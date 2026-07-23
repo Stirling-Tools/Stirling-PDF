@@ -2,25 +2,22 @@
    Uses the app's semantic theme tokens (theme.css) so it tracks light/dark. */
 
 .payg {
-  --payg-accent: #0a8bff;
-  --payg-accent-soft: rgba(10, 139, 255, 0.1);
+  --payg-accent: var(--c-primary);
+  --payg-accent-soft: color-mix(in srgb, var(--c-primary) 10%, transparent);
   --payg-radius: 14px;
   --payg-gap: 20px;
   /* Cards sit ON the modal content bg; in light that's white-on-white so we
      lean on border + shadow. Tokens are overridden per scheme below. */
-  --payg-card-bg: var(--bg-surface);
-  --payg-card-border: var(--border-default);
-  --payg-inset-bg: var(--bg-raised);
-  --payg-divider: var(--border-subtle);
+  --payg-card-bg: var(--c-surface);
+  --payg-card-border: var(--c-border);
+  --payg-inset-bg: var(--c-surface-raised);
+  --payg-divider: var(--c-border-subtle);
 }
 
-/* Dark mode: modal content bg is #131729 (--bg-surface), so lift cards above it */
+/* Dark mode: surfaces/borders track the neutral --c-* tokens (set on the base
+   rule); only the brand-azure accent tint is tuned brighter for dark. */
 [data-mantine-color-scheme="dark"] .payg {
-  --payg-card-bg: #1c2340;
-  --payg-card-border: #2d3560;
-  --payg-inset-bg: #0d1020;
-  --payg-accent-soft: rgba(79, 142, 245, 0.16);
-  --payg-divider: #2d3560;
+  --payg-accent-soft: color-mix(in srgb, var(--c-primary) 16%, transparent);
 }
 
 /* ── Header ─────────────────────────────────────────────────────────── */
@@ -29,12 +26,12 @@
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-header__subtitle {
   margin-top: 4px;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-role-pill {
   display: inline-flex;
@@ -49,12 +46,12 @@
 .payg-role-pill[data-leader="true"] {
   background: var(--payg-accent-soft);
   color: var(--payg-accent);
-  border: 1px solid rgba(10, 139, 255, 0.25);
+  border: 1px solid color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
 .payg-role-pill[data-leader="false"] {
-  background: var(--bg-muted);
-  color: var(--text-muted);
-  border: 1px solid var(--border-default);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
+  border: 1px solid var(--c-border);
 }
 
 /* ── Plan header: free-vs-metered split (shared by free + subscribed) ──── */
@@ -73,7 +70,7 @@
 }
 .payg-planhead__eyebrow {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-planhead__split {
   display: grid;
@@ -98,7 +95,7 @@
   margin-bottom: 8px;
 }
 .payg-planhead__lbl--free {
-  color: #10b981;
+  color: var(--c-success);
 }
 .payg-planhead__lbl--meter {
   color: var(--payg-accent);
@@ -110,14 +107,14 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--c-text);
   letter-spacing: -0.01em;
   line-height: 1.25;
 }
 .payg-planhead__body {
   margin: 5px 0 0;
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   line-height: 1.5;
 }
 @media (max-width: 640px) {
@@ -147,11 +144,11 @@
 .payg-card__title {
   font-size: 0.95rem;
   font-weight: 650;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-card__subtitle {
   font-size: 0.8125rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-top: 2px;
 }
 
@@ -175,22 +172,22 @@
 .payg-hero[data-state="FULL"]::before {
   background: linear-gradient(
     135deg,
-    rgba(10, 139, 255, 0.12) 0%,
-    rgba(10, 139, 255, 0) 55%
+    color-mix(in srgb, var(--c-primary) 12%, transparent) 0%,
+    color-mix(in srgb, var(--c-primary) 0%, transparent) 55%
   );
 }
 .payg-hero[data-state="WARNED"]::before {
   background: linear-gradient(
     135deg,
-    rgba(234, 179, 8, 0.16) 0%,
-    rgba(234, 179, 8, 0) 55%
+    color-mix(in srgb, var(--c-warning) 16%, transparent) 0%,
+    color-mix(in srgb, var(--c-warning) 0%, transparent) 55%
   );
 }
 .payg-hero[data-state="DEGRADED"]::before {
   background: linear-gradient(
     135deg,
-    rgba(239, 68, 68, 0.16) 0%,
-    rgba(239, 68, 68, 0) 55%
+    color-mix(in srgb, var(--c-danger) 16%, transparent) 0%,
+    color-mix(in srgb, var(--c-danger) 0%, transparent) 55%
   );
 }
 .payg-hero__inner {
@@ -202,7 +199,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-hero__figure {
   display: flex;
@@ -215,12 +212,12 @@
   font-weight: 750;
   line-height: 1;
   letter-spacing: -0.03em;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 .payg-hero__cap {
   font-size: 1rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
 }
 .payg-hero__meta {
@@ -229,10 +226,10 @@
   flex-wrap: wrap;
   gap: 6px 18px;
   font-size: 0.8125rem;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 .payg-hero__meta-dot {
-  color: var(--border-strong);
+  color: var(--c-border-strong);
 }
 .payg-hero__credit {
   display: inline-flex;
@@ -242,11 +239,11 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-green-700);
-  background: rgba(34, 197, 94, 0.14);
+  background: color-mix(in srgb, var(--c-success) 14%, transparent);
 }
 [data-mantine-color-scheme="dark"] .payg-hero__credit {
-  color: #4ade80;
-  background: rgba(34, 197, 94, 0.18);
+  color: var(--c-success);
+  background: color-mix(in srgb, var(--c-success) 18%, transparent);
 }
 
 /* Make Mantine default-variant buttons read clearly on the lifted cards in
@@ -257,16 +254,24 @@
 
 /* Dark mode: the stock default button is a flat slab that disappears into the
    card. Lift it with a soft top-down gradient + brighter border, and warm the
-   hover so the buttons feel tactile against --payg-card-bg (#1c2340). Driven
-   through Mantine's --button-* vars. The same rule covers disabled buttons
+   hover so the buttons feel tactile against the card surface. Driven through
+   Mantine's --button-* vars. The same rule covers disabled buttons
    (Cancel/Update cap before the form is dirty) so they read identically to the
    always-enabled ones — Mantine only fades them via opacity. */
 [data-mantine-color-scheme="dark"]
   .payg
   .mantine-Button-root[data-variant="default"] {
-  --button-bg: linear-gradient(180deg, #232a50 0%, #1c2340 100%);
-  --button-hover: linear-gradient(180deg, #2d3560 0%, #232a50 100%);
-  --button-bd: 1px solid #2d3560;
+  --button-bg: linear-gradient(
+    180deg,
+    var(--c-surface-raised) 0%,
+    var(--c-surface) 100%
+  );
+  --button-hover: linear-gradient(
+    180deg,
+    var(--c-border) 0%,
+    var(--c-surface-raised) 100%
+  );
+  --button-bd: 1px solid var(--c-border);
   --button-color: var(--mantine-color-white);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
@@ -307,7 +312,7 @@
 }
 .payg-status[data-state="FULL"] .payg-status__dot {
   background: var(--color-green-500);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-success) 18%, transparent);
 }
 .payg-status[data-state="WARNED"] {
   background: var(--color-yellow-100);
@@ -315,7 +320,7 @@
 }
 .payg-status[data-state="WARNED"] .payg-status__dot {
   background: var(--color-yellow-500);
-  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-warning) 20%, transparent);
 }
 .payg-status[data-state="DEGRADED"] {
   background: var(--color-red-100);
@@ -323,7 +328,7 @@
 }
 .payg-status[data-state="DEGRADED"] .payg-status__dot {
   background: var(--color-red-500);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-danger) 20%, transparent);
 }
 
 /* Segmented usage bar */
@@ -331,7 +336,7 @@
   margin-top: 18px;
   height: 10px;
   border-radius: 999px;
-  background: var(--bg-muted);
+  background: var(--c-surface-sunken);
   overflow: hidden;
   position: relative;
 }
@@ -341,13 +346,13 @@
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .payg-bar__fill[data-state="FULL"] {
-  background: linear-gradient(90deg, #0a8bff, #38bdf8);
+  background: var(--c-primary);
 }
 .payg-bar__fill[data-state="WARNED"] {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  background: var(--c-warning);
 }
 .payg-bar__fill[data-state="DEGRADED"] {
-  background: linear-gradient(90deg, #dc2626, #f87171);
+  background: var(--c-danger);
 }
 
 /* ── "What counts as a document?" expandable help ───────────────────── */
@@ -365,10 +370,10 @@
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 .payg-help__toggle:hover {
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-help__chevron {
   transition: transform 0.15s ease;
@@ -381,10 +386,10 @@
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid var(--payg-card-border);
-  background: var(--bg-muted);
+  background: var(--c-surface-sunken);
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 .payg-help__panel ul {
   margin: 0;
@@ -401,7 +406,7 @@
   padding: 13px 16px;
   border-radius: 10px;
   background: var(--payg-accent-soft);
-  border: 1px solid rgba(10, 139, 255, 0.2);
+  border: 1px solid color-mix(in srgb, var(--c-primary) 20%, transparent);
 }
 .payg-preview__icon {
   color: var(--payg-accent);
@@ -409,12 +414,12 @@
 }
 .payg-preview__main {
   font-size: 0.875rem;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-weight: 550;
 }
 .payg-preview__note {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-top: 1px;
 }
 
@@ -453,17 +458,17 @@
   flex-shrink: 0;
 }
 .payg-gate[data-enabled="true"] .payg-gate__chip {
-  background: rgba(34, 197, 94, 0.16);
-  color: #22c55e;
+  background: color-mix(in srgb, var(--c-success) 16%, transparent);
+  color: var(--c-success);
 }
 .payg-gate[data-enabled="false"] .payg-gate__chip {
-  background: rgba(239, 68, 68, 0.16);
-  color: #f87171;
+  background: color-mix(in srgb, var(--c-danger) 16%, transparent);
+  color: var(--c-danger);
 }
 .payg-gate__label {
   font-size: 0.8125rem;
   line-height: 1.35;
-  color: var(--text-primary);
+  color: var(--c-text);
   flex: 1;
 }
 .payg-gate__tag {
@@ -477,16 +482,16 @@
   white-space: nowrap;
 }
 .payg-gate__tag[data-variant="on"] {
-  color: var(--text-muted);
-  background: var(--bg-muted);
+  color: var(--c-text-subtle);
+  background: var(--c-surface-sunken);
 }
 .payg-gate__tag[data-variant="pause"] {
-  color: #dc2626;
-  background: rgba(239, 68, 68, 0.12);
+  color: var(--c-danger);
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
 }
 [data-mantine-color-scheme="dark"] .payg-gate__tag[data-variant="pause"] {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.18);
+  color: var(--c-danger);
+  background: color-mix(in srgb, var(--c-danger) 18%, transparent);
 }
 
 /* ── Member rows ────────────────────────────────────────────────────── */
@@ -509,17 +514,17 @@
   justify-content: center;
   font-size: 0.8125rem;
   font-weight: 650;
-  color: #fff;
+  color: var(--c-text-on-primary);
   flex-shrink: 0;
 }
 .payg-member__name {
   font-size: 0.875rem;
   font-weight: 550;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-member__email {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-member__usage {
   text-align: right;
@@ -527,7 +532,7 @@
 }
 .payg-member__usage-num {
   font-size: 0.8125rem;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 .payg-member__minibar {
@@ -570,27 +575,27 @@
 }
 .payg-activity__label {
   font-size: 0.8438rem;
-  color: var(--text-primary);
+  color: var(--c-text);
   flex: 1;
 }
 .payg-activity__ts {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-activity__kind {
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  background: var(--bg-muted);
+  color: var(--c-text-subtle);
+  background: var(--c-surface-sunken);
   padding: 2px 8px;
   border-radius: 999px;
 }
 .payg-activity__units {
   font-size: 0.8125rem;
   font-weight: 650;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
   min-width: 58px;
   text-align: right;
@@ -604,20 +609,20 @@
   gap: 16px;
   padding: 20px 24px;
   border-radius: var(--payg-radius);
-  border: 1px solid rgba(99, 91, 255, 0.28);
+  border: 1px solid color-mix(in srgb, var(--c-accent-stripe) 28%, transparent);
   background: linear-gradient(
     135deg,
-    rgba(99, 91, 255, 0.1) 0%,
-    rgba(99, 91, 255, 0.02) 100%
+    color-mix(in srgb, var(--c-accent-stripe) 10%, transparent) 0%,
+    color-mix(in srgb, var(--c-accent-stripe) 2%, transparent) 100%
   );
 }
 .payg-stripe__title {
   font-size: 0.9375rem;
   font-weight: 650;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-stripe__subtitle {
   font-size: 0.8125rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-top: 2px;
 }

@@ -121,8 +121,8 @@ export default function AdminStorageSharingSection() {
       return;
     }
     try {
-      markSaved();
       await saveSettings();
+      markSaved();
       showRestartModal();
     } catch (_error) {
       alert({

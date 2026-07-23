@@ -5,9 +5,9 @@
   flex-direction: row;
   align-items: center; /* Center align items vertically */
   height: 32px;
-  border: 1px solid var(--border-default);
-  background-color: var(--mantine-color-white); /* Use Mantine color variable */
-  color: var(--text-secondary);
+  border: 1px solid var(--c-border);
+  background-color: var(--c-input-bg);
+  color: var(--c-text-muted);
   border-radius: var(--radius-sm);
   padding: 4px 8px;
   font-size: 13px;
@@ -15,25 +15,9 @@
   transition: all 0.2s ease;
 }
 
-/* Dark mode background */
-[data-mantine-color-scheme="dark"] .languagePicker {
-  background-color: var(
-    --mantine-color-dark-6
-  ); /* Use Mantine dark color instead of hardcoded */
-}
-
 .languagePicker:hover {
-  border-color: var(--border-strong);
-  background-color: var(
-    --mantine-color-gray-0
-  ); /* Light gray on hover for light mode */
-}
-
-/* Dark mode hover */
-[data-mantine-color-scheme="dark"] .languagePicker:hover {
-  background-color: var(
-    --mantine-color-dark-5
-  ); /* Use Mantine color variable */
+  border-color: var(--c-border-strong);
+  background-color: var(--c-hover);
 }
 
 .languagePicker:disabled {
@@ -43,22 +27,17 @@
 
 .languagePickerIcon {
   font-size: 16px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-left: auto;
   display: flex;
   align-items: center; /* Center the icon vertically */
 }
 
 .languagePickerDropdown {
-  background-color: var(--mantine-color-white); /* Use Mantine color variable */
-  border: 1px solid var(--border-default);
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-sm);
   padding: 4px;
-}
-
-/* Dark mode dropdown background */
-[data-mantine-color-scheme="dark"] .languagePickerDropdown {
-  background-color: var(--mantine-color-dark-6);
 }
 
 .languagePickerOption {
@@ -66,7 +45,7 @@
   cursor: pointer;
   border-radius: var(--radius-xs);
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--c-text);
   transition: background-color 0.2s ease;
 }
 
@@ -81,14 +60,7 @@
 }
 
 .languagePickerOption:hover {
-  background-color: var(
-    --mantine-color-gray-0
-  ); /* Light gray on hover for light mode */
-}
-
-/* Dark mode option hover */
-[data-mantine-color-scheme="dark"] .languagePickerOption:hover {
-  background-color: var(--mantine-color-dark-5);
+  background-color: var(--c-hover);
 }
 
 /* Additional helper classes for the component */
@@ -110,7 +82,7 @@
 
 .languagePickerScrollArea {
   max-height: 180px;
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--c-border);
   padding-bottom: 8px;
 }
 
@@ -121,12 +93,7 @@
 }
 
 .languagePickerLink {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-fg);
   text-decoration: underline;
   cursor: pointer;
-}
-
-/* Dark mode link */
-[data-mantine-color-scheme="dark"] .languagePickerLink {
-  color: var(--mantine-color-blue-4);
 }

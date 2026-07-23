@@ -13,18 +13,11 @@
 :root,
 [data-theme="light"] {
   /* Text hierarchy */
-  --color-text-1: #0f172a;
-  --color-text-2: #1a202c;
-  --color-text-3: #475569;
-  --color-text-4: #64748b;
   /* text-5 was #94a3b8 (≈2.85:1 on white — fails WCAG AA). Bumped to #64748b
      so meta/timestamp copy at small sizes still passes contrast. The visual
      hierarchy now collapses text-4 and text-5 into the same shade — use weight
      or size to differentiate in components instead. */
-  --color-text-5: #64748b;
-  --color-text-6: #6b7280;
-  --color-text-muted: #8b92a1;
-  --color-text-placeholder: #9ca3af;
+  --color-text-placeholder: var(--p-gray-400);
 
   /* Body text colour for use on coloured / gradient backgrounds (blue buttons,
      assistant header, onboarding "done" badges). Theme-stable: even in dark
@@ -32,242 +25,205 @@
   --color-text-on-accent: #ffffff;
 
   /* Brand / status */
-  --color-blue: #3b82f6;
-  --color-blue-dark: #2563eb;
-  --color-blue-light: #eff6ff;
-  --color-blue-border: #bfdbfe;
-  --color-purple: #8b5cf6;
-  --color-purple-light: #f5f3ff;
-  --color-purple-border: #ddd6fe;
-  --color-purple-dark: #7c3aed;
-  --color-green: #10b981;
-  --color-green-light: #ecfdf5;
-  --color-green-border: #a7f3d0;
-  --color-green-dark: #16a34a;
-  --color-red: #ef4444;
-  --color-red-light: #fee2e2;
-  --color-red-border: #fecaca;
-  --color-red-dark: #dc2626;
-  --color-amber: #f59e0b;
-  --color-amber-light: #fef3c7;
-  --color-amber-border: #fde68a;
-  --color-amber-dark: #92400e;
-  --color-orange: #f97316;
-  --color-orange-light: #fff7ed;
-  --color-orange-border: #fed7aa;
-  --color-orange-dark: #9a3412;
+  --color-purple: var(--p-blue-400);
+  --color-purple-light: color-mix(
+    in srgb,
+    var(--p-blue-400) 13%,
+    var(--p-white)
+  );
+  --color-purple-border: color-mix(
+    in srgb,
+    var(--p-blue-400) 40%,
+    var(--p-white)
+  );
+  --color-purple-dark: var(--p-blue-600);
+  --color-green: var(--p-green-500);
+  --color-green-light: color-mix(
+    in srgb,
+    var(--p-green-500) 13%,
+    var(--p-white)
+  );
+  --color-green-border: color-mix(
+    in srgb,
+    var(--p-green-500) 40%,
+    var(--p-white)
+  );
+  --color-green-dark: var(--p-green-600);
+  --color-red: var(--p-red-500);
+  --color-red-light: color-mix(in srgb, var(--p-red-500) 13%, var(--p-white));
+  --color-red-border: color-mix(in srgb, var(--p-red-500) 40%, var(--p-white));
+  --color-red-dark: var(--p-red-600);
+  --color-amber: var(--p-amber-500);
+  --color-amber-light: color-mix(
+    in srgb,
+    var(--p-amber-500) 15%,
+    var(--p-white)
+  );
+  --color-amber-border: color-mix(
+    in srgb,
+    var(--p-amber-500) 42%,
+    var(--p-white)
+  );
+  --color-amber-dark: var(--p-amber-600);
+  --color-orange: var(--p-amber-600);
+  --color-orange-light: color-mix(
+    in srgb,
+    var(--p-amber-600) 15%,
+    var(--p-white)
+  );
+  --color-orange-border: color-mix(
+    in srgb,
+    var(--p-amber-600) 42%,
+    var(--p-white)
+  );
+  --color-orange-dark: var(--p-red-600);
 
   /* Category accents (theme-stable) */
-  --color-cat-insurance: #0ea5e9;
-  --color-cat-compliance: #6366f1;
-  --color-cat-finance: #10b981;
-  --color-cat-legal: #3b82f6;
-  --color-cat-healthcare: #8b5cf6;
-  --color-cat-government: #dc2626;
-  --color-cat-operations: #ec4899;
-  --color-cat-hr: #f59e0b;
-  --color-cat-realestate: #84cc16;
-  --color-cat-energy: #f97316;
-  --color-cat-extraction: #14b8a6;
+  --color-cat-insurance: var(--p-blue-500);
+  --color-cat-compliance: var(--p-blue-500);
+  --color-cat-finance: var(--p-green-500);
+  --color-cat-legal: var(--p-blue-500);
+  --color-cat-healthcare: var(--p-blue-400);
+  --color-cat-government: var(--p-red-600);
+  --color-cat-operations: var(--p-red-400);
+  --color-cat-hr: var(--p-amber-500);
+  --color-cat-realestate: var(--p-green-500);
+  --color-cat-energy: var(--p-amber-600);
+  --color-cat-extraction: var(--p-blue-500);
 
   /* Surfaces */
-  --color-bg: #f8f9fb;
-  --color-bg-alt: #f6f8fa;
-  --color-surface: #ffffff;
-  --color-surface-alt: #ffffff;
-  --color-border: #e3e8ee;
-  --color-border-light: #eef0f2;
-  --color-border-input: #e2e8f0;
-  --color-border-hover: #cbd5e1;
-  --color-divider: #f0f0f0;
-  --color-bg-subtle: #f9fafb;
-  --color-bg-hover: #f8fafc;
-  --color-bg-muted: #f3f4f6;
-  --color-bg-code: #f1f5f9;
+  --color-bg-subtle: var(--c-surface-sunken);
+  --color-bg-code: var(--p-gray-100);
 
   /* Dropdowns / tooltips */
-  --color-dropdown-bg: #ffffff;
-  --color-dropdown-border: #e5e7eb;
-  --color-dropdown-hover: #f9fafb;
-  --color-tooltip-bg: #1e293b;
-  --color-tooltip-text: #f8fafc;
+  --color-tooltip-bg: var(--p-gray-800);
+  --color-tooltip-text: var(--p-gray-50);
 
   /* Navigation */
-  --color-nav-active: #eff6ff;
-  --color-nav-active-text: #3b82f6;
-  --color-nav-text: #4b5563;
-  --color-nav-hover: #f6f8fa;
-  --color-nav-hover-text: #1a202c;
-  --color-section-label: #9ca3af;
-  --color-logo-text: #111827;
+  --color-section-label: var(--p-gray-400);
 
   /* Header */
-  --color-header-bg: #ffffff;
-  --color-header-border: #f0f0f0;
-  --color-header-text: #111827;
-  --color-search-bg: #f9fafb;
-  --color-search-border: #e5e7eb;
-  --color-search-border-hover: #d1d5db;
-  --color-search-text: #9ca3af;
+  --color-search-border-hover: var(--p-gray-300);
+  --color-search-text: var(--p-gray-400);
 
   /* Sidebar */
-  --color-sidebar-bg: #ffffff;
-  --color-sidebar-border: #e5e7eb;
-  --color-sidebar-divider: #f0f0f0;
-  --color-usage-text: #6b7280;
-  --color-usage-value: #374151;
-  --color-usage-track: #f3f4f6;
+  --color-usage-text: var(--p-gray-500);
+  --color-usage-value: var(--p-gray-700);
 
-  --color-toggle-off: #cbd5e1;
-  --color-badge-red: #ef4444;
-
-  /* Segmented control — semantic tokens so dark mode can decouple from blue surfaces */
+  --color-toggle-off: var(--p-gray-300);
+  --color-badge-red: var(--p-red-500);
 
   /* Shadows */
-  --shadow-sm: inset 0 0 0 1px #e3e8ee;
-  --shadow-md: inset 0 0 0 1px #e3e8ee, 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-lg: inset 0 0 0 1px #e3e8ee, 0 4px 12px rgba(15, 23, 42, 0.06);
-  --shadow-blue:
-    0 1px 2px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  --shadow-blue-hover:
-    0 2px 6px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --shadow-sm: inset 0 0 0 1px var(--p-gray-250);
+  --shadow-md:
+    inset 0 0 0 1px var(--p-gray-250),
+    0 1px 2px color-mix(in srgb, var(--p-blue-700) 4%, transparent);
+  --shadow-lg:
+    inset 0 0 0 1px var(--p-gray-250),
+    0 4px 12px color-mix(in srgb, var(--p-blue-700) 6%, transparent);
 
   /* Gradients */
   --grad-blue-btn: linear-gradient(
     180deg,
-    #5b9bf7 0%,
-    #4c8bf5 50%,
-    #3a7be8 100%
+    var(--p-azure-450) 0%,
+    var(--p-azure-550) 50%,
+    var(--p-azure-650) 100%
   );
   --grad-purple-btn: linear-gradient(
     180deg,
-    #a78bfa 0%,
-    #8b5cf6 50%,
-    #7c3aed 100%
+    var(--p-violet-400) 0%,
+    var(--p-violet-500) 50%,
+    var(--p-violet-600) 100%
   );
   --grad-green-btn: linear-gradient(
     180deg,
-    #34d399 0%,
-    #10b981 50%,
-    #059669 100%
+    var(--p-emerald-400) 0%,
+    var(--p-emerald-500) 50%,
+    var(--p-emerald-600) 100%
   );
   --grad-amber-btn: linear-gradient(
     180deg,
-    #fbbf24 0%,
-    #f59e0b 50%,
-    #d97706 100%
+    var(--p-amber-400) 0%,
+    var(--p-amber-500) 50%,
+    var(--p-amber-600) 100%
   );
   --grad-red-btn: linear-gradient(
     180deg,
-    #f87171 0%,
-    #ef4444 50%,
-    #dc2626 100%
+    var(--p-red-400) 0%,
+    var(--p-red-500) 50%,
+    var(--p-red-600) 100%
   );
-  --grad-banner: linear-gradient(135deg, #eef2ff 0%, #ddd6fe 50%, #fce7f3 100%);
 }
 
 [data-theme="dark"] {
-  --color-text-1: #f1f5f9;
-  --color-text-2: #e2e8f0;
-  --color-text-3: #94a3b8;
-  --color-text-4: #64748b;
   /* Bumped from #475569 (fails AA) — see light-theme note. */
-  --color-text-5: #7c869a;
-  --color-text-6: #94a3b8;
-  --color-text-muted: #64748b;
-  --color-text-placeholder: #475569;
+  --color-text-placeholder: var(--p-gray-600);
 
-  --color-blue: #60a5fa;
-  --color-blue-dark: #3b82f6;
-  --color-blue-light: #1e293b;
-  --color-blue-border: #1e3a5f;
-  --color-purple: #a78bfa;
-  --color-purple-light: #1e1b2e;
-  --color-purple-border: #2e2650;
-  --color-purple-dark: #8b5cf6;
-  --color-green: #34d399;
-  --color-green-light: #0d2818;
-  --color-green-border: #065f46;
-  --color-green-dark: #22c55e;
-  --color-red: #f87171;
-  --color-red-light: #2d1215;
-  --color-red-border: #7f1d1d;
-  --color-red-dark: #ef4444;
-  --color-amber: #fbbf24;
-  --color-amber-light: #2d2006;
-  --color-amber-border: #78350f;
+  --color-purple: var(--p-blue-400);
+  --color-purple-light: var(--p-zinc-750);
+  --color-purple-border: var(--p-zinc-600);
+  --color-purple-dark: var(--p-blue-400);
+  --color-green: var(--p-green-500);
+  --color-green-light: color-mix(
+    in srgb,
+    var(--p-green-500) 20%,
+    var(--p-zinc-900)
+  );
+  --color-green-border: var(--p-green-700);
+  --color-green-dark: var(--p-green-500);
+  --color-red: var(--p-red-400);
+  --color-red-light: var(--p-zinc-800);
+  --color-red-border: var(--p-red-600);
+  --color-red-dark: var(--p-red-500);
+  --color-amber: var(--p-amber-400);
+  --color-amber-light: color-mix(
+    in srgb,
+    var(--p-amber-500) 20%,
+    var(--p-zinc-900)
+  );
+  --color-amber-border: var(--p-amber-600);
   /* Deeper than the base so it stays distinct (hover shade + amber text on
      dark surfaces). ~7.4:1 on --color-amber-light, passes WCAG AA. Was
      #fbbf24 — identical to the base — which left Mantine's amber hover a
      no-op in dark mode. */
-  --color-amber-dark: #f59e0b;
-  --color-orange: #fb923c;
-  --color-orange-light: #2a1408;
-  --color-orange-border: #7c2d12;
-  --color-orange-dark: #fdba74;
+  --color-amber-dark: var(--p-amber-500);
+  --color-orange: var(--p-amber-500);
+  --color-orange-light: color-mix(
+    in srgb,
+    var(--p-amber-600) 30%,
+    var(--p-zinc-900)
+  );
+  --color-orange-border: var(--p-red-600);
+  --color-orange-dark: var(--p-amber-400);
 
-  --color-bg: #090c14;
-  --color-bg-alt: #0d1120;
-  --color-surface: #151c2e;
-  --color-surface-alt: #1c2640;
-  --color-border: #283248;
-  --color-border-light: #1e2840;
-  --color-border-input: #2e3c55;
-  --color-border-hover: #3d4f6a;
-  --color-divider: #1e2840;
-  --color-bg-subtle: #111827;
-  --color-bg-hover: #1c2640;
-  --color-bg-muted: #243044;
-  --color-bg-code: #0b0f1a;
+  --color-bg-subtle: var(--c-surface-sunken);
+  --color-bg-code: var(--p-zinc-900);
 
-  --color-dropdown-bg: #151c2e;
-  --color-dropdown-border: #2e3c55;
-  --color-dropdown-hover: #1c2640;
-  --color-tooltip-bg: #e2e8f0;
-  --color-tooltip-text: #0f172a;
+  --color-tooltip-bg: var(--p-gray-250);
+  --color-tooltip-text: var(--p-blue-700);
 
-  --color-nav-active: #172044;
-  --color-nav-active-text: #60a5fa;
-  --color-nav-text: #94a3b8;
-  --color-nav-hover: #1c2640;
-  --color-nav-hover-text: #e2e8f0;
-  --color-section-label: #475569;
-  --color-logo-text: #f1f5f9;
+  --color-section-label: var(--p-gray-600);
 
-  --color-header-bg: #0d1120;
-  --color-header-border: #1e2840;
-  --color-header-text: #f1f5f9;
-  --color-search-bg: #151c2e;
-  --color-search-border: #2e3c55;
-  --color-search-border-hover: #3d4f6a;
-  --color-search-text: #64748b;
+  --color-search-border-hover: var(--p-gray-600);
+  --color-search-text: var(--p-gray-500);
 
-  --color-sidebar-bg: #0d1120;
-  --color-sidebar-border: #1e2840;
-  --color-sidebar-divider: #1e2840;
-  --color-usage-text: #64748b;
-  --color-usage-value: #94a3b8;
-  --color-usage-track: #1e2840;
+  --color-usage-text: var(--p-gray-500);
+  --color-usage-value: var(--p-gray-400);
 
-  --color-toggle-off: #3d4f6a;
+  --color-toggle-off: var(--p-gray-600);
 
   /* Segmented control — blue-toned dark to match app surface colors */
 
-  --shadow-sm: inset 0 0 0 1px #283248;
-  --shadow-md: inset 0 0 0 1px #283248, 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-lg: inset 0 0 0 1px #283248, 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-blue:
-    0 1px 3px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --shadow-blue-hover:
-    0 2px 8px rgba(59, 130, 246, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --shadow-sm: inset 0 0 0 1px var(--p-zinc-600);
+  --shadow-md: inset 0 0 0 1px var(--p-zinc-600), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-lg: inset 0 0 0 1px var(--p-zinc-600), 0 8px 24px rgba(0, 0, 0, 0.4);
 
   --grad-blue-btn: linear-gradient(
     180deg,
-    #3b82f6 0%,
-    #2563eb 50%,
-    #1d4ed8 100%
+    var(--p-blue-500) 0%,
+    var(--p-blue-600) 50%,
+    var(--p-blue-700) 100%
   );
-  --grad-banner: linear-gradient(135deg, #0f172a 0%, #111827 50%, #1a1535 100%);
 }
 
 /* Code palette — theme-aware: a light GitHub-style box in light mode, the dark
@@ -275,91 +231,55 @@
    base colours are load-bearing; the syntax slots are kept for future Shiki. */
 :root,
 [data-theme="light"] {
-  --code-bg: #f6f8fa;
-  --code-bg-alt: #eef1f4;
-  --code-bg-header: #eaeef2;
-  --code-text: #1f2328;
-  --code-dim: #656d76;
-  --code-muted: #8c959f;
-  --code-keyword: #cf222e;
-  --code-string: #0a3069;
-  --code-number: #0550ae;
-  --code-fn: #8250df;
-  --code-type: #953800;
-  --code-property: #0550ae;
-  --code-comment: #6e7781;
-  --code-border: #d0d7de;
+  --code-bg: var(--p-c-f6f8fa);
+  --code-bg-alt: var(--p-c-eef1f4);
+  --code-bg-header: var(--p-c-eaeef2);
+  --code-text: var(--p-c-1f2328);
+  --code-dim: var(--p-c-656d76);
+  --code-muted: var(--p-c-8c959f);
+  --code-keyword: var(--p-c-cf222e);
+  --code-string: var(--p-code-string);
+  --code-number: var(--p-c-0550ae);
+  --code-fn: var(--p-c-8250df);
+  --code-type: var(--p-code-type);
+  --code-property: var(--p-c-0550ae);
+  --code-comment: var(--p-c-6e7781);
+  --code-border: var(--p-c-d0d7de);
   /* Window-chrome traffic-light dots in the code-block header. */
-  --code-dot: #d0d7de;
+  --code-dot: var(--p-c-d0d7de);
 }
 [data-theme="dark"] {
-  --code-bg: #0f172a;
-  --code-bg-alt: #1e293b;
-  --code-bg-header: #1a2332;
-  --code-text: #e2e8f0;
-  --code-dim: #64748b;
-  --code-muted: #94a3b8;
-  --code-keyword: #60a5fa;
-  --code-string: #fbbf24;
-  --code-number: #c084fc;
-  --code-fn: #34d399;
-  --code-type: #f472b6;
-  --code-property: #93c5fd;
-  --code-comment: #475569;
-  --code-border: #1e293b;
-  --code-dot: #475569;
+  --code-bg: var(--p-c-0f172a);
+  --code-bg-alt: var(--p-c-1e293b);
+  --code-bg-header: var(--p-c-1a2332);
+  --code-text: var(--p-gray-250);
+  --code-dim: var(--p-c-64748b);
+  --code-muted: var(--p-c-94a3b8);
+  --code-keyword: var(--p-blue-400);
+  --code-string: var(--p-amber-400);
+  --code-number: var(--p-c-c084fc);
+  --code-fn: var(--p-emerald-400);
+  --code-type: var(--p-c-f472b6);
+  --code-property: var(--p-blue-200);
+  --code-comment: var(--p-c-475569);
+  --code-border: var(--p-c-1e293b);
+  --code-dot: var(--p-c-475569);
 }
 
 /* Radii / typography / motion / spacing / z-index — theme-stable */
 :root {
-  /* Home hero strip navy. Theme-stable by design — the hero keeps this deep
-     navy in both light and dark (it's a branded surface, like the assistant
-     header), so it's defined once here rather than in the light/dark blocks. */
-  --color-hero-navy: #16213e;
-
-  --radius-xs: 0.1875rem;
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-pill: 0.625rem;
-
-  --font-sans:
-    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
-    sans-serif;
-  --font-mono:
-    "SF Mono", "Fira Code", Menlo, Consolas, "DejaVu Sans Mono", monospace;
-  --font-brand: "Alumni Sans", "Inter", sans-serif;
-
-  --motion-fast: 0.15s ease;
-  --motion-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --motion-slow: 0.3s ease;
-  --motion-enter: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Home hero strip navy. Theme-stable by design — the white hero CTA keeps
+     this deep navy text in both light and dark (branded surface). The hero
+     background itself is accent-responsive (see EditorStatusCard/WelcomeBanner). */
+  --color-hero-navy: var(--p-navy-700);
 
   /* 4-px grid spacing scale (rem so it tracks font-size changes). Use these
      in layout primitives + component CSS instead of bare 0.5rem / 0.75rem. */
-  --space-0: 0;
   --space-0_5: 0.125rem;
-  --space-1: 0.25rem;
   --space-1_5: 0.375rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
 
   /* Z-index hierarchy. Pick the highest tier that still puts you below the
      thing that's supposed to win. Modals beat drawers beat dropdowns. */
-  --z-base: 0;
-  --z-sticky: 10;
-  --z-dropdown: 25;
-  --z-fixed-overlay: 35;
-  --z-drawer: 50;
-  --z-modal: 100;
-  --z-toast: 200;
 }
 
 /* Keyframes used across the app. */

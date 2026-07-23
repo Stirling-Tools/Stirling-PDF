@@ -692,6 +692,166 @@ manualLinks = "Manual downloads: click the links and place the files into the te
 noLanguages = "No tessdata languages found in the configured directory."
 permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
 
+# AI engine admin settings (AI nav group)
+[admin.settings.ai.documents]
+description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
+title = "Documents & RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments."
+generic = "Embedding API key"
+openai = "OpenAI API key"
+setPlaceholder = "Saved - leave blank to keep the current key"
+voyageai = "VoyageAI API key"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "Base URL of the OpenAI-compatible / Ollama embeddings endpoint, e.g. http://ollama:11434/v1. Must point at a trusted internal endpoint (SSRF-sensitive)."
+label = "Embedding base URL"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Embedding model name. Free text; suggestions are hints only."
+label = "Embedding model"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Provider used to turn document text into vector embeddings."
+label = "Embedding provider"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Maximum number of retrieval searches the agent may run per request."
+label = "Max searches"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Changing the embedding model takes effect immediately, but documents indexed with the previous model must be re-indexed for search to return correct results."
+title = "Re-index required"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "If you changed the embedding model, re-index existing documents so search uses the new model."
+
+[admin.settings.ai.documents.topK]
+description = "Number of most-relevant chunks retrieved per search."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart."
+title = "AI Engine"
+
+[admin.settings.ai.general.capabilities]
+description = "Turn individual AI features on or off. Disabled features are hidden in the app."
+title = "Capabilities"
+
+[admin.settings.ai.general.enabled]
+description = "Master switch. When off, no AI tools, agents, or engine calls are available."
+label = "Enable AI"
+
+[admin.settings.ai.general.features.chat]
+description = "Conversational assistant for working with PDFs."
+label = "Chat assistant"
+
+[admin.settings.ai.general.features.classify]
+description = "Automatically categorise documents by type or content."
+label = "Document classification"
+
+[admin.settings.ai.general.features.createPdf]
+description = "Generate a new PDF (e.g. from HTML) via an AI agent."
+label = "Create PDF from prompt"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Ask questions and get answers grounded in an uploaded document."
+label = "Document questions"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Review documents for mathematical and numerical errors."
+label = "Math auditor"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "Add AI-authored review comments and annotations to a PDF."
+label = "PDF comment agent"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Timeout for heavier agent operations such as document generation."
+label = "Long-running timeout (seconds)"
+
+[admin.settings.ai.general.note]
+body = "The AI engine runs as a separate service. Its shared secret"
+body2 = "is set via a container environment variable. Provider API keys can be entered on these pages or supplied as engine environment variables; keys entered here are pushed to the engine when saved."
+title = "About the AI engine"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Timeout for streamed (token-by-token) chat responses."
+label = "Stream timeout (seconds)"
+
+[admin.settings.ai.general.test]
+button = "Test connection"
+failBody = "The AI engine did not respond. Check the URL, that the engine container is running, and that AI is enabled (a restart is needed after enabling)."
+failTitle = "AI engine unreachable"
+okBody = "The AI engine responded to a health check."
+okTitle = "AI engine reachable"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Timeout for standard AI requests to the engine."
+label = "Request timeout (seconds)"
+
+[admin.settings.ai.general.url]
+description = "Internal URL of the Python AI engine, e.g. http://stirling-pdf-engine:5001."
+label = "AI engine URL"
+
+[admin.settings.ai.limits]
+description = "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved."
+title = "Limits & Performance"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Guardrail: reject AI requests whose extracted text exceeds this length."
+label = "Max characters per request"
+
+[admin.settings.ai.limits.maxPages]
+description = "Guardrail: reject AI requests over this many PDF pages."
+label = "Max pages per request"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Maximum simultaneous in-flight model calls across the whole engine."
+label = "Model max concurrency"
+
+[admin.settings.ai.models]
+description = "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved."
+title = "Models & Providers"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Anthropic API key"
+description = "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments."
+generic = "API key"
+openai = "OpenAI API key"
+setPlaceholder = "Saved - leave blank to keep the current key"
+
+[admin.settings.ai.models.baseUrl]
+description = "Base URL of the OpenAI-compatible / Ollama endpoint, e.g. http://ollama:11434/v1."
+label = "Provider base URL"
+warning = "The base URL must point at a trusted internal endpoint. The engine will make server-side requests to it, so an untrusted value is SSRF-sensitive."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Maximum output tokens for the fast model."
+label = "Fast model max tokens"
+
+[admin.settings.ai.models.fastModel]
+description = "Cheaper, faster model for lightweight tasks. Free text; suggestions are hints only."
+label = "Fast model"
+
+[admin.settings.ai.models.provider]
+description = "Which LLM provider the engine talks to."
+label = "Provider"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Maximum output tokens for the smart model."
+label = "Smart model max tokens"
+
+[admin.settings.ai.models.smartModel]
+description = "High-capability model for complex reasoning. Free text; suggestions are hints only."
+label = "Smart model"
+
+[admin.settings.ai.saved]
+body = "Changes are pushed to the AI engine automatically."
+bodyNoPush = "Settings saved. They will apply the next time the AI engine picks up its configuration."
+title = "AI settings saved"
+
 [admin.settings.badge]
 clickToUpgrade = "Click to view plan details"
 
@@ -938,6 +1098,25 @@ label = "Regenerate on Startup"
 [admin.settings.features.serverCertificate.validity]
 description = "Number of days the certificate will be valid"
 label = "Certificate Validity (days)"
+
+[admin.settings.folderAccess]
+description = "Directories that folder sources and folder outputs are allowed to read from and write to. This is a security boundary: automations can never be pointed at a server path outside this list."
+securityNote = "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory is always off-limits."
+title = "Folder Access"
+
+[admin.settings.folderAccess.implied]
+description = "These Stirling-managed directories are always permitted and can't be changed here."
+serverStorage = "Server file storage"
+title = "Always allowed"
+watchedFolder = "Pipeline watched folder"
+
+[admin.settings.folderAccess.roots]
+add = "Add"
+empty = "No folders allowed. Folder sources and outputs are currently disabled."
+hint = "Enter absolute paths, for example /data/inbox."
+label = "Allowed folder roots"
+placeholder = "/data/inbox"
+remove = "Remove folder root"
 
 [admin.settings.general]
 description = "Configure system-wide application settings including branding and default behavior."
@@ -3734,20 +3913,9 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "Add"
-addLabel = "Add a label…"
-categoryIconAria = "Choose an icon for {{name}}"
-createCategory = "Create category"
-delete = "Delete category"
 done = "Done"
-hide = "Hide category"
-newCategory = "New category name…"
-removeLabel = "Remove {{name}}"
-rename = "Rename"
-reset = "Reset to defaults"
-search = "Search labels…"
-show = "Show category"
-subtitle = "Group your files into parent categories. Add existing or new labels to a category, rename it, or create your own. Files in none of your categories appear under “Other”."
+reset = "Show all"
+subtitle = "Show or hide categories in the files sidebar."
 title = "Sidebar categories"
 
 [filesPage]
@@ -4626,12 +4794,12 @@ hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG fil
 label = "Upload Image"
 placeholder = "Select image file"
 
-[imageToPdf]
-tags = "conversion,img,jpg,picture,photo"
-
 [imageToPDF]
 header = "Image to PDF"
 title = "Image to PDF"
+
+[imageToPdf]
+tags = "conversion,img,jpg,picture,photo"
 
 [infoBanner]
 dismiss = "Dismiss"
@@ -4713,6 +4881,7 @@ login = "Login"
 magicLinkSent = "Magic link sent to {{email}}! Check your email and click the link to sign in."
 mfaCode = "Authentication Code"
 mfaRequired = "Two-factor code required"
+noAccount = "Don't have an account?"
 or = "Or"
 password = "Password"
 passwordChangedSuccess = "Password changed successfully! Please sign in with your new password."
@@ -4736,21 +4905,6 @@ useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
-
-[login.slides.edit]
-alt = "Edit PDFs"
-subtitle = "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
-title = "Edit PDFs to display/secure the information you want"
-
-[login.slides.overview]
-alt = "Stirling PDF overview"
-subtitle = "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
-title = "Your one-stop-shop for all your PDF needs."
-
-[login.slides.secure]
-alt = "Secure PDFs"
-subtitle = "Add passwords, redact content, and manage certificates with ease."
-title = "Protect sensitive information in your PDFs"
 
 [margin]
 large = "Large"
@@ -6014,31 +6168,11 @@ summaryMore = "{{first}}, {{second}} and {{more}} more"
 summaryTwo = "{{first}} and {{second}}"
 
 [policies.labels]
-add = "Add"
-addPlaceholder = "Add a label…"
-customNote = "Customized for your team."
-defaultNote = "Using the built-in default, shared with your team."
-duplicate = "\"{{name}}\" already exists."
-edit = "Edit labels"
-empty = "No labels yet."
-export = "Export JSON"
-iconAria = "Choose an icon for {{name}}"
-import = "Import JSON"
-importError = "Couldn't import that file."
-managedNote = "Team labels are managed by your team leader."
-modalSubtitle = "Shared with your whole team. The classifier picks the labels that fit each document."
-modalTitle = "Classification labels"
-pickIcon = "Use {{label}} icon"
-removeAria = "Remove {{name}}"
-resetToDefault = "Reset to default"
-saveForTeam = "Save for team"
-saving = "Saving…"
-sectionLabel = "Classification labels"
-startFromScratch = "Start from scratch"
-teamCount = "team labels"
-tooLong = "Labels can be at most {{max}} characters."
-ungrouped = "Ungrouped"
-view = "View labels"
+categoryCount = "categories"
+hideCategory = "Hide category"
+labelCount = "labels"
+sharedNote = "These labels are built in and shared across your whole team."
+showCategory = "Show category"
 
 [policies.pii]
 account = "Account numbers (labelled)"
@@ -6181,90 +6315,6 @@ free = "Editor plan"
 subscribed = "Processor plan"
 unlinked = "Not linked"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Bootstrap from document"
-sectionsAriaLabel = "Agent builder sections"
-selectorAriaLabel = "Agents"
-subtitle = "Design, test and ship the AI agents that classify, extract from and route your documents. Define scenarios, fence tool access, run a golden set, and publish a version."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Cancel"
-dropzoneText = "Choose a sample document (PDF or image)"
-lead = "Drop a sample document and we'll propose scenarios and an extraction schema you can refine. Nothing is published until you review it."
-submit = "Bootstrap agent"
-subtitle = "Seed a new agent from one representative file"
-title = "Bootstrap from a document"
-
-[portal.agentBuilder.empty]
-description = "Bootstrap an agent from a sample document to seed its scenarios and extraction schema, then refine and publish."
-title = "No agents yet"
-
-[portal.agentBuilder.evals]
-casesPassing = "Cases passing"
-columnCase = "Eval case"
-columnLatency = "Latency"
-columnResult = "Result"
-fail = "fail"
-goldenSetPassRate = "Golden-set pass rate"
-latencyMs = "{{ms}} ms"
-notRun = "not run"
-pass = "pass"
-passRate = "Pass rate"
-runEvals = "Run evals"
-
-[portal.agentBuilder.evals.empty]
-description = "Evals turn your scenarios into a repeatable golden set. Upgrade to capture pass-rate over time and gate publishes on it."
-title = "No golden set yet"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "across golden sets"
-activeAgents = "Active agents"
-avgPassRate = "Avg eval pass rate"
-fleetWide = "fleet-wide"
-latestPublished = "Latest published"
-scenarios = "Scenarios"
-testCases = "test cases"
-totalDescription_one = "{{count}} total"
-totalDescription_other = "{{count}} total"
-
-[portal.agentBuilder.scenarios]
-add = "Add"
-addScenario = "Add scenario"
-enable = "Enable"
-expectationLabel = "Expected behaviour"
-expectationPlaceholder = "What the agent should do"
-inEval = "in eval"
-mute = "Mute"
-muted = "muted"
-nameLabel = "Name"
-namePlaceholder = "e.g. Compliance escalation"
-
-[portal.agentBuilder.status]
-draft = "Draft"
-published = "Published"
-
-[portal.agentBuilder.tabs]
-evals = "Evals"
-scenarios = "Scenarios"
-tools = "Tools"
-versions = "Versions"
-
-[portal.agentBuilder.tools]
-broadAccess = "Broad access"
-deniedHint = "Selected tools are blocked. Everything else stays callable."
-deniedTools = "Denied tools"
-governanceGate = "Tool governance is available on the Enterprise plan."
-restricted = "Restricted"
-restrictedAccess = "Restricted tool access"
-restrictedDescription = "Allow every tool except the ones you deny below."
-
-[portal.agentBuilder.versions]
-current = "current"
-historyGate = "Full version history and rollback are available on the Enterprise plan."
-publish = "Publish"
-rollBack = "Roll back"
-
 [portal.assistant]
 close = "Close assistant"
 error = "Couldn't reach the assistant."
@@ -6395,6 +6445,8 @@ sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
 summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
 summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFs"
+unitsPending_one = "{{units}} meter unit pending sync from linked instances"
+unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
@@ -6452,63 +6504,6 @@ title_other = "Process {{allowance}} PDFs free"
 titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Locked"
-openAriaLabel = "Open {{name}} component"
-
-[portal.catalogue.detail]
-addToProject = "Add to project"
-ariaLabel = "Component detail"
-tabsAriaLabel = "Component detail sections"
-upgradeToUnlock = "Upgrade to unlock"
-
-[portal.catalogue.detail.code]
-install = "Install"
-usage = "Usage"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} is included from the {{plan}}. Upgrade to embed it."
-title = "Not available on your plan"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interactive sandbox renders here"
-
-[portal.catalogue.detail.pricing]
-note = "Metered per {{unit}}. Usage beyond the monthly free quota is billed to your account and itemised under Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Billed on"
-embeds30d = "Embeds (30d)"
-freeQuota = "Free quota"
-freeQuotaValue = "{{amount}} / mo"
-maturity = "Maturity"
-none = "None"
-perAction = "Per action"
-price = "Price"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Overview"
-pricing = "Pricing"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "optional"
-required = "required"
-
-[portal.catalogue.props.columns]
-description = "Description"
-name = "Prop"
-required = "Required"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Component spend (MTD)"
-embedsThisMonth = "Embeds this month"
-inBeta = "In beta"
-
 [portal.components.billingUnit]
 approval = "approval"
 check = "check"
@@ -6522,31 +6517,76 @@ signature = "signature"
 beta = "Beta"
 ga = "GA"
 
-[portal.componentsView]
-subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
-title = "Components"
-
-[portal.componentsView.empty]
-description = "The component catalogue could not be loaded. Try again shortly."
-title = "No components available"
-
-[portal.componentsView.lockedBanner]
-description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
-title = "Some components need a paid plan"
-
 [portal.connections]
-createTitle = "New S3 connection"
+createTitle = "New connection"
+createTitleFor = "Connect {{name}}"
 delete = "Delete"
 edit = "Edit"
-editTitle = "Edit S3 connection"
-subtitle = "Reusable S3 credentials that sources and pipeline outputs connect to."
+editTitle = "Edit connection"
+subtitle = "Reusable credentials that sources, pipeline outputs and integration steps connect to."
+unsupportedType = "This connection type cannot be edited here."
 
 [portal.connections.actions]
 new = "New connection"
 
+[portal.connections.categories.advanced]
+description = "For a service we do not support yet."
+label = "Advanced"
+
+[portal.connections.categories.audit]
+description = "Record what happened to a document, where your auditors already look."
+label = "Audit & compliance logging"
+
+[portal.connections.categories.notify]
+description = "Tell another system that something happened."
+label = "Notify & workflow"
+
+[portal.connections.categories.security]
+description = "Scan or label a document before it moves on."
+label = "Security & classification"
+
+[portal.connections.categories.signing]
+description = "Send a document out to be signed or notarized."
+label = "E-signature & notarization"
+
+[portal.connections.categories.storage]
+description = "Where processed documents end up - a bucket, a drive, a ticket or a page."
+label = "File & attach"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Stirling stores this encrypted and never shows it again."
+label = "Access token"
+
+[portal.connections.commonFields.apiKey]
+label = "API key"
+
+[portal.connections.commonFields.apiToken]
+label = "API token"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Steps using this connection can only call paths under this URL, never another host."
+label = "Server URL"
+
+[portal.connections.commonFields.email]
+label = "Email"
+
+[portal.connections.commonFields.password]
+label = "Password"
+
+[portal.connections.commonFields.username]
+label = "Username"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Paste the URL the service gave you. Only paths under it can be called."
+label = "Webhook URL"
+
 [portal.connections.empty]
-description = "Add an S3 connection to reuse the same bucket and credentials across sources and pipeline outputs."
+description = "Add a connection to reuse the same credentials across sources, pipeline outputs and integration steps."
 title = "No connections yet"
+
+[portal.connections.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Claims bucket"
 
 [portal.connections.picker]
 cancel = "Cancel"
@@ -6554,14 +6594,225 @@ createNew = "New connection..."
 placeholder = "Select a connection"
 save = "Save connection"
 
-[portal.connections.s3.fields]
-name = "Connection name"
-namePlaceholder = "e.g. Claims bucket"
+[portal.connections.picker2]
+back = "Change integration"
+heading = "What do you want to connect?"
+noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
+noResultsTitle = "Nothing matches \"{{query}}\""
+searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
 
 [portal.connections.table]
-bucket = "Bucket"
+detail = "Details"
 name = "Name"
-region = "Region"
+type = "Type"
+
+[portal.connections.types.api]
+description = "Call any HTTP API from a policy. You choose the URL, authentication and payload."
+label = "Custom API"
+
+[portal.connections.types.api.fields.authType]
+label = "Authentication"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "Username and password"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Token in a custom header"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Log in for a token"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Steps using this connection can only call paths under this URL, never another host."
+label = "Base URL"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Header name"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Login path"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Password"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "If the API replies with a download link, only these hosts may be fetched. Separate with commas. Leave blank to allow only the base URL's own host."
+label = "Allowed result hosts"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Send the token as this header"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "The response header the login call returns the token in, e.g. X-Auth-Token."
+label = "Token response header"
+
+[portal.connections.types.api.fields.username]
+label = "Username"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "Scan documents for malware on a server you run - nothing leaves your network."
+label = "ClamAV (self-hosted)"
+
+[portal.connections.types.cloudmersive]
+description = "Virus and content scanning for documents in a policy."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Block documents containing macros, executables, scripts or embedded objects - not just known malware."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Attach processed documents to a Confluence page."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Send documents to ConsignO Cloud (Notarius) for electronic signature and notarization."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "Your ConsignO Cloud environment, including /api/v1."
+label = "Server URL"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "API key"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "API secret"
+
+[portal.connections.types.consigno.fields.password]
+label = "Password"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Only needed if your organisation uses tenants."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "Username"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Post a message to Discord when a policy processes a document."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Index an audit event in Elasticsearch each time a policy handles a document."
+label = "Elasticsearch"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Post a message to a Google Chat space when a policy runs."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Attach processed documents to a Jira issue."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "Email a document or a notification when a policy runs."
+label = "Mailgun"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "File processed documents into Nextcloud."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "App password"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "Detect personal data in document text using a Presidio server you run."
+label = "Presidio (self-hosted)"
+
+[portal.connections.types.purview]
+description = "Read and apply Microsoft Purview sensitivity labels on PDFs."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "Optional. Only needed to pick labels by name; labelling works without it."
+label = "Application (client) ID"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Stamped onto every label as its SiteId, so Purview-aware tools know which organisation applied it."
+label = "Directory (tenant) ID"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "An S3 bucket that sources can read from and pipeline outputs can write to."
+label = "S3 storage"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "Leave blank for AWS. Set this for MinIO or another S3-compatible store."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Region"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
+[portal.connections.types.sendgrid]
+description = "Email a document or a notification when a policy runs."
+label = "SendGrid"
+
+[portal.connections.types.slack]
+description = "Post a message to Slack when a policy processes a document."
+label = "Slack"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Send an audit event to Splunk each time a policy handles a document."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Send an audit event to a Sumo Logic HTTP collector."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Post a message to a Teams channel when a policy runs."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Post each document, or just the details, to a URL you choose."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Trigger a Zap or Make scenario from a policy."
+label = "Zapier & Make"
+
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "every request"
@@ -6648,10 +6899,18 @@ title = "Official SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
 title = "Agent skills"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6928,22 +7187,6 @@ title = "Invite teammates"
 blurb = "{{active}} active · {{recommended}} recommended"
 title = "Confirm your policies"
 
-[portal.home.quickActions]
-subtitle = "Top tasks for today"
-title = "Quick actions"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "3-step composer over the typed op library"
-title = "Build a pipeline"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3, agents, webhooks, watched folders"
-title = "Connect a source"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "Scoped key with rate limits and IP allowlist"
-title = "Issue an API key"
-
 [portal.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
 sectionsAriaLabel = "Infrastructure sections"
@@ -6951,30 +7194,30 @@ subtitle = "Deployments, credentials, security posture, storage, and the audit t
 title = "Infrastructure"
 
 # Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
-[portal.infrastructure.apiKeyPermission]
-admin = "Admin"
-read = "Read"
-write = "Write"
-
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
-subheading = "Scoped credentials with per-key rate limits, permissions, and IP allowlists."
+subheading = "Personal credentials, each with its own usage tracking."
 
 [portal.infrastructure.apiKeys.card]
-allowedIps = "Allowed IPs"
-anyIp = "Any IP (no allowlist)"
 created = "Created"
 lastUsed = "Last used"
-permissions = "Permissions"
-rateLimit = "Rate limit"
-rateLimitValue = "{{value}} req/min"
+revoke = "Revoke key"
 usageMonth = "Usage this month"
 usageToday = "Usage today"
 
 [portal.infrastructure.apiKeys.empty]
-description = "Create a scoped key to start calling the Stirling API."
+description = "Create a key to start calling the Stirling API."
 title = "No API keys yet"
+
+[portal.infrastructure.apiKeys.error]
+load = "Couldn't load your API keys. Please try again."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Revoke \"{{name}}\"? Any integration still using this key will immediately start receiving 401 errors. This can't be undone."
+cancel = "Cancel"
+confirm = "Revoke key"
+title = "Revoke API key"
 
 [portal.infrastructure.attestationLabel]
 attested = "Attested"
@@ -7061,14 +7304,11 @@ notStarted = "Not started"
 cancel = "Cancel"
 createKey = "Create key"
 done = "Done"
-ipAllowlistHelper = "Comma-separated CIDR ranges. Leave blank to allow any IP."
-ipAllowlistLabel = "IP allowlist"
 keyNameLabel = "Key name"
-keyNamePlaceholder = "e.g. Production · ingest"
-permissionsLabel = "Permissions"
+keyNamePlaceholder = "e.g. Production ingest"
 secretKeyCaption = "Secret key"
-secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash — there is no way to recover it later."
-subtitle = "Scope the key to the minimum it needs. You can rotate or revoke at any time."
+secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash, so there is no way to recover it later."
+subtitle = "Give the key a name so you can recognise it later. You can revoke it at any time."
 subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
@@ -7117,7 +7357,6 @@ title = "No regions deployed"
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
-rotateSoon = "Rotate soon"
 
 [portal.infrastructure.modelLabel]
 active = "Active"
@@ -7317,7 +7556,7 @@ storage = "Storage"
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
-docs = "Developer Docs"
+docs = "Documentation"
 documents = "Documents"
 editor = "Editor"
 home = "Home"
@@ -7330,6 +7569,10 @@ sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
 
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
+
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
 title = "Pipelines"
@@ -7340,6 +7583,8 @@ newPipeline = "New pipeline"
 [portal.pipelines.builder]
 addStep = "Add tool"
 back = "Back to pipelines"
+chooseAccount = "Choose an account"
+chooseOperation = "Choose what this step does"
 discard = "Discard changes"
 enabled = "Enabled"
 keepEditing = "Keep editing"
@@ -7349,6 +7594,8 @@ pipelineSettings = "Pipeline settings"
 searchTools = "Search tools"
 selectToolBody = "Add a tool to build your pipeline."
 selectToolTitle = "No tools yet"
+sendToSystem = "Send to another system"
+stepsNeedSetup = "These steps still need an operation and an account chosen before saving: {{tools}}."
 toolSettings = "Tool settings"
 unknownStep = "Unrecognized operation, kept as-is."
 unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
@@ -7451,6 +7698,11 @@ title = "Policies"
 [portal.policies.card]
 comingSoon = "Upgrade to Enterprise"
 notSetUp = "Not set up"
+requiresAiEngine = "Requires AI engine"
+
+[portal.policies.categories.classification]
+desc = "Identify each document's type on upload and tag its metadata for filing and search."
+label = "Classification"
 
 [portal.policies.categories.compliance]
 desc = "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document."
@@ -7474,6 +7726,13 @@ label = "Security"
 
 [portal.policies.config]
 scopeAll = "All documents"
+
+[portal.policies.config.classification]
+summary = "Classifies every uploaded document against your team's labels and tags its metadata."
+
+[portal.policies.config.classification.rules]
+0 = "Classify"
+1 = "Tag metadata"
 
 [portal.policies.config.compliance]
 summary = "Validates documents against regulatory frameworks before they leave the system."
@@ -7501,6 +7760,29 @@ minConfidence = "Min confidence"
 1 = "Extract"
 2 = "Name"
 3 = "Normalize"
+
+[portal.policies.config.purview]
+label = "Apply a Microsoft Purview sensitivity label"
+
+[portal.policies.config.purview.fields]
+connection = "Purview tenant"
+labelId = "Label ID"
+labelIdHelp = "The label's GUID, from the Purview portal. Applying a label writes its metadata onto the PDF; it cannot encrypt, which needs the Microsoft client."
+labelName = "Label name (optional)"
+labelNameHelp = "Recorded alongside the ID so people and tools can recognise the label."
+
+[portal.policies.config.purview.fields.method]
+help = "Purview distinguishes a label a policy applied from one a person chose."
+label = "How the label is recorded"
+privileged = "As chosen by a person"
+standard = "As applied automatically"
+
+[portal.policies.config.purviewRead]
+label = "Read a Microsoft Purview label"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Purview tenant"
+connectionHelp = "Reads the label the document already carries, so later steps can act on it."
 
 [portal.policies.config.retention]
 summary = "Enforces how long documents are kept, when to archive, and when to delete."
@@ -7569,6 +7851,7 @@ title = "No activity yet"
 [portal.policies.endpoints]
 addWatermark = "Watermark"
 autoRedact = "Redact PII"
+classifyAndLabel = "Classify"
 compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
@@ -7578,6 +7861,183 @@ sanitizePdf = "Remove JavaScript"
 description = "Your policies are saved and will appear once the connection is restored."
 retry = "Retry"
 title = "Backend unavailable"
+
+[portal.policies.operations]
+change = "Change what this step does"
+noResults = "No step matches that. Try a product name, or \"scan\", \"notify\", \"attach\"."
+searchPlaceholder = "Search steps - try \"scan\", \"attach\" or a product name"
+
+[portal.policies.operations.bodyMode]
+binary = "Raw file bytes"
+json = "Inside a JSON payload"
+multipart = "As a file upload (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "Your own ClamAV server checks the document; nothing leaves your network."
+label = "Scan for viruses (self-hosted)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Rejects documents carrying macros, executables, scripts or embedded objects."
+label = "Block active content"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Cloudmersive checks the document and the run stops if it is not clean."
+label = "Scan for viruses"
+
+[portal.policies.operations.confluenceAttach]
+description = "Files the processed document onto a page."
+label = "Attach to a Confluence page"
+
+[portal.policies.operations.consignoSubmit]
+description = "Submits the document to ConsignO Cloud for signing."
+label = "Send for signature (ConsignO)"
+note = "Submits the document. Retrieving the signed copy is not yet supported, because a step cannot pass a result to a later step."
+
+[portal.policies.operations.customApiCall]
+description = "Author the call yourself: path, method, body and response handling."
+label = "Call a custom API"
+
+[portal.policies.operations.discordNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Discord"
+
+[portal.policies.operations.elasticIndex]
+description = "Records what the policy did as a searchable document."
+label = "Index an audit event in Elasticsearch"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Multipart suits upload APIs; JSON suits APIs that want the file inside a payload; binary sends the raw bytes."
+label = "How to send the document"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "A JSON body sent as-is. {{document.base64}} carries the file; {{document.*}} and {{run.*}} are filled in per document."
+label = "JSON body"
+
+[portal.policies.operations.fields.connection]
+label = "Account"
+
+[portal.policies.operations.fields.domain]
+label = "Mailgun domain"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "The form field the API expects the document under."
+label = "File field name"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "From"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "A JSON object of header name/value pairs. The connection's credential is added for you."
+label = "Headers"
+
+[portal.policies.operations.fields.index]
+label = "Index"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Issue key"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "Sent as the message body. {{document.*}} and {{run.*}} are filled in per document."
+label = "Message"
+
+[portal.policies.operations.fields.method]
+label = "Method"
+
+[portal.policies.operations.fields.pageId]
+label = "Page ID"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "Appended to the connection's base URL. It can never reach another host."
+label = "Path"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "Where in the drive to write it. {{document.filename}} is filled in per document."
+label = "Destination path"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Report leaves the document untouched. Replace swaps it for whatever comes back."
+label = "What to do with the reply"
+
+[portal.policies.operations.fields.signerEmail]
+label = "Signer's email"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Subject"
+placeholder = "Processed: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Presidio analyses this text. Use {{document.title}} or paste the text you want checked."
+label = "Text to check"
+
+[portal.policies.operations.fields.to]
+label = "To"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Nextcloud username"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Tells a space that the policy handled a document."
+label = "Post a message to Google Chat"
+
+[portal.policies.operations.jiraAttach]
+description = "Files the processed document onto an issue."
+label = "Attach to a Jira issue"
+
+[portal.policies.operations.mailgunEmail]
+description = "Sends the processed document as an attachment."
+label = "Email the document (Mailgun)"
+
+[portal.policies.operations.nextcloudUpload]
+description = "Writes the processed document into a folder."
+label = "Upload to Nextcloud"
+
+[portal.policies.operations.presidioAnalyze]
+description = "Your own Presidio server reports the personal data it finds."
+label = "Detect personal data"
+note = "Presidio reads text, not files. Give it the text you want checked — the document itself is not uploaded."
+
+[portal.policies.operations.responseMode]
+replace = "Replace the document with the reply"
+report = "Keep the document, record the reply"
+
+[portal.policies.operations.sendgridEmail]
+description = "Sends the processed document as an attachment."
+label = "Email the document (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Slack"
+
+[portal.policies.operations.splunkEvent]
+description = "Records what the policy did, where your auditors already look."
+label = "Send an audit event to Splunk"
+
+[portal.policies.operations.sumologicEvent]
+description = "Records what the policy did to an HTTP collector."
+label = "Send an audit event to Sumo Logic"
+
+[portal.policies.operations.teamsNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Teams"
+
+[portal.policies.operations.webhookPost]
+description = "Sends the document itself to a URL you choose."
+label = "Post the document to a webhook"
+
+[portal.policies.operations.zapierNotify]
+description = "Hands the run's details to your automation."
+label = "Trigger a Zap or Make scenario"
 
 [portal.policies.stats]
 activeFor = "Active"
@@ -7604,12 +8064,23 @@ label = "Docs enforced"
 description = "Configured but not firing"
 label = "Paused"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "Back"
 cancel = "Cancel"
 continue = "Continue"
 enablePolicy = "Enable policy"
 saveChanges = "Save changes"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
+label = "Classify the document"
 
 [portal.policies.wizard.capability.compress]
 desc = "Compresses the document to a smaller file size."
@@ -7631,9 +8102,17 @@ label = "Redact sensitive information"
 desc = "Removes hidden JavaScript so nothing can run automatically when the document is opened."
 label = "Strip active content"
 
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server."
+label = "Add a trusted timestamp"
+
 [portal.policies.wizard.capability.watermark]
 desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
 label = "Apply a watermark"
+
+[portal.policies.wizard.classification]
+description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
+labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
@@ -7679,34 +8158,50 @@ setUp = "Set up {{category}} policy"
 [portal.policies.wizard.workflow]
 description = "Choose what this policy does to every document it processes."
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} active"
-noRule = "No rule enforced yet"
-subtitle = "Standing automations every document passes through, regardless of which pipeline handles it."
-title = "What runs on your PDFs"
-
 [portal.policySummary.action]
-comingSoon = "Upgrade to Enterprise"
-configure = "Configure"
 setUp = "Set up"
 
-[portal.policySummary.column]
-activeRule = "Active rule"
-policy = "Policy"
-status = "Status"
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
 
-[portal.policySummary.empty]
-description = "Once policies are configured, the categories appear here."
-title = "No policies yet"
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
 
-[portal.policySummary.state]
-active = "Active"
-off = "Off"
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
 soon = "Soon"
 
-[portal.processingStatus]
-managePlan = "Manage plan"
-volumeSuffix = "PDFs processed · last 30 days"
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
 
 [portal.procurement]
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
@@ -7943,6 +8438,7 @@ viewInvoice = "View & pay invoice"
 [portal.procurement.schedule]
 fallback = "Couldn't load the scheduler."
 fallbackLink = "Open scheduling in a new tab"
+loading = "Loading scheduler..."
 subtitle = "Your solutions engineer will walk your team through the rollout. Pick a time that suits you."
 title = "Schedule a call"
 
@@ -7983,14 +8479,6 @@ homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutab
 homeCta = "Start Trial →"
 homeHeadline = "Process millions of PDFs."
 
-[portal.recentActivity]
-title = "Recent activity"
-viewAll = "View all"
-
-[portal.recentActivity.empty]
-description = "Pipeline runs, deploys and agent events will appear here."
-title = "Nothing here yet"
-
 [portal.search]
 ariaLabel = "Search"
 placeholder = "Search Stirling — endpoints, pipelines, docs…"
@@ -8015,12 +8503,16 @@ linkAccount = "Link Stirling account"
 primaryNav = "Primary navigation"
 switchApp = "Switch app"
 
+[portal.shell.topbar]
+closeNav = "Close navigation"
+openNav = "Open navigation"
+search = "Search"
+
 [portal.sources]
 subtitle = "Reusable input connections that feed documents into Stirling. Configure a source once, then reference it from any number of pipelines."
 title = "Sources"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Connect source"
 
 [portal.sources.builder]
@@ -8032,6 +8524,11 @@ delete = "Delete"
 editTitle = "Edit source"
 enabled = "Enabled"
 save = "Save changes"
+
+[portal.sources.builder.folderAccess]
+description = "Folder automations can only use folders an administrator has allowed. Add it under Folder Access settings, then try again."
+openSettings = "Folder Access settings"
+title = "This folder isn't allowed"
 
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
@@ -8103,21 +8600,9 @@ top = "Top level only"
 description = "Pull documents from an Amazon S3 or S3-compatible bucket."
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.accessKeyId]
-label = "Access key ID"
-
-[portal.sources.types.s3.fields.bucket]
-label = "Bucket"
-placeholder = "my-company-inbox"
-
 [portal.sources.types.s3.fields.connection]
 helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
 label = "Connection"
-
-[portal.sources.types.s3.fields.endpoint]
-helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
-label = "Custom endpoint"
-placeholder = "https://s3.example.com"
 
 [portal.sources.types.s3.fields.mode]
 helperText = "Consume removes each object from the bucket once every policy has processed it."
@@ -8132,15 +8617,27 @@ helperText = "Only objects whose keys start with this prefix are processed."
 label = "Key prefix"
 placeholder = "incoming/"
 
-[portal.sources.types.s3.fields.region]
-label = "Region"
-placeholder = "us-east-1"
-
-[portal.sources.types.s3.fields.secretAccessKey]
-label = "Secret access key"
-
 [portal.sources.types.unknown]
 label = "Source"
+
+[portal.sources.types.webhook]
+createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."
+description = "Receive documents by signed HTTP POST from any external system."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "Delivery URL"
+secretNote = "The signing secret is shown once, when the webhook is created. Recreate the source to roll it."
+
+[portal.sources.types.webhook.reveal]
+copy = "Copy"
+done = "Done"
+secret = "Signing secret"
+secretHelp = "Sign each delivery's raw body with this key (HMAC-SHA256) and send it as the X-Stirling-Signature header."
+secretWarning = "Copy the signing secret now. For your security it is shown only once and cannot be retrieved later."
+title = "Webhook created"
+url = "Delivery URL"
+usage = "POST each document as the raw request body to the delivery URL with a binary content type (application/pdf or application/octet-stream). Referencing policies run automatically on arrival."
 
 [portal.sources.wizard]
 name = "Name"
@@ -8844,11 +9341,11 @@ label = "Remove XMP Metadata"
 [sanitize.steps]
 settings = "Settings"
 
-[sanitizePdf]
-tags = "clean,secure,safe,remove-threats"
-
 [sanitizePDF]
 title = "Sanitize PDF"
+
+[sanitizePdf]
+tags = "clean,secure,safe,remove-threats"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
@@ -8856,18 +9353,6 @@ title = "Adjust page-scale"
 
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[ScannerImageSplit.selectText]
-1 = "Angle Threshold:"
-10 = "Extra padding (in pixels) around each saved photo so edges aren't cut."
-2 = "Tilt (in degrees) needed before we auto-straighten a photo."
-3 = "Tolerance:"
-4 = "How closely a color must match the page background to count as background. Higher = looser, lower = stricter."
-5 = "Minimum Area:"
-6 = "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments."
-7 = "Minimum Contour Area:"
-8 = "Smallest edge/shape we consider when finding photos (filters dust and specks)."
-9 = "Border Size:"
 
 [scannerImageSplit]
 submit = "Extract Image Scans"
@@ -8899,6 +9384,18 @@ useCase4 = "Pull photos from documents"
 whatThisDoes = "What this does"
 whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image-no manual cropping."
 whenToUse = "When to use"
+
+[ScannerImageSplit.selectText]
+1 = "Angle Threshold:"
+10 = "Extra padding (in pixels) around each saved photo so edges aren't cut."
+2 = "Tilt (in degrees) needed before we auto-straighten a photo."
+3 = "Tolerance:"
+4 = "How closely a color must match the page background to count as background. Higher = looser, lower = stricter."
+5 = "Minimum Area:"
+6 = "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments."
+7 = "Minimum Contour Area:"
+8 = "Smallest edge/shape we consider when finding photos (filters dust and specks)."
+9 = "Border Size:"
 
 [search]
 noResults = "No results found"
@@ -8952,11 +9449,19 @@ title = "Signature Order"
 [settings]
 close = "Close"
 
+[settings.ai]
+documents = "Documents & RAG"
+general = "General"
+limits = "Limits & Performance"
+models = "Models & Providers"
+title = "AI"
+
 [settings.configuration]
 advanced = "Advanced"
 database = "Database"
 endpoints = "Endpoints"
 features = "Features"
+folderAccess = "Folder Access"
 mcp = "MCP Server"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
@@ -9007,9 +9512,18 @@ languageDescription = "Choose the display language"
 logout = "Log out"
 setAsDefault = "Set as Default"
 theme = "Theme"
+themeAccent = "Accent colour"
+themeAccentCustom = "Custom colour"
+themeAccentCustomHint = "Custom (defaults recommended)"
+themeAccentDark = "Dark mode accent colour"
+themeAccentDefault = "Default"
+themeAccentDefaultHint = "Default theme (recommended)"
+themeAccentDescription = "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active."
+themeAccentLight = "Light mode accent colour"
 themeDark = "Dark"
-themeDescription = "Choose light, dark, or follow your system"
+themeDescription = "Choose light, dark, or follow your system so it switches automatically."
 themeLight = "Light"
+themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "General"
 user = "User"

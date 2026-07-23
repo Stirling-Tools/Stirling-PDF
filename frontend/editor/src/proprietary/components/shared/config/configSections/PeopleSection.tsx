@@ -640,7 +640,10 @@ export default function PeopleSection() {
                 key={user.id}
                 style={
                   isCurrentUser(user)
-                    ? { backgroundColor: "rgba(34, 139, 230, 0.08)" }
+                    ? {
+                        backgroundColor:
+                          "color-mix(in srgb, var(--c-primary) 8%, transparent)",
+                      }
                     : undefined
                 }
               >

@@ -48,7 +48,7 @@ export const List: Story = {
           key={r.label}
           style={{
             padding: "0.7rem 0.875rem",
-            borderTop: i > 0 ? "1px solid var(--color-border)" : undefined,
+            borderTop: i > 0 ? "1px solid var(--c-border)" : undefined,
           }}
         >
           <SettingsRow

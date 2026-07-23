@@ -366,12 +366,43 @@ aiEngine:
   enabled: false # Set to 'true' to enable the AI engine integration
   url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
+  longRunningTimeoutSeconds: 600 # Timeout (seconds) for heavy operations like RAG ingestion of large documents
+  streamTimeoutSeconds: 1800 # SSE stream timeout (seconds) for long-running orchestrator runs
+  pushConfigToEngine: true # Push admin AI config to the engine on startup + save; false = engine stays fully env-controlled
+  models:
+    provider: anthropic # Model provider: 'anthropic', 'openai', 'ollama', or 'custom' (OpenAI-compatible)
+    smartModel: claude-haiku-4-5 # High-quality tier model name (no provider prefix)
+    fastModel: claude-haiku-4-5 # Cheap/fast tier model name (no provider prefix)
+    smartMaxTokens: 8192 # Max output tokens for the smart tier
+    fastMaxTokens: 2048 # Max output tokens for the fast tier
+    apiKey: "" # API key for the selected provider (secret). Empty = engine uses its native env credentials (e.g. ANTHROPIC_API_KEY)
+    baseUrl: "" # OpenAI-compatible base URL for 'ollama'/'custom' providers (e.g. http://ollama:11434/v1). Ignored for anthropic/openai
+  rag:
+    embeddingProvider: voyageai # Embedding provider: 'voyageai', 'openai', 'ollama', or 'custom' (OpenAI-compatible)
+    embeddingModel: voyage-4 # Embedding model name (no provider prefix)
+    embeddingApiKey: "" # Secret API key for the embedding provider. Empty = engine uses its native env credentials (e.g. VOYAGE_API_KEY)
+    embeddingBaseUrl: "" # OpenAI-compatible base URL for 'ollama'/'custom' embedding providers (e.g. http://ollama:11434/v1). Ignored for voyageai/openai
+    topK: 20 # Number of chunks retrieval returns per search
+    maxSearches: 5 # Per-run cap on knowledge-search tool calls before the agent must answer
+  limits:
+    maxPages: 200 # Upper bound on PDF pages the engine will process per request
+    maxCharacters: 200000 # Upper bound on characters of extracted text per request
+    modelMaxConcurrency: 32 # Process-wide cap on concurrent model API calls (engine restart to apply)
+  features: # Per-capability switches; turn an individual AI tool off without disabling the whole engine
+    chat: true # Assistant chat
+    documentQuestions: true # Ask-questions-about-a-PDF
+    createPdf: true # Generate a PDF from a natural-language spec
+    mathAuditor: true # Numerical/formula contradiction auditing
+    pdfComment: true # AI-authored PDF comments/annotations
+    classify: true # Automatic document classification/labelling
 
 policies:
   # Folder automations can read from and write to the directories you allow here, so treat this as a
-  # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs
-  # entirely; list absolute directories to permit folder access only within them. Stirling's own
-  # config directory is always off-limits, and folder access is always disabled in SaaS mode.
+  # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs,
+  # other than from directories that are always permitted like server file-storage and watched folders.
+  # List absolute directories to permit folder access within them.
+  # Stirling's own config directory is always off-limits, and folder access is always
+  # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
   watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
@@ -385,6 +416,8 @@ policies:
 mcp:
   enabled: false # Master switch. 'false' (default) means no /mcp endpoint, no metadata, no beans wired.
   scopesEnabled: true # Enforce mcp.tools.read / mcp.tools.write scopes derived from operation category
+  maxRequestBytes: 10485760 # Max size (bytes) of an incoming MCP tool request payload (default 10 MB)
+  maxInlineResponseBytes: 10485760 # Max size (bytes) of an MCP tool response returned inline before it is rejected (default 10 MB)
   allowedOperations: [] # Tool allow-list (operation ids, e.g. ['compress-pdf']). Empty = all. When set, ONLY these are exposed over MCP.
   blockedOperations: [] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed.
   auth:

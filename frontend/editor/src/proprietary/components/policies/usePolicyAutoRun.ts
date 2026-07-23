@@ -23,7 +23,6 @@ import {
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import i18n from "@app/i18n";
 import {
   runStoredPolicy,
@@ -43,6 +42,7 @@ import { readClassificationLabelsFromFile } from "@app/services/fileClassificati
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
+import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import {
   addReconciledRun,
   dispatchKey,
@@ -129,6 +129,7 @@ export function usePolicyAutoRun(): void {
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
+  const aiEnabled = useAiEngineEnabled();
   const runs = usePolicyRuns();
   // Live view of the workspace files, read inside the import effect WITHOUT making
   // it a dependency. The silent consume that delivers an output mutates fileStubs,
@@ -162,18 +163,21 @@ export function usePolicyAutoRun(): void {
     () =>
       Object.entries(policies)
         .filter(
-          ([, s]) =>
+          ([id, s]) =>
             s.configured &&
             s.status === "active" &&
             s.backendId &&
             (!s.sources ||
               s.sources.length === 0 ||
               s.sources.includes("editor")) &&
-            (s.runOn ?? "upload") === "upload",
+            (s.runOn ?? "upload") === "upload" &&
+            // Non-AI systems classify in the browser (useClientSideClassification), so keep the
+            // Classification policy out of the server chain when the AI engine is off.
+            !(id === "classification" && !aiEnabled),
         )
         .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
         .map(([id]) => id),
-    [policies],
+    [policies, aiEnabled],
   );
 
   // Runs whose chain-continuation we've already handled this session, so the next
@@ -247,7 +251,6 @@ export function usePolicyAutoRun(): void {
   // of the chain is dispatched by the chaining effect below, each on the previous
   // policy's output, so the policies apply cumulatively in order.
   useEffect(() => {
-    if (!POLICIES_ENABLED) return;
     const firstCategory = orderedUploadCategories[0];
     if (!firstCategory) return;
     const backendId = policies[firstCategory]?.backendId;
@@ -281,7 +284,6 @@ export function usePolicyAutoRun(): void {
   // next upload policy on that output. Only chains on success (a failed run has no
   // output), and only once per run. isDispatched guards re-dispatch across reloads.
   useEffect(() => {
-    if (!POLICIES_ENABLED) return;
     for (const run of runs) {
       if (run.status !== "COMPLETED" || !run.imported) continue;
       if (chained.current.has(run.runId)) continue;
@@ -315,7 +317,6 @@ export function usePolicyAutoRun(): void {
 
   // Poll each in-flight run to a terminal state.
   useEffect(() => {
-    if (!POLICIES_ENABLED) return;
     for (const run of runs) {
       if (isTerminal(run.status) || polling.current.has(run.runId)) continue;
       polling.current.add(run.runId);
@@ -328,7 +329,6 @@ export function usePolicyAutoRun(): void {
   // Import each completed run's outputs into the workspace (each output once),
   // so the enforced file appears in the app rather than only on the backend.
   useEffect(() => {
-    if (!POLICIES_ENABLED) return;
     for (const run of runs) {
       if (
         run.status !== "COMPLETED" ||
@@ -377,7 +377,7 @@ export function usePolicyAutoRun(): void {
   // than leaving them orphaned. Waits until policies are known so server runs can be
   // attributed to their category.
   useEffect(() => {
-    if (!POLICIES_ENABLED || reconciled.current) return;
+    if (reconciled.current) return;
     if (Object.keys(policies).length === 0) return;
     reconciled.current = true;
     void reconcileServerRuns(policies);
