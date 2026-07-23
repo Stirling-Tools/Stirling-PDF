@@ -79,10 +79,37 @@ const getTranslationPrefixesForNavKey = (key: string): string[] => {
   return Array.from(new Set([...explicitPrefixes, ...inferredPrefixes]));
 };
 
+const INTERPOLATION_PLACEHOLDER_PATTERN = /\{\{\s*[^}]+?\s*\}\}/g;
+const INDEXED_TRANS_TAG_PATTERN = /<\/?\d+>/g;
+const TEMPLATE_SYNTAX_PATTERN = /\{\{\s*[^}]+?\s*\}\}|<\/?\d+>/;
+const SEARCHABLE_TEXT_PATTERN = /[\p{L}\p{N}]/u;
+
+const sanitizeSearchableTranslationString = (value: string): string | null => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (!TEMPLATE_SYNTAX_PATTERN.test(trimmed)) {
+    return trimmed;
+  }
+
+  const sanitized = trimmed
+    .replace(INDEXED_TRANS_TAG_PATTERN, "")
+    .replace(INTERPOLATION_PLACEHOLDER_PATTERN, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([:;,.!?])/g, "$1")
+    .replace(/[:;,\s-]+$/g, "")
+    .trim();
+
+  return SEARCHABLE_TEXT_PATTERN.test(sanitized) ? sanitized : null;
+};
+
 const flattenTranslationStrings = (value: unknown): string[] => {
   if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed ? [trimmed] : [];
+    const sanitized = sanitizeSearchableTranslationString(value);
+    return sanitized ? [sanitized] : [];
   }
 
   if (Array.isArray(value)) {
