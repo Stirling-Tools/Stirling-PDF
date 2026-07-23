@@ -6,6 +6,10 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
+import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -47,12 +51,29 @@ export interface PipelineOverviewProps {
   outputDetail?: string;
   outputReady: boolean;
   expanded: OverviewExpanded;
+  /** Persists the user's dragged node positions per pipeline (falls back to "new"). */
+  layoutKey?: string;
+  /** Steps that must remain last (e.g. Add Password); pins their reorder arrows
+   * and hides the insert after them. Aligned with stepLabels. */
+  stepFinalOnly?: boolean[];
+  /** Each step's own tool icon; falls back to the generic dials. */
+  stepIcons?: (ReactNode | undefined)[];
+  /** Step index a run is currently executing; its node pulses. Null when idle. */
+  runningStep?: number | null;
+  /** Steps 0..n-1 finished in the current/last run; they wear a green tick. */
+  completedSteps?: number;
+  /** Step the last run failed on; it wears a red cross. Null when none. */
+  failedStep?: number | null;
+  /** Whether the page's code panel is open; drives the header toggle state. */
+  codeShown?: boolean;
+  /** Fired by the header's { } Code toggle. */
+  onToggleCode?: () => void;
   onToggleSection: (target: "sources" | "trigger" | "output") => void;
   onSelectStep: (index: number) => void;
   onAddStep: (atIndex?: number) => void;
   onMoveStep: (index: number, delta: number) => void;
   onRemoveStep: (index: number) => void;
-  /** Fired when the user flips Spec/Flow, so the page can match its copy. */
+  /** Fired when the user flips Flow/Spec/Code, so the page can match its copy. */
   onModeChange?: (mode: OverviewMode) => void;
 }
 
@@ -60,6 +81,7 @@ export type OverviewMode = "spec" | "flow";
 
 const MODE_KEY = "stirling.portal.pipelineViewMode";
 const LOCK_KEY = "stirling.portal.pipelineFlowLock";
+const POS_KEY = "stirling.portal.pipelineFlowPos";
 
 // Storage can throw (private mode); the overview then just uses the defaults.
 function stored(key: string, fallback: string): string {
@@ -88,26 +110,29 @@ interface NodePos {
   y: number;
 }
 
-/** Vertical-spine default layout for the free canvas, centred on `spine`. */
+/** Vertical-spine default layout for the free canvas, centred on `spine`.
+ * `trigWidth` centres the trigger card on the chain so its wire drops straight. */
 function defaultFlowLayout(
   sourceIds: string[],
   stepCount: number,
   spine = 240,
+  trigWidth = 150,
 ): Record<string, NodePos> {
   const pos: Record<string, NodePos> = {};
-  pos.trig = { x: spine + 14, y: 16 };
+  pos.trig = { x: spine + 112 - Math.round(trigWidth / 2), y: 16 };
   const n = sourceIds.length;
   sourceIds.forEach((id, i) => {
     pos[`src:${id}`] = {
       x: Math.max(12, spine + (i - (n - 1) / 2) * 190),
-      y: 92,
+      y: 100,
     };
   });
-  pos.srcghost = { x: spine, y: 92 };
+  pos.srcghost = { x: spine, y: 100 };
   for (let i = 0; i < stepCount; i++) {
-    pos[`step:${i}`] = { x: spine, y: 208 + i * 112 };
+    pos[`step:${i}`] = { x: spine, y: 224 + i * 124 };
   }
-  pos.out = { x: spine, y: 208 + stepCount * 112 };
+  if (stepCount === 0) pos.stepghost = { x: spine, y: 224 };
+  pos.out = { x: spine, y: 224 + Math.max(stepCount, 1) * 124 };
   return pos;
 }
 
@@ -128,6 +153,14 @@ export function PipelineOverview({
   outputDetail,
   outputReady,
   expanded,
+  layoutKey,
+  stepFinalOnly,
+  stepIcons,
+  runningStep,
+  completedSteps,
+  failedStep,
+  codeShown,
+  onToggleCode,
   onToggleSection,
   onSelectStep,
   onAddStep,
@@ -141,7 +174,20 @@ export function PipelineOverview({
     () => stored(LOCK_KEY, "true") === "true",
   );
   // User-dragged node positions; anything absent flows to the default layout.
-  const [posOverrides, setPosOverrides] = useState<Record<string, NodePos>>({});
+  // Persisted per pipeline so a locked layout survives reloads.
+  const posKey = `${POS_KEY}.${layoutKey ?? "new"}`;
+  const [posOverrides, setPosOverrides] = useState<Record<string, NodePos>>(
+    () => {
+      try {
+        return JSON.parse(stored(posKey, "{}")) as Record<string, NodePos>;
+      } catch {
+        return {};
+      }
+    },
+  );
+  useEffect(() => {
+    persist(posKey, JSON.stringify(posOverrides));
+  }, [posKey, posOverrides]);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const edgesRef = useRef<SVGSVGElement>(null);
@@ -172,39 +218,77 @@ export function PipelineOverview({
     });
   }
 
-  // Steps changed shape (add/remove/reorder): let the chain re-derive its
-  // positions while keeping wherever the user parked sources and the trigger.
+  // Steps changed shape: remap the index-keyed step positions so nodes keep
+  // their spots - removals shift later steps up, inserts shift them down, the
+  // reorder arrows swap the pair. Everything else (sources, trigger, output)
+  // stays exactly where the user parked it.
   const stepsSignature = stepLabels.join("|");
+  const prevLabelsRef = useRef(stepLabels);
   useEffect(() => {
-    setPosOverrides((prev) => {
-      const next: Record<string, NodePos> = {};
-      for (const [key, value] of Object.entries(prev)) {
-        if (!/^step:/.test(key) && key !== "ghost" && key !== "out") {
-          next[key] = value;
+    const prev = prevLabelsRef.current;
+    const next = stepLabels;
+    if (prev.join("|") === next.join("|")) return;
+    prevLabelsRef.current = next;
+    setPosOverrides((old) => {
+      const remapped: Record<string, NodePos> = {};
+      for (const [key, value] of Object.entries(old)) {
+        if (!/^step:/.test(key)) remapped[key] = value;
+      }
+      const stepPos = (i: number) => old[`step:${i}`];
+      const put = (i: number, value?: NodePos) => {
+        if (value) remapped[`step:${i}`] = value;
+      };
+      let r = 0;
+      while (r < Math.min(prev.length, next.length) && prev[r] === next[r]) {
+        r += 1;
+      }
+      if (next.length === prev.length - 1) {
+        for (let i = 0; i < r; i++) put(i, stepPos(i));
+        for (let i = r; i < next.length; i++) put(i, stepPos(i + 1));
+      } else if (next.length === prev.length + 1) {
+        for (let i = 0; i < r; i++) put(i, stepPos(i));
+        for (let i = r + 1; i < next.length; i++) put(i, stepPos(i - 1));
+      } else {
+        for (let i = 0; i < next.length; i++) put(i, stepPos(i));
+        const swap =
+          next.length === prev.length &&
+          r < next.length - 1 &&
+          prev[r] === next[r + 1] &&
+          prev[r + 1] === next[r];
+        if (swap) {
+          put(r, stepPos(r + 1));
+          put(r + 1, stepPos(r));
         }
       }
-      return next;
+      return remapped;
     });
-  }, [stepsSignature]);
+  }, [stepsSignature, stepLabels]);
 
-  // Centre the default spine in the visible canvas (node width 13.5rem = 216px).
+  // Centre the default spine in the visible canvas (node width 13.5rem = 216px),
+  // and measure the trigger pill so its default spot is dead-centre on the chain.
   const [stageW, setStageW] = useState(0);
+  const [trigW, setTrigW] = useState(150);
   useLayoutEffect(() => {
     const el = stageRef.current;
     if (!el) return;
-    const measure = () => setStageW(el.clientWidth);
+    const measure = () => {
+      setStageW(el.clientWidth);
+      const trig = el.querySelector<HTMLElement>('[data-node="trig"]');
+      if (trig && trig.offsetWidth > 0) setTrigW(trig.offsetWidth);
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [mode, locked]);
+  }, [mode]);
   const spineLeft =
-    stageW > 0 ? Math.max(12, Math.round(stageW / 2) - 108) : 240;
+    stageW > 0 ? Math.max(12, Math.round(stageW / 2) - 112) : 240;
 
   const defaults = defaultFlowLayout(
     sources.map((s) => s.id),
     stepLabels.length,
     spineLeft,
+    trigW,
   );
   const nodePos = (id: string): NodePos =>
     posOverrides[id] ?? defaults[id] ?? { x: 12, y: 12 };
@@ -216,7 +300,7 @@ export function PipelineOverview({
     maxX = Math.max(maxX, p.x);
     maxY = Math.max(maxY, p.y);
   }
-  const stageH = Math.max(280, maxY + 120);
+  const stageH = Math.max(280, maxY + 140);
   const stageMinW = maxX + 240;
 
   /** Draw the wires between ports (bottom centre out, top centre in). */
@@ -241,15 +325,16 @@ export function PipelineOverview({
     const srcIds = sources.length
       ? sources.map((s) => `src:${s.id}`)
       : ["srcghost"];
-    const firstStep = stepLabels.length ? "step:0" : null;
+    const firstStep = stepLabels.length ? "step:0" : "stepghost";
     srcIds.forEach((src, i) => {
       edges.push({ a: "trig", b: src, ghost: true });
       edges.push({
         a: src,
-        b: firstStep ?? "out",
-        ghost: src === "srcghost",
+        b: firstStep,
+        ghost: src === "srcghost" || stepLabels.length === 0,
         // Only the first source wire carries the insert point, to avoid twins.
-        insertAt: i === 0 ? 0 : undefined,
+        // The empty chain skips it: the ghost card IS the add affordance.
+        insertAt: stepLabels.length > 0 && i === 0 ? 0 : undefined,
       });
     });
     for (let i = 0; i < stepLabels.length - 1; i++) {
@@ -259,8 +344,13 @@ export function PipelineOverview({
       edges.push({
         a: `step:${stepLabels.length - 1}`,
         b: "out",
-        insertAt: stepLabels.length,
+        // A final-only last step admits nothing after it: no insert point.
+        insertAt: stepFinalOnly?.[stepLabels.length - 1]
+          ? undefined
+          : stepLabels.length,
       });
+    } else {
+      edges.push({ a: "stepghost", b: "out", ghost: true });
     }
 
     let html =
@@ -289,15 +379,38 @@ export function PipelineOverview({
           `<button type="button" class="portal-overview__insert"` +
           ` data-insert-at="${edge.insertAt}"` +
           ` aria-label="${t("portal.pipelines.composer.addTool")}"` +
-          ` style="left:${mx - 10}px;top:${my - 10}px">+</button>`;
+          ` style="left:${mx - 12}px;top:${my - 12}px">` +
+          `<svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">` +
+          `<path d="M6 1.5v9M1.5 6h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>` +
+          `</svg></button>`;
       }
+    }
+    // Reorder arrows ride beside each step node; drawn here so they follow drags.
+    for (let i = 0; i < stepLabels.length; i++) {
+      const el = stage.querySelector<HTMLElement>(`[data-node="step:${i}"]`);
+      if (!el) continue;
+      const x = el.offsetLeft + el.offsetWidth + 8;
+      const y = el.offsetTop + el.offsetHeight / 2 - 39;
+      const arrow = (dir: number, label: string, disabled: boolean) =>
+        `<button type="button" class="portal-overview__arrow"` +
+        ` data-move-step="${i}" data-dir="${dir}" aria-label="${label}"` +
+        (disabled ? " disabled" : "") +
+        `>${dir < 0 ? "↑" : "↓"}</button>`;
+      inserts +=
+        `<span class="portal-overview__nodemove" style="left:${x}px;top:${y}px">` +
+        arrow(-1, t("portal.pipelines.composer.moveUp"), upLocked(i)) +
+        arrow(1, t("portal.pipelines.composer.moveDown"), downLocked(i)) +
+        `<button type="button" class="portal-overview__arrow portal-overview__arrow--remove"` +
+        ` data-remove-step="${i}"` +
+        ` aria-label="${t("portal.pipelines.composer.removeStep")}">×</button>` +
+        `</span>`;
     }
     svg.innerHTML = html;
     if (insertsRef.current) insertsRef.current.innerHTML = inserts;
   }
 
   useLayoutEffect(() => {
-    if (mode === "flow" && !locked) drawEdges();
+    if (mode === "flow") drawEdges();
   });
 
   function onNodePointerDown(id: string, e: React.PointerEvent<HTMLElement>) {
@@ -374,6 +487,9 @@ export function PipelineOverview({
       small?: string;
       note?: string;
       actions?: ReactNode;
+      running?: boolean;
+      done?: boolean;
+      failed?: boolean;
     },
   ) {
     const num = opts?.ghost ? "+" : String(++lineNo);
@@ -390,7 +506,21 @@ export function PipelineOverview({
           }
           onClick={onClick}
         >
-          <span className="portal-overview__n">{num}</span>
+          <span className="portal-overview__n">
+            {opts?.failed ? (
+              <span className="portal-overview__nfail" aria-hidden>
+                ✗
+              </span>
+            ) : opts?.running ? (
+              <span className="portal-overview__rundot" aria-hidden />
+            ) : opts?.done ? (
+              <span className="portal-overview__ndone" aria-hidden>
+                ✓
+              </span>
+            ) : (
+              num
+            )}
+          </span>
           <span className="portal-overview__kw">{keyword}</span>
           <span
             className={
@@ -419,13 +549,18 @@ export function PipelineOverview({
     );
   }
 
+  const lastStep = stepLabels.length - 1;
+  const upLocked = (i: number) => i === 0 || Boolean(stepFinalOnly?.[i]);
+  const downLocked = (i: number) =>
+    i === lastStep || (i + 1 === lastStep && Boolean(stepFinalOnly?.[i + 1]));
+
   function stepActions(index: number) {
     return (
       <>
         <ActionIcon
           variant="tertiary"
           aria-label={t("portal.pipelines.composer.moveUp")}
-          disabled={index === 0}
+          disabled={upLocked(index)}
           onClick={() => onMoveStep(index, -1)}
         >
           <KeyboardArrowUpRoundedIcon style={{ fontSize: "1.125rem" }} />
@@ -433,7 +568,7 @@ export function PipelineOverview({
         <ActionIcon
           variant="tertiary"
           aria-label={t("portal.pipelines.composer.moveDown")}
-          disabled={index === stepLabels.length - 1}
+          disabled={downLocked(index)}
           onClick={() => onMoveStep(index, 1)}
         >
           <KeyboardArrowDownRoundedIcon style={{ fontSize: "1.125rem" }} />
@@ -483,6 +618,13 @@ export function PipelineOverview({
         () => onToggleSection("trigger"),
         { active: expanded === "trigger" },
       )}
+      {stepLabels.length === 0 &&
+        flowNode(
+          `+ ${t("portal.pipelines.overview.chooseToolCta")}`,
+          () => onAddStep(),
+          "portal-overview__node--step",
+          { blank: true, active: expanded === "picker", nodeId: "stepghost" },
+        )}
       {stepLabels.map((label, i) => (
         <span key={`${label}-${i}`}>
           {specLine(
@@ -496,6 +638,9 @@ export function PipelineOverview({
               small: stepSummaries?.[i],
               note: stepNotes?.[i],
               actions: stepActions(i),
+              running: runningStep === i,
+              done: i < (completedSteps ?? 0) && runningStep !== i,
+              failed: failedStep === i,
             },
           )}
         </span>
@@ -544,66 +689,84 @@ export function PipelineOverview({
       };
       subtitle?: string;
       subtitleWarn?: boolean;
+      running?: boolean;
+      done?: boolean;
+      failed?: boolean;
+      icon?: ReactNode;
     },
   ) {
-    const free = !locked && opts?.nodeId;
-    const pos = free ? nodePos(opts.nodeId!) : null;
+    // Every flow node lives on the canvas; locking only freezes dragging.
+    const nodeId = opts?.nodeId;
+    const pos = nodeId ? nodePos(nodeId) : null;
     return (
       <Button
         variant="quiet"
         className={
           `portal-overview__node ${cls}` +
           (opts?.blank ? " portal-overview__node--blank" : "") +
-          (opts?.active ? " portal-overview__node--active" : "")
+          (opts?.active ? " portal-overview__node--active" : "") +
+          (opts?.running ? " portal-overview__node--running" : "") +
+          (opts?.failed ? " portal-overview__node--failed" : "")
         }
         onClick={guardedClick(onClick)}
-        {...(free
+        {...(nodeId
           ? {
-              "data-node": opts.nodeId,
+              "data-node": nodeId,
               style: { left: pos!.x, top: pos!.y },
               onPointerDown: (e: React.PointerEvent<HTMLElement>) =>
-                onNodePointerDown(opts.nodeId!, e),
+                onNodePointerDown(nodeId, e),
               onPointerMove: onNodePointerMove,
               onPointerUp: onNodePointerUp,
             }
           : {})}
       >
-        {opts?.kind ? (
-          <span
-            className={`portal-overview__node-kind portal-overview__node-kind--${opts.kind.tone}`}
-          >
-            {opts.kind.text}
+        {opts?.failed ? (
+          <span className="portal-overview__node-failed" aria-hidden>
+            ✗
+          </span>
+        ) : opts?.done ? (
+          <span className="portal-overview__node-done" aria-hidden>
+            ✓
           </span>
         ) : null}
-        <span className="portal-overview__node-title">{body}</span>
-        {opts?.subtitle ? (
+        <span className="portal-overview__node-row">
           <span
-            className={
-              "portal-overview__node-sub" +
-              (opts.subtitleWarn ? " portal-overview__node-sub--warn" : "")
-            }
+            className={`portal-overview__node-ico portal-overview__node-ico--${opts?.kind?.tone ?? "default"}`}
+            aria-hidden
           >
-            {opts.subtitle}
+            {opts?.icon ??
+              (cls.includes("--trigger") ? (
+                <BoltRoundedIcon />
+              ) : cls.includes("--output") ? (
+                <SendRoundedIcon />
+              ) : cls.includes("--step") ? (
+                <TuneRoundedIcon />
+              ) : (
+                <MoveToInboxRoundedIcon />
+              ))}
           </span>
-        ) : null}
+          <span className="portal-overview__node-text">
+            {opts?.kind ? (
+              <span
+                className={`portal-overview__node-kind portal-overview__node-kind--${opts.kind.tone}`}
+              >
+                {opts.kind.text}
+              </span>
+            ) : null}
+            <span className="portal-overview__node-title">{body}</span>
+            {opts?.subtitle ? (
+              <span
+                className={
+                  "portal-overview__node-sub" +
+                  (opts.subtitleWarn ? " portal-overview__node-sub--warn" : "")
+                }
+              >
+                {opts.subtitle}
+              </span>
+            ) : null}
+          </span>
+        </span>
       </Button>
-    );
-  }
-
-  const connector = <span className="portal-overview__connector" aria-hidden />;
-
-  function insertConnector(at: number) {
-    return (
-      <span className="portal-overview__connector portal-overview__connector--insert">
-        <ActionIcon
-          variant="secondary"
-          className="portal-overview__insert"
-          aria-label={t("portal.pipelines.composer.addTool")}
-          onClick={() => onAddStep(at)}
-        >
-          +
-        </ActionIcon>
-      </span>
     );
   }
 
@@ -622,67 +785,40 @@ export function PipelineOverview({
           },
         },
       )}
-      {locked && connector}
-      {locked ? (
-        <div className="portal-overview__srcrow">
-          {sources.length > 0
-            ? sources.map((source) => (
-                <span key={source.id}>
-                  {flowNode(
-                    source.name,
-                    () => onToggleSection("sources"),
-                    "portal-overview__node--source",
-                    {
-                      active: expanded === "sources",
-                      kind: {
-                        text: `${t("portal.pipelines.overview.kindStart")}${source.type ? ` · ${source.type}` : ""}`,
-                        tone: "default",
-                      },
-                      subtitle: source.detail,
-                    },
-                  )}
-                </span>
-              ))
-            : flowNode(
-                `+ ${t("portal.pipelines.overview.chooseInputCta")}`,
+      {sources.length > 0
+        ? sources.map((source) => (
+            <span key={source.id}>
+              {flowNode(
+                source.name,
                 () => onToggleSection("sources"),
                 "portal-overview__node--source",
-                { blank: true, active: expanded === "sources" },
-              )}
-        </div>
-      ) : sources.length > 0 ? (
-        sources.map((source) => (
-          <span key={source.id}>
-            {flowNode(
-              source.name,
-              () => onToggleSection("sources"),
-              "portal-overview__node--source",
-              {
-                active: expanded === "sources",
-                nodeId: `src:${source.id}`,
-                kind: {
-                  text: `${t("portal.pipelines.overview.kindStart")}${source.type ? ` · ${source.type}` : ""}`,
-                  tone: "default",
+                {
+                  active: expanded === "sources",
+                  nodeId: `src:${source.id}`,
+                  kind: {
+                    text: `${t("portal.pipelines.overview.kindStart")}${source.type ? ` · ${source.type}` : ""}`,
+                    tone: "default",
+                  },
+                  subtitle: source.detail,
                 },
-                subtitle: source.detail,
-              },
-            )}
-          </span>
-        ))
-      ) : (
+              )}
+            </span>
+          ))
+        : flowNode(
+            `+ ${t("portal.pipelines.overview.chooseInputCta")}`,
+            () => onToggleSection("sources"),
+            "portal-overview__node--source",
+            { blank: true, active: expanded === "sources", nodeId: "srcghost" },
+          )}
+      {stepLabels.length === 0 &&
         flowNode(
-          `+ ${t("portal.pipelines.overview.chooseInputCta")}`,
-          () => onToggleSection("sources"),
-          "portal-overview__node--source",
-          { blank: true, active: expanded === "sources", nodeId: "srcghost" },
-        )
-      )}
-      {locked && insertConnector(0)}
+          `+ ${t("portal.pipelines.overview.chooseToolCta")}`,
+          () => onAddStep(),
+          "portal-overview__node--step",
+          { blank: true, active: expanded === "picker", nodeId: "stepghost" },
+        )}
       {stepLabels.map((label, i) => (
-        <span
-          key={`${label}-${i}`}
-          className={locked ? "portal-overview__flowrow" : undefined}
-        >
+        <span key={`${label}-${i}`}>
           {flowNode(
             label,
             () => onSelectStep(i),
@@ -702,9 +838,12 @@ export function PipelineOverview({
                 stepSummaries?.[i] ??
                 t("portal.pipelines.overview.defaultSettings"),
               subtitleWarn: Boolean(stepNotes?.[i]),
+              running: runningStep === i,
+              done: i < (completedSteps ?? 0) && runningStep !== i,
+              failed: failedStep === i,
+              icon: stepIcons?.[i],
             },
           )}
-          {locked && insertConnector(i + 1)}
         </span>
       ))}
       {flowNode(
@@ -730,15 +869,13 @@ export function PipelineOverview({
   const flow = (
     <>
       <div className="portal-overview__flowbar">
-        {!locked && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setPosOverrides({})}
-          >
-            {t("portal.pipelines.overview.autoArrange")}
-          </Button>
-        )}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setPosOverrides({})}
+        >
+          {t("portal.pipelines.overview.autoArrange")}
+        </Button>
         <span className="portal-overview__flowhint">
           {locked ? "" : t("portal.pipelines.overview.flowHint")}
         </span>
@@ -760,13 +897,14 @@ export function PipelineOverview({
             : t("portal.pipelines.overview.lockLayout")}
         </Button>
       </div>
-      {locked ? (
-        <div className="portal-overview__flow">{nodes}</div>
-      ) : (
+      {
         <div className="portal-overview__canvaswrap">
           <div
             ref={stageRef}
-            className="portal-overview__stage"
+            className={
+              "portal-overview__stage" +
+              (locked ? " portal-overview__stage--locked" : "")
+            }
             style={{ height: stageH, minWidth: stageMinW }}
           >
             <svg
@@ -779,16 +917,28 @@ export function PipelineOverview({
               ref={insertsRef}
               className="portal-overview__inserts"
               onClick={(e) => {
-                const hit = (e.target as HTMLElement).closest<HTMLElement>(
-                  "[data-insert-at]",
-                );
+                const target = e.target as HTMLElement;
+                const del = target.closest<HTMLElement>("[data-remove-step]");
+                if (del) {
+                  onRemoveStep(Number(del.dataset.removeStep));
+                  return;
+                }
+                const move = target.closest<HTMLElement>("[data-move-step]");
+                if (move) {
+                  onMoveStep(
+                    Number(move.dataset.moveStep),
+                    Number(move.dataset.dir),
+                  );
+                  return;
+                }
+                const hit = target.closest<HTMLElement>("[data-insert-at]");
                 if (hit) onAddStep(Number(hit.dataset.insertAt));
               }}
             />
             {nodes}
           </div>
         </div>
-      )}
+      }
     </>
   );
 
@@ -798,16 +948,27 @@ export function PipelineOverview({
         <span className="portal-builder__section-label">
           {t("portal.pipelines.overview.title")}
         </span>
-        <SegmentedControl<OverviewMode>
-          size="xs"
-          ariaLabel={t("portal.pipelines.overview.viewLabel")}
-          value={mode}
-          onChange={changeMode}
-          options={[
-            { value: "flow", label: t("portal.pipelines.overview.flow") },
-            { value: "spec", label: t("portal.pipelines.overview.spec") },
-          ]}
-        />
+        <div className="portal-overview__viewbar">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="portal-overview__codebtn"
+            aria-pressed={Boolean(codeShown)}
+            onClick={() => onToggleCode?.()}
+          >
+            {t("portal.pipelines.overview.code")}
+          </Button>
+          <SegmentedControl<OverviewMode>
+            size="xs"
+            ariaLabel={t("portal.pipelines.overview.viewLabel")}
+            value={mode}
+            onChange={changeMode}
+            options={[
+              { value: "flow", label: t("portal.pipelines.overview.flow") },
+              { value: "spec", label: t("portal.pipelines.overview.spec") },
+            ]}
+          />
+        </div>
       </div>
       {mode === "spec" ? spec : flow}
     </section>

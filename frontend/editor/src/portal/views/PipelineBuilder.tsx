@@ -5,9 +5,12 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {
+  ActionIcon,
   Banner,
   Button,
   Checkbox,
@@ -34,10 +37,13 @@ import {
   deletePipeline,
   fetchPipeline,
   fetchRun,
+  fetchRunOutput,
   fetchTriggers,
+  runPipelineTest,
   savePipeline,
   triggerPipeline,
   type OutputSpec,
+  type RunOutputFile,
   type Policy,
   type PolicyRunView,
   type PipelineOutputMode,
@@ -52,6 +58,7 @@ import { fetchSources, type SourceView } from "@portal/api/sources";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
 import {
   PipelineOverview,
@@ -95,6 +102,13 @@ const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
 const POLL_INTERVAL_MS = 1500;
 const POLL_ATTEMPTS = 60;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Operations that lock the output (encryption): nothing can run after them. */
+const FINAL_ONLY_OPERATIONS = new Set(["/api/v1/security/add-password"]);
+
+/** Params whose values must never surface on nodes or spec annotations. */
+const SECRET_PARAM =
+  /password|secret|token|api.?key|credential|passphrase|private.?key/i;
 
 type RunResult = {
   tone: "success" | "danger" | "info" | "warning";
@@ -209,6 +223,14 @@ export function PipelineBuilder() {
   const [deleting, setDeleting] = useState(false);
   const [pendingNav, setPendingNav] = useState<string | null>(null);
 
+  // Test bench: one file through the current steps, delivered inline.
+  const testFileRef = useRef<HTMLInputElement>(null);
+  const [testFile, setTestFile] = useState<File | null>(null);
+  const [testRunning, setTestRunning] = useState(false);
+  const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
+  const [testError, setTestError] = useState<string | null>(null);
+  const [showTestFailure, setShowTestFailure] = useState(false);
+
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -284,7 +306,7 @@ export function PipelineBuilder() {
     const at = insertAt;
     setInsertAt(null);
     setSteps((current) => {
-      const index = at === null ? current.length : Math.min(at, current.length);
+      const index = placementIndex(current, at, false);
       const next = [...current];
       next.splice(index, 0, newIntegrationStep(op));
       setSelectedIndex(index);
@@ -293,11 +315,36 @@ export function PipelineBuilder() {
     });
   }
 
+  function stepMustBeLast(step: WorkingToolStep): boolean {
+    return FINAL_ONLY_OPERATIONS.has(step.operation);
+  }
+
+  /** Where a new step lands: final-only tools go last; appends slot in before a locker. */
+  function placementIndex(
+    current: WorkingToolStep[],
+    at: number | null,
+    finalOnly: boolean,
+  ): number {
+    if (finalOnly) return current.length;
+    if (
+      at === null &&
+      current.length > 0 &&
+      stepMustBeLast(current[current.length - 1])
+    ) {
+      return current.length - 1;
+    }
+    return at === null ? current.length : Math.min(at, current.length);
+  }
+
   function addStep(tool: ExecutableTool) {
     const at = insertAt;
     setInsertAt(null);
     setSteps((current) => {
-      const index = at === null ? current.length : Math.min(at, current.length);
+      const index = placementIndex(
+        current,
+        at,
+        FINAL_ONLY_OPERATIONS.has(tool.endpoint),
+      );
       const next = [...current];
       next.splice(index, 0, newWorkingToolStep(tool, allTools));
       setSelectedIndex(index);
@@ -364,7 +411,13 @@ export function PipelineBuilder() {
     );
   }
 
+  // After a removal the chain re-packs, putting the next step's remove control
+  // under the cursor: a double-click would silently delete that one too.
+  const lastRemoveRef = useRef(0);
   function handleRemoveStep(index: number) {
+    const now = Date.now();
+    if (now - lastRemoveRef.current < 400) return;
+    lastRemoveRef.current = now;
     removeStep(index);
     setExpanded((prev) => (typeof prev === "number" ? null : prev));
   }
@@ -404,7 +457,8 @@ export function PipelineBuilder() {
     // Integration params are ids (operation/connection); raw values would read as noise.
     if (isIntegrationStep(step)) return undefined;
     const bits: string[] = [];
-    for (const value of Object.values(step.params)) {
+    for (const [key, value] of Object.entries(step.params)) {
+      if (SECRET_PARAM.test(key)) continue;
       if (typeof value !== "string" && typeof value !== "number") continue;
       const text = String(value).trim();
       if (text === "") continue;
@@ -417,6 +471,9 @@ export function PipelineBuilder() {
   // Side panel: per-step warning annotation, the completion checklist, and the
   // exact request Save would send (buildOutput/buildTrigger are hoisted).
   function stepNote(step: WorkingToolStep): string | undefined {
+    if (stepMustBeLast(step) && steps.indexOf(step) !== steps.length - 1) {
+      return t("portal.pipelines.builder.mustBeLast");
+    }
     // Integration steps carry support "unknown" by design; their notes are setup prompts.
     if (isIntegrationStep(step)) {
       if (!stepOperation(step))
@@ -503,6 +560,83 @@ export function PipelineBuilder() {
     .map(stepLabel);
   const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
+  const misplacedFinalLabels = steps
+    .filter((step, i) => stepMustBeLast(step) && i !== steps.length - 1)
+    .map(stepLabel);
+  const hasMisplacedFinal = misplacedFinalLabels.length > 0;
+
+  // A test needs runnable steps and a file; the same blockers gate saving.
+  const canTest =
+    steps.length > 0 &&
+    !hasUploadSteps &&
+    !hasUnconfiguredSteps &&
+    !hasMisplacedFinal &&
+    testFile !== null &&
+    !testRunning;
+
+  // The 1-based cursor names the step a FAILED run died on.
+  const failedStepIndex =
+    testRun?.status === "FAILED" && steps.length > 0
+      ? Math.min(Math.max((testRun.currentStep ?? 1) - 1, 0), steps.length - 1)
+      : null;
+
+  // Run the current definition (not the saved one) on the chosen file. Output
+  // is forced inline so a test never delivers to the pipeline's destination.
+  async function runTest() {
+    if (!testFile) return;
+    setTestRunning(true);
+    setTestError(null);
+    setTestRun(null);
+    try {
+      const { runId } = await runPipelineTest(
+        {
+          name: name.trim() || "Test run",
+          steps: steps.map((step) => serializeToolStep(step, allTools)),
+          output: { type: "inline", options: {} },
+        },
+        testFile,
+      );
+      for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
+        const run = await fetchRun(runId);
+        if (!mounted.current) return;
+        setTestRun(run);
+        if (TERMINAL_STATUSES.has(run.status)) return;
+        await sleep(POLL_INTERVAL_MS);
+      }
+      setTestError(t("portal.pipelines.builder.testStillRunning"));
+    } catch (e) {
+      if (mounted.current) setTestError(errorMessage(e));
+    } finally {
+      if (mounted.current) setTestRunning(false);
+    }
+  }
+
+  // Step edits invalidate the previous test run's outcome.
+  const testStepsSignature = steps.map((step) => step.operation).join("|");
+  const prevTestSignatureRef = useRef(testStepsSignature);
+  useEffect(() => {
+    if (prevTestSignatureRef.current === testStepsSignature) return;
+    prevTestSignatureRef.current = testStepsSignature;
+    if (!testRunning) {
+      setTestRun(null);
+      setTestError(null);
+    }
+  }, [testStepsSignature, testRunning]);
+
+  async function downloadTestOutput(file: RunOutputFile) {
+    try {
+      const blob = await fetchRunOutput(file.fileId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.fileName ?? "output";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      if (mounted.current) setTestError(errorMessage(e));
+    }
+  }
+
   // Track unsaved edits: snapshot the form and compare against the state captured just after
   // seeding, so leaving the builder can prompt to save or discard.
   const snapshot = JSON.stringify({
@@ -537,6 +671,7 @@ export function PipelineBuilder() {
     outputValid &&
     !hasUploadSteps &&
     !hasUnconfiguredSteps &&
+    !hasMisplacedFinal &&
     !submitting;
 
   const triggerOptions = [
@@ -610,12 +745,26 @@ export function PipelineBuilder() {
       ) : (
         <div className="portal-pipelines__source-list">
           {availableSources.map((source) => (
-            <Checkbox
-              key={source.id}
-              checked={sourceIds.includes(source.id)}
-              onChange={(e) => toggleSource(source.id, e.target.checked)}
-              label={source.name}
-            />
+            <div key={source.id} className="portal-builder__source-row">
+              <Checkbox
+                checked={sourceIds.includes(source.id)}
+                onChange={(e) => toggleSource(source.id, e.target.checked)}
+                label={source.name}
+              />
+              <ActionIcon
+                size="sm"
+                variant="quiet"
+                className="portal-builder__source-edit"
+                aria-label={t("portal.pipelines.composer.editSource")}
+                onClick={() =>
+                  attemptLeave(
+                    `${toPortalPath(VIEW_PATHS.sources)}/${source.id}`,
+                  )
+                }
+              >
+                <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+              </ActionIcon>
+            </div>
           ))}
         </div>
       )}
@@ -912,6 +1061,71 @@ export function PipelineBuilder() {
   const selectedStep =
     selectedIndex !== null ? (steps[selectedIndex] ?? null) : null;
 
+  // The { } Code toggle's panel: request tabs + copy, shown in the side column.
+  const codePanelJsx = (
+    <section className="portal-builder__codepanel">
+      <div className="portal-builder__codetabs">
+        {(["json", "curl", "mcp"] as const).map((tab) => (
+          <Button
+            key={tab}
+            variant="quiet"
+            size="sm"
+            className={
+              "portal-builder__codetab" +
+              (requestTab === tab ? " portal-builder__codetab--active" : "")
+            }
+            aria-pressed={requestTab === tab}
+            onClick={() => setRequestTab(tab)}
+          >
+            {tab === "json" ? "JSON" : tab === "curl" ? "cURL" : "MCP"}
+          </Button>
+        ))}
+        <Button
+          variant="quiet"
+          size="sm"
+          className="portal-builder__codecopy"
+          onClick={() => {
+            const text = requestTab === "curl" ? requestCurl : requestPreview;
+            void navigator.clipboard?.writeText(text).then(() => {
+              setRequestCopied(true);
+              setTimeout(() => setRequestCopied(false), 1500);
+            });
+          }}
+        >
+          {requestCopied
+            ? t("portal.pipelines.overview.copied")
+            : t("portal.pipelines.overview.copy")}
+        </Button>
+      </div>
+      {requestTab === "mcp" ? (
+        <div className="portal-builder__codenote">
+          <Banner
+            tone="warning"
+            title={t("portal.pipelines.overview.mcpTitle")}
+            description={t("portal.pipelines.overview.mcpBody")}
+          />
+        </div>
+      ) : (
+        <pre className="portal-builder__code">
+          {requestTab === "json" ? (
+            <>
+              <span className="portal-builder__code-c">
+                {"// "}
+                {t("portal.pipelines.overview.requestComment")}
+                {"\n"}
+              </span>
+              {requestPreview
+                .split("\n")
+                .map((line, i) => renderJsonLine(line, i))}
+            </>
+          ) : (
+            requestCurl
+          )}
+        </pre>
+      )}
+    </section>
+  );
+
   return (
     <div className="portal-builder">
       <header className="portal-builder__head">
@@ -1019,6 +1233,14 @@ export function PipelineBuilder() {
           })}
         />
       )}
+      {hasMisplacedFinal && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.builder.stepsMustBeLast", {
+            tools: misplacedFinalLabels.join(", "),
+          })}
+        />
+      )}
 
       <div className="portal-builder__cols">
         <div className="portal-builder__main">
@@ -1035,6 +1257,10 @@ export function PipelineBuilder() {
             expanded={expanded}
             onToggleSection={toggleSection}
             onSelectStep={(index) => {
+              if (index === failedStepIndex) {
+                setShowTestFailure(true);
+                return;
+              }
               setSelectedIndex(index);
               setExpanded((prev) => (prev === index ? null : index));
             }}
@@ -1044,6 +1270,31 @@ export function PipelineBuilder() {
             }}
             onMoveStep={handleMoveStep}
             onRemoveStep={handleRemoveStep}
+            layoutKey={id ?? "new"}
+            stepFinalOnly={steps.map(stepMustBeLast)}
+            failedStep={failedStepIndex}
+            stepIcons={steps.map((step) =>
+              step.toolId ? allTools[step.toolId]?.icon : undefined,
+            )}
+            runningStep={
+              // Backend cursor is 1-based, set on entering a step.
+              testRunning
+                ? Math.min(
+                    Math.max((testRun?.currentStep ?? 1) - 1, 0),
+                    steps.length - 1,
+                  )
+                : null
+            }
+            completedSteps={
+              // The step the cursor sits on is running or failed - never ticked.
+              testRun
+                ? testRun.status === "COMPLETED"
+                  ? steps.length
+                  : Math.max((testRun.currentStep ?? 1) - 1, 0)
+                : 0
+            }
+            codeShown={requestShown}
+            onToggleCode={() => setRequestShown((prev) => !prev)}
             onModeChange={setOverviewMode}
           />
         </div>
@@ -1052,18 +1303,35 @@ export function PipelineBuilder() {
             with the exact request underneath for the admin who would script it. */}
         <aside className="portal-builder__side">
           <section className="portal-builder__panel">
-            <div className="portal-builder__section-label">
-              {expanded === "sources"
-                ? t("portal.pipelines.composer.sources")
-                : expanded === "trigger"
-                  ? t("portal.pipelines.composer.trigger")
-                  : expanded === "output"
-                    ? t("portal.pipelines.composer.output")
-                    : expanded === "picker"
-                      ? t("portal.pipelines.builder.addStep")
-                      : typeof expanded === "number" && selectedStep
-                        ? stepLabel(selectedStep)
-                        : t("portal.pipelines.overview.inspector")}
+            <div className="portal-builder__panel-head">
+              <div className="portal-builder__section-label">
+                {expanded === "sources"
+                  ? t("portal.pipelines.composer.sources")
+                  : expanded === "trigger"
+                    ? t("portal.pipelines.composer.trigger")
+                    : expanded === "output"
+                      ? t("portal.pipelines.composer.output")
+                      : expanded === "picker"
+                        ? t("portal.pipelines.builder.addStep")
+                        : typeof expanded === "number" && selectedStep
+                          ? stepLabel(selectedStep)
+                          : t("portal.pipelines.overview.inspector")}
+              </div>
+              {expanded !== null && (
+                <ActionIcon
+                  size="sm"
+                  variant="quiet"
+                  className="portal-builder__panel-close"
+                  aria-label={t("portal.pipelines.composer.closePanel")}
+                  onClick={() => {
+                    setExpanded(null);
+                    setSelectedIndex(null);
+                    setInsertAt(null);
+                  }}
+                >
+                  <CloseRoundedIcon style={{ fontSize: "1rem" }} />
+                </ActionIcon>
+              )}
             </div>
             {expanded === "sources" ? (
               sourcesEditor
@@ -1083,14 +1351,35 @@ export function PipelineBuilder() {
                 }}
               />
             ) : typeof expanded === "number" && selectedStep ? (
-              <PipelineStepSettings
-                step={selectedStep}
-                registry={allTools}
-                onChange={(params) =>
-                  selectedIndex !== null &&
-                  updateStepParams(selectedIndex, params)
-                }
-              />
+              // Contained: a tool's settings module failing (bad chunk, stale
+              // dev graph) degrades to a retry card instead of killing the page.
+              <ErrorBoundary
+                key={selectedIndex ?? "step"}
+                fallback={(reset) => (
+                  <>
+                    <Banner
+                      tone="danger"
+                      description={t(
+                        "portal.pipelines.builder.settingsCrashed",
+                      )}
+                    />
+                    <div>
+                      <Button variant="secondary" size="sm" onClick={reset}>
+                        {t("portal.errorBoundary.retry")}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              >
+                <PipelineStepSettings
+                  step={selectedStep}
+                  registry={allTools}
+                  onChange={(params) =>
+                    selectedIndex !== null &&
+                    updateStepParams(selectedIndex, params)
+                  }
+                />
+              </ErrorBoundary>
             ) : (
               <>
                 <p className="portal-builder__intro">
@@ -1105,85 +1394,173 @@ export function PipelineBuilder() {
             )}
           </section>
 
-          <div className="portal-builder__codetoggle">
+          {/* Test bench: one file through the current steps, result inline. */}
+          <section className="portal-builder__panel portal-builder__testpanel">
+            <div className="portal-builder__section-label">
+              {t("portal.pipelines.builder.testRun")}
+            </div>
+            <p className="portal-builder__side-hint">
+              {t("portal.pipelines.builder.testHelper")}
+            </p>
+            <div className="portal-builder__testrow">
+              <input
+                ref={testFileRef}
+                type="file"
+                hidden
+                onChange={(e) => {
+                  setTestFile(e.target.files?.[0] ?? null);
+                  setTestRun(null);
+                  setTestError(null);
+                }}
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                className="portal-builder__testpick"
+                onClick={() => testFileRef.current?.click()}
+              >
+                {testFile?.name ?? t("portal.pipelines.builder.testChoose")}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!canTest}
+                onClick={runTest}
+                leftSection={
+                  <PlayArrowRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.pipelines.builder.testCta")}
+              </Button>
+            </div>
+            {testRunning && (
+              <div className="portal-builder__testprogress">
+                <Spinner size="sm" />
+                <span>
+                  {t("portal.pipelines.builder.testRunning", {
+                    n: Math.min(
+                      Math.max(testRun?.currentStep ?? 1, 1),
+                      testRun?.stepCount || steps.length,
+                    ),
+                    total: testRun?.stepCount || steps.length,
+                  })}
+                </span>
+              </div>
+            )}
+            {testError && <Banner tone="danger" description={testError} />}
+            {!testRunning && testRun?.status === "FAILED" && (
+              <>
+                <Banner
+                  tone="danger"
+                  description={
+                    failedStepIndex !== null
+                      ? t("portal.pipelines.builder.testFailedShort", {
+                          tool: stepLabel(steps[failedStepIndex]),
+                        })
+                      : t("portal.pipelines.builder.testFailed")
+                  }
+                />
+                <div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowTestFailure(true)}
+                  >
+                    {t("portal.pipelines.builder.testFailedDetails")}
+                  </Button>
+                </div>
+              </>
+            )}
+            {!testRunning && testRun?.status === "COMPLETED" && (
+              <div className="portal-builder__testresults">
+                <div className="portal-builder__section-label">
+                  {t("portal.pipelines.builder.testResults")}
+                </div>
+                {(testRun.outputs ?? []).map((file) => (
+                  <Button
+                    key={file.fileId}
+                    variant="tertiary"
+                    size="sm"
+                    className="portal-builder__testfile"
+                    onClick={() => downloadTestOutput(file)}
+                  >
+                    {file.fileName ?? file.fileId}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {requestShown && codePanelJsx}
+        </aside>
+      </div>
+
+      <Modal
+        open={showTestFailure && failedStepIndex !== null}
+        onClose={() => setShowTestFailure(false)}
+        width="sm"
+        title={t("portal.pipelines.builder.testFailedTitle", {
+          tool:
+            failedStepIndex !== null ? stepLabel(steps[failedStepIndex]) : "",
+        })}
+        footer={
+          <div className="portal-pipelines__composer-footer">
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={() => setShowTestFailure(false)}
+            >
+              {t("portal.pipelines.composer.closePanel")}
+            </Button>
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setRequestShown((prev) => !prev)}
+              onClick={() => {
+                setShowTestFailure(false);
+                if (failedStepIndex !== null) {
+                  setSelectedIndex(failedStepIndex);
+                  setExpanded(failedStepIndex);
+                }
+              }}
             >
-              {requestShown
-                ? t("portal.pipelines.overview.hideCode")
-                : t("portal.pipelines.overview.viewCode")}
+              {t("portal.pipelines.builder.testFailedOpenStep")}
             </Button>
           </div>
-          {requestShown && (
-            <section className="portal-builder__codepanel">
-              <div className="portal-builder__codetabs">
-                {(["json", "curl", "mcp"] as const).map((tab) => (
-                  <Button
-                    key={tab}
-                    variant="quiet"
-                    size="sm"
-                    className={
-                      "portal-builder__codetab" +
-                      (requestTab === tab
-                        ? " portal-builder__codetab--active"
-                        : "")
-                    }
-                    aria-pressed={requestTab === tab}
-                    onClick={() => setRequestTab(tab)}
-                  >
-                    {tab === "json" ? "JSON" : tab === "curl" ? "cURL" : "MCP"}
-                  </Button>
-                ))}
-                <Button
-                  variant="quiet"
-                  size="sm"
-                  className="portal-builder__codecopy"
-                  onClick={() => {
-                    const text =
-                      requestTab === "curl" ? requestCurl : requestPreview;
-                    void navigator.clipboard?.writeText(text).then(() => {
-                      setRequestCopied(true);
-                      setTimeout(() => setRequestCopied(false), 1500);
-                    });
-                  }}
-                >
-                  {requestCopied
-                    ? t("portal.pipelines.overview.copied")
-                    : t("portal.pipelines.overview.copy")}
-                </Button>
-              </div>
-              {requestTab === "mcp" ? (
-                <div className="portal-builder__codenote">
-                  <Banner
-                    tone="warning"
-                    title={t("portal.pipelines.overview.mcpTitle")}
-                    description={t("portal.pipelines.overview.mcpBody")}
-                  />
-                </div>
-              ) : (
-                <pre className="portal-builder__code">
-                  {requestTab === "json" ? (
-                    <>
-                      <span className="portal-builder__code-c">
-                        {"// "}
-                        {t("portal.pipelines.overview.requestComment")}
-                        {"\n"}
-                      </span>
-                      {requestPreview
-                        .split("\n")
-                        .map((line, i) => renderJsonLine(line, i))}
-                    </>
-                  ) : (
-                    requestCurl
-                  )}
-                </pre>
-              )}
-            </section>
-          )}
-        </aside>
-      </div>
+        }
+      >
+        <pre className="portal-builder__testerror">
+          {testRun?.error ?? t("portal.pipelines.builder.testFailed")}
+        </pre>
+        <dl className="portal-builder__testmeta">
+          {testRun?.errorCode ? (
+            <>
+              <dt>{t("portal.pipelines.builder.testFailedCode")}</dt>
+              <dd>{testRun.errorCode}</dd>
+            </>
+          ) : null}
+          <dt>
+            {t("portal.pipelines.overview.stepOf", {
+              n: (failedStepIndex ?? 0) + 1,
+              total: steps.length,
+            })}
+          </dt>
+          <dd>
+            {failedStepIndex !== null ? stepLabel(steps[failedStepIndex]) : ""}
+          </dd>
+          {testFile ? (
+            <>
+              <dt>{t("portal.pipelines.builder.testFailedFile")}</dt>
+              <dd>{testFile.name}</dd>
+            </>
+          ) : null}
+          {testRun?.runId ? (
+            <>
+              <dt>{t("portal.pipelines.builder.testFailedRun")}</dt>
+              <dd>{testRun.runId}</dd>
+            </>
+          ) : null}
+        </dl>
+      </Modal>
 
       <Modal
         open={pendingDelete}

@@ -292,7 +292,7 @@
 }
 
 .portal-pipelines__picker-list {
-  max-height: 20rem;
+  max-height: clamp(16rem, calc(100vh - 24rem), 44rem);
   overflow-y: auto;
   padding: 0.25rem 0;
 }
@@ -708,4 +708,121 @@
   margin-top: 0.0625rem;
   font-size: 0.875rem;
   color: var(--c-text-subtle);
+}
+
+/* ── Test bench: file picker + run + progress + result downloads ── */
+.portal-builder__testrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-builder__testrow .portal-builder__testpick {
+  min-width: 0;
+  max-width: 11rem;
+}
+
+.portal-builder__testpick .mantine-Button-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-builder__testprogress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__testresults {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.portal-builder__testfile {
+  max-width: 100%;
+}
+
+/* Source rows: checkbox + a quiet edit affordance for the existing source. */
+.portal-builder__source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.portal-builder__source-row .portal-builder__source-edit {
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__source-row .portal-builder__source-edit:hover {
+  color: var(--c-primary);
+}
+
+/* Panel header: section title + an always-easy way out of the editor. */
+.portal-builder__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.portal-builder__panel-close {
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__panel-close:hover {
+  color: var(--c-text);
+}
+
+/* Failure modal: the raw error, then quiet key/value details. */
+.portal-builder__testerror {
+  margin: 0 0 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--c-border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.71875rem;
+  line-height: 1.6;
+  color: var(--c-danger);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.portal-builder__testmeta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.portal-builder__testmeta dt {
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__testmeta dd {
+  margin: 0;
+  color: var(--c-text);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+/* Long backend errors and filenames must wrap inside the card, never overflow. */
+.portal-builder__testpanel .sui-banner,
+.portal-builder__panel .sui-banner {
+  min-width: 0;
+}
+
+.portal-builder__testpanel .sui-banner *,
+.portal-builder__panel .sui-banner * {
+  overflow-wrap: anywhere;
 }

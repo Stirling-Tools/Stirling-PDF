@@ -25,6 +25,7 @@ function renderOverview(overrides: Record<string, unknown> = {}) {
     onSelectStep: vi.fn(),
     onAddStep: vi.fn(),
     onMoveStep: vi.fn(),
+    onToggleCode: vi.fn(),
     onRemoveStep: vi.fn(),
   };
   render(
@@ -55,21 +56,18 @@ function renderOverview(overrides: Record<string, unknown> = {}) {
 describe("PipelineOverview", () => {
   beforeEach(() => localStorage.clear());
 
-  it("defaults to the flow view: the locked spine with kind chips and details", () => {
+  it("defaults to the flow view: a locked canvas with kind chips and details", () => {
     renderOverview();
     expect(screen.getAllByText("stepOf")).toHaveLength(2);
     expect(screen.getByText("kindStart · s3")).toBeInTheDocument();
     expect(screen.getByText("Production S3 · incoming/")).toBeInTheDocument();
     expect(screen.getByText(/kindEnd/)).toBeInTheDocument();
     expect(screen.getByText("kindTrigger")).toBeInTheDocument();
-    // Locked by default: the tidy spine, no drag canvas or arrange button.
+    // Locked by default: the canvas renders but dragging is frozen.
     expect(
-      document.querySelector(".portal-overview__stage"),
-    ).not.toBeInTheDocument();
-    expect(
-      document.querySelector(".portal-overview__flow"),
+      document.querySelector(".portal-overview__stage--locked"),
     ).toBeInTheDocument();
-    expect(screen.queryByText("autoArrange")).not.toBeInTheDocument();
+    expect(screen.getByText("autoArrange")).toBeInTheDocument();
     expect(screen.getByText("unlockLayout")).toBeInTheDocument();
   });
 
@@ -81,17 +79,75 @@ describe("PipelineOverview", () => {
     expect(handlers.onAddStep).toHaveBeenCalledWith(1);
   });
 
-  it("unlocking opens the drag canvas and persists the choice", () => {
+  it("unlocking keeps the user's layout and just re-enables dragging", () => {
     renderOverview();
     fireEvent.click(screen.getByText("unlockLayout"));
+    // Same canvas, no snap to a preset arrangement - only the freeze lifts.
     expect(
       document.querySelector(".portal-overview__stage"),
     ).toBeInTheDocument();
-    expect(screen.getByText("autoArrange")).toBeInTheDocument();
+    expect(
+      document.querySelector(".portal-overview__stage--locked"),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("lockLayout")).toBeInTheDocument();
+    expect(document.querySelectorAll("[data-move-step]")).toHaveLength(4);
     expect(localStorage.getItem("stirling.portal.pipelineFlowLock")).toBe(
       "false",
     );
+  });
+
+  it("reorders steps from the canvas arrows, ends disabled", () => {
+    const handlers = renderOverview();
+    const ups = screen.getAllByLabelText("moveUp");
+    const downs = screen.getAllByLabelText("moveDown");
+    expect(ups).toHaveLength(2);
+    expect(ups[0]).toBeDisabled();
+    expect(downs[1]).toBeDisabled();
+    fireEvent.click(downs[0]);
+    expect(handlers.onMoveStep).toHaveBeenCalledWith(0, 1);
+    // The cluster also carries a remove control per step.
+    fireEvent.click(screen.getAllByLabelText("removeStep")[1]);
+    expect(handlers.onRemoveStep).toHaveBeenCalledWith(1);
+  });
+
+  it("pulses the step a test run is currently executing", () => {
+    renderOverview({ runningStep: 1, completedSteps: 1 });
+    expect(screen.getByText("Redact").closest("button")).toHaveClass(
+      "portal-overview__node--running",
+    );
+    expect(screen.getByText("OCR").closest("button")).not.toHaveClass(
+      "portal-overview__node--running",
+    );
+  });
+
+  it("ticks the steps a run has already finished", () => {
+    renderOverview({ runningStep: 1, completedSteps: 1 });
+    const ocr = screen.getByText("OCR").closest("button")!;
+    expect(ocr.querySelector(".portal-overview__node-done")).not.toBeNull();
+    const redact = screen.getByText("Redact").closest("button")!;
+    expect(redact.querySelector(".portal-overview__node-done")).toBeNull();
+  });
+
+  it("pins final-only steps: no trailing insert, locked arrows", () => {
+    renderOverview({ stepFinalOnly: [false, true] });
+    // Only before/between remain: nothing can follow the locker.
+    expect(screen.getAllByLabelText("addTool")).toHaveLength(2);
+    expect(screen.getAllByLabelText("moveDown")[0]).toBeDisabled();
+    expect(screen.getAllByLabelText("moveUp")[1]).toBeDisabled();
+  });
+
+  it("shows a bold tool call to action when the chain is empty", () => {
+    const handlers = renderOverview({ stepLabels: [] });
+    fireEvent.click(screen.getByText(/chooseToolCta/));
+    expect(handlers.onAddStep).toHaveBeenCalled();
+  });
+
+  it("raises the code toggle from the header button", () => {
+    const handlers = renderOverview();
+    const btn = screen.getByText("code").closest("button")!;
+    expect(btn).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(btn);
+    expect(handlers.onToggleCode).toHaveBeenCalledTimes(1);
   });
 
   it("switches to the spec view and persists the choice", () => {
