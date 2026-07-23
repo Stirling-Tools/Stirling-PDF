@@ -37,7 +37,7 @@ public class AppConfig {
     private final ApplicationProperties applicationProperties;
 
     @Getter
-    @Value("${server.servlet.context-path:/}")
+    @Value("${server.servlet.context-path}")
     private String contextPath;
 
     @Getter
