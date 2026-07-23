@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Box,
-  ScrollArea,
   Text,
   Loader,
   Stack,
@@ -21,7 +20,7 @@ import apiClient from "@app/services/apiClient";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
-import "@app/components/viewer/SidebarBase.css";
+import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import "@app/components/viewer/BookmarkSidebar.css";
 
 interface BookmarkSidebarProps {
@@ -31,7 +30,7 @@ interface BookmarkSidebarProps {
   preloadCacheKeys?: string[];
 }
 
-const SIDEBAR_WIDTH = "15rem";
+
 
 type BookmarkNode = PdfBookmarkObject & { id: string };
 
@@ -666,285 +665,208 @@ export const BookmarkSidebar = ({
   if (!visible) {
     return null;
   }
-
-  return (
-    <Box
-      className="sidebar-base bookmark-sidebar"
-      style={{
-        position: "fixed",
-        right: thumbnailVisible ? SIDEBAR_WIDTH : 0,
-        top: 0,
-        bottom: 0,
-        width: SIDEBAR_WIDTH,
-        zIndex: 998,
-      }}
-    >
-      <div className="sidebar-base__header bookmark-sidebar__header">
-        <div className="sidebar-base__header-title bookmark-sidebar__header-title">
-          <span className="sidebar-base__header-icon bookmark-sidebar__header-icon">
-            <BookmarksIcon />
-          </span>
-          <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
-            Bookmarks
-          </Text>
-        </div>
-        <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {bookmarkSupport && bookmarksWithIds.length > 0 && (
-            <>
-              {Object.values(expanded).some((val) => val === false) ? (
-                <ActionIcon
-                  variant="tertiary"
-                  size="sm"
-                  onClick={expandAll}
-                  aria-label={t(
-                    "viewer.bookmarks.expandAll",
-                    "Expand all bookmarks",
-                  )}
-                  title={t(
-                    "viewer.bookmarks.expandAll",
-                    "Expand all bookmarks",
-                  )}
-                >
-                  <LocalIcon
-                    icon="unfold-more"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                </ActionIcon>
-              ) : (
-                <ActionIcon
-                  variant="tertiary"
-                  size="sm"
-                  onClick={collapseAll}
-                  aria-label={t(
-                    "viewer.bookmarks.collapseAll",
-                    "Collapse all bookmarks",
-                  )}
-                  title={t(
-                    "viewer.bookmarks.collapseAll",
-                    "Collapse all bookmarks",
-                  )}
-                >
-                  <LocalIcon
-                    icon="unfold-less"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                </ActionIcon>
-              )}
-            </>
-          )}
+  const expandCollapseActions =
+    bookmarkSupport && bookmarksWithIds.length > 0 ? (
+      <>
+        {Object.values(expanded).some((val) => val === false) ? (
           <ActionIcon
             variant="tertiary"
-            accent="neutral"
             size="sm"
-            onClick={toggleBookmarkSidebar}
-            aria-label={t(
-              "viewer.bookmarks.closeSidebar",
-              "Close bookmarks sidebar",
-            )}
-            title={t(
-              "viewer.bookmarks.closeSidebar",
-              "Close bookmarks sidebar",
-            )}
+            onClick={expandAll}
+            aria-label={t("viewer.bookmarks.expandAll", "Expand all bookmarks")}
+            title={t("viewer.bookmarks.expandAll", "Expand all bookmarks")}
           >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            <LocalIcon icon="unfold-more" width="1.1rem" height="1.1rem" />
           </ActionIcon>
-        </Box>
-      </div>
+        ) : (
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            onClick={collapseAll}
+            aria-label={t(
+              "viewer.bookmarks.collapseAll",
+              "Collapse all bookmarks",
+            )}
+            title={t("viewer.bookmarks.collapseAll", "Collapse all bookmarks")}
+          >
+            <LocalIcon icon="unfold-less" width="1.1rem" height="1.1rem" />
+          </ActionIcon>
+        )}
+      </>
+    ) : null;
 
-      <Box
-        px="sm"
-        pb="sm"
-        className="sidebar-base__search bookmark-sidebar__search"
-      >
-        <TextInput
-          value={searchTerm}
-          placeholder={t(
-            "viewer.bookmarks.searchPlaceholder",
-            "Search bookmarks",
-          )}
-          onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          leftSection={
-            <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
-          }
-          size="xs"
-        />
-      </Box>
+  return (
+    <SidebarBase
+      className="bookmark-sidebar"
+      title={t("viewer.bookmarks.title", "Bookmarks")}
+      icon={<BookmarksIcon />}
+      rightOffset={`${thumbnailVisible ? 15 : 0}rem`}
+      visible={visible}
+      onClose={toggleBookmarkSidebar}
+      closeLabel={t("viewer.bookmarks.closeSidebar", "Close bookmarks sidebar")}
+      headerActions={expandCollapseActions}
+      searchTerm={searchTerm}
+      searchPlaceholder={t(
+        "viewer.bookmarks.searchPlaceholder",
+        "Search bookmarks",
+      )}
+      onSearchChange={setSearchTerm}
+    >
+      {bookmarkSupport && showNoDocument && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            Open a PDF to view its bookmarks.
+          </Text>
+        </div>
+      )}
 
-      <ScrollArea style={{ flex: 1 }}>
-        <Box p="sm" className="sidebar-base__content bookmark-sidebar__content">
-          {!bookmarkSupport && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                Bookmark support is unavailable for this viewer.
-              </Text>
-            </div>
-          )}
+      {bookmarkSupport && documentCacheKey && currentError && (
+        <Stack gap="xs" align="center" className="sidebar-base__error">
+          <Text size="sm" c="red" ta="center">
+            {currentError}
+          </Text>
+          <Button variant="secondary" size="sm" onClick={requestReload}>
+            Retry
+          </Button>
+        </Stack>
+      )}
 
-          {bookmarkSupport && showNoDocument && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                Open a PDF to view its bookmarks.
-              </Text>
-            </div>
-          )}
+      {bookmarkSupport && documentCacheKey && isLocalLoading && (
+        <Stack
+          gap="md"
+          align="center"
+          c="dimmed"
+          py="xl"
+          className="sidebar-base__loading"
+        >
+          <Loader size="md" type="dots" />
+          <Text size="sm" ta="center">
+            Loading bookmarks...
+          </Text>
+        </Stack>
+      )}
+      {showEmptyState && !isAddingBookmark && (
+        <Stack align="center" gap="sm" py="lg">
+          <LocalIcon
+            icon="bookmark-add-rounded"
+            width="2rem"
+            height="2rem"
+            style={{ color: "var(--mantine-color-dimmed)" }}
+          />
+          <Text size="sm" c="dimmed" ta="center">
+            {t("viewer.bookmarks.empty", "No bookmarks in this document")}
+          </Text>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={handleOpenAddBookmark}
+            leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
+          >
+            {t("viewer.bookmarks.addBookmark", "Add bookmark")}
+          </Button>
+        </Stack>
+      )}
 
-          {bookmarkSupport && documentCacheKey && currentError && (
-            <Stack gap="xs" align="center" className="sidebar-base__error">
-              <Text size="sm" c="red" ta="center">
-                {currentError}
-              </Text>
-              <Button variant="secondary" size="sm" onClick={requestReload}>
-                Retry
-              </Button>
-            </Stack>
-          )}
-
-          {bookmarkSupport && documentCacheKey && isLocalLoading && (
-            <Stack
-              gap="md"
-              align="center"
-              c="dimmed"
-              py="xl"
-              className="sidebar-base__loading"
-            >
-              <Loader size="md" type="dots" />
-              <Text size="sm" ta="center">
-                Loading bookmarks...
-              </Text>
-            </Stack>
-          )}
-          {showEmptyState && !isAddingBookmark && (
-            <Stack align="center" gap="sm" py="lg">
-              <LocalIcon
-                icon="bookmark-add-rounded"
-                width="2rem"
-                height="2rem"
-                style={{ color: "var(--mantine-color-dimmed)" }}
-              />
-              <Text size="sm" c="dimmed" ta="center">
-                No bookmarks in this document
-              </Text>
-              <Button
-                variant="tertiary"
-                size="sm"
-                onClick={handleOpenAddBookmark}
-                leftSection={
-                  <LocalIcon icon="add" width="1rem" height="1rem" />
-                }
-              >
-                Add bookmark
-              </Button>
-            </Stack>
-          )}
-
-          {isAddingBookmark && (
-            <Box
-              mb="sm"
-              p="sm"
-              data-testid="bookmark-add-form"
-              style={{
-                border: "1px solid var(--c-border-subtle)",
-                borderRadius: 6,
-                background:
-                  "var(--c-surface-raised, var(--mantine-color-gray-0))",
-              }}
-            >
-              <Stack gap="xs">
-                <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                  Add bookmark
-                </Text>
-                <TextInput
-                  size="xs"
-                  placeholder={t(
-                    "viewer.bookmarks.bookmarkTitle",
-                    "Bookmark title",
-                  )}
-                  aria-label={t(
-                    "viewer.bookmarks.bookmarkTitle",
-                    "Bookmark title",
-                  )}
-                  value={newBookmarkTitle}
-                  onChange={(e) => setNewBookmarkTitle(e.currentTarget.value)}
-                  autoFocus
-                  disabled={isSavingBookmark}
-                />
-                <NumberInput
-                  size="xs"
-                  label="Page"
-                  min={1}
-                  clampBehavior="strict"
-                  value={newBookmarkPage}
-                  onChange={(v) =>
-                    setNewBookmarkPage(typeof v === "number" ? v : 1)
-                  }
-                  disabled={isSavingBookmark}
-                />
-                {addBookmarkError && (
-                  <Text size="xs" c="red">
-                    {addBookmarkError}
-                  </Text>
-                )}
-                <Group justify="flex-end" gap="xs">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={handleCancelAddBookmark}
-                    disabled={isSavingBookmark}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    onClick={handleSubmitAddBookmark}
-                    loading={isSavingBookmark}
-                    disabled={!newBookmarkTitle.trim()}
-                  >
-                    Save
-                  </Button>
-                </Group>
-              </Stack>
-            </Box>
-          )}
-          {showBookmarkList && (
-            <>
-              {!isAddingBookmark && (
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  fullWidth
-                  justify="start"
-                  onClick={handleOpenAddBookmark}
-                  leftSection={
-                    <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-                  }
-                  style={{ marginBottom: "var(--space-xs)" }}
-                >
-                  Add bookmark
-                </Button>
+      {isAddingBookmark && (
+        <Box
+          mb="sm"
+          p="sm"
+          data-testid="bookmark-add-form"
+          style={{
+            border: "1px solid var(--c-border-subtle)",
+            borderRadius: 6,
+            background: "var(--c-surface-raised, var(--mantine-color-gray-0))",
+          }}
+        >
+          <Stack gap="xs">
+            <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+              {t("viewer.bookmarks.addBookmark", "Add bookmark")}
+            </Text>
+            <TextInput
+              size="xs"
+              placeholder={t(
+                "viewer.bookmarks.bookmarkTitle",
+                "Bookmark title",
               )}
-              <div className="bookmark-list">
-                {renderBookmarks(filteredBookmarks)}
-              </div>
-            </>
-          )}
-
-          {showSearchEmpty && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                No bookmarks match your search
+              aria-label={t("viewer.bookmarks.bookmarkTitle", "Bookmark title")}
+              value={newBookmarkTitle}
+              onChange={(e) => setNewBookmarkTitle(e.currentTarget.value)}
+              autoFocus
+              disabled={isSavingBookmark}
+            />
+            <NumberInput
+              size="xs"
+              label="Page"
+              min={1}
+              clampBehavior="strict"
+              value={newBookmarkPage}
+              onChange={(v) =>
+                setNewBookmarkPage(typeof v === "number" ? v : 1)
+              }
+              disabled={isSavingBookmark}
+            />
+            {addBookmarkError && (
+              <Text size="xs" c="red">
+                {addBookmarkError}
               </Text>
-            </div>
-          )}
+            )}
+            <Group justify="flex-end" gap="xs">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleCancelAddBookmark}
+                disabled={isSavingBookmark}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={handleSubmitAddBookmark}
+                loading={isSavingBookmark}
+                disabled={!newBookmarkTitle.trim()}
+              >
+                Save
+              </Button>
+            </Group>
+          </Stack>
         </Box>
-      </ScrollArea>
+      )}
+      {showBookmarkList && (
+        <>
+          {!isAddingBookmark && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              fullWidth
+              justify="start"
+              onClick={handleOpenAddBookmark}
+              leftSection={
+                <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+              }
+              style={{ marginBottom: "var(--space-xs)" }}
+            >
+              {t("viewer.bookmarks.addBookmark", "Add bookmark")}
+            </Button>
+          )}
+          <div className="bookmark-list">
+            {renderBookmarks(filteredBookmarks)}
+          </div>
+        </>
+      )}
 
+      {showSearchEmpty && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            No bookmarks match your search
+          </Text>
+        </div>
+      )}
       {bookmarkSupport && documentCacheKey && (
         <Box
           px="sm"
           py="xs"
+          mt="sm"
           style={{
             borderTop: "1px solid var(--c-border-subtle)",
             backgroundColor: "var(--c-bg-raised)",
@@ -978,6 +900,6 @@ export const BookmarkSidebar = ({
           </Button>
         </Box>
       )}
-    </Box>
+    </SidebarBase>
   );
 };
