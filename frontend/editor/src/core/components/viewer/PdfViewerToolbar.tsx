@@ -359,7 +359,7 @@ export function PdfViewerToolbar({
               minWidth: "2.5rem",
               textAlign: "center",
               fontSize: 12,
-              color: "var(--text-muted)",
+              color: "var(--c-text-subtle)",
             }}
           >
             {displayZoomPercent}%

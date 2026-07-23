@@ -43,8 +43,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "Classification",
     icon: policyCategoryIcon("classification", ICON_SX),
     desc: "Identify each document's type on upload and tag its metadata for filing and search.",
-    // Needs the AI engine to classify; hidden from the policy list when it's off.
-    requiresAiEngine: true,
   },
   {
     id: "compliance",

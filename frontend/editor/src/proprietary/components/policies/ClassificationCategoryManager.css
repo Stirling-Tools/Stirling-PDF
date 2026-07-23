@@ -17,17 +17,17 @@
   display: inline-flex;
   align-items: center;
   flex: none;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 .category-visibility-name {
   flex: 1;
   min-width: 0;
   font-size: 0.875rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .category-visibility-count {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 /* Hidden categories read as dimmed until re-shown. */
 .category-visibility-row--hidden .category-visibility-icon,

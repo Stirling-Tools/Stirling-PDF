@@ -26,7 +26,7 @@ export const Open: Story = {
     children: (
       <Card padding="loose">
         <h3 style={{ margin: 0 }}>Ready for payment</h3>
-        <p style={{ color: "var(--color-text-3)" }}>
+        <p style={{ color: "var(--c-text-subtle)" }}>
           Your quote is accepted. Continue to checkout to pay your committed
           contract and go live.
         </p>

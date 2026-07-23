@@ -3,6 +3,7 @@ package stirling.software.proprietary.controller.api;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.annotation.ResponseStatusExceptionResolver;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
 
@@ -39,13 +41,15 @@ import tools.jackson.databind.json.JsonMapper;
 class PdfCommentAgentControllerTest {
 
     @Mock private PdfCommentAgentOrchestrator orchestrator;
+    @Mock private AiFeatureGate aiFeatureGate;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         PdfCommentAgentController controller =
-                new PdfCommentAgentController(orchestrator, JsonMapper.builder().build());
+                new PdfCommentAgentController(
+                        orchestrator, JsonMapper.builder().build(), aiFeatureGate);
         mockMvc =
                 MockMvcBuilders.standaloneSetup(controller)
                         // standaloneSetup's defaults don't handle ResponseStatusException; wire up
@@ -113,6 +117,27 @@ class PdfCommentAgentControllerTest {
     void rejectsMissingFileInput() throws Exception {
         mockMvc.perform(multipart("/api/v1/ai/tools/pdf-comment-agent").param("prompt", "test"))
                 .andExpect(status().is4xxClientError());
+
+        verify(orchestrator, never()).applyComments(any(), anyString());
+    }
+
+    @Test
+    void returnsServiceUnavailableWhenPdfCommentFeatureDisabled() throws Exception {
+        doThrow(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE))
+                .when(aiFeatureGate)
+                .requirePdfComment();
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput",
+                        "input.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "%PDF-1.4\n%%EOF".getBytes());
+
+        mockMvc.perform(
+                        multipart("/api/v1/ai/tools/pdf-comment-agent")
+                                .file(pdfFile)
+                                .param("prompt", "flag dates"))
+                .andExpect(status().isServiceUnavailable());
 
         verify(orchestrator, never()).applyComments(any(), anyString());
     }

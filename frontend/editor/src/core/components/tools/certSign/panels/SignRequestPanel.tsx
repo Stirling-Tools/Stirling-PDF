@@ -317,9 +317,9 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
         onClick={handleAddToActiveFiles}
         fullWidth
         style={{
-          backgroundColor: "var(--landing-inner-paper-bg)",
-          color: "var(--btn-open-file)",
-          border: "1px solid var(--landing-inner-paper-border)",
+          backgroundColor: "var(--c-surface-raised)",
+          color: "var(--c-primary)",
+          border: "1px solid var(--c-border)",
         }}
       >
         {t("certSign.collab.signRequest.addToFiles", "Add to Active Files")}

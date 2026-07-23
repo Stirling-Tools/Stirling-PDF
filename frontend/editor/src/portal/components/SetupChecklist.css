@@ -21,7 +21,7 @@
   width: 100%;
   padding: 0.6875rem 1.25rem;
   border: none;
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
   background: transparent;
   text-align: left;
   cursor: pointer;
@@ -31,7 +31,7 @@
   border-top: none;
 }
 .portal-setup__row:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 /* Numbered step marker */
@@ -42,10 +42,10 @@
   height: 1.5rem;
   flex-shrink: 0;
   border-radius: 50%;
-  border: 1px solid var(--color-border-input);
+  border: 1px solid var(--c-border);
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 /* Completed step: filled green check. */
 .portal-setup__num.is-done {
@@ -54,7 +54,7 @@
   color: #fff;
 }
 .portal-setup__row.is-done .portal-setup__text strong {
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-setup__text {
@@ -65,12 +65,12 @@
 .portal-setup__text strong {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .portal-setup__text span {
   font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* ── Enterprise upsell rung ── */
@@ -81,10 +81,10 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.75rem 1.25rem;
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--color-blue) 5%, transparent) 0%,
+    color-mix(in srgb, var(--c-primary) 5%, transparent) 0%,
     transparent 55%
   );
 }
@@ -105,18 +105,18 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-blue-dark);
-  background: var(--color-blue-light);
+  color: var(--c-primary-hover);
+  background: var(--c-primary-tint);
 }
 
 .portal-setup__enterprise-text {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   min-width: 0;
 }
 .portal-setup__enterprise-text strong {
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-weight: 700;
 }

@@ -226,8 +226,8 @@ const preview: Preview = {
     backgrounds: {
       default: "app",
       values: [
-        { name: "app", value: "var(--color-bg)" },
-        { name: "surface", value: "var(--color-surface)" },
+        { name: "app", value: "var(--c-bg)" },
+        { name: "surface", value: "var(--c-surface)" },
       ],
     },
     a11y: {

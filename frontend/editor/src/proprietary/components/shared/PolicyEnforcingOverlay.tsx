@@ -40,7 +40,7 @@ export function PolicyEnforcingOverlay({
   if (!enforcing) return null;
   return (
     <Overlay
-      color="var(--color-bg)"
+      color="var(--c-bg)"
       backgroundOpacity={0.9}
       blur={4}
       zIndex={zIndex}

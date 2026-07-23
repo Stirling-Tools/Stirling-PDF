@@ -8,15 +8,15 @@
   letter-spacing: 0.01em;
   border: 1px solid transparent;
   line-height: 1;
-  color: var(--sui-status-c, var(--color-text-3));
+  color: var(--sui-status-c, var(--c-text-subtle));
   background: color-mix(
     in srgb,
-    var(--sui-status-c, var(--color-text-3)) 12%,
+    var(--sui-status-c, var(--c-text-subtle)) 12%,
     transparent
   );
   border-color: color-mix(
     in srgb,
-    var(--sui-status-c, var(--color-text-3)) 28%,
+    var(--sui-status-c, var(--c-text-subtle)) 28%,
     transparent
   );
 }
@@ -51,9 +51,9 @@
 
 /* Neutral keeps the plain muted surface rather than an accent tint. */
 .sui-status--neutral {
-  color: var(--color-text-3);
-  background: var(--color-bg-muted);
-  border-color: var(--color-border-light);
+  color: var(--c-text-subtle);
+  background: var(--c-surface-sunken);
+  border-color: var(--c-border-subtle);
 }
 /* Tones only pick the accent; the base rule builds the fill + border. `-dark`
    is theme-adaptive, so text stays legible on the pale fill in both themes. */
@@ -67,7 +67,7 @@
   --sui-status-c: var(--color-red-dark);
 }
 .sui-status--info {
-  --sui-status-c: var(--color-blue-dark);
+  --sui-status-c: var(--c-primary-hover);
 }
 .sui-status--purple {
   --sui-status-c: var(--color-purple-dark);

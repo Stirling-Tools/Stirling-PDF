@@ -54,8 +54,8 @@ export default function Footer({
     <div
       style={{
         height: "var(--footer-height)",
-        backgroundColor: "var(--bg-surface)",
-        borderTop: "1px solid var(--border-subtle)",
+        backgroundColor: "var(--c-surface)",
+        borderTop: "1px solid var(--c-border-subtle)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",

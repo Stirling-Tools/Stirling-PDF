@@ -31,7 +31,7 @@
 .portal-source-builder__title {
   font-size: 1.375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   margin: 0;
 }
 
@@ -60,8 +60,8 @@
    Button's own inline background/border vars. */
 .portal-source-builder__type-grid .portal-source-builder__type-card {
   padding: 0.875rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   transition:
     border-color var(--motion-fast),
@@ -70,21 +70,21 @@
 }
 
 .portal-source-builder__type-grid .portal-source-builder__type-card:hover {
-  border-color: var(--color-border-strong, var(--color-border));
-  background: var(--color-bg-hover);
+  border-color: var(--c-border-strong);
+  background: var(--c-hover);
 }
 
 .portal-source-builder__type-grid
   .portal-source-builder__type-card:focus-visible {
-  border-color: var(--color-blue);
-  box-shadow: 0 0 0 2px var(--color-blue-light);
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 2px var(--c-primary-tint);
 }
 
 .portal-source-builder__type-grid
   .portal-source-builder__type-card.is-selected {
-  border-color: var(--color-blue);
-  background: var(--color-blue-light);
-  box-shadow: 0 0 0 1px var(--color-blue) inset;
+  border-color: var(--c-primary);
+  background: var(--c-primary-tint);
+  box-shadow: 0 0 0 1px var(--c-primary) inset;
 }
 
 .portal-source-builder__type-icon {
@@ -96,13 +96,13 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
   background: var(--color-bg-subtle);
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-source-builder__type-card.is-selected
   .portal-source-builder__type-icon {
-  background: color-mix(in srgb, var(--color-blue) 14%, transparent);
-  color: var(--color-blue);
+  background: color-mix(in srgb, var(--c-primary) 14%, transparent);
+  color: var(--c-primary);
 }
 
 .portal-source-builder__type-icon svg {
@@ -121,13 +121,13 @@
 .portal-source-builder__type-name {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-source-builder__type-desc {
   font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-source-builder__delete-actions {
@@ -156,11 +156,11 @@
 .portal-source-builder__muted {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-source-builder__type-description {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
