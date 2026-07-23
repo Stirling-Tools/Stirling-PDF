@@ -18,8 +18,10 @@ import {
   createSource,
   deleteSource,
   fetchSource,
+  isFolderAccessDeniedError,
   type Source,
 } from "@portal/api/sources";
+import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
@@ -72,6 +74,7 @@ export function SourceBuilder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { openSettings } = useUI();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const listPath = toPortalPath(VIEW_PATHS.sources);
@@ -95,6 +98,9 @@ export function SourceBuilder() {
   const [seeded, setSeeded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A folder-outside-allowed-roots failure: the error banner offers a link to
+  // the Folder Access settings instead of leaving the admin at a dead end.
+  const [folderAccessDenied, setFolderAccessDenied] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [reveal, setReveal] = useState<{
@@ -145,6 +151,7 @@ export function SourceBuilder() {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
+    setFolderAccessDenied(false);
     try {
       const saved = await createSource({
         id: isEdit ? id : undefined,
@@ -165,6 +172,7 @@ export function SourceBuilder() {
       navigate(listPath);
     } catch (e) {
       setError(errorMessage(e));
+      setFolderAccessDenied(isFolderAccessDeniedError(e));
       setSubmitting(false);
     }
   }
@@ -367,7 +375,34 @@ export function SourceBuilder() {
           </FormField>
         )}
 
-        {error && <Banner tone="danger" description={error} />}
+        {error &&
+          (folderAccessDenied ? (
+            <Banner
+              tone="danger"
+              title={t(
+                "portal.sources.builder.folderAccess.title",
+                "This folder isn't allowed",
+              )}
+              description={t(
+                "portal.sources.builder.folderAccess.description",
+                "Folder automations can only use folders an administrator has allowed. Add it under Folder Access settings, then try again.",
+              )}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => openSettings("adminFolderAccess")}
+                >
+                  {t(
+                    "portal.sources.builder.folderAccess.openSettings",
+                    "Folder Access settings",
+                  )}
+                </Button>
+              }
+            />
+          ) : (
+            <Banner tone="danger" description={error} />
+          ))}
       </div>
 
       <Modal

@@ -24,7 +24,7 @@ function StirlingMark() {
       fill="none"
       aria-hidden
     >
-      <rect width="256" height="256" rx="58" fill="#8E3131" />
+      <rect width="256" height="256" rx="58" fill="var(--c-brand-mark)" />
       <path
         d="M39.2638 127.834L155.374 32L155.375 121.499L39.2638 217.333L39.2638 127.834Z"
         fill="white"

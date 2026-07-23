@@ -16,7 +16,7 @@
 }
 
 .containerBorder {
-  border: 1px solid var(--border-default, #333);
+  border: 1px solid var(--c-border);
 }
 
 /* Page thumbnail styles */
@@ -105,8 +105,8 @@
 
 .gridTileSelected,
 .gridTileHovered {
-  border: 2px solid var(--mantine-primary-color-filled, #3b82f6);
-  background-color: rgba(59, 130, 246, 0.2);
+  border: 2px solid var(--c-primary);
+  background-color: color-mix(in srgb, var(--c-primary) 20%, transparent);
 }
 
 /* Preview header */
@@ -116,14 +116,14 @@
 
 .divider {
   height: 1px;
-  background-color: var(--border-default, #333);
+  background-color: var(--c-border);
   margin-bottom: 8px;
 }
 
 .previewLabel {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--c-text);
   text-align: center;
 }
 

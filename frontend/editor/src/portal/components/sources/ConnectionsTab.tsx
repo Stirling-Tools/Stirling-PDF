@@ -1,5 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import {
@@ -13,35 +12,51 @@ import {
 import { errorMessage } from "@portal/api/http";
 import {
   deleteIntegration,
+  fetchIntegrationCapabilities,
+  fetchIntegrations,
+  type IntegrationCapabilities,
   type IntegrationConfig,
 } from "@portal/api/integrations";
-import { useS3Connections } from "@portal/queries/sources";
-import { qk } from "@portal/queries/keys";
 import { SourcesIcon } from "@portal/components/icons";
-import { S3ConnectionModal } from "@portal/components/sources/S3ConnectionModal";
+import { ConnectionModal } from "@portal/components/sources/ConnectionModal";
+import { connectionTypeOf } from "@portal/components/sources/connectionTypes";
 
 /**
- * The Connections tab of the Sources page: stored S3 connections that sources
- * and pipeline outputs reference by id. Create/edit go through the shared
- * {@link S3ConnectionModal}; deleting one the backend still references returns a
- * 409, surfaced inline.
+ * The Connections tab of the Sources page: the stored connections that sources, pipeline outputs
+ * and integration steps reference by id — S3, Purview, ConsignO, and admin-authored custom APIs.
+ * Create/edit go through the shared {@link ConnectionModal}; deleting one the backend still
+ * references returns a 409, surfaced inline.
  */
 export function ConnectionsTab() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const state = useS3Connections();
-  const connections = state.data;
+  const [connections, setConnections] = useState<IntegrationConfig[] | null>(
+    null,
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<IntegrationConfig | null>(null);
   const [busy, setBusy] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  // Surface a mutation failure first, else a fetch failure from the query.
-  const error = actionError ?? (state.error ? errorMessage(state.error) : null);
+  const [error, setError] = useState<string | null>(null);
+  const [capabilities, setCapabilities] = useState<
+    IntegrationCapabilities | undefined
+  >(undefined);
 
-  const refresh = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: qk.s3Connections() }),
-    [queryClient],
-  );
+  const refresh = useCallback(async () => {
+    try {
+      setConnections(await fetchIntegrations());
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  // What this caller may author. Left undefined on failure, which withholds the custom-API
+  // option rather than offering something the backend would refuse.
+  useEffect(() => {
+    fetchIntegrationCapabilities().then(setCapabilities, () => undefined);
+  }, []);
 
   function openCreate() {
     setEditing(null);
@@ -56,12 +71,12 @@ export function ConnectionsTab() {
   async function remove(connection: IntegrationConfig) {
     if (busy) return;
     setBusy(true);
-    setActionError(null);
+    setError(null);
     try {
       await deleteIntegration(connection.id);
       await refresh();
     } catch (e) {
-      setActionError(errorMessage(e));
+      setError(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -75,18 +90,21 @@ export function ConnectionsTab() {
         render: (c) => <strong>{c.name}</strong>,
       },
       {
-        key: "bucket",
-        header: t("portal.connections.table.bucket"),
-        render: (c) => (
-          <span className="portal-sources__connections-bucket">
-            {String(c.config?.bucket ?? "")}
-          </span>
-        ),
+        key: "type",
+        header: t("portal.connections.table.type"),
+        render: (c) => {
+          const type = connectionTypeOf(c.integrationType, c.config);
+          return type ? t(type.labelKey) : c.integrationType;
+        },
       },
       {
-        key: "region",
-        header: t("portal.connections.table.region"),
-        render: (c) => String(c.config?.region ?? ""),
+        key: "detail",
+        header: t("portal.connections.table.detail"),
+        render: (c) => (
+          <span className="portal-sources__connections-bucket">
+            {connectionDetail(c)}
+          </span>
+        ),
       },
       {
         key: "actions",
@@ -120,22 +138,26 @@ export function ConnectionsTab() {
     [t, busy],
   );
 
-  const isLoading = state.loading && connections === null;
-  const isEmpty = !isLoading && (connections?.length ?? 0) === 0;
+  const isLoading = connections === null;
+  const isEmpty = connections !== null && connections.length === 0;
 
   return (
     <section className="portal-sources__connections">
-      <div className="portal-sources__connections-head">
-        <p className="portal-sources__connections-sub">
-          {t("portal.connections.subtitle")}
-        </p>
-        <Button
-          onClick={openCreate}
-          leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
-        >
-          {t("portal.connections.actions.new")}
-        </Button>
-      </div>
+      {/* The empty state carries its own heading and call to action, so the header row would
+          only double the button and the copy - show it once there are connections to head. */}
+      {!isEmpty && (
+        <div className="portal-sources__connections-head">
+          <p className="portal-sources__connections-sub">
+            {t("portal.connections.subtitle")}
+          </p>
+          <Button
+            onClick={openCreate}
+            leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+          >
+            {t("portal.connections.actions.new")}
+          </Button>
+        </div>
+      )}
 
       {error && <Banner tone="danger" description={error} />}
 
@@ -172,12 +194,30 @@ export function ConnectionsTab() {
         />
       )}
 
-      <S3ConnectionModal
+      <ConnectionModal
         open={modalOpen}
         connection={editing}
+        capabilities={capabilities}
         onClose={() => setModalOpen(false)}
         onSaved={() => void refresh()}
       />
     </section>
   );
+}
+
+/**
+ * The one line that identifies a connection at a glance. Per type, because "bucket" means nothing
+ * to a Purview tenant and a base URL means nothing to S3. Never a secret: config arrives masked,
+ * but only non-secret keys are shown regardless.
+ */
+function connectionDetail(connection: IntegrationConfig): string {
+  const config = connection.config ?? {};
+  switch (connection.integrationType) {
+    case "S3":
+      return String(config.bucket ?? "");
+    case "PURVIEW":
+      return String(config.tenantId ?? "");
+    default:
+      return String(config.baseUrl ?? "");
+  }
 }

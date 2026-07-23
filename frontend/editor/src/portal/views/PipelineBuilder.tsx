@@ -61,6 +61,13 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
+import {
+  integrationStepConfigured,
+  isIntegrationStep,
+  newIntegrationStep,
+  stepOperation,
+} from "@portal/components/pipelines/integrationStep";
 import "@portal/views/PipelineBuilder.css";
 
 type OutputMode = PipelineOutputMode;
@@ -284,6 +291,15 @@ export function PipelineBuilder() {
     );
   }
 
+  function addOperationStep(op: (typeof STEP_OPERATIONS)[number]) {
+    setSteps((current) => {
+      const next = [...current, newIntegrationStep(op)];
+      setSelectedIndex(next.length - 1);
+      return next;
+    });
+    setPickerOpen(false);
+  }
+
   function addStep(tool: ExecutableTool) {
     setSteps((current) => {
       const next = [...current, newWorkingToolStep(tool, allTools)];
@@ -312,12 +328,22 @@ export function PipelineBuilder() {
   function updateStepParams(index: number, params: ErasedToolParams) {
     setSteps((current) =>
       current.map((step, i) =>
-        i === index && step.toolId !== null ? { ...step, params } : step,
+        // Integration steps are deliberately toolId-less, so they must be editable too; only a
+        // genuinely unrecognised step has no editor to send changes from.
+        i === index && (step.toolId !== null || isIntegrationStep(step))
+          ? { ...step, params }
+          : step,
       ),
     );
   }
 
   function stepLabel(step: WorkingToolStep): string {
+    // An integration step's endpoint is the same for every vendor, so the raw path would read
+    // "External api call" for all of them. Name it by the operation instead.
+    const op = stepOperation(step);
+    if (op) return t(op.labelKey);
+    if (isIntegrationStep(step))
+      return t("portal.pipelines.builder.sendToSystem");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -326,6 +352,13 @@ export function PipelineBuilder() {
   // policy, so a later run would send null for that field (see stepRequiresUpload).
   const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
   const hasUploadSteps = uploadStepLabels.length > 0;
+
+  // An integration step with no operation or no account chosen would fail at run time with a raw
+  // backend rejection, so block saving on it here where the fix is one click away.
+  const unconfiguredStepLabels = steps
+    .filter((step) => !integrationStepConfigured(step))
+    .map(stepLabel);
+  const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
   // Track unsaved edits: snapshot the form and compare against the state captured just after
   // seeding, so leaving the builder can prompt to save or discard.
@@ -359,6 +392,7 @@ export function PipelineBuilder() {
     scheduleCountValid &&
     outputValid &&
     !hasUploadSteps &&
+    !hasUnconfiguredSteps &&
     !submitting;
 
   const triggerOptions = [
@@ -659,6 +693,14 @@ export function PipelineBuilder() {
           })}
         />
       )}
+      {hasUnconfiguredSteps && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.builder.stepsNeedSetup", {
+            tools: unconfiguredStepLabels.join(", "),
+          })}
+        />
+      )}
 
       {/* Pipeline-level settings, above the operation list. */}
       <section className="portal-builder__settings">
@@ -834,7 +876,17 @@ export function PipelineBuilder() {
                       <span className="portal-builder__step-name">
                         {stepLabel(step)}
                       </span>
-                      {stepRequiresUpload(step) ? (
+                      {isIntegrationStep(step) ? (
+                        !stepOperation(step) ? (
+                          <span className="portal-builder__step-note">
+                            {t("portal.pipelines.builder.chooseOperation")}
+                          </span>
+                        ) : !integrationStepConfigured(step) ? (
+                          <span className="portal-builder__step-note">
+                            {t("portal.pipelines.builder.chooseAccount")}
+                          </span>
+                        ) : null
+                      ) : stepRequiresUpload(step) ? (
                         <span className="portal-builder__step-note">
                           {t("portal.pipelines.builder.needsUpload")}
                         </span>
@@ -889,6 +941,8 @@ export function PipelineBuilder() {
             <ToolPicker
               tools={executableTools}
               onPick={addStep}
+              operations={STEP_OPERATIONS}
+              onPickOperation={addOperationStep}
               onClose={() => setPickerOpen(false)}
             />
           ) : (

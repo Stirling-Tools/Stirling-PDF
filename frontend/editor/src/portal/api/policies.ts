@@ -291,7 +291,14 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("sanitize"), policyStep("flatten")],
+    // Apply writes our sensitivity label into the document after it is sanitised and flattened.
+    // Offered only once a Purview tenant is connected (it needs a tenant connection and a label
+    // GUID, which no default can guess), and hidden entirely until then.
+    defaultOperations: [
+      policyStep("sanitize"),
+      policyStep("flatten"),
+      policyStep("purviewApplyLabel"),
+    ],
     fields: [
       {
         label: "portal.policies.config.compliance.fields.frameworks",

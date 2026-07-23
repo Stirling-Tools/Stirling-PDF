@@ -81,11 +81,14 @@ async function resolveTeam(): Promise<TeamDetailsDTO | null> {
   const fetchMy = () =>
     apiClient.local.json<TeamDetailsDTO[]>("/api/v1/team/my");
   // fetchUsers and fetchTeams both resolve the team; share one /team/my via the
-  // query cache (two callers, one fetch). Falls back to a direct fetch when no
-  // portal client is mounted (e.g. a unit test exercising this adapter).
+  // query cache. fetchQuery (not ensureQueryData) so the shared entry honours
+  // both staleTime — two callers in one mount dedupe to a single request — AND
+  // invalidation: refresh() invalidates qk.teamMy(), so the next resolve after a
+  // rename/remove refetches instead of returning the stale team. Falls back to a
+  // direct fetch when no portal client is mounted (e.g. a unit test).
   const client = tryGetPortalQueryClient();
   const teams = client
-    ? await client.ensureQueryData({ queryKey: qk.teamMy(), queryFn: fetchMy })
+    ? await client.fetchQuery({ queryKey: qk.teamMy(), queryFn: fetchMy })
     : await fetchMy();
   if (!teams || teams.length === 0) return null;
   return (

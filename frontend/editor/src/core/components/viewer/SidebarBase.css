@@ -6,15 +6,15 @@
   flex-direction: column;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--bg-toolbar) 96%, transparent),
-    color-mix(in srgb, var(--bg-background) 90%, transparent)
+    color-mix(in srgb, var(--c-bg-raised) 96%, transparent),
+    color-mix(in srgb, var(--c-bg) 90%, transparent)
   );
   border-left: 1px solid
-    color-mix(in srgb, var(--border-subtle) 75%, transparent);
+    color-mix(in srgb, var(--c-border-subtle) 75%, transparent);
   box-shadow: -2px 0 16px
     color-mix(
       in srgb,
-      var(--shadow-color, rgba(15, 23, 42, 0.35)) 20%,
+      var(--shadow-color, color-mix(in srgb, black 35%, transparent)) 20%,
       transparent
     );
   backdrop-filter: blur(12px);
@@ -26,8 +26,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 0.875rem;
-  background: var(--bg-toolbar);
-  border-bottom: 1px solid var(--border-subtle);
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .sidebar-base__header-title {
@@ -46,9 +46,8 @@
 
 /* Search Section (used by bookmark & attachment sidebars) */
 .sidebar-base__search {
-  background: var(--tool-panel-search-bg, var(--bg-toolbar));
-  border-bottom: 1px solid
-    var(--tool-panel-search-border-bottom, var(--border-subtle));
+  background: var(--c-surface-sunken, var(--c-bg-raised));
+  border-bottom: 1px solid var(--c-border, var(--c-border-subtle));
   padding-top: 0.75rem !important;
 }
 
