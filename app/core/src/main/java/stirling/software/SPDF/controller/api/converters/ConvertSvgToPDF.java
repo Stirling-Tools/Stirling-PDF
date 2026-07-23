@@ -147,7 +147,7 @@ public class ConvertSvgToPDF {
             String outputFilename =
                     filenames.isEmpty()
                             ? "combined_svgs.pdf"
-                            : GeneralUtils.generateFilename(filenames.get(0), "_combined.pdf");
+                            : GeneralUtils.generateFilename(filenames.getFirst(), "_combined.pdf");
 
             log.info("Successfully combined {} SVGs into single PDF", sanitizedSvgs.size());
 
@@ -203,7 +203,7 @@ public class ConvertSvgToPDF {
 
         try {
             if (convertedPdfs.size() == 1) {
-                ConvertedPdf pdf = convertedPdfs.get(0);
+                ConvertedPdf pdf = convertedPdfs.getFirst();
                 TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
                 try {
                     Files.write(tempOut.getPath(), pdf.content);
@@ -218,7 +218,7 @@ public class ConvertSvgToPDF {
                     filenames.isEmpty()
                             ? "converted_svgs.zip"
                             : GeneralUtils.generateFilename(
-                                    filenames.get(0), "_converted_svgs.zip");
+                                    filenames.getFirst(), "_converted_svgs.zip");
             TempFile zipFile = createZipFromPdfs(convertedPdfs);
             return WebResponseUtils.zipFileToWebResponse(zipFile, zipFilename);
         } catch (IOException e) {

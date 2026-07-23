@@ -131,7 +131,7 @@ public class PolicyExecutor {
             // One call over all inputs. The outputs derive from a single input only when exactly
             // one entered; otherwise (a genuine merge) there is no single source.
             ToolResult r = callEndpoint(step, inputFiles, supportingFiles);
-            Integer origin = inputOrigins.size() == 1 ? inputOrigins.get(0) : null;
+            Integer origin = inputOrigins.size() == 1 ? inputOrigins.getFirst() : null;
             for (Resource file : r.files()) {
                 files.add(file);
                 origins.add(origin);

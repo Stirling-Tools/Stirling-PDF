@@ -82,7 +82,7 @@ public class ExtractCSVController {
             if (csvEntries.isEmpty()) {
                 return ResponseEntity.noContent().build();
             } else if (csvEntries.size() == 1) {
-                return createCsvResponse(csvEntries.get(0), baseName);
+                return createCsvResponse(csvEntries.getFirst(), baseName);
             } else {
                 return createZipResponse(csvEntries, baseName);
             }

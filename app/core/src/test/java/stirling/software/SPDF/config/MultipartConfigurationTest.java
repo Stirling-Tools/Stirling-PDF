@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,10 +22,7 @@ class MultipartConfigurationTest {
     void setUp() throws Exception {
         // Manually constructed config with a mocked service, so Spring env overrides do not apply.
         uploadLimitService = mock(UploadLimitService.class);
-        configuration = new MultipartConfiguration();
-        Field field = MultipartConfiguration.class.getDeclaredField("uploadLimitService");
-        field.setAccessible(true);
-        field.set(configuration, uploadLimitService);
+        configuration = new MultipartConfiguration(uploadLimitService);
     }
 
     @Nested

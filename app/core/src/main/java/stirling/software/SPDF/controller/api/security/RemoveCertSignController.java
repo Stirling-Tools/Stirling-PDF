@@ -60,7 +60,7 @@ public class RemoveCertSignController {
                 // Remove signature fields safely
                 List<PDField> fieldsToRemove =
                         acroForm.getFields().stream()
-                                .filter(field -> field instanceof PDSignatureField)
+                                .filter(PDSignatureField.class::isInstance)
                                 .toList();
 
                 if (!fieldsToRemove.isEmpty()) {

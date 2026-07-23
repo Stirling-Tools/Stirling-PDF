@@ -1,6 +1,5 @@
 package stirling.software.SPDF.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +21,11 @@ import stirling.software.SPDF.controller.web.UploadLimitService;
 @Slf4j
 public class MultipartConfiguration {
 
-    @Autowired private UploadLimitService uploadLimitService;
+    private final UploadLimitService uploadLimitService;
+
+    public MultipartConfiguration(UploadLimitService uploadLimitService) {
+        this.uploadLimitService = uploadLimitService;
+    }
 
     /**
      * Creates MultipartConfigElement that respects fileUploadLimit from settings.yml or environment
