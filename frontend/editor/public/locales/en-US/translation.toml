@@ -3536,6 +3536,7 @@ message = "Failed to set default PDF handler"
 title = "Error"
 
 [defaultApp.prompt]
+dontRemind = "Don't remind me again"
 message = "Make Stirling PDF your default application for opening PDF files."
 
 [defaultApp.settingsOpened]
@@ -9495,6 +9496,8 @@ defaultPdfEditor = "Default PDF editor"
 defaultPdfEditorActive = "Stirling PDF is your default PDF editor"
 defaultPdfEditorChecking = "Checking..."
 defaultPdfEditorInactive = "Another application is set as default"
+defaultPdfEditorRemind = "Remind me to set as default"
+defaultPdfEditorRemindDescription = "Show a banner when Stirling PDF is not your default PDF application."
 defaultPdfEditorSet = "Already Default"
 defaultStartupView = "Default view on launch"
 defaultStartupViewDescription = "Choose which view is active when the app starts"

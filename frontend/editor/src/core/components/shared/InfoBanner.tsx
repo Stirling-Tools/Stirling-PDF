@@ -78,6 +78,9 @@ interface InfoBannerProps {
   buttonText?: string;
   buttonIcon?: string;
   onButtonClick?: () => void;
+  /** Optional muted secondary action (e.g. "Don't remind me again"). */
+  secondaryButtonText?: string;
+  onSecondaryButtonClick?: () => void;
   onDismiss?: () => void;
   dismissible?: boolean;
   loading?: boolean;
@@ -106,6 +109,8 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   buttonText,
   buttonIcon = "check-circle-rounded",
   onButtonClick,
+  secondaryButtonText,
+  onSecondaryButtonClick,
   onDismiss,
   dismissible = true,
   loading = false,
@@ -128,6 +133,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   }
 
   const toneStyle = toneStyles[tone] ?? toneStyles.info;
+  const resolvedTextColor = textColor ?? toneStyle.text;
   const handleDismiss = () => {
     onDismiss?.();
   };
@@ -184,7 +190,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               <Text
                 fw={600}
                 size={textSize}
-                style={{ color: textColor ?? toneStyle.text }}
+                style={{ color: resolvedTextColor }}
               >
                 {title}
               </Text>
@@ -192,7 +198,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
             <Text
               fw={title ? 400 : 500}
               size={textSize}
-              style={{ color: textColor ?? toneStyle.text }}
+              style={{ color: resolvedTextColor }}
               lineClamp={compact ? 1 : 2}
             >
               {message}
@@ -221,6 +227,17 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               {buttonText}
             </Button>
           )}
+          {secondaryButtonText && onSecondaryButtonClick && (
+            <Button
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
+              onClick={onSecondaryButtonClick}
+              style={{ color: "var(--c-text-muted)" }}
+            >
+              {secondaryButtonText}
+            </Button>
+          )}
           {dismissible && (
             <ActionIcon
               variant="tertiary"
@@ -228,7 +245,9 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               size="sm"
               onClick={handleDismiss}
               aria-label={t("infoBanner.dismiss", "Dismiss")}
-              style={closeIconColor ? { color: closeIconColor } : undefined}
+              style={{
+                color: closeIconColor ?? "var(--c-text-muted)",
+              }}
             >
               <LocalIcon
                 icon="close-rounded"
