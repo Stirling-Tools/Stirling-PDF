@@ -49,6 +49,40 @@ function setTransientNull(key: string): void {
 /** Track in-flight prefetches so we don't double-fire. */
 const inFlight = new Set<string>();
 
+/**
+ * Hard cap on CONCURRENT auto-prefetches. Every prefetch serializes the whole
+ * PDF to base64 and POSTs it (~MBs); a burst of edits across many runs used
+ * to fan out hundreds of such uploads at once, exhausting the browser's
+ * request slots (net::ERR_INSUFFICIENT_RESOURCES) and destabilising the tab.
+ * Excess requests are simply dropped - the chars stay cache-miss and a later
+ * keystroke re-fires when a slot is free.
+ */
+const MAX_CONCURRENT_AUTO_PREFETCH = 2;
+let autoPrefetchActive = 0;
+
+/**
+ * Short-lived cache of the serialized document, shared by prefetch bursts.
+ * The backend only needs the bytes to LOCATE fonts - fonts don't change
+ * between keystrokes - so a few-seconds-stale copy is fine and saves one
+ * full PdfiumSave serialize per missing char.
+ */
+let serializedCache: { bytes: Uint8Array; at: number } | null = null;
+const SERIALIZE_TTL_MS = 4000;
+
+function serializeDocCached<D>(
+  save: { serialize: (d: D) => Uint8Array },
+  doc: D,
+): Uint8Array | null {
+  const now = Date.now();
+  if (serializedCache && now - serializedCache.at < SERIALIZE_TTL_MS) {
+    return serializedCache.bytes;
+  }
+  const bytes = save.serialize(doc);
+  if (!bytes || bytes.byteLength === 0) return null;
+  serializedCache = { bytes, at: now };
+  return bytes;
+}
+
 /** Endpoint config - resolved relative to current origin in dev. */
 const ENDPOINT = "/api/v1/general/pdf-text-editor-v2/encode-charcodes";
 
@@ -174,10 +208,14 @@ function maybeAutoPrefetch(
   // Never round-trip whitespace - it has no reusable glyph (see resolve()).
   chars = chars.filter((ch) => !/\s/.test(ch));
   if (chars.length === 0) return;
+  // Concurrency cap: dropping is safe - the chars stay cache-miss and a
+  // later keystroke re-fires once a slot frees up.
+  if (autoPrefetchActive >= MAX_CONCURRENT_AUTO_PREFETCH) return;
   // Avoid re-firing while a prefetch for these chars is in flight.
   const reqKey = `auto:${fontPtr}:${chars.join("")}`;
   if (inFlight.has(reqKey)) return;
   inFlight.add(reqKey);
+  autoPrefetchActive += 1;
   void (async () => {
     try {
       const { PdfiumSave } =
@@ -192,8 +230,8 @@ function maybeAutoPrefetch(
         for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
         return;
       }
-      const bytes = PdfiumSave.serialize(doc);
-      if (!bytes || bytes.byteLength === 0) {
+      const bytes = serializeDocCached(PdfiumSave, doc);
+      if (!bytes) {
         for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
         return;
       }
@@ -278,6 +316,7 @@ function maybeAutoPrefetch(
       }
     } finally {
       inFlight.delete(reqKey);
+      autoPrefetchActive -= 1;
     }
   })();
 }
@@ -732,4 +771,6 @@ export function resetBackendResolverCaches(): void {
   inFlight.clear();
   prewarmedPages.clear();
   fontForCharCache.clear();
+  serializedCache = null;
+  autoPrefetchActive = 0;
 }

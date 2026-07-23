@@ -1195,6 +1195,45 @@ function objFontPtr(
 }
 
 /**
+ * Pick the member object whose text shares the most characters with the text
+ * about to be emitted, and return ITS font handle. Taking `ptrs[0]` blindly
+ * borrowed the BULLET glyph's font for every bulleted line (SymbolMT subsets
+ * hold only the bullet - re-emitting words with them produced .notdef boxes
+ * that even read-back can't detect, because PDFium round-trips the raw codes
+ * symmetrically). A member that rendered the line's letters is guaranteed to
+ * cover them. Falls back to the first resolvable font when nothing scores.
+ */
+export function bestFontPtrForText(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  ptrs: number[],
+  texts: string[],
+  targetText: string,
+): number {
+  const want = new Set([...targetText].filter((c) => c.trim().length > 0));
+  let bestPtr = 0;
+  let bestScore = 0;
+  for (let i = 0; i < ptrs.length; i++) {
+    const ptr = ptrs[i];
+    if (!ptr) continue;
+    let score = 0;
+    for (const c of texts[i] ?? "") if (want.has(c)) score += 1;
+    if (score > bestScore) {
+      bestScore = score;
+      bestPtr = ptr;
+    }
+  }
+  if (bestPtr) {
+    const font = objFontPtr(m, bestPtr);
+    if (font) return font;
+  }
+  for (const ptr of ptrs) {
+    const font = objFontPtr(m, ptr);
+    if (font) return font;
+  }
+  return 0;
+}
+
+/**
  * Locate the single contiguous edit between `prev` and `next` via a
  * prefix/suffix scan. Returns the changed span: `[start, prevEnd)` in
  * `prev` maps to `[start, nextEnd)` in `next`.
@@ -1374,8 +1413,15 @@ export function applyParagraphEditPlan(
       // glyphs still match; emitTextLine self-validates each word and falls
       // back to base-14 only where the reused font produces .notdef.
       const leftX = slot.mergedFromBounds[0]?.x ?? slot.matrixE;
-      // Read the font handle BEFORE the objects are removed.
-      const reuseFontPtr = objFontPtr(m, slot.mergedFromPtrs[0] ?? 0);
+      // Read the font handle BEFORE the objects are removed. Score members
+      // by char overlap with the line - member[0] is the BULLET on bulleted
+      // lines, and its symbol-only subset boxes every re-emitted word.
+      const reuseFontPtr = bestFontPtrForText(
+        m,
+        slot.mergedFromPtrs,
+        slot.mergedFromTexts,
+        lineText,
+      );
       for (const ptr of slot.mergedFromPtrs) {
         if (!ptr) continue;
         try {

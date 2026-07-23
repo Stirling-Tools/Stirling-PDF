@@ -12,6 +12,7 @@ import {
   rotationFromMatrix,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import {
+  bestFontPtrForText,
   applyParagraphEditPlan,
   applyPartialEditPlan,
   planModifiesWhitespace,
@@ -370,8 +371,18 @@ export class EditTextCommand implements Command {
     // `!run.fontSubset` guard is safe and keeps subset/embedded fonts on edit
     // instead of always flipping to Helvetica.
     const canReuseFont = safeChars && run.containerPtr === 0;
-    const originalFontPtr =
-      canReuseFont && run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0;
+    // Borrow the font of the member sharing the most chars with the new
+    // text - the primary object is the BULLET on bulleted lines, and its
+    // symbol-only subset boxes every re-emitted word.
+    const borrowPtrs = collectMemberPtrs(run);
+    const borrowTexts =
+      run.mergedFromTexts.length === borrowPtrs.length
+        ? run.mergedFromTexts
+        : borrowPtrs.map(() => run.text);
+    const originalFontPtr = canReuseFont
+      ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
+        (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
+      : 0;
 
     this.revertLines = snapshotRevertLines(run, this.prevText ?? "");
     this.revertRotation = rotationFromMatrix(run.matrix) ?? null;

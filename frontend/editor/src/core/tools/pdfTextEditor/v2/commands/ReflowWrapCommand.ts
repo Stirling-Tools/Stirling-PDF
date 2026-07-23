@@ -127,6 +127,32 @@ export class ReflowWrapCommand implements Command {
       Math.max(fontSize * 4, rawRightEdge - startX - fontSize),
     );
 
+    // Reflow is only NEEDED when some line actually overflows the wrap
+    // width. When everything already fits, repositioning is pure loss: the
+    // greedy placer re-lines the paragraph at its AVERAGE line height
+    // (destroying intentional irregular spacing - e.g. the larger gaps above
+    // headings, which visibly shifted every line of a CV block after a
+    // one-char deletion) and re-spaces words at estimated gaps (scattering
+    // per-fragment kerned text like "Executive" into "Execut ive"). Group
+    // leaves by baseline and bail before touching anything if every line
+    // fits - the common case for deletions and small in-line edits.
+    {
+      const rightByLine = new Map<number, number>();
+      for (const l of leaves) {
+        const key = Math.round(l.baseline / 2);
+        const prev = rightByLine.get(key);
+        if (prev === undefined || l.right > prev) rightByLine.set(key, l.right);
+      }
+      let overflows = false;
+      for (const right of rightByLine.values()) {
+        if (right - startX > maxWidth + 0.5) {
+          overflows = true;
+          break;
+        }
+      }
+      if (!overflows) return;
+    }
+
     const words = groupWords(leaves, fontSize * 0.18);
     const spaceWidth = estimateSpaceWidth(words, fontSize);
     // Manual line breaks the user typed (Enter) live in run.text as "\n".

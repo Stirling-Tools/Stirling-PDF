@@ -1,4 +1,4 @@
-import { writeUtf16 } from "@app/services/pdfiumService";
+import { readUtf16, writeUtf16 } from "@app/services/pdfiumService";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
@@ -60,6 +60,13 @@ export function removeAndDestroyObject(
  */
 const perCharBranchPtrs = new Set<number>();
 
+/**
+ * (fontPtr:char) pairs a read-back has PROVEN render faithfully via SetText.
+ * Lets repeat emits of already-validated chars skip the text-page reload.
+ * Doc-scoped: font pointers are reused across documents.
+ */
+const readBackValidated = new Set<string>();
+
 /** Caller check: was this ptr produced by the per-char emit branch? */
 export function isVerifiedPerCharPtr(ptr: number): boolean {
   return perCharBranchPtrs.has(ptr);
@@ -68,6 +75,7 @@ export function isVerifiedPerCharPtr(ptr: number): boolean {
 /** Doc-scoped reset: PDFium reuses freed pointers across documents. */
 export function resetPerCharBranchPtrs(): void {
   perCharBranchPtrs.clear();
+  readBackValidated.clear();
 }
 
 /** Test-only: clear the verified-ptr set between cases. */
@@ -377,6 +385,25 @@ function looseBoxAdvancePt(
   }
 }
 
+/** |scale| of a page object's matrix (1 when unreadable). */
+function objMatrixScale(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  objPtr: number,
+): number {
+  const buf = m.pdfium.wasmExports.malloc(6 * 4);
+  try {
+    if (!m.FPDFPageObj_GetMatrix(objPtr, buf)) return 1;
+    const a = m.pdfium.getValue(buf, "float");
+    const b = m.pdfium.getValue(buf + 4, "float");
+    const s = Math.hypot(a, b);
+    return s > 0 ? s : 1;
+  } catch {
+    return 1;
+  } finally {
+    m.pdfium.wasmExports.free(buf);
+  }
+}
+
 function buildOnPageAdvMap(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   pagePtr: number,
@@ -395,6 +422,13 @@ function buildOnPageAdvMap(
   }
   const tp = mod.FPDFText_LoadPage(pagePtr);
   if (!tp) return out;
+  // FPDFText_GetFontSize returns the raw Tf operand, but many producers
+  // (Quartz/Word) set Tf 1 and carry the real size in the text matrix -
+  // dividing by 1 made "advance per em" actually "advance in points", and
+  // consumers multiplying by the EFFECTIVE size scattered glyphs by the
+  // matrix scale (an 18pt run advanced ~18x too far per char). Normalise
+  // by the effective size: Tf size x the object's matrix scale.
+  const scaleByObj = new Map<number, number>();
   try {
     const count = mod.FPDFText_CountChars(tp);
     for (let i = 0; i < count; i++) {
@@ -417,9 +451,16 @@ function buildOnPageAdvMap(
       if (fm.has(u)) continue;
       const fs = mod.FPDFText_GetFontSize(tp, i);
       if (!fs || fs <= 0) continue;
+      let scale = scaleByObj.get(obj);
+      if (scale === undefined) {
+        scale = objMatrixScale(m, obj);
+        scaleByObj.set(obj, scale);
+      }
+      const effFs = fs * scale;
+      if (!effFs || effFs <= 0) continue;
       const adv = looseBoxAdvancePt(m, tp, i);
       if (adv == null) continue;
-      fm.set(u, adv / fs);
+      fm.set(u, adv / effFs);
     }
   } finally {
     try {
@@ -750,6 +791,49 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       // Discard the .notdef object and free it (we re-emit in base-14 next).
       removeAndDestroyObject(m, opts.page.pagePtr, ptr);
       return emitBase14();
+    }
+    // Read-back validation for a source-font SetText. When PDFium's reverse
+    // Unicode lookup misses a char (not in the font's ToUnicode), SetText
+    // silently keeps the RAW code point as the charcode - and a re-encoded
+    // font renders whatever glyph it parks at that code. That is a full-width
+    // VALID glyph ("Zahid" -> "Lahid": Z=0x5A hit the glyph the subset stores
+    // at 0x5A), invisible to the width check above. The text page decodes the
+    // object's charcodes through the font's own ToUnicode - the ground truth -
+    // so a mismatch against the intended text means wrong glyphs: drop the
+    // object and re-emit in base-14 (right letters, safe font).
+    //
+    // Gated on the SetText path only (warm backend emits returned earlier),
+    // but NOT on `originalFontSubset`: a merged run's flag comes from its
+    // FIRST fragment's font (often a bullet glyph's), while the borrowed emit
+    // font can be a different, re-encoded subset - exactly the case that
+    // scrambled rare chars. A correct SetText just passes the compare.
+    if (strategyUsed === null) {
+      // Throttle: chars a previous read-back already proved this font renders
+      // faithfully never need re-checking - without this, char-by-char typing
+      // re-validated every word on every keystroke (a full text-page load
+      // each), tripling emit cost and timing out stress tests under parallel
+      // suite load. First occurrence per (font, char) still validates.
+      const visibleChars = [...text].filter((c) => c.trim().length > 0);
+      const allProven =
+        opts.originalFontPtr !== 0 &&
+        visibleChars.every((c) =>
+          readBackValidated.has(`${opts.originalFontPtr}:${c}`),
+        );
+      if (!allProven) {
+        const got = readBackTextObj(m, opts.page.pagePtr, ptr);
+        if (got !== null) {
+          const norm = (s: string) => s.replace(/\s+/g, "");
+          if (norm(got) !== norm(text)) {
+            removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+            return emitBase14();
+          }
+          if (opts.originalFontPtr) {
+            for (const c of visibleChars) {
+              readBackValidated.add(`${opts.originalFontPtr}:${c}`);
+            }
+          }
+        }
+      }
     }
     // Self-validate an UNTRUSTED charcode GUESS. Two strategies produce
     // valid-but-possibly-WRONG (non-.notdef) glyphs: content-stream maps
@@ -1199,6 +1283,59 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
   }
   return withRotation(ptrs);
+}
+
+interface TextObjReadModule {
+  FPDFText_LoadPage?: (page: number) => number;
+  FPDFText_ClosePage?: (tp: number) => void;
+  FPDFTextObj_GetText?: (
+    obj: number,
+    tp: number,
+    buf: number,
+    len: number,
+  ) => number;
+}
+
+/**
+ * Decode a just-inserted text object's content through the font's ToUnicode
+ * (what any PDF reader will see), or null when unavailable. Loads a fresh
+ * text page - PDFium builds it from the live object list, so no content
+ * regeneration is needed. Only called on the cold subset-font SetText path.
+ */
+function readBackTextObj(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  objPtr: number,
+): string | null {
+  const mod = m as unknown as TextObjReadModule;
+  if (
+    !mod.FPDFText_LoadPage ||
+    !mod.FPDFTextObj_GetText ||
+    !mod.FPDFText_ClosePage
+  ) {
+    return null;
+  }
+  const tp = mod.FPDFText_LoadPage(pagePtr);
+  if (!tp) return null;
+  try {
+    const len = mod.FPDFTextObj_GetText(objPtr, tp, 0, 0);
+    if (len <= 2) return "";
+    const buf = m.pdfium.wasmExports.malloc(len);
+    try {
+      mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
+      return readUtf16(m, buf, len);
+    } finally {
+      m.pdfium.wasmExports.free(buf);
+    }
+  } catch {
+    return null;
+  } finally {
+    try {
+      mod.FPDFText_ClosePage(tp);
+    } catch {
+      /* best-effort */
+    }
+  }
 }
 
 export function measureObjRightEdgePt(
