@@ -277,10 +277,17 @@ public class SourceController {
         }
     }
 
-    /** Names of the caller's visible policies that reference the given source. */
+    /**
+     * Names of the caller's visible policies that reference the given source - as an input ({@code
+     * sourceIds}) or as their output destination ({@code outputId}), so a location in use either
+     * way is protected from deletion.
+     */
     private List<String> referencingPolicyNames(String sourceId) {
         return policyAccessGuard.visibleFrom(policyStore).stream()
-                .filter(policy -> policy.sourceIds().contains(sourceId))
+                .filter(
+                        policy ->
+                                policy.sourceIds().contains(sourceId)
+                                        || policy.outputIds().contains(sourceId))
                 .map(Policy::name)
                 .toList();
     }

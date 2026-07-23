@@ -29,8 +29,8 @@ export interface OutputSpec {
   options: Record<string, unknown>;
 }
 
-/** The output destinations the pipeline builder can offer. */
-export type PipelineOutputMode = "inline" | "folder" | "s3";
+/** Source types that can be written to (used as a pipeline's output destination). */
+export type PipelineOutputMode = "folder" | "s3";
 
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
@@ -45,7 +45,17 @@ export interface Policy {
   trigger: TriggerConfig | null;
   sourceIds: string[];
   steps: PipelineStep[];
+  /**
+   * Inline output, used only when no destinations are referenced (editor/one-off runs that return
+   * results to the caller). Portal pipelines set {@link outputIds} instead.
+   */
   output: OutputSpec;
+  /**
+   * The saved Sources this policy delivers its output to (each a source used as a write target),
+   * resolved live at run time; a run is delivered to every one. Empty means the inline {@link
+   * output} is used.
+   */
+  outputIds: string[];
   teamId?: number | null;
 }
 

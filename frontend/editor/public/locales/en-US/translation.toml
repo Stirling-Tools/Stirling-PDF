@@ -7165,20 +7165,16 @@ addTool = "Add tool"
 cancel = "Cancel"
 chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
-directory = "Output folder"
-directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
 moveDown = "Move down"
 moveUp = "Move up"
 name = "Name"
 namePlaceholder = "e.g. Redaction sweep"
-noSources = "No sources connected yet. The pipeline can still run on files supplied to it directly."
 noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
-output = "Output"
+output = "Destinations"
 removeStep = "Remove operation"
-s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Save changes"
 scheduleEvery = "Run every"
 sources = "Sources"
@@ -7212,11 +7208,6 @@ title = "No pipelines yet"
 active = "Active"
 paused = "Paused"
 total = "Pipelines"
-
-[portal.pipelines.output]
-folder = "Write to folder"
-inline = "Return files"
-s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
 allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
@@ -7889,7 +7880,7 @@ confirm = "Delete"
 title = "Delete source?"
 
 [portal.sources.empty]
-description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
+description = "Connect a storage location so your policies have somewhere to pull data from."
 title = "No sources connected yet"
 
 [portal.sources.kpi]

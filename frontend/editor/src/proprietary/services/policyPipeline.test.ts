@@ -32,7 +32,7 @@ describe("buildPipelineDefinition", () => {
 
     expect(unresolved).toEqual([]);
     expect(definition.name).toBe("Secure Ingestion");
-    expect(definition.output).toEqual({ type: "inline", options: {} });
+    expect(definition.outputs).toEqual([{ type: "inline", options: {} }]);
     expect(definition.steps).toEqual([
       { operation: "/api/v1/misc/compress-pdf", parameters: {} },
       {
