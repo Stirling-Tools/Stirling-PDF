@@ -712,6 +712,11 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             formData,
             {
               responseType: "json",
+              // The component renders its own error state below, so suppress the
+              // generic global "Request error" toast (e.g. a 404 when the server
+              // doesn't support this conversion) — otherwise the user sees a bare
+              // toast over a blank editor with no explanation.
+              suppressErrorToast: true,
             },
           );
 
@@ -892,12 +897,22 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         cachedJobIdRef.current = null;
 
         if (isPdf) {
-          const errorMsg =
-            (error instanceof Error ? error.message : undefined) ||
-            t(
-              "pdfTextEditor.conversionFailed",
-              "Failed to convert PDF. Please try again.",
-            );
+          // A 404 from the convert endpoint means this server build doesn't
+          // expose the PDF text editor conversion. Surface a clear, actionable
+          // message instead of the generic "Failed to convert" copy so the user
+          // understands it's a server capability gap, not a bad file.
+          const isEndpointUnavailable =
+            isAxiosError(error) && error.response?.status === 404;
+          const errorMsg = isEndpointUnavailable
+            ? t(
+                "pdfTextEditor.errors.notAvailable",
+                "The PDF text editor isn't available on this server. It may be disabled, or the server may need to be updated to a version that supports it.",
+              )
+            : (error instanceof Error ? error.message : undefined) ||
+              t(
+                "pdfTextEditor.conversionFailed",
+                "Failed to convert PDF. Please try again.",
+              );
           setErrorMessage(errorMsg);
           console.error("Setting error message:", errorMsg);
         } else {
