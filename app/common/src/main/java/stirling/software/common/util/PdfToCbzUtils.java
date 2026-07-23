@@ -1,23 +1,18 @@
 package stirling.software.common.util;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.imageio.ImageIO;
-
 import org.apache.commons.io.FilenameUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.jpdfium.PdfDocument;
 
 @Slf4j
 public class PdfToCbzUtils {
@@ -31,12 +26,15 @@ public class PdfToCbzUtils {
 
         validatePdfFile(pdfFile);
 
-        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
-            if (document.getNumberOfPages() == 0) {
-                throw ExceptionUtils.createPdfNoPages();
-            }
+        try (TempFile tempFile = new TempFile(tempFileManager, ".pdf")) {
+            pdfFile.transferTo(tempFile.getFile());
+            try (PdfDocument document = PdfDocument.open(tempFile.getPath())) {
+                if (document.pageCount() == 0) {
+                    throw ExceptionUtils.createPdfNoPages();
+                }
 
-            return createCbzFromPdf(document, dpi, tempFileManager);
+                return createCbzFromPdf(document, dpi, tempFileManager);
+            }
         }
     }
 
@@ -57,37 +55,28 @@ public class PdfToCbzUtils {
     }
 
     private static TempFile createCbzFromPdf(
-            PDDocument document, int dpi, TempFileManager tempFileManager) throws IOException {
-        PDFRenderer pdfRenderer = new PDFRenderer(document);
-        pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
-
+            PdfDocument document, int dpi, TempFileManager tempFileManager) throws IOException {
         TempFile cbzTempFile = new TempFile(tempFileManager, ".cbz");
         try {
             try (ZipOutputStream zipOut =
                     new ZipOutputStream(Files.newOutputStream(cbzTempFile.getPath()))) {
 
-                int totalPages = document.getNumberOfPages();
+                int totalPages = document.pageCount();
 
                 for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                     final int currentPage = pageIndex;
                     try {
-                        BufferedImage image =
-                                ExceptionUtils.handleOomRendering(
-                                        currentPage + 1,
-                                        dpi,
-                                        () ->
-                                                pdfRenderer.renderImageWithDPI(
-                                                        currentPage, dpi, ImageType.RGB));
+                        byte[] imageBytes =
+                                RenderingUtils.renderPageToBytes(document, currentPage, dpi, "png");
 
                         String imageFilename =
                                 String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
                         zipOut.putNextEntry(new ZipEntry(imageFilename));
-                        ImageIO.write(image, "PNG", zipOut);
+                        zipOut.write(imageBytes);
                         zipOut.closeEntry();
 
-                    } catch (ExceptionUtils.OutOfMemoryDpiException e) {
-                        // Re-throw OOM exceptions without wrapping
-                        throw e;
+                    } catch (OutOfMemoryError e) {
+                        throw ExceptionUtils.createOutOfMemoryDpiException(currentPage + 1, dpi, e);
                     } catch (IOException e) {
                         // Wrap other IOExceptions with context
                         throw ExceptionUtils.createFileProcessingException(

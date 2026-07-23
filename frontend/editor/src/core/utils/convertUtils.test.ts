@@ -20,6 +20,11 @@ describe("convertUtils", () => {
       expect(getEndpointName("pdf", "tiff")).toBe("pdf-to-img");
       expect(getEndpointName("pdf", "bmp")).toBe("pdf-to-img");
       expect(getEndpointName("pdf", "webp")).toBe("pdf-to-img");
+      expect(getEndpointName("pdf", "heic")).toBe("pdf-to-img");
+      expect(getEndpointName("pdf", "heif")).toBe("pdf-to-img");
+      expect(getEndpointName("pdf", "avif")).toBe("pdf-to-img");
+      expect(getEndpointName("pdf", "jxl")).toBe("pdf-to-img");
+      expect(getEndpointName("pdf", "jp2")).toBe("pdf-to-img");
 
       // PDF to Office formats
       expect(getEndpointName("pdf", "docx")).toBe("pdf-to-word");
@@ -63,6 +68,11 @@ describe("convertUtils", () => {
       expect(getEndpointName("bmp", "pdf")).toBe("img-to-pdf");
       expect(getEndpointName("tiff", "pdf")).toBe("img-to-pdf");
       expect(getEndpointName("webp", "pdf")).toBe("img-to-pdf");
+      expect(getEndpointName("heic", "pdf")).toBe("img-to-pdf");
+      expect(getEndpointName("heif", "pdf")).toBe("img-to-pdf");
+      expect(getEndpointName("avif", "pdf")).toBe("img-to-pdf");
+      expect(getEndpointName("jxl", "pdf")).toBe("img-to-pdf");
+      expect(getEndpointName("jp2", "pdf")).toBe("img-to-pdf");
 
       // Web formats to PDF
       expect(getEndpointName("html", "pdf")).toBe("html-to-pdf");
@@ -102,6 +112,11 @@ describe("convertUtils", () => {
       expect(getEndpointUrl("pdf", "tiff")).toBe("/api/v1/convert/pdf/img");
       expect(getEndpointUrl("pdf", "bmp")).toBe("/api/v1/convert/pdf/img");
       expect(getEndpointUrl("pdf", "webp")).toBe("/api/v1/convert/pdf/img");
+      expect(getEndpointUrl("pdf", "heic")).toBe("/api/v1/convert/pdf/img");
+      expect(getEndpointUrl("pdf", "heif")).toBe("/api/v1/convert/pdf/img");
+      expect(getEndpointUrl("pdf", "avif")).toBe("/api/v1/convert/pdf/img");
+      expect(getEndpointUrl("pdf", "jxl")).toBe("/api/v1/convert/pdf/img");
+      expect(getEndpointUrl("pdf", "jp2")).toBe("/api/v1/convert/pdf/img");
 
       // PDF to Office formats
       expect(getEndpointUrl("pdf", "docx")).toBe("/api/v1/convert/pdf/word");
@@ -149,6 +164,11 @@ describe("convertUtils", () => {
       expect(getEndpointUrl("bmp", "pdf")).toBe("/api/v1/convert/img/pdf");
       expect(getEndpointUrl("tiff", "pdf")).toBe("/api/v1/convert/img/pdf");
       expect(getEndpointUrl("webp", "pdf")).toBe("/api/v1/convert/img/pdf");
+      expect(getEndpointUrl("heic", "pdf")).toBe("/api/v1/convert/img/pdf");
+      expect(getEndpointUrl("heif", "pdf")).toBe("/api/v1/convert/img/pdf");
+      expect(getEndpointUrl("avif", "pdf")).toBe("/api/v1/convert/img/pdf");
+      expect(getEndpointUrl("jxl", "pdf")).toBe("/api/v1/convert/img/pdf");
+      expect(getEndpointUrl("jp2", "pdf")).toBe("/api/v1/convert/img/pdf");
 
       // Web formats to PDF
       expect(getEndpointUrl("html", "pdf")).toBe("/api/v1/convert/html/pdf");
@@ -272,6 +292,11 @@ describe("convertUtils", () => {
       expect(isImageFormat("tiff")).toBe(true);
       expect(isImageFormat("bmp")).toBe(true);
       expect(isImageFormat("webp")).toBe(true);
+      expect(isImageFormat("heic")).toBe(true);
+      expect(isImageFormat("heif")).toBe(true);
+      expect(isImageFormat("avif")).toBe(true);
+      expect(isImageFormat("jxl")).toBe(true);
+      expect(isImageFormat("jp2")).toBe(true);
     });
 
     test("should return false for non-image formats", () => {

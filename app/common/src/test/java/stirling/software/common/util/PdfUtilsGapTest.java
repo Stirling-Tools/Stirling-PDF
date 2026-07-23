@@ -114,129 +114,116 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("single PNG image is produced from a one-page PDF")
         void singlePng() throws Exception {
-            byte[] bytes = simplePdfBytes();
-            when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(1));
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = docWithPages(1)) {
+                    doc.save(tempPdf.getFile());
+                }
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory, bytes, "png", ImageType.RGB, true, 72, "doc", true);
+                byte[] out =
+                        PdfUtils.convertFromPdf(
+                                tempPdf.getPath(), "png", ImageType.RGB, true, 72, "doc", true);
 
-            assertNotNull(out);
-            assertTrue(out.length > 0);
-            // A valid PNG starts with the 8-byte PNG signature.
-            assertEquals((byte) 0x89, out[0]);
-            assertEquals('P', out[1]);
-            assertEquals('N', out[2]);
-            assertEquals('G', out[3]);
+                assertNotNull(out);
+                assertTrue(out.length > 0);
+                // A valid PNG starts with the 8-byte PNG signature.
+                assertEquals((byte) 0x89, out[0]);
+                assertEquals('P', out[1]);
+                assertEquals('N', out[2]);
+                assertEquals('G', out[3]);
+            }
         }
 
         @Test
         @DisplayName("single combined JPEG image is produced for multi-page PDF")
         void singleJpegMultiPage() throws Exception {
-            byte[] bytes = simplePdfBytes();
-            when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = docWithPages(2)) {
+                    doc.save(tempPdf.getFile());
+                }
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "jpg",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            false);
+                byte[] out =
+                        PdfUtils.convertFromPdf(
+                                tempPdf.getPath(), "jpg", ImageType.RGB, true, 72, "doc", false);
 
-            assertNotNull(out);
-            assertTrue(out.length > 0);
-            // JPEG magic bytes.
-            assertEquals((byte) 0xFF, out[0]);
-            assertEquals((byte) 0xD8, out[1]);
+                assertNotNull(out);
+                assertTrue(out.length > 0);
+                // JPEG magic bytes.
+                assertEquals((byte) 0xFF, out[0]);
+                assertEquals((byte) 0xD8, out[1]);
+            }
         }
 
         @Test
         @DisplayName("single TIFF image sequence is produced for multi-page PDF")
         void singleTiffMultiPage() throws Exception {
-            byte[] bytes = simplePdfBytes();
-            when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = docWithPages(2)) {
+                    doc.save(tempPdf.getFile());
+                }
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "tiff",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            true);
+                byte[] out =
+                        PdfUtils.convertFromPdf(
+                                tempPdf.getPath(), "tiff", ImageType.RGB, true, 72, "doc", true);
 
-            assertNotNull(out);
-            assertTrue(out.length > 0);
+                assertNotNull(out);
+                assertTrue(out.length > 0);
+            }
         }
 
         @Test
         @DisplayName("non-single image mode returns a non-empty zip of per-page images")
         void zipOfImages() throws Exception {
-            byte[] bytes = simplePdfBytes();
-            when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = docWithPages(2)) {
+                    doc.save(tempPdf.getFile());
+                }
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "png",
-                            ImageType.RGB,
-                            false,
-                            72,
-                            "myfile",
-                            true);
+                byte[] out =
+                        PdfUtils.convertFromPdf(
+                                tempPdf.getPath(), "png", ImageType.RGB, false, 72, "myfile", true);
 
-            assertNotNull(out);
-            assertTrue(out.length > 0);
-            // ZIP local-file-header magic "PK\003\004".
-            assertEquals('P', out[0]);
-            assertEquals('K', out[1]);
+                assertNotNull(out);
+                assertTrue(out.length > 0);
+                // ZIP local-file-header magic "PK\003\004".
+                assertEquals('P', out[0]);
+                assertEquals('K', out[1]);
+            }
         }
 
         @Test
         @DisplayName("DPI above the safe limit throws IllegalArgumentException")
-        void dpiTooHighThrows() {
-            byte[] bytes = new byte[] {1, 2, 3};
-            // The DPI check happens before the document is loaded.
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () ->
-                            PdfUtils.convertFromPdf(
-                                    pdfDocumentFactory,
-                                    bytes,
-                                    "png",
-                                    ImageType.RGB,
-                                    true,
-                                    9999,
-                                    "doc",
-                                    true));
+        void dpiTooHighThrows() throws Exception {
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                // The DPI check happens before the document is loaded.
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                PdfUtils.convertFromPdf(
+                                        tempPdf.getPath(),
+                                        "png",
+                                        ImageType.RGB,
+                                        true,
+                                        9999,
+                                        "doc",
+                                        true));
+            }
         }
 
         @Test
         @DisplayName("annotations excluded path still renders successfully")
         void withoutAnnotations() throws Exception {
-            byte[] bytes = simplePdfBytes();
-            when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(1));
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = docWithPages(1)) {
+                    doc.save(tempPdf.getFile());
+                }
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "png",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            false);
+                byte[] out =
+                        PdfUtils.convertFromPdf(
+                                tempPdf.getPath(), "png", ImageType.RGB, true, 72, "doc", false);
 
-            assertNotNull(out);
-            assertTrue(out.length > 0);
+                assertNotNull(out);
+                assertTrue(out.length > 0);
+            }
         }
     }
 
@@ -454,81 +441,50 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("overlays only the first page when everyPage is false")
         void firstPageOnly() throws IOException {
-            byte[] pdf = simplePdfBytes();
-            when(pdfDocumentFactory.load(pdf)).thenReturn(docWithPages(3));
-            byte[] image = imageBytes("png", Color.RED);
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = docWithPages(3)) {
+                    doc.save(tempPdf.getFile());
+                }
+                byte[] image = imageBytes("png", Color.RED);
 
-            byte[] out = PdfUtils.overlayImage(pdfDocumentFactory, pdf, image, 10f, 10f, false);
+                byte[] out =
+                        PdfUtils.overlayImage(
+                                tempPdf.getPath(),
+                                new java.io.ByteArrayInputStream(image),
+                                10f,
+                                10f,
+                                false);
 
-            assertNotNull(out);
-            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(out)) {
-                assertEquals(3, doc.getNumberOfPages());
+                assertNotNull(out);
+                try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(out)) {
+                    assertEquals(3, doc.getNumberOfPages());
+                }
             }
         }
 
         @Test
         @DisplayName("overlays every page when everyPage is true")
         void everyPage() throws IOException {
-            byte[] pdf = simplePdfBytes();
-            when(pdfDocumentFactory.load(pdf)).thenReturn(docWithPages(2));
-            byte[] image = imageBytes("png", Color.BLUE);
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = docWithPages(2)) {
+                    doc.save(tempPdf.getFile());
+                }
+                byte[] image = imageBytes("png", Color.BLUE);
 
-            byte[] out = PdfUtils.overlayImage(pdfDocumentFactory, pdf, image, 0f, 0f, true);
+                byte[] out =
+                        PdfUtils.overlayImage(
+                                tempPdf.getPath(),
+                                new java.io.ByteArrayInputStream(image),
+                                0f,
+                                0f,
+                                true);
 
-            assertNotNull(out);
-            assertTrue(out.length > 0);
-            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(out)) {
-                assertEquals(2, doc.getNumberOfPages());
+                assertNotNull(out);
+                assertTrue(out.length > 0);
+                try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(out)) {
+                    assertEquals(2, doc.getNumberOfPages());
+                }
             }
-        }
-    }
-
-    // ---- containsTextInFile -------------------------------------------------
-
-    @Nested
-    @DisplayName("containsTextInFile")
-    class ContainsTextInFile {
-
-        @Test
-        @DisplayName("finds text when searching all pages")
-        void allPagesMatch() throws IOException {
-            PDDocument doc = docWithText("HelloWorld");
-            assertTrue(PdfUtils.containsTextInFile(doc, "HelloWorld", "all"));
-        }
-
-        @Test
-        @DisplayName("null pagesToCheck is treated as all pages")
-        void nullPagesTreatedAsAll() throws IOException {
-            PDDocument doc = docWithText("FindThis");
-            assertTrue(PdfUtils.containsTextInFile(doc, "FindThis", null));
-        }
-
-        @Test
-        @DisplayName("returns false when text is absent")
-        void noMatch() throws IOException {
-            PDDocument doc = docWithText("SomeText");
-            assertFalse(PdfUtils.containsTextInFile(doc, "Missing", "all"));
-        }
-
-        @Test
-        @DisplayName("matches text on an individual page number")
-        void individualPage() throws IOException {
-            PDDocument doc = docWithText("PageOne", "PageTwo");
-            assertTrue(PdfUtils.containsTextInFile(doc, "PageTwo", "2"));
-        }
-
-        @Test
-        @DisplayName("matches text within a page range")
-        void pageRange() throws IOException {
-            PDDocument doc = docWithText("Alpha", "Beta", "Gamma");
-            assertTrue(PdfUtils.containsTextInFile(doc, "Gamma", "1-3"));
-        }
-
-        @Test
-        @DisplayName("whitespace in the page spec is stripped before parsing")
-        void whitespaceStripped() throws IOException {
-            PDDocument doc = docWithText("One", "Two");
-            assertTrue(PdfUtils.containsTextInFile(doc, "Two", " 1 , 2 "));
         }
     }
 

@@ -1,6 +1,5 @@
 package stirling.software.common.util;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,34 +10,35 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-import javax.imageio.ImageIO;
-
 import org.apache.commons.io.FilenameUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.jpdfium.PdfDocument;
 
 @Slf4j
 public class PdfToCbrUtils {
 
     public static byte[] convertPdfToCbr(
-            MultipartFile pdfFile, int dpi, CustomPDFDocumentFactory pdfDocumentFactory)
+            MultipartFile pdfFile,
+            int dpi,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager)
             throws IOException {
 
         validatePdfFile(pdfFile);
 
-        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
-            if (document.getNumberOfPages() == 0) {
-                throw ExceptionUtils.createPdfNoPages();
+        try (TempFile tempFile = new TempFile(tempFileManager, ".pdf")) {
+            pdfFile.transferTo(tempFile.getFile());
+            try (PdfDocument document = PdfDocument.open(tempFile.getPath())) {
+                if (document.pageCount() == 0) {
+                    throw ExceptionUtils.createPdfNoPages();
+                }
+                return createCbrFromPdf(document, dpi);
             }
-
-            return createCbrFromPdf(document, dpi);
         }
     }
 
@@ -58,36 +58,27 @@ public class PdfToCbrUtils {
         }
     }
 
-    private static byte[] createCbrFromPdf(PDDocument document, int dpi) throws IOException {
-        PDFRenderer pdfRenderer = new PDFRenderer(document);
-        pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
-
+    private static byte[] createCbrFromPdf(PdfDocument document, int dpi) throws IOException {
         Path tempDir = Files.createTempDirectory("stirling-pdf-cbr-");
         List<Path> generatedImages = new ArrayList<>();
         try {
-            int totalPages = document.getNumberOfPages();
+            int totalPages = document.pageCount();
 
             for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                 final int currentPage = pageIndex;
                 try {
-                    BufferedImage image =
-                            ExceptionUtils.handleOomRendering(
-                                    currentPage + 1,
-                                    dpi,
-                                    () ->
-                                            pdfRenderer.renderImageWithDPI(
-                                                    currentPage, dpi, ImageType.RGB));
+                    byte[] imageBytes =
+                            RenderingUtils.renderPageToBytes(document, currentPage, dpi, "png");
 
                     String imageFilename =
                             String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
                     Path imagePath = tempDir.resolve(imageFilename);
 
-                    ImageIO.write(image, "PNG", imagePath.toFile());
+                    Files.write(imagePath, imageBytes);
                     generatedImages.add(imagePath);
 
-                } catch (ExceptionUtils.OutOfMemoryDpiException e) {
-                    // Re-throw OOM exceptions without wrapping
-                    throw e;
+                } catch (OutOfMemoryError e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(currentPage + 1, dpi, e);
                 } catch (IOException e) {
                     // Wrap other IOExceptions with context
                     throw ExceptionUtils.createFileProcessingException(

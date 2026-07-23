@@ -385,6 +385,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
+      libvips-dev libmimalloc2.0 libheif1 libheif-plugin-x265 libheif-plugin-aomdec libheif-plugin-aomenc libjxl0.7 \
       # ffmpeg disabled due to raised CVEs
       # ffmpeg \
       poppler-utils fontforge \

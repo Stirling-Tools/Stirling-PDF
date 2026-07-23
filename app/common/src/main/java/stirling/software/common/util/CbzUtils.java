@@ -1,9 +1,9 @@
 package stirling.software.common.util;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -26,6 +26,8 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+
+import app.photofox.vipsffm.VImage;
 
 @Slf4j
 @UtilityClass
@@ -76,14 +78,14 @@ public class CbzUtils {
                 // Pass 2: load ONE image at a time peak memory = max(single image)
                 for (String imageName : sortedImageNames) {
                     ZipEntry entry = zipFile.getEntry(imageName);
-                    try (InputStream is = zipFile.getInputStream(entry)) {
-                        ByteArrayOutputStream imgBaos = new ByteArrayOutputStream();
-                        is.transferTo(imgBaos);
-                        byte[] imageBytes = imgBaos.toByteArray();
+                    try (InputStream is = zipFile.getInputStream(entry);
+                            Arena arena = Arena.ofConfined()) {
                         try {
+                            VImage vimg = RenderingUtils.loadAnyImage(arena, is);
+                            byte[] pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
                             PDImageXObject pdImage =
                                     PDImageXObject.createFromByteArray(
-                                            document, imageBytes, imageName);
+                                            document, pngBytes, imageName);
                             PDPage page =
                                     new PDPage(
                                             new PDRectangle(
@@ -98,10 +100,9 @@ public class CbzUtils {
                                             true)) {
                                 contentStream.drawImage(pdImage, 0, 0);
                             }
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             log.warn("Error processing image {}: {}", imageName, e.getMessage());
                         }
-                        // imageBytes eligible for GC after each iteration
                     } catch (IOException e) {
                         log.warn("Error reading image {}: {}", imageName, e.getMessage());
                     }

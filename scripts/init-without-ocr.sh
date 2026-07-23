@@ -950,6 +950,16 @@ JAVA_CMD=(
   -Djava.io.tmpdir=/tmp/stirling-pdf
 )
 
+# Setup mimalloc for Java only to avoid issues with other native tools
+MIMALLOC_PATH=""
+case "$(uname -m)" in
+  x86_64)  MIMALLOC_PATH="/usr/lib/x86_64-linux-gnu/libmimalloc.so.2" ;;
+  aarch64) MIMALLOC_PATH="/usr/lib/aarch64-linux-gnu/libmimalloc.so.2" ;;
+esac
+if [ -z "$MIMALLOC_PATH" ] || [ ! -f "$MIMALLOC_PATH" ]; then
+  MIMALLOC_PATH=""
+fi
+
 if [ -f "/app.jar" ]; then
   JAVA_CMD+=("-jar" "/app.jar")
 elif [ -f "/app/app.jar" ]; then
@@ -963,16 +973,17 @@ else
 fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
-  "${JAVA_CMD[@]}" &
+  LD_PRELOAD="${MIMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}" "${JAVA_CMD[@]}" &
 elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
   # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
   env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
       USER="$RUNTIME_USER" \
       LOGNAME="$RUNTIME_USER" \
+      LD_PRELOAD="${MIMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}" \
     setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
-  "${JAVA_CMD[@]}" &
+  LD_PRELOAD="${MIMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}" "${JAVA_CMD[@]}" &
 fi
 
 JAVA_PID=$!
@@ -1013,6 +1024,9 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
 
   if [ "$CONTAINER_MEM_MB" -gt "$_aot_min_mem" ] || [ "$CONTAINER_MEM_MB" -eq 0 ]; then
     (
+      # Setup mimalloc for AOT generation too
+      [ -n "$MIMALLOC_PATH" ] && export LD_PRELOAD="${MIMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}"
+
       # Wait for Spring Boot to finish initializing before competing for CPU/memory.
       # ARM devices (Raspberry Pi 4, Ampere) need extra time, 90s vs 45s on x86_64.
       _startup_wait=45
