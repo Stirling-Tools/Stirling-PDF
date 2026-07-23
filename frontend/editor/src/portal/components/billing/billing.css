@@ -1171,7 +1171,7 @@
   color: var(--c-text);
 }
 .portal-billing__caplimit-chip[data-selected="true"] {
-  background: rgba(10, 139, 255, 0.12);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
   border-color: var(--c-primary);
   color: var(--c-primary);
 }
