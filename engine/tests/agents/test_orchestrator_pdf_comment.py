@@ -50,7 +50,7 @@ async def test_delegate_pdf_review_wires_prompt_to_tool_step(runtime: AppRuntime
         "stirling.agents.pdf_review.MathIntentClassifier.classify",
         new=AsyncMock(return_value=False),
     ):
-        response = await orchestrator.delegate_pdf_review(ctx)  # type: ignore[arg-type]
+        response = await orchestrator.delegate_pdf_review(ctx)  # pyrefly: ignore [bad-argument-type]
 
     assert isinstance(response, EditPlanResponse)
     assert len(response.steps) == 1

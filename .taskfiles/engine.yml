@@ -75,7 +75,7 @@ tasks:
     desc: "Run type checking"
     deps: [install]
     cmds:
-      - uv run pyright . --warnings
+      - uv run pyrefly check
 
   test:
     desc: "Run tests"

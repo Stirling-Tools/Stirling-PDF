@@ -478,6 +478,7 @@ class MathAuditorAgent:
 
         logger.info("[math-auditor-agent] extracting figures from page %d (%d chars)", folio.page, len(text))
         prompt = f"Page {folio.page + 1} text:\n{text}"
+        figures: list[ExtractedFigure] = []
         try:
             result = await self._figure_extractor.run(prompt)
             figures = result.output.figures
@@ -487,7 +488,6 @@ class MathAuditorAgent:
                 folio.page,
                 exc_info=True,
             )
-            figures = []
 
         logger.debug(
             "TOOL (extract_figures)\nArgs: %s\nResult: %s",
