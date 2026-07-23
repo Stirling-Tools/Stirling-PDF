@@ -208,9 +208,10 @@ public class ApplicationProperties {
     public static class Policies {
         /**
          * Absolute directories that policy folder input sources and output sinks may read from or
-         * write to. Empty (the default) disables folder access entirely, so a policy can never be
-         * pointed at an arbitrary server path. Stirling's own config directory is always
-         * off-limits, and folder access is always disabled in SaaS mode regardless of this list.
+         * write to. Empty (the default) disables folder access except to implicitly defined
+         * folders, such as server storage folders (if enabled) and the pipeline watched folders.
+         * Stirling's own config directory is always off-limits, and folder access is always
+         * disabled in SaaS mode regardless of this list.
          */
         private List<String> allowedFolderRoots = new java.util.ArrayList<>();
 

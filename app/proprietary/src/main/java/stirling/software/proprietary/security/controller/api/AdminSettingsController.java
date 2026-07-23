@@ -673,6 +673,7 @@ public class AdminSettingsController {
             case "telegram" -> applicationProperties.getTelegram();
             case "aiengine", "aiEngine" -> applicationProperties.getAiEngine();
             case "mcp" -> applicationProperties.getMcp();
+            case "policies" -> applicationProperties.getPolicies();
             default -> null;
         };
     }
@@ -699,7 +700,8 @@ public class AdminSettingsController {
                     "telegram",
                     "aiEngine",
                     "aiengine",
-                    "mcp");
+                    "mcp",
+                    "policies");
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
     private static final Pattern SAFE_KEY_PATTERN =

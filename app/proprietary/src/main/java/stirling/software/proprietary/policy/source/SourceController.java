@@ -6,8 +6,10 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
@@ -44,6 +47,13 @@ import stirling.software.proprietary.util.SecretMasker;
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
 public class SourceController {
+
+    /**
+     * Machine-readable marker on the error body when a folder source is rejected for pointing
+     * outside the allowed roots. The admin portal keys off this to offer a link straight to the
+     * Folder Access settings rather than only showing the message.
+     */
+    public static final String FOLDER_ACCESS_DENIED_CODE = "folderAccessDenied";
 
     private static final String WEBHOOK_TYPE = "webhook";
 
@@ -114,6 +124,10 @@ public class SourceController {
         Source owned = withPreparedOptions(withStoredSecrets(resolveOwnership(source)), isCreate);
         try {
             validateConfig(owned);
+        } catch (FolderAccessDeniedException e) {
+            // Surfaced with a machine-readable code by handleFolderAccessDenied so the portal can
+            // link to the Folder Access settings; don't flatten it into a plain 400 here.
+            throw e;
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -148,6 +162,22 @@ public class SourceController {
         }
         sourceStore.delete(sourceId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * A folder source was rejected for pointing outside the allowed roots. Return a 400 carrying
+     * {@link #FOLDER_ACCESS_DENIED_CODE} so the portal can offer a link to the Folder Access
+     * settings, while other guard rejections (SaaS mode, the protected config dir) fall through to
+     * the global handler as plain 400s the admin can't fix by editing the allowlist.
+     */
+    @ExceptionHandler(FolderAccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleFolderAccessDenied(FolderAccessDeniedException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setProperty("code", FOLDER_ACCESS_DENIED_CODE);
+        return ResponseEntity.badRequest()
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problem);
     }
 
     /**
