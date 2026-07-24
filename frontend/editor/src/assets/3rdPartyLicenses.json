@@ -23,175 +23,175 @@
     },
     {
       "moduleName": "@embedpdf/core",
-      "moduleUrl": "https://www.npmjs.com/package/@embedpdf/core",
-      "moduleVersion": "2.14.1",
+      "moduleUrl": "https://registry.npmjs.org/@embedpdf/core/-/core-2.14.4.tgz",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/engines",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/models",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-annotation",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-attachment",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-bookmark",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-document-manager",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-export",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-history",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-interaction-manager",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-pan",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-print",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-redaction",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-render",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-rotate",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-scroll",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-search",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-selection",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-spread",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-thumbnail",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-tiling",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-viewport",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@embedpdf/plugin-zoom",
       "moduleUrl": "https://github.com/embedpdf/embed-pdf-viewer",
-      "moduleVersion": "2.14.1",
+      "moduleVersion": "2.14.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@emotion/react",
-      "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/react",
+      "moduleUrl": "https://github.com/emotion-js/emotion.git#main",
       "moduleVersion": "11.14.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@emotion/styled",
-      "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/styled",
+      "moduleUrl": "https://github.com/emotion-js/emotion.git#main",
       "moduleVersion": "11.14.1",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -288,6 +288,13 @@
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
+      "moduleName": "@tanstack/react-query",
+      "moduleUrl": "https://github.com/TanStack/query",
+      "moduleVersion": "5.101.4",
+      "moduleLicense": "MIT",
+      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+    },
+    {
       "moduleName": "@tanstack/react-virtual",
       "moduleUrl": "https://github.com/TanStack/virtual",
       "moduleVersion": "3.13.23",
@@ -345,7 +352,7 @@
     },
     {
       "moduleName": "autoprefixer",
-      "moduleUrl": "postcss/autoprefixer",
+      "moduleUrl": "https://github.com/postcss/autoprefixer",
       "moduleVersion": "10.4.27",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -353,7 +360,7 @@
     {
       "moduleName": "axios",
       "moduleUrl": "https://github.com/axios/axios",
-      "moduleVersion": "1.15.0",
+      "moduleVersion": "1.18.1",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
@@ -366,7 +373,7 @@
     },
     {
       "moduleName": "globals",
-      "moduleUrl": "sindresorhus/globals",
+      "moduleUrl": "https://github.com/sindresorhus/globals",
       "moduleVersion": "17.5.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -394,7 +401,7 @@
     },
     {
       "moduleName": "license-report",
-      "moduleUrl": "https://github.com/kessler/license-report",
+      "moduleUrl": "https://github.com/bepo65/license-report",
       "moduleVersion": "6.8.2",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -423,7 +430,7 @@
     {
       "moduleName": "posthog-js",
       "moduleUrl": "https://github.com/PostHog/posthog-js",
-      "moduleVersion": "1.363.3",
+      "moduleVersion": "1.396.4",
       "moduleLicense": "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE",
       "moduleLicenseUrl": "https://github.com/PostHog/posthog-js/blob/main/LICENSE"
     },
@@ -436,14 +443,14 @@
     },
     {
       "moduleName": "react",
-      "moduleUrl": "https://github.com/facebook/react",
+      "moduleUrl": "https://github.com/react/react",
       "moduleVersion": "19.2.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "react-dom",
-      "moduleUrl": "https://github.com/facebook/react",
+      "moduleUrl": "https://github.com/react/react",
       "moduleVersion": "19.2.4",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -464,7 +471,7 @@
     },
     {
       "moduleName": "react-markdown",
-      "moduleUrl": "remarkjs/react-markdown",
+      "moduleUrl": "https://github.com/remarkjs/react-markdown",
       "moduleVersion": "9.1.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -479,7 +486,7 @@
     {
       "moduleName": "react-router-dom",
       "moduleUrl": "https://github.com/remix-run/react-router",
-      "moduleVersion": "7.13.2",
+      "moduleVersion": "7.18.1",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
@@ -492,7 +499,7 @@
     },
     {
       "moduleName": "remark-gfm",
-      "moduleUrl": "remarkjs/remark-gfm",
+      "moduleUrl": "https://github.com/remarkjs/remark-gfm",
       "moduleVersion": "4.0.1",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -521,7 +528,7 @@
     {
       "moduleName": "web-vitals",
       "moduleUrl": "https://github.com/GoogleChrome/web-vitals",
-      "moduleVersion": "5.1.0",
+      "moduleVersion": "5.3.0",
       "moduleLicense": "Apache-2.0",
       "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
     }
