@@ -295,3 +295,70 @@ jobs:
           name: playwright-report-enterprise-${{ github.run_id }}
           path: frontend/playwright-report/
           retention-days: 7
+
+  # Multi-node regression: builds + seeds the clustered stack (testing/compose/docker-compose-multinode.yml)
+  # and runs behave features/multinode. Licence-gated, so it runs after the Playwright job (not in parallel).
+  multinode-e2e:
+    needs: [pick, playwright-e2e-enterprise]
+    # Nightly cron + manual dispatch only (heavy build), fork-gated for the licence secret.
+    if: >-
+      always() && needs.pick.outputs.is_fork != 'true'
+      && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    timeout-minutes: 60
+    env:
+      PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
+      PREMIUM_ENABLED: "true"
+      SYSTEM_ENABLEANALYTICS: "false"
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+      MN_COMPOSE: docker-compose-multinode.yml
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: ./testing/cucumber/requirements.txt
+      - name: Install behave test deps
+        run: |
+          pip install --require-hashes --only-binary=:all: -r ./testing/cucumber/requirements.txt
+      - name: Build the multi-node image
+        working-directory: testing/compose
+        run: docker compose -f "$MN_COMPOSE" build
+      - name: Bring up the cluster and wait for both nodes healthy
+        working-directory: testing/compose
+        run: |
+          docker compose -f "$MN_COMPOSE" up -d
+          for i in $(seq 1 90); do
+            h1=$(docker inspect -f '{{.State.Health.Status}}' multinode-stirling-1 2>/dev/null || echo starting)
+            h2=$(docker inspect -f '{{.State.Health.Status}}' multinode-stirling-2 2>/dev/null || echo starting)
+            if [ "$h1" = healthy ] && [ "$h2" = healthy ]; then echo "both nodes healthy"; exit 0; fi
+            sleep 5
+          done
+          echo "::error::nodes did not become healthy"
+          docker compose -f "$MN_COMPOSE" logs --tail=200 stirling-1 stirling-2
+          exit 1
+      - name: Seed the cluster (teams, users, S3 connection, policy)
+        working-directory: testing/compose
+        run: docker compose -f "$MN_COMPOSE" --profile seed run --rm seed
+      - name: Run multi-node regression (implemented guarantees)
+        working-directory: testing/cucumber
+        # -e overrides behave.ini's exclusion of features/multinode; ~@known_gap skips any tracked-gap scenarios.
+        run: python -m behave features/multinode -e "features/enterprise" --tags="~@known_gap ~@destructive" --no-capture -f plain
+      - name: Run multi-node failover (destructive)
+        working-directory: testing/cucumber
+        run: python -m behave features/multinode -e "features/enterprise" --tags="@destructive ~@known_gap" --no-capture -f plain
+      - name: Dump node logs on failure
+        if: failure()
+        working-directory: testing/compose
+        run: docker compose -f "$MN_COMPOSE" logs --tail=400 stirling-1 stirling-2
+      - name: Tear down
+        if: always()
+        working-directory: testing/compose
+        run: docker compose -f "$MN_COMPOSE" --profile seed down -v --remove-orphans

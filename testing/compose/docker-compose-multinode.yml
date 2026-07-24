@@ -1,0 +1,225 @@
+# Multi-node Stirling-PDF processor test stack: shared Postgres/MinIO/Valkey behind an nginx LB fronting N app nodes, with enterprise features unlocked via a local test licence key.
+# Bring up: ./start-multinode-test.sh   Validate: ./validate-multinode-test.sh   Access: http://localhost:8080 (admin / stirling)
+
+x-stirling-node: &stirling-node
+  build:
+    context: ../..
+    dockerfile: docker/embedded/Dockerfile
+  image: stirling-pdf-multinode:local
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    valkey:
+      condition: service_healthy
+    minio-init:
+      condition: service_completed_successfully
+  deploy:
+    resources:
+      limits:
+        memory: 4G
+  healthcheck:
+    test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api/v1/info/status | grep -q UP"]
+    interval: 10s
+    timeout: 10s
+    retries: 30
+    start_period: 90s
+  environment: &stirling-env
+    # --- Licensing: unlock pro/enterprise (custom DB + cluster mode) ---
+    # Cluster mode is licence-gated - set PREMIUM_KEY (locally: export PREMIUM_KEY=...; CI: the PREMIUM_KEY_ENTERPRISE secret); the default below is a non-functional placeholder, never a real key.
+    PREMIUM_ENABLED: "true"
+    PREMIUM_KEY: "${PREMIUM_KEY:-00000000-0000-0000-0000-000000000000}"
+    DISABLE_ADDITIONAL_FEATURES: "false"
+
+    # --- Login + teams ---
+    DOCKER_ENABLE_SECURITY: "true"
+    SECURITY_ENABLELOGIN: "true"
+    SECURITY_INITIALLOGIN_USERNAME: "admin"
+    SECURITY_INITIALLOGIN_PASSWORD: "stirling"
+    # Global API key: lets the seed/validate scripts call admin APIs without a login flow.
+    SECURITY_CUSTOMGLOBALAPIKEY: "multinode-test-key"
+
+    # --- Shared Postgres (the single DB every node coordinates through) ---
+    # enableCustomDatabase is an enterprise feature, unlocked by PREMIUM_* above.
+    SYSTEM_DATASOURCE_ENABLECUSTOMDATABASE: "true"
+    SYSTEM_DATASOURCE_TYPE: "postgresql"
+    SYSTEM_DATASOURCE_HOSTNAME: "postgres"
+    SYSTEM_DATASOURCE_PORT: "5432"
+    SYSTEM_DATASOURCE_NAME: "stirling"
+    SYSTEM_DATASOURCE_USERNAME: "stirling"
+    SYSTEM_DATASOURCE_PASSWORD: "stirling"
+    # User.settings has no @Lob annotation - with one, Postgres treats it as a large object and every login 500s ("Large Objects may not be used in auto-commit mode"); see multinode/README.md.
+
+    # --- Shared object storage (persistent user uploads + share/store feature) ---
+    STORAGE_ENABLED: "true"
+    STORAGE_PROVIDER: "s3"
+    STORAGE_S3_ENDPOINT: "http://minio:9000"
+    STORAGE_S3_BUCKET: "stirling-storage"
+    STORAGE_S3_REGION: "us-east-1"
+    STORAGE_S3_ACCESSKEY: "minioadmin"
+    STORAGE_S3_SECRETKEY: "minioadmin"
+    STORAGE_S3_PATHSTYLEACCESS: "true"
+    STORAGE_S3_ALLOWPRIVATEENDPOINTS: "true"
+
+    # --- Cluster mode: Valkey backplane + shared S3 job-artifact store ---
+    # artifactStore=s3 is REQUIRED for multi-node (transient job artifacts must be shared).
+    CLUSTER_ENABLED: "true"
+    CLUSTER_BACKPLANE: "valkey"
+    CLUSTER_ARTIFACTSTORE: "s3"
+    CLUSTER_VALKEY_URL: "redis://valkey:6379"
+    # SPRING_DATA_REDIS_REPOSITORIES_ENABLED is not needed: DataRedisRepositoriesAutoConfiguration is excluded (see application.properties, multinode/README.md).
+
+    # --- Shared credential-encryption key (REQUIRED in cluster mode) ---
+    # AES-256 key that encrypts stored integration/S3 secrets - must match on every node or secrets encrypted on one can't decrypt on another; boot fails if unset with cluster.enabled=true (test-only value; JWT keys persist separately in the shared DB).
+    STIRLING_CREDENTIAL_ENCRYPTION_KEY: "dMobekyUEnEV7WHBah2FkbboP4Coqifd3JRXB00LiIY="
+
+    # --- Policy / processor subsystem (the thing under test) ---
+    POLICIES_ENABLED: "true"
+    # Let policy S3 sources/webhook-staging connections point at the in-cluster MinIO.
+    POLICIES_ALLOWPRIVATES3ENDPOINTS: "true"
+
+    # --- Misc features on ---
+    METRICS_ENABLED: "true"
+    SYSTEM_DEFAULTLOCALE: "en-US"
+    SYSTEM_MAXFILESIZE: "100"
+    UI_APPNAME: "Stirling-PDF Multi-Node"
+    UI_APPNAMENAVBAR: "Stirling Multi-Node"
+  networks:
+    - stirling-multinode
+
+services:
+  # ---- Shared Postgres: the single DB all nodes coordinate through ----------
+  postgres:
+    image: postgres:17-alpine
+    container_name: multinode-postgres
+    environment:
+      POSTGRES_USER: stirling
+      POSTGRES_PASSWORD: stirling
+      POSTGRES_DB: stirling
+    ports:
+      - "5434:5432" # host access for inspection (psql -h localhost -p 5434 -U stirling)
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stirling -d stirling"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    networks:
+      - stirling-multinode
+
+  # ---- Valkey: cluster backplane (shared job state / rate limiting) ---------
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: multinode-valkey
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli ping | grep -q PONG"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    networks:
+      - stirling-multinode
+
+  # ---- MinIO: shared S3 (platform storage + policy connections + webhook staging) ----
+  minio:
+    image: minio/minio:latest
+    container_name: multinode-minio
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # web console (minioadmin / minioadmin)
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks:
+      - stirling-multinode
+
+  # ---- One-shot: create the buckets the stack needs -------------------------
+  minio-init:
+    image: minio/mc:latest
+    container_name: multinode-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/stirling-storage &&
+      mc mb --ignore-existing local/policy-data &&
+      echo 'buckets ready: stirling-storage, policy-data'
+      "
+    networks:
+      - stirling-multinode
+
+  # ---- App node 1 -----------------------------------------------------------
+  stirling-1:
+    <<: *stirling-node
+    container_name: multinode-stirling-1
+    environment:
+      <<: *stirling-env
+      SYSTEM_NODEID: "node-1"
+
+  # ---- App node 2 -----------------------------------------------------------
+  # No ordering vs node-1 needed - each node mints its own signing key at boot and publishes the public half to the shared DB, so both verify each other's tokens.
+  stirling-2:
+    <<: *stirling-node
+    container_name: multinode-stirling-2
+    environment:
+      <<: *stirling-env
+      SYSTEM_NODEID: "node-2"
+
+  # ---- One-shot seeder: teams, ~40 users, S3 connection, policies -----------
+  # Profile-gated so plain `docker compose up` skips it; the start script runs it once, using postgres:alpine for psql with curl+jq added for the HTTP calls.
+  seed:
+    image: postgres:17-alpine
+    container_name: multinode-seed
+    profiles: ["seed"]
+    depends_on:
+      stirling-1:
+        condition: service_healthy
+      stirling-2:
+        condition: service_healthy
+    environment:
+      BASE_URL: "http://nginx:8080"
+      PGHOST: "postgres"
+      PGUSER: "stirling"
+      PGPASSWORD: "stirling"
+      PGDATABASE: "stirling"
+      USER_COUNT: "40"
+    volumes:
+      - ./multinode/seed.sh:/seed.sh:ro
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache curl jq >/dev/null && sh /seed.sh"]
+    networks:
+      - stirling-multinode
+
+  # ---- nginx load balancer: single entrypoint round-robining the nodes ------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: multinode-nginx
+    depends_on:
+      stirling-1:
+        condition: service_healthy
+      stirling-2:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./multinode/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - stirling-multinode
+
+networks:
+  stirling-multinode:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  minio-data:
