@@ -143,6 +143,7 @@ public class FileStorageService {
             storedFile.setContentType(mainObject.getContentType());
             storedFile.setSizeBytes(mainObject.getSizeBytes());
             storedFile.setStorageKey(mainObject.getStorageKey());
+            storedFile.setEncryptionKeyId(mainObject.getEncryptionKeyId());
             applyHistoryMetadata(storedFile, historyObject);
             applyAuditMetadata(storedFile, auditObject);
             try {
@@ -207,6 +208,7 @@ public class FileStorageService {
             existing.setContentType(mainObject.getContentType());
             existing.setSizeBytes(mainObject.getSizeBytes());
             existing.setStorageKey(mainObject.getStorageKey());
+            existing.setEncryptionKeyId(mainObject.getEncryptionKeyId());
             if (historyObject != null) {
                 applyHistoryMetadata(existing, historyObject);
             }

@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,10 +17,14 @@ import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.cluster.s3.S3Clients;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
+import stirling.software.proprietary.storage.crypto.EncryptingStorageProvider;
+import stirling.software.proprietary.storage.crypto.FileEncryptionKeyService;
+import stirling.software.proprietary.storage.crypto.FileEncryptionMasterKey;
 import stirling.software.proprietary.storage.provider.DatabaseStorageProvider;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
 import stirling.software.proprietary.storage.provider.S3StorageProvider;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
 @Configuration
@@ -29,10 +34,48 @@ public class StorageProviderConfig {
 
     private final ApplicationProperties applicationProperties;
     private final StoredFileBlobRepository storedFileBlobRepository;
+    private final FileEncryptionKeyRepository fileEncryptionKeyRepository;
     private final LicenseKeyChecker licenseKeyChecker;
+
+    @Value("${stirling.security.fileEncryptionKey:}")
+    private String configuredFileEncryptionKey;
+
+    @Value("${cluster.enabled:false}")
+    private boolean clusterEnabled;
 
     @Bean(destroyMethod = "close")
     public StorageProvider storageProvider() {
+        return withEncryption(innerStorageProvider());
+    }
+
+    /**
+     * Wraps the backend with the encryption-at-rest decorator. The write side is gated on the
+     * config flag (plus Pro/Enterprise licence); the decrypt side activates whenever encryption
+     * keys exist, so switching the flag off — or a lapsed licence — never makes previously
+     * encrypted files unreadable.
+     */
+    private StorageProvider withEncryption(StorageProvider inner) {
+        boolean writeEnabled = applicationProperties.getStorage().getEncryption().isEnabled();
+        boolean hasEncryptedContent = fileEncryptionKeyRepository.count() > 0;
+        if (!writeEnabled && !hasEncryptedContent) {
+            return inner;
+        }
+        if (writeEnabled) {
+            licenseKeyChecker.requireProOrEnterprise("storage.encryption");
+        }
+        FileEncryptionMasterKey masterKey =
+                new FileEncryptionMasterKey(configuredFileEncryptionKey, clusterEnabled);
+        FileEncryptionKeyService keyService =
+                new FileEncryptionKeyService(fileEncryptionKeyRepository, masterKey);
+        // Wrong key must fail startup, not silently start a second key hierarchy.
+        keyService.verifyMasterKey();
+        log.info(
+                "Storage encryption at rest active (writes {})",
+                writeEnabled ? "encrypted" : "plaintext; decrypt-only mode");
+        return new EncryptingStorageProvider(inner, keyService, writeEnabled);
+    }
+
+    private StorageProvider innerStorageProvider() {
         boolean storageEnabled = applicationProperties.getStorage().isEnabled();
         String providerName =
                 Optional.ofNullable(applicationProperties.getStorage().getProvider())

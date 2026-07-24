@@ -16,6 +16,7 @@ import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVeri
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
 /**
@@ -96,6 +97,8 @@ class StorageProviderConfigTest {
         props.getStorage()
                 .setEnabled(false); // local-fallback path skips dir creation when disabled
         StoredFileBlobRepository repo = mock(StoredFileBlobRepository.class);
+        // count() defaults to 0 under Mockito, so the encryption decorator stays inactive here.
+        FileEncryptionKeyRepository keyRepo = mock(FileEncryptionKeyRepository.class);
         LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
         when(checker.getPremiumLicenseEnabledResult()).thenReturn(license);
         if (license == License.SERVER || license == License.ENTERPRISE) {
@@ -111,6 +114,6 @@ class StorageProviderConfigTest {
                     .when(checker)
                     .requireProOrEnterprise(anyString());
         }
-        return new StorageProviderConfig(props, repo, checker);
+        return new StorageProviderConfig(props, repo, keyRepo, checker);
     }
 }
