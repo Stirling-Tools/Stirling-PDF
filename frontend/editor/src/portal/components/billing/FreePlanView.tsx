@@ -8,6 +8,10 @@ import { WalletMeter } from "@portal/components/billing/WalletMeter";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 import { EnterpriseUpsell } from "@portal/components/billing/EnterpriseUpsell";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
+import { ActivationChoiceModal } from "@portal/components/billing/ActivationChoiceModal";
+import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
+import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
+import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
 
 interface Props {
   wallet: Wallet;
@@ -32,7 +36,9 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
  */
 export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
   const { t } = useTranslation();
-  const [modalOpen, setModalOpen] = useState(false);
+  // Activation fork (demo D97): choose → the metered checkout (payg) or the
+  // discounted bundle (prepay). Exactly one is open at a time.
+  const [step, setStep] = useState<"choose" | "payg" | "prepay" | null>(null);
   const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
   const isLeader = wallet.role === "leader";
@@ -40,7 +46,12 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
     ? wallet.currency
     : "usd";
 
-  function openCheckout() {
+  // Where this team sits in the prepaid-bundle flow, read on load so the CTA names
+  // the resume action rather than always restarting the fork. Leader + team gated
+  // (the RPC 403s otherwise). Refreshed when any activation modal closes.
+  const flow = useBundleFlowState(wallet.teamId, isLeader);
+
+  function requireTeam(): boolean {
     if (wallet.teamId == null) {
       setMissingTeam(
         t(
@@ -48,23 +59,44 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
           "No team is resolved on your wallet yet — refresh and try again.",
         ),
       );
-      return;
+      return false;
     }
     setMissingTeam(null);
-    setModalOpen(true);
+    return true;
+  }
+
+  // No quote yet → open the pay-as-you-go vs prepay fork. A quote already in flight
+  // → skip the fork and reopen the bundle modal directly; its resume effect lands
+  // on the calculator (quote) or the payment step (invoice awaiting payment).
+  function openActivation() {
+    if (requireTeam()) setStep("choose");
+  }
+  function resumeBundle() {
+    if (requireTeam()) setStep("prepay");
+  }
+
+  // Closing any activation modal re-reads the flow state so the CTA reflects a
+  // freshly-minted quote / invoice without a full page reload.
+  function closeModals() {
+    setStep(null);
+    flow.refresh();
   }
 
   const switchOnAction = isLeader ? (
     <Button
       variant="primary"
       accent="premium"
-      onClick={openCheckout}
+      onClick={flow.status === "none" ? openActivation : resumeBundle}
       disabled={wallet.teamId == null}
     >
-      {t(
-        "portal.billing.freePlan.switchOnProcessor",
-        "Switch on the Processor →",
-      )}
+      {flow.status === "invoice"
+        ? t("portal.billing.freePlan.payInvoice", "Pay invoice to complete")
+        : flow.status === "quote"
+          ? t("portal.billing.freePlan.viewQuote", "View quote")
+          : t(
+              "portal.billing.freePlan.switchOnProcessor",
+              "Switch on the Processor →",
+            )}
     </Button>
   ) : null;
 
@@ -92,6 +124,15 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       </div>
 
       <FreePdfEditorsCard />
+
+      {/* Prepaid capacity is usable independent of a metered subscription, so surface it here on the
+          free plan too (not just the subscribed dashboard) whenever the team holds a live pool. */}
+      {wallet.prepaidUnitsRemaining > 0 && (
+        <PrepaidCapacityCard
+          wallet={wallet}
+          onBuy={isLeader ? resumeBundle : undefined}
+        />
+      )}
 
       {/* Processor trial — meter with the inline upgrade CTA */}
       <WalletMeter
@@ -123,15 +164,38 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       {/* Volume discount / Enterprise */}
       <EnterpriseUpsell />
 
+      <ActivationChoiceModal
+        open={step === "choose"}
+        onClose={closeModals}
+        onChoosePayg={() => setStep("payg")}
+        onChoosePrepay={() => setStep("prepay")}
+      />
+
       {wallet.teamId != null && (
         <StripeCheckoutModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
+          open={step === "payg"}
+          onClose={closeModals}
           teamId={wallet.teamId}
           currency={currency}
           pricePerDocMinor={wallet.pricePerDocMinor}
           initialCapUsd={wallet.capUsd}
           onComplete={() => onSubscribed?.() ?? Promise.resolve(false)}
+        />
+      )}
+
+      {/* Prepay reuses the bundle modal (free team → first-purchase copy, no cap
+          step). On completion the webhook credits the pool AND silently creates
+          the metered subscription off the saved card, so we poll like the payg
+          path to flip the wallet to subscribed. */}
+      {wallet.teamId != null && (
+        <BundleCheckoutModal
+          open={step === "prepay"}
+          onClose={closeModals}
+          wallet={wallet}
+          onComplete={() => {
+            closeModals();
+            void onSubscribed?.();
+          }}
         />
       )}
     </div>

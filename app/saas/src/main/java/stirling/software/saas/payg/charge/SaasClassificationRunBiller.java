@@ -17,8 +17,8 @@ import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
- * Charges one PAYG unit per document as an AUTOMATION job, matching what a server-side
- * classify policy step bills.
+ * Charges one PAYG unit per document as an AUTOMATION job, matching what a server-side classify
+ * policy step bills.
  */
 @Component
 @Profile("saas")

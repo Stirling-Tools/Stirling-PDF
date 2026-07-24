@@ -7,6 +7,8 @@ import type { LocalUsage } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 import { PdfsProcessedCard } from "@portal/components/billing/PdfsProcessedCard";
+import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
+import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
 import { SpendThisMonthCard } from "@portal/components/billing/SpendThisMonthCard";
 import { SpendLimitCard } from "@portal/components/billing/SpendLimitCard";
 import { PaymentMethodCard } from "@portal/components/billing/PaymentMethodCard";
@@ -40,9 +42,13 @@ export function SubscribedPlanView({
 }: Props) {
   const { t } = useTranslation();
   const [adjusting, setAdjusting] = useState(false);
+  const [bundleOpen, setBundleOpen] = useState(false);
   const portal = useStripePortal(wallet);
 
   const isLeader = wallet.role === "leader";
+  // Buying/topping up prepaid capacity is a commercial action — leader-only, and
+  // needs a resolved team to scope checkout.
+  const canBuyBundle = isLeader && wallet.teamId != null;
   const spent =
     wallet.estimatedBillMinor != null ? wallet.estimatedBillMinor / 100 : 0;
   const capActive = !wallet.noCap && wallet.capUsd != null;
@@ -100,6 +106,11 @@ export function SubscribedPlanView({
 
       <FreePdfEditorsCard />
 
+      <PrepaidCapacityCard
+        wallet={wallet}
+        onBuy={canBuyBundle ? () => setBundleOpen(true) : undefined}
+      />
+
       <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
 
       <div className="portal-billing__spend-row">
@@ -126,6 +137,15 @@ export function SubscribedPlanView({
         >
           {portal.error}
         </Banner>
+      )}
+
+      {canBuyBundle && (
+        <BundleCheckoutModal
+          open={bundleOpen}
+          onClose={() => setBundleOpen(false)}
+          wallet={wallet}
+          onComplete={onWalletChange}
+        />
       )}
     </div>
   );
