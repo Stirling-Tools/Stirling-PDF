@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -37,6 +38,12 @@ import stirling.software.proprietary.security.service.UserService;
  * consumed file.
  */
 @Testcontainers(disabledWithoutDocker = true)
+@EnabledIfEnvironmentVariable(
+        named = "RUN_NETWORK_INTEGRATION_TESTS",
+        matches = "true",
+        disabledReason =
+                "Spins up SFTP/FTP/SMB containers; opt-in to keep several heavy containers off the"
+                        + " standard CI runner. Run with RUN_NETWORK_INTEGRATION_TESTS=true.")
 class SmbNetworkSourceIntegrationTest {
 
     private static final String POLICY = "p1";
