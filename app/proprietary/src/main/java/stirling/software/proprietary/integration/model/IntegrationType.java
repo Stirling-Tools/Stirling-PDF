@@ -4,5 +4,10 @@ package stirling.software.proprietary.integration.model;
 public enum IntegrationType {
     S3,
     MCP,
-    API
+    /** A generic outbound HTTP endpoint a pipeline step can post a document to. */
+    API,
+    /** Microsoft Purview Information Protection: sensitivity-label taxonomy via Graph. */
+    PURVIEW,
+    /** ConsignO Cloud (Notarius) e-signature and notarization. */
+    CONSIGNO
 }

@@ -1,6 +1,7 @@
 package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
@@ -45,8 +47,10 @@ import tools.jackson.databind.node.ObjectNode;
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class PdfCommentAgentController {
 
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
     private final PdfCommentAgentOrchestrator orchestrator;
     private final ObjectMapper objectMapper;
+    private final AiFeatureGate aiFeatureGate;
 
     @PostMapping(
             value = "/pdf-comment-agent",
@@ -77,10 +81,12 @@ public class PdfCommentAgentController {
                     @RequestParam("prompt")
                     String prompt)
             throws IOException {
+        aiFeatureGate.requirePdfComment();
 
+        String originalFilename = fileInput.getOriginalFilename();
         String safeName =
-                fileInput.getOriginalFilename() != null
-                        ? fileInput.getOriginalFilename().replaceAll("[\\r\\n]", "_")
+                originalFilename != null
+                        ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
                         : "<unnamed>";
         log.info(
                 "[pdf-comment-agent] request file={} promptLen={}",

@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import { useSectionFlags } from "@portal/hooks/useAsync";
 import {
   buildWireFromSetup,
   buildWireFromState,
   clearProcessedHistory,
   deletePolicy,
-  fetchPolicies,
   savePolicy,
   POLICY_CATEGORIES,
   POLICY_CONFIG,
   type CatalogueEntry,
-  type PoliciesResponse,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import { usePoliciesOverview } from "@portal/queries/policies";
+import { qk } from "@portal/queries/keys";
 import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
 import { PolicyCatalogueTable } from "@portal/components/policies/PolicyCatalogueTable";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
@@ -26,8 +27,8 @@ import "@portal/views/Policies.css";
 
 export function Policies() {
   const { t } = useTranslation();
-  const [version, setVersion] = useState(0);
-  const state = useAsync<PoliciesResponse>(() => fetchPolicies(), [version]);
+  const queryClient = useQueryClient();
+  const state = usePoliciesOverview();
   const { data, loading, error: fetchError } = state;
   const { isLoading } = useSectionFlags(state);
 
@@ -63,7 +64,12 @@ export function Policies() {
   );
 
   const catalogue = data?.catalogue ?? [];
-  const refetch = useCallback(() => setVersion((v) => v + 1), []);
+  // Invalidate the shared policies caches; because ProcessorFlow and onboarding
+  // read the SAME entries, this also live-refreshes Home.
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: qk.policiesList() });
+    queryClient.invalidateQueries({ queryKey: qk.policyRuns() });
+  }, [queryClient]);
   // The catalogue cards are always shown (they're the "configure a policy" CTAs),
   // but the summary strip is pure stat boxes: hide it until at least one policy
   // is configured so a fresh workspace doesn't show a row of zeros.

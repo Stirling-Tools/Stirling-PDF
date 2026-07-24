@@ -238,7 +238,7 @@ export function ThumbnailSidebar({
                       onMouseEnter={(e) => {
                         if (scrollState.currentPage !== pageIndex + 1) {
                           e.currentTarget.style.backgroundColor =
-                            "var(--hover-bg)";
+                            "var(--c-hover)";
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -259,7 +259,7 @@ export function ThumbnailSidebar({
                               height: "auto",
                               borderRadius: "4px",
                               boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                              border: "1px solid var(--border-subtle)",
+                              border: "1px solid var(--c-border-subtle)",
                             }}
                           />
                         </PrivateContent>
@@ -285,13 +285,13 @@ export function ThumbnailSidebar({
                           style={{
                             width: "11.5rem",
                             height: "15rem",
-                            backgroundColor: "var(--bg-muted)",
-                            border: "1px solid var(--border-subtle)",
+                            backgroundColor: "var(--c-surface-sunken)",
+                            border: "1px solid var(--c-border-subtle)",
                             borderRadius: "4px",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "var(--text-muted)",
+                            color: "var(--c-text-subtle)",
                             fontSize: "12px",
                           }}
                         >
@@ -307,7 +307,7 @@ export function ThumbnailSidebar({
                           color:
                             scrollState.currentPage === pageIndex + 1
                               ? "var(--color-primary-500)"
-                              : "var(--text-muted)",
+                              : "var(--c-text-subtle)",
                         }}
                       >
                         Page {pageIndex + 1}

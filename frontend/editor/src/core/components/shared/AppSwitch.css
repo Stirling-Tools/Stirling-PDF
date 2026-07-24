@@ -9,15 +9,15 @@
   background: none;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   transition:
     background var(--motion-fast),
     color var(--motion-fast);
 }
 
 .app-switch-btn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-2);
+  background: var(--c-hover);
+  color: var(--c-text-muted);
 }
 
 .app-switch-icon {

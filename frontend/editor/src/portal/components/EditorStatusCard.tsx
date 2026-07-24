@@ -4,12 +4,8 @@ import { useTranslation } from "react-i18next";
 import { Button, Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
-import { useAsync } from "@portal/hooks/useAsync";
-import {
-  fetchEditorDeployment,
-  type EditorDeploymentResponse,
-  type EditorInstance,
-} from "@portal/api/editorDeploy";
+import { useEditorDeployment } from "@portal/queries/infrastructure";
+import { type EditorInstance } from "@portal/api/editorDeploy";
 import {
   DownloadIcon,
   ExternalLinkIcon,
@@ -28,7 +24,7 @@ function StirlingMark() {
       fill="none"
       aria-hidden
     >
-      <rect width="256" height="256" rx="58" fill="#8E3131" />
+      <rect width="256" height="256" rx="58" fill="var(--c-brand-mark)" />
       <path
         d="M39.2638 127.834L155.374 32L155.375 121.499L39.2638 217.333L39.2638 127.834Z"
         fill="white"
@@ -76,10 +72,7 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
   const { tier } = useTier();
   const { setActiveView } = useView();
   const [installOpen, setInstallOpen] = useState(false);
-  const { data, loading } = useAsync<EditorDeploymentResponse>(
-    () => fetchEditorDeployment(tier),
-    [tier],
-  );
+  const { data, loading } = useEditorDeployment(tier);
 
   const view = useMemo(() => {
     if (!data) return null;

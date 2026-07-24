@@ -16,12 +16,12 @@
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 .portal-home__greeting-date {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* Two-column dashboard row (activity + quick actions) */
@@ -47,12 +47,12 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-home__quick-sub {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-home__quick-list {
@@ -65,7 +65,7 @@
    shared Button's leftSection / label / rightSection, not overridden here. */
 .portal-home__quick-row {
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
   text-align: left;
   transition:
@@ -74,8 +74,8 @@
 }
 
 .portal-home__quick-row:hover {
-  background: var(--color-bg-hover);
-  border-color: var(--color-border);
+  background: var(--c-hover);
+  border-color: var(--c-border);
 }
 
 /* Let the label grow so the arrow (rightSection) is pushed to the far right,
@@ -109,18 +109,19 @@
 
 .portal-home__quick-text strong {
   font-size: 0.8125rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-weight: 600;
 }
 
 .portal-home__quick-text span {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-home__quick-arrow {
   display: inline-flex;
-  color: var(--color-text-5);
+  font-size: 0.875rem;
+  color: var(--c-text-subtle);
 }
 .portal-home__quick-arrow svg {
   width: 1rem;
@@ -128,5 +129,5 @@
 }
 
 .portal-home__quick-row:hover .portal-home__quick-arrow {
-  color: var(--color-blue);
+  color: var(--c-primary);
 }

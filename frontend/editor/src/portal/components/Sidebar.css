@@ -1,13 +1,51 @@
 .portal-sidebar {
   width: 15rem;
   height: 100vh;
-  background: var(--color-sidebar-bg);
-  border-right: 1px solid var(--color-sidebar-border);
+  height: 100dvh; /* track mobile browser chrome */
+  background: var(--c-bg-raised);
+  border-right: 1px solid var(--c-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   position: sticky;
   top: 0;
+}
+
+/* Mobile close button (shared ActionIcon) — only shown inside the drawer. */
+.portal-sidebar__close {
+  display: none;
+  flex-shrink: 0;
+}
+
+/* Off-canvas drawer under the shell breakpoint (keep in sync with
+   AppShell.css and Sidebar.tsx). Slides from the inline-start edge so RTL
+   locales get the mirrored behavior for free. */
+@media (max-width: 48rem) {
+  .portal-sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 80; /* above the scrim (75), below SUI modals (100) */
+    width: min(17rem, 85vw);
+    border-right: none;
+    border-inline-end: 1px solid var(--color-sidebar-border);
+    transform: translateX(calc(var(--sui-dir, 1) * -100%));
+    visibility: hidden;
+    transition:
+      transform var(--motion-fast),
+      visibility var(--motion-fast);
+  }
+  [dir="rtl"] .portal-sidebar {
+    --sui-dir: -1;
+  }
+  .portal-sidebar--open {
+    transform: translateX(0);
+    visibility: visible;
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.35);
+  }
+  .portal-sidebar__close {
+    display: inline-flex;
+  }
 }
 
 /* Logo block */
@@ -16,17 +54,38 @@
   padding: 0 0.875rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--color-sidebar-divider);
+  gap: 0.4375rem;
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
-/* Stirling Processor wordmark (theme-switched in Sidebar.tsx); matches the
-   editor's 22px wordmark so the two apps read as one brand. */
+/* Brand mark (parallelogram icon) leading the wordmark; same in both themes. */
+.portal-sidebar__mark {
+  height: 1.5rem;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Stirling wordmark (theme-switched in Sidebar.tsx); matches the editor's
+   22px wordmark so the two apps read as one brand. */
 .portal-sidebar__wordmark {
   height: 1.375rem;
   width: auto;
   display: block;
   flex-shrink: 0;
+}
+
+/* Show the wordmark that matches the rendered scheme (black text on light,
+   white text on dark). Keyed on data-mantine-color-scheme so it follows the
+   actual theme, not the portal's separate (and sometimes stale) theme state. */
+.portal-sidebar__wordmark--dark {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .portal-sidebar__wordmark--light {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .portal-sidebar__wordmark--dark {
+  display: block;
 }
 
 /* App switcher (down-arrow → Portal / Editor); button and menu styling live
@@ -46,21 +105,35 @@
   gap: 0.5rem;
 }
 
+/* Each section is a labelled card: a small header above its nav items. */
+.portal-sidebar__section {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.375rem 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.portal-sidebar__section-label {
+  margin: 0;
+  padding: 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--c-text-subtle);
+}
+
 .portal-sidebar__group {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
 
-.portal-sidebar__divider {
-  height: 1px;
-  background: var(--color-sidebar-divider);
-  margin: 0.25rem 0;
-}
-
 /* Footer */
 .portal-sidebar__footer {
-  border-top: 1px solid var(--color-sidebar-divider);
+  border-top: 1px solid var(--c-border-subtle);
   padding: 0.5rem 0.625rem 0.75rem;
   display: flex;
   flex-direction: column;

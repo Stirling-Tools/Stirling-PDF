@@ -87,7 +87,7 @@ export function SpendCapReachedModal({ onClose }: SpendCapReachedModalProps) {
         content: {
           overflow: "hidden",
           border: "none",
-          background: "var(--bg-surface)",
+          background: "var(--c-surface)",
           maxHeight: "90vh",
           display: "flex",
           flexDirection: "column",

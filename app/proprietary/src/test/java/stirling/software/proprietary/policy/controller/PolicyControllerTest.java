@@ -27,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import stirling.software.common.cluster.JobStore;
+import stirling.software.common.cluster.inprocess.InProcessJobStore;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.service.JobOwnershipService;
@@ -78,6 +80,7 @@ class PolicyControllerTest {
     @Mock private JobOwnershipService jobOwnershipService;
 
     private ApplicationProperties applicationProperties;
+    private final JobStore jobStore = new InProcessJobStore();
     private PolicyController controller;
 
     private final java.util.List<stirling.software.proprietary.policy.trigger.PolicyTrigger>
@@ -106,7 +109,8 @@ class PolicyControllerTest {
                         policyTriggers,
                         applicationProperties,
                         tempFileManager,
-                        jobOwnershipService);
+                        jobOwnershipService,
+                        jobStore);
     }
 
     private static stirling.software.proprietary.policy.trigger.PolicyTrigger trigger(
@@ -264,6 +268,8 @@ class PolicyControllerTest {
         @DisplayName("returns 404 when run is unknown")
         void notFound() {
             when(runRegistry.get("missing")).thenReturn(null);
+            when(jobOwnershipService.extractJobId("missing")).thenReturn("missing");
+            when(jobOwnershipService.createScopedJobKey("missing")).thenReturn("missing");
 
             ResponseEntity<PolicyRunView> response = controller.status("missing");
 
