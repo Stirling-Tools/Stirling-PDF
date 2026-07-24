@@ -101,10 +101,77 @@ button.portal-source-modal__card:focus-visible {
   white-space: nowrap;
 }
 
+/* Step rail in the modal header: numbered dots joined by short connectors. */
+.portal-source-modal__steps {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.375rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portal-source-modal__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+
+/* Connector line between steps. */
+.portal-source-modal__step + .portal-source-modal__step::before {
+  content: "";
+  width: 1.25rem;
+  height: 1px;
+  margin-right: 0.375rem;
+  background: var(--c-border);
+}
+
+.portal-source-modal__step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.portal-source-modal__step.is-active {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.portal-source-modal__step.is-active .portal-source-modal__step-dot {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+}
+
+.portal-source-modal__step.is-done .portal-source-modal__step-dot {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+
 .portal-source-modal__form {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
+}
+
+/* "New connection..." on the left, the view-all escape hatch on the right. */
+.portal-source-modal__connection-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .portal-source-modal__loading {

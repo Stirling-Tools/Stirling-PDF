@@ -67,6 +67,12 @@
   min-width: 0;
 }
 
+/* Leading slot (back button): pull up to optically align with the title line. */
+.sui-modal__header-start {
+  flex: 0 0 auto;
+  margin: -0.25rem 0 0 -0.25rem;
+}
+
 .sui-modal__title {
   font-size: 0.9375rem;
   font-weight: 600;

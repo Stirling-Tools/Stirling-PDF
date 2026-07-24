@@ -5,17 +5,21 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import type { ReactNode } from "react";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { UIProvider } from "@portal/contexts/UIContext";
 
-// SourceModal reads useUI() (open settings) and useQueryClient (list
-// invalidation), so provide the query client + Mantine + the UI context.
+// SourceModal reads useUI() (open settings), useQueryClient (list
+// invalidation) and useNavigate (View all in Integrations), so provide the
+// query client + Mantine + the UI context + a router.
 const Providers = ({ children }: { children: ReactNode }) => (
-  <PortalTestProviders>
-    <UIProvider>{children}</UIProvider>
-  </PortalTestProviders>
+  <MemoryRouter>
+    <PortalTestProviders>
+      <UIProvider>{children}</UIProvider>
+    </PortalTestProviders>
+  </MemoryRouter>
 );
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
@@ -80,11 +84,12 @@ describe("SourceModal", () => {
   it("creates a folder source through the staged flow and closes", async () => {
     const { onClose, onSaved } = renderModal();
 
-    // Stage 1: pick the folder connector, then fill name + directory.
+    // A folder has no integration step: the catalogue goes straight to setup.
     fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
-      target: { value: "Claims intake" },
-    });
+    fireEvent.change(
+      screen.getByLabelText(/portal\.sources\.builder\.sourceName/),
+      { target: { value: "Claims intake" } },
+    );
     fireEvent.change(
       screen.getByLabelText(
         /portal\.sources\.types\.folder\.fields\.directory\.label/,
@@ -114,9 +119,10 @@ describe("SourceModal", () => {
     renderModal();
 
     fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
-      target: { value: "Claims intake" },
-    });
+    fireEvent.change(
+      screen.getByLabelText(/portal\.sources\.builder\.sourceName/),
+      { target: { value: "Claims intake" } },
+    );
     fireEvent.change(
       screen.getByLabelText(
         /portal\.sources\.types\.folder\.fields\.directory\.label/,
@@ -139,9 +145,10 @@ describe("SourceModal", () => {
     renderModal();
 
     fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
-      target: { value: "Claims intake" },
-    });
+    fireEvent.change(
+      screen.getByLabelText(/portal\.sources\.builder\.sourceName/),
+      { target: { value: "Claims intake" } },
+    );
     fireEvent.change(
       screen.getByLabelText(
         /portal\.sources\.types\.folder\.fields\.directory\.label/,
@@ -156,57 +163,15 @@ describe("SourceModal", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("gates the s3 type on a chosen connection", async () => {
+  it("walks s3 through the connection step, creating one inline when none exist", async () => {
     renderModal();
+
+    // No stored connections: the step opens straight on the inline form,
+    // still inside the single modal.
     fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
-      target: { value: "Bucket source" },
-    });
     expect(
-      await screen.findByText(
-        "portal.sources.types.s3.fields.connection.label",
-      ),
+      await screen.findByLabelText(/portal\.integrations\.typedName/),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("portal.sources.builder.create").closest("button"),
-    ).toBeDisabled();
-  });
-
-  it("reveals the delivery URL and signing secret once after creating a webhook", async () => {
-    createSource.mockResolvedValue({
-      id: "wh-1",
-      options: { webhookId: "whk_abc123", signingSecret: "whsec_topsecret" },
-    });
-    const { onClose } = renderModal();
-
-    fireEvent.click(screen.getByText("portal.sources.types.webhook.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
-      target: { value: "Partner uploads" },
-    });
-    fireEvent.click(screen.getByText("portal.sources.builder.create"));
-
-    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
-    expect(
-      await screen.findByDisplayValue("whsec_topsecret"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue(/\/api\/v1\/webhooks\/whk_abc123$/),
-    ).toBeInTheDocument();
-    expect(onClose).not.toHaveBeenCalled();
-
-    fireEvent.click(
-      screen.getByText("portal.sources.types.webhook.reveal.done"),
-    );
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it("creates an S3 connection in-place without stacking a second modal", async () => {
-    renderModal();
-    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
-    // "New connection..." swaps the stage instead of opening another modal.
-    fireEvent.click(
-      await screen.findByText("portal.connections.picker.createNew"),
-    );
     expect(document.querySelectorAll('[role="dialog"]').length).toBe(1);
 
     fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
@@ -230,7 +195,7 @@ describe("SourceModal", () => {
       ),
       { target: { value: "secret" } },
     );
-    fireEvent.click(screen.getByText("portal.connections.picker.save"));
+    fireEvent.click(screen.getByText("portal.sources.builder.saveConnection"));
 
     await waitFor(() => expect(createIntegration).toHaveBeenCalledTimes(1));
     expect(createIntegration).toHaveBeenCalledWith(
@@ -240,12 +205,89 @@ describe("SourceModal", () => {
         scope: "TEAM",
       }),
     );
-    // Back on the source form with the new connection selected.
+
+    // On the setup step with the fresh connection selected: name it and save.
+    fireEvent.change(
+      await screen.findByLabelText(/portal\.sources\.builder\.sourceName/),
+      { target: { value: "Bucket source" } },
+    );
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
+    expect(createSource).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Bucket source",
+        type: "s3",
+        options: expect.objectContaining({ connectionId: "77" }),
+      }),
+    );
+  });
+
+  it("gates the connection step's Next on a selection when connections exist", async () => {
+    fetchS3Connections.mockResolvedValue([
+      { id: 5, name: "Prod bucket", integrationType: "S3" },
+    ]);
+    renderModal();
+
+    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
     expect(
-      await screen.findByText(
-        "portal.sources.types.s3.fields.connection.label",
+      await screen.findByText("portal.connections.picker.createNew"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.sources.builder.next").closest("button"),
+    ).toBeDisabled();
+
+    // "New connection..." swaps to the inline form; still one modal.
+    fireEvent.click(screen.getByText("portal.connections.picker.createNew"));
+    expect(
+      await screen.findByLabelText(
+        /portal\.connections\.types\.s3\.fields\.bucket\.label/,
       ),
     ).toBeInTheDocument();
+    expect(document.querySelectorAll('[role="dialog"]').length).toBe(1);
+  });
+
+  it("returns from the connection step to the catalogue via the header back arrow", async () => {
+    renderModal();
+
+    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
+    expect(
+      await screen.findByLabelText(/portal\.integrations\.typedName/),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("portal.sources.builder.backStep"));
+    expect(
+      screen.getByText("portal.sources.types.folder.label"),
+    ).toBeInTheDocument();
+  });
+
+  it("reveals the delivery URL and signing secret once after creating a webhook", async () => {
+    createSource.mockResolvedValue({
+      id: "wh-1",
+      options: { webhookId: "whk_abc123", signingSecret: "whsec_topsecret" },
+    });
+    const { onClose } = renderModal();
+
+    fireEvent.click(screen.getByText("portal.sources.types.webhook.label"));
+    fireEvent.change(
+      screen.getByLabelText(/portal\.sources\.builder\.sourceName/),
+      { target: { value: "Partner uploads" } },
+    );
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
+    expect(
+      await screen.findByDisplayValue("whsec_topsecret"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue(/\/api\/v1\/webhooks\/whk_abc123$/),
+    ).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByText("portal.sources.types.webhook.reveal.done"),
+    );
+    expect(onClose).toHaveBeenCalled();
   });
 
   it("lists coming-soon connectors as inert cards", () => {
@@ -253,7 +295,7 @@ describe("SourceModal", () => {
     fireEvent.click(screen.getByText("portal.sources.types.sharepoint.label"));
     // Still on the type stage: no configure form appeared.
     expect(
-      screen.queryByLabelText(/portal\.integrations\.typedName/),
+      screen.queryByLabelText(/portal\.sources\.builder\.sourceName/),
     ).not.toBeInTheDocument();
     expect(
       screen.getAllByText("portal.sources.builder.comingSoon").length,

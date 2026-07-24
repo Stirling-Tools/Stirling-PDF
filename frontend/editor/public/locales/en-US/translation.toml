@@ -8679,23 +8679,34 @@ title = "Sources"
 connectSource = "Connect source"
 
 [portal.sources.builder]
-back = "Back to sources"
-backToTypes = "All source types"
+backStep = "Back"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
 comingSoon = "Coming soon"
 comingSoonHeading = "Coming soon"
+connectionEmpty = "No {{tool}} connections yet. Enter the details once and every source, policy and pipeline can reuse them."
+connectionHint = "Pick the {{tool}} connection this source reads from, or add a new one."
 create = "Create source"
 createTitle = "Connect a source"
 delete = "Delete"
 editTitle = "Edit source"
 enabled = "Enabled"
+manageIntegrations = "View all in Integrations"
+next = "Next"
 save = "Save changes"
+saveConnection = "Save and continue"
+sourceName = "Source name"
 
 [portal.sources.builder.folderAccess]
 description = "Folder automations can only use folders an administrator has allowed. Add it under Folder Access settings, then try again."
 openSettings = "Folder Access settings"
 title = "This folder isn't allowed"
+
+[portal.sources.builder.steps]
+aria = "Setup steps"
+configure = "Set up source"
+connection = "Connection"
+type = "Source type"
 
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
@@ -8709,7 +8720,7 @@ title = "No sources connected yet"
 
 [portal.sources.kpi]
 inUse = "In use"
-total = "Connections"
+total = "Sources"
 unused = "Unused"
 
 [portal.sources.status]

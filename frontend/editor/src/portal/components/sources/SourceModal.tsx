@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import {
   Banner,
   Button,
@@ -22,6 +25,7 @@ import {
 import { useUI } from "@portal/contexts/UIContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
 import {
   COMING_SOON_SOURCE_TYPES,
@@ -29,6 +33,7 @@ import {
   defaultOptions,
   WEBHOOK_SOURCE_TYPE,
   type CreatableSourceType,
+  type SourceFieldDef,
 } from "@portal/components/sources/sourceTypes";
 import { BrandMark } from "@portal/components/BrandMarks";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
@@ -39,7 +44,11 @@ import {
   connectionFormValid,
   emptyConnectionValues,
 } from "@portal/components/sources/connectionTypes";
-import { createIntegration } from "@portal/api/integrations";
+import {
+  createIntegration,
+  fetchS3Connections,
+  type IntegrationConfig,
+} from "@portal/api/integrations";
 import "@portal/components/sources/SourceModal.css";
 
 function webhookUrl(webhookId: string): string {
@@ -69,12 +78,74 @@ function optionsFor(
   return out;
 }
 
-type Stage = "type" | "configure" | "reveal" | "delete" | "connection";
+/** The slot on a type that references a stored connection, if it has one. */
+function connectionFieldOf(
+  type: CreatableSourceType,
+): SourceFieldDef | undefined {
+  return type.fields.find((field) => field.control === "s3Connection");
+}
+
+type Stage =
+  | "type"
+  | "connection"
+  | "configure"
+  | "reveal"
+  | "delete"
+  | "connCreate";
 
 /** The S3 catalogue entry, for creating a connection in-place (no stacked modal). */
 const S3_CONNECTION_TYPE = CREATABLE_CONNECTION_TYPES.find(
   (entry) => entry.id === "s3",
 )!;
+
+const STEP_LABEL_KEYS: Record<string, string> = {
+  type: "portal.sources.builder.steps.type",
+  connection: "portal.sources.builder.steps.connection",
+  configure: "portal.sources.builder.steps.configure",
+};
+
+/** The create flow's step rail, shown in the modal header. */
+function WizardSteps({
+  stage,
+  stepKeys,
+}: {
+  stage: Stage;
+  stepKeys: string[];
+}) {
+  const { t } = useTranslation();
+  const activeIndex = stepKeys.indexOf(stage);
+  return (
+    <ol
+      className="portal-source-modal__steps"
+      aria-label={t("portal.sources.builder.steps.aria")}
+    >
+      {stepKeys.map((key, index) => {
+        const state =
+          index === activeIndex
+            ? "active"
+            : index < activeIndex
+              ? "done"
+              : "todo";
+        return (
+          <li
+            key={key}
+            className={`portal-source-modal__step is-${state}`}
+            aria-current={state === "active" ? "step" : undefined}
+          >
+            <span className="portal-source-modal__step-dot" aria-hidden>
+              {state === "done" ? (
+                <CheckRoundedIcon style={{ fontSize: "0.75rem" }} />
+              ) : (
+                index + 1
+              )}
+            </span>
+            {t(STEP_LABEL_KEYS[key])}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 interface SourceModalProps {
   open: boolean;
@@ -89,10 +160,12 @@ interface SourceModalProps {
 }
 
 /**
- * Create/edit a source, staged inside one modal: the connector catalogue first
- * (including greyed-out coming-soon entries), then the configure form for the
- * picked type; webhook creation swaps to a one-time secret reveal, and delete
- * swaps to an inline confirm rather than stacking a second modal.
+ * Create/edit a source as a stepped wizard in one modal: pick the connector
+ * type, then (for connection-backed types) select or create the connection
+ * it reads from, then the source-only setup (name, prefix, mode). Webhook
+ * creation swaps to a one-time secret reveal, and delete swaps to an inline
+ * confirm rather than stacking a second modal. Edit skips the wizard and goes
+ * straight to the setup form.
  */
 export function SourceModal({
   open,
@@ -102,6 +175,7 @@ export function SourceModal({
 }: SourceModalProps) {
   const { t } = useTranslation();
   const { openSettings } = useUI();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEdit = Boolean(sourceId);
 
@@ -129,12 +203,19 @@ export function SourceModal({
     webhookId: string;
     secret: string;
   } | null>(null);
-  // In-place connection create (swaps the stage; never stacks a second modal).
+  // The connection step: the stored connections of the type's kind, and
+  // whether the step is picking one or creating one inline (never a 2nd modal).
+  const [connections, setConnections] = useState<IntegrationConfig[] | null>(
+    null,
+  );
+  const [connMode, setConnMode] = useState<"select" | "create">("select");
   const [connValues, setConnValues] = useState<Record<string, string>>(() =>
     emptyConnectionValues(S3_CONNECTION_TYPE),
   );
   const [connField, setConnField] = useState("");
   const [connSaving, setConnSaving] = useState(false);
+
+  const connectionField = connectionFieldOf(type);
 
   // Seed on every open: fresh catalogue for create, fetched record for edit.
   useEffect(() => {
@@ -143,6 +224,8 @@ export function SourceModal({
     setReveal(null);
     setSubmitting(false);
     setDeleting(false);
+    setConnections(null);
+    setConnMode("select");
     if (!sourceId) {
       setStage("type");
       setType(OFFERED_TYPES[0]);
@@ -167,10 +250,33 @@ export function SourceModal({
       .finally(() => setLoading(false));
   }, [open, sourceId]);
 
+  // The connection step's list, fetched once per open when the step is
+  // reached; an empty account has nothing to pick, so it opens on the form.
+  useEffect(() => {
+    if (!open || stage !== "connection" || connections !== null) return;
+    let cancelled = false;
+    fetchS3Connections()
+      .then((list) => {
+        if (cancelled) return;
+        setConnections(list);
+        if (list.length === 0) {
+          setConnValues(emptyConnectionValues(S3_CONNECTION_TYPE));
+          setConnMode("create");
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) setError(errorMessage(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, stage, connections]);
+
   function chooseType(next: CreatableSourceType) {
     setType(next);
     setOptions(defaultOptions(next));
-    setStage("configure");
+    setError(null);
+    setStage(connectionFieldOf(next) ? "connection" : "configure");
   }
 
   function setOption(key: string, value: string) {
@@ -182,6 +288,13 @@ export function SourceModal({
   );
   const canSave = name.trim() !== "" && requiredComplete && !submitting;
 
+  const selectedConnectionId = connectionField
+    ? (options[connectionField.key] ?? "").trim()
+    : "";
+  const selectedConnection = connections?.find(
+    (connection) => String(connection.id) === selectedConnectionId,
+  );
+
   const editingWebhookId =
     isEdit && loaded?.type === WEBHOOK_SOURCE_TYPE
       ? String(loaded.options?.webhookId ?? "")
@@ -192,34 +305,63 @@ export function SourceModal({
     onClose();
   }
 
+  function goToIntegrations() {
+    onClose();
+    navigate(toPortalPath(VIEW_PATHS.integrations));
+  }
+
+  function startInlineCreate() {
+    setConnValues(emptyConnectionValues(S3_CONNECTION_TYPE));
+    setError(null);
+    setConnMode("create");
+  }
+
+  /** Edit flow only: the configure form's picker swaps the stage in-place. */
   function openConnectionStage(fieldKey: string) {
     setConnValues(emptyConnectionValues(S3_CONNECTION_TYPE));
     setConnField(fieldKey);
     setError(null);
-    setStage("connection");
+    setStage("connCreate");
   }
 
-  async function saveConnection() {
+  async function createConnection(): Promise<IntegrationConfig | null> {
     if (connSaving || !connectionFormValid(S3_CONNECTION_TYPE, connValues))
-      return;
+      return null;
     setConnSaving(true);
     setError(null);
     try {
-      const created = await createIntegration({
+      return await createIntegration({
         integrationType: S3_CONNECTION_TYPE.integrationType,
         name: connValues.name.trim(),
         scope: "TEAM",
         config: buildConnectionConfig(S3_CONNECTION_TYPE, connValues),
       });
-      // Back to the source form with the fresh connection selected; the picker
-      // remounts and refetches, so the new name is in its list.
-      setOption(connField, String(created.id));
-      setStage("configure");
     } catch (e) {
       setError(errorMessage(e));
+      return null;
     } finally {
       setConnSaving(false);
     }
+  }
+
+  /** Connection step's inline create: select the new one and move on. */
+  async function saveConnectionAndContinue() {
+    if (!connectionField) return;
+    const created = await createConnection();
+    if (!created) return;
+    setConnections((list) => [...(list ?? []), created]);
+    setOption(connectionField.key, String(created.id));
+    setConnMode("select");
+    setStage("configure");
+  }
+
+  /** Edit flow's in-place create: back to the form with the new id selected. */
+  async function saveConnectionForEdit() {
+    const created = await createConnection();
+    if (!created) return;
+    // The picker remounts and refetches, so the new name is in its list.
+    setOption(connField, String(created.id));
+    setStage("configure");
   }
 
   async function save() {
@@ -273,19 +415,53 @@ export function SourceModal({
   }
 
   const title =
-    stage === "type"
-      ? t("portal.sources.builder.createTitle")
-      : stage === "connection"
-        ? t("portal.connections.createTitleFor", {
-            name: t(S3_CONNECTION_TYPE.labelKey),
-          })
-        : stage === "reveal"
-          ? t("portal.sources.types.webhook.reveal.title")
-          : stage === "delete"
-            ? t("portal.sources.delete.title")
-            : isEdit
-              ? name || t("portal.sources.builder.editTitle")
-              : t("portal.sources.builder.createTitle");
+    stage === "connCreate"
+      ? t("portal.connections.createTitleFor", {
+          name: t(S3_CONNECTION_TYPE.labelKey),
+        })
+      : stage === "reveal"
+        ? t("portal.sources.types.webhook.reveal.title")
+        : stage === "delete"
+          ? t("portal.sources.delete.title")
+          : isEdit
+            ? name || t("portal.sources.builder.editTitle")
+            : t("portal.sources.builder.createTitle");
+
+  // The wizard chrome (step rail + header back arrow) belongs to create only;
+  // edit opens directly on the form and reveal/delete are terminal swaps.
+  const wizardStage =
+    !isEdit &&
+    (stage === "type" || stage === "connection" || stage === "configure");
+  const stepKeys =
+    stage === "type" || connectionField
+      ? ["type", "connection", "configure"]
+      : ["type", "configure"];
+
+  const headerBack =
+    !isEdit &&
+    stage === "connection" &&
+    connMode === "create" &&
+    (connections?.length ?? 0) > 0
+      ? () => {
+          setError(null);
+          setConnMode("select");
+        }
+      : !isEdit && stage === "connection"
+        ? () => {
+            setError(null);
+            setStage("type");
+          }
+        : !isEdit && stage === "configure"
+          ? () => {
+              setError(null);
+              setStage(connectionField ? "connection" : "type");
+            }
+          : stage === "connCreate"
+            ? () => {
+                setError(null);
+                setStage("configure");
+              }
+            : null;
 
   return (
     <Modal
@@ -293,6 +469,26 @@ export function SourceModal({
       onClose={stage === "reveal" ? finish : onClose}
       width={stage === "type" ? "lg" : stage === "delete" ? "sm" : "md"}
       title={title}
+      subtitle={
+        wizardStage ? (
+          <WizardSteps stage={stage} stepKeys={stepKeys} />
+        ) : undefined
+      }
+      headerStart={
+        headerBack ? (
+          <Button
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            shape="circle"
+            aria-label={t("portal.sources.builder.backStep")}
+            onClick={headerBack}
+            leftSection={
+              <ArrowBackRoundedIcon style={{ fontSize: "1.125rem" }} />
+            }
+          />
+        ) : undefined
+      }
       footer={
         stage === "configure" ? (
           <div className="portal-source-modal__footer">
@@ -339,6 +535,38 @@ export function SourceModal({
               variant="tertiary"
               size="sm"
               disabled={connSaving}
+              onClick={onClose}
+            >
+              {t("portal.sources.builder.cancel")}
+            </Button>
+            {connMode === "create" ? (
+              <Button
+                size="sm"
+                loading={connSaving}
+                disabled={!connectionFormValid(S3_CONNECTION_TYPE, connValues)}
+                onClick={() => void saveConnectionAndContinue()}
+              >
+                {t("portal.sources.builder.saveConnection")}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                disabled={selectedConnectionId === ""}
+                onClick={() => {
+                  setError(null);
+                  setStage("configure");
+                }}
+              >
+                {t("portal.sources.builder.next")}
+              </Button>
+            )}
+          </div>
+        ) : stage === "connCreate" ? (
+          <div className="portal-source-modal__footer-actions">
+            <Button
+              variant="tertiary"
+              size="sm"
+              disabled={connSaving}
               onClick={() => setStage("configure")}
             >
               {t("portal.connections.picker.cancel")}
@@ -347,7 +575,7 @@ export function SourceModal({
               size="sm"
               loading={connSaving}
               disabled={!connectionFormValid(S3_CONNECTION_TYPE, connValues)}
-              onClick={() => void saveConnection()}
+              onClick={() => void saveConnectionForEdit()}
             >
               {t("portal.connections.picker.save")}
             </Button>
@@ -444,6 +672,97 @@ export function SourceModal({
         </div>
       )}
 
+      {stage === "connection" && connectionField && (
+        <div className="portal-source-modal__form">
+          <div className="portal-source-modal__type-summary">
+            <BrandMark id={type.type} size={22} />
+            <span className="portal-source-modal__card-text">
+              <span className="portal-source-modal__card-name">
+                {t(type.labelKey)}
+              </span>
+              <span className="portal-source-modal__card-desc">
+                {t(type.descriptionKey)}
+              </span>
+            </span>
+          </div>
+
+          {connections === null ? (
+            error ? (
+              <Banner tone="danger" description={error} />
+            ) : (
+              <div className="portal-source-modal__loading">
+                <Spinner />
+              </div>
+            )
+          ) : connMode === "create" ? (
+            <>
+              {connections.length === 0 && (
+                <p className="portal-source-modal__muted">
+                  {t("portal.sources.builder.connectionEmpty", {
+                    tool: t(type.labelKey),
+                  })}
+                </p>
+              )}
+              <ConnectionForm
+                type={S3_CONNECTION_TYPE}
+                values={connValues}
+                onChange={setConnValues}
+              />
+              {error && <Banner tone="danger" description={error} />}
+            </>
+          ) : (
+            <>
+              <p className="portal-source-modal__muted">
+                {t("portal.sources.builder.connectionHint", {
+                  tool: t(type.labelKey),
+                })}
+              </p>
+              <FormField
+                label={t(connectionField.labelKey)}
+                helperText={
+                  connectionField.helperTextKey
+                    ? t(connectionField.helperTextKey)
+                    : undefined
+                }
+                required
+              >
+                <Select
+                  value={selectedConnectionId || null}
+                  placeholder={t("portal.connections.picker.placeholder")}
+                  options={connections.map((connection) => ({
+                    value: String(connection.id),
+                    label: connection.name,
+                  }))}
+                  onChange={(selected) =>
+                    setOption(connectionField.key, selected ?? "")
+                  }
+                />
+              </FormField>
+              <div className="portal-source-modal__connection-actions">
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  onClick={startInlineCreate}
+                >
+                  {t("portal.connections.picker.createNew")}
+                </Button>
+                <Button
+                  variant="quiet"
+                  size="sm"
+                  onClick={goToIntegrations}
+                  rightSection={
+                    <ArrowForwardRoundedIcon style={{ fontSize: "1rem" }} />
+                  }
+                >
+                  {t("portal.sources.builder.manageIntegrations")}
+                </Button>
+              </div>
+              {error && <Banner tone="danger" description={error} />}
+            </>
+          )}
+        </div>
+      )}
+
       {stage === "configure" && (
         <div className="portal-source-modal__form">
           {loading && (
@@ -454,18 +773,6 @@ export function SourceModal({
 
           {!loading && (
             <>
-              {!isEdit && (
-                <Button
-                  variant="quiet"
-                  size="sm"
-                  className="portal-source-modal__back"
-                  leftSection={<ArrowBackRoundedIcon fontSize="inherit" />}
-                  onClick={() => setStage("type")}
-                >
-                  {t("portal.sources.builder.backToTypes")}
-                </Button>
-              )}
-
               <div className="portal-source-modal__type-summary">
                 <BrandMark id={type.type} size={22} />
                 <span className="portal-source-modal__card-text">
@@ -473,15 +780,13 @@ export function SourceModal({
                     {t(type.labelKey)}
                   </span>
                   <span className="portal-source-modal__card-desc">
-                    {t(type.descriptionKey)}
+                    {selectedConnection?.name ?? t(type.descriptionKey)}
                   </span>
                 </span>
               </div>
 
               <FormField
-                label={t("portal.integrations.typedName", {
-                  tool: t(type.labelKey),
-                })}
+                label={t("portal.sources.builder.sourceName")}
                 required
               >
                 <Input
@@ -497,48 +802,52 @@ export function SourceModal({
                 </p>
               )}
 
-              {type.fields.map((field) => (
-                <FormField
-                  key={field.key}
-                  label={t(field.labelKey)}
-                  helperText={
-                    field.helperTextKey ? t(field.helperTextKey) : undefined
-                  }
-                  required={field.required}
-                >
-                  {field.control === "s3Connection" ? (
-                    <S3ConnectionPicker
-                      value={options[field.key] ?? ""}
-                      onChange={(connectionId) =>
-                        setOption(field.key, connectionId)
-                      }
-                      onCreateNew={() => openConnectionStage(field.key)}
-                    />
-                  ) : field.control === "select" ? (
-                    <Select
-                      value={options[field.key] ?? ""}
-                      options={(field.options ?? []).map((o) => ({
-                        value: o.value,
-                        label: t(o.labelKey),
-                      }))}
-                      onChange={(value) => setOption(field.key, value ?? "")}
-                    />
-                  ) : (
-                    <Input
-                      type={
-                        field.control === "password" ? "password" : undefined
-                      }
-                      value={options[field.key] ?? ""}
-                      placeholder={
-                        field.placeholderKey
-                          ? t(field.placeholderKey)
-                          : undefined
-                      }
-                      onChange={(e) => setOption(field.key, e.target.value)}
-                    />
-                  )}
-                </FormField>
-              ))}
+              {type.fields
+                // Create picks the connection on its own step; edit keeps the
+                // picker here so an existing source can be repointed.
+                .filter((field) => isEdit || field.control !== "s3Connection")
+                .map((field) => (
+                  <FormField
+                    key={field.key}
+                    label={t(field.labelKey)}
+                    helperText={
+                      field.helperTextKey ? t(field.helperTextKey) : undefined
+                    }
+                    required={field.required}
+                  >
+                    {field.control === "s3Connection" ? (
+                      <S3ConnectionPicker
+                        value={options[field.key] ?? ""}
+                        onChange={(connectionId) =>
+                          setOption(field.key, connectionId)
+                        }
+                        onCreateNew={() => openConnectionStage(field.key)}
+                      />
+                    ) : field.control === "select" ? (
+                      <Select
+                        value={options[field.key] ?? ""}
+                        options={(field.options ?? []).map((o) => ({
+                          value: o.value,
+                          label: t(o.labelKey),
+                        }))}
+                        onChange={(value) => setOption(field.key, value ?? "")}
+                      />
+                    ) : (
+                      <Input
+                        type={
+                          field.control === "password" ? "password" : undefined
+                        }
+                        value={options[field.key] ?? ""}
+                        placeholder={
+                          field.placeholderKey
+                            ? t(field.placeholderKey)
+                            : undefined
+                        }
+                        onChange={(e) => setOption(field.key, e.target.value)}
+                      />
+                    )}
+                  </FormField>
+                ))}
 
               {editingWebhookId && (
                 <FormField
@@ -590,7 +899,7 @@ export function SourceModal({
         </div>
       )}
 
-      {stage === "connection" && (
+      {stage === "connCreate" && (
         <div className="portal-source-modal__form">
           <ConnectionForm
             type={S3_CONNECTION_TYPE}

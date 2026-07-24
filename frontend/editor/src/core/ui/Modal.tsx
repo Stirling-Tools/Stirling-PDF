@@ -11,6 +11,9 @@ export interface ModalProps {
   onClose: () => void;
   title?: ReactNode;
   subtitle?: ReactNode;
+  /** Rendered in the header before the title, e.g. a back button. Kept outside
+   * the title node so it never joins the dialog's accessible name. */
+  headerStart?: ReactNode;
   footer?: ReactNode;
   /** sm=24rem, md=32rem, lg=48rem, xl=64rem. */
   width?: ModalWidth;
@@ -28,6 +31,7 @@ export function Modal({
   onClose,
   title,
   subtitle,
+  headerStart,
   footer,
   width = "md",
   disableBackdropClose = false,
@@ -84,6 +88,9 @@ export function Modal({
         >
           {(title || subtitle) && (
             <header className="sui-modal__header">
+              {headerStart && (
+                <div className="sui-modal__header-start">{headerStart}</div>
+              )}
               <div className="sui-modal__header-text">
                 {title && (
                   <div id={titleId} className="sui-modal__title">
