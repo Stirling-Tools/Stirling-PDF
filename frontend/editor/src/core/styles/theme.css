@@ -246,6 +246,37 @@
   /* API Keys section colors (light mode) */
   --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
 
+  --modal-nav-bg: var(--p-gray-100);
+  --modal-nav-section-title: var(--p-gray-500);
+  --modal-nav-item-active: var(--p-blue-500);
+  --modal-nav-item-active-bg: color-mix(
+    in srgb,
+    var(--p-blue-500) 8%,
+    transparent
+  );
+  --modal-content-bg: var(--p-white);
+  --modal-header-border: rgba(0, 0, 0, 0.06);
+  --api-keys-card-bg: var(--p-white);
+  --api-keys-card-border: var(--p-gray-200);
+  --api-keys-input-bg: var(--p-gray-50);
+  --api-keys-input-border: var(--p-gray-200);
+  --usage-inactive: var(--p-gray-200);
+  --color-orange-50: var(--p-amber-400);
+  --color-orange-100: var(--p-amber-400);
+  --color-orange-200: var(--p-red-400);
+  --color-orange-300: var(--p-red-400);
+  --color-orange-400: var(--p-red-600);
+  --color-amber-50: var(--p-amber-400);
+  --color-amber-100: var(--p-amber-400);
+  --color-amber-200: var(--p-amber-400);
+  --color-amber-300: var(--p-amber-400);
+  --color-amber-400: var(--p-amber-400);
+  --color-amber-500: var(--p-amber-500);
+  --color-amber-600: var(--p-amber-600);
+  --color-amber-700: var(--p-amber-600);
+  --color-amber-800: var(--p-amber-600);
+  --color-amber-900: var(--p-amber-600);
+
   /* PDF Report Colors (always light) */
   --pdf-light-text-muted: 100 116 139;
   --pdf-light-box-bg: 248 250 252;
@@ -460,6 +491,28 @@
   --onboarding-step-inactive: var(--p-zinc-500);
   /* API Keys section colors (dark mode) */
   --api-keys-card-shadow: none;
+
+  /* Migrated from the former saas-theme.css (dark) — see the light block. */
+  --modal-nav-bg: var(--p-zinc-850);
+  --modal-nav-section-title: var(--p-zinc-300);
+  --modal-nav-item-active: var(--p-blue-500);
+  --modal-nav-item-active-bg: color-mix(
+    in srgb,
+    var(--p-blue-500) 15%,
+    transparent
+  );
+  --modal-content-bg: var(--p-zinc-800);
+  --modal-header-border: rgba(255, 255, 255, 0.05);
+  --api-keys-card-bg: var(--p-zinc-800);
+  --api-keys-card-border: var(--p-zinc-650);
+  --api-keys-input-bg: var(--p-zinc-850);
+  --api-keys-input-border: var(--p-zinc-650);
+  --usage-inactive: var(--p-zinc-650);
+  --color-orange-50: var(--p-amber-400);
+  --color-orange-100: var(--p-amber-400);
+  --color-orange-200: var(--p-red-400);
+  --color-orange-300: var(--p-red-400);
+  --color-orange-400: var(--p-red-600);
 
   /* Code token colors (dark mode - Cursor-like) */
   --code-kw-color: var(--p-blue-400); /* purple */

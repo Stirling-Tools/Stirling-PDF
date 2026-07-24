@@ -152,8 +152,8 @@
 
 [data-mantine-color-scheme="dark"] .chat-panel-input:focus-within {
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--mantine-color-blue-3) 40%, transparent),
-    0 8px 22px color-mix(in srgb, var(--mantine-color-blue-6) 18%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--c-brand) 40%, transparent),
+    0 8px 22px color-mix(in srgb, var(--c-brand) 18%, transparent);
 }
 
 [data-mantine-color-scheme="dark"] .chat-quick-action {
@@ -339,8 +339,8 @@
 
 .chat-panel-input:focus-within {
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--mantine-color-blue-6) 20%, transparent),
-    0 6px 18px color-mix(in srgb, var(--mantine-color-blue-6) 12%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--c-brand) 20%, transparent),
+    0 6px 18px color-mix(in srgb, var(--c-brand) 12%, transparent);
 }
 
 /* Kill the Mantine Textarea's own border/outline — the wrapper owns the chrome. */
@@ -479,12 +479,12 @@
 }
 
 .chat-bubble-user {
-  background: var(--mantine-color-blue-filled) !important;
-  color: white !important;
+  background: var(--c-btn-solid) !important;
+  color: var(--c-btn-inverse) !important;
 }
 
 .chat-bubble-user * {
-  color: white !important;
+  color: var(--c-btn-inverse) !important;
 }
 
 /* Assistant messages: no bubble, free-flowing with side padding */
@@ -517,12 +517,17 @@
   padding: 0.2rem 0.5rem 0.35rem;
 }
 
+.chat-panel__header .sui-panelhdr__icon {
+  background: transparent;
+  border: none;
+}
+
 .chat-progress-live__logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-brand-mark);
 }
 
 /* Shimmer: a soft highlight sweeps left-to-right across the muted label. */

@@ -1,6 +1,6 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { ActionIcon, NavItem } from "@app/ui";
-import { AppSwitch } from "@app/components/shared/AppSwitch";
+import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
@@ -8,8 +8,6 @@ import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
-import wordmarkLight from "@app/assets/brand/modern-logo/StirlingProcessorLogoBlackText.svg";
-import wordmarkDark from "@app/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
 import { CloseIcon, SettingsIcon } from "@portal/components/icons";
 import {
   GROUP_PROCESSOR,
@@ -80,22 +78,7 @@ export function Sidebar() {
       inert={isMobile && !mobileNavOpen}
     >
       <div className="portal-sidebar__logo">
-        {/* Both wordmarks render; CSS shows the right one per the actual color
-            scheme (data-mantine-color-scheme), so it tracks the rendered theme
-            rather than the portal's separate theme state. */}
-        <img
-          className="portal-sidebar__wordmark portal-sidebar__wordmark--light"
-          src={wordmarkLight}
-          alt={t("portal.shell.sidebar.brandSuffix")}
-        />
-        <img
-          className="portal-sidebar__wordmark portal-sidebar__wordmark--dark"
-          src={wordmarkDark}
-          alt={t("portal.shell.sidebar.brandSuffix")}
-        />
-
-        <AppSwitch
-          className="portal-sidebar__app-switch"
+        <BrandSwitcher
           current="processor"
           theme={theme}
           onSwitch={goToEditor}
@@ -113,7 +96,10 @@ export function Sidebar() {
 
       <nav className="portal-sidebar__nav">
         {NAV_SECTIONS.map((section) => (
-          <section key={section.labelKey} className="portal-sidebar__section">
+          <section
+            key={section.labelKey}
+            className="portal-sidebar__section sui-nav-surface"
+          >
             <h2 className="portal-sidebar__section-label">
               {t(section.labelKey)}
             </h2>
@@ -124,7 +110,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="portal-sidebar__footer">
+      <div className="portal-sidebar__footer sui-nav-surface">
         <LinkAccountFooterItem />
         <NavItem
           id="settings"

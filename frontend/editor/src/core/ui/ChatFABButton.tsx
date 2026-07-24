@@ -27,8 +27,8 @@ export function ChatFABButton({
     <button type="button" className={classes} {...rest}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width={28}
-        height={28}
+        width={30}
+        height={30}
         viewBox="0 0 192 192"
         fill="currentColor"
         aria-hidden="true"

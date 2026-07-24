@@ -5,6 +5,7 @@ import {
   Card,
   EmptyState,
   MetricCard,
+  MetricStrip,
   StatusBadge,
   Table,
   Tabs,
@@ -141,7 +142,7 @@ export function AuditTab() {
       />
 
       {data && (
-        <section className="portal-infra__metrics">
+        <MetricStrip layout="row">
           <MetricCard
             label={t("portal.infrastructure.audit.metrics.totalEvents")}
             value={data.summary.totalEvents.toLocaleString()}
@@ -158,7 +159,7 @@ export function AuditTab() {
             label={t("portal.infrastructure.audit.metrics.config")}
             value={data.summary.config.toLocaleString()}
           />
-        </section>
+        </MetricStrip>
       )}
 
       {!forbidden && (

@@ -24,6 +24,49 @@ function ChevronDownIcon() {
   );
 }
 
+interface AppSwitchMenuItemsProps {
+  /** The app this switcher is rendered in (shown as active in the menu). */
+  current: AppSwitchTarget;
+  /** Resolved color scheme; picks the brand mark for the menu items. */
+  theme: "light" | "dark";
+  /** Invoked with the selected app; only called for apps other than `current`. */
+  onSwitch: (app: AppSwitchTarget) => void;
+}
+
+/**
+ * The editor / processor items for the app-switch menu. Shared so the chevron
+ * switcher (below) and the BrandSwitcher's logo trigger present the same list.
+ */
+export function AppSwitchMenuItems({
+  current,
+  theme,
+  onSwitch,
+}: AppSwitchMenuItemsProps) {
+  const { t } = useTranslation();
+  const mark = theme === "dark" ? markDark : markLight;
+  const apps: Array<{ id: AppSwitchTarget; label: string }> = [
+    {
+      id: "processor",
+      label: t("portal.shell.sidebar.appProcessor", "Processor"),
+    },
+    { id: "editor", label: t("portal.shell.sidebar.appEditor", "Editor") },
+  ];
+  return (
+    <>
+      {apps.map((app) => (
+        <Dropdown.Item
+          key={app.id}
+          active={current === app.id}
+          onSelect={app.id === current ? undefined : () => onSwitch(app.id)}
+          leading={<img className="app-switch-icon" src={mark} alt="" />}
+        >
+          {app.label}
+        </Dropdown.Item>
+      ))}
+    </>
+  );
+}
+
 interface AppSwitchProps {
   /** The app this switcher is rendered in (shown as active in the menu). */
   current: AppSwitchTarget;
@@ -46,14 +89,6 @@ export function AppSwitch({
   className,
 }: AppSwitchProps) {
   const { t } = useTranslation();
-  const mark = theme === "dark" ? markDark : markLight;
-  const apps: Array<{ id: AppSwitchTarget; label: string }> = [
-    {
-      id: "processor",
-      label: t("portal.shell.sidebar.appProcessor", "Processor"),
-    },
-    { id: "editor", label: t("portal.shell.sidebar.appEditor", "Editor") },
-  ];
   return (
     <Dropdown.Root align="end" className={className}>
       <Dropdown.Trigger>
@@ -66,16 +101,11 @@ export function AppSwitch({
         </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="11rem">
-        {apps.map((app) => (
-          <Dropdown.Item
-            key={app.id}
-            active={current === app.id}
-            onSelect={app.id === current ? undefined : () => onSwitch(app.id)}
-            leading={<img className="app-switch-icon" src={mark} alt="" />}
-          >
-            {app.label}
-          </Dropdown.Item>
-        ))}
+        <AppSwitchMenuItems
+          current={current}
+          theme={theme}
+          onSwitch={onSwitch}
+        />
       </Dropdown.Menu>
     </Dropdown.Root>
   );

@@ -41,7 +41,7 @@ import {
 import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
-import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
+import { Logo } from "@app/ui/Logo";
 import { PanelHeader } from "@app/ui/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
@@ -474,8 +474,14 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   return (
     <Box className="chat-panel chat-panel--embedded">
       <PanelHeader
-        icon={<StirlingLogoOutline size={16} />}
-        title={t("agents.stirling_name", "Stirling")}
+        icon={<Logo variant="iconOnly" iconHeight="26px" />}
+        title={
+          <Logo
+            variant="textOnly"
+            textHeight="17px"
+            alt={t("agents.stirling_name", "Stirling")}
+          />
+        }
         loading={isLoading}
         className="chat-panel__header"
         barClassName="chat-panel__agent-pill-vt"

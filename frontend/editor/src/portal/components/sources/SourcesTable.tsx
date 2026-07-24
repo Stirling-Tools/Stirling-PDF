@@ -64,11 +64,7 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
         key: "status",
         header: t("portal.sources.table.status"),
         render: (s) => (
-          <StatusBadge
-            tone={STATUS_TONE[s.status]}
-            size="sm"
-            pulse={s.status === "active"}
-          >
+          <StatusBadge tone={STATUS_TONE[s.status]} size="sm">
             {t(`portal.sources.status.${s.status}`)}
           </StatusBadge>
         ),
