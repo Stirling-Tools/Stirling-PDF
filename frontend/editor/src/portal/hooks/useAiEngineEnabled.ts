@@ -2,8 +2,9 @@
 // setup: the card always shows but can't be enabled until the engine is on.
 // `loading` lets callers hold the decision rather than flash a locked card.
 
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@portal/api/http";
-import { useAsync } from "@portal/hooks/useAsync";
+import { qk } from "@portal/queries/keys";
 
 interface AppConfigShape {
   aiEngineEnabled?: boolean;
@@ -15,12 +16,13 @@ export interface AiEngineState {
 }
 
 export function useAiEngineEnabled(): AiEngineState {
-  const state = useAsync<AppConfigShape>(
-    () => apiClient.local.json<AppConfigShape>("/api/v1/config/app-config"),
-    [],
-  );
+  const query = useQuery({
+    queryKey: qk.appConfig(),
+    queryFn: () =>
+      apiClient.local.json<AppConfigShape>("/api/v1/config/app-config"),
+  });
   return {
-    enabled: Boolean(state.data?.aiEngineEnabled),
-    loading: state.loading && state.data === null,
+    enabled: Boolean(query.data?.aiEngineEnabled),
+    loading: query.isPending,
   };
 }

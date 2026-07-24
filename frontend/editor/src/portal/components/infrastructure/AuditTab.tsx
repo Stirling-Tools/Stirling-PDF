@@ -12,13 +12,12 @@ import {
   type TableColumn,
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import { useSectionFlags } from "@portal/hooks/useAsync";
+import { useAuditLog } from "@portal/queries/infrastructure";
 import { HttpError } from "@portal/api/http";
 import {
-  fetchAuditLog,
   type AuditCategory,
   type AuditEvent,
-  type AuditLogResponse,
 } from "@portal/api/infrastructure";
 import { AuditExportModal } from "@portal/components/infrastructure/AuditExportModal";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
@@ -108,7 +107,7 @@ export function AuditTab() {
     },
   ];
 
-  const state = useAsync<AuditLogResponse>(() => fetchAuditLog(tier), [tier]);
+  const state = useAuditLog(tier);
   const { data, error } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
   // Backend returns 403 for scoped-out callers; show an access message, not an empty state.

@@ -11,28 +11,17 @@ on:
         required: false
         type: string
         default: "false"
-      depot_cores:
-        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking. Tuned to 4 because bench showed 16 was within noise of 4."
-        required: false
-        type: string
-        default: "4"
 
 permissions:
   contents: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   docker-compose-tests:
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '4') || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     permissions:
       actions: write
       contents: read
       checks: write
-    env:
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:
       - name: Harden Runner
