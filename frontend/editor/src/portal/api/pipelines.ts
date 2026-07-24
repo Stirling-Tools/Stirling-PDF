@@ -102,7 +102,13 @@ export type PolicyRunStatus =
   | "FAILED"
   | "CANCELLED";
 
-/** A run's current state. Mirrors the backend `PolicyRunView` (outputs elided). */
+/** One produced output of a run, downloadable via /api/v1/general/files/{fileId}. */
+export interface RunOutputFile {
+  fileId: string;
+  fileName: string | null;
+}
+
+/** A run's current state. Mirrors the backend `PolicyRunView`. */
 export interface PolicyRunView {
   runId: string;
   policyId: string | null;
@@ -112,6 +118,8 @@ export interface PolicyRunView {
   /** Human-readable failure message; set when status is FAILED. */
   error: string | null;
   errorCode: string | null;
+  /** Produced files; present once the run completes. */
+  outputs?: RunOutputFile[] | null;
   createdAt: number;
 }
 
@@ -175,6 +183,42 @@ export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
   return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
     { method: "POST" },
+  );
+}
+
+/** The definition an ad-hoc test run posts: steps + output, no sources or trigger. */
+export interface TestRunDefinition {
+  name: string;
+  steps: unknown[];
+  output: OutputSpec;
+}
+
+/**
+ * POST /api/v1/policies/run: run a definition on an uploaded file right now.
+ * The builder's test path — callers force an inline output so nothing is
+ * delivered to the pipeline's real destination.
+ */
+export async function runPipelineTest(
+  definition: TestRunDefinition,
+  file: File,
+): Promise<{ runId: string }> {
+  const form = new FormData();
+  form.append(
+    "json",
+    new Blob([JSON.stringify(definition)], { type: "application/json" }),
+  );
+  form.append("fileInput", file);
+  const res = await apiClient.local.multipart<{ jobId: string }>(
+    "/api/v1/policies/run",
+    form,
+  );
+  return { runId: res.jobId };
+}
+
+/** GET /api/v1/general/files/{id}: download one run output as a Blob. */
+export async function fetchRunOutput(fileId: string): Promise<Blob> {
+  return apiClient.local.blob(
+    `/api/v1/general/files/${encodeURIComponent(fileId)}`,
   );
 }
 

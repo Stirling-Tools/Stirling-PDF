@@ -292,7 +292,7 @@
 }
 
 .portal-pipelines__picker-list {
-  max-height: 20rem;
+  max-height: clamp(16rem, calc(100vh - 24rem), 44rem);
   overflow-y: auto;
   padding: 0.25rem 0;
 }
@@ -402,4 +402,431 @@
   height: 1.5rem;
   min-width: 1.5rem;
   min-height: 1.5rem;
+}
+
+/* ── Two-column layout: the pipeline surface + a side panel that serves both
+   admins (completion checklist for guidance, the exact request for scripting). ── */
+.portal-builder__cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21rem;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 66rem) {
+  .portal-builder__cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The surface is a workspace: fill the viewport instead of ending mid-page. */
+.portal-builder__main .portal-overview {
+  min-height: max(30rem, calc(100dvh - 10rem));
+}
+
+.portal-builder__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: 1rem;
+  min-width: 0;
+}
+
+@media (max-width: 66rem) {
+  .portal-builder__side {
+    position: static;
+  }
+}
+
+.portal-builder__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.125rem;
+}
+
+.portal-builder__side-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__intro {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__request-help {
+  margin: 0 0 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+}
+
+/* ── The runbook code panel: JSON / cURL / MCP tabs with Copy, 1:1 with the mock. ── */
+.portal-builder__codepanel {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-builder__codetabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.625rem 0;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.portal-builder__codetab.sui-btn {
+  min-height: 0;
+  padding: 0.4375rem 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.portal-builder__codetab.sui-btn:hover {
+  color: var(--c-text);
+}
+
+.portal-builder__codetab--active.sui-btn {
+  color: var(--c-primary);
+  border-bottom-color: var(--c-primary);
+}
+
+.portal-builder__codecopy.sui-btn {
+  margin-left: auto;
+  margin-bottom: 0.25rem;
+  min-height: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.portal-builder__code {
+  margin: 0;
+  padding: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.65;
+  color: var(--c-text-subtle);
+  overflow: auto;
+  background: var(--color-bg-code);
+  max-height: 30rem;
+}
+
+.portal-builder__code-k {
+  color: var(--c-primary);
+}
+
+.portal-builder__code-s {
+  color: var(--color-green-dark);
+}
+
+.portal-builder__code-c {
+  color: var(--c-text-subtle);
+  font-style: italic;
+}
+
+.portal-builder__codenote {
+  padding: 0.875rem;
+}
+
+/* ── The runbook code panel: JSON / cURL / MCP tabs with Copy, 1:1 with the mock. ── */
+.portal-builder__codepanel {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-builder__codetabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.625rem 0;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.portal-builder__codetab.sui-btn {
+  min-height: 0;
+  padding: 0.4375rem 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.portal-builder__codetab.sui-btn:hover {
+  color: var(--c-text);
+}
+
+.portal-builder__codetab--active.sui-btn {
+  color: var(--c-primary);
+  border-bottom-color: var(--c-primary);
+}
+
+.portal-builder__codecopy.sui-btn {
+  margin-left: auto;
+  margin-bottom: 0.25rem;
+  min-height: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.portal-builder__code {
+  margin: 0;
+  padding: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.65;
+  color: var(--c-text-subtle);
+  overflow: auto;
+  background: var(--color-bg-code);
+  max-height: 30rem;
+}
+
+.portal-builder__code-k {
+  color: var(--c-primary);
+}
+
+.portal-builder__code-s {
+  color: var(--color-green-dark);
+}
+
+.portal-builder__code-c {
+  color: var(--c-text-subtle);
+  font-style: italic;
+}
+
+.portal-builder__codenote {
+  padding: 0.875rem;
+}
+
+.portal-builder__codetoggle {
+  display: flex;
+}
+
+/* Design-parity placeholders: options the mock shows but the backend lacks yet. */
+.portal-builder__ghost {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--c-border);
+}
+
+.portal-builder__ghost-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__ghost-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.portal-builder__ghost-box {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-top: 0.1875rem;
+  border: 1.5px dashed var(--c-border-strong);
+  border-radius: 0.25rem;
+}
+
+.portal-builder__ghost-box--radio {
+  border-radius: 50%;
+}
+
+.portal-builder__ghost-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-builder__ghost-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__ghost-sub {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__soon {
+  flex: none;
+  margin-left: auto;
+  padding: 0.125rem 0.4375rem;
+  border-radius: 999px;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__note {
+  display: flex;
+  gap: 0.375rem;
+  align-items: flex-start;
+  margin: 0.25rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__note svg {
+  flex: none;
+  margin-top: 0.0625rem;
+  font-size: 0.875rem;
+  color: var(--c-text-subtle);
+}
+
+/* ── Test bench: file picker + run + progress + result downloads ── */
+.portal-builder__testrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-builder__testrow .portal-builder__testpick {
+  min-width: 0;
+  max-width: 11rem;
+}
+
+.portal-builder__testpick .mantine-Button-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-builder__testprogress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__testresults {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.portal-builder__testfile {
+  max-width: 100%;
+}
+
+/* Source rows: checkbox + a quiet edit affordance for the existing source. */
+.portal-builder__source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.portal-builder__source-row .portal-builder__source-edit {
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__source-row .portal-builder__source-edit:hover {
+  color: var(--c-primary);
+}
+
+/* Panel header: section title + an always-easy way out of the editor. */
+.portal-builder__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.portal-builder__panel-close {
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__panel-close:hover {
+  color: var(--c-text);
+}
+
+/* Failure modal: the raw error, then quiet key/value details. */
+.portal-builder__testerror {
+  margin: 0 0 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--c-border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.71875rem;
+  line-height: 1.6;
+  color: var(--c-danger);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.portal-builder__testmeta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.portal-builder__testmeta dt {
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__testmeta dd {
+  margin: 0;
+  color: var(--c-text);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+/* Long backend errors and filenames must wrap inside the card, never overflow. */
+.portal-builder__testpanel .sui-banner,
+.portal-builder__panel .sui-banner {
+  min-width: 0;
+}
+
+.portal-builder__testpanel .sui-banner *,
+.portal-builder__panel .sui-banner * {
+  overflow-wrap: anywhere;
 }

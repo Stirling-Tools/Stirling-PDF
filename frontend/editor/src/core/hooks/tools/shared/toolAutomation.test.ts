@@ -144,6 +144,21 @@ describe("serialize/deserialize round-trip", () => {
     });
   });
 
+  test("a stored step missing fields falls back to defaults, not undefined", () => {
+    // Mappers echo absent stored fields as explicit undefined; settings UIs
+    // then crash on things like keyLength.toString(). Defaults must win.
+    const back = deserializeToolStep(
+      { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+      registry,
+    );
+    expect(back.params.compressionLevel).toBe(
+      compressDefaults.compressionLevel,
+    );
+    expect(
+      Object.values(back.params).every((value) => value !== undefined),
+    ).toBe(true);
+  });
+
   test("an unknown endpoint is preserved as an unmapped step", () => {
     const step = deserializeToolStep(
       { operation: "/api/v1/unknown/thing", parameters: { keep: true } },

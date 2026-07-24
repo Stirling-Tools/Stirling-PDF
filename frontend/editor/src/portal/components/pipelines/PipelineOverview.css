@@ -1,0 +1,746 @@
+/* Pipeline overview: one strip, two projections (spec / flow) of the same state. */
+.portal-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem 1.125rem;
+}
+
+.portal-overview__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* ── Spec: runbook-style lines ── */
+.portal-overview__spec {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* A row is the line plus its hover-revealed actions (reorder/remove on steps). */
+.portal-overview__row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.portal-overview__row > .sui-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-overview__actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+
+.portal-overview__row:hover .portal-overview__actions,
+.portal-overview__actions:focus-within {
+  opacity: 1;
+}
+
+/* The source list inherits its column layout from Pipelines.css in the app;
+   the builder never imported that file, so own it here where the list now lives. */
+.portal-builder__panel .portal-pipelines__source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5625rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+/* Shared Button carrying bespoke line styling; re-assert over the sui-btn base
+   the same way PipelineBuilder.css does for its step rows. */
+.portal-overview__line.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0.4375rem 0.625rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--c-text-muted);
+}
+
+/* Runbook gutter: line numbers for real lines, "+" for ghost extend-lines. */
+.portal-overview__n {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  width: 1.125rem;
+  flex-shrink: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-overview__line--ghost .portal-overview__n {
+  color: var(--c-primary);
+}
+
+/* Inline muted annotation after the value (detail, param summary). */
+.portal-overview__small {
+  font-weight: 400;
+  color: var(--c-text-subtle);
+  font-size: 0.75rem;
+}
+
+/* Hover-revealed edit hint, like the runbook's. */
+.portal-overview__edit {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 0.75rem;
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+
+.portal-overview__line.sui-btn:hover .portal-overview__edit {
+  opacity: 1;
+}
+
+.portal-overview__line.sui-btn:hover {
+  background: var(--c-hover);
+}
+
+.portal-overview__line .mantine-Button-label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.portal-overview__line--active {
+  background: var(--c-primary-tint);
+}
+
+.portal-overview__kw {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--c-primary);
+  min-width: 4.75rem;
+  flex-shrink: 0;
+}
+
+.portal-overview__line--ghost .portal-overview__kw {
+  color: var(--c-text-subtle);
+}
+
+.portal-overview__val {
+  font-weight: 600;
+  color: var(--c-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview__line--ghost .portal-overview__val {
+  color: var(--c-primary);
+  font-weight: 500;
+}
+
+.portal-overview__val--blank {
+  color: var(--color-amber-dark);
+  border-bottom: 1.5px dashed var(--color-amber);
+  font-weight: 600;
+}
+
+/* Inline warning annotation on a DO line (needs upload / defaults / unknown). */
+.portal-overview__note {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-amber-dark);
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 0.75rem;
+}
+
+.portal-overview__note + .portal-overview__edit {
+  margin-left: 0;
+}
+
+/* ── Flow toolbar: auto-arrange + lock, shared by both layouts ── */
+.portal-overview__flowbar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.portal-overview__flowhint {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  text-align: right;
+  padding-right: 0.25rem;
+}
+
+/* ── Unlocked flow: a free canvas with draggable nodes and live wires ── */
+.portal-overview__canvaswrap {
+  position: relative;
+  flex: 1;
+  min-height: 18rem;
+  overflow: auto;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in srgb, var(--c-border) 60%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 16px 16px;
+}
+
+/* Dark bg-subtle is the theme's navy; the canvas stays neutral zinc instead. */
+[data-theme="dark"] .portal-overview__canvaswrap {
+  background-color: var(--c-bg);
+}
+
+[data-theme="dark"] .portal-overview__insert {
+  box-shadow:
+    0 0 0 3px var(--c-bg),
+    var(--shadow-sm);
+}
+
+.portal-overview__stage {
+  position: relative;
+  min-width: 100%;
+}
+
+.portal-overview__edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.portal-overview__edges path {
+  fill: none;
+  stroke: var(--c-border-strong);
+  stroke-width: 1.5;
+}
+
+.portal-overview__edges path.is-ghost {
+  stroke: var(--c-primary);
+  stroke-dasharray: 5 5;
+}
+
+.portal-overview__edges .portal-overview__ah {
+  fill: var(--c-border-strong);
+}
+
+.portal-overview__edges .portal-overview__ahg {
+  fill: var(--c-primary);
+}
+
+/* Draggable nodes: absolute inside the stage, grab cursor, no touch panning. */
+.portal-overview__stage .portal-overview__node.sui-btn {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.portal-overview__stage .portal-overview__node.sui-btn:active {
+  cursor: grabbing;
+}
+
+/* Ports on the free canvas: in = hollow ring on top, out = filled dot below. */
+.portal-overview__stage .portal-overview__node::before,
+.portal-overview__stage .portal-overview__node::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.portal-overview__stage .portal-overview__node::before {
+  top: -0.3125rem;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border-strong);
+}
+
+.portal-overview__stage .portal-overview__node::after {
+  bottom: -0.3125rem;
+  background: var(--c-border-strong);
+}
+
+.portal-overview__stage .portal-overview__node--output::after {
+  display: none;
+}
+
+.portal-overview__stage .portal-overview__node--output::before {
+  border-color: var(--color-green);
+}
+
+.portal-overview__stage .portal-overview__node--trigger::before {
+  display: none;
+}
+
+/* Wire "+" insert points: a solid round button on each step boundary. */
+.portal-overview__inserts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.portal-overview__inserts .portal-overview__insert {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.portal-overview__insert {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-strong);
+  box-shadow: var(--shadow-sm);
+  color: var(--c-text-muted);
+  line-height: 0;
+  padding: 0;
+  cursor: pointer;
+  /* A canvas-coloured halo so the wire visibly passes behind the button. */
+  box-shadow:
+    0 0 0 3px var(--color-bg-subtle),
+    var(--shadow-sm);
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.portal-overview__insert:hover {
+  background: var(--c-primary-tint);
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+  transform: scale(1.15);
+}
+
+/* Card base: Zapier-style surface shared by every node. */
+.portal-overview__node.sui-btn {
+  height: auto;
+  min-height: 0;
+  width: 14rem;
+  max-width: 20rem;
+  padding: 0.625rem 0.6875rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  text-align: left;
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+/* Card anatomy: tinted icon square, micro-label, bold title, muted detail. */
+.portal-overview__node .mantine-Button-label {
+  display: block;
+  width: 100%;
+}
+
+.portal-overview__node-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.portal-overview__node-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 0.5625rem;
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+}
+
+.portal-overview__node-ico svg {
+  font-size: 1.25rem;
+}
+
+.portal-overview__node-ico--default {
+  background: var(--c-primary-tint);
+  color: var(--c-primary);
+}
+
+.portal-overview__node-ico--success {
+  background: color-mix(in srgb, var(--color-green) 14%, var(--c-surface));
+  color: var(--color-green-dark);
+}
+
+.portal-overview__node-ico--warning {
+  background: color-mix(in srgb, var(--color-amber) 16%, var(--c-surface));
+  color: var(--color-amber-dark);
+}
+
+[data-theme="dark"] .portal-overview__node-ico--success {
+  color: color-mix(in srgb, var(--color-green) 55%, var(--c-text));
+}
+
+[data-theme="dark"] .portal-overview__node-ico--warning {
+  color: color-mix(in srgb, var(--color-amber) 55%, var(--c-text));
+}
+
+.portal-overview__node-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-overview__node-kind {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: var(--c-text-subtle);
+}
+
+.portal-overview__node-kind--default {
+  color: var(--c-primary);
+}
+
+.portal-overview__node-kind--success {
+  color: var(--color-green-dark);
+}
+
+.portal-overview__node-kind--warning {
+  color: var(--color-amber-dark);
+}
+
+[data-theme="dark"] .portal-overview__node-kind--default {
+  color: color-mix(in srgb, var(--c-primary) 60%, var(--c-text));
+}
+
+[data-theme="dark"] .portal-overview__node-kind--success {
+  color: color-mix(in srgb, var(--color-green) 55%, var(--c-text));
+}
+
+[data-theme="dark"] .portal-overview__node-kind--warning {
+  color: color-mix(in srgb, var(--color-amber) 55%, var(--c-text));
+}
+
+.portal-overview__node-title {
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--c-text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview__node-sub {
+  font-size: 0.71875rem;
+  font-weight: 400;
+  color: var(--c-text-subtle);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview__node-sub--warn {
+  color: var(--color-amber-dark);
+}
+
+/* Hover lifts the card, Zapier-style; selection rings it in primary. */
+.portal-overview__node.sui-btn:hover {
+  border-color: var(--c-border-strong);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.portal-overview__node--active.sui-btn {
+  border-color: var(--c-primary);
+  box-shadow:
+    0 0 0 1px var(--c-primary),
+    var(--shadow-md);
+}
+
+/* Role edges: files enter through blue, leave through green. */
+.portal-overview__node--source.sui-btn {
+  --pov-edge: var(--c-primary);
+  box-shadow:
+    inset 0 3px 0 var(--pov-edge),
+    var(--shadow-sm);
+}
+
+.portal-overview__node--output.sui-btn {
+  --pov-edge: var(--color-green);
+  box-shadow:
+    inset 0 -3px 0 var(--pov-edge),
+    var(--shadow-sm);
+}
+
+[data-theme="dark"] .portal-overview__node--source.sui-btn {
+  --pov-edge: color-mix(in srgb, var(--c-primary) 75%, var(--c-surface));
+}
+
+[data-theme="dark"] .portal-overview__node--output.sui-btn {
+  --pov-edge: color-mix(in srgb, var(--color-green) 65%, var(--c-surface));
+}
+
+.portal-overview__node--source.portal-overview__node--active.sui-btn {
+  box-shadow:
+    inset 0 3px 0 var(--pov-edge),
+    0 0 0 1px var(--c-primary),
+    var(--shadow-md);
+}
+
+.portal-overview__node--output.portal-overview__node--active.sui-btn {
+  box-shadow:
+    inset 0 -3px 0 var(--pov-edge),
+    0 0 0 1px var(--c-primary),
+    var(--shadow-md);
+}
+
+/* Blank slots are the call to action: dashed blue card, tinted icon. */
+.portal-overview__node--blank.sui-btn {
+  border: 1.5px dashed color-mix(in srgb, var(--c-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 4%, var(--c-surface));
+  box-shadow: none;
+}
+
+.portal-overview__node--blank .portal-overview__node-ico {
+  background: var(--c-primary-tint);
+  color: var(--c-primary);
+}
+
+.portal-overview__node--blank .portal-overview__node-title {
+  color: var(--c-primary);
+  font-weight: 650;
+  white-space: normal;
+}
+
+.portal-overview__node--blank.sui-btn:hover {
+  border-color: var(--c-primary);
+  background: var(--c-primary-tint);
+  transform: translateY(-1px);
+}
+
+/* ── Step reorder arrows: a quiet vertical pair beside each step node ── */
+.portal-overview__nodemove {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  pointer-events: auto;
+}
+
+/* Locked spine: anchored just right of the centred 13.5rem node. */
+.portal-overview__nodemove--spine {
+  left: calc(50% + 7.125rem);
+  top: 0.375rem;
+}
+
+.portal-overview__flowrow {
+  position: relative;
+}
+
+.portal-overview__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text-subtle);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.portal-overview__arrow:hover:not(:disabled) {
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+  transform: scale(1.08);
+}
+
+.portal-overview__arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* The spine's ActionIcons sized to match the canvas arrows. */
+.portal-overview__nodemove--spine .sui-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-height: 0;
+  border-radius: 50%;
+}
+
+/* Locked canvas: same layout, dragging off - nodes read as plain click targets. */
+.portal-overview__stage--locked .portal-overview__node.sui-btn {
+  cursor: pointer;
+}
+
+.portal-overview__stage--locked .portal-overview__node.sui-btn:active {
+  cursor: pointer;
+}
+
+/* Header view controls: the { } Code toggle sits left of Flow/Spec. */
+.portal-overview__viewbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-overview__codebtn.sui-btn {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+}
+
+.portal-overview__codebtn[aria-pressed="true"].sui-btn {
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+/* Remove sits under the reorder pair; reads danger only on hover. */
+.portal-overview__arrow--remove:hover:not(:disabled) {
+  color: var(--c-danger);
+  border-color: var(--c-danger);
+}
+
+/* A test run walks the chain: the executing step pulses. */
+.portal-overview__node--running.sui-btn {
+  border-color: var(--c-primary);
+  animation: pov-run-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes pov-run-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--c-primary-subtle);
+  }
+  50% {
+    box-shadow: 0 0 0 6px var(--c-primary-subtle);
+  }
+}
+
+/* Completed steps from the last test run wear a corner tick. */
+.portal-overview__node-done {
+  position: absolute;
+  top: -0.4375rem;
+  right: -0.4375rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: var(--c-success);
+  color: var(--c-text-on-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+}
+
+/* The corner tick sits outside the card: nothing on the way may clip it. */
+.portal-overview__node.sui-btn,
+.portal-overview__node.sui-btn .mantine-Button-inner,
+.portal-overview__node .mantine-Button-label {
+  overflow: visible;
+}
+
+/* Spec gutter shows the run walking the lines: pulsing dot, then a tick. */
+.portal-overview__rundot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--c-primary);
+  animation: pov-rundot 1s ease-in-out infinite;
+}
+
+@keyframes pov-rundot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+.portal-overview__ndone {
+  color: var(--c-success);
+  font-weight: 700;
+}
+
+/* The step a run died on: red cross badge and a danger ring. */
+.portal-overview__node-failed {
+  position: absolute;
+  top: -0.4375rem;
+  right: -0.4375rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: var(--c-danger);
+  color: var(--c-text-on-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+}
+
+.portal-overview__node--failed.sui-btn {
+  border-color: var(--c-danger);
+  box-shadow:
+    0 0 0 1px var(--c-danger),
+    var(--shadow-sm);
+}
+
+.portal-overview__nfail {
+  color: var(--c-danger);
+  font-weight: 700;
+}

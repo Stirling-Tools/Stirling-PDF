@@ -175,6 +175,29 @@ async function localJson<T>(
   return unwrap<T>(res);
 }
 
+/** POST a multipart/form-data body (file-carrying endpoints), via the
+ * localBackend seam. No Content-Type header: the browser sets the boundary. */
+async function localMultipart<T>(
+  path: string,
+  form: FormData,
+  options: HttpRequestOptions = {},
+): Promise<T> {
+  const res = await fetch(`${localBaseUrl()}${path}`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      ...(await localAuthHeader()),
+      ...options.headers,
+    },
+    body: form,
+    signal: options.signal,
+  });
+  if (res.status === 401) {
+    onLocalUnauthorized();
+  }
+  return unwrap<T>(res);
+}
+
 /** GET returning a binary Blob (e.g. a CSV/JSON export download), via the
  * localBackend seam — same base + auth as localJson (SaaS backend + Supabase JWT
  * on SaaS, same-origin + Spring bearer self-hosted). */
@@ -303,6 +326,7 @@ export const apiClient = {
     json: localJson,
     form: localForm,
     blob: localBlob,
+    multipart: localMultipart,
   },
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */
   saas: {

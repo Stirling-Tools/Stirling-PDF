@@ -245,12 +245,22 @@ export function deserializeToolStep(
   if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
-  const params: ErasedToolParams = config?.fromApiParams
-    ? {
-        ...(config.defaultParameters ?? {}),
-        ...config.fromApiParams(step.parameters as never),
-      }
-    : { ...(config?.defaultParameters ?? {}) };
+  // Mappers echo missing stored fields as explicit `undefined`, which would
+  // clobber the default underneath; strip those so defaults always win.
+  const mapped = config?.fromApiParams
+    ? Object.fromEntries(
+        Object.entries(
+          config.fromApiParams(step.parameters as never) as Record<
+            string,
+            unknown
+          >,
+        ).filter(([, value]) => value !== undefined),
+      )
+    : {};
+  const params: ErasedToolParams = {
+    ...(config?.defaultParameters ?? {}),
+    ...mapped,
+  } as ErasedToolParams;
   // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
     resolveEndpoint(config, params) ??

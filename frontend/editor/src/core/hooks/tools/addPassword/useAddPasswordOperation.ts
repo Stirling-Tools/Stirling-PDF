@@ -47,7 +47,7 @@ export const addPasswordFromApiParams = (
 ): Partial<AddPasswordFullParameters> => ({
   password: apiParams.password ?? defaultParameters.password,
   ownerPassword: apiParams.ownerPassword ?? defaultParameters.ownerPassword,
-  keyLength: apiParams.keyLength,
+  keyLength: apiParams.keyLength ?? defaultParameters.keyLength,
   permissions: {
     preventAssembly:
       apiParams.preventAssembly ?? permissionsDefaults.preventAssembly,
