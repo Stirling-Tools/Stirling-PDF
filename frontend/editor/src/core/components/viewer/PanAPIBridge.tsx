@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { usePan } from "@embedpdf/plugin-pan/react";
+import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
@@ -21,13 +22,18 @@ export function PanAPIBridge() {
 
 function PanAPIBridgeInner({ documentId }: { documentId: string }) {
   const { provides: pan, isPanning } = usePan(documentId);
+  const { provides: imCapability } = useInteractionManagerCapability();
   const { registerBridge, triggerImmediatePanUpdate } = useViewer();
 
-  // Keep pan ref updated to avoid re-running effect when object reference changes
+  // Keep refs updated to avoid re-running effect when object references change
   const panRef = useRef(pan);
   useEffect(() => {
     panRef.current = pan;
   }, [pan]);
+  const imRef = useRef(imCapability);
+  useEffect(() => {
+    imRef.current = imCapability;
+  }, [imCapability]);
 
   // Track previous isPanning value to detect changes
   const prevIsPanningRef = useRef<boolean>(isPanning);
@@ -39,6 +45,17 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
         isPanning,
       };
 
+      // Pan off must always land in selection (pointerMode), not the default mode -
+      // if pan ever became the default, disablePan/togglePan couldn't escape it (#5175).
+      const goToPointerMode = () => {
+        const im = imRef.current;
+        if (im) {
+          im.forDocument(documentId).activate("pointerMode");
+        } else {
+          currentPan.disablePan();
+        }
+      };
+
       // Register this bridge with ViewerContext
       registerBridge("pan", {
         state: newState,
@@ -47,21 +64,19 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
             currentPan.enablePan();
           },
           disable: () => {
-            currentPan.disablePan();
+            goToPointerMode();
           },
           toggle: () => {
-            currentPan.togglePan();
-          },
-          makePanDefault: () => {
-            // v2.5.0: makePanDefault may not exist, enable pan as fallback
-            if (
-              "makePanDefault" in currentPan &&
-              typeof (currentPan as any).makePanDefault === "function"
-            ) {
-              (currentPan as any).makePanDefault();
+            if (isPanning) {
+              goToPointerMode();
             } else {
               currentPan.enablePan();
             }
+          },
+          makePanDefault: () => {
+            // Never make pan the default mode (that is what locks the viewer in
+            // #5175). Just enable pan for the current interaction.
+            currentPan.enablePan();
           },
         },
       });
@@ -75,7 +90,7 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
     return () => {
       registerBridge("pan", null);
     };
-  }, [isPanning, registerBridge, triggerImmediatePanUpdate]);
+  }, [isPanning, registerBridge, triggerImmediatePanUpdate, documentId]);
 
   return null;
 }
