@@ -47,6 +47,7 @@
     "@stripe/stripe-js": "^7.9.0",
     "@supabase/supabase-js": "^2.47.13",
     "@tailwindcss/postcss": "^4.1.13",
+    "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-virtual": "^3.13.12",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "2.7.0",

@@ -89,6 +89,10 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // components/sources/sourceTypes.ts (t(field.labelKey)), invisible to the
       // static scan.
       /^portal\.sources\.types\./,
+      // The connection catalogue (connectionTypes.ts) mirrors source types: every key is
+      // t(`${PREFIX}.${id}.label`) / t(`${COMMON}.${field}.label`) with multi-segment const
+      // prefixes, so the whole family is matched here rather than by the shape heuristic.
+      /^portal\.connections\.(types|commonFields)\./,
       // Portal catalogue copy stored as i18n keys in api/<surface>.ts constants
       // (label maps, role/policy/journey catalogues) and rendered via
       // t(constant), invisible to the static scan.
@@ -99,6 +103,11 @@ export const I18N_PROJECTS: TranslationProject[] = [
       /^portal\.procurement\.journeySteps\./,
       /^portal\.users\.roles\./,
       /^portal\.policies\.(categories|config|endpoints)\./,
+      // The integration operations catalogue (stepOperations.ts) assembles every key as
+      // t(`${PREFIX}.${id}.label`) where PREFIX is the multi-segment const
+      // "portal.policies.operations" - the shape heuristic treats that interpolation as one
+      // segment, so this whole catalogue-driven family is matched here instead.
+      /^portal\.policies\.operations\./,
       // Policy field labels + option display copy are looked up with keys
       // derived from catalogue data (t(`policies.field.${key}`),
       // t(`policyOption.${id}`)) in the PolicyFieldRows and setup wizards —

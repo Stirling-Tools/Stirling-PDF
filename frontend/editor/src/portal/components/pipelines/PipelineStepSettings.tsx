@@ -7,6 +7,10 @@ import { type ToolRegistry } from "@app/data/toolsTaxonomy";
 import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
 import { type WorkingToolStep } from "@app/hooks/tools/shared/toolAutomation";
 
+import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
+import { isIntegrationStep } from "@portal/components/pipelines/integrationStep";
+import type { ExternalApiStepParams } from "@portal/components/policies/stepOperations";
+
 interface PipelineStepSettingsProps {
   step: WorkingToolStep;
   registry: Partial<ToolRegistry>;
@@ -23,7 +27,20 @@ export function PipelineStepSettings({
   registry,
   onChange,
 }: PipelineStepSettingsProps) {
+  // Hooks first: selecting a different step re-renders this same instance, so an early return
+  // above useTranslation would change the hook count between renders and crash.
   const { t } = useTranslation();
+
+  // An integration step is configured by the operations catalogue, not by a tool's settings UI:
+  // it has no registry entry to look one up from.
+  if (isIntegrationStep(step)) {
+    return (
+      <PolicyExternalApiConfig
+        parameters={step.params as unknown as ExternalApiStepParams}
+        onChange={(params) => onChange(params as never)}
+      />
+    );
+  }
 
   if (step.support === "noSettings") {
     return (
