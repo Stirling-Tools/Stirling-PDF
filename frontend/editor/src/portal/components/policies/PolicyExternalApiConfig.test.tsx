@@ -6,7 +6,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 
 import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
 import {
@@ -15,8 +15,10 @@ import {
   type ExternalApiStepParams,
 } from "@portal/components/policies/stepOperations";
 
+// The component reaches for the shared query layer (variable availability), so
+// wrap in the query client + Mantine the portal provides.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, { wrapper: PortalTestProviders });
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -30,6 +32,14 @@ vi.mock("@portal/api/integrations", () => ({
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   createIntegration: vi.fn(),
   updateIntegration: vi.fn(),
+}));
+
+// Only what the query layer pulls from the module; importing the real one would
+// drag in the full i18n chain the test has already mocked away.
+vi.mock("@portal/api/policies", () => ({
+  fetchPoliciesList: () => Promise.resolve([]),
+  fetchPolicyRuns: () => Promise.resolve([]),
+  assemblePolicies: () => ({ summary: {}, catalogue: [] }),
 }));
 
 vi.mock("@portal/api/http", () => ({

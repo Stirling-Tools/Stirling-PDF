@@ -20,6 +20,12 @@ import {
   type ExternalApiStepParams,
   type StepOperation,
 } from "@portal/components/policies/stepOperations";
+import {
+  VariableField,
+  VariablesReference,
+} from "@portal/components/policies/VariableField";
+import { useVariableGroups } from "@portal/components/policies/useVariableGroups";
+import type { VariableGroup } from "@portal/components/policies/variables";
 
 /**
  * Configures a "send the document to another system" step.
@@ -63,6 +69,8 @@ export function PolicyExternalApiConfig({
 }: PolicyExternalApiConfigProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
+  // Which variable scopes this team can use, offered to every field and the reference panel.
+  const variableGroups = useVariableGroups();
   // Whether to OFFER the escape hatch. The server refuses it regardless of what the client
   // believes, so this is presentation only - the same contract the connections tab uses.
   const [allowCustom, setAllowCustom] = useState(true);
@@ -206,14 +214,7 @@ export function PolicyExternalApiConfig({
           required={field.required}
           helperText={field.helperTextKey ? t(field.helperTextKey) : undefined}
         >
-          {field.control === "textarea" ? (
-            <textarea
-              className="portal-sources__connection-textarea"
-              rows={3}
-              value={values[field.key] ?? ""}
-              onChange={(e) => setValue(field.key, e.target.value)}
-            />
-          ) : field.control === "select" ? (
+          {field.control === "select" ? (
             <Select
               value={values[field.key] ?? ""}
               options={(field.options ?? []).map((o) => ({
@@ -223,20 +224,29 @@ export function PolicyExternalApiConfig({
               onChange={(v) => v && setValue(field.key, v)}
             />
           ) : (
-            <Input
+            // Text answers flow into the call, so every one may reference {{variables}}.
+            <VariableField
+              multiline={field.control === "textarea"}
               value={values[field.key] ?? ""}
               placeholder={
                 field.placeholderKey ? t(field.placeholderKey) : undefined
               }
-              onChange={(e) => setValue(field.key, e.target.value)}
+              onChange={(v) => setValue(field.key, v)}
+              groups={variableGroups}
             />
           )}
         </FormField>
       ))}
 
       {selected.custom && (
-        <CustomCallFields parameters={parameters} onChange={onChange} />
+        <CustomCallFields
+          parameters={parameters}
+          onChange={onChange}
+          groups={variableGroups}
+        />
       )}
+
+      <VariablesReference groups={variableGroups} />
     </div>
   );
 }
@@ -289,9 +299,11 @@ function OperationGrid({
 function CustomCallFields({
   parameters,
   onChange,
+  groups,
 }: {
   parameters: ExternalApiParams;
   onChange: (p: ExternalApiParams) => void;
+  groups: VariableGroup[];
 }) {
   const { t } = useTranslation();
   const set = (key: keyof ExternalApiParams, value: string) =>
@@ -305,10 +317,11 @@ function CustomCallFields({
         helperText={t("portal.policies.operations.fields.path.helperText")}
         required
       >
-        <Input
+        <VariableField
           value={str("path")}
           placeholder="/v1/scan"
-          onChange={(e) => set("path", e.target.value)}
+          onChange={(v) => set("path", v)}
+          groups={groups}
         />
       </FormField>
 
@@ -387,12 +400,13 @@ function CustomCallFields({
         label={t("portal.policies.operations.fields.headers.label")}
         helperText={t("portal.policies.operations.fields.headers.helperText")}
       >
-        <textarea
-          className="portal-sources__connection-textarea"
+        <VariableField
+          multiline
           rows={2}
           value={str("headers")}
           placeholder='{"X-Api-Version": "2"}'
-          onChange={(e) => set("headers", e.target.value)}
+          onChange={(v) => set("headers", v)}
+          groups={groups}
         />
       </FormField>
 
@@ -403,12 +417,13 @@ function CustomCallFields({
             "portal.policies.operations.fields.bodyTemplate.helperText",
           )}
         >
-          <textarea
-            className="portal-sources__connection-textarea"
+          <VariableField
+            multiline
             rows={4}
             value={str("bodyTemplate")}
             placeholder='{"file": "{{document.base64}}"}'
-            onChange={(e) => set("bodyTemplate", e.target.value)}
+            onChange={(v) => set("bodyTemplate", v)}
+            groups={groups}
           />
         </FormField>
       )}

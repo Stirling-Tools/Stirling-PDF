@@ -48,6 +48,9 @@ vi.mock("@portal/api/sources", () => ({
 const clearProcessedHistory = vi.fn();
 vi.mock("@portal/api/policies", () => ({
   clearProcessedHistory: (id: string) => clearProcessedHistory(id),
+  // The integration step's variable menu asks which scopes this team has.
+  fetchPoliciesList: () => Promise.resolve([]),
+  fetchPolicyRuns: () => Promise.resolve([]),
 }));
 
 const fetchS3Connections = vi.fn();

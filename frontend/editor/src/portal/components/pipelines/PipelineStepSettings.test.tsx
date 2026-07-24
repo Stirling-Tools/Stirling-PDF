@@ -12,6 +12,13 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+// The integration step's variable layer imports the policies API, whose real module drags the
+// editor tool-hook chain (and its i18n side effects) into this otherwise-isolated test.
+vi.mock("@portal/api/policies", () => ({
+  fetchPoliciesList: () => Promise.resolve([]),
+  fetchPolicyRuns: () => Promise.resolve([]),
+}));
+
 // A stand-in tool-settings UI that uses the shared editor Tooltip. The Tooltip
 // pulls in the Preferences + Sidebar contexts, which the portal does not mount
 // app-wide — so this reproduces the "usePreferences must be used within a
