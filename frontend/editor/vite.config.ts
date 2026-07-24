@@ -358,9 +358,36 @@ export default defineConfig(async ({ mode, command }) => {
       target: "esnext",
       rollupOptions: {
         output: {
-          manualChunks: {
-            "vendor-react": ["react", "react-dom"],
-            "pdf-engine": ["@embedpdf/engines", "@embedpdf/pdfium"],
+          manualChunks(id) {
+            if (id.includes("material-symbols-icons.json"))
+              return "vendor-iconset";
+            if (id.includes("node_modules")) {
+              if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
+              if (id.includes("@embedpdf")) return "vendor-embedpdf";
+              if (
+                id.includes("react") ||
+                id.includes("@mantine") ||
+                id.includes("@emotion") ||
+                id.includes("@mui") ||
+                id.includes("@iconify")
+              ) {
+                return "vendor-ui";
+              }
+              if (id.includes("@supabase")) return "vendor-supabase";
+              if (id.includes("posthog-js") || id.includes("@posthog"))
+                return "vendor-posthog";
+              if (id.includes("@cantoo/pdf-lib") || id.includes("pdf-lib"))
+                return "vendor-pdflib";
+              if (
+                id.includes("recharts") ||
+                id.includes("d3") ||
+                id.includes("decimal.js")
+              )
+                return "vendor-charts";
+              if (id.includes("jszip") || id.includes("pako"))
+                return "vendor-zip";
+              if (id.includes("i18next")) return "vendor-i18n";
+            }
           },
         },
       },
