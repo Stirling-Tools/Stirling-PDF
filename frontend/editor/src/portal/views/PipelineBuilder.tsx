@@ -54,9 +54,12 @@ import {
 import { clearProcessedHistory } from "@portal/api/policies";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
-import { fetchSources, type SourceView } from "@portal/api/sources";
+import { type SourceView } from "@portal/api/sources";
+import { useSources } from "@portal/queries/sources";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
@@ -171,6 +174,16 @@ function parseOutput(output: OutputSpec | undefined): {
 export function PipelineBuilder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  // Pipelines are stored as policies, so a save/delete must invalidate both the
+  // pipelines overview and the policies caches (Policies page + Home) before
+  // navigating back to the list.
+  const invalidatePipelines = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: qk.pipelines() }),
+      queryClient.invalidateQueries({ queryKey: qk.policiesList() }),
+      queryClient.invalidateQueries({ queryKey: qk.policyRuns() }),
+    ]);
   const { id } = useParams();
   const isEdit = Boolean(id);
   const { allTools } = useToolRegistry();
@@ -183,20 +196,20 @@ export function PipelineBuilder() {
     async () => (id ? await fetchPipeline(id) : null),
     [id],
   );
-  const sourcesState = useAsync<SourceView[]>(
-    // The editor is a built-in, client-driven source (it runs on editor upload, not as a pipeline
-    // input), so it's excluded from the sources a pipeline can pull from.
-    async () =>
-      (await fetchSources()).sources.filter(
-        (source) => source.type !== EDITOR_SOURCE_TYPE,
-      ),
-    [],
-  );
+  const sourcesState = useSources();
   const triggersState = useAsync<TriggerInfo[]>(
     async () => await fetchTriggers(),
     [],
   );
-  const availableSources = sourcesState.data ?? [];
+  // The editor is a built-in, client-driven source (it runs on editor upload,
+  // not as a pipeline input), so it's excluded from a pipeline's inputs.
+  const availableSources = useMemo<SourceView[]>(
+    () =>
+      (sourcesState.data?.sources ?? []).filter(
+        (source) => source.type !== EDITOR_SOURCE_TYPE,
+      ),
+    [sourcesState.data],
+  );
   const triggers = useMemo(
     () => triggersState.data ?? [],
     [triggersState.data],
@@ -932,6 +945,7 @@ export function PipelineBuilder() {
     };
     try {
       await savePipeline(policy);
+      await invalidatePipelines();
       navigate(destination);
     } catch (e) {
       setError(errorMessage(e));
@@ -1042,6 +1056,7 @@ export function PipelineBuilder() {
     setDeleting(true);
     try {
       await deletePipeline(id);
+      await invalidatePipelines();
       close();
     } catch (e) {
       setError(errorMessage(e));

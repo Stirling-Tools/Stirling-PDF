@@ -5,17 +5,18 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 import { SourceBuilder } from "@portal/views/SourceBuilder";
 import { UIProvider } from "@portal/contexts/UIContext";
 
-// SourceBuilder reads useUI() to open settings, so wrap in its provider.
+// SourceBuilder reads useUI() (open settings) and useQueryClient (list
+// invalidation), so provide the query client + Mantine + the UI context.
 const Providers = ({ children }: { children: ReactNode }) => (
-  <MantineProvider>
+  <PortalTestProviders>
     <UIProvider>{children}</UIProvider>
-  </MantineProvider>
+  </PortalTestProviders>
 );
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
