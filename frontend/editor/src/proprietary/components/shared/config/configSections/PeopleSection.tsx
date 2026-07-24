@@ -588,38 +588,22 @@ export default function PeopleSection() {
       </Group>
 
       {/* Members Table */}
-      <Table
-        horizontalSpacing="md"
-        verticalSpacing="sm"
-        withRowBorders
-        style={
-          {
-            "--table-border-color": "var(--mantine-color-gray-3)",
-          } as React.CSSProperties
-        }
-      >
+      <Table horizontalSpacing="md" verticalSpacing="sm" withRowBorders>
         <Table.Thead>
-          <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-            <Table.Th
-              style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }}
-              fz="sm"
-            >
+          <Table.Tr>
+            <Table.Th style={{ fontWeight: 600 }} fz="sm">
               {t("workspace.people.user")}
             </Table.Th>
             <Table.Th
               style={{
                 fontWeight: 600,
-                color: "var(--mantine-color-gray-7)",
                 whiteSpace: "nowrap",
               }}
               fz="sm"
             >
               {t("workspace.people.role")}
             </Table.Th>
-            <Table.Th
-              style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }}
-              fz="sm"
-            >
+            <Table.Th style={{ fontWeight: 600 }} fz="sm">
               {t("workspace.people.team")}
             </Table.Th>
             <Table.Th w={50}></Table.Th>
