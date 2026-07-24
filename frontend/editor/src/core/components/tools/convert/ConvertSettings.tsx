@@ -11,7 +11,7 @@ import {
 } from "@app/utils/convertUtils";
 import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
 import { useFileSelection } from "@app/contexts/FileContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { useFileSelector, useFileSelectors } from "@app/contexts/FileContext";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
@@ -62,8 +62,8 @@ const ConvertSettings = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { setSelectedFiles } = useFileSelection();
-  const { state, selectors } = useFileState();
-  const activeFiles = state.files.ids;
+  const selectors = useFileSelectors();
+  const activeFiles = useFileSelector((s) => s.files.ids);
   const { preferences } = usePreferences();
 
   const allEndpoints = useMemo(() => {

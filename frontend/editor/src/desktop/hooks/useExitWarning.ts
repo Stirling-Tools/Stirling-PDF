@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { message } from "@tauri-apps/plugin-dialog";
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { useFileSelectors, useFileActions } from "@app/contexts/FileContext";
 import { downloadFile } from "@app/services/downloadService";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { useTranslation } from "react-i18next";
 
 export function useExitWarning() {
   const { t } = useTranslation();
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
   const { actions: fileActions } = useFileActions();
   const selectorsRef = useRef(selectors);
   const isClosingRef = useRef(false);

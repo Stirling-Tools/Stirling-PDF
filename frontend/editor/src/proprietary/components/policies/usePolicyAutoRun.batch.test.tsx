@@ -2,21 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 /**
- * Batch integration test for the policy auto-run orchestration, at the scale the
- * user hit the bug: 61 files uploaded at once, two active upload policies
- * (Classification → Security) chained. Drives the REAL policyRunStore + the REAL
- * hook effects (dispatch → poll → import → chain), mocking only the IO boundaries
- * (network, storage, thumbnail/stub creation).
- *
- * Proves the invariants the user asked for:
- *  - 61 files ⇒ exactly 122 runs (61 classification, then 61 security).
- *  - Delivery is SILENT + in place (consumeFiles called with { silent: true }),
- *    never adding a second copy — the workspace never grows past 61.
- *  - No runaway: if the loop guard regressed, the run count would blow past 122
- *    (or the test would time out), so an exact 122 is a hard regression gate.
- *  - Closing all files mid-run does NOT re-open them: with the workspace emptied,
- *    outputs are delivered to storage (persistVersionedOutputs), never re-added
- *    to the workspace via consumeFiles.
+ * Batch integration test (61 files, two chained upload policies) driving the real
+ * store + hook effects, IO mocked. Classification is forced last (see the sort).
  */
 
 const FILE_COUNT = 61;
@@ -32,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   addFilesCalls: 0,
   stubCounter: 0,
   backendOutCounter: 0,
+  dispatchInFlight: 0,
+  maxDispatchInFlight: 0,
   bumpRevision: vi.fn(),
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
@@ -66,7 +55,8 @@ vi.mock("@app/contexts/IndexedDBContext", () => ({
 vi.mock("@app/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
-      // Classification runs first (order 0), Security second (order 1).
+      // Classification is configured first (order 0) but is FORCED to run last
+      // by the orchestrator; Security (order 1) therefore runs first.
       classification: {
         configured: true,
         status: "active",
@@ -107,7 +97,9 @@ vi.mock("@app/services/fileStubHelpers", () => ({
   createStirlingFilesAndStubs: mocks.createStirlingFilesAndStubs,
 }));
 vi.mock("@app/services/fileClassification", () => ({
-  readClassificationLabelsFromFile: vi.fn().mockResolvedValue(null),
+  // Classification always resolves labels here, so the metadata-only import path
+  // stamps them onto the stub.
+  readClassificationLabelsFromFile: vi.fn().mockResolvedValue(["Invoice"]),
 }));
 
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
@@ -141,6 +133,8 @@ beforeEach(() => {
   mocks.addFilesCalls = 0;
   mocks.stubCounter = 0;
   mocks.backendOutCounter = 0;
+  mocks.dispatchInFlight = 0;
+  mocks.maxDispatchInFlight = 0;
 
   mocks.workspace = Array.from({ length: FILE_COUNT }, (_, i) => ({
     id: `file-${i}`,
@@ -155,15 +149,23 @@ beforeEach(() => {
   mocks.persistVersionedOutputs.mockImplementation(async () => {
     mocks.persistCalls += 1;
   });
-  mocks.updateFileMetadata.mockResolvedValue(false);
+  mocks.updateFileMetadata.mockResolvedValue(true);
   mocks.downloadPolicyOutput.mockResolvedValue(
     new Blob(["x"], { type: "application/pdf" }),
   );
 
   // Each dispatch gets a unique run id; the run's single backend output likewise.
-  mocks.runStoredPolicy.mockImplementation(
-    async () => `run-${mocks.stubCounter++}`,
-  );
+  // Takes real time so overlapping dispatches are measurable (the upload window).
+  mocks.runStoredPolicy.mockImplementation(async () => {
+    mocks.dispatchInFlight++;
+    mocks.maxDispatchInFlight = Math.max(
+      mocks.maxDispatchInFlight,
+      mocks.dispatchInFlight,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    mocks.dispatchInFlight--;
+    return `run-${mocks.stubCounter++}`;
+  });
   mocks.getPolicyRun.mockImplementation(async (runId: string) => ({
     runId,
     policyId: null,
@@ -225,8 +227,8 @@ async function runUntilSettled(expectedRuns: number) {
   });
 }
 
-describe("policy auto-run — 61-file batch through a Classification → Security chain", () => {
-  it("produces exactly 122 runs (61 classification, then 61 security)", async () => {
+describe("policy auto-run — 61-file batch through a Security → Classification chain", () => {
+  it("produces exactly 122 runs (61 security, then 61 classification)", async () => {
     await runUntilSettled(FILE_COUNT * 2);
 
     const classification = latestRuns.filter(
@@ -239,15 +241,26 @@ describe("policy auto-run — 61-file batch through a Classification → Securit
     expect(latestRuns).toHaveLength(FILE_COUNT * 2);
   });
 
-  it("delivers every output SILENTLY in place — workspace never grows past 61", async () => {
+  it("bounds concurrent dispatch uploads so polls/downloads keep connections", async () => {
+    await runUntilSettled(FILE_COUNT * 2);
+    expect(mocks.maxDispatchInFlight).toBeGreaterThan(1); // still parallel…
+    expect(mocks.maxDispatchInFlight).toBeLessThanOrEqual(4); // …but windowed
+  });
+
+  it("versions on Security in place, tags on Classification — workspace never grows past 61", async () => {
     await runUntilSettled(FILE_COUNT * 2);
 
-    // 122 deliveries, all silent (background), none via the disruptive path.
-    expect(mocks.consumeSilentCalls).toBe(FILE_COUNT * 2);
+    // Only the 61 Security runs fork a version, and every one silently in place.
+    expect(mocks.consumeSilentCalls).toBe(FILE_COUNT);
     expect(mocks.consumeNonSilentCalls).toBe(0);
+    // Classification never forks a version — it only stamps labels onto the stub.
+    expect(mocks.updateStirlingFileStub).toHaveBeenCalledTimes(FILE_COUNT);
+    for (const call of mocks.updateStirlingFileStub.mock.calls) {
+      expect(call[1]).toEqual({ classificationLabels: ["Invoice"] });
+    }
     // Never added as brand-new files either.
     expect(mocks.addFilesCalls).toBe(0);
-    // In-place versioning: each file replaced twice, count unchanged.
+    // In-place versioning + metadata-only tagging: count unchanged.
     expect(mocks.workspace).toHaveLength(FILE_COUNT);
   });
 
@@ -273,8 +286,8 @@ describe("policy auto-run — 61-file batch through a Classification → Securit
       );
     });
 
-    // Still fully processed (chain intact), but delivered to STORAGE, never
-    // re-added to the workbench — the workspace stays empty.
+    // Still fully processed (chain intact), but Security's versions went to
+    // STORAGE, never re-added to the workbench — the workspace stays empty.
     expect(latestRuns).toHaveLength(FILE_COUNT * 2);
     expect(mocks.workspace).toHaveLength(0);
     expect(mocks.consumeSilentCalls).toBe(0);

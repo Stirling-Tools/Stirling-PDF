@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import { buildPolicyBadgeMap } from "@app/hooks/usePolicyFileBadges";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
-const NOW = 1_000_000;
 const labels = new Map([
   ["security", "Security"],
   ["watermark", "Watermark"],
+  ["classification", "Classification"],
 ]);
 
 function run(overrides: Partial<PolicyRunRecord>): PolicyRunRecord {
@@ -20,29 +20,24 @@ function run(overrides: Partial<PolicyRunRecord>): PolicyRunRecord {
     outputs: [],
     outputFileIds: ["out"],
     error: null,
-    startedAt: NOW - 1_000, // recent by default
+    startedAt: 0,
     ...overrides,
   };
 }
 
 describe("buildPolicyBadgeMap — badge follows the document onto derived files", () => {
-  it("badges a policy's direct output, and marks it recent within the window", () => {
-    const map = buildPolicyBadgeMap([run({})], [{ id: "out" }], labels, NOW);
-    const badges = map.get("out") ?? [];
-    expect(badges.map((b) => b.id)).toEqual(["security"]);
-    expect(badges[0].recent).toBe(true);
+  it("badges a policy's direct output", () => {
+    const map = buildPolicyBadgeMap([run({})], [{ id: "out" }], labels);
+    expect((map.get("out") ?? []).map((b) => b.id)).toEqual(["security"]);
   });
 
-  it("a versioned edit inherits the badge via parentFileId (never glows)", () => {
+  it("a versioned edit inherits the badge via parentFileId", () => {
     const map = buildPolicyBadgeMap(
       [run({})],
       [{ id: "out" }, { id: "edit", parentFileId: "out" }],
       labels,
-      NOW,
     );
-    const edit = map.get("edit") ?? [];
-    expect(edit.map((b) => b.id)).toEqual(["security"]);
-    expect(edit[0].recent).toBe(false);
+    expect((map.get("edit") ?? []).map((b) => b.id)).toEqual(["security"]);
   });
 
   it("SPLIT parts inherit the badge via sourceFileIds, though they have no parent", () => {
@@ -56,11 +51,9 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
         { id: "part2", sourceFileIds: ["out"] },
       ],
       labels,
-      NOW,
     );
     expect((map.get("part1") ?? []).map((b) => b.id)).toEqual(["security"]);
     expect((map.get("part2") ?? []).map((b) => b.id)).toEqual(["security"]);
-    expect((map.get("part1") ?? [])[0].recent).toBe(false);
   });
 
   it("resolves transitively when an intermediate edit was consumed/removed", () => {
@@ -70,7 +63,6 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
       [run({})],
       [{ id: "part", sourceFileIds: ["editGone", "out"] }],
       labels,
-      NOW,
     );
     expect((map.get("part") ?? []).map((b) => b.id)).toEqual(["security"]);
   });
@@ -83,7 +75,6 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
       ],
       [{ id: "merged", sourceFileIds: ["a", "b"] }],
       labels,
-      NOW,
     );
     expect((map.get("merged") ?? []).map((b) => b.id).sort()).toEqual([
       "security",
@@ -96,24 +87,33 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
       [run({})],
       [{ id: "out" }, { id: "unrelated", sourceFileIds: ["someUpload"] }],
       labels,
-      NOW,
     );
     expect(map.has("unrelated")).toBe(false);
   });
 
-  it("inherited badges never glow even when the source run is recent", () => {
+  it("a completed classification run badges the files it tagged", () => {
+    // Classification is metadata-only: its outputFileIds are the tagged
+    // workspace files (no forked version), so the label badge persists there.
     const map = buildPolicyBadgeMap(
-      [run({ startedAt: NOW })], // maximally recent
-      [{ id: "out" }, { id: "part", sourceFileIds: ["out"] }],
+      [
+        run({
+          categoryId: "classification",
+          fileId: "in",
+          outputFileIds: ["in"],
+          imported: true,
+        }),
+      ],
+      [{ id: "in" }],
       labels,
-      NOW,
     );
-    expect((map.get("out") ?? [])[0].recent).toBe(true);
-    expect((map.get("part") ?? [])[0].recent).toBe(false);
+    const badges = map.get("in") ?? [];
+    expect(badges.map((b) => b.id)).toEqual(["classification"]);
+    expect(badges[0].enforcing).toBeUndefined();
+    expect(badges[0].background).toBeUndefined();
   });
 });
 
-describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", () => {
+describe("buildPolicyBadgeMap — in-flight indicators", () => {
   const enforcingOn = (
     map: Map<string, { enforcing?: boolean }[]>,
     id: string,
@@ -124,7 +124,6 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
       [run({ status: "RUNNING", outputFileIds: [] })],
       [{ id: "in" }],
       labels,
-      NOW,
     );
     expect(enforcingOn(map, "in")).toBe(true);
   });
@@ -136,7 +135,6 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
       [run({ status: "COMPLETED" })],
       [{ id: "in" }],
       labels,
-      NOW,
     );
     expect(enforcingOn(before, "in")).toBe(true);
 
@@ -144,7 +142,6 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
       [run({ status: "COMPLETED", imported: true })],
       [{ id: "in" }],
       labels,
-      NOW,
     );
     expect(enforcingOn(after, "in")).toBe(false);
   });
@@ -155,7 +152,6 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
         [run({ status, outputFileIds: [] })],
         [{ id: "in" }],
         labels,
-        NOW,
       );
       expect(enforcingOn(map, "in")).toBe(false);
     }
@@ -166,7 +162,6 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
       [run({ status: "FAILED", retrying: true, outputFileIds: [] })],
       [{ id: "in" }],
       labels,
-      NOW,
     );
     expect(enforcingOn(map, "in")).toBe(true);
   });
@@ -176,8 +171,27 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
       [run({ status: "RUNNING", fileId: "", outputFileIds: [] })],
       [{ id: "in" }],
       labels,
-      NOW,
     );
+    expect(enforcingOn(map, "in")).toBe(false);
+  });
+
+  it("an in-flight classification run is background, never enforcing", () => {
+    // Non-blocking: shows a spinner but must never trip the enforcing flag
+    // that gates actions and overlays.
+    const map = buildPolicyBadgeMap(
+      [
+        run({
+          categoryId: "classification",
+          status: "RUNNING",
+          outputFileIds: [],
+        }),
+      ],
+      [{ id: "in" }],
+      labels,
+    );
+    const badges = map.get("in") ?? [];
+    expect(badges.map((b) => b.id)).toEqual(["classification"]);
+    expect(badges[0].background).toBe(true);
     expect(enforcingOn(map, "in")).toBe(false);
   });
 });

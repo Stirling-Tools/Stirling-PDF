@@ -9,7 +9,7 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigation } from "@app/contexts/NavigationContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { useFileSelector, useFileSelectors } from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { enforceExportPolicies } from "@app/services/policyExport";
@@ -244,18 +244,19 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
 
   // activeFileIndex is derived from activeFileId so they can never desync.
-  // ViewerProvider sits inside FileContextProvider so useFileState is valid here.
-  const { selectors, state } = useFileState();
+  // ViewerProvider sits inside FileContextProvider so these hooks are valid here.
+  const selectors = useFileSelectors();
+  const fileIds = useFileSelector((s) => s.files.ids);
 
   // Clear activeFileId when its file is removed from the workbench.
   // Dep on state.files.ids so the effect re-runs on every add/remove.
   useEffect(() => {
     if (!activeFileId) return;
-    const stillInWorkbench = state.files.ids.some(
+    const stillInWorkbench = fileIds.some(
       (id) => (id as string) === activeFileId,
     );
     if (!stillInWorkbench) setActiveFileId(null);
-  }, [activeFileId, state.files.ids]);
+  }, [activeFileId, fileIds]);
 
   const activeFileIndex = useMemo(() => {
     if (!activeFileId) return 0;

@@ -16,6 +16,7 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useMemo,
   useState,
@@ -23,7 +24,6 @@ import {
 import {
   FileContextProviderProps,
   FileContextSelectors,
-  FileContextStateValue,
   FileContextActionsValue,
   FileContextActions,
   FileId,
@@ -36,6 +36,7 @@ import {
 import {
   fileContextReducer,
   initialFileContextState,
+  withReducerIdentityGuard,
 } from "@app/contexts/file/FileReducer";
 import { createFileSelectors } from "@app/contexts/file/fileSelectors";
 import {
@@ -49,8 +50,9 @@ import {
 } from "@app/contexts/file/fileActions";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import {
-  FileStateContext,
+  FileStoreContext,
   FileActionsContext,
+  type FileStateStore,
 } from "@app/contexts/file/contexts";
 import {
   IndexedDBProvider,
@@ -75,10 +77,13 @@ function FileContextInner({
   children,
   enablePersistence = true,
 }: FileContextProviderProps) {
-  const [state, dispatch] = useReducer(
-    fileContextReducer,
-    initialFileContextState,
+  // Guarded in dev: warns if a reducer case reallocates a slice without changing
+  // it, which would silently defeat the selector-subscription bail-out.
+  const guardedReducer = useMemo(
+    () => withReducerIdentityGuard(fileContextReducer),
+    [],
   );
+  const [state, dispatch] = useReducer(guardedReducer, initialFileContextState);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
   // IndexedDB context is only used when enablePersistence is true.
@@ -657,14 +662,28 @@ function FileContextInner({
     ],
   );
 
-  // Split context values to minimize re-renders
-  const stateValue = useMemo<FileContextStateValue>(
+  // Subscription store bridge: the context value is STABLE, so consumers only
+  // re-render when the slice they select (via useFileSelector) changes — not on
+  // every state change. Listeners are notified after each committed state.
+  const listenersRef = useRef<Set<() => void>>(new Set());
+  const store = useMemo<FileStateStore>(
     () => ({
-      state,
+      getState: () => stateRef.current,
+      subscribe: (listener) => {
+        listenersRef.current.add(listener);
+        return () => {
+          listenersRef.current.delete(listener);
+        };
+      },
       selectors,
     }),
-    [state, selectors],
+    [selectors],
   );
+  // Layout effect (not passive): subscribers re-render before the browser
+  // paints, so a state change can never show a frame with stale consumers.
+  useLayoutEffect(() => {
+    for (const listener of listenersRef.current) listener();
+  }, [state]);
 
   const actionsValue = useMemo<FileContextActionsValue>(
     () => ({
@@ -698,7 +717,7 @@ function FileContextInner({
   }, [lifecycleManager]);
 
   return (
-    <FileStateContext.Provider value={stateValue}>
+    <FileStoreContext.Provider value={store}>
       <FileActionsContext.Provider value={actionsValue}>
         {children}
         <ZipWarningModal
@@ -721,7 +740,7 @@ function FileContextInner({
           onSkip={handleUnlockSkip}
         />
       </FileActionsContext.Provider>
-    </FileStateContext.Provider>
+    </FileStoreContext.Provider>
   );
 }
 
@@ -758,6 +777,9 @@ export function FileContextProvider({
 export {
   useFileState,
   useFileActions,
+  useFileSelector,
+  useFileSelectors,
+  shallowEqual,
   useCurrentFile,
   useFileSelection,
   useFileManagement,

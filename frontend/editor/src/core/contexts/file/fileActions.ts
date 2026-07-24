@@ -361,32 +361,57 @@ export async function addFiles(
 
     // Collect hydrations to schedule after dispatch so updateStirlingFileStub finds files in state.
     const pendingHydrations: Array<() => Promise<void>> = [];
+    // Per-chunk persistence promises (kicked off as chunks flush, awaited before
+    // return). See flushChunk — we stream writes instead of one batch at the end.
+    const persistPromises: Array<Promise<unknown>> = [];
 
-    // Stream the batch into the workspace in chunks. The per-file pre-scan below
-    // (dedupe, encryption sniff — which reads each PDF's bytes) takes real time
-    // for a big folder drop; a single end-of-loop dispatch would leave the UI
-    // frozen-looking for seconds and then dump hundreds of rows in one render.
-    // Chunked dispatch keeps rows (and their thumbnail hydrations) streaming in,
-    // and the progress store drives the sidebar's "Adding files…" indicator.
-    const DISPATCH_CHUNK = 25;
+    // Dispatch stubs in chunks so rows (and thumbnail hydrations) stream in
+    // rather than dumping the whole drop in one render.
+    const DISPATCH_CHUNK = 5;
     let flushedStubs = 0;
     let flushedHydrations = 0;
-    const flushChunk = () => {
-      if (
-        !options.skipWorkspaceDispatch &&
-        stirlingFileStubs.length > flushedStubs
-      ) {
-        dispatch({
-          type: "ADD_FILES",
-          payload: { stirlingFileStubs: stirlingFileStubs.slice(flushedStubs) },
-        });
+    // Flushes the pending chunk and returns this chunk's persistence promises,
+    // so the caller can await the writes (see the loop's yield) before the policy
+    // auto-run tries to read the file back from storage.
+    const flushChunk = (): Array<Promise<unknown>> => {
+      const chunkWrites: Array<Promise<unknown>> = [];
+      if (stirlingFileStubs.length > flushedStubs) {
+        const from = flushedStubs;
+        const newStubs = stirlingFileStubs.slice(from);
         flushedStubs = stirlingFileStubs.length;
+        if (!options.skipWorkspaceDispatch) {
+          dispatch({
+            type: "ADD_FILES",
+            payload: { stirlingFileStubs: newStubs },
+          });
+        }
+        // Persist each chunk as it flushes, not one batch at the end: the policy
+        // auto-run reads files from IndexedDB with no in-memory fallback.
+        if (enablePersistence) {
+          const newFiles = stirlingFiles.slice(from);
+          for (let i = 0; i < newFiles.length; i++) {
+            const sf = newFiles[i];
+            const stub = newStubs[i];
+            const write = fileStorage
+              .storeStirlingFile(sf, stub)
+              .catch((error) => {
+                console.error(
+                  "Failed to persist file to storage:",
+                  sf.name,
+                  error,
+                );
+              });
+            chunkWrites.push(write);
+            persistPromises.push(write);
+          }
+        }
       }
       // Hydrations only after their chunk is dispatched, so
       // updateStirlingFileStub finds the files in state.
       while (flushedHydrations < pendingHydrations.length) {
         scheduleMetadataHydration(pendingHydrations[flushedHydrations++]);
       }
+      return chunkWrites;
     };
 
     reportBulkAddProgress(0, filesToProcess.length);
@@ -545,38 +570,25 @@ export async function addFiles(
 
       reportBulkAddProgress(++scannedCount, filesToProcess.length);
       if (stirlingFileStubs.length - flushedStubs >= DISPATCH_CHUNK) {
-        flushChunk();
+        const chunkWrites = flushChunk();
+        // Yield a MACROTASK so React commits this chunk and runs its effects
+        // (incl. the policy-enforcement dispatch) before the next chunk scans.
+        // The per-file awaits above are only microtasks, which don't give React
+        // a turn — without this, all dispatches batch and processing can't begin
+        // until the whole drop is scanned. Awaiting the chunk's writes first means
+        // the auto-run finds each file's bytes already committed in storage.
+        await Promise.all(chunkWrites);
+        await new Promise((resolve) => setTimeout(resolve));
       }
     }
 
     // Flush the remainder (also the sole dispatch for small batches).
     flushChunk();
 
-    // Persist to storage if enabled using fileStorage service
-    if (enablePersistence && stirlingFiles.length > 0) {
-      await Promise.all(
-        stirlingFiles.map(async (stirlingFile, index) => {
-          try {
-            // Get corresponding stub with all metadata
-            const fileStub = stirlingFileStubs[index];
-
-            // Store using the cleaner signature - pass StirlingFile + StirlingFileStub directly
-            await fileStorage.storeStirlingFile(stirlingFile, fileStub);
-
-            if (DEBUG)
-              console.log(
-                `📄 addFiles: Stored file ${stirlingFile.name} with metadata:`,
-                fileStub,
-              );
-          } catch (error) {
-            console.error(
-              "Failed to persist file to storage:",
-              stirlingFile.name,
-              error,
-            );
-          }
-        }),
-      );
+    // Wait for the per-chunk writes (streamed in flushChunk) to commit, so
+    // addFiles only resolves once every file is durably stored.
+    if (enablePersistence && persistPromises.length > 0) {
+      await Promise.all(persistPromises);
     }
 
     if (!options.skipUploadTracking && stirlingFiles.length > 0) {
