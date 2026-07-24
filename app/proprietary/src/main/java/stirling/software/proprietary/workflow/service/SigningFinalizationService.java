@@ -1045,12 +1045,12 @@ public class SigningFinalizationService {
                 if (certNode.has("p12Keystore")) {
                     submission.setP12Keystore(
                             metadataEncryptionService.decryptBytes(
-                                    certNode.get("p12Keystore").asText()));
+                                    certNode.get("p12Keystore").asString()));
                 }
                 if (certNode.has("jksKeystore")) {
                     submission.setJksKeystore(
                             metadataEncryptionService.decryptBytes(
-                                    certNode.get("jksKeystore").asText()));
+                                    certNode.get("jksKeystore").asString()));
                 }
                 return submission;
             }

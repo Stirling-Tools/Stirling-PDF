@@ -35,6 +35,7 @@ class PolicyValidatorTest {
     @Mock private PolicyTrigger trigger;
     @Mock private InputSource inputSource;
     @Mock private PolicyOutputSink outputSink;
+    @Mock private PipelineStepValidator stepValidator;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private PolicyValidator validator;
@@ -43,7 +44,11 @@ class PolicyValidatorTest {
     void setUp() {
         validator =
                 new PolicyValidator(
-                        List.of(trigger), List.of(inputSource), List.of(outputSink), sourceStore);
+                        List.of(trigger),
+                        List.of(inputSource),
+                        List.of(outputSink),
+                        List.of(stepValidator),
+                        sourceStore);
     }
 
     @Test
@@ -80,6 +85,28 @@ class PolicyValidatorTest {
                         IllegalArgumentException.class,
                         () -> validator.validate(policy("schedule")));
         assertTrue(ex.getMessage().contains("schedule"));
+    }
+
+    @Test
+    void validateOutputDelegatesToTheSink() {
+        when(outputSink.supports(any())).thenReturn(true);
+        OutputSpec output = new OutputSpec("s3", Map.of("connectionId", 1));
+
+        validator.validateOutput(output);
+
+        verify(outputSink).validate(output);
+    }
+
+    @Test
+    void validateOutputSurfacesAnInaccessibleConnection() {
+        when(outputSink.supports(any())).thenReturn(true);
+        doThrow(new IllegalArgumentException("unknown or inaccessible s3 connection"))
+                .when(outputSink)
+                .validate(any());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> validator.validateOutput(new OutputSpec("s3", Map.of("connectionId", 1))));
     }
 
     @Test

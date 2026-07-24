@@ -29,12 +29,8 @@ permissions:
   contents: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   aggregate:
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Harden Runner
@@ -60,9 +56,9 @@ jobs:
           key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
           cache-disabled: true
 
       - name: Set up Python

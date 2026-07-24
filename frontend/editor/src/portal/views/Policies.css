@@ -18,14 +18,14 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-policies__sub {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   max-width: 46rem;
 }
 
@@ -49,14 +49,14 @@
   flex: 1;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* "Set up" underline link inside the active-row button's rightSection */
 .portal-policies__setup-link {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-blue);
+  color: var(--c-primary);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -83,7 +83,7 @@
 
 .portal-policies__card-enforces {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -106,13 +106,13 @@
 .portal-policies__card-statval {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   line-height: 1.2;
 }
 
 .portal-policies__card-statlbl {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   line-height: 1.2;
 }
 
@@ -124,19 +124,19 @@
   height: 2rem;
   flex-shrink: 0;
   font-size: 1.125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-policies__card-title {
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-policies__card-blurb {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   line-height: 1.4;
 }
 
@@ -144,7 +144,7 @@
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-policies__card-foot {
@@ -165,7 +165,7 @@
 .portal-policies__card-cta {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 .portal-policies__chevron-right {
@@ -180,7 +180,13 @@
   gap: 0.5rem;
   margin-top: auto;
   padding-top: 0.75rem;
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+@media (max-width: 30rem) {
+  .portal-policies__card-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Wizard + detail shared chrome */
@@ -213,7 +219,7 @@
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-policies__wizard-heading {
@@ -221,7 +227,7 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-weight: 600;
 }
 
@@ -254,128 +260,35 @@
 }
 
 .portal-policies__capability + .portal-policies__capability {
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--c-border);
 }
 
 /* An enabled row with config gets a faint tint so the revealed settings read as
  * belonging to it. */
 .portal-policies__capability[data-on] .portal-policies__capability-config {
-  border-top: 1px dashed var(--color-border);
+  border-top: 1px dashed var(--c-border);
   padding-top: 0.75rem;
   margin-top: 0.75rem;
 }
 
 /* Sources picker */
+/* Selectable source tiles: a vertical stack of full-width shared Buttons
+   (icon · name · check). Layout is the Button's own leftSection/label/
+   rightSection — only the selected border/tint is added here. */
 .portal-policies__sources {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-@media (max-width: 40rem) {
-  .portal-policies__sources {
-    grid-template-columns: 1fr;
-  }
-}
-
-.portal-policies__source {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.5rem;
-  padding: 0.625rem;
-  text-align: left;
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  /* Shared Button pins a fixed control height and natural width; this tile is a
-     full-width, two-line card, so fill the grid cell and grow to fit content. */
-  width: 100%;
-  height: auto;
-  font-weight: inherit;
-  transition:
-    border-color var(--motion-fast),
-    background var(--motion-fast);
-}
-
-/* The shared Button wraps children in an inner/label node. Let the inner grow
-   (so the ::after check sits at the far right) and the label carry the
-   icon + two-line-text row. */
-.portal-policies__source .mantine-Button-inner {
-  flex: 1;
-  min-width: 0;
-}
-
-.portal-policies__source .mantine-Button-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  white-space: normal;
-}
-
-.portal-policies__source::after {
-  content: "";
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-left: auto;
-  width: 1rem;
-  height: 1rem;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border-strong);
-  transition:
-    border-color var(--motion-fast),
-    background var(--motion-fast);
-}
-
-.portal-policies__source:hover {
-  background: var(--color-bg-hover);
 }
 
 .portal-policies__source--on {
-  border-color: var(--color-blue);
-  background: var(--color-blue-light);
-}
-
-.portal-policies__source--on::after {
-  content: "✓";
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #fff;
-  border-color: var(--color-blue);
-  background: var(--color-blue);
-}
-
-.portal-policies__source-icon {
-  font-size: 1rem;
-  line-height: 1.2;
-  flex-shrink: 0;
-  color: var(--color-text-3);
-}
-
-.portal-policies__source--on .portal-policies__source-icon {
-  color: var(--color-blue);
-}
-
-.portal-policies__source-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.0625rem;
-  min-width: 0;
+  border-color: var(--c-primary);
 }
 
 .portal-policies__source-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-policies__source-desc {
-  font-size: 0.6875rem;
-  color: var(--color-text-4);
-  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .portal-policies__link {
@@ -384,7 +297,7 @@
   padding: 0;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-blue);
+  color: var(--c-primary);
   cursor: pointer;
 }
 
@@ -407,17 +320,17 @@
 }
 
 .portal-policies__detail-sep {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-size: 0.75rem;
 }
 
 .portal-policies__detail-meta {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-policies__enforce-arrow {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-size: 0.75rem;
 }
 
@@ -431,7 +344,7 @@
 .portal-policies__detail-inline-label {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   flex-shrink: 0;
@@ -440,7 +353,7 @@
 
 .portal-policies__detail-inline-value {
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   line-height: 1.5;
 }
 
@@ -453,7 +366,7 @@
 }
 
 .portal-policies__activity-row + .portal-policies__activity-row {
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 .portal-policies__activity-icon {
@@ -471,7 +384,7 @@
   color: var(--color-amber);
 }
 .portal-policies__activity-icon--info {
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 @keyframes portal-policies-spin {
@@ -495,17 +408,17 @@
 .portal-policies__activity-doc {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-policies__activity-action {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-policies__activity-time {
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   white-space: nowrap;
 }
 
@@ -544,5 +457,40 @@
 }
 
 .portal-policies__detail-stats .sui-stat + .sui-stat {
-  border-left: 1px solid var(--color-border-light);
+  border-left: 1px solid var(--c-border-subtle);
 }
+
+/* ── Catalogue table (replaces the stacked category cards) ──────────────── */
+.portal-policies__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.portal-policies__cell-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+  min-width: 0;
+}
+
+.portal-policies__rulechips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+}
+
+.portal-policies__muted {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-policies__docs {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+/* The .pcat-badge icon styles live with the PolicyCategoryIcon component
+   (PolicyCategoryIcon.css) so the Home policy summary picks them up too. */

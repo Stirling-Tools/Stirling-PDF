@@ -48,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
@@ -69,6 +70,7 @@ public class SupabaseSecurityConfig {
     private final SupabaseUserService supabaseUserService;
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Value("${app.supabase.issuer:}")
     private String issuer;
@@ -125,7 +127,8 @@ public class SupabaseSecurityConfig {
                                 userService,
                                 supabaseUserService,
                                 saasTeamService,
-                                jwtDecoder),
+                                jwtDecoder,
+                                apiKeyAuthenticationService),
                         BearerTokenAuthenticationFilter.class)
                 .exceptionHandling(
                         ex ->

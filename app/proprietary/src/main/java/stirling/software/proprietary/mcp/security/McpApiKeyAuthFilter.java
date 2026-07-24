@@ -24,8 +24,8 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
 /**
- * API-key auth for the MCP endpoint: validates a Stirling per-user API key and binds the request to
- * that user with the MCP scopes.
+ * API-key auth for the MCP endpoint: validates a Stirling API key and binds the request to that
+ * user with the MCP scopes.
  */
 @Slf4j
 public class McpApiKeyAuthFilter extends OncePerRequestFilter {

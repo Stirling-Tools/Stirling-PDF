@@ -6,11 +6,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -23,6 +23,9 @@ import stirling.software.proprietary.policy.source.SourceStore;
  *   <li>denied entirely under the {@code saas} profile;
  *   <li>Stirling's own config dir always rejected, even if an allowed root were misconfigured to
  *       contain it;
+ *   <li>Stirling-owned "implied" roots are always permitted (even with none configured): the local
+ *       server file-storage directory when that storage provider is enabled, and the pipeline
+ *       watched-folder directories, so automations use them without the admin listing them;
  *   <li>must resolve within {@code policies.allowedFolderRoots}; none configured means all denied.
  * </ol>
  *
@@ -30,23 +33,33 @@ import stirling.software.proprietary.policy.source.SourceStore;
  * defended: an operator who roots an allowlist on a symlink to a sensitive location is trusted.
  */
 @Component
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";
 
+    /** Reason keys for an implied root, surfaced to the admin UI so it can label each one. */
+    public static final String IMPLIED_SERVER_STORAGE = "serverStorage";
+
+    public static final String IMPLIED_WATCHED_FOLDER = "watchedFolder";
+
+    /** A directory implicitly permitted regardless of {@code allowedFolderRoots}, and why. */
+    public record ImpliedRoot(Path path, String reason) {}
+
     private final boolean saasActive;
     private final List<Path> allowedRoots;
+    private final List<ImpliedRoot> impliedRoots;
     private final List<Path> protectedRoots;
     private final SourceStore sourceStore;
 
     public FolderAccessGuard(
             ApplicationProperties applicationProperties,
+            RuntimePathConfig runtimePathConfig,
             Environment environment,
             SourceStore sourceStore) {
         this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
+        this.impliedRoots = impliedRoots(applicationProperties.getStorage(), runtimePathConfig);
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));
         this.sourceStore = sourceStore;
     }
@@ -64,16 +77,26 @@ public class FolderAccessGuard {
                         "folder may not point inside a protected Stirling directory");
             }
         }
+        // Stirling-owned implied roots are always permitted, even with no configured roots, so
+        // automations work against them out of the box.
+        if (impliedRoots.stream().anyMatch(root -> normalized.startsWith(root.path()))) {
+            return normalized;
+        }
         if (allowedRoots.isEmpty()) {
-            throw new IllegalArgumentException(
+            throw new FolderAccessDeniedException(
                     "folder access is disabled; set policies.allowedFolderRoots to permit it");
         }
         boolean within = allowedRoots.stream().anyMatch(normalized::startsWith);
         if (!within) {
-            throw new IllegalArgumentException(
+            throw new FolderAccessDeniedException(
                     "folder '" + normalized + "' is outside the allowed folder roots");
         }
         return normalized;
+    }
+
+    /** The Stirling-owned directories always permitted, with a reason key for each (read-only). */
+    public List<ImpliedRoot> impliedRoots() {
+        return impliedRoots;
     }
 
     /** Whether this policy touches a folder source/sink, and so is subject to these rules. */
@@ -86,6 +109,34 @@ public class FolderAccessGuard {
         boolean writesFolder =
                 policy.output() != null && FOLDER_TYPE.equals(policy.output().type());
         return readsFolder || writesFolder;
+    }
+
+    /**
+     * Stirling-owned directories always permitted regardless of {@code allowedFolderRoots}, so
+     * folder automations work against them out of the box.
+     */
+    private static List<ImpliedRoot> impliedRoots(
+            ApplicationProperties.Storage storage, RuntimePathConfig runtimePathConfig) {
+        List<ImpliedRoot> roots = new ArrayList<>();
+        for (Path path : serverStorageRoots(storage)) {
+            roots.add(new ImpliedRoot(path, IMPLIED_SERVER_STORAGE));
+        }
+        for (Path path : normalizeAll(runtimePathConfig.getPipelineWatchedFoldersPaths())) {
+            roots.add(new ImpliedRoot(path, IMPLIED_WATCHED_FOLDER));
+        }
+        return List.copyOf(roots);
+    }
+
+    /** The local server file-storage directory, when that storage provider is enabled. */
+    private static List<Path> serverStorageRoots(ApplicationProperties.Storage storage) {
+        if (!storage.isEnabled() || !"local".equalsIgnoreCase(storage.getProvider())) {
+            return List.of();
+        }
+        String basePath = storage.getLocal().getBasePath();
+        if (basePath == null || basePath.isBlank()) {
+            return List.of();
+        }
+        return List.of(normalize(Path.of(basePath)));
     }
 
     private static List<Path> normalizeAll(List<String> roots) {

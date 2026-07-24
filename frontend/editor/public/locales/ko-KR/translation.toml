@@ -6521,63 +6521,6 @@ title_other = "PDF {{allowance}}개 무료 처리"
 titleWithRate_one = "PDF {{allowance}}개 무료 처리 후 {{rate}}/PDF"
 titleWithRate_other = "PDF {{allowance}}개 무료 처리 후 {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "잠김"
-openAriaLabel = "{{name}} 구성 요소 열기"
-
-[portal.catalogue.detail]
-addToProject = "프로젝트에 추가"
-ariaLabel = "구성 요소 상세"
-tabsAriaLabel = "구성 요소 상세 섹션"
-upgradeToUnlock = "업그레이드하여 잠금 해제"
-
-[portal.catalogue.detail.code]
-install = "설치"
-usage = "사용법"
-
-[portal.catalogue.detail.locked]
-description = "{{name}}은(는) {{tier}} 플랜부터 포함됩니다. 임베드하려면 업그레이드하세요."
-title = "현재 플랜에서 사용할 수 없음"
-
-[portal.catalogue.detail.preview]
-badge = "라이브 미리보기"
-note = "Interactive sandbox가 여기에 렌더링됩니다"
-
-[portal.catalogue.detail.pricing]
-note = "{{unit}}당 종량제입니다. 월별 무료 할당량을 초과한 사용량은 계정에 청구되며 Usage & Billing에 항목별로 표시됩니다."
-
-[portal.catalogue.detail.stats]
-billedOn = "청구 기준"
-embeds30d = "임베드(30일)"
-freeQuota = "무료 할당량"
-freeQuotaValue = "{{amount}} / 월"
-maturity = "성숙도"
-none = "없음"
-perAction = "작업당"
-price = "가격"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "개요"
-pricing = "가격"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "선택 사항"
-required = "필수"
-
-[portal.catalogue.props.columns]
-description = "설명"
-name = "Prop"
-required = "필수"
-type = "유형"
-
-[portal.catalogue.summary]
-componentsGa = "구성 요소 GA"
-componentSpendMtd = "구성 요소 지출(MTD)"
-embedsThisMonth = "이번 달 임베드"
-inBeta = "Beta 중"
-
 [portal.components.billingUnit]
 approval = "승인"
 check = "확인"
@@ -6590,18 +6533,6 @@ signature = "서명"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "자체 앱에 넣을 수 있는 임베드 가능한 SDK 위젯 — viewer, e-sign 흐름, AI 검토 패널. 각 항목은 작업당 종량제입니다. 설치, 사용법, props를 보려면 카드를 클릭하세요."
-title = "구성 요소"
-
-[portal.componentsView.empty]
-description = "구성 요소 카탈로그를 불러올 수 없습니다. 잠시 후 다시 시도하세요."
-title = "사용 가능한 구성 요소 없음"
-
-[portal.componentsView.lockedBanner]
-description = "GA 구성 요소는 Pay-as-you-go에서 사용할 수 있으며, 일부 Beta 구성 요소는 enterprise 전용입니다. 잠긴 카드에는 업그레이드 안내가 표시됩니다."
-title = "일부 구성 요소에는 유료 플랜이 필요합니다"
 
 [portal.docs.authentication]
 codeCaption = "모든 요청"

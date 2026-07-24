@@ -1,37 +1,53 @@
 :root {
   /* Compare highlight colors (same in light/dark) */
-  --spdf-compare-removed-bg: rgba(255, 107, 107, 0.45); /* #ff6b6b @ 0.45 */
-  --spdf-compare-added-bg: rgba(81, 207, 102, 0.35); /* #51cf66 @ 0.35 */
+  --spdf-compare-removed-bg: color-mix(
+    in srgb,
+    var(--p-red-400) 45%,
+    transparent
+  ); /* #ff6b6b @ 0.45 */
+  --spdf-compare-added-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 35%,
+    transparent
+  ); /* #51cf66 @ 0.35 */
 
   /* Badge colors for dropdowns */
-  --spdf-compare-removed-badge-bg: rgba(255, 59, 48, 0.15);
-  --spdf-compare-removed-badge-fg: #b91c1c;
-  --spdf-compare-added-badge-bg: rgba(52, 199, 89, 0.18);
-  --spdf-compare-added-badge-fg: #1b5e20;
+  --spdf-compare-removed-badge-bg: color-mix(
+    in srgb,
+    var(--p-red-500) 15%,
+    transparent
+  );
+  --spdf-compare-removed-badge-fg: var(--p-red-600);
+  --spdf-compare-added-badge-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 18%,
+    transparent
+  );
+  --spdf-compare-added-badge-fg: var(--p-green-700);
 
   /* Inline highlights in summary */
-  --spdf-compare-inline-removed-bg: rgba(255, 59, 48, 0.25);
-  --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
+  --spdf-compare-inline-removed-bg: color-mix(
+    in srgb,
+    var(--p-red-500) 25%,
+    transparent
+  );
+  --spdf-compare-inline-added-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 25%,
+    transparent
+  );
 
   /* File Manager active file colors */
-  --file-active-bg: rgba(
-    59,
-    130,
-    246,
-    0.1
-  ); /* Transparent blue for active file background */
-  --file-active-badge-bg: rgba(
-    34,
-    197,
-    94,
-    0.15
+  --file-active-badge-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 15%,
+    transparent
   ); /* Transparent green for active badge */
-  --file-active-badge-fg: #15803d; /* Green text for active badge */
-  --file-active-badge-border: rgba(
-    34,
-    197,
-    94,
-    0.3
+  --file-active-badge-fg: var(--p-green-700); /* Green text for active badge */
+  --file-active-badge-border: color-mix(
+    in srgb,
+    var(--p-green-500) 30%,
+    transparent
   ); /* Green border for active badge */
 }
 
@@ -41,13 +57,6 @@
   /* Global animation durations */
   --fullscreen-anim-duration-in: 0.28s;
   --fullscreen-anim-duration-out: 0.22s;
-
-  /* Z-index constants (added in this PR) */
-  --z-over-fullscreen-surface: 1400;
-  --z-fullscreen-surface: 1200;
-  --z-fullscreen-favorite-star: 2;
-  --z-fullscreen-icon-svg: 1;
-  --z-toolpicker-star: 1;
 
   /* Standard gray scale */
   --gray-50: 249 250 251;
@@ -67,108 +76,97 @@
   --border: 229 231 235;
 
   /* Colors for Mantine integration */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  --color-primary-50: var(--p-blue-400);
+  --color-primary-100: var(--p-blue-400);
+  --color-primary-200: var(--p-blue-400);
+  --color-primary-300: var(--p-blue-400);
+  --color-primary-400: var(--p-blue-400);
+  --color-primary-500: var(--p-blue-500);
+  --color-primary-600: var(--p-blue-600);
+  --color-primary-700: var(--p-blue-700);
+  --color-primary-800: var(--p-blue-700);
+  --color-primary-900: var(--p-blue-700);
 
   /* Success (green) */
-  --color-green-50: #f0fdf4;
-  --color-green-100: #dcfce7;
-  --color-green-200: #bbf7d0;
-  --color-green-300: #86efac;
-  --color-green-400: #4ade80;
-  --color-green-500: #22c55e;
-  --color-green-600: #16a34a;
-  --color-green-700: #15803d;
-  --color-green-800: #166534;
-  --color-green-900: #14532d;
+  --color-green-50: var(--p-green-500);
+  --color-green-100: var(--p-green-500);
+  --color-green-200: var(--p-green-500);
+  --color-green-300: var(--p-green-500);
+  --color-green-400: var(--p-green-500);
+  --color-green-500: var(--p-green-500);
+  --color-green-600: var(--p-green-600);
+  --color-green-700: var(--p-green-700);
+  --color-green-800: var(--p-green-700);
+  --color-green-900: var(--p-green-700);
 
   /* Warning (yellow) */
-  --color-yellow-50: #fefce8;
-  --color-yellow-100: #fef9c3;
-  --color-yellow-200: #fef08a;
-  --color-yellow-300: #fde047;
-  --color-yellow-400: #facc15;
+  --color-yellow-50: var(--p-amber-400);
+  --color-yellow-100: var(--p-amber-400);
+  --color-yellow-200: var(--p-amber-400);
+  --color-yellow-300: var(--p-amber-400);
+  --color-yellow-400: var(--p-amber-400);
 
   /* Category colors - consistent across light and dark modes */
-  --category-color-removal: #ef4444; /* Red for removal tools */
-  --category-color-security: #f59e0b; /* Orange for security tools */
-  --category-color-formatting: #8b5cf6; /* Purple for formatting tools */
-  --category-color-extraction: #06b6d4; /* Cyan for extraction tools */
-  --category-color-signing: #10b981; /* Green for signing tools */
-  --category-color-general: #3b82f6; /* Blue for general tools */
-  --category-color-verification: #f97316; /* Orange for verification tools */
-  --category-color-automation: #ec4899; /* Pink for automation tools */
-  --category-color-developer: #6b7280; /* Gray for developer tools */
-  --category-color-default: #6b7280; /* Default gray */
+  --category-color-removal: var(--p-red-500); /* Red for removal tools */
+  --category-color-security: var(--p-amber-500); /* Orange for security tools */
+  --category-color-formatting: var(
+    --p-blue-400
+  ); /* Purple for formatting tools */
+  --category-color-extraction: var(
+    --p-blue-500
+  ); /* Cyan for extraction tools */
+  --category-color-signing: var(--p-green-500); /* Green for signing tools */
+  --category-color-general: var(--p-blue-500); /* Blue for general tools */
+  --category-color-verification: var(
+    --p-amber-600
+  ); /* Orange for verification tools */
+  --category-color-automation: var(--p-red-400); /* Pink for automation tools */
+  --category-color-developer: var(--p-gray-500); /* Gray for developer tools */
+  --category-color-default: var(--p-gray-500); /* Default gray */
 
   /* Special section colors - consistent across light and dark modes */
-  --special-color-favorites: #ffc107; /* Yellow/gold for favorites */
-  --special-color-recommended: #1bb1d4; /* Cyan for recommended */
-  --color-yellow-500: #eab308;
-  --color-yellow-600: #ca8a04;
-  --color-yellow-700: #a16207;
-  --color-yellow-800: #854d0e;
-  --color-yellow-900: #713f12;
+  --special-color-favorites: var(--p-amber-400); /* Yellow/gold for favorites */
+  --special-color-recommended: var(--p-blue-500); /* Cyan for recommended */
+  --color-yellow-500: var(--p-amber-500);
+  --color-yellow-600: var(--p-amber-600);
+  --color-yellow-700: var(--p-amber-600);
+  --color-yellow-800: var(--p-amber-600);
+  --color-yellow-900: var(--p-amber-600);
 
-  --color-red-50: #fef2f2;
-  --color-red-100: #fee2e2;
-  --color-red-200: #fecaca;
-  --color-red-300: #fca5a5;
-  --color-red-400: #f87171;
-  --color-red-500: #ef4444;
-  --color-red-600: #dc2626;
-  --color-red-700: #b91c1c;
-  --color-red-800: #991b1b;
-  --color-red-900: #7f1d1d;
+  --color-red-50: var(--p-red-400);
+  --color-red-100: var(--p-red-400);
+  --color-red-200: var(--p-red-400);
+  --color-red-300: var(--p-red-400);
+  --color-red-400: var(--p-red-400);
+  --color-red-500: var(--p-red-500);
+  --color-red-600: var(--p-red-600);
+  --color-red-700: var(--p-red-600);
+  --color-red-800: var(--p-red-600);
+  --color-red-900: var(--p-red-600);
 
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
+  --color-gray-50: var(--p-gray-50);
+  --color-gray-100: var(--p-gray-100);
+  --color-gray-200: var(--p-gray-200);
+  --color-gray-300: var(--p-gray-300);
+  --color-gray-400: var(--p-gray-400);
+  --color-gray-500: var(--p-gray-500);
+  --color-gray-600: var(--p-gray-600);
+  --color-gray-700: var(--p-gray-700);
+  --color-gray-800: var(--p-gray-800);
+  --color-gray-900: var(--p-gray-900);
 
   /* Categorical accents (sidebar groups, file-type icons, badges). One hue per
      token; the dark block overrides each with a LIGHTER shade for contrast on
      dark backgrounds. JS consumers go through utils/accentColors.ts. */
-  --accent-green: #16a34a;
-  --accent-blue: #2563eb;
-  --accent-red: #dc2626;
-  --accent-orange: #ea580c;
-  --accent-purple: #9333ea;
-  --accent-teal: #0d9488;
-  --accent-pink: #db2777;
-  --accent-amber: #d97706;
-  --accent-indigo: #4f46e5;
-  --accent-cyan: #0891b2;
-  --accent-violet: #7c3aed;
-  --accent-gray: #6b7280;
-
-  /* Spacing system */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-
-  /* Radius system */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --accent-orange: var(--p-amber-600);
+  --accent-purple: var(--p-blue-500);
+  --accent-teal: var(--p-blue-700);
+  --accent-pink: var(--p-red-500);
+  --accent-amber: var(--p-amber-600);
+  --accent-indigo: var(--p-blue-600);
+  --accent-cyan: var(--p-blue-600);
+  --accent-violet: var(--p-blue-600);
+  --accent-gray: var(--p-gray-500);
 
   /* Shadow system */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -177,201 +175,81 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
 
-  /* Font weights */
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-
-  /* Light theme semantic colors */
-  --bg-surface: #ffffff;
-  --bg-raised: #f9fafb;
-  --bg-muted: #f3f4f6;
-  --bg-background: #f9fafb;
-  --bg-toolbar: #ffffff;
-  --bg-file-manager: #f5f6f8;
-  --bg-file-list: #ffffff;
-  --btn-open-file: #0a8bff;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #6b7280;
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
-  --text-always-dark: #1f2937;
-  --text-always-dark-muted: #6b7280;
-  --border-subtle: #e5e7eb;
-  --border-default: #e2e8f0;
-  --border-strong: #9ca3af;
-  --border-hover: #9ca3af;
-  --hover-bg: #f9fafb;
-  --active-bg: #f3f4f6;
-  --automation-entry-hover-bg: var(--color-gray-100);
+  --text-always-dark: var(--p-gray-800);
+  --text-always-dark-muted: var(--p-gray-500);
 
   /* Icon colors for light mode */
-  --icon-user-bg: #9ca3af;
-  --icon-user-color: #ffffff;
-  --icon-notifications-bg: #9ca3af;
-  --icon-notifications-color: #ffffff;
-  --icon-tools-bg: #1e88e5;
+  --icon-tools-bg: var(--p-blue-500);
   --icon-tools-color: #ffffff;
-  --icon-read-bg: #4caf50;
-  --icon-read-color: #ffffff;
-  --icon-sign-bg: #3ba99c;
-  --icon-sign-color: #ffffff;
-  --icon-automate-bg: #a576e3;
-  --icon-automate-color: #ffffff;
-  --icon-files-bg: #d3e7f7;
-  --icon-files-color: #0a8bff;
-  --icon-activity-bg: #d3e7f7;
-  --icon-activity-color: #0a8bff;
-  --icon-config-bg: #9ca3af;
-  --icon-config-color: #ffffff;
+  --icon-files-color: var(--p-blue-500);
 
   /* Colors for tooltips */
-  --tooltip-title-bg: #dbefff;
-  --tooltip-title-color: #31528e;
-  --tooltip-header-bg: #31528e;
+  --tooltip-header-bg: var(--p-blue-700);
   --tooltip-header-color: white;
-  --tooltip-border: var(--border-default);
+  --tooltip-border: var(--c-border);
 
   /* Inactive icon colors for light mode */
-  --icon-inactive-bg: #9ca3af;
+  --icon-inactive-bg: var(--p-gray-400);
   --icon-inactive-color: #ffffff;
 
-  /* New theme colors for text and icons */
-  --tools-text-and-icon-color: var(--text-primary);
-
-  /* Tool picker sticky header variables (light mode) */
-  --tool-header-bg: #dbefff;
-  --tool-header-border: #bee2ff;
-  --tool-header-text: #1e88e5;
-  --tool-header-badge-bg: #c0ddff;
-  --tool-header-badge-text: #004e99;
-
-  /* Subcategory title styling (light mode) */
-  --tool-subcategory-text-color: #9ca3af; /* lighter text */
-  --tool-subcategory-rule-color: #e5e7eb; /* doubly lighter rule line */
-  --accent-interactive: #4a90e2;
-  --text-instruction: #4a90e2;
-  --text-brand: var(--color-gray-700);
-  --text-brand-accent: #dc2626;
+  /* doubly lighter rule line */
+  --text-brand-accent: var(--p-red-600);
 
   /* PDF text selection colors */
-  --pdf-selection-bg: rgba(59, 130, 246, 0.2);
-  --pdf-selection-ring: rgba(59, 130, 246, 0.18);
-
-  /* Placeholder text colors */
-  --search-text-and-icon-color: #6b7382;
-  --input-bg: #ffffff;
-
-  /* Tool panel search bar background colors */
-  --tool-panel-search-bg: #eff1f4;
-  --tool-panel-search-border-bottom: #eff1f4;
+  --pdf-selection-bg: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
+  --pdf-selection-ring: color-mix(in srgb, var(--p-blue-500) 18%, transparent);
 
   /* container */
-  --landing-paper-bg: var(--bg-surface);
-  --landing-inner-paper-bg: #eef8ff;
-  --landing-inner-paper-border: #cdeaff;
-  --landing-button-bg: var(--bg-surface);
-  --landing-button-color: var(--icon-tools-bg);
-  --landing-button-border: #e0f2f7;
-  --landing-button-hover-bg: rgb(251, 251, 251);
+  --landing-button-bg: var(--c-surface);
+  --landing-button-border: var(--p-blue-400);
+  --landing-button-hover-bg: var(--p-gray-50);
 
   /* drop state */
-  --landing-drop-paper-bg: #e3f2fd;
-  --landing-drop-inner-paper-bg: #bbdefb;
-  --landing-drop-inner-paper-border: #90caf9;
+  --landing-drop-inner-paper-bg: var(--p-blue-400);
+  --landing-drop-inner-paper-border: var(--p-blue-400);
 
   /* landing hero & stack */
-  --landing-hero-gradient: linear-gradient(135deg, #4c8bf5 0%, #3a7be8 100%);
+  --landing-hero-gradient: linear-gradient(
+    135deg,
+    var(--p-blue-500) 0%,
+    var(--p-blue-500) 100%
+  );
   --landing-stack-w: 224px;
   --landing-stack-h: 176px;
-  --landing-stack-glow-bg: radial-gradient(
-    circle,
-    rgba(74, 144, 226, 0.18) 0%,
-    transparent 70%
-  );
 
   /* landing doc stack shadows */
   --landing-doc-shadow-back-idle:
     0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --landing-doc-shadow-back-hover:
-    0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
   --landing-doc-shadow-front-idle:
     0 8px 30px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06),
     0 0 0 1px rgba(0, 0, 0, 0.02);
-  --landing-doc-shadow-front-hover:
-    0 18px 48px rgba(0, 0, 0, 0.18), 0 8px 20px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(0, 0, 0, 0.04);
-
-  /* landing action button shadows */
-  --landing-action-transition:
-    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-  --landing-action-shadow-idle:
-    0 6px 18px rgba(0, 0, 0, 0), 0 2px 6px rgba(0, 0, 0, 0);
-  --landing-action-shadow-hover:
-    0 6px 18px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08);
-  --landing-action-primary-shadow-idle:
-    0 10px 26px rgba(58, 123, 232, 0), 0 4px 12px rgba(0, 0, 0, 0);
-  --landing-action-primary-shadow-hover:
-    0 10px 26px rgba(58, 123, 232, 0.42), 0 4px 12px rgba(0, 0, 0, 0.1);
 
   /* selected file header colors */
-  --header-selected-bg: #1e88e5; /* light mode selected header matches dark */
+  --header-selected-bg: var(
+    --p-blue-500
+  ); /* light mode selected header matches dark */
   --header-selected-fg: #ffffff;
-  --file-card-bg: #ffffff; /* file card background (light/dark paired) */
-  --accordion-item-bg: #e8eaed; /* accordion item background - more distinguishable */
 
-  /* shadows */
-  --drop-shadow-color: rgba(0, 0, 0, 0.08);
-  --drop-shadow-color-strong: rgba(0, 0, 0, 0.04);
-  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.08))
-    drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.06))
-    drop-shadow(0 1.2rem 1rem rgba(0, 0, 0, 0.04));
+  /* slightly more blue than dark mode header */
 
-  /* Light mode card hover and selection */
-  --header-hover-bg: #3b4b6e; /* same family as selected, a touch muted for hover */
-  --card-selected-border: #3fafff; /* slightly more blue than dark mode header */
-  --checkbox-border: #2f83bf;
-  --checkbox-checked-bg: #3fafff;
-  --checkbox-tick: #ffffff;
-
-  --information-text-bg: #eaeaea;
-  --information-text-color: #5e5e5e;
-  /* Bulk selection panel specific colors (light mode) */
-  --bulk-panel-bg: #ffffff; /* white background for parent container */
-  --bulk-card-bg: #ffffff; /* white background for cards */
-  --bulk-card-border: #e5e7eb; /* light gray border for cards and buttons */
-  --bulk-card-hover-border: #d1d5db; /* slightly darker on hover */
-  --unsupported-bar-bg: #5a616e;
-  --unsupported-bar-border: #6b7280;
+  --information-text-color: var(--p-zinc-400);
+  /* white background for cards */
+  --bulk-card-border: var(
+    --p-gray-200
+  ); /* light gray border for cards and buttons */
+  --bulk-card-hover-border: var(--p-gray-300); /* slightly darker on hover */
 
   /* Config Modal colors (light mode) */
-  --modal-nav-bg: #f5f6f8;
-  --modal-nav-section-title: #6b7280;
-  --modal-nav-item: #374151;
-  --modal-nav-item-active: #0a8bff;
-  --modal-nav-item-active-bg: rgba(10, 139, 255, 0.08);
-  --modal-content-bg: #ffffff;
-  --modal-header-border: rgba(0, 0, 0, 0.06);
+  --modal-nav-item: var(--p-gray-700);
 
   /* API Keys section colors (light mode) */
-  --api-keys-card-bg: #ffffff;
-  --api-keys-card-border: #e0e0e0;
   --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
-  --api-keys-input-bg: #f8f8f8;
-  --api-keys-input-border: #e0e0e0;
 
   /* PDF Report Colors (always light) */
-  --pdf-light-header-bg: 239 246 255;
-  --pdf-light-accent: 59 130 246;
-  --pdf-light-text-primary: 30 41 59;
   --pdf-light-text-muted: 100 116 139;
   --pdf-light-box-bg: 248 250 252;
   --pdf-light-box-border: 226 232 240;
-  --pdf-light-warning: 234 179 8;
-  --pdf-light-danger: 248 113 113;
-  --pdf-light-success: 34 197 94;
   --pdf-light-neutral: 148 163 184;
   --pdf-light-status-valid-bg: 209 250 229;
   --pdf-light-status-valid-text: 6 95 70;
@@ -381,31 +259,19 @@
   --pdf-light-status-invalid-text: 153 27 27;
   --pdf-light-status-neutral-bg: 229 231 235;
   --pdf-light-status-neutral-text: 55 65 81;
-  --pdf-light-report-container-bg: 249 250 251;
-  --pdf-light-simulated-page-bg: 255 255 255;
   --pdf-light-simulated-page-text: 15 23 42;
 
   /* Code token colors (light mode) */
-  --code-kw-color: #1d4ed8; /* blue-700 */
-  --code-str-color: #16a34a; /* green-600 */
-  --code-num-color: #4338ca; /* indigo-700 */
-  --code-com-color: #6b7280; /* gray-500 */
-  /* Compare tool specific colors - only for colors that don't have existing theme pairs */
-  --compare-upload-dropzone-bg: rgba(241, 245, 249, 0.45);
-  --compare-upload-dropzone-border: rgba(148, 163, 184, 0.6);
-  --compare-upload-icon-bg: rgba(148, 163, 184, 0.2);
-  --compare-upload-icon-color: rgba(17, 24, 39, 0.75);
-  --compare-upload-divider: rgba(148, 163, 184, 0.5);
+  --code-kw-color: var(--p-blue-700); /* blue-700 */
+  --code-str-color: var(--p-green-600); /* green-600 */
+  --code-num-color: var(--p-blue-700); /* indigo-700 */
+  --code-com-color: var(--p-gray-500); /* gray-500 */
 
   /* Compare page label chip (light mode): slightly lighter than surrounding rows */
-  --compare-page-label-bg: var(--bg-muted);
-  --compare-page-label-fg: var(--text-secondary);
+  --compare-page-label-fg: var(--c-text-muted);
 
   /* Status indicator dot ring shadow */
   --status-dot-ring: 0 0 0 2px rgba(0, 0, 0, 0.08);
-
-  /* Input element styling */
-  --input-bg: #ffffff;
 
   /* Select/dropdown placeholder state */
   --select-placeholder-bg: var(--mantine-color-gray-1);
@@ -414,7 +280,6 @@
   /* Grouped format dropdown */
   --dropdown-trigger-bg: var(--mantine-color-white);
   --dropdown-trigger-text: var(--mantine-color-dark-9);
-  --dropdown-trigger-text-disabled: var(--mantine-color-dark-7);
   --dropdown-trigger-icon: var(--mantine-color-gray-6);
   --dropdown-panel-bg: var(--mantine-color-white);
   --dropdown-panel-border: var(--mantine-color-gray-4);
@@ -423,211 +288,146 @@
 
 /* Onboarding (light mode) */
 :root {
-  --onboarding-title: #0a0a0a;
-  --onboarding-body: #4a5565;
-  --onboarding-step-active: #1e2939;
-  --onboarding-step-inactive: #d1d5dc;
+  --onboarding-step-active: var(--p-gray-800);
+  --onboarding-step-inactive: var(--p-gray-300);
 }
 
 [data-mantine-color-scheme="dark"] {
-  /* Dark theme gray scale (inverted) — navy-indigo tinted */
-  --gray-50: 9 11 24;
-  --gray-100: 13 16 32;
-  --gray-200: 19 23 41;
-  --gray-300: 28 35 64;
-  --gray-400: 45 55 96;
-  --gray-500: 90 98 128;
-  --gray-600: 144 153 185;
-  --gray-700: 195 200 230;
-  --gray-800: 218 222 245;
-  --gray-900: 238 241 252;
+  /* Inverted dark gray scale — RGB channels for Tailwind's rgb(var(--gray-N)). */
+  --gray-50: 15 15 16; /* zinc-950 */
+  --gray-100: 16 16 18; /* zinc-900 */
+  --gray-200: 24 24 27; /* zinc-800 */
+  --gray-300: 42 42 46; /* zinc-650 */
+  --gray-400: 63 63 70; /* zinc-500 */
+  --gray-500: 82 82 91; /* zinc-400 */
+  --gray-600: 113 113 122; /* zinc-300 */
+  --gray-700: 161 161 170; /* zinc-200 */
+  --gray-800: 212 212 216;
+  --gray-900: 244 244 245; /* zinc-100 */
 
-  /* Dark semantic colors for Tailwind — aligned with portal tokens.css */
-  --surface: 21 28 46; /* #151c2e — portal --color-surface */
-  --background: 9 12 20; /* #090c14 — portal --color-bg */
-  --border: 40 50 72; /* #283248 — portal --color-border */
+  /* Dark semantic channels for Tailwind. */
+  --surface: 24 24 27; /* zinc-800 */
+  --background: 15 15 16; /* zinc-950 */
+  --border: 42 42 46; /* zinc-650 */
 
   /* Dark theme Mantine colors */
-  --color-red-50: #2d1b1b;
-  --color-red-100: #3a2323;
-  --color-red-200: #4a2d2d;
-  --color-red-300: #5c3535;
-  --color-red-400: #7c4a4a;
-  --color-red-500: #ef4444;
-  --color-red-600: #dc2626;
-  --color-red-700: #b91c1c;
-  --color-red-800: #991b1b;
-  --color-red-900: #7f1d1d;
+  --color-red-50: var(--p-zinc-775);
+  --color-red-100: var(--p-zinc-700);
+  --color-red-200: var(--p-zinc-600);
+  --color-red-300: var(--p-zinc-500);
+  --color-red-400: var(--p-zinc-400);
+  --color-red-500: var(--p-red-500);
+  --color-red-600: var(--p-red-600);
+  --color-red-700: var(--p-red-600);
+  --color-red-800: var(--p-red-600);
+  --color-red-900: var(--p-red-600);
 
-  --color-gray-50: #111827;
-  --color-gray-100: #1f2329;
-  --color-gray-200: #2a2f36;
-  --color-gray-300: #374151;
-  --color-gray-400: #4b5563;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #9ca3af;
-  --color-gray-700: #d1d5db;
-  --color-gray-800: #e5e7eb;
-  --color-gray-900: #f3f4f6;
+  --color-gray-50: var(--p-gray-900);
+  --color-gray-100: var(--p-zinc-775);
+  --color-gray-200: var(--p-zinc-650);
+  --color-gray-300: var(--p-gray-700);
+  --color-gray-400: var(--p-gray-600);
+  --color-gray-500: var(--p-gray-500);
+  --color-gray-600: var(--p-gray-400);
+  --color-gray-700: var(--p-gray-300);
+  --color-gray-800: var(--p-gray-200);
+  --color-gray-900: var(--p-gray-100);
 
   /* Categorical accents: lighter shades of the same hues, for contrast on dark. */
-  --accent-green: #4ade80;
-  --accent-blue: #60a5fa;
-  --accent-red: #f87171;
-  --accent-orange: #fb923c;
-  --accent-purple: #c084fc;
-  --accent-teal: #2dd4bf;
-  --accent-pink: #f472b6;
-  --accent-amber: #fbbf24;
-  --accent-indigo: #818cf8;
-  --accent-cyan: #22d3ee;
-  --accent-violet: #a78bfa;
-  --accent-gray: #9ca3af;
+  --accent-orange: var(--p-amber-500);
+  --accent-purple: var(--p-blue-400);
+  --accent-teal: var(--p-blue-400);
+  --accent-pink: var(--p-red-400);
+  --accent-amber: var(--p-amber-400);
+  --accent-indigo: var(--p-blue-400);
+  --accent-cyan: var(--p-blue-400);
+  --accent-violet: var(--p-blue-400);
+  --accent-gray: var(--p-gray-400);
 
   /* Category colors - same as light mode for consistency */
-  --category-color-removal: #ef4444; /* Red for removal tools */
-  --category-color-security: #f59e0b; /* Orange for security tools */
-  --category-color-formatting: #8b5cf6; /* Purple for formatting tools */
-  --category-color-extraction: #06b6d4; /* Cyan for extraction tools */
-  --category-color-signing: #10b981; /* Green for signing tools */
-  --category-color-general: #3b82f6; /* Blue for general tools */
-  --category-color-verification: #f97316; /* Orange for verification tools */
-  --category-color-automation: #ec4899; /* Pink for automation tools */
-  --category-color-developer: #6b7280; /* Gray for developer tools */
-  --category-color-default: #6b7280; /* Default gray */
+  --category-color-removal: var(--p-red-500); /* Red for removal tools */
+  --category-color-security: var(--p-amber-500); /* Orange for security tools */
+  --category-color-formatting: var(
+    --p-blue-400
+  ); /* Purple for formatting tools */
+  --category-color-extraction: var(
+    --p-blue-500
+  ); /* Cyan for extraction tools */
+  --category-color-signing: var(--p-green-500); /* Green for signing tools */
+  --category-color-general: var(--p-blue-500); /* Blue for general tools */
+  --category-color-verification: var(
+    --p-amber-600
+  ); /* Orange for verification tools */
+  --category-color-automation: var(--p-red-400); /* Pink for automation tools */
+  --category-color-developer: var(--p-gray-500); /* Gray for developer tools */
+  --category-color-default: var(--p-gray-500); /* Default gray */
 
   /* Special section colors - same as light mode for consistency */
-  --special-color-favorites: #ffc107; /* Yellow/gold for favorites */
-  --special-color-recommended: #1bb1d4; /* Cyan for recommended */
+  --special-color-favorites: var(--p-amber-400); /* Yellow/gold for favorites */
+  --special-color-recommended: var(--p-blue-500); /* Cyan for recommended */
 
   /* Success (green) - dark */
-  --color-green-50: #052e16;
-  --color-green-100: #064e3b;
-  --color-green-200: #065f46;
-  --color-green-300: #047857;
-  --color-green-400: #059669;
-  --color-green-500: #22c55e;
-  --color-green-600: #16a34a;
-  --color-green-700: #4ade80;
-  --color-green-800: #86efac;
-  --color-green-900: #bbf7d0;
+  --color-green-50: var(--p-green-700);
+  --color-green-100: var(--p-green-700);
+  --color-green-200: var(--p-green-700);
+  --color-green-300: var(--p-green-700);
+  --color-green-400: var(--p-green-600);
+  --color-green-500: var(--p-green-500);
+  --color-green-600: var(--p-green-600);
+  --color-green-700: var(--p-green-500);
+  --color-green-800: var(--p-green-500);
+  --color-green-900: var(--p-green-500);
 
   /* Warning (yellow) - dark */
-  --color-yellow-50: #451a03;
-  --color-yellow-100: #713f12;
-  --color-yellow-200: #854d0e;
-  --color-yellow-300: #a16207;
-  --color-yellow-400: #ca8a04;
-  --color-yellow-500: #eab308;
-  --color-yellow-600: #facc15;
-  --color-yellow-700: #fde047;
-  --color-yellow-800: #fef08a;
-  --color-yellow-900: #fef9c3;
+  --color-yellow-50: var(--p-amber-600);
+  --color-yellow-100: var(--p-amber-600);
+  --color-yellow-200: var(--p-amber-600);
+  --color-yellow-300: var(--p-amber-600);
+  --color-yellow-400: var(--p-amber-600);
+  --color-yellow-500: var(--p-amber-500);
+  --color-yellow-600: var(--p-amber-400);
+  --color-yellow-700: var(--p-amber-400);
+  --color-yellow-800: var(--p-amber-400);
+  --color-yellow-900: var(--p-amber-400);
 
-  /* Dark theme semantic colors — deep navy/indigo palette, aligned with portal
-     tokens.css so the editor and portal (Processor) dark modes don't drift.
-     Chrome surfaces (--bg-toolbar, --bg-file-manager) sit at the portal's
-     sidebar level (#0d1120) so the left/right sidebars lift off the darker
-     canvas (--bg-background) instead of blending into it. */
-  --bg-surface: #151c2e; /* portal --color-surface */
-  --bg-raised: #0d1120; /* portal --color-bg-alt */
-  --bg-muted: #0d1120;
-  --bg-background: #090c14; /* portal --color-bg */
-  --bg-toolbar: #0d1120; /* portal --color-sidebar-bg — lifted off the canvas */
-  --bg-file-manager: #0d1120; /* portal --color-sidebar-bg */
-  --bg-file-list: #151c2e; /* portal --color-surface */
-  --btn-open-file: #4f8ef5;
-  --text-primary: #e8eaf6;
-  --text-secondary: #9299b0;
-  --text-muted: #5b6280;
+  /* Dark theme semantic colours — the neutral zinc ramp. These legacy
+     `--bg-*`/`--text-*` names are shadowed by compat.css (→ --c-*), so this is
+     kept only for any consumer not yet on the semantic tokens. */
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
-  --text-always-dark: #1f2937;
-  --text-always-dark-muted: #6b7280;
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-default: #1e2840; /* portal --color-border-light */
-  --border-strong: #283248; /* portal --color-border */
-  --border-hover: #3d4f6a; /* portal --color-border-hover */
-  --hover-bg: #1c2640; /* portal --color-bg-hover */
-  --active-bg: #243044; /* portal --color-bg-muted */
-  --automation-entry-hover-bg: var(--color-gray-200);
+  --text-always-dark: var(--p-gray-800);
+  --text-always-dark-muted: var(--p-gray-500);
 
   /* Icon colors for dark mode */
-  --icon-user-bg: #131729;
-  --icon-user-color: #6e7898;
-  --icon-notifications-bg: #131729;
-  --icon-notifications-color: #6e7898;
-  --icon-tools-bg: #1c2340;
-  --icon-tools-color: #e0e3f8;
-  --icon-read-bg: #1c2340;
-  --icon-read-color: #e0e3f8;
-  --icon-sign-bg: #1c2340;
-  --icon-sign-color: #e0e3f8;
-  --icon-automate-bg: #1c2340;
-  --icon-automate-color: #e0e3f8;
-  --icon-files-bg: #1c2340;
-  --icon-files-color: #e0e3f8;
-  --icon-activity-bg: #1c2340;
-  --icon-activity-color: #e0e3f8;
-  --icon-config-bg: #1c2340;
-  --icon-config-color: #e0e3f8;
+  --icon-tools-bg: var(--p-zinc-650);
+  --icon-tools-color: var(--p-blue-400);
+  --icon-files-color: var(--p-blue-400);
 
   /* Inactive icon colors for dark mode */
-  --icon-inactive-bg: #131729;
-  --icon-inactive-color: #6e7898;
+  --icon-inactive-bg: var(--p-zinc-800);
+  --icon-inactive-color: var(--p-gray-500);
 
   /* Dark mode tooltip colors */
-  --tooltip-title-bg: #1c2340;
-  --tooltip-title-color: #e8eaf6;
-  --tooltip-header-bg: var(--bg-raised);
-  --tooltip-header-color: var(--text-primary);
-  --tooltip-border: var(--border-default);
+  --tooltip-header-bg: var(--c-surface-raised);
+  --tooltip-header-color: var(--c-text);
+  --tooltip-border: var(--c-border);
 
-  --accent-interactive: #e8eaf6;
-  --text-instruction: #e8eaf6;
-  --text-brand: var(--color-gray-800);
-  --text-brand-accent: #ef4444;
+  --text-brand-accent: var(--p-red-500);
 
   /* Compare badge text colors (dark mode): lighter for readability */
   --spdf-compare-removed-badge-fg: var(--color-red-500);
   --spdf-compare-added-badge-fg: var(--color-green-500);
 
-  /* container */
-  --landing-paper-bg: #090b18;
-  --landing-inner-paper-bg: var(--bg-raised);
-  --landing-inner-paper-border: #1c2340;
-
   /* landing dark overrides */
-  --landing-stack-glow-bg: radial-gradient(
-    circle,
-    rgba(50, 90, 210, 0.22) 0%,
-    transparent 70%
-  );
   --landing-doc-shadow-back-idle:
     0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
-  --landing-doc-shadow-back-hover:
-    0 14px 44px rgba(0, 0, 0, 0.65), 0 6px 16px rgba(0, 0, 0, 0.45);
   --landing-doc-shadow-front-idle:
     0 8px 30px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.04);
-  --landing-doc-shadow-front-hover:
-    0 20px 52px rgba(0, 0, 0, 0.7), 0 10px 24px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
-  --landing-button-color: #e8eaf6;
-  --landing-button-hover-bg: var(--bg-raised);
+  --landing-button-hover-bg: var(--c-surface-raised);
 
   /* selected file header colors for dark */
-  --header-selected-bg: #2040a0;
+  --header-selected-bg: var(--p-blue-700);
   --header-selected-fg: #ffffff;
-  /* file card background (dark) */
-  --file-card-bg: #0d1120;
-  --accordion-item-bg: #1c2340; /* accordion item background - more distinguishable */
-
-  /* shadows */
-  --drop-shadow-color: rgba(255, 255, 255, 0.05);
-  --drop-shadow-color-strong: rgba(255, 255, 255, 0.03);
-  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.3))
-    drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.2))
-    drop-shadow(0 1.2rem 1rem rgba(0, 0, 0, 0.15));
 
   /* Adjust shadows for dark mode */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -636,86 +436,42 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
 
-  --tools-text-and-icon-color: var(--text-primary);
-
-  /* Tool picker sticky header variables (dark mode) */
-  --tool-header-bg: #131729;
-  --tool-header-border: #1c2340;
-  --tool-header-text: #c2c8e0;
-  --tool-header-badge-bg: #1c2340;
-  --tool-header-badge-text: #e8eaf6;
-
-  /* Subcategory title styling (dark mode) */
-  --tool-subcategory-text-color: #5b6280;
-  --tool-subcategory-rule-color: #1c2340;
-
   /* PDF text selection colors (dark mode) */
-  --pdf-selection-bg: rgba(96, 130, 250, 0.25);
-  --pdf-selection-ring: rgba(96, 130, 250, 0.28);
-
-  /* Placeholder text colors (dark mode) */
-  --search-text-and-icon-color: #e8eaf6 !important;
-  --input-bg: #1c2340;
+  --pdf-selection-bg: color-mix(in srgb, var(--p-blue-400) 25%, transparent);
+  --pdf-selection-ring: color-mix(in srgb, var(--p-blue-400) 28%, transparent);
 
   /* Tool panel search bar background colors (dark mode) */
-  --tool-panel-search-bg: #0d1020;
-  --tool-panel-search-border-bottom: #1c2340;
 
-  --information-text-bg: #131729;
-  --information-text-color: #e0e3f8;
+  --information-text-color: var(--p-blue-400);
 
-  /* Bulk selection panel specific colors (dark mode) */
-  --bulk-panel-bg: var(--bg-raised); /* dark background for parent container */
-  --bulk-card-bg: var(--bg-raised); /* dark background for cards */
+  /* dark background for cards */
   --bulk-card-border: var(
-    --border-default
+    --c-border
   ); /* default border for cards and buttons */
-  --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
-  --unsupported-bar-bg: #0d1020;
-  --unsupported-bar-border: #1c2340;
+  --bulk-card-hover-border: var(
+    --c-border-strong
+  ); /* stronger border on hover */
 
   /* Config Modal colors (dark mode) */
-  --modal-nav-bg: #0d1020;
-  --modal-nav-section-title: #5b6280;
-  --modal-nav-item: #c2c8e0;
-  --modal-nav-item-active: #4f8ef5;
-  --modal-nav-item-active-bg: rgba(79, 142, 245, 0.15);
-  --modal-content-bg: #131729;
-  --modal-header-border: rgba(255, 255, 255, 0.05);
+  --modal-nav-item: var(--p-gray-300);
 
   /* Onboarding (dark mode) */
-  --onboarding-title: #e8eaf6;
-  --onboarding-body: #9299b0;
-  --onboarding-step-active: #d8dcf0;
-  --onboarding-step-inactive: #2d3560;
+  --onboarding-step-active: var(--p-gray-250);
+  --onboarding-step-inactive: var(--p-zinc-500);
   /* API Keys section colors (dark mode) */
-  --api-keys-card-bg: #131729;
-  --api-keys-card-border: #1c2340;
   --api-keys-card-shadow: none;
-  --api-keys-input-bg: #0d1020;
-  --api-keys-input-border: #1c2340;
 
   /* Code token colors (dark mode - Cursor-like) */
-  --code-kw-color: #c792ea; /* purple */
-  --code-str-color: #c3e88d; /* green */
-  --code-num-color: #f78c6c; /* orange */
-  --code-com-color: #697098; /* muted gray-blue */
-  /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
-  --compare-upload-dropzone-bg: rgba(9, 11, 24, 0.45);
-  --compare-upload-dropzone-border: rgba(28, 35, 64, 0.6);
-  --compare-upload-icon-bg: rgba(28, 35, 64, 0.2);
-  --compare-upload-icon-color: rgba(232, 234, 246, 0.75);
-  --compare-upload-divider: rgba(28, 35, 64, 0.5);
+  --code-kw-color: var(--p-blue-400); /* purple */
+  --code-str-color: var(--p-green-500); /* green */
+  --code-num-color: var(--p-red-400); /* orange */
+  --code-com-color: var(--p-gray-500); /* muted gray-blue */
 
   /* Compare page label chip (dark mode): slightly darker than surrounding rows */
-  --compare-page-label-bg: #0d1020;
-  --compare-page-label-fg: var(--text-secondary);
+  --compare-page-label-fg: var(--c-text-muted);
 
   /* Status indicator dot ring shadow (dark) */
   --status-dot-ring: 0 0 0 2px rgba(255, 255, 255, 0.15);
-
-  /* Input element styling (dark) */
-  --input-bg: #1c2340;
 
   /* Select/dropdown placeholder state (dark) */
   --select-placeholder-bg: var(--mantine-color-dark-5);
@@ -724,7 +480,6 @@
   /* Grouped format dropdown (dark) */
   --dropdown-trigger-bg: var(--mantine-color-dark-6);
   --dropdown-trigger-text: var(--mantine-color-dark-0);
-  --dropdown-trigger-text-disabled: var(--mantine-color-dark-1);
   --dropdown-trigger-icon: var(--mantine-color-dark-2);
   --dropdown-panel-bg: var(--mantine-color-dark-7);
   --dropdown-panel-border: var(--mantine-color-dark-4);
@@ -739,11 +494,10 @@
 
 /* Plan section card borders - only override in dark mode */
 [data-mantine-color-scheme="dark"] .plan-card {
-  --paper-border-color: rgb(44, 52, 120) !important;
 }
 
 [data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
-  color: rgb(194, 200, 224) !important;
+  color: var(--p-c-c2c8e0) !important;
 }
 
 /* Current plan badge - use light mode green in dark mode */
@@ -753,24 +507,24 @@
 
 /* Plan section button colors */
 .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: #0a8bff !important;
+  background-color: var(--p-azure-500) !important;
 }
 
 [data-mantine-color-scheme="dark"]
   .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: #2040a0 !important;
+  background-color: var(--p-royal-700) !important;
 }
 
 /* Lighter grey for disabled plan buttons */
 .plan-button:disabled,
 .plan-button[data-disabled] {
-  background-color: #7e7e7e !important;
+  background-color: var(--p-c-7e7e7e) !important;
   color: white;
 }
 
 [data-mantine-color-scheme="dark"] .plan-button:disabled,
 [data-mantine-color-scheme="dark"] .plan-button[data-disabled] {
-  background-color: #6b7280 !important;
+  background-color: var(--p-gray-500) !important;
 }
 
 /* Override the flat multiply blend for a clean, modern semi-transparent overlay */
@@ -787,19 +541,29 @@
 /* Flash highlight for comment card (e.g. "View comment" from annotation menu) */
 @keyframes comment-card-flash {
   0% {
-    background-color: rgba(255, 235, 59, 0);
+    background-color: color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
     box-shadow: none;
   }
   20% {
-    background-color: rgba(255, 235, 59, 0.35);
-    box-shadow: 0 0 20px rgba(255, 235, 59, 0.5);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 35%,
+      transparent
+    );
+    box-shadow: 0 0 20px
+      color-mix(in srgb, var(--p-flash-yellow) 50%, transparent);
   }
   50% {
-    background-color: rgba(255, 235, 59, 0.25);
-    box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 25%,
+      transparent
+    );
+    box-shadow: 0 0 15px
+      color-mix(in srgb, var(--p-flash-yellow) 40%, transparent);
   }
   100% {
-    background-color: rgba(255, 235, 59, 0);
+    background-color: color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
     box-shadow: none;
   }
 }
@@ -809,22 +573,22 @@
   border-radius: 8px;
 }
 
-/* Smooth transitions for theme switching */
+/* Smooth transitions for theme switching. Text `color` is deliberately EXCLUDED:
+   it must swap instantly, never fade white↔black through grey. */
 * {
   transition:
     background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
+    border-color 0.2s ease;
 }
 /* ── PDF Link Overlay (viewer) ── */
 :root {
-  --link-hover-bg: rgba(10, 139, 255, 0.1);
-  --link-hover-border: rgba(10, 139, 255, 0.32);
+  --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  --link-hover-border: color-mix(in srgb, var(--p-blue-500) 32%, transparent);
   --link-hover-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-    0 1px 4px rgba(10, 139, 255, 0.12);
-  --link-focus-ring: rgba(10, 139, 255, 0.25);
-  --link-toolbar-bg: rgba(15, 23, 42, 0.88);
+    0 1px 4px color-mix(in srgb, var(--p-azure-500) 12%, transparent);
+  --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 25%, transparent);
+  --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 88%, transparent);
   --link-toolbar-border: rgba(255, 255, 255, 0.1);
   --link-toolbar-shadow:
     0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16),
@@ -832,12 +596,13 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  --link-hover-bg: rgba(79, 130, 245, 0.14);
-  --link-hover-border: rgba(79, 130, 245, 0.38);
+  --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 14%, transparent);
+  --link-hover-border: color-mix(in srgb, var(--p-blue-500) 38%, transparent);
   --link-hover-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 4px rgba(79, 142, 245, 0.18);
-  --link-focus-ring: rgba(79, 130, 245, 0.3);
-  --link-toolbar-bg: rgba(9, 11, 24, 0.94);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 1px 4px color-mix(in srgb, var(--p-c-4f8ef5) 18%, transparent);
+  --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 30%, transparent);
+  --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 94%, transparent);
   --link-toolbar-border: rgba(255, 255, 255, 0.07);
   --link-toolbar-shadow:
     0 12px 40px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35),
@@ -967,7 +732,7 @@
 }
 
 .pdf-link-toolbar-btn:hover .pdf-link-toolbar-label {
-  color: #60a5fa; /* Modern blue accent */
+  color: var(--p-blue-400); /* Modern blue accent */
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -977,8 +742,8 @@
 }
 
 .pdf-link-toolbar-btn--delete:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
+  background: color-mix(in srgb, var(--p-red-500) 15%, transparent);
+  color: var(--p-art-red-light);
 }
 
 .pdf-link-toolbar-sep {
@@ -1001,8 +766,8 @@
 }
 
 .pdf-link-toolbar-btn--delete:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  background: color-mix(in srgb, var(--p-red-500) 20%, transparent);
+  color: var(--p-red-400);
 }
 
 .pdf-link-toolbar-btn--go:hover {
@@ -1021,7 +786,7 @@
 }
 
 :root {
-  --shadow-color: rgba(15, 23, 42, 0.55);
+  --shadow-color: color-mix(in srgb, var(--p-blue-700) 55%, transparent);
 }
 
 [data-theme="dark"] {
@@ -1032,23 +797,20 @@
 .wordmark-dark-only {
   display: none;
 }
-[data-mantine-color-scheme="dark"] .wordmark-light-only {
+[data-mantine-color-scheme="dark"] .wordmark {
   display: none;
 }
 [data-mantine-color-scheme="dark"] .wordmark-dark-only {
   display: block;
 }
 
-/* Theme-aware image display utilities */
-/* Use .theme-img-light-only for images to show in light mode only */
-/* Use .theme-img-dark-only for images to show in dark mode only */
-.theme-img-light-only {
+.theme-img {
   display: inline;
 }
 .theme-img-dark-only {
   display: none;
 }
-[data-mantine-color-scheme="dark"] .theme-img-light-only {
+[data-mantine-color-scheme="dark"] .theme-img {
   display: none;
 }
 [data-mantine-color-scheme="dark"] .theme-img-dark-only {
@@ -1057,19 +819,19 @@
 
 /* Modern logo icon */
 .logo-icon-modern__path1 {
-  fill: #acacac;
+  fill: var(--p-c-acacac);
   fill-opacity: 0.3;
 }
 .logo-icon-modern__path2 {
-  fill: #fc9999;
+  fill: var(--p-art-red-soft);
   fill-opacity: 0.5;
 }
 [data-mantine-color-scheme="dark"] .logo-icon-modern__path1 {
-  fill: #e6e6e6;
+  fill: var(--p-c-e6e6e6);
   fill-opacity: 0.4;
 }
 [data-mantine-color-scheme="dark"] .logo-icon-modern__path2 {
-  fill: #e6e6e6;
+  fill: var(--p-c-e6e6e6);
   fill-opacity: 0.7;
 }
 
@@ -1078,13 +840,13 @@
   opacity: 0.2;
 }
 .logo-icon-classic__body {
-  fill: #ff4b4b;
+  fill: var(--p-art-red);
 }
 .logo-icon-classic__flap {
-  fill: #545454;
+  fill: var(--p-c-545454);
 }
 .logo-icon-classic__triangle {
-  fill: #d0dbdc;
+  fill: var(--p-c-d0dbdc);
 }
 .logo-icon-classic__s {
   fill: white;
@@ -1096,17 +858,17 @@
   fill: white;
 }
 [data-mantine-color-scheme="dark"] .logo-icon-classic__flap {
-  fill: #d3d3d3;
+  fill: var(--p-c-d3d3d3);
 }
 [data-mantine-color-scheme="dark"] .logo-icon-classic__triangle {
-  fill: #d0dbdc;
+  fill: var(--p-c-d0dbdc);
 }
 [data-mantine-color-scheme="dark"] .logo-icon-classic__s {
   fill: var(--mantine-color-body);
 }
 
-/* Wordmark muted variant (used in empty/placeholder states) */
-/* Stirling text: 30% opacity in light mode, full opacity in dark */
+/* Wordmark muted variant (empty/placeholder states).
+   Stirling text: 30% opacity in light mode, full opacity in dark. */
 .wordmark__text--muted {
   fill-opacity: 0.3;
 }
@@ -1115,11 +877,11 @@
 }
 /* PDF text: dimmed red in light mode, standard red in dark */
 .wordmark__pdf--muted {
-  fill: #d62626;
+  fill: var(--p-c-d62626);
   fill-opacity: 0.7;
 }
 [data-mantine-color-scheme="dark"] .wordmark__pdf--muted {
-  fill: #c56565;
+  fill: var(--p-art-red-muted);
   fill-opacity: 1;
 }
 

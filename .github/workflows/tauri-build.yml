@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: true
+      minimal:
+        description: "Fast smoke build: Linux deb only, skip rpm and the flaky AppImage pass. Used by PR builds."
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       platform:
@@ -37,6 +42,11 @@ on:
         description: "Sign and notarize the bundles."
         required: false
         default: true
+        type: boolean
+      minimal:
+        description: "Fast smoke build: Linux deb only, skip rpm and the flaky AppImage pass."
+        required: false
+        default: false
         type: boolean
 
 permissions:
@@ -96,7 +106,6 @@ jobs:
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -158,9 +167,9 @@ jobs:
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
 
       - name: Setup Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -386,10 +395,10 @@ jobs:
         with:
           projectPath: ./frontend/editor
           tauriScript: npx tauri
-          # Linux: build deb+rpm only here. AppImage runs in its own
-          # continue-on-error step below so its persistent linuxdeploy
-          # failure (#6127 onwards) does not tank deb/rpm uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,rpm' || matrix.args }}
+          # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
+          # AppImage runs in its own continue-on-error step below so its
+          # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
+          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
 
       - name: Build Tauri app (unsigned)
         if: ${{ !inputs.sign }}
@@ -406,15 +415,16 @@ jobs:
         with:
           projectPath: ./frontend/editor
           tauriScript: npx tauri
-          # Linux: build deb+rpm only here. AppImage runs in its own
-          # continue-on-error step below so its persistent linuxdeploy
-          # failure (#6127 onwards) does not tank deb/rpm uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,rpm' || matrix.args }}
+          # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
+          # AppImage runs in its own continue-on-error step below so its
+          # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
+          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
+      # Skipped on minimal smoke builds (flaky + slow, deb is enough to verify).
       - name: Build Tauri app (Linux AppImage)
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' && !inputs.minimal
         continue-on-error: true
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:

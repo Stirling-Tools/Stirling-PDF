@@ -8,8 +8,7 @@
 
 .modeTabs {
   flex-shrink: 0;
-  border-bottom: 1px solid
-    var(--border-default, var(--mantine-color-default-border));
+  border-bottom: 1px solid var(--c-border, var(--mantine-color-default-border));
   background: transparent;
   padding: 0.25rem;
 }
@@ -44,7 +43,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   transition: color 0.15s ease;
   line-height: 1;
 }
@@ -59,8 +58,7 @@
   flex-shrink: 0;
   padding: 0.75rem 1rem;
   background: transparent;
-  border-bottom: 1px solid
-    var(--border-default, var(--mantine-color-default-border));
+  border-bottom: 1px solid var(--c-border, var(--mantine-color-default-border));
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
@@ -76,7 +74,7 @@
 .progressLabel {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   white-space: nowrap;
 }
 
@@ -133,7 +131,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--border-default, var(--mantine-color-default-border));
+  background: var(--c-border, var(--mantine-color-default-border));
   opacity: 0.2;
 }
 
@@ -142,22 +140,22 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   opacity: 0.6;
 }
 
 .fieldCard {
   padding: 0.625rem 0.75rem;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-default, var(--mantine-color-default-border));
-  background: var(--bg-surface, var(--mantine-color-body));
+  border: 1px solid var(--c-border, var(--mantine-color-default-border));
+  background: var(--c-surface, var(--mantine-color-body));
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .fieldCard:hover {
   border-color: var(--mantine-color-blue-5);
-  background: var(--bg-surface);
+  background: var(--c-surface);
 }
 
 .fieldCardActive {
@@ -193,7 +191,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .fieldRequired {
@@ -214,7 +212,7 @@
 .fieldHint {
   margin-top: 0.375rem;
   font-size: 0.6875rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   line-height: 1.4;
   font-style: italic;
   opacity: 0.8;
@@ -235,7 +233,7 @@
   gap: 0.75rem;
   padding: 5rem 1.5rem;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   background: transparent;
 }
 
@@ -263,14 +261,13 @@
 .statusBar {
   flex-shrink: 0;
   padding: 0.5rem 1rem;
-  border-top: 1px solid
-    var(--border-default, var(--mantine-color-default-border));
+  border-top: 1px solid var(--c-border, var(--mantine-color-default-border));
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   background: transparent;
 }
 
@@ -294,7 +291,7 @@
 .comingSoonTitle {
   font-size: 1rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--c-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -302,6 +299,6 @@
 .comingSoonDesc {
   font-size: 0.75rem;
   line-height: 1.6;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   max-width: 200px;
 }

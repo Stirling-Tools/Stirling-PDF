@@ -3,7 +3,7 @@
    ========================= */
 
 .card {
-  background: var(--file-card-bg);
+  background: var(--c-surface-raised);
   border-radius: 0.0625rem;
   cursor: pointer;
   transition:
@@ -28,7 +28,7 @@
 /* While dragging */
 .card.dragging,
 .card:global(.dragging) {
-  outline: 1px solid var(--border-strong);
+  outline: 1px solid var(--c-border-strong);
   box-shadow: var(--shadow-md);
   transform: none !important;
 }
@@ -42,15 +42,17 @@
   justify-content: space-between;
   padding: 0 6px;
   user-select: none;
-  background: var(--bg-toolbar);
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-default);
+  background: var(--c-bg-raised);
+  color: var(--c-text);
+  border-bottom: 1px solid var(--c-border);
 }
 
 .headerResting {
-  background: #3b4b6e; /* dark blue for unselected in light mode */
-  color: #ffffff;
-  border-bottom: 1px solid var(--border-default);
+  background: var(
+    --c-file-header-resting
+  ); /* branded navy for unselected files */
+  color: var(--c-text-on-primary);
+  border-bottom: 1px solid var(--c-border);
 }
 
 .headerSelected {
@@ -62,20 +64,20 @@
 /* Error highlight (transient) */
 .headerError {
   background: var(--color-red-200);
-  color: var(--text-primary);
+  color: var(--c-text);
   border-bottom: 2px solid var(--color-red-500);
 }
 
 /* Unsupported (but not errored) header appearance */
 .headerUnsupported {
-  background: var(--unsupported-bar-bg); /* neutral gray */
-  color: #ffffff;
-  border-bottom: 1px solid var(--unsupported-bar-border);
+  background: var(--c-bg-raised); /* neutral gray */
+  color: var(--c-text-on-primary);
+  border-bottom: 1px solid var(--c-border);
 }
 
 /* Selected border color in light mode */
 :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: var(--card-selected-border);
+  outline-color: var(--c-primary);
 }
 
 /* Reserve space for checkbox instead of logo */
@@ -106,7 +108,7 @@
 }
 
 .headerIconButton {
-  color: #ffffff !important;
+  color: var(--c-text-on-primary) !important;
 }
 
 /* Menu dropdown */
@@ -117,12 +119,12 @@
 /* -------- Title / Meta -------- */
 .title {
   line-height: 1.2;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .meta {
   margin-top: 2px;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 
 /* -------- Preview area -------- */
@@ -131,7 +133,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--file-card-bg);
+  background: var(--c-surface-raised);
 }
 
 .previewPaper {
@@ -142,7 +144,7 @@
   display: grid;
   position: relative;
   overflow: hidden;
-  background: var(--file-card-bg);
+  background: var(--c-surface-raised);
 }
 
 /* Thumbnail fallback */
@@ -152,7 +154,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   font-weight: 600;
   font-size: 12px;
 }
@@ -162,7 +164,7 @@
   position: absolute;
   bottom: 6px;
   right: 6px;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   z-index: 1;
   cursor: grab;
   display: inline-flex;
@@ -173,12 +175,12 @@
   position: absolute;
   left: 0;
   top: 44px; /* just below header */
-  background: var(--bg-toolbar);
-  border-bottom: 1px solid var(--border-default);
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border);
   z-index: 20;
   overflow: hidden;
   animation: slideDown 140ms ease-out;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 @keyframes slideDown {
@@ -200,13 +202,13 @@
   padding: 12px 16px;
   background: transparent;
   border: none;
-  color: var(--text-primary);
+  color: var(--c-text);
   cursor: pointer;
   text-align: left;
 }
 
 .actionRow:hover {
-  background: var(--hover-bg);
+  background: var(--c-hover);
 }
 
 .actionDanger {
@@ -215,7 +217,7 @@
 
 .actionsDivider {
   height: 1px;
-  background: var(--border-default);
+  background: var(--c-border);
   margin: 4px 0;
 }
 
@@ -229,13 +231,13 @@
 }
 
 .pinned {
-  color: #ffc107 !important;
+  color: var(--c-warning) !important;
 }
 
 /* Unsupported file indicator */
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: #6b7280;
+  background: var(--c-neutral-fill);
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -252,7 +254,7 @@
 .errorPill {
   margin-left: 1.75rem;
   background: var(--color-red-500);
-  color: #ffffff;
+  color: var(--c-text-on-primary);
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 10px;
@@ -291,36 +293,36 @@
    DARK MODE OVERRIDES
    ========================= */
 :global([data-mantine-color-scheme="dark"]) .card {
-  outline-color: #1c2340; /* deselected stroke */
+  outline-color: var(--c-border); /* deselected stroke */
 }
 
 :global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
-  outline-color: #2d3560; /* selected stroke (subtle navy) */
+  outline-color: var(--c-primary); /* selected stroke (subtle navy) */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
-  background: #0d1020; /* requested default unselected color */
-  color: var(--tool-header-text); /* #D0D6DC */
-  border-bottom-color: var(--tool-header-border); /* #3A4047 */
+  /* Background flips via the themed --c-file-header-resting token. */
+  color: var(--c-accent-fg, var(--c-primary));
+  border-bottom-color: var(--c-border);
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerSelected {
-  background: var(--tool-header-border); /* #3A4047 */
-  color: var(--tool-header-text); /* #D0D6DC */
-  border-bottom-color: var(--tool-header-border);
+  background: var(--c-border);
+  color: var(--c-accent-fg, var(--c-primary));
+  border-bottom-color: var(--c-border);
 }
 
 :global([data-mantine-color-scheme="dark"]) .title {
-  color: #d0d6dc; /* title text */
+  color: var(--c-text); /* title text */
 }
 
 :global([data-mantine-color-scheme="dark"]) .meta {
-  color: #6b7280; /* subtitle text */
+  color: var(--c-text-muted); /* subtitle text */
 }
 
 /* Light mode selected header stroke override */
 :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: #3b4b6e;
+  outline-color: var(--c-primary);
 }
 
 /* =========================
@@ -332,8 +334,8 @@
   max-width: 260px;
   height: calc(310px - 0.5rem);
   margin: 0.5rem auto 0;
-  background: var(--file-card-bg);
-  border: 1.5px solid var(--border-default);
+  background: var(--c-bg);
+  border: 1.5px solid var(--c-border);
   border-radius: 12px;
   box-shadow: var(--shadow-md);
   cursor: pointer;
@@ -347,11 +349,11 @@
 .addFileCard:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
-  border-color: var(--accent-interactive);
+  border-color: var(--c-primary);
 }
 
 .addFileCard:focus-visible {
-  outline: 2px solid var(--accent-interactive);
+  outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
 
@@ -386,7 +388,7 @@
 }
 
 .addFileCard:hover .addFileText {
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .addFileSubtext {

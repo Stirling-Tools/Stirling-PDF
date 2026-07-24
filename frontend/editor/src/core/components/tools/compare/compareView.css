@@ -5,19 +5,14 @@
 .compare-dropdown-sticky {
   position: sticky;
   z-index: 2;
-  background: var(--compare-page-label-bg);
+  background: var(--c-surface-sunken);
   color: var(--compare-page-label-fg);
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--c-border-subtle);
   pointer-events: none;
 }
 
-[data-mantine-color-scheme="dark"] .compare-dropdown-sticky {
-  background: var(--compare-page-label-bg);
-  color: var(--compare-page-label-fg);
-  border-bottom: 1px solid var(--border-default);
-}
 .compare-workbench {
   display: flex;
   flex-direction: column;
@@ -91,9 +86,9 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--bg-toolbar);
+  background: var(--c-bg-raised);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--c-border);
   padding: 0.5rem;
   margin: -0.5rem -0.5rem 0.5rem -0.5rem;
 }
@@ -164,21 +159,13 @@
   margin: 0 !important;
   border-top-left-radius: 8px !important;
   border-top-right-radius: 8px !important;
-}
-
-/* Style the dropdown container */
-.compare-changes-select .mantine-Combobox-dropdown {
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: 8px !important;
-  box-shadow: var(--shadow-md) !important;
-  background-color: var(--bg-surface) !important;
-}
-
+} /* Style the dropdown container */
+.compare-changes-select .mantine-Combobox-dropdown,
 .compare-changes-select--comparison .mantine-Combobox-dropdown {
-  border: 1px solid var(--border-subtle) !important;
+  border: 1px solid var(--c-border-subtle) !important;
   border-radius: 8px !important;
   box-shadow: var(--shadow-md) !important;
-  background-color: var(--bg-surface) !important;
+  background-color: var(--c-surface) !important;
 }
 
 /* Custom scrollbar for ScrollArea */
@@ -187,18 +174,18 @@
 }
 
 .compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
-  background: var(--bg-muted) !important;
+  background: var(--c-surface-sunken) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
-  background: var(--border-strong) !important;
+  background: var(--c-border-strong) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select
   .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted) !important;
+  background: var(--c-text-subtle) !important;
 }
 
 .compare-changes-select--comparison
@@ -208,27 +195,21 @@
 
 .compare-changes-select--comparison
   .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
-  background: var(--bg-muted) !important;
+  background: var(--c-surface-sunken) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select--comparison
   .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
-  background: var(--border-strong) !important;
+  background: var(--c-border-strong) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select--comparison
   .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted) !important;
-}
-
-/* Style the dropdown options */
-.compare-changes-select .mantine-Combobox-option {
-  font-size: 0.875rem !important;
-  padding: 8px 12px !important;
-}
-
+  background: var(--c-text-subtle) !important;
+} /* Style the dropdown options */
+.compare-changes-select .mantine-Combobox-option,
 .compare-changes-select--comparison .mantine-Combobox-option {
   font-size: 0.875rem !important;
   padding: 8px 12px !important;
@@ -240,27 +221,16 @@
 
 .compare-changes-select--comparison .mantine-Combobox-option:hover {
   background-color: var(--spdf-compare-added-badge-bg) !important;
-}
-
-/* Style the search input */
-.compare-changes-select .mantine-Combobox-search {
-  font-size: 0.875rem !important;
-  padding: 8px 12px !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
-}
-
+} /* Style the search input */
+.compare-changes-select .mantine-Combobox-search,
 .compare-changes-select--comparison .mantine-Combobox-search {
   font-size: 0.875rem !important;
   padding: 8px 12px !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
+  border-bottom: 1px solid var(--c-border-subtle) !important;
 }
-
-.compare-changes-select .mantine-Combobox-search::placeholder {
-  color: var(--text-muted) !important;
-}
-
+.compare-changes-select .mantine-Combobox-search::placeholder,
 .compare-changes-select--comparison .mantine-Combobox-search::placeholder {
-  color: var(--text-muted) !important;
+  color: var(--c-text-subtle) !important;
 }
 
 /* Style the chevron - ensure proper coloring */
@@ -273,29 +243,49 @@
 /* Flash/pulse highlight for navigated change */
 @keyframes compare-flash {
   0% {
-    outline: 4px solid rgba(255, 235, 59, 0);
-    box-shadow: 0 0 0 rgba(255, 235, 59, 0);
-    background-color: rgba(255, 235, 59, 0.2) !important;
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 0%, transparent);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--c-highlight) 0%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--c-highlight) 20%,
+      transparent
+    ) !important;
   }
   25% {
-    outline: 4px solid rgba(255, 235, 59, 1);
-    box-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
-    background-color: rgba(255, 235, 59, 0.4) !important;
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 100%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--c-highlight) 80%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--c-highlight) 40%,
+      transparent
+    ) !important;
   }
   50% {
-    outline: 4px solid rgba(255, 235, 59, 1);
-    box-shadow: 0 0 30px rgba(255, 235, 59, 0.9);
-    background-color: rgba(255, 235, 59, 0.5) !important;
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 100%, transparent);
+    box-shadow: 0 0 30px color-mix(in srgb, var(--c-highlight) 90%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--c-highlight) 50%,
+      transparent
+    ) !important;
   }
   75% {
-    outline: 4px solid rgba(255, 235, 59, 0.8);
-    box-shadow: 0 0 15px rgba(255, 235, 59, 0.6);
-    background-color: rgba(255, 235, 59, 0.3) !important;
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 80%, transparent);
+    box-shadow: 0 0 15px color-mix(in srgb, var(--c-highlight) 60%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--c-highlight) 30%,
+      transparent
+    ) !important;
   }
   100% {
-    outline: 4px solid rgba(255, 235, 59, 0);
-    box-shadow: 0 0 0 rgba(255, 235, 59, 0);
-    background-color: rgba(255, 235, 59, 0) !important;
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 0%, transparent);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--c-highlight) 0%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--c-highlight) 0%,
+      transparent
+    ) !important;
   }
 }
 
@@ -304,14 +294,18 @@
   z-index: 1000;
   position: relative;
   /* Bonus: temporarily override red/green to yellow during flash for clarity */
-  background-color: rgba(255, 235, 59, 0.5) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--c-highlight) 50%,
+    transparent
+  ) !important;
 }
 
 /* Union overlay for group flash */
 .compare-diff-flash-overlay {
   animation: compare-flash 1.5s ease-in-out 1;
   z-index: 999;
-  background-color: rgba(255, 235, 59, 0.4);
+  background-color: color-mix(in srgb, var(--c-highlight) 40%, transparent);
   pointer-events: none;
   border-radius: 2px;
 }
@@ -328,7 +322,7 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.15);
+  border: 1px solid var(--c-border);
 }
 
 .compare-summary__stats {
@@ -343,10 +337,10 @@
 }
 
 .compare-summary__segment {
-  border: 1px solid var(--mantine-color-gray-3);
+  border: 1px solid var(--c-border);
   border-radius: 0.5rem;
   padding: 0.75rem;
-  background-color: var(--mantine-color-gray-0);
+  background-color: var(--c-surface);
 }
 
 .compare-diff-page {
@@ -357,10 +351,10 @@
 
 .compare-diff-page__canvas {
   position: relative;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--c-border-strong);
   border-radius: 0.75rem;
   overflow: hidden;
-  background-color: var(--bg-surface);
+  background-color: var(--c-surface);
   width: 100%;
 }
 
@@ -381,7 +375,7 @@
   margin-right: auto;
   max-width: 100%;
   background-color: #fff; /* ensure stable white backing during load */
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--c-border-subtle);
   will-change: transform;
 }
 
@@ -403,7 +397,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 8px;
-  background-color: var(--compare-page-label-bg);
+  background-color: var(--c-surface-sunken);
   color: var(--compare-page-label-fg);
 }
 
@@ -432,7 +426,7 @@
 }
 .compare-dropdown-option__page {
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .compare-dropdown-option__text {
   display: -webkit-box;
@@ -446,11 +440,11 @@
 /* Non-sticky in-flow group headers; sticky handled by floating header */
 .compare-dropdown-group {
   position: static;
-  background: var(--compare-page-label-bg);
+  background: var(--c-surface-sunken);
   color: var(--compare-page-label-fg);
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .compare-dropdown-group.compare-dropdown-group--hidden {
@@ -461,15 +455,9 @@
   overflow: hidden;
 }
 
-[data-mantine-color-scheme="dark"] .compare-dropdown-group {
-  background: var(--compare-page-label-bg);
-  color: var(--compare-page-label-fg);
-  border-bottom: 1px solid var(--border-default);
-}
-
 /* Light grey rendering flag next to page labels in the dropdown */
 .compare-dropdown-rendering-flag {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-left: 0.25rem;
 }
 
@@ -489,7 +477,7 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--bg-background);
+  background: var(--c-bg);
   padding: 0.25rem 0;
 }
 
@@ -550,7 +538,7 @@
   padding-bottom: 32px;
 }
 .compare-pixel-page {
-  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+  border: 1px solid var(--mantine-color-default-border, var(--c-border));
   border-radius: 8px;
   padding: 12px;
   background: var(--mantine-color-body, #fff);
@@ -568,13 +556,13 @@
 }
 .compare-pixel-triptych figure img {
   display: block;
-  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+  border: 1px solid var(--mantine-color-default-border, var(--c-border));
   background: #fff;
 }
 .compare-pixel-triptych figcaption {
   font-size: 11px;
   text-align: center;
-  color: var(--mantine-color-dimmed, #868e96);
+  color: var(--mantine-color-dimmed, var(--c-text-muted));
 }
 .compare-pixel-overlay {
   position: relative;
@@ -583,7 +571,7 @@
 .compare-pixel-overlay-img {
   display: block;
   width: 100%;
-  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+  border: 1px solid var(--mantine-color-default-border, var(--c-border));
 }
 .compare-pixel-overlay-top {
   position: absolute;

@@ -1,0 +1,24 @@
+{
+  "models": {
+    "provider": "ollama",
+    "smartModel": "smart-model-x",
+    "fastModel": "fast-model-x",
+    "smartMaxTokens": 1111,
+    "fastMaxTokens": 2222,
+    "apiKey": "provider-key-abc",
+    "baseUrl": "http://engine.example/v1"
+  },
+  "rag": {
+    "embeddingProvider": "custom",
+    "embeddingModel": "embed-model-x",
+    "embeddingApiKey": "embed-key-abc",
+    "embeddingBaseUrl": "http://embed.example/v1",
+    "topK": 33,
+    "maxSearches": 7
+  },
+  "limits": {
+    "maxPages": 111,
+    "maxCharacters": 222222,
+    "modelMaxConcurrency": 9
+  }
+}

@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -52,7 +52,148 @@ class IntegrationConfigServiceTest {
     @Mock
     private stirling.software.proprietary.access.repository.ResourceGrantRepository grantRepository;
 
-    @InjectMocks private IntegrationConfigService service;
+    @Mock private IntegrationConfigValidator validator;
+    @Mock private IntegrationConfigUsageCheck usageCheck;
+
+    private final stirling.software.common.model.ApplicationProperties applicationProperties =
+            new stirling.software.common.model.ApplicationProperties();
+
+    private IntegrationConfigService service;
+
+    @BeforeEach
+    void setUp() {
+        service =
+                new IntegrationConfigService(
+                        repository,
+                        ownership,
+                        secretMasker,
+                        grantRepository,
+                        applicationProperties,
+                        List.of(validator),
+                        List.of(usageCheck));
+    }
+
+    @Test
+    void createRejectsAConfigItsTypeValidatorRefuses() {
+        when(secretMasker.sanitize(any())).thenReturn(Map.of());
+        when(validator.type()).thenReturn(IntegrationType.MCP);
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("mcp config needs a 'url'"))
+                .when(validator)
+                .validate(any());
+
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        request(IntegrationType.MCP, OwnerScope.USER, null),
+                                        user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void anAdminCanAuthorACustomApiIntegration() {
+        when(secretMasker.sanitize(any())).thenReturn(Map.of());
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(ownership.isAdmin(any())).thenReturn(true);
+
+        IntegrationConfig created =
+                service.create(request(IntegrationType.API, OwnerScope.USER, null), user(7));
+
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.API);
+    }
+
+    @Test
+    void aNonAdminCannotAuthorACustomApiIntegration() {
+        // A custom integration names its own host and body, so it can aim the server anywhere;
+        // that is admin authoring power, not self-serve config like a vendor preset.
+        when(ownership.isAdmin(any())).thenReturn(false);
+
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        request(IntegrationType.API, OwnerScope.USER, null),
+                                        user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void theOperatorCanWithdrawCustomApiAuthoringEntirely() {
+        applicationProperties.getPolicies().setAllowCustomApiIntegrations(false);
+
+        // Off for everyone, admins included.
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        request(IntegrationType.API, OwnerScope.USER, null),
+                                        user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(service.canAuthorCustomApi(user(7))).isFalse();
+    }
+
+    @Test
+    void vendorPresetsAreNotGatedByTheCustomApiFlag() {
+        // Purview/ConsignO carry a fixed shape: the worst a user can do is misconfigure their own
+        // connection, so they stay self-serve even with custom authoring switched off.
+        applicationProperties.getPolicies().setAllowCustomApiIntegrations(false);
+        when(secretMasker.sanitize(any())).thenReturn(Map.of());
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        IntegrationConfig created =
+                service.create(request(IntegrationType.PURVIEW, OwnerScope.USER, null), user(7));
+
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.PURVIEW);
+    }
+
+    @Test
+    void editingACustomApisConfigNeedsTheSameRightsAsCreatingIt() {
+        // Otherwise the base URL and body could be rewritten by someone who could never have
+        // authored them.
+        IntegrationConfig cfg = config(5L);
+        cfg.setIntegrationType(IntegrationType.API);
+        when(repository.findById(5L)).thenReturn(Optional.of(cfg));
+        when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
+        when(ownership.isAdmin(any())).thenReturn(false);
+
+        assertThatThrownBy(
+                        () ->
+                                service.update(
+                                        5L,
+                                        request(IntegrationType.API, OwnerScope.USER, null),
+                                        user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void customApiAuthoringIsOnByDefaultForAdmins() {
+        when(ownership.isAdmin(any())).thenReturn(true);
+
+        assertThat(service.canAuthorCustomApi(user(7))).isTrue();
+    }
+
+    @Test
+    void deleteRefusedWhileAnythingStillReferencesTheConfig() {
+        IntegrationConfig cfg = config(9L);
+        when(repository.findById(9L)).thenReturn(Optional.of(cfg));
+        when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
+        when(usageCheck.usagesOf(9L)).thenReturn(List.of("source 'Claims intake'"));
+
+        assertThatThrownBy(() -> service.delete(9L, user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.CONFLICT));
+        verify(repository, org.mockito.Mockito.never()).delete(any(IntegrationConfig.class));
+    }
 
     @Test
     void createDelegatesOwnershipAndSanitizesConfig() {
@@ -61,9 +202,9 @@ class IntegrationConfigServiceTest {
         User user = user(7);
 
         IntegrationConfig created =
-                service.create(request(IntegrationType.API, OwnerScope.USER, null), user);
+                service.create(request(IntegrationType.MCP, OwnerScope.USER, null), user);
 
-        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.API);
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.MCP);
         assertThat(created.getName()).isEqualTo("name");
         verify(ownership)
                 .assignOwnership(eq(created), eq(OwnerScope.USER), isNull(), eq(user), any());
