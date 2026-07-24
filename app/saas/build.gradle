@@ -11,6 +11,7 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
 
-    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    testImplementation "com.tngtech.archunit:archunit-junit5:${rootProject.ext.archunitVersion}"
 }
