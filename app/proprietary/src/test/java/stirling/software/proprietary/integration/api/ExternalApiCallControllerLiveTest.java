@@ -298,6 +298,7 @@ class ExternalApiCallControllerLiveTest {
         private String headers;
         private boolean includeContext;
         private boolean includeFile = true;
+        private long maxRequestBytes = 0;
         private String policyName;
         private String runId;
 
@@ -356,6 +357,11 @@ class ExternalApiCallControllerLiveTest {
             return this;
         }
 
+        Step maxRequestBytes(long v) {
+            maxRequestBytes = v;
+            return this;
+        }
+
         Step run(String policy, String id) {
             policyName = policy;
             runId = id;
@@ -380,6 +386,7 @@ class ExternalApiCallControllerLiveTest {
                     headers,
                     includeContext,
                     includeFile,
+                    maxRequestBytes,
                     policyName,
                     runId);
         }
@@ -387,6 +394,15 @@ class ExternalApiCallControllerLiveTest {
 
     private Step step() {
         return new Step();
+    }
+
+    @Test
+    void aDocumentOverTheSizeLimitFailsBeforeTheCall() {
+        connection(Map.of());
+        // A 1-byte cap is under the test PDF, so the step stops before any request goes out.
+        assertThatThrownBy(() -> step().path("/v1/scan").maxRequestBytes(1L).go())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("limit set for this step");
     }
 
     @Test
