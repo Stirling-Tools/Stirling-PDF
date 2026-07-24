@@ -22,7 +22,9 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
-import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.InviteAcceptanceService;
+import stirling.software.proprietary.security.service.InviteAcceptanceService.AcceptanceResult;
+import stirling.software.proprietary.security.service.InviteAcceptanceService.InviteAcceptanceException;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -38,6 +40,7 @@ public class InviteLinkController {
     private final ApplicationProperties applicationProperties;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService userLicenseSettingsService;
+    private final InviteAcceptanceService inviteAcceptanceService;
 
     /**
      * Generate a new invite link (admin only)
@@ -411,67 +414,22 @@ public class InviteLinkController {
                         .body(Map.of("error", "Password is required"));
             }
 
-            Optional<InviteToken> inviteOpt = inviteTokenRepository.findByToken(token);
-
-            if (inviteOpt.isEmpty()) {
-                return invalidInviteResponse();
-            }
-
-            InviteToken invite = inviteOpt.get();
-
-            if (invite.isUsed()) {
-                return invalidInviteResponse();
-            }
-
-            if (invite.isExpired()) {
-                return invalidInviteResponse();
-            }
-
-            // Determine the email to use
-            String effectiveEmail = invite.getEmail();
-            if (effectiveEmail == null) {
-                // Email not pre-set, must be provided by user
-                if (email == null || email.trim().isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of("error", "Email address is required"));
-                }
-
-                // Validate email format
-                if (!email.contains("@")) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of("error", "Invalid email address"));
-                }
-
-                effectiveEmail = email.trim().toLowerCase();
-            }
-
-            // Check if user already exists
-            if (userService.usernameExistsIgnoreCase(effectiveEmail)) {
-                return invalidInviteResponse();
-            }
-
-            // Create the user account
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(effectiveEmail)
-                            .password(password)
-                            .teamId(invite.getTeamId())
-                            .role(invite.getRole());
-            userService.saveUserCore(builder.build());
-
-            // Mark invite as used
-            invite.setUsed(true);
-            invite.setUsedAt(LocalDateTime.now());
-            inviteTokenRepository.save(invite);
+            AcceptanceResult result = inviteAcceptanceService.accept(token, email, password);
 
             log.info(
                     "User account created via invite link: {} with role: {}",
-                    effectiveEmail,
-                    invite.getRole());
+                    result.username(),
+                    result.role());
 
             return ResponseEntity.ok(
-                    Map.of("message", "Account created successfully", "username", effectiveEmail));
+                    Map.of(
+                            "message",
+                            "Account created successfully",
+                            "username",
+                            result.username()));
 
+        } catch (InviteAcceptanceException e) {
+            return ResponseEntity.status(e.getStatus()).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Failed to accept invite: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

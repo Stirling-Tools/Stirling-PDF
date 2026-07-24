@@ -35,8 +35,10 @@ import stirling.software.proprietary.workflow.dto.CertificateInfo;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
-import stirling.software.proprietary.workflow.service.SigningFinalizationService;
+import stirling.software.proprietary.workflow.service.WorkflowFinalizationCoordinator;
+import stirling.software.proprietary.workflow.service.WorkflowFinalizationCoordinator.FinalizedWorkflow;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 // Direct handler invocations (no MockMvc) for SigningSessionController; previously 0% covered.
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +47,7 @@ class SigningSessionControllerTest {
 
     @Mock private WorkflowSessionService workflowSessionService;
     @Mock private UserService userService;
-    @Mock private SigningFinalizationService signingFinalizationService;
+    @Mock private WorkflowFinalizationCoordinator workflowFinalizationCoordinator;
     @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
 
     private SigningSessionController controller;
@@ -56,7 +58,7 @@ class SigningSessionControllerTest {
                 new SigningSessionController(
                         workflowSessionService,
                         userService,
-                        signingFinalizationService,
+                        workflowFinalizationCoordinator,
                         certificateSubmissionValidator);
     }
 
@@ -382,26 +384,22 @@ class SigningSessionControllerTest {
         @Test
         void success_returnsSignedPdf() throws Exception {
             User owner = user("alice");
-            WorkflowSession session = ownedSession("s1", owner);
             when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(owner));
-            when(workflowSessionService.getSessionWithParticipantsForOwner("s1", owner))
-                    .thenReturn(session);
-            when(workflowSessionService.getOriginalFile("s1")).thenReturn(new byte[] {1});
-            when(signingFinalizationService.finalizeDocument(eq(session), any()))
-                    .thenReturn(new byte[] {2, 3});
+            when(workflowFinalizationCoordinator.finalizeSession("s1", owner))
+                    .thenReturn(new FinalizedWorkflow(new byte[] {2, 3}, "doc_shared_signed.pdf"));
 
             ResponseEntity<byte[]> response = controller.finalizeSession("s1", principal("alice"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            verify(workflowSessionService).finalizeSession("s1", owner);
-            verify(workflowSessionService).deleteOriginalFile(session);
+            assertThat(response.getBody()).containsExactly(2, 3);
+            verify(workflowFinalizationCoordinator).finalizeSession("s1", owner);
         }
 
         @Test
         void serviceError_returns500() throws Exception {
             User owner = user("alice");
             when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(owner));
-            when(workflowSessionService.getSessionWithParticipantsForOwner("s1", owner))
+            when(workflowFinalizationCoordinator.finalizeSession("s1", owner))
                     .thenThrow(new RuntimeException("boom"));
 
             assertThat(controller.finalizeSession("s1", principal("alice")).getStatusCode())
@@ -671,6 +669,26 @@ class SigningSessionControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody().valid()).isFalse();
             assertThat(response.getBody().error()).isEqualTo("bad password");
+        }
+
+        @Test
+        void oversizedCertificate_throwsPayloadTooLargeBeforeValidation() {
+            MockMultipartFile p12 =
+                    new MockMultipartFile(
+                            "p12File",
+                            "c.p12",
+                            "application/octet-stream",
+                            new byte[(int) WorkflowUploadUtils.MAX_CREDENTIAL_FILE_SIZE_BYTES + 1]);
+
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                            () ->
+                                    controller.validateCertificate(
+                                            "P12", "pw", p12, null, principal("alice")))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
+
+            org.mockito.Mockito.verifyNoInteractions(certificateSubmissionValidator);
         }
     }
 }

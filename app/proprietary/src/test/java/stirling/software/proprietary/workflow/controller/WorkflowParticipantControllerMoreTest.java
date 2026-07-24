@@ -13,10 +13,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.proprietary.security.model.User;
@@ -32,6 +35,7 @@ import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepo
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -136,6 +140,25 @@ class WorkflowParticipantControllerMoreTest {
                             org.mockito.ArgumentMatchers.anyLong(),
                             org.mockito.ArgumentMatchers.any());
         }
+
+        @ParameterizedTest
+        @EnumSource(
+                value = WorkflowStatus.class,
+                names = {"COMPLETED", "CANCELLED"})
+        void inactiveSession_isReturnedWithoutUpdatingParticipantStatus(
+                WorkflowStatus workflowStatus) {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            p.getWorkflowSession().setStatus(workflowStatus);
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+            ResponseEntity<WorkflowSessionResponse> response = controller.getSessionByToken(TOKEN);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            verify(workflowSessionService, org.mockito.Mockito.never())
+                    .updateParticipantStatus(
+                            org.mockito.ArgumentMatchers.anyLong(),
+                            org.mockito.ArgumentMatchers.any());
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -160,6 +183,19 @@ class WorkflowParticipantControllerMoreTest {
         when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> controller.getParticipantDetails("bad"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("getParticipantDetails expired token throws 403")
+    void getParticipantDetails_expiredToken() {
+        WorkflowParticipant p = participant(ParticipantStatus.VIEWED);
+        p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
+        when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> controller.getParticipantDetails(TOKEN))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -239,6 +275,52 @@ class WorkflowParticipantControllerMoreTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(p.getStatus()).isEqualTo(ParticipantStatus.SIGNED);
         }
+
+        @Test
+        void oversizedCertificate_throwsPayloadTooLargeWithoutReadingFile() throws Exception {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            MultipartFile certificateFile = org.mockito.Mockito.mock(MultipartFile.class);
+            when(certificateFile.getSize())
+                    .thenReturn(WorkflowUploadUtils.MAX_CREDENTIAL_FILE_SIZE_BYTES + 1);
+
+            SignatureSubmissionRequest r = request(TOKEN);
+            r.setCertType("P12");
+            r.setP12File(certificateFile);
+
+            assertThatThrownBy(() -> controller.submitSignature(r))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
+
+            verify(certificateFile, org.mockito.Mockito.never()).getBytes();
+            verify(participantRepository, org.mockito.Mockito.never()).save(p);
+        }
+
+        @Test
+        void certificateFile_isReadOnlyOnceForValidationAndEncryption() throws Exception {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.save(org.mockito.ArgumentMatchers.any()))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            MultipartFile certificateFile = org.mockito.Mockito.mock(MultipartFile.class);
+            byte[] certificateBytes =
+                    "certificate".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            when(certificateFile.getSize()).thenReturn((long) certificateBytes.length);
+            when(certificateFile.getBytes()).thenReturn(certificateBytes);
+            when(metadataEncryptionService.encryptBytes(certificateBytes)).thenReturn("encrypted");
+
+            SignatureSubmissionRequest r = request(TOKEN);
+            r.setCertType("P12");
+            r.setP12File(certificateFile);
+
+            controller.submitSignature(r);
+
+            verify(certificateFile).getBytes();
+            verify(certificateSubmissionValidator)
+                    .validateAndExtractInfo(certificateBytes, "P12", null);
+            verify(metadataEncryptionService).encryptBytes(certificateBytes);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -260,6 +342,20 @@ class WorkflowParticipantControllerMoreTest {
         }
 
         @Test
+        void expiredToken_throwsForbiddenWithoutChangingParticipant() {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+            assertThatThrownBy(() -> controller.declineParticipation(TOKEN, null))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
+            assertThat(p.getStatus()).isEqualTo(ParticipantStatus.PENDING);
+            verify(participantRepository, org.mockito.Mockito.never()).save(p);
+        }
+
+        @Test
         void alreadyCompleted_throwsBadRequest() {
             WorkflowParticipant p = participant(ParticipantStatus.DECLINED);
             when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
@@ -268,6 +364,29 @@ class WorkflowParticipantControllerMoreTest {
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @ParameterizedTest
+        @EnumSource(
+                value = WorkflowStatus.class,
+                names = {"COMPLETED", "CANCELLED"})
+        void inactiveSession_throwsBadRequestWithoutChangingParticipant(
+                WorkflowStatus workflowStatus) {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            p.getWorkflowSession().setStatus(workflowStatus);
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+            assertThatThrownBy(() -> controller.declineParticipation(TOKEN, "reason"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+
+            assertThat(p.getStatus()).isEqualTo(ParticipantStatus.PENDING);
+            verify(workflowSessionService, org.mockito.Mockito.never())
+                    .addParticipantNotification(
+                            org.mockito.ArgumentMatchers.anyLong(),
+                            org.mockito.ArgumentMatchers.anyString());
+            verify(participantRepository, org.mockito.Mockito.never()).save(p);
         }
 
         @Test

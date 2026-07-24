@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,13 +47,10 @@ public class ConfigController {
             ApplicationProperties applicationProperties,
             ApplicationContext applicationContext,
             EndpointConfiguration endpointConfiguration,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    ServerCertificateServiceInterface serverCertificateService,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    UserServiceInterface userService,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    ShowAdminInterface showAdmin,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
+            @Autowired(required = false) UserServiceInterface userService,
+            @Autowired(required = false) ShowAdminInterface showAdmin,
+            @Autowired(required = false)
                     stirling.software.common.service.LicenseServiceInterface licenseService,
             stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;

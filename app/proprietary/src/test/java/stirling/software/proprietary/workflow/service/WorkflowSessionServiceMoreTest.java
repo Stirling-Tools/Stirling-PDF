@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -298,6 +299,21 @@ class WorkflowSessionServiceMoreTest {
     class RemoveParticipant {
 
         @Test
+        void inactiveSession_throwsBadRequestWithoutDeletingAuditRecord() {
+            User owner = user("alice", 1L);
+            WorkflowSession s = session("s1", owner);
+            s.setStatus(WorkflowStatus.COMPLETED);
+            when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+
+            assertThatThrownBy(() -> service.removeParticipant("s1", 5L, owner))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+
+            verify(workflowParticipantRepository, never()).delete(any());
+        }
+
+        @Test
         void participantNotFound_throwsNotFound() {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
@@ -535,6 +551,23 @@ class WorkflowSessionServiceMoreTest {
         }
 
         @Test
+        void getSignRequestDetail_inactiveSessionDoesNotTransitionToViewed() {
+            User user = user("alice", 1L);
+            User owner = user("owner", 2L);
+            WorkflowSession s = session("s1", owner);
+            s.setCreatedAt(LocalDateTime.now());
+            s.setStatus(WorkflowStatus.COMPLETED);
+            WorkflowParticipant p = participant(user, ParticipantStatus.NOTIFIED);
+            s.addParticipant(p);
+            when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+
+            service.getSignRequestDetail("s1", user);
+
+            assertThat(p.getStatus()).isEqualTo(ParticipantStatus.NOTIFIED);
+            verify(workflowParticipantRepository, never()).save(p);
+        }
+
+        @Test
         void getSignRequestDetail_readsAppearanceFromMetadata() {
             User user = user("alice", 1L);
             User owner = user("owner", 2L);
@@ -600,6 +633,23 @@ class WorkflowSessionServiceMoreTest {
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.NOT_FOUND);
         }
+
+        @Test
+        void getSignRequestDocument_expiredParticipantThrowsForbidden() {
+            User user = user("alice", 1L);
+            WorkflowSession s = session("s1", user("owner", 2L));
+            WorkflowParticipant p = participant(user, ParticipantStatus.PENDING);
+            p.setExpiresAt(LocalDateTime.now().minusMinutes(1));
+            s.addParticipant(p);
+            when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+
+            assertThatThrownBy(() -> service.getSignRequestDocument("s1", user))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
+
+            verifyNoInteractions(storageProvider);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -609,6 +659,24 @@ class WorkflowSessionServiceMoreTest {
     @Nested
     @DisplayName("declineSignRequest")
     class DeclineSignRequest {
+
+        @Test
+        void inactiveSessionDoesNotChangeParticipant() {
+            User user = user("alice", 1L);
+            WorkflowSession s = session("s1", user("owner", 2L));
+            s.setStatus(WorkflowStatus.CANCELLED);
+            WorkflowParticipant p = participant(user, ParticipantStatus.PENDING);
+            s.addParticipant(p);
+            when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+
+            assertThatThrownBy(() -> service.declineSignRequest("s1", user))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+
+            assertThat(p.getStatus()).isEqualTo(ParticipantStatus.PENDING);
+            verify(workflowParticipantRepository, never()).save(any());
+        }
 
         @Test
         void alreadySigned_throwsBadRequest() {

@@ -47,6 +47,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CertificateFileUtils;
 import stirling.software.common.util.ExceptionUtils;
 
 @Slf4j
@@ -91,8 +92,8 @@ public class ValidateSignatureController {
         // Load custom certificate if provided
         X509Certificate customCert = null;
         if (request.getCertFile() != null && !request.getCertFile().isEmpty()) {
-            try (ByteArrayInputStream certStream =
-                    new ByteArrayInputStream(request.getCertFile().getBytes())) {
+            byte[] certificateBytes = CertificateFileUtils.read(request.getCertFile());
+            try (ByteArrayInputStream certStream = new ByteArrayInputStream(certificateBytes)) {
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 customCert = (X509Certificate) cf.generateCertificate(certStream);
             } catch (CertificateException e) {

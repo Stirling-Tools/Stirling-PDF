@@ -30,6 +30,7 @@ public class SharedSignatureService {
     private static final Pattern FILENAME_VALIDATION_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
     private final String SIGNATURE_BASE_PATH;
     private static final String ALL_USERS_FOLDER = "ALL_USERS";
+    private static final long MAX_SIGNATURE_SIZE_BYTES = 2_000_000;
     private final ObjectMapper objectMapper;
 
     public SharedSignatureService(ObjectMapper objectMapper) {
@@ -157,9 +158,16 @@ public class SharedSignatureService {
         // Extract and save image data
         String dataUrl = request.getDataUrl();
         if (dataUrl != null && dataUrl.startsWith("data:image/")) {
+            if (dataUrl.length() > MAX_SIGNATURE_SIZE_BYTES * 2) {
+                throw new IllegalArgumentException("Signature data too large");
+            }
             // Extract base64 data
             String base64Data = dataUrl.substring(dataUrl.indexOf(',') + 1);
             byte[] imageBytes = Base64.getDecoder().decode(base64Data);
+
+            if (imageBytes.length > MAX_SIGNATURE_SIZE_BYTES) {
+                throw new IllegalArgumentException("Signature image too large");
+            }
 
             // Determine and validate file extension from data URL
             String mimeType = dataUrl.substring(dataUrl.indexOf(':') + 1, dataUrl.indexOf(';'));

@@ -177,6 +177,38 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicAuthEndpoint_rejectsLookalikeAuthPaths() {
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/auth/login-admin", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/auth/refresh-token", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/invite/acceptance", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/actuator/healthz-extra", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/oauth2-admin", ""));
+        assertFalse(RequestUriUtils.isStaticResource("/api/v1/info/status-details"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_allMobileScannerRoutesArePublic() {
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/validate-session/session-id", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/session-id", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/create-session/session-id", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/files/session-id", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/download/session-id/file.jpg", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/session/session-id", ""));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_webhookReceiver() {
         // The webhook source receiver authenticates each delivery by HMAC signature, not a session.
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/whk_abc123", ""));

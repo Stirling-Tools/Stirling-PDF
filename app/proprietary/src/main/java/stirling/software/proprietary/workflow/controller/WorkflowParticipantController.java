@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -40,10 +42,12 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
+import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 import stirling.software.proprietary.workflow.util.WorkflowMapper;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -58,14 +62,33 @@ import tools.jackson.databind.ObjectMapper;
 @RestController
 @RequestMapping("/api/v1/workflow/participant")
 @Tag(name = "Workflow Participant", description = "Participant Action APIs")
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class WorkflowParticipantController {
 
     private final WorkflowSessionService workflowSessionService;
     private final WorkflowParticipantRepository participantRepository;
+    private final WorkflowSessionRepository sessionRepository;
     private final ObjectMapper objectMapper;
     private final MetadataEncryptionService metadataEncryptionService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
+
+    /**
+     * Compatibility constructor for focused controller tests that do not exercise session locks.
+     */
+    public WorkflowParticipantController(
+            WorkflowSessionService workflowSessionService,
+            WorkflowParticipantRepository participantRepository,
+            ObjectMapper objectMapper,
+            MetadataEncryptionService metadataEncryptionService,
+            CertificateSubmissionValidator certificateSubmissionValidator) {
+        this(
+                workflowSessionService,
+                participantRepository,
+                null,
+                objectMapper,
+                metadataEncryptionService,
+                certificateSubmissionValidator);
+    }
 
     private static final DateTimeFormatter ISO_UTC =
             DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
@@ -93,14 +116,16 @@ public class WorkflowParticipantController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
         }
 
-        // Mark as viewed if not already
-        if (participant.getStatus() == ParticipantStatus.PENDING
-                || participant.getStatus() == ParticipantStatus.NOTIFIED) {
+        WorkflowSession session = participant.getWorkflowSession();
+
+        // Completed and cancelled workflows remain readable for participants, but immutable.
+        if (session.isActive()
+                && (participant.getStatus() == ParticipantStatus.PENDING
+                        || participant.getStatus() == ParticipantStatus.NOTIFIED)) {
             workflowSessionService.updateParticipantStatus(
                     participant.getId(), ParticipantStatus.VIEWED);
         }
 
-        WorkflowSession session = participant.getWorkflowSession();
         // Strip peer share tokens — a single participant token must not enumerate peer bearer
         // tokens (GHSA-qgg6-mxw4-xg62).
         return ResponseEntity.ok(WorkflowMapper.toResponse(session, null, false));
@@ -124,17 +149,23 @@ public class WorkflowParticipantController {
                                                 HttpStatus.FORBIDDEN,
                                                 "Invalid or expired participant token"));
 
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
+
         return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
 
     @Operation(
             summary = "Submit signature (wet signature and/or certificate)",
             description =
-                    "Participants submit their signature data and certificate information for signing")
+                    "Participants submit their signature data and certificate information for"
+                            + " signing")
     @PostMapping(
             value = "/submit-signature",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
     public ResponseEntity<ParticipantResponse> submitSignature(
             @ModelAttribute SignatureSubmissionRequest request) {
 
@@ -146,6 +177,24 @@ public class WorkflowParticipantController {
         }
 
         WorkflowParticipant participant =
+                participantRepository
+                        .findByShareToken(request.getParticipantToken())
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN,
+                                                "Invalid or expired participant token"));
+
+        if (sessionRepository != null) {
+            sessionRepository
+                    .findByParticipantShareTokenForUpdate(request.getParticipantToken())
+                    .orElseThrow(
+                            () ->
+                                    new ResponseStatusException(
+                                            HttpStatus.FORBIDDEN,
+                                            "Invalid or expired participant token"));
+        }
+        participant =
                 participantRepository
                         .findByShareToken(request.getParticipantToken())
                         .orElseThrow(
@@ -198,6 +247,7 @@ public class WorkflowParticipantController {
             summary = "Decline participation",
             description = "Participant declines to sign or participate in the workflow")
     @PostMapping(value = "/decline", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
     public ResponseEntity<ParticipantResponse> declineParticipation(
             @RequestParam("token") @NotBlank String token,
             @RequestParam(value = "reason", required = false) @Size(max = 500) String reason) {
@@ -213,9 +263,36 @@ public class WorkflowParticipantController {
                                                 HttpStatus.FORBIDDEN,
                                                 "Invalid or expired participant token"));
 
+        if (sessionRepository != null) {
+            sessionRepository
+                    .findByParticipantShareTokenForUpdate(token)
+                    .orElseThrow(
+                            () ->
+                                    new ResponseStatusException(
+                                            HttpStatus.FORBIDDEN,
+                                            "Invalid or expired participant token"));
+        }
+        participant =
+                participantRepository
+                        .findByShareToken(token)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN,
+                                                "Invalid or expired participant token"));
+
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
+
         if (participant.hasCompleted()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Participant has already completed their action");
+        }
+
+        if (!participant.getWorkflowSession().isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Workflow session is no longer active");
         }
 
         // Update status to DECLINED
@@ -320,14 +397,27 @@ public class WorkflowParticipantController {
                     HttpStatus.BAD_REQUEST, "No certificate file provided");
         }
 
-        try {
-            byte[] keystoreBytes = null;
-            if (p12File != null && !p12File.isEmpty()) {
-                keystoreBytes = p12File.getBytes();
-            } else if (jksFile != null && !jksFile.isEmpty()) {
-                keystoreBytes = jksFile.getBytes();
-            }
+        WorkflowUploadUtils.rejectMultipleKeystores(p12File, jksFile);
 
+        byte[] keystoreBytes;
+        try {
+            keystoreBytes =
+                    WorkflowUploadUtils.readCredentialFile(
+                            p12File != null && !p12File.isEmpty() ? p12File : jksFile);
+        } catch (IOException e) {
+            log.error("Error reading certificate file during pre-validation", e);
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            false,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false,
+                            "Failed to read certificate file"));
+        }
+
+        try {
             CertificateInfo info =
                     certificateSubmissionValidator.validateAndExtractInfo(
                             keystoreBytes, certType, password);
@@ -356,17 +446,6 @@ public class WorkflowParticipantController {
             return ResponseEntity.ok(
                     new CertificateValidationResponse(
                             false, null, null, null, null, false, e.getReason()));
-        } catch (IOException e) {
-            log.error("Error reading certificate file during pre-validation", e);
-            return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            false,
-                            null,
-                            null,
-                            null,
-                            null,
-                            false,
-                            "Failed to read certificate file"));
         }
     }
 
@@ -378,14 +457,13 @@ public class WorkflowParticipantController {
             throws IOException {
         Map<String, Object> metadata = new HashMap<>();
 
+        WorkflowUploadUtils.rejectMultipleKeystores(request.getP12File(), request.getJksFile());
+        byte[] p12Bytes = WorkflowUploadUtils.readCredentialFile(request.getP12File());
+        byte[] jksBytes = WorkflowUploadUtils.readCredentialFile(request.getJksFile());
+
         // Validate certificate before storing — throws 400 if invalid, expired, or wrong password
         if (request.getCertType() != null && !"SERVER".equalsIgnoreCase(request.getCertType())) {
-            byte[] keystoreBytes = null;
-            if (request.getP12File() != null && !request.getP12File().isEmpty()) {
-                keystoreBytes = request.getP12File().getBytes();
-            } else if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
-                keystoreBytes = request.getJksFile().getBytes();
-            }
+            byte[] keystoreBytes = p12Bytes != null ? p12Bytes : jksBytes;
             if (keystoreBytes != null) {
                 certificateSubmissionValidator.validateAndExtractInfo(
                         keystoreBytes, request.getCertType(), request.getPassword());
@@ -405,15 +483,11 @@ public class WorkflowParticipantController {
             certSubmission.put("showLogo", request.getShowLogo());
 
             // Store the certificate keystores encrypted at rest.
-            if (request.getP12File() != null && !request.getP12File().isEmpty()) {
-                certSubmission.put(
-                        "p12Keystore",
-                        metadataEncryptionService.encryptBytes(request.getP12File().getBytes()));
+            if (p12Bytes != null) {
+                certSubmission.put("p12Keystore", metadataEncryptionService.encryptBytes(p12Bytes));
             }
-            if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
-                certSubmission.put(
-                        "jksKeystore",
-                        metadataEncryptionService.encryptBytes(request.getJksFile().getBytes()));
+            if (jksBytes != null) {
+                certSubmission.put("jksKeystore", metadataEncryptionService.encryptBytes(jksBytes));
             }
 
             metadata.put("certificateSubmission", certSubmission);
@@ -421,10 +495,7 @@ public class WorkflowParticipantController {
 
         // Add wet signatures data if provided - parse once and store as List directly
         if (request.getWetSignaturesData() != null && !request.getWetSignaturesData().isBlank()) {
-            if (request.getWetSignaturesData().length() > 5 * 1024 * 1024) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Wet signatures data exceeds maximum allowed size");
-            }
+            WorkflowUploadUtils.validateWetSignatureDataSize(request.getWetSignaturesData());
             @SuppressWarnings("unchecked")
             java.util.List<Map<String, Object>> wetSigs =
                     objectMapper.readValue(

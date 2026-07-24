@@ -34,6 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.MobileScannerService;
 import stirling.software.common.service.MobileScannerService.FileMetadata;
+import stirling.software.common.service.MobileScannerService.SessionLimitExceededException;
+import stirling.software.common.service.MobileScannerService.SessionNotFoundException;
+import stirling.software.common.service.MobileScannerService.StorageCapacityExceededException;
+import stirling.software.common.service.MobileScannerService.UploadRateLimitExceededException;
+import stirling.software.common.service.MobileScannerService.UploadSizeLimitExceededException;
 
 /**
  * REST controller for mobile scanner functionality. Allows mobile devices to upload scanned images
@@ -45,8 +50,8 @@ import stirling.software.common.service.MobileScannerService.FileMetadata;
 @Tag(
         name = "Mobile Scanner",
         description =
-                "Endpoints for mobile-to-desktop file transfer via QR code scanning. "
-                        + "Files are temporarily stored and automatically cleaned up after 10 minutes.")
+                "Endpoints for mobile-to-desktop file transfer via QR code scanning. Files are"
+                        + " temporarily stored and automatically cleaned up after 10 minutes.")
 @Hidden
 @Slf4j
 public class MobileScannerController {
@@ -120,6 +125,10 @@ public class MobileScannerController {
         } catch (IllegalArgumentException e) {
             log.warn("Invalid session creation request: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (SessionLimitExceededException e) {
+            log.warn("Mobile scanner session limit reached");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -214,6 +223,18 @@ public class MobileScannerController {
         } catch (IllegalArgumentException e) {
             log.warn("Invalid mobile scanner upload request: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (SessionNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (UploadRateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (StorageCapacityExceededException e) {
+            return ResponseEntity.status(HttpStatus.INSUFFICIENT_STORAGE)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (UploadSizeLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+                    .body(Map.of("error", e.getMessage()));
         } catch (IOException e) {
             log.error("Failed to upload files for session: {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -266,7 +287,8 @@ public class MobileScannerController {
     @Operation(
             summary = "Download a specific file",
             description =
-                    "Download a file that was uploaded to a session. File is automatically deleted after download.")
+                    "Download a file that was uploaded to a session. File is automatically deleted"
+                            + " after download.")
     @ApiResponse(responseCode = "200", description = "File downloaded successfully")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     @ApiResponse(responseCode = "404", description = "File or session not found")
