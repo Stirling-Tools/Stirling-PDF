@@ -6523,11 +6523,7 @@ createTitleFor = "Connect {{name}}"
 delete = "Delete"
 edit = "Edit"
 editTitle = "Edit connection"
-subtitle = "Reusable credentials that sources, pipeline outputs and integration steps connect to."
 unsupportedType = "This connection type cannot be edited here."
-
-[portal.connections.actions]
-new = "New connection"
 
 [portal.connections.categories.advanced]
 description = "For a service we do not support yet."
@@ -6580,13 +6576,9 @@ label = "Username"
 helperText = "Paste the URL the service gave you. Only paths under it can be called."
 label = "Webhook URL"
 
-[portal.connections.empty]
-description = "Add a connection to reuse the same credentials across sources, pipeline outputs and integration steps."
-title = "No connections yet"
-
 [portal.connections.fields]
 name = "Connection name"
-namePlaceholder = "e.g. Claims bucket"
+namePlaceholder = "e.g. Production"
 
 [portal.connections.picker]
 cancel = "Cancel"
@@ -6600,11 +6592,6 @@ heading = "What do you want to connect?"
 noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
 noResultsTitle = "Nothing matches \"{{query}}\""
 searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
-
-[portal.connections.table]
-detail = "Details"
-name = "Name"
-type = "Type"
 
 [portal.connections.types.api]
 description = "Call any HTTP API from a policy. You choose the URL, authentication and payload."
@@ -7553,6 +7540,41 @@ models = "Models"
 security = "Security"
 storage = "Storage"
 
+[portal.integrations]
+addAnother = "Add another"
+availableHeading = "Available"
+comingSoonHeading = "Coming soon"
+connect = "Connect"
+connectedHeading = "Connected"
+connectionCount_one = "{{count}} connection"
+connectionCount_other = "{{count}} connections"
+customApi = "Custom API"
+searchPlaceholder = "Search integrations"
+subtitle = "Everything Stirling can talk to. Credentials are created once here, then referenced by sources, policies and pipelines."
+title = "Integrations"
+typedName = "{{tool}} name"
+
+[portal.integrations.filters]
+all = "All"
+audit = "Audit"
+connected = "Connected"
+notify = "Notify"
+security = "Security"
+signing = "Signing"
+storage = "Storage"
+
+[portal.integrations.status]
+connected = "Connected"
+
+[portal.integrations.table]
+integration = "Integration"
+worksWith = "Works with"
+
+[portal.integrations.worksWith]
+pipelines = "Pipelines"
+policies = "Policies"
+sources = "Sources"
+
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
@@ -7561,6 +7583,7 @@ documents = "Documents"
 editor = "Editor"
 home = "Home"
 infrastructure = "Infrastructure"
+integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
@@ -8517,7 +8540,11 @@ connectSource = "Connect source"
 
 [portal.sources.builder]
 back = "Back to sources"
+backToTypes = "All source types"
 cancel = "Cancel"
+chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
+comingSoon = "Coming soon"
+comingSoonHeading = "Coming soon"
 create = "Create source"
 createTitle = "Connect a source"
 delete = "Delete"
@@ -8556,14 +8583,22 @@ source = "Source"
 status = "Status"
 usedBy = "Policies"
 
-[portal.sources.tabs]
-connections = "Connections"
-sources = "Sources"
+[portal.sources.types.box]
+description = "Pull documents from Box folders your team already shares."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Pull documents from a shared Dropbox folder."
+label = "Dropbox"
 
 [portal.sources.types.editor]
 description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
 noPolicies = "No policies run from the editor yet."
+
+[portal.sources.types.email]
+description = "Turn attachments sent to a dedicated mailbox into documents."
+label = "Email inbox"
 
 [portal.sources.types.folder]
 description = "Watch a directory on the server for new documents."
@@ -8596,6 +8631,18 @@ label = "Folder depth"
 all = "Include subfolders"
 top = "Top level only"
 
+[portal.sources.types.googledrive]
+description = "Pull documents from shared Google Drive folders."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Watch an SMB network share for new documents."
+label = "Network drive"
+
+[portal.sources.types.onedrive]
+description = "Watch OneDrive folders for new documents."
+label = "OneDrive"
+
 [portal.sources.types.s3]
 description = "Pull documents from an Amazon S3 or S3-compatible bucket."
 label = "Amazon S3"
@@ -8616,6 +8663,14 @@ snapshot = "Snapshot: re-read the bucket every run"
 helperText = "Only objects whose keys start with this prefix are processed."
 label = "Key prefix"
 placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Poll an SFTP drop folder for new documents."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "Pull documents from SharePoint document libraries."
+label = "SharePoint"
 
 [portal.sources.types.unknown]
 label = "Source"

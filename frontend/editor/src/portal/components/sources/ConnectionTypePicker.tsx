@@ -7,6 +7,7 @@ import {
   type ConnectionCategory,
   type CreatableConnectionType,
 } from "@portal/components/sources/connectionTypes";
+import { BrandMark } from "@portal/components/BrandMarks";
 
 /**
  * Choose what to connect to.
@@ -118,15 +119,9 @@ function Grid({
             }
             onClick={() => onPick(type)}
           >
-            {/* A monogram rather than a logo: no third-party assets to ship, licence or keep
-                current, and it still gives each card something to recognise at a glance. Tinted
-                by category so the colour still carries meaning while searching, when the section
-                headings that would otherwise group them are gone. */}
-            <span
-              className={`portal-conn-picker__mark portal-conn-picker__mark--${type.category}`}
-              aria-hidden
-            >
-              {label.slice(0, 1)}
+            {/* The vendor's real mark, full colour on the card surface. */}
+            <span className="portal-conn-picker__mark" aria-hidden>
+              <BrandMark id={type.id} size={20} />
             </span>
             <span className="portal-conn-picker__card-text">
               <span className="portal-conn-picker__card-name">{label}</span>

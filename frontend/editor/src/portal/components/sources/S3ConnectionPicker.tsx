@@ -7,11 +7,14 @@ import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
 interface S3ConnectionPickerProps {
   value: string;
   onChange: (connectionId: string) => void;
+  /** Forwarded to {@link ConnectionPicker}: hosts inside a modal create in-place. */
+  onCreateNew?: () => void;
 }
 
 export function S3ConnectionPicker({
   value,
   onChange,
+  onCreateNew,
 }: S3ConnectionPickerProps) {
   return (
     <ConnectionPicker
@@ -19,6 +22,7 @@ export function S3ConnectionPicker({
       onChange={onChange}
       integrationType="S3"
       createTypeId="s3"
+      onCreateNew={onCreateNew}
     />
   );
 }

@@ -33,6 +33,13 @@ interface ConnectionPickerProps {
    * connection, which can point anywhere and so fits any API operation.
    */
   presetId?: string;
+  /**
+   * When the picker already sits inside a modal, stacking the shared connection
+   * modal on top reads badly. A host that can offer its own create surface (the
+   * source modal swaps to a connection stage) passes this; "New connection..."
+   * then delegates instead of opening the nested modal.
+   */
+  onCreateNew?: () => void;
 }
 
 export function ConnectionPicker({
@@ -41,6 +48,7 @@ export function ConnectionPicker({
   integrationType,
   createTypeId,
   presetId,
+  onCreateNew,
 }: ConnectionPickerProps) {
   const { t } = useTranslation();
   const [connections, setConnections] = useState<IntegrationConfig[] | null>(
@@ -85,19 +93,25 @@ export function ConnectionPicker({
         }))}
         onChange={(selected) => onChange(selected ?? "")}
       />
-      <Button variant="tertiary" size="sm" onClick={() => setModalOpen(true)}>
+      <Button
+        variant="tertiary"
+        size="sm"
+        onClick={() => (onCreateNew ? onCreateNew() : setModalOpen(true))}
+      >
         {t("portal.connections.picker.createNew")}
       </Button>
       {error && <Banner tone="danger" description={error} />}
-      <ConnectionModal
-        open={modalOpen}
-        fixedTypeId={createTypeId}
-        onClose={() => setModalOpen(false)}
-        onSaved={(created) => {
-          setConnections((list) => [...(list ?? []), created]);
-          onChange(String(created.id));
-        }}
-      />
+      {!onCreateNew && (
+        <ConnectionModal
+          open={modalOpen}
+          fixedTypeId={createTypeId}
+          onClose={() => setModalOpen(false)}
+          onSaved={(created) => {
+            setConnections((list) => [...(list ?? []), created]);
+            onChange(String(created.id));
+          }}
+        />
+      )}
     </div>
   );
 }
