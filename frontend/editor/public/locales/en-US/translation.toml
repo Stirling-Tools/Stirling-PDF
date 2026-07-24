@@ -5502,6 +5502,11 @@ title = "Page Ranges"
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
 
+[payg.cap]
+docsEstimate = "≈ {{docs}} credits / month"
+docsRate = "at {{rate}} / credit"
+noCapLabel = "No cap"
+
 [payg.checkout]
 connecting = "Connecting to Stripe…"
 errorTitle = "Stripe error"
@@ -5527,6 +5532,15 @@ metaCategories = "Automation · AI · API requests"
 approachingLimit = "Approaching limit"
 limitReached = "Limit reached"
 plentyLeft = "Plenty left"
+
+[payg.prepaid.meter]
+capSuffix = "of {{total}} prepaid credits"
+expires = "Expires {{date}}"
+
+[payg.prepaid.state]
+exhausted = "Used up"
+healthy = "Plenty left"
+low = "Running low"
 
 [payg.signupRequired]
 body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
@@ -5857,8 +5871,6 @@ title = "Change Permissions"
 tags = "automate,sequence,scripted,batch-process"
 title = "Pipeline"
 
-[plan]
-
 [plan.features]
 allPdfOperations = "All PDF operations"
 auditing = "Auditing"
@@ -6126,10 +6138,21 @@ typing = "Typing"
 loading = "Loading"
 redirectingToEditor = "Redirecting to the editor..."
 
+[portal.billing.activation]
+maybeLater = "Maybe later"
+title = "Switch on the Processor"
+
+[portal.billing.activation.payg]
+sub = "Set a monthly limit. Pay for what you run."
+title = "Pay as you go"
+
+[portal.billing.activation.prepay]
+badge = "2 months free"
+sub = "One invoice, card or bank transfer."
+title = "Prepay a year"
+
 [portal.billing.checkout]
 noClientSecret = "Edge function returned no client_secret."
-stepCount = "Step {{step}} of 2"
-subtitle = "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest."
 title = "Add a payment method"
 
 [portal.billing.checkout.activationSlow]
@@ -6138,12 +6161,14 @@ close = "Close"
 title = "Almost there"
 
 [portal.billing.checkout.cap]
+amountAria = "Monthly spend limit"
 back = "Back"
 continue = "Continue to payment"
 error = "Couldn't set your spend limit"
-finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
-note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
-subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+finePrint = "Invoices post monthly. Cancel anytime."
+noLimit = "No limit"
+note = "You're never billed past your limit. Processing just pauses."
+perMonth = "/ mo"
 title = "Set your spend limit"
 
 [portal.billing.checkout.card]
@@ -6158,6 +6183,10 @@ title = "Couldn't start checkout"
 body = "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds."
 hint = "Please keep this window open."
 title = "Activating your Processor plan..."
+
+[portal.billing.checkout.pay]
+limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
+limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
 [portal.billing.enterpriseUpsell]
 cta = "Explore Enterprise"
@@ -6180,10 +6209,12 @@ currentPlan = "Current plan"
 freeForever = "Free forever"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
 ownerOnly = "Only the team owner can switch on the Processor plan."
+payInvoice = "Pay invoice to complete"
 planName = "Editor"
 ssoIncluded = "SSO included"
 switchOnProcessor = "Switch on the Processor →"
 unlimitedUsers = "Unlimited users"
+viewQuote = "View quote"
 
 [portal.billing.invoices]
 columnAmount = "Amount"
@@ -6243,6 +6274,105 @@ unit = "PDFs"
 unitsPending_one = "{{units}} meter unit pending sync from linked instances"
 unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
+[portal.billing.prepaid]
+capSuffix = "of {{total}} prepaid credits"
+expires = "Expires {{date}}"
+eyebrow = "Prepaid capacity"
+note = "Used before metered billing and outside your spend limit."
+topUp = "Top up"
+
+[portal.billing.prepaid.buy]
+back = "Back"
+calcTitle = "Calculate your annual payment"
+cancel = "Cancel"
+cancelPurchase = "Cancel purchase"
+close = "Close"
+continueToPayment = "Continue to payment"
+finalise = "Finalise"
+invoiceErrorTitle = "Couldn't generate the invoice"
+loadingTitle = "Loading your quote"
+payTitle = "Pay for your year"
+step = "Step {{current}} of {{total}}"
+
+[portal.billing.prepaid.calc]
+change = "Change"
+deployRow = "Deployment"
+done = "Done"
+enterpriseHint = "This is enterprise scale. At this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes."
+governanceRow = "Governance"
+governanceValue = "{{label}} · {{count}} policies"
+handlesLabel = "Your Processor"
+handlesValue = "handles {{volume}} credits / mo"
+pipelinesLabel = "Pipelines"
+policiesMeta = "{{count}} policies"
+poolCaption = "One pool of {{credits}} credits for the year. Heavy months borrow from light ones."
+priceLabel = "Your year · 12 months for the price of 10"
+rateUnknown = "We'll show the exact price at checkout."
+savings = "You save {{amount}} · 2 months free."
+sizingRow = "Sizing"
+sizingValue = "{{label}} · {{desc}}"
+usersLabel = "Total users"
+
+[portal.billing.prepaid.consent]
+label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Managed by Stirling. Live in minutes."
+cloudValue = "Stirling Cloud · Managed"
+selfhost = "Self-hosted"
+selfhostDesc = "Runs on private infrastructure. Same rate."
+selfhostValue = "Self-hosted · Private infrastructure"
+
+[portal.billing.prepaid.offer]
+cta = "Review offer"
+subtitle = "Prepay a year of PDF processing and get two months free, used before metered billing, outside your spend limit."
+title = "Get 12 months for the price of 10"
+
+[portal.billing.prepaid.pay]
+accountName = "Account holder name"
+accountNamePlaceholder = "e.g. Jane Smith"
+companyName = "Company name (optional)"
+companyNamePlaceholder = "e.g. Acme Inc."
+downloadInvoice = "Download invoice"
+payOnline = "Pay online"
+poNumber = "PO number (optional)"
+poNumberPlaceholder = "e.g. PO-2026-0142"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Advanced"
+advancedDesc = "Pipelines drive most of your processing."
+none = "None"
+noneDesc = "Not running pipelines yet. Turn them on any time."
+standard = "Standard"
+standardDesc = "A few pipelines re-process arriving PDFs."
+
+[portal.billing.prepaid.posture]
+essentials = "Essentials"
+essentialsDesc = "Classification, the default, plus Sharing"
+governed = "Governed"
+governedDesc = "Adds Security and Routing"
+regulated = "Regulated"
+regulatedDesc = "Every category, incl. Compliance, Retention, Ingestion"
+
+[portal.billing.prepaid.review]
+download = "Download quote (PDF)"
+downloading = "Preparing…"
+share = "share for approval"
+
+[portal.billing.prepaid.size]
+compact = "Compact"
+compactDesc = "Files under 25 MB, no data charges"
+heavy = "Heavy"
+heavyDesc = "Scanned or image-heavy, routinely 50 MB+"
+standard = "Standard"
+standardDesc = "Mostly small, some scans past 25 MB"
+
+[portal.billing.prepaid.state]
+exhausted = "Used up"
+healthy = "Plenty left"
+low = "Running low"
+
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
 cancel = "Cancel"
@@ -6252,7 +6382,7 @@ capSuffixWithDocs = "/ month · ≈ {{documents}} documents"
 displaySub = "You're only billed for what you process automatically — never past the ceiling."
 editTitle = "Set your monthly ceiling"
 eyebrow = "Spend limit"
-guardrailBody = "a hard ceiling — you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost."
+guardrailBody = "a hard ceiling; you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost."
 guardrailLabel = "Your guardrail:"
 noCap = "no cap"
 pctUsed = "{{pct}}% used"
@@ -6318,11 +6448,7 @@ createTitleFor = "Connect {{name}}"
 delete = "Delete"
 edit = "Edit"
 editTitle = "Edit connection"
-subtitle = "Reusable credentials that sources, pipeline outputs and integration steps connect to."
 unsupportedType = "This connection type cannot be edited here."
-
-[portal.connections.actions]
-new = "New connection"
 
 [portal.connections.categories.advanced]
 description = "For a service we do not support yet."
@@ -6375,13 +6501,9 @@ label = "Username"
 helperText = "Paste the URL the service gave you. Only paths under it can be called."
 label = "Webhook URL"
 
-[portal.connections.empty]
-description = "Add a connection to reuse the same credentials across sources, pipeline outputs and integration steps."
-title = "No connections yet"
-
 [portal.connections.fields]
 name = "Connection name"
-namePlaceholder = "e.g. Claims bucket"
+namePlaceholder = "e.g. Production"
 
 [portal.connections.picker]
 cancel = "Cancel"
@@ -6395,11 +6517,6 @@ heading = "What do you want to connect?"
 noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
 noResultsTitle = "Nothing matches \"{{query}}\""
 searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
-
-[portal.connections.table]
-detail = "Details"
-name = "Name"
-type = "Type"
 
 [portal.connections.types.api]
 description = "Call any HTTP API from a policy. You choose the URL, authentication and payload."
@@ -7348,6 +7465,41 @@ models = "Models"
 security = "Security"
 storage = "Storage"
 
+[portal.integrations]
+addAnother = "Add another"
+availableHeading = "Available"
+comingSoonHeading = "Coming soon"
+connect = "Connect"
+connectedHeading = "Connected"
+connectionCount_one = "{{count}} connection"
+connectionCount_other = "{{count}} connections"
+customApi = "Custom API"
+searchPlaceholder = "Search integrations"
+subtitle = "Everything Stirling can talk to. Credentials are created once here, then referenced by sources, policies and pipelines."
+title = "Integrations"
+typedName = "{{tool}} name"
+
+[portal.integrations.filters]
+all = "All"
+audit = "Audit"
+connected = "Connected"
+notify = "Notify"
+security = "Security"
+signing = "Signing"
+storage = "Storage"
+
+[portal.integrations.status]
+connected = "Connected"
+
+[portal.integrations.table]
+integration = "Integration"
+worksWith = "Works with"
+
+[portal.integrations.worksWith]
+pipelines = "Pipelines"
+policies = "Policies"
+sources = "Sources"
+
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
@@ -7356,6 +7508,7 @@ documents = "Documents"
 editor = "Editor"
 home = "Home"
 infrastructure = "Infrastructure"
+integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
@@ -8312,7 +8465,11 @@ connectSource = "Connect source"
 
 [portal.sources.builder]
 back = "Back to sources"
+backToTypes = "All source types"
 cancel = "Cancel"
+chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
+comingSoon = "Coming soon"
+comingSoonHeading = "Coming soon"
 create = "Create source"
 createTitle = "Connect a source"
 delete = "Delete"
@@ -8351,14 +8508,22 @@ source = "Source"
 status = "Status"
 usedBy = "Policies"
 
-[portal.sources.tabs]
-connections = "Connections"
-sources = "Sources"
+[portal.sources.types.box]
+description = "Pull documents from Box folders your team already shares."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Pull documents from a shared Dropbox folder."
+label = "Dropbox"
 
 [portal.sources.types.editor]
 description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
 noPolicies = "No policies run from the editor yet."
+
+[portal.sources.types.email]
+description = "Turn attachments sent to a dedicated mailbox into documents."
+label = "Email inbox"
 
 [portal.sources.types.folder]
 description = "Watch a directory on the server for new documents."
@@ -8391,6 +8556,18 @@ label = "Folder depth"
 all = "Include subfolders"
 top = "Top level only"
 
+[portal.sources.types.googledrive]
+description = "Pull documents from shared Google Drive folders."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Watch an SMB network share for new documents."
+label = "Network drive"
+
+[portal.sources.types.onedrive]
+description = "Watch OneDrive folders for new documents."
+label = "OneDrive"
+
 [portal.sources.types.s3]
 description = "Pull documents from an Amazon S3 or S3-compatible bucket."
 label = "Amazon S3"
@@ -8411,6 +8588,14 @@ snapshot = "Snapshot: re-read the bucket every run"
 helperText = "Only objects whose keys start with this prefix are processed."
 label = "Key prefix"
 placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Poll an SFTP drop folder for new documents."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "Pull documents from SharePoint document libraries."
+label = "SharePoint"
 
 [portal.sources.types.unknown]
 label = "Source"

@@ -31,7 +31,14 @@ export function ConnectionForm({
 
   return (
     <div className="portal-sources__connection-form">
-      <FormField label={t("portal.connections.fields.name")} required>
+      {/* "S3 storage name", "Jira name": the vendor is in the label, so the
+          field explains itself and the placeholder stays a neutral example. */}
+      <FormField
+        label={t("portal.integrations.typedName", {
+          tool: t(type.labelKey),
+        })}
+        required
+      >
         <Input
           value={values.name ?? ""}
           placeholder={t("portal.connections.fields.namePlaceholder")}
