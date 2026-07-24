@@ -29,7 +29,7 @@ public class SaasTeamExtensionService {
                 .orElseGet(() -> repository.save(new SaasTeamExtensions(team)));
     }
 
-    /** Whether the team is personal (1-seat owned by a single user). Defaults to false. */
+    /** Whether the team is a disposable single-owner personal team. Defaults to false. */
     public boolean isPersonal(Team team) {
         if (team == null || team.getId() == null) {
             return false;
@@ -58,8 +58,14 @@ public class SaasTeamExtensionService {
                 .orElse(0);
     }
 
+    /**
+     * Persisted max seats, or {@link SaasTeamExtensions#UNLIMITED_SEATS} (unlimited) when no row.
+     */
     public int getMaxSeats(Team team) {
-        return repository.findByTeamId(team.getId()).map(SaasTeamExtensions::getMaxSeats).orElse(1);
+        return repository
+                .findByTeamId(team.getId())
+                .map(SaasTeamExtensions::getMaxSeats)
+                .orElse(SaasTeamExtensions.UNLIMITED_SEATS);
     }
 
     public Long getCreatedByUserId(Team team) {
@@ -87,7 +93,7 @@ public class SaasTeamExtensionService {
                 .orElse(true);
     }
 
-    /** Atomic seat increment with personal-team cap enforcement. */
+    /** Atomic seat increment; only capped when a personal team sets a positive maxSeats. */
     @Transactional
     public int incrementSeatsUsed(Team team) {
         getOrCreate(team);
