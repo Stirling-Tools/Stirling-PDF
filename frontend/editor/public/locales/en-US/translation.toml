@@ -3204,7 +3204,7 @@ title = "Quality Adjustment"
 tags = "squish,small,tiny"
 
 [config]
-plan = "Plan"
+plan = "Plan & Usage"
 team = "Team"
 
 [config.account.overview]
@@ -5502,25 +5502,6 @@ title = "Page Ranges"
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
 
-[payg.activity]
-docs = "docs"
-empty = "No billable activity yet this period."
-subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
-title = "Recent billable activity"
-
-[payg.cap]
-amount = "Cap amount"
-custom = "Custom"
-docsEstimate = "≈ {{docs}} processed PDFs / month"
-docsRate = "at {{rate}} / PDF"
-noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
-noCapLabel = "No cap"
-noneShort = "No cap"
-perMonth = "/ month"
-save = "Update cap"
-subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
-title = "Monthly spending cap"
-
 [payg.checkout]
 connecting = "Connecting to Stripe…"
 errorTitle = "Stripe error"
@@ -5534,87 +5515,18 @@ continue = "Continue with mock subscription"
 noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
 title = "Stripe Embedded Checkout (mock mode)"
 
-[payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
-capValue = "{{symbol}}{{amount}} / month"
-noCap = "No cap"
-note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
-summaryLabel = "Monthly ceiling"
-title = "Welcome to the Processor plan"
-
-[payg.docHelp]
-billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
-chains = "Running the same file through several steps of one automation counts it once, not once per step."
-perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
-refunds = "If a job fails on its first step, the PDF is credited back automatically."
-toggle = "What counts as a PDF?"
-
 [payg.error]
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
-
-[payg.free.cta]
-benefit1Body = "chain tools, schedule runs, batch process"
-benefit1Title = "Automation pipelines"
-benefit2Body = "summarize, classify, redact, AI-OCR"
-benefit2Title = "AI tools"
-benefit3Body = "call any Stirling endpoint programmatically"
-benefit3Title = "API access"
-button = "Turn on Processor →"
-reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
-title = "Turn on the Processor plan"
-
-[payg.free.editor]
-eyebrow = "Editor plan · Always free"
-
-[payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
-freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
-[payg.free.member]
-ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
-
-[payg.free.proc]
-eyebrow = "Processor plan · metered"
-
 [payg.free.state]
 approachingLimit = "Approaching limit"
 limitReached = "Limit reached"
 plentyLeft = "Plenty left"
-
-[payg.gates]
-ai = "AI tools (AI Create, suggestions, AI-OCR)"
-automation = "Automations & pipelines"
-client = "Browser-only tools (viewer, page editor, file management)"
-offsite = "Server tools (compress, OCR, convert, watermark…)"
-pauses = "pauses at cap"
-title = "What happens when the cap is reached"
-
-[payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
-freeLabel = "Always free"
-freeTitle = "Unlimited PDF editing"
-meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
-meterLabel = "Metered"
-meterTitle = "Automation · AI · API"
-
-[payg.member]
-askLeader = "Only your team owner can change the cap."
-
-[payg.members]
-docs = "PDFs"
-subtitle = "Billable PDFs each teammate has processed this period."
-title = "Team member usage"
-
-[payg.role]
-leader = "Team owner"
-member = "Member"
 
 [payg.signupRequired]
 body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
@@ -5638,71 +5550,6 @@ resets = "Resets each billing period"
 degraded = "Cap reached"
 full = "Healthy"
 warned = "Approaching cap"
-
-[payg.stripe]
-open = "Open billing portal"
-subtitle = "Receipts, invoices, payment method, billing currency."
-title = "Manage billing in Stripe"
-
-[payg.stripe.toast.unavailable]
-body = "Billing portal isn't available right now. Try again in a moment."
-title = "Billing portal unavailable"
-
-[payg.upgrade]
-backAria = "Back"
-closeAria = "Close"
-
-[payg.upgrade.button]
-cancel = "Cancel"
-continue = "Continue →"
-finish = "Finish"
-
-[payg.upgrade.cap]
-help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
-title = "Set your monthly spend ceiling"
-usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
-
-[payg.upgrade.checkout]
-capValue = "{{symbol}}{{amount}} / month"
-edit = "Edit"
-help = "Stripe handles your card details. Stirling never sees them."
-loading = "Loading checkout…"
-noCap = "No cap"
-title = "Add your payment method"
-
-[payg.upgrade.help]
-aiBody = "summarize, classify, redact, AI-OCR"
-aiTitle = "AI tools"
-apiBody = "programmatic access to any Stirling endpoint"
-apiTitle = "API calls"
-automationBody = "chained tools or scheduled runs that don't need clicks"
-automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
-title = "What we count toward billing"
-
-[payg.upgrade.promise]
-body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
-highlight = "Manual tools stay free, always."
-
-[payg.upgrade.steps]
-cap = "Set monthly ceiling"
-payment = "Add payment method"
-
-[payg.upgrade.title]
-confirm = "You're subscribed"
-default = "Upgrade to Processor plan"
-
-[payg.usage]
-breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
-capLine = "{{cap}}/mo cap"
-estBill = "≈ {{amount}} so far this period"
-firstFree = "First {{free}} free"
-noCap = "No monthly cap"
-ofLimitProcessed = "/ {{limit}} PDFs processed"
-processed = "PDFs processed"
-resetsIn = "Resets in {{days}} days"
-resetsTomorrow = "Resets tomorrow"
-thisPeriod = "This billing period"
 
 [payment]
 canCloseWindow = "You can now close this window."
@@ -6011,47 +5858,6 @@ tags = "automate,sequence,scripted,batch-process"
 title = "Pipeline"
 
 [plan]
-contact = "Contact Us"
-current = "Current Plan"
-featureComparison = "Feature Comparison"
-from = "From"
-hideComparison = "Hide Feature Comparison"
-licensedSeats = "Licensed: {{count}} seats"
-manage = "Manage"
-perMonth = "/month"
-perSeat = "/seat"
-popular = "Popular"
-selectPlan = "Select Plan"
-showComparison = "Compare All Features"
-upgrade = "Upgrade"
-withServer = "+ Server Plan"
-
-[plan.api]
-large = "5,000 Credits"
-medium = "1,000 Credits"
-small = "500 Credits"
-xsmall = "100 Credits"
-
-[plan.availablePlans]
-subtitle = "Choose the plan that fits your needs"
-title = "Available Plans"
-
-[plan.enterprise]
-highlight1 = "Custom pricing"
-highlight2 = "Dedicated support"
-highlight3 = "Latest features"
-name = "Enterprise"
-requiresServer = "Requires Server"
-requiresServerMessage = "Please upgrade to the Server plan first before upgrading to Enterprise."
-
-[plan.feature]
-api = "API Access"
-automation = "Automate tool workflows"
-customPricing = "Custom Pricing"
-fileSize = "File Size Limit"
-pdfTools = "Basic PDF Tools"
-priority = "Priority Support"
-title = "Feature"
 
 [plan.features]
 allPdfOperations = "All PDF operations"
@@ -6072,14 +5878,6 @@ upToFiveUsers = "Up to 5 users"
 upToFiveUsersLowercase = "up to 5 users"
 usageTracking = "Usage tracking"
 usersLimitedToSeats = "Users limited to seats"
-
-[plan.free]
-forever = "Forever free"
-highlight1 = "Limited Tool Usage Per week"
-highlight2 = "Access to all tools"
-highlight3 = "Community support"
-included = "Included"
-name = "Free"
 
 [plan.freeLimit]
 cta = "View Processor Plan"
@@ -6109,14 +5907,31 @@ cta = "See plans"
 overLimit = "more than {{limit}}"
 title = "Free self-hosted limit reached"
 
-[plan.period]
-month = "month"
+[plan.link]
+body = "Manual PDF editing is always free. Link this instance to a Stirling account to see metered usage and billing, and to claim your free processing allowance."
+cta = "Link Stirling account"
+title = "Link your Stirling account"
 
-[plan.pro]
-highlight1 = "Unlimited Tool Usage"
-highlight2 = "Advanced PDF tools"
-highlight3 = "No watermarks"
-name = "Pro"
+[plan.snapshot]
+active = "Active"
+auditRetention = "Audit retention"
+currentPlan = "Current plan"
+documentsMetered = "From {{rate}} · scales with size + policies"
+documentsMonth = "Documents this month"
+floorScales = "Floor; scales with size + policies"
+hardCapFree = "Hard cap on Free"
+manageCta = "Manage in Usage & Billing"
+noCardOnFile = "No card on file"
+noSpendLimit = "No spend limit"
+pctOfLimit = "{{pct}}% of {{cap}} limit"
+perCredit = "{{amount}} / credit"
+readOnlyHint = "This is read-only, ask a workspace admin to make changes."
+retentionDays = "{{count}} days"
+sources = "Sources"
+sourcesSub = "Connected for policies + pipelines"
+spendMonth = "Spend this month"
+startingRate = "Starting rate"
+startingRateFree = "A credit is one processor run · first {{count}} free"
 
 [plan.spendCap]
 cta = "View Spending Limit"
@@ -6124,29 +5939,9 @@ dismiss = "Not Now"
 message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
 title = "You're on a Roll!"
 
-[plan.static]
-activateLicense = "Activate Your License"
-contactToUpgrade = "Contact us to upgrade or customize your plan"
-getLicense = "Get Server License"
-monthlyBilling = "Monthly Billing"
-selectPeriod = "Select Billing Period"
-upgradeToEnterprise = "Upgrade to Enterprise"
-upTo = "Up to"
-yearlyBilling = "Yearly Billing"
-
-[plan.static.billingPortal]
-message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
-title = "Email Verification Required"
-
-[plan.static.licenseActivation]
-activate = "Activate License"
-checkoutOpened = "Checkout Opened in New Tab"
-doLater = "I'll do this later"
-enterKey = "Enter your license key below to activate your plan:"
-instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
-keyDescription = "Paste the license key from your email"
-success = "License Activated!"
-successMessage = "Your license has been successfully activated. You can now close this window."
+[plan.tier]
+editor = "Editor"
+processor = "Processor"
 
 [policies.activity]
 outputsUnavailable = "Policy outputs are no longer available to download."
@@ -9645,7 +9440,7 @@ version = "Version"
 
 [settings.licensingAnalytics]
 audit = "Audit"
-plan = "Plan"
+plan = "Plan & Usage"
 title = "Licensing & Analytics"
 usageAnalytics = "Usage Analytics"
 

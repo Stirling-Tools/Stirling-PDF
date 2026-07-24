@@ -247,9 +247,9 @@ export const useConfigNavSections = (
       items: [
         {
           key: "adminPlan",
-          label: t("settings.licensingAnalytics.plan", "Plan"),
+          label: t("settings.licensingAnalytics.plan", "Plan & Usage"),
           icon: "star-rounded",
-          component: <AdminPlanSection />,
+          component: <AdminPlanSection onRequestClose={onRequestClose} />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
