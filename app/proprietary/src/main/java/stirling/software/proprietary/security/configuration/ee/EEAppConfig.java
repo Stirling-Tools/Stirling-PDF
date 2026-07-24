@@ -1,7 +1,5 @@
 package stirling.software.proprietary.security.configuration.ee;
 
-import static stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -30,8 +28,7 @@ public class EEAppConfig {
     @Profile("security & !saas")
     @Bean(name = "runningProOrHigher")
     public boolean runningProOrHigher() {
-        License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
-        return license == License.SERVER || license == License.ENTERPRISE;
+        return true;
     }
 
     @Profile("security & !saas")
@@ -43,7 +40,7 @@ public class EEAppConfig {
     @Profile("security & !saas")
     @Bean(name = "runningEE")
     public boolean runningEnterprise() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;
+        return true;
     }
 
     @Profile("security & !saas")

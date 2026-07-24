@@ -306,36 +306,7 @@ public class UserLicenseSettingsService {
      * @return Maximum number of users allowed (Integer.MAX_VALUE for unlimited)
      */
     public int calculateMaxAllowedUsers() {
-        validateSettingsIntegrity();
-        UserLicenseSettings settings = getOrCreateSettings();
-
-        int grandfatheredLimit = settings.getGrandfatheredUserCount();
-        if (grandfatheredLimit == 0) {
-            // Fallback if not initialized yet - should not happen with validation
-            log.warn("Grandfathered limit is 0, using default: {}", DEFAULT_USER_LIMIT);
-            grandfatheredLimit = DEFAULT_USER_LIMIT;
-        }
-
-        // No license: use grandfathered limit
-        if (!hasPaidLicense()) {
-            log.debug("No license: using grandfathered limit of {}", grandfatheredLimit);
-            return grandfatheredLimit;
-        }
-
-        int licenseMaxUsers = settings.getLicenseMaxUsers();
-
-        // SERVER license (maxUsers=0): unlimited users
-        if (licenseMaxUsers == 0) {
-            log.debug("SERVER license: unlimited users allowed");
-            return Integer.MAX_VALUE;
-        }
-
-        // ENTERPRISE license (maxUsers>0): license seats only (replaces grandfathering)
-        log.debug(
-                "ENTERPRISE license: {} seats (grandfathered {} not added)",
-                licenseMaxUsers,
-                grandfatheredLimit);
-        return licenseMaxUsers;
+        return Integer.MAX_VALUE;
     }
 
     /**
@@ -352,25 +323,7 @@ public class UserLicenseSettingsService {
      * @return true if the user can use OAuth/SAML
      */
     public boolean isOAuthEligible(User user) {
-        String username = (user != null) ? user.getUsername() : "<new user>";
-        log.info("OAuth eligibility check for user: {}", username);
-
-        // Check license first - if paying, they're eligible (no need to check grandfathering)
-        boolean hasPaid = hasPaidLicense();
-        if (hasPaid) {
-            log.debug("User {} eligible for OAuth via paid license", username);
-            return true;
-        }
-
-        // No license - check if grandfathered (fallback for V1 users)
-        if (user != null && user.isOauthGrandfathered()) {
-            log.info("User {} eligible for OAuth via grandfathering (no paid license)", username);
-            return true;
-        }
-
-        // Not grandfathered and no license
-        log.info("User {} NOT eligible for OAuth: no paid license and not grandfathered", username);
-        return false;
+        return true;
     }
 
     /**
@@ -387,29 +340,7 @@ public class UserLicenseSettingsService {
      * @return true if the user can use SAML
      */
     public boolean isSamlEligible(User user) {
-        String username = (user != null) ? user.getUsername() : "<new user>";
-        log.info("SAML2 eligibility check for user: {}", username);
-
-        // Check license first - if paying, they're eligible (no need to check grandfathering)
-        boolean hasEnterprise = hasEnterpriseLicense();
-        if (hasEnterprise) {
-            log.debug("User {} eligible for SAML2 via ENTERPRISE license", username);
-            return true;
-        }
-
-        // No license - check if grandfathered (fallback for V1 users)
-        if (user != null && user.isOauthGrandfathered()) {
-            log.info(
-                    "User {} eligible for SAML2 via grandfathering (no ENTERPRISE license)",
-                    username);
-            return true;
-        }
-
-        // Not grandfathered and no license
-        log.info(
-                "User {} NOT eligible for SAML2: no ENTERPRISE license and not grandfathered",
-                username);
-        return false;
+        return true;
     }
 
     /**
@@ -419,9 +350,7 @@ public class UserLicenseSettingsService {
      * @return true if the addition would exceed the limit
      */
     public boolean wouldExceedLimit(int newUsersCount) {
-        long currentUserCount = userService.getTotalUsersCount();
-        int maxAllowed = calculateMaxAllowedUsers();
-        return (currentUserCount + newUsersCount) > maxAllowed;
+        return false;
     }
 
     /**

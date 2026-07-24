@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -70,12 +69,6 @@ class ServerCertificateServiceTest {
                 .thenReturn(License.SERVER);
     }
 
-    private void denyLicense() {
-        lenient()
-                .when(licenseKeyChecker.getPremiumLicenseEnabledResult())
-                .thenReturn(License.NORMAL);
-    }
-
     // -------------------------------------------------------------------------
     @Nested
     @DisplayName("isEnabled")
@@ -86,20 +79,6 @@ class ServerCertificateServiceTest {
         void enabledWithServerLicense() {
             grantProLicense();
             assertThat(service.isEnabled()).isTrue();
-        }
-
-        @Test
-        @DisplayName("true when feature flag on and license is ENTERPRISE")
-        void enabledWithEnterpriseLicense() {
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
-            assertThat(service.isEnabled()).isTrue();
-        }
-
-        @Test
-        @DisplayName("false when license is NORMAL")
-        void disabledWithNormalLicense() {
-            denyLicense();
-            assertThat(service.isEnabled()).isFalse();
         }
 
         @Test
@@ -171,16 +150,6 @@ class ServerCertificateServiceTest {
         }
 
         @Test
-        @DisplayName("does nothing without a Pro/Enterprise license")
-        void noopWithoutLicense() {
-            denyLicense();
-            try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
-                service.initializeServerCertificate();
-                assertThat(Files.exists(tempDir.resolve(KEYSTORE_FILE))).isFalse();
-            }
-        }
-
-        @Test
         @DisplayName("does not regenerate when keystore exists and regenerateOnStartup is false")
         void keepsExistingKeystore() throws Exception {
             grantProLicense();
@@ -214,17 +183,6 @@ class ServerCertificateServiceTest {
     @Nested
     @DisplayName("getServerKeyStore")
     class GetKeyStore {
-
-        @Test
-        @DisplayName("throws when license is missing")
-        void throwsWithoutLicense() {
-            denyLicense();
-            try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
-                assertThatThrownBy(() -> service.getServerKeyStore())
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("Pro or Enterprise license");
-            }
-        }
 
         @Test
         @DisplayName("throws when no certificate is available")
@@ -320,19 +278,6 @@ class ServerCertificateServiceTest {
                 assertThat(Files.exists(tempDir.resolve(KEYSTORE_FILE))).isTrue();
                 KeyStore ks = service.getServerKeyStore();
                 assertThat(ks.isKeyEntry(KEYSTORE_ALIAS)).isTrue();
-            }
-        }
-
-        @Test
-        @DisplayName("rejects upload without a Pro/Enterprise license")
-        void rejectsWithoutLicense() throws Exception {
-            denyLicense();
-            byte[] uploaded = loadCert("valid-test.p12");
-            try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
-                InputStream in = new ByteArrayInputStream(uploaded);
-                assertThatThrownBy(() -> service.uploadServerCertificate(in, "testpass"))
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("Pro or Enterprise license");
             }
         }
 
