@@ -464,7 +464,7 @@ const EmbedPdfViewerContent = ({
           target.tagName === "TEXTAREA" ||
           target.isContentEditable);
 
-      // Ctrl+P (print) must be intercepted unconditionally
+      // Ctrl+P (print) must be intercepted 
       // whenever the viewer is mounted, even before the user has hovered over it.
       // Ctrl+R (rotate) is intercepted only on desktop (Tauri), while on web it still falls through to browser refresh.
       // Without this, the browser falls through to its native "print HTML page"
