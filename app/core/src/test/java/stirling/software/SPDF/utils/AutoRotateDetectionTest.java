@@ -126,6 +126,32 @@ class AutoRotateDetectionTest {
     }
 
     @Test
+    void unanimousShortTextIsConclusive() throws IOException {
+        // Between MIN_GLYPHS_UNANIMOUS (8) and MIN_GLYPHS (30): trusted only because every
+        // glyph agrees on direction, the sparse-page path (e.g. a lone header or URL line).
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage(PDRectangle.LETTER);
+        document.addPage(page);
+        try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+            content.beginText();
+            content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+            content.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(90), 300, 200));
+            content.showText("york.gov.uk/pay");
+            content.endText();
+        }
+        try (document) {
+            TextDirection direction = AutoRotateDetection.detectTextDirection(document, 0);
+            assertThat(direction.glyphCount())
+                    .isBetween(
+                            AutoRotateDetection.MIN_GLYPHS_UNANIMOUS,
+                            AutoRotateDetection.MIN_GLYPHS - 1);
+            assertThat(direction.dominance()).isEqualTo(1.0);
+            assertThat(direction.isConclusive()).isTrue();
+            assertThat(direction.dominantDirection()).isEqualTo(90);
+        }
+    }
+
+    @Test
     void parsesTypicalOsdOutput() {
         String output =
                 """

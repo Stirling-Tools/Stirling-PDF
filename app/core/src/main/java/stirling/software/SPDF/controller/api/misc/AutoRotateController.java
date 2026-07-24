@@ -3,10 +3,13 @@ package stirling.software.SPDF.controller.api.misc;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -60,6 +63,7 @@ public class AutoRotateController {
 
     private static final String METHOD_TEXT = "text";
     private static final String METHOD_OSD = "osd";
+    private static final String METHOD_INFERRED = "inferred";
     private static final String METHOD_NONE = "none";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -169,7 +173,55 @@ public class AutoRotateController {
             runOsdOnPages(document, osdCandidates, results, threshold);
         }
 
+        if (request.isInferUndetected()) {
+            inferUndetectedPages(results);
+        }
+
         return summarise(results, pageCount);
+    }
+
+    /**
+     * Fill in pages that no signal could decide, using the pages that could. When every decided
+     * page sharing an undecided page's current rotation agrees on one correction, that correction
+     * is the document's consensus for that rotation and is applied to the undecided page. This is
+     * the common "whole document rotated uniformly, but a cover or near-blank page has too little
+     * text to detect on its own" case. If decided pages disagree, nothing is inferred.
+     */
+    private void inferUndetectedPages(List<PageResult> results) {
+        // rotation -> the single agreed correction, or null once a conflict is seen
+        Map<Integer, Integer> consensus = new HashMap<>();
+        Set<Integer> conflicted = new HashSet<>();
+        for (PageResult result : results) {
+            if (METHOD_NONE.equals(result.getMethod())) {
+                continue;
+            }
+            int rotation = result.getCurrentRotation();
+            if (conflicted.contains(rotation)) {
+                continue;
+            }
+            Integer existing = consensus.get(rotation);
+            if (existing == null) {
+                consensus.put(rotation, result.getCorrection());
+            } else if (existing != result.getCorrection()) {
+                conflicted.add(rotation);
+                consensus.remove(rotation);
+            }
+        }
+
+        for (PageResult result : results) {
+            if (!METHOD_NONE.equals(result.getMethod())) {
+                continue;
+            }
+            Integer correction = consensus.get(result.getCurrentRotation());
+            if (correction == null) {
+                continue;
+            }
+            result.setMethod(METHOD_INFERRED);
+            result.setCorrection(correction);
+            result.setConfidence(null);
+            result.setApply(correction != 0);
+            result.setNote("inferredFromDocument");
+        }
     }
 
     private void runOsdOnPages(
@@ -280,6 +332,7 @@ public class AutoRotateController {
         int toRotate = 0;
         int byText = 0;
         int byOsd = 0;
+        int byInference = 0;
         int undetected = 0;
         for (PageResult result : results) {
             if (result.isApply()) {
@@ -288,6 +341,7 @@ public class AutoRotateController {
             switch (result.getMethod()) {
                 case METHOD_TEXT -> byText++;
                 case METHOD_OSD -> byOsd++;
+                case METHOD_INFERRED -> byInference++;
                 default -> undetected++;
             }
         }
@@ -297,6 +351,7 @@ public class AutoRotateController {
                 .pagesToRotate(toRotate)
                 .detectedByText(byText)
                 .detectedByOsd(byOsd)
+                .inferred(byInference)
                 .undetected(undetected)
                 .build();
     }

@@ -27,6 +27,9 @@ public class AutoRotateAnalysisResult {
 
     private int detectedByOsd;
 
+    @Schema(description = "Pages whose correction was inherited from the document consensus")
+    private int inferred;
+
     private int undetected;
 
     @Data
@@ -55,7 +58,7 @@ public class AutoRotateAnalysisResult {
 
         @Schema(
                 description = "How the orientation was determined",
-                allowableValues = {"text", "osd", "none"})
+                allowableValues = {"text", "osd", "inferred", "none"})
         private String method;
 
         @Schema(description = "Whether the correction will be (or was) applied")

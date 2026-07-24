@@ -21,11 +21,21 @@ public final class AutoRotateDetection {
 
     private AutoRotateDetection() {}
 
-    /** Minimum glyphs on a page before the embedded-text signal is trusted at all. */
+    /** Glyphs needed to trust the text signal at the ordinary dominance bar. */
     public static final int MIN_GLYPHS = 30;
 
-    /** Fraction of glyphs that must share one direction for the text signal to be conclusive. */
+    /** Fraction of glyphs that must share one direction at the ordinary bar. */
     public static final double MIN_DOMINANCE = 0.95;
+
+    /**
+     * Glyphs needed to trust the text signal when the glyphs are near-unanimous. Lets sparse pages
+     * (a header, a single line, a rotated URL) be decided from their own text instead of falling
+     * through to OSD, as long as effectively every glyph agrees on the direction.
+     */
+    public static final int MIN_GLYPHS_UNANIMOUS = 8;
+
+    /** Dominance required for the sparse-page path — essentially total agreement. */
+    public static final double UNANIMOUS_DOMINANCE = 0.99;
 
     /**
      * Dominant embedded-text direction of one page.
@@ -37,7 +47,10 @@ public final class AutoRotateDetection {
     public record TextDirection(int dominantDirection, double dominance, int glyphCount) {
 
         public boolean isConclusive() {
-            return glyphCount >= MIN_GLYPHS && dominance >= MIN_DOMINANCE;
+            if (glyphCount >= MIN_GLYPHS && dominance >= MIN_DOMINANCE) {
+                return true;
+            }
+            return glyphCount >= MIN_GLYPHS_UNANIMOUS && dominance >= UNANIMOUS_DOMINANCE;
         }
     }
 

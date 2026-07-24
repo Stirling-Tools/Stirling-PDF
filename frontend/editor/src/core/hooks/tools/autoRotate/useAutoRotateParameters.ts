@@ -11,11 +11,14 @@ export interface AutoRotateParameters extends BaseParameters {
   detectionMode: AutoRotateDetectionMode;
   /** Minimum Tesseract OSD confidence before a correction is applied. */
   confidenceThreshold: number;
+  /** Give undetected pages the document's consensus rotation when its pages agree. */
+  inferUndetected: boolean;
 }
 
 export const defaultParameters: AutoRotateParameters = {
   detectionMode: "auto",
   confidenceThreshold: 14,
+  inferUndetected: true,
 };
 
 export type AutoRotateParametersHook = BaseParametersHook<AutoRotateParameters>;

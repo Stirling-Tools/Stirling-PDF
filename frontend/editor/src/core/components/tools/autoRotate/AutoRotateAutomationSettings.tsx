@@ -5,6 +5,7 @@ import {
   AutoRotateDetectionMode,
 } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
+import { Checkbox } from "@app/ui/Checkbox";
 
 interface AutoRotateAutomationSettingsProps {
   parameters: AutoRotateParameters;
@@ -61,6 +62,18 @@ const AutoRotateAutomationSettings = ({
             "confidenceThreshold",
             typeof value === "number" ? value : 14,
           )
+        }
+      />
+
+      <Checkbox
+        label={t(
+          "autoRotate.inferUndetected.title",
+          "Fill undetected pages from document",
+        )}
+        disabled={disabled}
+        checked={parameters.inferUndetected}
+        onChange={(event) =>
+          onParameterChange("inferUndetected", event.currentTarget.checked)
         }
       />
     </Stack>

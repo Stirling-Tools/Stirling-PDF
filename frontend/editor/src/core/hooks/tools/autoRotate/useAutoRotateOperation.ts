@@ -15,7 +15,7 @@ import {
 
 export const AUTO_ROTATE_ENDPOINT = "/api/v1/misc/auto-rotate-pdf";
 
-export type AutoRotateMethod = "text" | "osd" | "none";
+export type AutoRotateMethod = "text" | "osd" | "inferred" | "none";
 
 /** Mirrors the backend's AutoRotateAnalysisResult.PageResult. */
 export interface AutoRotatePageResult {
@@ -35,6 +35,7 @@ export interface AutoRotateReport {
   pagesToRotate: number;
   detectedByText: number;
   detectedByOsd: number;
+  inferred: number;
   undetected: number;
 }
 
@@ -59,6 +60,10 @@ const createAutoRotateProcessor =
       analysisForm.append(
         "confidenceThreshold",
         String(parameters.confidenceThreshold),
+      );
+      analysisForm.append(
+        "inferUndetected",
+        String(parameters.inferUndetected),
       );
       analysisForm.append("dryRun", "true");
 

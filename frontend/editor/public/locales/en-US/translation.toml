@@ -2194,6 +2194,10 @@ title = "Detection method"
 [autoRotate.error]
 failed = "An error occurred while auto-rotating the PDF."
 
+[autoRotate.inferUndetected]
+desc = "When the readable pages agree on a rotation, apply it to pages that were too sparse to detect on their own."
+title = "Fill undetected pages from document"
+
 [autoRotate.report]
 applied = "{{degrees}}° CW"
 confidence = "Confidence"
@@ -2201,16 +2205,18 @@ methodHeader = "Method"
 noteHeader = "Note"
 page = "Page"
 rotation = "Rotation"
-summary = "{{rotated}} of {{total}} pages rotated ({{text}} by text, {{osd}} by OCR, {{undetected}} undetected)"
+summary = "{{rotated}} of {{total}} pages rotated ({{text}} by text, {{osd}} by OCR, {{inferred}} inferred, {{undetected}} undetected)"
 title = "Detection report"
 
 [autoRotate.report.method]
+inferred = "Inferred"
 none = "Skipped"
 osd = "OCR"
 text = "Text"
 
 [autoRotate.report.note]
 belowThreshold = "Below confidence threshold"
+inferredFromDocument = "From document consensus"
 noDominantDirection = "Mixed text directions"
 osdFailed = "No readable text found"
 osdNoVerdict = "OCR gave no verdict"

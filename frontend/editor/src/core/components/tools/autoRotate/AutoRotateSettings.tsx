@@ -1,5 +1,6 @@
 import { Stack, Text, NumberInput } from "@mantine/core";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Checkbox } from "@app/ui/Checkbox";
 import { useTranslation } from "react-i18next";
 import {
   AutoRotateParametersHook,
@@ -71,6 +72,25 @@ const AutoRotateSettings = ({
           parameters.updateParameter(
             "confidenceThreshold",
             typeof value === "number" ? value : 14,
+          )
+        }
+      />
+
+      <Checkbox
+        label={t(
+          "autoRotate.inferUndetected.title",
+          "Fill undetected pages from document",
+        )}
+        description={t(
+          "autoRotate.inferUndetected.desc",
+          "When the readable pages agree on a rotation, apply it to pages that were too sparse to detect on their own.",
+        )}
+        disabled={disabled}
+        checked={parameters.parameters.inferUndetected}
+        onChange={(event) =>
+          parameters.updateParameter(
+            "inferUndetected",
+            event.currentTarget.checked,
           )
         }
       />

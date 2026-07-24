@@ -24,6 +24,12 @@ const methodBadge = (t: TFunction, method: AutoRotatePageResult["method"]) => {
           {t("autoRotate.report.method.osd", "OCR")}
         </Badge>
       );
+    case "inferred":
+      return (
+        <Badge size="sm" variant="light" color="grape">
+          {t("autoRotate.report.method.inferred", "Inferred")}
+        </Badge>
+      );
     default:
       return (
         <Badge size="sm" variant="light" color="gray">
@@ -55,6 +61,11 @@ const noteLabel = (t: TFunction, note: string | null | undefined): string => {
       return t(
         "autoRotate.report.note.belowThreshold",
         "Below confidence threshold",
+      );
+    case "inferredFromDocument":
+      return t(
+        "autoRotate.report.note.inferredFromDocument",
+        "From document consensus",
       );
     default:
       return note ?? "";
@@ -88,11 +99,12 @@ const AutoRotateReport = ({ reports }: AutoRotateReportProps) => {
           <Text size="xs" c="dimmed">
             {t("autoRotate.report.summary", {
               defaultValue:
-                "{{rotated}} of {{total}} pages rotated ({{text}} by text, {{osd}} by OCR, {{undetected}} undetected)",
+                "{{rotated}} of {{total}} pages rotated ({{text}} by text, {{osd}} by OCR, {{inferred}} inferred, {{undetected}} undetected)",
               rotated: report.pagesToRotate,
               total: report.totalPages,
               text: report.detectedByText,
               osd: report.detectedByOsd,
+              inferred: report.inferred,
               undetected: report.undetected,
             })}
           </Text>

@@ -171,6 +171,52 @@ class AutoRotateControllerTest {
     }
 
     @Test
+    void infersUndetectedPageFromDocumentConsensus() throws Exception {
+        // Page 1 has body text and is rotated 90 (-> 270 correction); page 2 is blank and shares
+        // the same rotation. With OSD unavailable, page 2 can't be detected on its own, so it
+        // should inherit page 1's 270 correction.
+        PDDocument document = docWithUprightText(90);
+        PDPage blank = new PDPage(PDRectangle.LETTER);
+        blank.setRotation(90);
+        document.addPage(blank);
+        AutoRotatePdfRequest request = request(document);
+        request.setDryRun(true);
+        request.setDetectionMode("text");
+
+        ResponseEntity<?> response = controller.autoRotatePdf(request);
+
+        AutoRotateAnalysisResult result = (AutoRotateAnalysisResult) response.getBody();
+        AutoRotateAnalysisResult.PageResult page2 = result.getPages().get(1);
+        assertThat(page2.getMethod()).isEqualTo("inferred");
+        assertThat(page2.getCorrection()).isEqualTo(270);
+        assertThat(page2.isApply()).isTrue();
+        assertThat(page2.getNote()).isEqualTo("inferredFromDocument");
+        assertThat(result.getInferred()).isEqualTo(1);
+        assertThat(result.getPagesToRotate()).isEqualTo(2);
+    }
+
+    @Test
+    void doesNotInferWhenDisabled() throws Exception {
+        PDDocument document = docWithUprightText(90);
+        PDPage blank = new PDPage(PDRectangle.LETTER);
+        blank.setRotation(90);
+        document.addPage(blank);
+        AutoRotatePdfRequest request = request(document);
+        request.setDryRun(true);
+        request.setDetectionMode("text");
+        request.setInferUndetected(false);
+
+        ResponseEntity<?> response = controller.autoRotatePdf(request);
+
+        AutoRotateAnalysisResult result = (AutoRotateAnalysisResult) response.getBody();
+        AutoRotateAnalysisResult.PageResult page2 = result.getPages().get(1);
+        assertThat(page2.getMethod()).isEqualTo("none");
+        assertThat(page2.isApply()).isFalse();
+        assertThat(result.getInferred()).isZero();
+        assertThat(result.getUndetected()).isEqualTo(1);
+    }
+
+    @Test
     void rejectsInvalidDetectionMode() {
         AutoRotatePdfRequest request = new AutoRotatePdfRequest();
         request.setDetectionMode("magic");

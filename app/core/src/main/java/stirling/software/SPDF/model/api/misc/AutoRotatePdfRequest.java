@@ -35,6 +35,15 @@ public class AutoRotatePdfRequest extends PDFFile {
 
     @Schema(
             description =
+                    "When a page cannot be decided on its own but the pages that could be decided"
+                            + " agree on a single correction for that same current rotation, apply"
+                            + " that shared correction to the undecided page. Handles documents"
+                            + " rotated uniformly where some pages are too sparse to detect alone",
+            defaultValue = "true")
+    private boolean inferUndetected = true;
+
+    @Schema(
+            description =
                     "Optional JSON object of pre-computed corrections to apply without running"
                             + " detection, mapping 1-based page number to additional clockwise"
                             + " degrees (multiples of 90), e.g. {\"1\":90,\"4\":180}. Pages not"
