@@ -257,6 +257,48 @@ export const procurementSaasHandlers = [
     (deal as Record<string, unknown>).stage = "security";
     return HttpResponse.json(deal);
   }),
+  http.get(`${SAAS}/api/v1/procurement/agreement/document`, () => {
+    const q = (deal as { latestQuote: { quoteNumber?: string } | null })
+      .latestQuote;
+    if (!q) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json({
+      docId: "enterprise-agreement",
+      version: "0.9.1",
+      versionLabel: "SEA v0.9.1",
+      displayName: "Stirling Enterprise Agreement",
+      effectiveDate: "2026-07-10",
+      status: "draft",
+      markdown: [
+        "# Stirling Enterprise Agreement",
+        "## Part A — Master Services Agreement",
+        "Provider will provide the Stirling PDF Processor and Editor as described in the Order Form.",
+        `## Part B — Order Form · ${q.quoteNumber ?? "Q-MOCK"}`,
+        "| Term | Value |",
+        "| --- | --- |",
+        "| Subscription | Enterprise · Stirling Cloud |",
+        "| Escalator | +3% at each anniversary during the Term |",
+        "## Part C — Data Processing Addendum",
+        "Provider processes Personal Data only on Customer's documented instructions.",
+      ].join("\n\n"),
+    });
+  }),
+  http.post(
+    `${SAAS}/api/v1/procurement/agreement/sign`,
+    async ({ request }) => {
+      const body = (await request.json().catch(() => ({}))) as Partial<{
+        signatoryName: string;
+        authorityConfirmed: boolean;
+      }>;
+      if (!body.signatoryName || !body.authorityConfirmed) {
+        return new HttpResponse(null, { status: 400 });
+      }
+      return HttpResponse.json({
+        signatureId: 1,
+        versionLabel: "SEA v0.9.1",
+        pdfStored: true,
+      });
+    },
+  ),
   http.post(`${SAAS}/api/v1/procurement/go-live`, () => {
     const d = deal as Record<string, unknown>;
     if (d.dealId) {

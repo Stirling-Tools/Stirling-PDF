@@ -418,6 +418,51 @@ export function buildQuote(cfg: QuoteConfigInput): Promise<QuoteResult> {
   });
 }
 
+/** The filled enterprise agreement (MSA + Order Form + DPA) for the current quote, as markdown. */
+export interface AgreementDocument {
+  docId: string;
+  version: string;
+  /** e.g. "SEA v0.9.1" — the exact document version a signature will be pinned to. */
+  versionLabel: string;
+  displayName: string;
+  effectiveDate: string;
+  /** "draft" until counsel clears it — the UI badges drafts. */
+  status: string;
+  markdown: string;
+}
+
+/** Buyer-supplied signing inputs captured on the agreement stage. */
+export interface SignAgreementInput {
+  customerLegalName: string;
+  signatoryName: string;
+  signatoryTitle: string;
+  authorityConfirmed: boolean;
+}
+
+export interface SignAgreementResult {
+  signatureId: number;
+  versionLabel: string;
+  /** Whether the signed PDF was rendered + stored (false when the render runtime was unavailable). */
+  pdfStored: boolean;
+}
+
+/** Fetch the filled agreement to review before signing. */
+export function fetchAgreementDocument(): Promise<AgreementDocument> {
+  return apiClient.saas.json<AgreementDocument>(
+    "/api/v1/procurement/agreement/document",
+  );
+}
+
+/** Record the signed agreement (pins version + hash + variable snapshot + signatory + PDF). */
+export function recordAgreementSignature(
+  input: SignAgreementInput,
+): Promise<SignAgreementResult> {
+  return apiClient.saas.json<SignAgreementResult>(
+    "/api/v1/procurement/agreement/sign",
+    { method: "POST", body: input },
+  );
+}
+
 // ---- Stripe Quote operations (Supabase edge functions) ---------------------
 // Java has no Stripe SDK, so issuing/accepting the quote and fetching its PDF run in edge functions
 // that own Stripe; they persist results back through SECURITY DEFINER RPCs. The portal invokes them

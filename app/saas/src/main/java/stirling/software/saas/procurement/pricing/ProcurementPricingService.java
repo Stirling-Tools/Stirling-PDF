@@ -60,12 +60,7 @@ public class ProcurementPricingService {
                                 rates.discountPerDoubling()
                                         * (Math.log(runVol / (double) RUN_CURVE_KNEE) / LOG2))
                         : 0.0;
-        double rate = Math.max(rates.floorRatePerRun(), rates.listRatePerRun() * (1.0 - volDisc));
-        // File-size multiplier (D93): larger, image-heavy PDFs cost more OCR/compute/storage. Folds
-        // into the per-run rate after the floor, so it flows through the meter, TCV and renewal.
-        // QuoteConfig has already snapped it to a known tier, so a tampered request can't sneak a
-        // cheaper factor in.
-        rate *= cfg.sizeMult();
+        double rate = perRunRate(cfg, rates);
         double termDisc = rates.termDiscount(cfg.termYears());
 
         // The meter is a whole-dollar figure (the quote reads in dollars), then minor units.
@@ -158,6 +153,48 @@ public class ProcurementPricingService {
                             training));
         }
         return new QuoteBreakdown(lines, annualNet, tcv, renewalAnnual, cfg.currency());
+    }
+
+    /**
+     * The per-run rate after the committed-volume curve, the half-cent floor, and the file-size
+     * multiplier — the same value {@link #price} meters against. Extracted so read-only callers
+     * (the Order Form) can quote it without re-deriving the curve.
+     */
+    private static double perRunRate(QuoteConfig cfg, PricingRates rates) {
+        long runVol = Math.max(0, cfg.volume()) * (long) Math.max(1, cfg.intensity());
+        double volDisc =
+                runVol > RUN_CURVE_KNEE
+                        ? Math.min(
+                                0.5,
+                                rates.discountPerDoubling()
+                                        * (Math.log(runVol / (double) RUN_CURVE_KNEE) / LOG2))
+                        : 0.0;
+        return Math.max(rates.floorRatePerRun(), rates.listRatePerRun() * (1.0 - volDisc))
+                * cfg.sizeMult();
+    }
+
+    /**
+     * The effective per-PDF rate at the chosen posture, in dollars (4-decimal quote figure). This
+     * is what the Order Form and quote copy speak in — never the per-run rate. Read-only; does not
+     * affect billing.
+     */
+    public double effectiveRatePerPdf(QuoteConfig cfg) {
+        return perRunRate(cfg, PricingRates.defaults()) * Math.max(1, cfg.intensity());
+    }
+
+    /** The multi-year term discount as a whole-percent figure for the Order Form (0.05 → 5). */
+    public int termDiscountPct(int termYears) {
+        return (int) Math.round(PricingRates.defaults().termDiscount(termYears) * 100.0);
+    }
+
+    /** Buyer-facing posture name (Essentials / Governed / Regulated) for the given intensity. */
+    public static String postureName(int intensity) {
+        return postureLabel(intensity);
+    }
+
+    /** Buyer-facing deployment name (Stirling Cloud / Self-hosted / Air-gapped). */
+    public static String deploymentName(String deployment) {
+        return deploymentLabel(deployment);
     }
 
     /** The default CPI escalator (fraction) applied to the annual fee on each post-term renewal. */
