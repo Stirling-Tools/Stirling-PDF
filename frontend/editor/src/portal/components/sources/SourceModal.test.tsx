@@ -286,6 +286,52 @@ describe("SourceModal", () => {
     );
   });
 
+  it("ignores a stale source fetch after the modal switches to another source", async () => {
+    // Two edits in flight: A resolves last (stale). Without the guard its late resolution would
+    // clobber B's fields, and a save would then write A's config onto source B.
+    const makeDeferred = () => {
+      let resolve!: (value: unknown) => void;
+      const promise = new Promise<unknown>((r) => (resolve = r));
+      return { promise, resolve };
+    };
+    const aDef = makeDeferred();
+    const bDef = makeDeferred();
+    fetchSource.mockImplementation((id: string) =>
+      id === "src-A" ? aDef.promise : bDef.promise,
+    );
+
+    const view = render(
+      <SourceModal open sourceId="src-A" onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+    // Switch to B while A is still pending; the effect cleanup marks A's fetch stale.
+    view.rerender(
+      <SourceModal open sourceId="src-B" onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+    bDef.resolve({
+      id: "src-B",
+      name: "Bravo",
+      type: "folder",
+      options: { directory: "/bravo", mode: "consume" },
+      enabled: true,
+    });
+
+    const directory = (await screen.findByLabelText(
+      /portal\.sources\.types\.folder\.fields\.directory\.label/,
+    )) as HTMLInputElement;
+    await waitFor(() => expect(directory.value).toBe("/bravo"));
+
+    // The stale fetch resolves last; the guard must stop it overwriting B.
+    aDef.resolve({
+      id: "src-A",
+      name: "Alpha",
+      type: "folder",
+      options: { directory: "/alpha", mode: "consume" },
+      enabled: true,
+    });
+    await Promise.resolve();
+    expect(directory.value).toBe("/bravo");
+  });
+
   it("deletes an existing source after the inline confirm", async () => {
     fetchSource.mockResolvedValue({
       id: "src-9",

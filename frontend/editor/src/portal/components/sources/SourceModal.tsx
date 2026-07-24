@@ -154,8 +154,13 @@ export function SourceModal({
     }
     setStage("configure");
     setLoading(true);
+    // Guard against a stale fetch: a fast close+reopen to another source would otherwise let the
+    // earlier resolution clobber this one's state, and a save then write one source's config onto
+    // another.
+    let ignore = false;
     fetchSource(sourceId)
       .then((source) => {
+        if (ignore) return;
         const resolved = typeFor(source.type);
         setLoaded(source);
         setType(resolved);
@@ -163,8 +168,15 @@ export function SourceModal({
         setOptions(optionsFor(resolved, source.options));
         setEnabled(source.enabled ?? true);
       })
-      .catch((e) => setError(errorMessage(e)))
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        if (!ignore) setError(errorMessage(e));
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
   }, [open, sourceId]);
 
   function chooseType(next: CreatableSourceType) {
