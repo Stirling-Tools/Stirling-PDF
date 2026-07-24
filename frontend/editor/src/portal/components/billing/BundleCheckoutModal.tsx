@@ -101,6 +101,23 @@ function pipelineIdFor(mult: number): string {
 }
 
 /**
+ * Reuse key for the minted Stripe quote. Includes the sizing MULTIPLIER ids alongside the pool + PO,
+ * not just the pool: different posture/size/pipeline combos can yield the same poolCredits (identical
+ * Stripe amount), and keying on the pool alone would skip the re-mint on such an edit and leave the
+ * persisted quote row with stale sizing fields. Keying on the ids re-mints (and re-persists) whenever
+ * the buyer actually changes the config.
+ */
+function buildStripeQuoteSig(
+  poolCredits: number,
+  postureId: string,
+  sizeId: string,
+  pipelineId: string,
+  poNumber: string,
+): string {
+  return `${poolCredits}|${postureId}|${sizeId}|${pipelineId}|${poNumber.trim()}`;
+}
+
+/**
  * Pre-quote calculator progress, persisted per team so closing the modal / reloading doesn't lose the
  * buyer's place. Once a real quote exists it's the source of truth (loaded server-side), so this is
  * only the "still sizing, nothing minted yet" fallback.
@@ -304,7 +321,13 @@ export function BundleCheckoutModal({
           });
           // Match the reuse signature so resuming doesn't immediately re-mint the Stripe quote.
           setStripeQuoteSig(
-            `${latest.poolCredits}|${(saved?.poNumber ?? "").trim()}`,
+            buildStripeQuoteSig(
+              latest.poolCredits,
+              postureIdFor(latest.posturePolicies),
+              sizeIdFor(latest.sizeMult),
+              pipelineIdFor(latest.pipelineMult),
+              saved?.poNumber ?? "",
+            ),
           );
         }
         // Already accepted (an invoice exists) → resume straight to the payment step rather than the
@@ -461,7 +484,13 @@ export function BundleCheckoutModal({
     stripeQuote: BundleStripeQuote;
   } | null> {
     if (teamId == null) return null;
-    const sig = `${quote.poolCredits}|${poNumber.trim()}`;
+    const sig = buildStripeQuoteSig(
+      quote.poolCredits,
+      postureId,
+      sizeId,
+      pipelineId,
+      poNumber,
+    );
     if (stripeQuote && stripeQuoteSig === sig && quoteId != null) {
       return { quoteId, stripeQuote }; // unchanged since last mint — reuse, no new quote
     }
