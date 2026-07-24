@@ -8,6 +8,7 @@ import {
   Tooltip,
   Group,
   Box,
+  Checkbox,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
@@ -34,6 +35,7 @@ import {
   AddSignatureResult,
 } from "@app/hooks/tools/sign/useSavedSignatures";
 import { SavedSignaturesSection } from "@app/components/tools/sign/SavedSignaturesSection";
+import { shouldPausePlacementAfterExit } from "@app/components/tools/sign/placementMode";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
 
 type SignatureDrafts = {
@@ -90,7 +92,13 @@ const SignSettings = ({
   defaultSignatureSource,
 }: SignSettingsProps) => {
   const { t } = useTranslation();
-  const { isPlacementMode, signaturesApplied, historyApiRef } = useSignature();
+  const {
+    isPlacementMode,
+    signaturesApplied,
+    historyApiRef,
+    placeMultiple,
+    setPlaceMultiple,
+  } = useSignature();
   const { activeFileIndex } = useViewer();
   const [historyAvailability, setHistoryAvailability] = useState({
     canUndo: false,
@@ -821,6 +829,34 @@ const SignSettings = ({
     onParameterChange,
   ]);
 
+  // After a single placement (when "place multiple" is off) the
+  // SignatureAPIBridge drops out of placement mode. Without pausing here, the
+  // auto-activate effect below would immediately pull the user back into
+  // placement mode - so single placement would never stick and the "place
+  // multiple" checkbox would appear to do nothing.
+  const wasPlacementModeRef = useRef(isPlacementMode);
+  useEffect(() => {
+    const shouldPause = shouldPausePlacementAfterExit({
+      wasInPlacementMode: wasPlacementModeRef.current,
+      isInPlacementMode: isPlacementMode,
+      placeMultiple,
+      signaturesApplied,
+      placementEnabled: shouldEnablePlacement,
+      alreadyPaused: isPlacementManuallyPaused,
+    });
+    wasPlacementModeRef.current = isPlacementMode;
+
+    if (shouldPause) {
+      setPlacementManuallyPaused(true);
+    }
+  }, [
+    isPlacementMode,
+    placeMultiple,
+    signaturesApplied,
+    shouldEnablePlacement,
+    isPlacementManuallyPaused,
+  ]);
+
   useEffect(() => {
     if (!shouldEnablePlacement) {
       if (isPlacementMode) {
@@ -1196,6 +1232,20 @@ const SignSettings = ({
           />
           <Box style={{ marginLeft: "auto" }}>{placementToggleControl}</Box>
         </Group>
+
+        <Checkbox
+          checked={placeMultiple}
+          onChange={(event) => setPlaceMultiple(event.currentTarget.checked)}
+          label={translate(
+            "mode.placeMultiple",
+            "Stay in placement mode after each placement",
+          )}
+          description={translate(
+            "mode.placeMultipleDesc",
+            "Place several stamps in a row instead of exiting after the first.",
+          )}
+          disabled={disabled}
+        />
 
         <Alert color={placementAlert.color} title={placementAlert.title}>
           <Text size="sm">{placementAlert.message}</Text>
