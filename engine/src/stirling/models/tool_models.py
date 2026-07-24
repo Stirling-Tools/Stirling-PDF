@@ -241,6 +241,36 @@ class AutoRenameParams(ApiModel):
     )
 
 
+class DetectionMode(StrEnum):
+    """
+    Detection method. 'auto' tries embedded-text direction first and falls back to Tesseract OSD for pages without usable text; 'text' uses only embedded-text direction; 'osd' forces Tesseract OSD for every page
+    """
+
+    auto = "auto"
+    text = "text"
+    osd = "osd"
+
+
+class AutoRotatePdfParams(ApiModel):
+    confidence_threshold: float = Field(
+        14.0,
+        description="Minimum Tesseract OSD orientation confidence required before a correction is applied. Matches OCRmyPDF's --rotate-pages-threshold scale",
+    )
+    detection_mode: DetectionMode = Field(
+        DetectionMode.auto,
+        description="Detection method. 'auto' tries embedded-text direction first and falls back to Tesseract OSD for pages without usable text; 'text' uses only embedded-text direction; 'osd' forces Tesseract OSD for every page",
+    )
+    dry_run: bool | None = Field(
+        None,
+        description="If true, no rotation is applied; returns a JSON report of the per-page detection results instead of a PDF",
+    )
+    page_rotations: str | None = Field(
+        None,
+        description='Optional JSON object of pre-computed corrections to apply without running detection, mapping 1-based page number to additional clockwise degrees (multiples of 90), e.g. {"1":90,"4":180}. Pages not listed are left unchanged',
+        examples=['{"1":90,"4":180}'],
+    )
+
+
 class AutoSplitPdfParams(ApiModel):
     duplex_mode: bool = Field(
         False,
@@ -1432,6 +1462,7 @@ class Model(
         | AddPageNumbersParams
         | AddStampParams
         | AutoRenameParams
+        | AutoRotatePdfParams
         | AutoSplitPdfParams
         | CompressPdfParams
         | DeleteAttachmentParams
@@ -1505,6 +1536,7 @@ class Model(
         | AddPageNumbersParams
         | AddStampParams
         | AutoRenameParams
+        | AutoRotatePdfParams
         | AutoSplitPdfParams
         | CompressPdfParams
         | DeleteAttachmentParams
@@ -1579,6 +1611,7 @@ type ParamToolModel = (
     | AddPageNumbersParams
     | AddStampParams
     | AutoRenameParams
+    | AutoRotatePdfParams
     | AutoSplitPdfParams
     | CompressPdfParams
     | DeleteAttachmentParams
@@ -1654,6 +1687,7 @@ class ToolEndpoint(StrEnum):
     ADD_PAGE_NUMBERS = "/api/v1/misc/add-page-numbers"
     ADD_STAMP = "/api/v1/misc/add-stamp"
     AUTO_RENAME = "/api/v1/misc/auto-rename"
+    AUTO_ROTATE_PDF = "/api/v1/misc/auto-rotate-pdf"
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
@@ -1727,6 +1761,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.ADD_PAGE_NUMBERS: AddPageNumbersParams,
     ToolEndpoint.ADD_STAMP: AddStampParams,
     ToolEndpoint.AUTO_RENAME: AutoRenameParams,
+    ToolEndpoint.AUTO_ROTATE_PDF: AutoRotatePdfParams,
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,

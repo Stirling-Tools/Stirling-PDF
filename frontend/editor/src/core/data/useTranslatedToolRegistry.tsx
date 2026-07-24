@@ -656,9 +656,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(autoRotateOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import(
-              "@app/components/tools/autoRotate/AutoRotateAutomationSettings"
-            ),
+            import("@app/components/tools/autoRotate/AutoRotateAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "autoRotate"),
       },
