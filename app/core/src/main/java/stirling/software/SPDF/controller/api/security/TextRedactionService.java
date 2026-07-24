@@ -46,12 +46,11 @@ class TextRedactionService {
     private static final int MAX_XOBJECT_DEPTH = 10;
     private static final float PRECISION_THRESHOLD = 1e-3f;
     private static final int FONT_SCALE_FACTOR = 1000;
-    private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
+    private static final Set<String> TEXT_SHOWING_OPERATORS =
+            stirling.software.SPDF.pdf.redaction.RedactionPipeline.TEXT_SHOWING_OPERATORS;
     private static final COSString EMPTY_COS_STRING = new COSString("");
 
-    // -----------------------------------------------------------------------
     // Public API
-    // -----------------------------------------------------------------------
 
     Map<Integer, List<PDFText>> findTextToRedact(
             PDDocument document, String[] listOfText, boolean useRegex, boolean wholeWordSearch) {
@@ -135,9 +134,7 @@ class TextRedactionService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Content stream manipulation
-    // -----------------------------------------------------------------------
 
     List<Object> createTokensWithoutTargetText(
             PDDocument document,
@@ -271,9 +268,7 @@ class TextRedactionService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Placeholder creation
-    // -----------------------------------------------------------------------
 
     String createPlaceholderWithFont(String originalWord, PDFont font) {
         if (originalWord == null || originalWord.isEmpty()) {
@@ -410,9 +405,7 @@ class TextRedactionService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Width calculation
-    // -----------------------------------------------------------------------
 
     private float safeGetStringWidth(PDFont font, String text) {
         if (font == null || text == null || text.isEmpty()) {
@@ -601,9 +594,7 @@ class TextRedactionService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Token and segment operations
-    // -----------------------------------------------------------------------
 
     private void processPageXObjects(
             PDDocument document,
@@ -706,16 +697,12 @@ class TextRedactionService {
     private void writeRedactedContentToXObject(
             PDDocument document, PDFormXObject formXObject, List<Object> redactedTokens)
             throws IOException {
-
-        PDStream newStream = new PDStream(document);
-
-        try (var out = newStream.createOutputStream()) {
+        // A form XObject's content IS its own stream body; overwrite it in place.
+        PDStream formStream = new PDStream(formXObject.getCOSObject());
+        try (var out = formStream.createOutputStream(COSName.FLATE_DECODE)) {
             ContentStreamWriter writer = new ContentStreamWriter(out);
             writer.writeTokens(redactedTokens);
         }
-
-        formXObject.getCOSObject().removeItem(COSName.CONTENTS);
-        formXObject.getCOSObject().setItem(COSName.CONTENTS, newStream.getCOSObject());
     }
 
     private List<TextSegment> extractTextSegments(PDPage page, List<Object> tokens) {
@@ -1168,9 +1155,7 @@ class TextRedactionService {
         };
     }
 
-    // -----------------------------------------------------------------------
     // Inner data classes
-    // -----------------------------------------------------------------------
 
     @Data
     private static class GraphicsState {

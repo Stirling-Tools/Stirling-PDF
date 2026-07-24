@@ -287,8 +287,12 @@ class TextRedactionServiceExtraTest {
 
                 service.createTokensWithoutTargetText(doc, page, Set.of("SECRET"), false, false);
 
-                // The deep traversal must have rewritten the inner form's content stream.
-                assertThat(inner.getCOSObject().containsKey(COSName.CONTENTS)).isTrue();
+                // The deep traversal must have rewritten the inner form's own stream in place (F3).
+                String innerContent;
+                try (var in = inner.getContents()) {
+                    innerContent = new String(in.readAllBytes(), StandardCharsets.ISO_8859_1);
+                }
+                assertThat(innerContent).doesNotContain("SECRET");
             }
         }
 

@@ -192,15 +192,27 @@ class RedactControllerTest {
         when(mockCOSStream.createOutputStream()).thenReturn(mockOutputStream);
         when(mockCOSStream.createOutputStream(any())).thenReturn(mockOutputStream);
 
+        // The pipeline saves then reloads the bytes to verify, so the mock must emit a real,
+        // reloadable PDF (not a placeholder) or verification throws on reopen.
+        byte[] realPdfBytes = createSimplePdfContent();
         lenient()
                 .doAnswer(
                         inv -> {
                             File f = inv.getArgument(0);
-                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
+                            java.nio.file.Files.write(f.toPath(), realPdfBytes);
                             return null;
                         })
                 .when(mockDocument)
                 .save(any(File.class));
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            java.io.OutputStream os = inv.getArgument(0);
+                            os.write(realPdfBytes);
+                            return null;
+                        })
+                .when(mockDocument)
+                .save(any(java.io.OutputStream.class));
         doNothing().when(mockDocument).close();
 
         // Build real service instances so tests exercise actual logic
@@ -347,7 +359,7 @@ class RedactControllerTest {
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
 
-            verify(mockDocument).save(any(File.class));
+            verify(mockDocument).save(any(java.io.OutputStream.class));
             verify(mockDocument).close();
         }
     }
@@ -753,7 +765,7 @@ class RedactControllerTest {
                 assertEquals(200, response.getStatusCode().value());
                 assertNotNull(response.getBody());
                 assertTrue(drainBody(response).length > 0);
-                verify(mockDocument, times(1)).save(any(File.class));
+                verify(mockDocument, times(1)).save(any(java.io.OutputStream.class));
                 verify(mockDocument, times(1)).close();
             }
         } catch (Exception e) {
@@ -776,7 +788,7 @@ class RedactControllerTest {
             if (response != null) {
                 assertNotNull(response);
                 assertEquals(200, response.getStatusCode().value());
-                verify(mockDocument, times(1)).save(any(File.class));
+                verify(mockDocument, times(1)).save(any(java.io.OutputStream.class));
             }
         } catch (Exception e) {
             log.info("Manual redaction test completed with graceful handling: {}", e.getMessage());
