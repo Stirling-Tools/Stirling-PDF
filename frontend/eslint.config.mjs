@@ -268,6 +268,17 @@ export default defineConfig(
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
     },
   },
+  // TEMPORARY (same rationale as procurement above): the connection/operation catalogues render
+  // bespoke preset tiles (tinted monogram + two-line text). Raw-<button> rule only; migrate later.
+  {
+    files: [
+      "editor/src/portal/components/sources/ConnectionTypePicker.tsx",
+      "editor/src/portal/components/policies/PolicyExternalApiConfig.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
+    },
+  },
   // Stricter rules that not all sub-folders are conformant to yet.
   {
     files: srcGlobs,

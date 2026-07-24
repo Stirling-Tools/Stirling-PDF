@@ -10,8 +10,8 @@
   height: 100vh;
   height: 100dvh; /* mobile browser chrome shrinks the viewport; dvh tracks it */
   overflow: hidden;
-  background: var(--color-bg);
-  color: var(--color-text-2);
+  background: var(--c-bg);
+  color: var(--c-text-muted);
 }
 
 .portal-shell__main {
@@ -55,7 +55,7 @@
   position: fixed;
   inset: 0;
   z-index: 75;
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--c-overlay);
 }
 
 @media (max-width: 48rem) {

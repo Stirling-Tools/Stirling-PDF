@@ -123,7 +123,7 @@ public class PolicyController {
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
-        validateAdHocOutput(definition);
+        validateAdHocRun(definition);
         PolicyInputs inputs = toInputs(files);
         PolicyRunHandle handle =
                 policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
@@ -144,7 +144,7 @@ public class PolicyController {
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
-        validateAdHocOutput(definition);
+        validateAdHocRun(definition);
         PolicyInputs inputs = toInputs(files);
 
         SseEmitter emitter =
@@ -560,18 +560,22 @@ public class PolicyController {
     }
 
     /**
-     * Authorization-check an ad-hoc run's output while the caller's principal is present (this
-     * request thread). The worker thread that later delivers carries no security context, so an S3
-     * output's connection-access check would be skipped there; without this gate a caller could
-     * reference another tenant's connection by id and write to it (confused deputy). Stored
-     * policies are covered by save-time {@link PolicyValidator#validate} instead.
+     * Authorization-check an ad-hoc run's steps and output while the caller's principal is present
+     * (this request thread). The worker thread that later runs and delivers carries no security
+     * context, so a connection-access check would be skipped there; without this gate a caller
+     * could reference another tenant's connection by id and write to it, or make the server call it
+     * with its stored credentials (confused deputy). Stored policies are covered by save-time
+     * {@link PolicyValidator#validate} instead.
      */
-    private void validateAdHocOutput(PipelineDefinition definition) {
-        if (definition.output() == null) {
-            return;
-        }
+    private void validateAdHocRun(PipelineDefinition definition) {
         try {
-            policyValidator.validateOutput(definition.output());
+            // Steps get the same treatment as the output, and for the same reason: an integration
+            // step dereferences its connection by id on a principal-less worker thread, so this
+            // request thread is the only place that reference can be checked against the caller.
+            policyValidator.validateSteps(definition.steps());
+            if (definition.output() != null) {
+                policyValidator.validateOutput(definition.output());
+            }
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }

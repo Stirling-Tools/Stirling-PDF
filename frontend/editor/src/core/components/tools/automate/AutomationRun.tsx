@@ -153,7 +153,7 @@ export default function AutomationRun({
             style={{
               width: 16,
               height: 16,
-              border: "2px solid #ccc",
+              border: "2px solid var(--c-border)",
               borderRadius: "50%",
             }}
           />

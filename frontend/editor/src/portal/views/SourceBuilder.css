@@ -31,7 +31,7 @@
 .portal-source-builder__title {
   font-size: 1.375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   margin: 0;
 }
 
@@ -67,7 +67,7 @@
 
 .portal-source-builder__type-card.is-selected {
   border-color: var(--color-accent, var(--color-brand));
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 .portal-source-builder__type-icon {
