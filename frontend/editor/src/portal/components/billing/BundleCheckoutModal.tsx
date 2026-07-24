@@ -218,10 +218,12 @@ export function BundleCheckoutModal({
   const [stripeQuoteSig, setStripeQuoteSig] = useState<string | null>(null);
   // The invoice generated when the quote is accepted (awaiting payment); null when simulated.
   const [invoice, setInvoice] = useState<BundleInvoice | null>(null);
-  // On resume, the total the quote was persisted at (server value), frozen so the receipt shows what
-  // the buyer actually quoted rather than a figure recomputed from a since-changed rate. Paired with
-  // the pool size it was persisted at — once the buyer edits the sizing (pool changes) we drop back to
-  // the live estimate, since editing re-mints and re-persists anyway.
+  // On resume, the total the quote was persisted at, frozen so the receipt shows what the buyer
+  // actually quoted rather than a figure recomputed from a since-changed rate. Once the Stripe quote
+  // has been minted this is the server-derived total (create-payg-bundle-quote overwrites price_minor
+  // with Price x qty - amount_off); before that it's the client estimate persisted at upsert. Paired
+  // with the pool size it was persisted at — once the buyer edits the sizing (pool changes) we drop
+  // back to the live estimate, since editing re-mints and re-persists anyway.
   const [persistedPriceMinor, setPersistedPriceMinor] = useState<number | null>(
     null,
   );
