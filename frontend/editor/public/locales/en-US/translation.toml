@@ -6566,8 +6566,14 @@ label = "Server URL"
 [portal.connections.commonFields.email]
 label = "Email"
 
+[portal.connections.commonFields.host]
+label = "Host"
+
 [portal.connections.commonFields.password]
 label = "Password"
+
+[portal.connections.commonFields.port]
+label = "Port"
 
 [portal.connections.commonFields.username]
 label = "Username"
@@ -6701,6 +6707,26 @@ baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Index an audit event in Elasticsearch each time a policy handles a document."
 label = "Elasticsearch"
 
+[portal.connections.types.ftp]
+description = "Poll an FTP or FTPS server for new documents."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Connection mode"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Active"
+passive = "Passive (recommended)"
+
+[portal.connections.types.ftp.fields.security]
+label = "Encryption"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explicit / AUTH TLS)"
+implicit = "FTPS (implicit)"
+none = "None (plain FTP)"
+
 [portal.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Post a message to a Google Chat space when a policy runs."
@@ -6768,9 +6794,37 @@ label = "Secret access key"
 description = "Email a document or a notification when a policy runs."
 label = "SendGrid"
 
+[portal.connections.types.sftp]
+description = "Poll an SFTP (SSH) server for new documents."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key passphrase"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Leave blank if you authenticate with a private key instead."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Optional. Paste an OpenSSH private key to authenticate with a key instead of a password."
+label = "Private key"
+
 [portal.connections.types.slack]
 description = "Post a message to Slack when a policy processes a document."
 label = "Slack"
+
+[portal.connections.types.smb]
+description = "Watch an SMB / CIFS network share (Windows or Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Network share"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Optional. The Windows domain or workgroup, if your server uses one."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
 
 [portal.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
@@ -8572,6 +8626,30 @@ inUse = "In use"
 total = "Connections"
 unused = "Unused"
 
+[portal.sources.networkFields.connection]
+helperText = "The stored connection with the server address and credentials. Reused by every source that references it."
+label = "Connection"
+
+[portal.sources.networkFields.directory]
+helperText = "Folder on the server to poll, relative to the login home or share root. Leave blank for the root."
+label = "Folder"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume removes each file from the server once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: process each file once"
+snapshot = "Snapshot: re-read the folder every run"
+
+[portal.sources.networkFields.recursive]
+label = "Folder depth"
+
+[portal.sources.networkFields.recursive.options]
+all = "Include subfolders"
+top = "Top level only"
+
 [portal.sources.status]
 active = "Active"
 disabled = "Disabled"
@@ -8630,6 +8708,10 @@ label = "Folder depth"
 [portal.sources.types.folder.fields.recursive.options]
 all = "Include subfolders"
 top = "Top level only"
+
+[portal.sources.types.ftp]
+description = "Poll an FTP or FTPS server folder for new documents."
+label = "FTP"
 
 [portal.sources.types.googledrive]
 description = "Pull documents from shared Google Drive folders."

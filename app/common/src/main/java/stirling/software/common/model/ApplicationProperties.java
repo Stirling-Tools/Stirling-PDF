@@ -252,6 +252,14 @@ public class ApplicationProperties {
         private boolean allowPrivateS3Endpoints = false;
 
         /**
+         * Whether a network source's host (SFTP, FTP, or SMB) may resolve to a loopback,
+         * link-local, or private address. Off by default so a connection cannot be pointed at
+         * internal services; enable for an on-network file server (e.g. an internal SFTP drop or a
+         * Samba share).
+         */
+        private boolean allowPrivateNetworkSources = false;
+
+        /**
          * Whether an API/Purview/ConsignO integration's base URL may resolve to a loopback,
          * link-local, or private address. Off by default: unlike S3 connections, any user may
          * create one of these, so without this gate a user could point a connection at the cloud

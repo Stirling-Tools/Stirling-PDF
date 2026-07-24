@@ -122,6 +122,149 @@ const S3_FIELDS: ConnectionFieldDef[] = [
   },
 ];
 
+// Network file servers (SFTP/FTP/SMB). The protocol is baked into presetConfig; the operator
+// supplies host and credentials. host/port/username/password reuse the shared commonFields copy.
+const SFTP_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "host",
+    labelKey: `${COMMON}.host.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.sftp.hostPlaceholder`,
+  },
+  {
+    key: "port",
+    labelKey: `${COMMON}.port.label`,
+    control: "text",
+    defaultValue: "22",
+  },
+  {
+    key: "username",
+    labelKey: `${COMMON}.username.label`,
+    control: "text",
+    required: true,
+  },
+  {
+    key: "password",
+    labelKey: `${COMMON}.password.label`,
+    control: "password",
+    helperTextKey: `${PREFIX}.sftp.fields.password.helperText`,
+  },
+  {
+    key: "privateKey",
+    labelKey: `${PREFIX}.sftp.fields.privateKey.label`,
+    control: "textarea",
+    helperTextKey: `${PREFIX}.sftp.fields.privateKey.helperText`,
+  },
+  {
+    key: "privateKeyPassphrase",
+    labelKey: `${PREFIX}.sftp.fields.passphrase.label`,
+    control: "password",
+  },
+];
+
+const FTP_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "host",
+    labelKey: `${COMMON}.host.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.ftp.hostPlaceholder`,
+  },
+  {
+    key: "port",
+    labelKey: `${COMMON}.port.label`,
+    control: "text",
+    defaultValue: "21",
+  },
+  {
+    key: "username",
+    labelKey: `${COMMON}.username.label`,
+    control: "text",
+    required: true,
+  },
+  {
+    key: "password",
+    labelKey: `${COMMON}.password.label`,
+    control: "password",
+    required: true,
+  },
+  {
+    key: "security",
+    labelKey: `${PREFIX}.ftp.fields.security.label`,
+    control: "select",
+    defaultValue: "NONE",
+    options: [
+      { value: "NONE", labelKey: `${PREFIX}.ftp.fields.security.options.none` },
+      {
+        value: "EXPLICIT",
+        labelKey: `${PREFIX}.ftp.fields.security.options.explicit`,
+      },
+      {
+        value: "IMPLICIT",
+        labelKey: `${PREFIX}.ftp.fields.security.options.implicit`,
+      },
+    ],
+  },
+  {
+    key: "passive",
+    labelKey: `${PREFIX}.ftp.fields.passive.label`,
+    control: "select",
+    defaultValue: "true",
+    options: [
+      {
+        value: "true",
+        labelKey: `${PREFIX}.ftp.fields.passive.options.passive`,
+      },
+      {
+        value: "false",
+        labelKey: `${PREFIX}.ftp.fields.passive.options.active`,
+      },
+    ],
+  },
+];
+
+const SMB_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "host",
+    labelKey: `${COMMON}.host.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.smb.hostPlaceholder`,
+  },
+  {
+    key: "port",
+    labelKey: `${COMMON}.port.label`,
+    control: "text",
+    defaultValue: "445",
+  },
+  {
+    key: "share",
+    labelKey: `${PREFIX}.smb.fields.share.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.smb.fields.share.placeholder`,
+  },
+  {
+    key: "username",
+    labelKey: `${COMMON}.username.label`,
+    control: "text",
+    required: true,
+  },
+  {
+    key: "password",
+    labelKey: `${COMMON}.password.label`,
+    control: "password",
+    required: true,
+  },
+  {
+    key: "domain",
+    labelKey: `${PREFIX}.smb.fields.domain.label`,
+    control: "text",
+    helperTextKey: `${PREFIX}.smb.fields.domain.helperText`,
+  },
+];
+
 const PURVIEW_FIELDS: ConnectionFieldDef[] = [
   {
     key: "tenantId",
@@ -586,6 +729,46 @@ export const CREATABLE_CONNECTION_TYPES: CreatableConnectionType[] = [
     descriptionKey: `${PREFIX}.s3.description`,
     searchTerms: ["aws", "bucket", "minio", "object storage"],
     fields: S3_FIELDS,
+  },
+  {
+    id: "sftp",
+    integrationType: "NETWORK",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.sftp.label`,
+    descriptionKey: `${PREFIX}.sftp.description`,
+    searchTerms: ["sftp", "ssh", "scp", "drop folder", "file transfer"],
+    presetConfig: { protocol: "SFTP" },
+    fields: SFTP_FIELDS,
+  },
+  {
+    id: "ftp",
+    integrationType: "NETWORK",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.ftp.label`,
+    descriptionKey: `${PREFIX}.ftp.description`,
+    searchTerms: ["ftp", "ftps", "file transfer", "drop folder"],
+    presetConfig: { protocol: "FTP" },
+    fields: FTP_FIELDS,
+  },
+  {
+    id: "smb",
+    integrationType: "NETWORK",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.smb.label`,
+    descriptionKey: `${PREFIX}.smb.description`,
+    searchTerms: [
+      "smb",
+      "cifs",
+      "samba",
+      "network drive",
+      "windows share",
+      "unc",
+    ],
+    presetConfig: { protocol: "SMB" },
+    fields: SMB_FIELDS,
   },
   {
     id: "purview",
