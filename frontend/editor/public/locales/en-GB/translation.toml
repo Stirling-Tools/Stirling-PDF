@@ -7309,8 +7309,6 @@ secondDestSub = "One destination per pipeline today"
 sharepointDest = "SharePoint"
 sharepointDestSub = "Write to a SharePoint library"
 triggerCurrentNote = "In the design each input carries its own trigger; for now one trigger runs the whole pipeline."
-webhookSource = "Webhook"
-webhookSourceSub = "Partners POST files to an endpoint"
 
 [portal.pipelines.composer.unit]
 days = "days"

@@ -54,6 +54,7 @@ import {
 import { clearProcessedHistory } from "@portal/api/policies";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
+import { SourceModal } from "@portal/components/sources/SourceModal";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
@@ -243,6 +244,26 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
   const [showTestFailure, setShowTestFailure] = useState(false);
+
+  // Create/edit sources in place (#7068's modal) instead of leaving the builder.
+  const [sourceModal, setSourceModal] = useState<{
+    open: boolean;
+    sourceId: string | null;
+  }>({ open: false, sourceId: null });
+  // A source created from here is what the pipeline wants: tick it on arrival.
+  const autoSelectSourceRef = useRef(false);
+  const knownSourceIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const ids = availableSources.map((source) => source.id);
+    if (autoSelectSourceRef.current) {
+      const fresh = ids.filter((sid) => !knownSourceIdsRef.current.has(sid));
+      if (fresh.length > 0) {
+        autoSelectSourceRef.current = false;
+        setSourceIds((current) => [...new Set([...current, ...fresh])]);
+      }
+    }
+    knownSourceIdsRef.current = new Set(ids);
+  }, [availableSources]);
 
   const mounted = useRef(true);
   useEffect(() => {
@@ -770,9 +791,7 @@ export function PipelineBuilder() {
                 className="portal-builder__source-edit"
                 aria-label={t("portal.pipelines.composer.editSource")}
                 onClick={() =>
-                  attemptLeave(
-                    `${toPortalPath(VIEW_PATHS.sources)}/${source.id}`,
-                  )
+                  setSourceModal({ open: true, sourceId: source.id })
                 }
               >
                 <EditOutlinedIcon style={{ fontSize: "1rem" }} />
@@ -785,7 +804,7 @@ export function PipelineBuilder() {
         <Button
           variant="tertiary"
           size="sm"
-          onClick={goToSources}
+          onClick={() => setSourceModal({ open: true, sourceId: null })}
           leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
         >
           {t("portal.sources.actions.connectSource")}
@@ -796,7 +815,6 @@ export function PipelineBuilder() {
           {t("portal.pipelines.composer.designOnly")}
         </div>
         {ghostOption("check", "manualUpload")}
-        {ghostOption("check", "webhookSource")}
       </div>
     </>
   );
@@ -903,7 +921,6 @@ export function PipelineBuilder() {
   );
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
-  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
 
   function close() {
     navigate(listPath);
@@ -913,12 +930,6 @@ export function PipelineBuilder() {
   function attemptLeave(destination: string) {
     if (dirty) setPendingNav(destination);
     else navigate(destination);
-  }
-
-  // Jump to the Sources page with its create wizard open, for when the source you want to run
-  // this pipeline over doesn't exist yet.
-  function goToSources() {
-    attemptLeave(sourcesPath);
   }
 
   function buildOutput(): OutputSpec {
@@ -1509,6 +1520,15 @@ export function PipelineBuilder() {
           {requestShown && codePanelJsx}
         </aside>
       </div>
+
+      <SourceModal
+        open={sourceModal.open}
+        sourceId={sourceModal.sourceId}
+        onClose={() => setSourceModal({ open: false, sourceId: null })}
+        onSaved={() => {
+          if (sourceModal.sourceId === null) autoSelectSourceRef.current = true;
+        }}
+      />
 
       <Modal
         open={showTestFailure && failedStepIndex !== null}

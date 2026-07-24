@@ -50,6 +50,16 @@ vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
 }));
 
+vi.mock("@portal/components/sources/SourceModal", () => ({
+  SourceModal: ({
+    open,
+    sourceId,
+  }: {
+    open: boolean;
+    sourceId?: string | null;
+  }) => (open ? <div>source-modal:{sourceId ?? "new"}</div> : null),
+}));
+
 const clearProcessedHistory = vi.fn();
 vi.mock("@portal/api/policies", () => ({
   clearProcessedHistory: (id: string) => clearProcessedHistory(id),
@@ -302,13 +312,11 @@ describe("PipelineBuilder", () => {
       screen.getByText("portal.pipelines.composer.outputCurrentNote"),
     ).toBeInTheDocument();
 
-    // Inputs: manual upload + webhook are grayed rows with no control to click.
+    // Inputs: manual upload stays a grayed row with no control to click
+    // (webhook graduated to a real connector in the source modal).
     fireEvent.click(screen.getByText("portal.pipelines.overview.chooseInput"));
-    expect(
-      screen.getByText("portal.pipelines.composer.manualUpload"),
-    ).toBeInTheDocument();
     const row = screen
-      .getByText("portal.pipelines.composer.webhookSource")
+      .getByText("portal.pipelines.composer.manualUpload")
       .closest(".portal-builder__ghost-row");
     expect(row).toHaveAttribute("aria-disabled");
     expect(row?.querySelector("button, input")).toBeNull();
@@ -438,6 +446,31 @@ describe("PipelineBuilder", () => {
       screen.queryByLabelText("portal.pipelines.composer.removeStep"),
     ).not.toBeInTheDocument();
     nowSpy.mockRestore();
+  });
+
+  it("creates and edits sources in place through the modal", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [
+        { id: "s1", name: "Claims intake", type: "folder", config: [] },
+      ],
+    });
+    renderBuilder("/processor/pipelines/new");
+    await screen.findByRole("textbox");
+    fireEvent.click(screen.getByText("portal.pipelines.overview.chooseInput"));
+
+    // Connect source opens the modal in create mode - no navigation.
+    fireEvent.click(
+      await screen.findByText("portal.sources.actions.connectSource"),
+    );
+    expect(screen.getByText("source-modal:new")).toBeInTheDocument();
+
+    // The pencil opens the same modal on the clicked source.
+    fireEvent.click(
+      screen.getByLabelText("portal.pipelines.composer.editSource"),
+    );
+    expect(screen.getByText("source-modal:s1")).toBeInTheDocument();
+    expect(screen.queryByText("pipelines list")).not.toBeInTheDocument();
   });
 
   it("closes the side editor from the panel header", async () => {
