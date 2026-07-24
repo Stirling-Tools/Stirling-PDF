@@ -2,7 +2,7 @@ name: Enterprise E2E (Playwright)
 
 # Enterprise Playwright suite — exercises premium-key gated features (audit,
 # teams, analytics) plus full OAuth + SAML logins via the Keycloak compose
-# stacks under testing/compose. Slow and secret-gated, so it runs in three
+# stacks under testing/compose. Slow and secret-gated, so it runs in four
 # situations:
 #
 #   - PRs that touch proprietary / premium / SSO compose / enterprise tests
@@ -12,28 +12,14 @@ name: Enterprise E2E (Playwright)
 #   - on a nightly cron schedule (catches Keycloak image drift, license
 #     expiry, upstream proprietary changes),
 #   - manual workflow_dispatch.
-#
-# Auto-skipped when secrets.PREMIUM_KEY_ENTERPRISE is missing (forks, dependabot).
 
 on:
   workflow_call:
-    inputs:
-      depot_cores:
-        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
-        required: false
-        type: string
-        default: "8"
   push:
     branches: ["main"]
   schedule:
     - cron: "0 4 * * *"
   workflow_dispatch:
-    inputs:
-      depot_cores:
-        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
-        required: false
-        type: string
-        default: "8"
 
 # No `concurrency:` block here on purpose. When this workflow is called via
 # workflow_call from build.yml, ${{ github.workflow }}/event_name/pr_number
@@ -52,13 +38,16 @@ jobs:
 
   playwright-e2e-enterprise:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    # Skip on fork PRs / untrusted authors: they have no PREMIUM_KEY_ENTERPRISE,
+    # so the suite can't boot premium and would fail. See the header comment.
+    # GitHub reports the skipped reusable workflow as success.
+    if: needs.pick.outputs.is_fork != 'true'
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
       PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
       PREMIUM_ENABLED: "true"
       SYSTEM_ENABLEANALYTICS: "false"
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -165,6 +154,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-oauth.json
         run: task e2e:enterprise -- --grep "OAuth"
       - name: Stop backend + tear down OAuth Keycloak
         if: always()
@@ -238,6 +229,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-saml.json
         run: task e2e:enterprise -- --grep "SAML"
       - name: Stop backend + tear down SAML Keycloak
         if: always()
@@ -268,6 +261,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise feature Playwright tests
         id: feature-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-feature.json
         run: task e2e:enterprise -- --grep "Enterprise license"
       - name: Print backend log on failure
         if: failure()
@@ -280,10 +275,23 @@ jobs:
         run: |
           source /tmp/helpers.sh
           stop_backend
+      - name: Flag flaky tests
+        # Runs regardless of the test outcomes: a flaky test (passed on retry)
+        # leaves its step green, so this is the only place it surfaces. Merges
+        # all three phase reports (some may be absent if an earlier phase hard-
+        # failed and skipped the rest). Emits ::warning:: annotations + a job
+        # summary; never fails the job.
+        if: always()
+        working-directory: frontend
+        run: >
+          npx tsx editor/scripts/report-flaky-tests.mts
+          "${{ github.workspace }}/frontend/playwright-report/results-oauth.json"
+          "${{ github.workspace }}/frontend/playwright-report/results-saml.json"
+          "${{ github.workspace }}/frontend/playwright-report/results-feature.json"
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-enterprise-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          path: frontend/playwright-report/
           retention-days: 7
