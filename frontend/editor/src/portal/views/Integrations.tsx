@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Banner, Button, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import {
@@ -22,7 +23,10 @@ import {
   type ConnectionCategory,
   type CreatableConnectionType,
 } from "@portal/components/sources/connectionTypes";
-import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
+import {
+  STEP_OPERATIONS,
+  operationsForConnectionType,
+} from "@portal/components/policies/stepOperations";
 import { COMING_SOON_SOURCE_TYPES } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Integrations.css";
 
@@ -361,6 +365,7 @@ export function Integrations() {
                 </button>
                 {open && (
                   <div className="portal-integrations__instances">
+                    <TasksList typeId={type.id} />
                     {list.map((connection) => (
                       <div
                         key={connection.id}
@@ -420,31 +425,12 @@ export function Integrations() {
             </div>
           )}
           {availableTypes.map((type) => (
-            <div key={type.id} className="portal-integrations__row">
-              <span className="portal-integrations__name">
-                <BrandMark id={type.id} size={22} />
-                <span className="portal-integrations__name-text">
-                  <span className="portal-integrations__label">
-                    {t(type.labelKey)}
-                  </span>
-                  <span className="portal-integrations__detail">
-                    {t(type.descriptionKey)}
-                  </span>
-                </span>
-              </span>
-              <span className="portal-integrations__chips">
-                {worksWith(type).map(chip)}
-              </span>
-              <span className="portal-integrations__status">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => openCreate(type.id)}
-                >
-                  {t("portal.integrations.connect")}
-                </Button>
-              </span>
-            </div>
+            <AvailableRow
+              key={type.id}
+              type={type}
+              chips={worksWith(type).map(chip)}
+              onConnect={() => openCreate(type.id)}
+            />
           ))}
 
           {comingSoon.length > 0 && (
@@ -490,6 +476,92 @@ export function Integrations() {
         onClose={() => setModal({ open: false, editing: null })}
         onSaved={() => void refresh()}
       />
+    </div>
+  );
+}
+
+/** The task list an integration unlocks, shown inside an expanded row panel. */
+function TasksList({ typeId }: { typeId: string }) {
+  const { t } = useTranslation();
+  const tasks = operationsForConnectionType(typeId);
+  if (tasks.length === 0) return null;
+  return (
+    <div className="portal-integrations__instance-tasks">
+      <span className="portal-integrations__tasks-title">
+        {t("portal.connections.picker2.tasksTitle")}
+      </span>
+      <ul className="portal-integrations__tasks-list">
+        {tasks.map((op) => (
+          <li key={op.id} className="portal-integrations__task">
+            <span className="portal-integrations__task-name">
+              {t(op.labelKey)}
+            </span>
+            <span className="portal-integrations__task-desc">
+              {t(op.descriptionKey)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * One not-yet-connected integration row. The (i) answers "what would connecting this let me do?"
+ * right on the row, expanding the same kind of inline panel a connected row uses - a floating
+ * popover would be clipped by the table's overflow. No (i) for entries that add no steps (a
+ * bucket, a label store).
+ */
+function AvailableRow({
+  type,
+  chips,
+  onConnect,
+}: {
+  type: CreatableConnectionType;
+  chips: React.ReactNode;
+  onConnect: () => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const hasTasks = operationsForConnectionType(type.id).length > 0;
+
+  return (
+    <div className="portal-integrations__group">
+      <div className="portal-integrations__row">
+        <span className="portal-integrations__name">
+          <BrandMark id={type.id} size={22} />
+          <span className="portal-integrations__name-text">
+            <span className="portal-integrations__label">
+              {t(type.labelKey)}
+            </span>
+            <span className="portal-integrations__detail">
+              {t(type.descriptionKey)}
+            </span>
+          </span>
+          {hasTasks && (
+            <button
+              type="button"
+              className="portal-integrations__info"
+              aria-label={t("portal.connections.picker2.tasksInfo")}
+              aria-expanded={open}
+              onClick={() => setOpen((o) => !o)}
+            >
+              <InfoOutlinedIcon fontSize="inherit" />
+            </button>
+          )}
+        </span>
+        <span className="portal-integrations__chips">{chips}</span>
+        <span className="portal-integrations__status">
+          <Button variant="secondary" size="sm" onClick={onConnect}>
+            {t("portal.integrations.connect")}
+          </Button>
+        </span>
+      </div>
+      {open && (
+        <div className="portal-integrations__instances">
+          <TasksList typeId={type.id} />
+        </div>
+      )}
     </div>
   );
 }

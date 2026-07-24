@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   CONNECTION_CATEGORIES,
   searchConnectionTypes,
   type ConnectionCategory,
   type CreatableConnectionType,
 } from "@portal/components/sources/connectionTypes";
+import { operationsForConnectionType } from "@portal/components/policies/stepOperations";
 import { BrandMark } from "@portal/components/BrandMarks";
 
 /**
@@ -102,36 +104,88 @@ function Grid({
   types: CreatableConnectionType[];
   onPick: (type: CreatableConnectionType) => void;
 }) {
-  const { t } = useTranslation();
   return (
     <div className="portal-conn-picker__grid">
-      {types.map((type) => {
-        const label = t(type.labelKey);
-        return (
-          <button
-            key={type.id}
-            type="button"
-            className={
-              "portal-conn-picker__card" +
-              (type.kind === "custom"
-                ? " portal-conn-picker__card--advanced"
-                : "")
-            }
-            onClick={() => onPick(type)}
-          >
-            {/* The vendor's real mark, full colour on the card surface. */}
-            <span className="portal-conn-picker__mark" aria-hidden>
-              <BrandMark id={type.id} size={20} />
-            </span>
-            <span className="portal-conn-picker__card-text">
-              <span className="portal-conn-picker__card-name">{label}</span>
-              <span className="portal-conn-picker__card-desc">
-                {t(type.descriptionKey)}
-              </span>
-            </span>
-          </button>
-        );
-      })}
+      {types.map((type) => (
+        <TypeCard key={type.id} type={type} onPick={onPick} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * One vendor card. Its (i) expands the tasks the integration unlocks, inline below the card -
+ * the picker scrolls, so a floating popover would be clipped at its edges. No (i) for entries
+ * that add no policy steps (a bucket, a label store).
+ */
+function TypeCard({
+  type,
+  onPick,
+}: {
+  type: CreatableConnectionType;
+  onPick: (type: CreatableConnectionType) => void;
+}) {
+  const { t } = useTranslation();
+  const [showTasks, setShowTasks] = useState(false);
+  const tasks = operationsForConnectionType(type.id);
+  const label = t(type.labelKey);
+
+  return (
+    <div className="portal-conn-picker__card-wrap">
+      <button
+        type="button"
+        className={
+          "portal-conn-picker__card" +
+          (type.kind === "custom"
+            ? " portal-conn-picker__card--advanced"
+            : "") +
+          (tasks.length > 0 ? " portal-conn-picker__card--has-tasks" : "")
+        }
+        onClick={() => onPick(type)}
+      >
+        {/* The vendor's real mark, full colour on the card surface. */}
+        <span className="portal-conn-picker__mark" aria-hidden>
+          <BrandMark id={type.id} size={20} />
+        </span>
+        <span className="portal-conn-picker__card-text">
+          <span className="portal-conn-picker__card-name">{label}</span>
+          <span className="portal-conn-picker__card-desc">
+            {t(type.descriptionKey)}
+          </span>
+        </span>
+      </button>
+
+      {tasks.length > 0 && (
+        <button
+          type="button"
+          className="portal-conn-picker__info"
+          aria-label={t("portal.connections.picker2.tasksInfo")}
+          aria-expanded={showTasks}
+          onClick={() => setShowTasks((open) => !open)}
+        >
+          <InfoOutlinedIcon fontSize="inherit" />
+        </button>
+      )}
+
+      {showTasks && (
+        <div className="portal-conn-picker__tasks">
+          <p className="portal-conn-picker__tasks-title">
+            {t("portal.connections.picker2.tasksTitle")}
+          </p>
+          <ul className="portal-conn-picker__tasks-list">
+            {tasks.map((op) => (
+              <li key={op.id} className="portal-conn-picker__task">
+                <span className="portal-conn-picker__task-name">
+                  {t(op.labelKey)}
+                </span>
+                <span className="portal-conn-picker__task-desc">
+                  {t(op.descriptionKey)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

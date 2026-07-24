@@ -6,6 +6,7 @@ import {
   emptyOperationValues,
   operationById,
   operationFormValid,
+  operationsForConnectionType,
   searchOperations,
 } from "@portal/components/policies/stepOperations";
 import { CREATABLE_CONNECTION_TYPES } from "@portal/components/sources/connectionTypes";
@@ -94,6 +95,7 @@ describe("buildStepParameters", () => {
       "bodyTemplate",
       "includeContext",
       "includeFile",
+      "maxRequestBytes",
       "operationId",
       "operationValues",
     ]) {
@@ -247,5 +249,110 @@ describe("substituting an answer into the URL path", () => {
       domain: "mg.acme.com",
     });
     expect(params.path).toBe("/v3/mg.acme.com/messages");
+  });
+});
+
+describe("operationsForConnectionType", () => {
+  it("lists every task a connection type unlocks, so the (i) can show them", () => {
+    const jira = operationsForConnectionType("jira").map((o) => o.id);
+    expect(jira).toEqual(
+      expect.arrayContaining(["jiraAttach", "jiraComment", "jiraTransition"]),
+    );
+
+    const discord = operationsForConnectionType("discord").map((o) => o.id);
+    expect(discord).toEqual(
+      expect.arrayContaining(["discordNotify", "discordAttach"]),
+    );
+
+    const nextcloud = operationsForConnectionType("nextcloud").map((o) => o.id);
+    expect(nextcloud).toEqual(
+      expect.arrayContaining(["nextcloudUpload", "nextcloudShareLink"]),
+    );
+  });
+
+  it("returns nothing for a connection type with no policy steps", () => {
+    // S3 is a source/destination, not a step operation - so it gets no (i) list.
+    expect(operationsForConnectionType("s3")).toEqual([]);
+    expect(operationsForConnectionType("does-not-exist")).toEqual([]);
+  });
+});
+
+describe("per-step size limit", () => {
+  it("turns the operator's MB limit into a byte cap for Discord attach", () => {
+    const op = operationById("discordAttach")!;
+    const params = buildStepParameters(op, "5", {
+      ...emptyOperationValues(op),
+      maxFileMb: "25",
+    });
+    expect(params.maxRequestBytes).toBe(String(25 * 1024 * 1024));
+  });
+
+  it("caps nothing when the operation declares no size field", () => {
+    const params = buildStepParameters(operationById("slackNotify")!, "5", {
+      message: "hi",
+    });
+    expect(params.maxRequestBytes).toBe("0");
+  });
+
+  it("treats a blank or non-numeric limit as no cap", () => {
+    const op = operationById("discordAttach")!;
+    expect(
+      buildStepParameters(op, "5", {
+        ...emptyOperationValues(op),
+        maxFileMb: "",
+      }).maxRequestBytes,
+    ).toBe("0");
+    expect(
+      buildStepParameters(op, "5", {
+        ...emptyOperationValues(op),
+        maxFileMb: "abc",
+      }).maxRequestBytes,
+    ).toBe("0");
+  });
+});
+
+describe("newly added tasks build the right call", () => {
+  it("nextcloudShareLink asks for JSON, sends no file, uses the OCS header", () => {
+    const op = operationById("nextcloudShareLink")!;
+    const params = buildStepParameters(op, "9", {
+      ...emptyOperationValues(op),
+      remotePath: "Processed/x.pdf",
+    });
+    expect(params.includeFile).toBe("false");
+    expect(params.path).toContain("format=json");
+    expect(params.headers).toContain("OCS-APIRequest");
+    // The operator's path lands in the OCS 'path' field alongside the public shareType.
+    expect(JSON.parse(params.fields)).toMatchObject({
+      path: "Processed/x.pdf",
+      shareType: "3",
+    });
+  });
+
+  it("discordAttach uploads the file under files[0] with a caption", () => {
+    const op = operationById("discordAttach")!;
+    const params = buildStepParameters(op, "3", {
+      ...emptyOperationValues(op),
+      message: "done",
+    });
+    expect(params.bodyMode).toBe("multipart");
+    expect(params.fileFieldName).toBe("files[0]");
+    expect(params.includeFile).toBe("true");
+    // The caption rides in payload_json, Discord's multipart companion field.
+    const fields: Record<string, string> = JSON.parse(params.fields);
+    expect(JSON.parse(fields.payload_json)).toEqual({ content: "done" });
+  });
+
+  it("jiraComment posts an ADF body to the issue's comment endpoint", () => {
+    const op = operationById("jiraComment")!;
+    const params = buildStepParameters(op, "2", {
+      ...emptyOperationValues(op),
+      issueKey: "OPS-9",
+      message: "processed",
+    });
+    expect(params.path).toBe("/rest/api/3/issue/OPS-9/comment");
+    expect(params.includeFile).toBe("false");
+    expect(params.bodyTemplate).toContain("processed");
+    // The Atlassian Document Format wrapper survives to the wire.
+    expect(params.bodyTemplate).toContain("paragraph");
   });
 });
