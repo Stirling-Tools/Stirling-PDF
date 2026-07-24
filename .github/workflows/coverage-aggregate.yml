@@ -29,12 +29,8 @@ permissions:
   contents: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   aggregate:
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Harden Runner
