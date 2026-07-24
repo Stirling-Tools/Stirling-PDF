@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@app/ui";
 import { loadScript } from "@app/utils/scriptLoader";
 
 /**
  * Inline Calendly scheduler. Lazily loads Calendly's widget.js (only once the embed mounts, i.e. when
- * the modal opens) and initialises an inline widget. Falls back to a plain "open in a new tab" link if
- * the script can't load (offline, blocked, etc.).
+ * the modal opens) and initialises an inline widget. Shows a spinner while the (external, sometimes
+ * slow) script loads, and falls back to a plain "open in a new tab" link if the script can't load
+ * (offline, blocked, etc.). A real load failure fires the script's error event, so the fallback is
+ * shown immediately rather than after a fixed timeout — a slow-but-working connection is never
+ * abandoned, it just spins until the widget arrives.
  */
 
 const CALENDLY_SCRIPT = "https://assets.calendly.com/assets/external/widget.js";
@@ -40,6 +44,36 @@ function buildUrl(base: string): string {
   return `${base}${sep}hide_event_type_details=1&background_color=${WIDGET_COLORS.background}&text_color=${WIDGET_COLORS.text}&primary_color=${WIDGET_COLORS.primary}`;
 }
 
+// Origins the embed fetches from: the widget script, then the scheduler iframe.
+const CALENDLY_ORIGINS = [
+  "https://assets.calendly.com",
+  "https://calendly.com",
+];
+
+function preconnect(origin: string): void {
+  if (typeof document === "undefined") return;
+  if (document.querySelector(`link[rel="preconnect"][href="${origin}"]`))
+    return;
+  const link = document.createElement("link");
+  link.rel = "preconnect";
+  link.href = origin;
+  link.crossOrigin = "anonymous";
+  document.head.appendChild(link);
+}
+
+/**
+ * Warm the Calendly embed ahead of use: open connections to its origins and start fetching
+ * widget.js, so opening the scheduler initialises near-instantly instead of paying a cold
+ * script + iframe fetch on click. Idempotent and safe to call repeatedly; failures are left
+ * for the modal's own load to surface as the fallback link.
+ */
+export function warmCalendly(): void {
+  CALENDLY_ORIGINS.forEach(preconnect);
+  void loadScript({ src: CALENDLY_SCRIPT, id: "calendly-widget-script" }).catch(
+    () => {},
+  );
+}
+
 export function CalendlyInline({
   url = CALENDLY_URL,
   height = 760,
@@ -53,17 +87,25 @@ export function CalendlyInline({
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fullUrl = buildUrl(url);
 
   useEffect(() => {
     let cancelled = false;
     setFailed(false);
+    setLoading(true);
     loadScript({ src: CALENDLY_SCRIPT, id: "calendly-widget-script" })
       .then(() => {
         const el = containerRef.current;
         const calendly = (window as CalendlyWindow).Calendly;
-        if (cancelled || !el || !calendly) return;
+        if (cancelled || !el) return;
+        // Script resolved but the global never materialised (blocked/altered by an
+        // extension, etc.) — show the fallback link rather than an empty modal.
+        if (!calendly) {
+          setFailed(true);
+          return;
+        }
         // Re-init explicitly (rather than relying on widget.js auto-scan) so the widget rebuilds on
         // reopen and whenever the URL or prefill changes.
         el.innerHTML = "";
@@ -72,6 +114,7 @@ export function CalendlyInline({
           parentElement: el,
           prefill: email ? { email } : undefined,
         });
+        setLoading(false);
       })
       .catch(() => !cancelled && setFailed(true));
     return () => {
@@ -91,10 +134,14 @@ export function CalendlyInline({
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="portal-calendly"
-      style={{ minWidth: 320, height }}
-    />
+    <div className="portal-calendly" style={{ minWidth: 320, height }}>
+      {loading && (
+        <div className="portal-calendly__loading">
+          <Spinner size="lg" label={t("portal.procurement.schedule.loading")} />
+        </div>
+      )}
+      {/* Calendly injects its iframe here; the spinner overlays until the widget is initialised. */}
+      <div ref={containerRef} className="portal-calendly__embed" />
+    </div>
   );
 }

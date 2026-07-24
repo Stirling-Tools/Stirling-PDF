@@ -23,13 +23,9 @@ permissions:
   pull-requests: write
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   check-pr:
     if: (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.decide.outputs.should_deploy }}
       is_fork: ${{ steps.resolve.outputs.is_fork }}
@@ -101,8 +97,8 @@ jobs:
           echo "allow_fork=${allow_fork:-false}" >> $GITHUB_OUTPUT
 
   deploy-v2-pr:
-    needs: [pick, check-pr]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    needs: check-pr
+    runs-on: ubuntu-latest
     if: needs.check-pr.outputs.should_deploy == 'true' && (needs.check-pr.outputs.is_fork == 'false' || needs.check-pr.outputs.allow_fork == 'true')
     # Concurrency control - only one deployment per PR at a time
     concurrency:
@@ -112,10 +108,7 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
-      id-token: write
     env:
-      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
       # Single source of truth for whether this preview embeds the admin portal:
       # drives the image build-arg and the deployment comment.
       BUILD_PORTAL: "true"
@@ -190,12 +183,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0 # Fetch full history for commit hash detection
 
-      - name: Set up Depot CLI
-        if: env.USE_DEPOT == 'true'
-        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
-
       - name: Set up Docker Buildx
-        if: env.USE_DEPOT != 'true'
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Get version number
@@ -240,22 +228,8 @@ jobs:
             echo "Image needs to be built"
           fi
 
-      - name: Build and push V2 image (Depot)
-        if: env.USE_DEPOT == 'true' && steps.check-image.outputs.exists == 'false'
-        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
-        with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: .
-          file: ./docker/embedded/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
-          build-args: |
-            VERSION_TAG=v2-alpha
-            BUILD_PORTAL=${{ env.BUILD_PORTAL }}
-          platforms: linux/amd64
-
-      - name: Build and push V2 image (Docker fork fallback)
-        if: env.USE_DEPOT != 'true' && steps.check-image.outputs.exists == 'false'
+      - name: Build and push V2 image
+        if: steps.check-image.outputs.exists == 'false'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
@@ -297,7 +271,6 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/storage:/storage:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
-                POLICIES_ENABLED: "true"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
@@ -475,8 +448,7 @@ jobs:
 
   cleanup-v2-deployment:
     if: github.event.action == 'closed'
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       issues: write

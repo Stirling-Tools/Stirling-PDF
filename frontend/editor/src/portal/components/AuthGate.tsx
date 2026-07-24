@@ -19,7 +19,7 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
         alignItems: "center",
         justifyContent: "center",
         gap: "0.75rem",
-        color: "var(--color-text-3)",
+        color: "var(--c-text-subtle)",
       }}
     >
       {children}

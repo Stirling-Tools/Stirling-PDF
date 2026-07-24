@@ -10,7 +10,7 @@
   font-size: 2rem;
   font-weight: 700;
   line-height: 1.25;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .landing-subtitle {
@@ -20,7 +20,7 @@
   font-size: 0.9375rem;
   line-height: 1.5;
   max-width: 28rem;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 
 /* ── Document stack ──────────────────────────────────────── */
@@ -49,7 +49,7 @@
   width: 128px;
   height: 160px;
   transform-origin: bottom center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--c-illustration-line);
   box-shadow: var(--landing-doc-shadow-back-idle);
 }
 
@@ -103,16 +103,16 @@
 /* Bars — static light colours, never change with theme */
 .landing-bar {
   border-radius: 9999px;
-  background-color: #e5e7eb;
+  background-color: var(--c-illustration-line);
 }
 .landing-bar--strong {
-  background-color: #d1d5db;
+  background-color: var(--c-illustration-line-strong);
 }
 
 /* ── Action buttons ──────────────────────────────────────── */
 .landing-btn-primary {
   background: var(--landing-hero-gradient) !important;
-  color: #ffffff !important;
+  color: var(--c-text-on-primary) !important;
   border: none !important;
   border-radius: 0.75rem !important;
   font-weight: 600 !important;
@@ -121,27 +121,27 @@
 .landing-btn-secondary {
   border-radius: 0.75rem !important;
   font-weight: 600 !important;
-  border-color: var(--landing-button-border, var(--border-default)) !important;
-  background-color: var(--landing-button-bg, var(--bg-surface)) !important;
-  color: var(--landing-button-color, var(--text-primary)) !important;
+  border-color: var(--landing-button-border, var(--c-border)) !important;
+  background-color: var(--landing-button-bg, var(--c-surface)) !important;
+  color: var(--c-accent-fg, var(--c-text)) !important;
 }
 .landing-btn-secondary:hover {
   background-color: var(
     --landing-button-hover-bg,
-    var(--landing-button-bg, var(--bg-surface))
+    var(--landing-button-bg, var(--c-surface))
   ) !important;
 }
 
 /* Icon-only variant: accent colour instead of button text colour */
 .landing-btn-icon {
-  color: var(--accent-interactive) !important;
+  color: var(--c-primary) !important;
 }
 
 /* Dropzone accept/reject outlines. Mantine 8 no longer supports nested
  * `&[data-accept]` selectors inside the `styles` prop object, so these are
  * plain CSS attribute selectors on a class applied to the Dropzone root. */
 .landing-dropzone[data-accept] {
-  outline: 2px dashed var(--accent-interactive);
+  outline: 2px dashed var(--c-primary);
   outline-offset: 4px;
 }
 .landing-dropzone[data-reject] {

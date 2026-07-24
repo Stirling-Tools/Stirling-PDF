@@ -7,7 +7,7 @@
   /* Resolved tint. Each accent class sets --ib-base; --ib-accent defaults to it
      but a consumer can override --ib-accent alone (e.g. to neutralise the badge
      until hover) without losing the per-accent base. */
-  --ib-accent: var(--ib-base, var(--color-blue));
+  --ib-accent: var(--ib-base, var(--c-primary));
   color: var(--ib-accent);
   background: color-mix(in srgb, var(--ib-accent) 14%, transparent);
 }
@@ -20,7 +20,7 @@
   height: 2rem;
 }
 .sui-iconbadge--blue {
-  --ib-base: var(--color-blue);
+  --ib-base: var(--c-primary);
 }
 .sui-iconbadge--purple {
   --ib-base: var(--color-purple);
@@ -38,6 +38,6 @@
   --ib-base: var(--color-orange);
 }
 .sui-iconbadge--neutral {
-  --ib-base: var(--color-text-1);
+  --ib-base: var(--c-text);
   background: none;
 }

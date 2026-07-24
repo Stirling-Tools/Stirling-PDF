@@ -14,6 +14,7 @@ import stirling.software.proprietary.security.model.User;
 
 @Entity
 @Table(name = "teams")
+@EntityListeners(TeamEntityListener.class)
 @NoArgsConstructor
 @Getter
 @Setter

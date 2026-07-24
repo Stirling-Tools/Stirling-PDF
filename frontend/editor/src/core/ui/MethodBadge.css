@@ -10,14 +10,14 @@
   line-height: 1.4;
 }
 .sui-method--get {
-  color: var(--color-green);
+  color: var(--color-green-dark);
   background: var(--color-green-light);
   border-color: var(--color-green-border);
 }
 .sui-method--post {
-  color: var(--color-blue);
-  background: var(--color-blue-light);
-  border-color: var(--color-blue-border);
+  color: var(--c-primary);
+  background: var(--c-primary-tint);
+  border-color: var(--c-primary-border);
 }
 .sui-method--put {
   color: var(--color-amber-dark);
@@ -25,12 +25,12 @@
   border-color: var(--color-amber-border);
 }
 .sui-method--patch {
-  color: var(--color-purple);
+  color: var(--color-purple-dark);
   background: var(--color-purple-light);
   border-color: var(--color-purple-border);
 }
 .sui-method--delete {
-  color: var(--color-red);
+  color: var(--color-red-dark);
   background: var(--color-red-light);
   border-color: var(--color-red-border);
 }

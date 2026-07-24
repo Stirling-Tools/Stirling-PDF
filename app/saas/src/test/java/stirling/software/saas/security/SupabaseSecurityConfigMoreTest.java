@@ -43,9 +43,18 @@ class SupabaseSecurityConfigMoreTest {
     @Mock private SupabaseUserService supabaseUserService;
     @Mock private SaasTeamService saasTeamService;
 
+    @Mock
+    private stirling.software.proprietary.security.service.ApiKeyAuthenticationService
+            apiKeyAuthenticationService;
+
     private SupabaseSecurityConfig config(ApplicationProperties props) {
         return new SupabaseSecurityConfig(
-                userService, teamService, supabaseUserService, saasTeamService, props);
+                userService,
+                teamService,
+                supabaseUserService,
+                saasTeamService,
+                props,
+                apiKeyAuthenticationService);
     }
 
     @Nested

@@ -1,4 +1,9 @@
-import type React from "react";
+import {
+  type FocusEventHandler,
+  type CSSProperties,
+  useEffect,
+  useState,
+} from "react";
 import {
   ColorInput as MantineColorInput,
   type ColorInputProps as MantineColorInputProps,
@@ -7,15 +12,15 @@ import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
-  "--input-bg": "var(--color-surface)",
-  "--input-bd": "var(--color-border-input)",
-  "--input-bd-focus": "var(--color-blue)",
+  "--input-bg": "var(--c-surface)",
+  "--input-bd": "var(--c-border)",
+  "--input-bd-focus": "var(--c-primary)",
   "--input-radius": "var(--radius-md)",
-  "--input-color": "var(--color-text-1)",
+  "--input-color": "var(--c-text)",
   "--input-placeholder-color": "var(--color-text-placeholder)",
   "--input-height-sm": "1.75rem",
   "--input-height-md": "2.25rem",
-} as React.CSSProperties;
+} as CSSProperties;
 
 export type ColorInputSize = "sm" | "md";
 
@@ -23,6 +28,8 @@ export interface ColorInputProps {
   // Value
   value?: string;
   onChange?: (value: string) => void;
+  /** Fires once when picking finishes (pointer up / blur), not every drag frame — for committing expensive updates. */
+  onChangeEnd?: (value: string) => void;
   defaultValue?: string;
 
   // Behaviour
@@ -30,6 +37,8 @@ export interface ColorInputProps {
   swatches?: string[];
   swatchesPerRow?: number;
   withPicker?: boolean;
+  /** Restrict the gamut live: every change is run through this (handle sticks at the boundary), receiving the previous in-gamut value so a clamp can preserve hue at achromatic extremes. */
+  clampValue?: (value: string, previous: string) => string;
 
   // Popover escape hatch — only for zIndex / offset overrides in modals
   popoverProps?: MantineColorInputProps["popoverProps"];
@@ -44,37 +53,35 @@ export interface ColorInputProps {
   required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
-  onFocus?: React.FocusEventHandler<HTMLInputElement>;
-  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onFocus?: FocusEventHandler<HTMLInputElement>;
+  onBlur?: FocusEventHandler<HTMLInputElement>;
 
   // SUI — invalid applies error styling; FormField renders the message itself.
   inputSize?: ColorInputSize;
   invalid?: boolean;
 }
 
-type PassthroughProps = Omit<
-  Pick<
-    MantineColorInputProps,
-    | "value"
-    | "onChange"
-    | "defaultValue"
-    | "format"
-    | "swatches"
-    | "swatchesPerRow"
-    | "withPicker"
-    | "popoverProps"
-    | "placeholder"
-    | "id"
-    | "name"
-    | "aria-label"
-    | "aria-describedby"
-    | "required"
-    | "disabled"
-    | "readOnly"
-    | "onFocus"
-    | "onBlur"
-  >,
-  never
+type PassthroughProps = Pick<
+  MantineColorInputProps,
+  | "value"
+  | "onChange"
+  | "onChangeEnd"
+  | "defaultValue"
+  | "format"
+  | "swatches"
+  | "swatchesPerRow"
+  | "withPicker"
+  | "popoverProps"
+  | "placeholder"
+  | "id"
+  | "name"
+  | "aria-label"
+  | "aria-describedby"
+  | "required"
+  | "disabled"
+  | "readOnly"
+  | "onFocus"
+  | "onBlur"
 >;
 
 /**
@@ -90,6 +97,8 @@ export function ColorInput({
   format = "hex",
   value,
   onChange,
+  onChangeEnd,
+  clampValue,
   defaultValue,
   swatches,
   swatchesPerRow,
@@ -108,9 +117,27 @@ export function ColorInput({
   onBlur,
 }: ColorInputProps) {
   const inputRef = useInputAria({ describedBy: ariaDescribedBy });
+
+  // With a clamp, this component owns the displayed value so the picker reflects the constraint live (clamped and mirrored back each frame); without one, value/handlers pass straight through.
+  const [clamped, setClamped] = useState(value ?? defaultValue ?? "");
+  useEffect(() => {
+    if (value !== undefined) setClamped(value);
+  }, [value]);
+
+  const constrainedProps = clampValue
+    ? {
+        value: clamped,
+        onChange: (next: string) => {
+          const c = clampValue(next, clamped);
+          setClamped(c);
+          onChange?.(c);
+        },
+        onChangeEnd: (next: string) => onChangeEnd?.(clampValue(next, clamped)),
+      }
+    : { value, onChange, onChangeEnd };
+
   const passthroughProps: PassthroughProps = {
-    value,
-    onChange,
+    ...constrainedProps,
     defaultValue,
     format,
     swatches,

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Avatar, Button } from "@app/ui";
 import type { PendingInvitation } from "@portal/api/users";
 import "@portal/views/Users.css";
@@ -11,13 +12,15 @@ interface PendingInvitationsProps {
 
 /** Human "Expires in 3 days" from an ISO expiry; empty when absent, unparseable,
  *  or already past (the adapter filters expired invites, so no "expired" state). */
-function expiryLabel(iso: string | undefined, expiresWord: string): string {
+function expiryLabel(iso: string | undefined, t: TFunction): string {
   if (!iso) return "";
   const ts = Date.parse(iso);
   if (!Number.isFinite(ts) || ts <= Date.now()) return "";
   const days = Math.round((ts - Date.now()) / 86400000);
-  if (days === 0) return `${expiresWord} today`;
-  return `${expiresWord} in ${days === 1 ? "1 day" : `${days} days`}`;
+  if (days === 0) return t("users.invites.expiresToday", "Expires today");
+  return t("users.invites.expiresInDays", "Expires in {{count}} days", {
+    count: days,
+  });
 }
 
 /**
@@ -30,7 +33,6 @@ export function PendingInvitations({
   onCancel,
 }: PendingInvitationsProps) {
   const { t } = useTranslation();
-  const expiresWord = t("users.invites.expires", "Expires");
   return (
     <section className="portal-users__group">
       <header className="portal-users__group-head">
@@ -50,7 +52,7 @@ export function PendingInvitations({
         </span>
       </header>
       {invitations.map((inv) => {
-        const expires = expiryLabel(inv.expiresAt, expiresWord);
+        const expires = expiryLabel(inv.expiresAt, t);
         return (
           <div className="portal-users__row" key={inv.id}>
             <div className="portal-users__row-main">

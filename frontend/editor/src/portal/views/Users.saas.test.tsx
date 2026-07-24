@@ -15,7 +15,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter } from "react-router-dom";
 import { setupServer } from "msw/node";
 import {
@@ -78,11 +78,11 @@ beforeEach(() => resetTeamSaasStore());
 
 function renderUsers() {
   return render(
-    <MantineProvider>
+    <PortalTestProviders>
       <MemoryRouter>
         <Users />
       </MemoryRouter>
-    </MantineProvider>,
+    </PortalTestProviders>,
   );
 }
 

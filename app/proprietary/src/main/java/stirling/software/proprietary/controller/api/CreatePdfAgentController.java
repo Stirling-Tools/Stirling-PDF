@@ -8,12 +8,14 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -24,18 +26,25 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.model.api.ai.create.AiDocument;
+import stirling.software.proprietary.service.AiDocumentHtmlRenderer;
+import stirling.software.proprietary.service.AiFeatureGate;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
- * Dispatchable tool that converts an AI-generated HTML string to a PDF via WeasyPrint.
+ * Dispatchable tool that converts an AI-generated document model to a PDF via WeasyPrint.
  *
  * <p>Called by {@link stirling.software.proprietary.service.AiWorkflowService} when the engine
- * emits a {@code CREATE_PDF_FROM_HTML_AGENT} plan step. The HTML comes from a trusted Jinja
- * template so sanitization is intentionally skipped.
+ * emits a {@code CREATE_PDF_FROM_HTML_AGENT} plan step. The engine supplies the document as
+ * structured fields; the HTML is built here from a fixed template.
  */
 @Slf4j
 @Hidden
@@ -48,6 +57,10 @@ public class CreatePdfAgentController {
     private final TempFileManager tempFileManager;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
+    private final ApplicationProperties applicationProperties;
+    private final ObjectMapper objectMapper;
+    private final AiDocumentHtmlRenderer htmlRenderer;
+    private final AiFeatureGate aiFeatureGate;
 
     /**
      * Returns true only when WeasyPrint is definitively unavailable — either the binary could not
@@ -74,32 +87,42 @@ public class CreatePdfAgentController {
             value = "/create-pdf-from-html-agent",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
-            summary = "Convert AI-generated HTML to a PDF",
+            summary = "Convert an AI-generated document to a PDF",
             description =
-                    "Accepts an HTML document as a plain-text parameter and returns a PDF."
-                            + " This endpoint is dispatched by the AI workflow orchestrator as a"
-                            + " plan step; it is not intended for direct client use.")
-    public ResponseEntity<Resource> createPdfFromHtml(
-            @RequestParam("htmlContent") String htmlContent,
-            @RequestParam("filename") String filename)
+                    "Accepts a structured document as a JSON parameter and returns a PDF. This"
+                            + " endpoint is dispatched by the AI workflow orchestrator as a plan"
+                            + " step; it is not intended for direct client use.")
+    public ResponseEntity<Resource> createPdf(
+            @RequestParam("document") String document, @RequestParam("filename") String filename)
             throws Exception {
+        if (!applicationProperties.getAiEngine().isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        aiFeatureGate.requireCreatePdf();
+
+        AiDocument model;
+        try {
+            model = objectMapper.readValue(document, AiDocument.class);
+        } catch (JacksonException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+
+        String html = htmlRenderer.render(model);
 
         log.info(
-                "[create-pdf-agent] converting HTML to PDF via WeasyPrint — html_bytes={}",
-                htmlContent.length());
+                "[create-pdf-agent] converting document to PDF via WeasyPrint — html_bytes={}",
+                html.length());
 
         try (TempFile htmlFile = tempFileManager.createManagedTempFile(".html");
                 TempFile pdfFile = tempFileManager.createManagedTempFile(".pdf")) {
 
-            Files.writeString(htmlFile.getPath(), htmlContent, StandardCharsets.UTF_8);
+            Files.writeString(htmlFile.getPath(), html, StandardCharsets.UTF_8);
 
             List<String> command = new ArrayList<>();
             command.add(runtimePathConfig.getWeasyPrintPath());
             command.add("-e");
             command.add("utf-8");
             command.add("-v");
-            // SSRF: the HTML is self-contained and the engine validates style colours, so no
-            // external url() reaches WeasyPrint. For full isolation, run it network-isolated.
             command.add(htmlFile.getAbsolutePath());
             command.add(pdfFile.getAbsolutePath());
 
@@ -126,8 +149,8 @@ public class CreatePdfAgentController {
             // avoids materialising the whole document as a byte[] twice (read-all + re-serialise),
             // which matters for large generated documents.
             TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-            try (PDDocument document = pdfDocumentFactory.load(pdfFile.getPath())) {
-                document.save(tempOut.getPath().toFile());
+            try (PDDocument pdDocument = pdfDocumentFactory.load(pdfFile.getPath())) {
+                pdDocument.save(tempOut.getPath().toFile());
             } catch (Exception e) {
                 tempOut.close();
                 throw e;

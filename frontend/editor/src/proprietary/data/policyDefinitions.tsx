@@ -5,18 +5,13 @@
  * user's real files, not defined here.
  */
 
-import LayersIcon from "@mui/icons-material/Layers";
-import ShieldIcon from "@mui/icons-material/Shield";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import StorageIcon from "@mui/icons-material/Storage";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ComputerIcon from "@mui/icons-material/Computer";
 import PublicIcon from "@mui/icons-material/Public";
 import CloudIcon from "@mui/icons-material/Cloud";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -30,7 +25,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
     label: "Ingestion",
-    icon: <LayersIcon sx={ICON_SX} />,
+    icon: policyCategoryIcon("ingestion", ICON_SX),
     desc: "Classify documents, extract structured data, enforce naming conventions, and normalize pages.",
     // The classifier the wizard's "Set up Classification" action routes to.
     providesClassification: true,
@@ -40,35 +35,33 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "security",
     label: "Security",
-    icon: <ShieldIcon sx={ICON_SX} />,
+    icon: policyCategoryIcon("security", ICON_SX),
     desc: "Detect PII, encrypt, verify authenticity, control access, and certify documents.",
   },
   {
     id: "classification",
     label: "Classification",
-    icon: <LabelOutlinedIcon sx={ICON_SX} />,
+    icon: policyCategoryIcon("classification", ICON_SX),
     desc: "Identify each document's type on upload and tag its metadata for filing and search.",
-    // Needs the AI engine to classify; hidden from the policy list when it's off.
-    requiresAiEngine: true,
   },
   {
     id: "compliance",
     label: "Compliance",
-    icon: <CheckCircleIcon sx={ICON_SX} />,
+    icon: policyCategoryIcon("compliance", ICON_SX),
     desc: "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document.",
     comingSoon: true,
   },
   {
     id: "routing",
     label: "Routing",
-    icon: <ArrowForwardIcon sx={ICON_SX} />,
+    icon: policyCategoryIcon("routing", ICON_SX),
     desc: "Auto-route documents to the right team, folder, or system.",
     comingSoon: true,
   },
   {
     id: "retention",
     label: "Retention",
-    icon: <StorageIcon sx={ICON_SX} />,
+    icon: policyCategoryIcon("retention", ICON_SX),
     desc: "Set how long documents are kept, when to archive, and when to delete.",
     comingSoon: true,
   },

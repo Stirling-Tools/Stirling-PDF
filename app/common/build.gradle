@@ -2,32 +2,6 @@
 bootRun {
     enabled = false
 }
-spotless {
-    java {
-        target 'src/**/java/**/*.java'
-        targetExclude 'src/main/java/org/apache/**'
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
-        // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
-        suppressLintsFor { setStep('google-java-format') }
-
-        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    yaml {
-        target '**/*.yml', '**/*.yaml'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    format 'gradle', {
-        target '**/gradle/*.gradle', '**/*.gradle'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-}
 dependencies {
     api "com.google.guava:guava:${guavaVersion}"
     api 'org.springframework.boot:spring-boot-starter-webmvc'
@@ -42,7 +16,7 @@ dependencies {
     api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
     api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
     api "org.apache.pdfbox:preflight:$pdfboxVersion"
-    api 'com.github.junrar:junrar:7.5.10' // RAR archive support for CBR files
+    api 'com.github.junrar:junrar:7.6.0' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"

@@ -1,15 +1,34 @@
+# CI routing infra. Editing the top-level router (build.yml) or this filter
+# config re-runs every area's jobs, so every job-gating filter below includes
+# *ci. That makes a change to how jobs are dispatched actually exercise those
+# jobs (self-testing), instead of a router edit only matching the project filter.
+ci: &ci
+  - .github/workflows/build.yml
+  - .github/config/.files.yaml
+
 build: &build
+  - *ci
   - build.gradle
+  - gradle/spotless.gradle
   - app/(common|core|proprietary|saas)/build.gradle
   - Taskfile.yml
   - .taskfiles/backend.yml
+  - .github/workflows/check-licence.yml
 
 openapi: &openapi
+  - *ci
   - *build
   - app/(common|core|proprietary|saas)/src/main/java/**
+  - .github/workflows/check-openapi.yml
 
 docker-base: &docker-base
   - docker/base/Dockerfile
+
+# Dockerfiles only (base + embedded + unoserver). Gates the slow multi-arch
+# (arm64) leg of the PR docker test build: arm64 is only rebuilt when a
+# Dockerfile itself changes, not on every code PR.
+dockerfiles: &dockerfiles
+  - docker/**/Dockerfile*
 
 docker: &docker
   - docker/embedded/Dockerfile
@@ -23,13 +42,11 @@ docker: &docker
   - *docker-base
 
 project: &project
+  - *ci
   - app/(common|core|proprietary|saas)/src/(main|test)/java/**
   - *build
   - "app/(common|core|proprietary|saas)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
   - exampleYmlFiles/**
-  - gradle/**
-  - libs/**
-  - "testing/**/!(requirements*.txt|requirements*.in)*"
   - *docker
   - *docker-base
   - gradle.properties
@@ -45,8 +62,11 @@ project: &project
   - .taskfiles/docker.yml
   - scripts/db-migration/**
   - .github/workflows/db-migration-test.yml
+  - .github/workflows/docker-compose-tests.yml
+  - .github/workflows/test-build-docker.yml
 
 frontend: &frontend
+  - *ci
   - frontend/**
   - .github/workflows/testdriver.yml
   - testing/**
@@ -63,10 +83,14 @@ frontend: &frontend
   - Taskfile.yml
   - .taskfiles/frontend.yml
   - .taskfiles/e2e.yml
+  - .github/workflows/frontend-validation.yml
+  - .github/workflows/e2e-stubbed.yml
+  - .github/workflows/e2e-live.yml
 
 # Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
 # job on changes to any of these.
 tauri: &tauri
+  - *ci
   - frontend/editor/src-tauri/**
   - frontend/editor/src/desktop/**
   - frontend/editor/tsconfig.desktop.vite.json
@@ -81,6 +105,7 @@ tauri: &tauri
 # the engine validation job on changes to engine sources or to the Java
 # tool surfaces it generates models from.
 engine: &engine
+  - *ci
   - engine/**
   - app/(common|core|proprietary|saas)/src/main/java/**
   - .github/workflows/ai-engine.yml
@@ -93,6 +118,7 @@ engine: &engine
 # tasks that drive generation. Deliberately excludes the broad frontend/docker/
 # testing globs, so a CSS-only PR does not boot the backend to rebuild the spec.
 generated-models: &generated-models
+  - *ci
   - *openapi
   - frontend/editor/scripts/generate-tool-api-types.mts
   - frontend/editor/src/core/types/toolApiTypes.ts
@@ -115,6 +141,7 @@ licenses-backend: &licenses-backend
 # Files that can affect premium / enterprise behaviour. Gate the enterprise
 # Playwright job on changes to any of these on PRs.
 proprietary: &proprietary
+  - *ci
   - app/proprietary/**
   - frontend/editor/src/proprietary/**
   - frontend/editor/src/core/tests/enterprise/**
@@ -129,4 +156,5 @@ proprietary: &proprietary
   - configs/settings.yml.template
   - build.gradle
   - app/proprietary/build.gradle
+  - gradle/spotless.gradle
   - .github/workflows/build-enterprise.yml

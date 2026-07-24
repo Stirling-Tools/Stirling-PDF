@@ -66,7 +66,13 @@ export interface Wallet {
   categoryDocs: WalletCategoryBreakdown;
   /** Total input files processed this period (Σ doc_count). */
   docsProcessedThisPeriod: number;
-  /** Distinct input documents this period — a file hit by N operations counts once. */
+  /**
+   * Distinct input document-sets this period — `COUNT(DISTINCT document_fingerprint)`, where the
+   * fingerprint is the hash of a charge's whole input set. A file processed repeatedly within one
+   * run (chain/split) counts once; the same file reused across *different* groupings (e.g.
+   * standalone, then later in a merge {A,B}) has different fingerprints and so counts per grouping.
+   * A close approximation of "unique PDFs", exact for the single-input common case.
+   */
   uniquePdfsThisPeriod: number;
   /** Input files on charges where the size multiplier applied (units billed &gt; input files). */
   sizeMultiplierPdfsThisPeriod: number;

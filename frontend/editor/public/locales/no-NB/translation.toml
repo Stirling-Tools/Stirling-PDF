@@ -6521,63 +6521,6 @@ title_other = "Behandle {{allowance}} PDF-er gratis"
 titleWithRate_one = "Behandle {{allowance}} PDF-er gratis, deretter {{rate}}/PDF"
 titleWithRate_other = "Behandle {{allowance}} PDF-er gratis, deretter {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Låst"
-openAriaLabel = "Åpne {{name}}-komponent"
-
-[portal.catalogue.detail]
-addToProject = "Legg til i prosjekt"
-ariaLabel = "Komponentdetalj"
-tabsAriaLabel = "Komponentdetaljseksjoner"
-upgradeToUnlock = "Oppgrader for å låse opp"
-
-[portal.catalogue.detail.code]
-install = "Installer"
-usage = "Bruk"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} er inkludert fra {{tier}}-planen. Oppgrader for å bygge den inn."
-title = "Ikke tilgjengelig i planen din"
-
-[portal.catalogue.detail.preview]
-badge = "Live-forhåndsvisning"
-note = "Interaktiv sandbox gjengis her"
-
-[portal.catalogue.detail.pricing]
-note = "Målt per {{unit}}. Bruk utover den månedlige gratiskvoten faktureres kontoen din og spesifiseres under Bruk og fakturering."
-
-[portal.catalogue.detail.stats]
-billedOn = "Faktureres på"
-embeds30d = "Innbygginger (30 d)"
-freeQuota = "Gratiskvote"
-freeQuotaValue = "{{amount}} / mnd"
-maturity = "Modenhet"
-none = "Ingen"
-perAction = "Per handling"
-price = "Pris"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Oversikt"
-pricing = "Priser"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "valgfritt"
-required = "påkrevd"
-
-[portal.catalogue.props.columns]
-description = "Beskrivelse"
-name = "Prop"
-required = "Påkrevd"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Komponenter GA"
-componentSpendMtd = "Komponentforbruk (MTD)"
-embedsThisMonth = "Innbygginger denne måneden"
-inBeta = "I beta"
-
 [portal.components.billingUnit]
 approval = "godkjenning"
 check = "sjekk"
@@ -6590,18 +6533,6 @@ signature = "signatur"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Innbyggbare SDK-widgets du slipper inn i din egen app — en viser, en e-sign-flyt, et AI-gjennomgangspanel. Hver måles per handling. Klikk på et kort for installasjon, bruk og props."
-title = "Komponenter"
-
-[portal.componentsView.empty]
-description = "Komponentkatalogen kunne ikke lastes. Prøv igjen om kort tid."
-title = "Ingen komponenter tilgjengelig"
-
-[portal.componentsView.lockedBanner]
-description = "GA-komponenter er tilgjengelige med betal etter bruk; noen få Beta-komponenter er kun for Enterprise. Låste kort viser en oppgraderingsoppfordring."
-title = "Noen komponenter trenger en betalt plan"
 
 [portal.docs.authentication]
 codeCaption = "hver forespørsel"

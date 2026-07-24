@@ -1,0 +1,4 @@
+/* Consolidated theme entry. Order matters: primitives → dimensions → colors. */
+@import "./primitives.css";
+@import "./dimensions.css";
+@import "./colors.css";

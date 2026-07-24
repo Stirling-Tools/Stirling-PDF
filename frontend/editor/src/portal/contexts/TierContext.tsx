@@ -10,16 +10,20 @@ import { usePlanTier } from "@portal/contexts/usePlanTier";
 export type Tier = "free" | "pro" | "enterprise";
 
 export interface TierInfo {
-  label: string;
+  /** i18n key for the plan label; resolve with `t()` at the call site. */
+  labelKey: string;
   dotColor: string;
 }
 
 export const TIER_INFO: Record<Tier, TierInfo> = {
   // Matches SaaS branding (editor/cloud Payg + PaygFree): the always-free
   // manual-tools tier is "Editor plan"; the metered tier is "Processor plan".
-  free: { label: "Editor plan", dotColor: "var(--color-text-4)" },
-  pro: { label: "Processor plan", dotColor: "var(--color-blue)" },
-  enterprise: { label: "Enterprise plan", dotColor: "var(--color-purple)" },
+  free: { labelKey: "portal.tier.free", dotColor: "var(--c-text-subtle)" },
+  pro: { labelKey: "portal.tier.pro", dotColor: "var(--c-primary)" },
+  enterprise: {
+    labelKey: "portal.tier.enterprise",
+    dotColor: "var(--color-purple)",
+  },
 };
 
 interface TierContextValue {

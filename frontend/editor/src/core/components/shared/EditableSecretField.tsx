@@ -78,7 +78,11 @@ export default function EditableSecretField({
       )}
       {description && (
         <p
-          style={{ margin: "4px 0 12px 0", fontSize: "0.75rem", color: "#666" }}
+          style={{
+            margin: "4px 0 12px 0",
+            fontSize: "0.75rem",
+            color: "var(--c-text-muted)",
+          }}
         >
           {description}
         </p>
