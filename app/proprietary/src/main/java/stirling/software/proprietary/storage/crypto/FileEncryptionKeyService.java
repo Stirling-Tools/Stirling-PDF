@@ -87,7 +87,7 @@ public class FileEncryptionKeyService {
                                                         + " stored data (restored from an older"
                                                         + " database backup?)"));
         if (row.getStatus() == FileEncryptionKey.Status.DISABLED) {
-            throw new StorageEncryptionException(
+            throw new StorageKeyRevokedException(
                     "Encryption key " + keyId + " is disabled; access to this content is revoked");
         }
         return unwrapRow(row);

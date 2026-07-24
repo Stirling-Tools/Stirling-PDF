@@ -131,7 +131,7 @@ class EncryptingStorageProviderTest {
         EncryptingStorageProvider fresh =
                 new EncryptingStorageProvider(inner, newKeyService(), true);
         assertThatThrownBy(() -> fresh.load(stored.getStorageKey()))
-                .isInstanceOf(StorageEncryptionException.class)
+                .isInstanceOf(StorageKeyRevokedException.class)
                 .hasMessageContaining("disabled");
     }
 

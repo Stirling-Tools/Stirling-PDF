@@ -95,7 +95,7 @@ class FileEncryptionKeyServiceTest {
                 new FileEncryptionKeyService(
                         repo.mock, new FileEncryptionMasterKey(MASTER_A, false));
         assertThatThrownBy(() -> fresh.kekForDecrypt(created.keyId()))
-                .isInstanceOf(StorageEncryptionException.class)
+                .isInstanceOf(StorageKeyRevokedException.class)
                 .hasMessageContaining("disabled");
     }
 
