@@ -170,6 +170,94 @@ class FormPayloadParserTest {
         }
     }
 
+    // ── parseNewFieldDefinitions ───────────────────────────────────────
+
+    @Nested
+    @DisplayName("parseNewFieldDefinitions")
+    class ParseNewFieldDefinitions {
+
+        @Test
+        @DisplayName("returns empty list for null input")
+        void nullInput() {
+            List<FormUtils.NewFormFieldDefinition> result =
+                    FormPayloadParser.parseNewFieldDefinitions(objectMapper, null);
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("returns empty list for blank input")
+        void blankInput() {
+            List<FormUtils.NewFormFieldDefinition> result =
+                    FormPayloadParser.parseNewFieldDefinitions(objectMapper, "   ");
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("parses a valid new-field list including geometry and flags")
+        void validNewFields() {
+            String json =
+                    "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
+                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20,"
+                            + "\"fontSize\":14,\"readOnly\":true,\"multiline\":true}]";
+            List<FormUtils.NewFormFieldDefinition> result =
+                    FormPayloadParser.parseNewFieldDefinitions(objectMapper, json);
+            assertThat(result).hasSize(1);
+            FormUtils.NewFormFieldDefinition def = result.get(0);
+            assertThat(def.name()).isEqualTo("NewField");
+            assertThat(def.type()).isEqualTo("text");
+            assertThat(def.pageIndex()).isEqualTo(0);
+            assertThat(def.x()).isEqualTo(50f);
+            assertThat(def.y()).isEqualTo(700f);
+            assertThat(def.width()).isEqualTo(200f);
+            assertThat(def.height()).isEqualTo(20f);
+            assertThat(def.fontSize()).isEqualTo(14f);
+            assertThat(def.readOnly()).isTrue();
+            assertThat(def.multiline()).isTrue();
+        }
+    }
+
+    // ── parseFieldEdits ────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("parseFieldEdits")
+    class ParseFieldEdits {
+
+        @Test
+        @DisplayName("returns empty batch for null input")
+        void nullInput() {
+            FormUtils.FieldEditBatch batch = FormPayloadParser.parseFieldEdits(objectMapper, null);
+            assertThat(batch.add()).isEmpty();
+            assertThat(batch.modify()).isEmpty();
+            assertThat(batch.delete()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("parses a combined add/modify/delete batch")
+        void combinedBatch() {
+            String json =
+                    "{\"add\":[{\"name\":\"new1\",\"type\":\"text\",\"pageIndex\":0,\"x\":1,"
+                            + "\"y\":2,\"width\":3,\"height\":4}],"
+                            + "\"modify\":[{\"targetName\":\"old1\",\"label\":\"L\"}],"
+                            + "\"delete\":[\"gone1\",{\"name\":\"gone2\"}]}";
+            FormUtils.FieldEditBatch batch = FormPayloadParser.parseFieldEdits(objectMapper, json);
+            assertThat(batch.add()).hasSize(1);
+            assertThat(batch.add().get(0).name()).isEqualTo("new1");
+            assertThat(batch.modify()).hasSize(1);
+            assertThat(batch.modify().get(0).targetName()).isEqualTo("old1");
+            assertThat(batch.delete()).containsExactly("gone1", "gone2");
+        }
+
+        @Test
+        @DisplayName("tolerates missing sections")
+        void missingSections() {
+            FormUtils.FieldEditBatch batch =
+                    FormPayloadParser.parseFieldEdits(objectMapper, "{\"delete\":[\"x\"]}");
+            assertThat(batch.add()).isEmpty();
+            assertThat(batch.modify()).isEmpty();
+            assertThat(batch.delete()).containsExactly("x");
+        }
+    }
+
     // ── parseNameList ──────────────────────────────────────────────────
 
     @Nested

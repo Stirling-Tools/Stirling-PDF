@@ -262,8 +262,8 @@
     },
     "formFill": {
       "image": "/og_images/form-fill.png",
-      "title": "Fill Form - Stirling PDF",
-      "description": "Fill PDF form fields interactively with a visual editor"
+      "title": "Form Editor - Stirling PDF",
+      "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
     },
     "multiTool": {
       "image": "/og_images/multi-tool.png",

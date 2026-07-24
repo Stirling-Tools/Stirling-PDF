@@ -130,13 +130,15 @@ class FormFieldTypeSupportTest {
     }
 
     @Test
-    void doesNotSupportsDefinitionCreation_signatureReturnsTrue() {
-        assertTrue(FormFieldTypeSupport.SIGNATURE.doesNotsupportsDefinitionCreation());
+    void doesNotSupportsDefinitionCreation_signatureReturnsFalse() {
+        // Signature placeholders are now creatable via the editor.
+        assertFalse(FormFieldTypeSupport.SIGNATURE.doesNotsupportsDefinitionCreation());
     }
 
     @Test
-    void doesNotSupportsDefinitionCreation_buttonReturnsTrue() {
-        assertTrue(FormFieldTypeSupport.BUTTON.doesNotsupportsDefinitionCreation());
+    void doesNotSupportsDefinitionCreation_buttonReturnsFalse() {
+        // Push buttons (with actions) are now creatable via the editor.
+        assertFalse(FormFieldTypeSupport.BUTTON.doesNotsupportsDefinitionCreation());
     }
 
     @Test

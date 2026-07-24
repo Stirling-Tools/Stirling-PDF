@@ -13,6 +13,12 @@ export interface WidgetCoordinates {
   exportValue?: string;
   /** Font size in PDF points */
   fontSize?: number;
+  /**
+   * CropBox height in PDF points for the page this widget sits on. Lets the
+   * editor reverse the backend's Y-flip when sending new/changed coordinates
+   * back for create/modify operations.
+   */
+  cropBoxHeight?: number;
 }
 
 export interface FormField {
@@ -66,6 +72,90 @@ export interface ButtonAction {
   /** For 'submitForm' actions: submit flags bitmask */
   submitFlags?: number;
 }
+
+/**
+ * Field types that can be created/edited structurally through the editor.
+ */
+export type CreatableFieldType =
+  | "text"
+  | "checkbox"
+  | "combobox"
+  | "listbox"
+  | "radio"
+  | "button"
+  | "signature";
+
+export const CREATABLE_FIELD_TYPES: CreatableFieldType[] = [
+  "text",
+  "checkbox",
+  "combobox",
+  "listbox",
+  "radio",
+  "button",
+  "signature",
+];
+
+/**
+ * A new field queued for creation. Coordinates are CropBox-relative,
+ * lower-left-origin PDF points — the reverse of what the backend emits in
+ * WidgetCoordinates, ready to POST to /api/v1/form/add-fields.
+ */
+export interface NewFieldDefinition {
+  name: string;
+  label?: string;
+  type: CreatableFieldType;
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  required?: boolean;
+  multiSelect?: boolean;
+  options?: string[];
+  defaultValue?: string;
+  tooltip?: string;
+  fontSize?: number;
+  readOnly?: boolean;
+  multiline?: boolean;
+  maxLength?: number; // text only; >0 also makes it a comb field
+  /** Push-button activation action: "reset" | "print" | "uri:<url>" | "submit:<url>" */
+  buttonAction?: string;
+}
+
+/**
+ * A change to an existing field. Only non-undefined properties are applied.
+ * Coordinates (when present) are CropBox-relative, lower-left-origin PDF points.
+ */
+export interface ModifyFieldDefinition {
+  targetName: string;
+  name?: string;
+  label?: string;
+  type?: FormFieldType;
+  pageIndex?: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  required?: boolean;
+  multiSelect?: boolean;
+  options?: string[];
+  defaultValue?: string;
+  tooltip?: string;
+  fontSize?: number;
+  readOnly?: boolean;
+  multiline?: boolean;
+  maxLength?: number; // text only; >0 also makes it a comb field
+}
+
+/** A batch of field edits committed in one request via /api/v1/form/edit-fields. */
+export interface FieldEditBatch {
+  add?: NewFieldDefinition[];
+  modify?: ModifyFieldDefinition[];
+  delete?: string[];
+}
+
+/** The form tool's working mode. */
+export type FormMode = "fill" | "create" | "modify";
 
 export interface FormFillState {
   /** Fields fetched from backend with coordinates */

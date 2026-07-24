@@ -330,6 +330,85 @@ class FormFillControllerTest {
         }
     }
 
+    // ── addFields ──────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("addFields")
+    class AddFields {
+
+        @Test
+        @DisplayName("throws when fields payload is null")
+        void nullPayload() {
+            assertThatThrownBy(() -> controller.addFields(pdfFile(), null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("throws when fields payload is an empty list")
+        void emptyPayload() {
+            assertThatThrownBy(() -> controller.addFields(pdfFile(), "[]".getBytes()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("processes a valid new-field payload")
+        void validPayload() throws Exception {
+            MockMultipartFile file = pdfFile();
+            PDDocument doc = createMinimalPdf();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+
+            String json =
+                    "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
+                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]";
+            ResponseEntity<Resource> response = controller.addFields(file, json.getBytes());
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+        }
+    }
+
+    // ── editFields (combined) ──────────────────────────────────────────
+
+    @Nested
+    @DisplayName("editFields")
+    class EditFields {
+
+        @Test
+        @DisplayName("throws when edits payload is null")
+        void nullPayload() {
+            assertThatThrownBy(() -> controller.editFields(pdfFile(), null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("throws when all sections are empty")
+        void emptyBatch() {
+            assertThatThrownBy(
+                            () ->
+                                    controller.editFields(
+                                            pdfFile(),
+                                            "{\"add\":[],\"modify\":[],\"delete\":[]}".getBytes()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("processes a combined add/delete batch")
+        void validBatch() throws Exception {
+            MockMultipartFile file = pdfFile();
+            PDDocument doc = createMinimalPdf();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+
+            String json =
+                    "{\"add\":[{\"name\":\"f\",\"type\":\"text\",\"pageIndex\":0,\"x\":50,"
+                            + "\"y\":700,\"width\":200,\"height\":20}],\"modify\":[],"
+                            + "\"delete\":[]}";
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+        }
+    }
+
     // ── buildBaseName ──────────────────────────────────────────────────
 
     @Nested

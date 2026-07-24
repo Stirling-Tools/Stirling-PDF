@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionNamed;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionResetForm;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionSubmitForm;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceCharacteristicsDictionary;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -59,6 +63,24 @@ public enum FormFieldTypeSupport {
                 List<String> options)
                 throws IOException {
             PDTextField textField = (PDTextField) field;
+            if (definition.fontSize() != null && definition.fontSize() > 0) {
+                textField.setDefaultAppearance("/Helv " + definition.fontSize() + " Tf 0 g");
+            }
+            if (Boolean.TRUE.equals(definition.multiline())) {
+                textField.setMultiline(true);
+            }
+            // Comb field: evenly spaced character cells (e.g. SSN, phone). Requires
+            // a positive MaxLen and is mutually exclusive with multiline.
+            if (definition.maxLength() != null && definition.maxLength() > 0) {
+                textField.setMaxLen(definition.maxLength());
+                if (!Boolean.TRUE.equals(definition.multiline())) {
+                    try {
+                        textField.setComb(true);
+                    } catch (Exception e) {
+                        log.debug("Unable to set comb flag: {}", e.getMessage());
+                    }
+                }
+            }
             String defaultValue = Optional.ofNullable(definition.defaultValue()).orElse("");
             if (!defaultValue.isBlank()) {
                 FormUtils.setTextValue(textField, defaultValue);
@@ -272,11 +294,80 @@ public enum FormFieldTypeSupport {
         PDTerminalField createField(PDAcroForm acroForm) {
             return new PDSignatureField(acroForm);
         }
+
+        @Override
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
+        }
+        // Empty signature placeholder: no value to apply (signed later by a sign tool).
     },
     BUTTON("button", "pushButton", PDPushButton.class) {
         @Override
         PDTerminalField createField(PDAcroForm acroForm) {
             return new PDPushButton(acroForm);
+        }
+
+        @Override
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
+        }
+
+        @Override
+        void applyNewFieldDefinition(
+                PDTerminalField field,
+                FormUtils.NewFormFieldDefinition definition,
+                List<String> options)
+                throws IOException {
+            if (field.getWidgets().isEmpty()) {
+                return;
+            }
+            PDAnnotationWidget widget = field.getWidgets().get(0);
+
+            // Visible caption (/MK /CA).
+            String caption = definition.label();
+            if (caption == null || caption.isBlank()) {
+                caption = definition.name();
+            }
+            if (caption != null && !caption.isBlank()) {
+                PDAppearanceCharacteristicsDictionary mk = widget.getAppearanceCharacteristics();
+                if (mk == null) {
+                    mk = new PDAppearanceCharacteristicsDictionary(widget.getCOSObject());
+                    widget.setAppearanceCharacteristics(mk);
+                }
+                mk.setNormalCaption(caption);
+            }
+            widget.setPrinted(true);
+
+            applyButtonAction(widget, definition.buttonAction());
+        }
+
+        private void applyButtonAction(PDAnnotationWidget widget, String action) {
+            if (action == null || action.isBlank()) {
+                return;
+            }
+            try {
+                String spec = action.trim();
+                String lower = spec.toLowerCase();
+                if (lower.equals("reset")) {
+                    widget.getCOSObject()
+                            .setItem(COSName.A, new PDActionResetForm().getCOSObject());
+                } else if (lower.equals("print")) {
+                    PDActionNamed named = new PDActionNamed();
+                    named.setN("Print");
+                    widget.getCOSObject().setItem(COSName.A, named.getCOSObject());
+                } else if (lower.startsWith("uri:")) {
+                    PDActionURI uri = new PDActionURI();
+                    uri.setURI(spec.substring(4));
+                    widget.getCOSObject().setItem(COSName.A, uri.getCOSObject());
+                } else if (lower.startsWith("submit:")) {
+                    PDActionSubmitForm submit = new PDActionSubmitForm();
+                    // Store the target URL on the action dictionary's /F entry.
+                    submit.getCOSObject().setString(COSName.F, spec.substring(7));
+                    widget.getCOSObject().setItem(COSName.A, submit.getCOSObject());
+                }
+            } catch (Exception e) {
+                log.debug("Unable to apply button action '{}': {}", action, e.getMessage());
+            }
         }
     };
 
