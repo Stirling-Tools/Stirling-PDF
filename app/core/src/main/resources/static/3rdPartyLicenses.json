@@ -1,6 +1,13 @@
 {
     "dependencies": [
         {
+            "moduleName": "ch.obermuhlner:big-math",
+            "moduleUrl": "https://github.com/eobermuhlner/big-math",
+            "moduleVersion": "2.0.0",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://raw.githubusercontent.com/eobermuhlner/big-math/master/LICENSE.txt"
+        },
+        {
             "moduleName": "ch.qos.logback:logback-classic",
             "moduleUrl": "http://www.qos.ch",
             "moduleVersion": "1.5.32",
@@ -71,9 +78,23 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "com.fasterxml.jackson.core:jackson-core",
+            "moduleUrl": "https://github.com/FasterXML/jackson-core",
+            "moduleVersion": "2.21.4",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "com.fasterxml.jackson.core:jackson-databind",
             "moduleUrl": "https://github.com/FasterXML/jackson",
             "moduleVersion": "2.21.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson.core:jackson-databind",
+            "moduleUrl": "https://github.com/FasterXML/jackson",
+            "moduleVersion": "2.21.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -83,6 +104,13 @@
             "moduleVersion": "2.21.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson.datatype:jackson-datatype-jdk8",
+            "moduleUrl": "https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jdk8",
+            "moduleVersion": "2.21.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310",
@@ -95,6 +123,13 @@
             "moduleName": "com.fasterxml.jackson:jackson-bom",
             "moduleUrl": "https://github.com/FasterXML/jackson-bom",
             "moduleVersion": "2.21.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson:jackson-bom",
+            "moduleUrl": "https://github.com/FasterXML/jackson-bom",
+            "moduleVersion": "2.21.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -147,7 +182,7 @@
         {
             "moduleName": "com.github.junrar:junrar",
             "moduleUrl": "https://github.com/junrar/junrar",
-            "moduleVersion": "7.5.10",
+            "moduleVersion": "7.6.0",
             "moduleLicense": "UnRar License",
             "moduleLicenseUrl": "https://github.com/junrar/junrar/blob/master/LICENSE"
         },
@@ -228,11 +263,25 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "com.google.re2j:re2j",
+            "moduleUrl": "http://github.com/google/re2j",
+            "moduleVersion": "1.2",
+            "moduleLicense": "Go License",
+            "moduleLicenseUrl": "https://golang.org/LICENSE"
+        },
+        {
             "moduleName": "com.google.zxing:core",
             "moduleUrl": "https://github.com/zxing/zxing/core",
             "moduleVersion": "3.5.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.googlecode.java-ipv6:java-ipv6",
+            "moduleUrl": "https://github.com/janvanbesien/java-ipv6/",
+            "moduleVersion": "0.17",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "com.googlecode.owasp-java-html-sanitizer:java10-shim",
@@ -268,6 +317,21 @@
             "moduleVersion": "2.4.240",
             "moduleLicense": "MPL 2.0",
             "moduleLicenseUrl": "https://www.mozilla.org/en-US/MPL/2.0/"
+        },
+        {
+            "moduleName": "com.hubspot.immutables:immutables-exceptions",
+            "moduleVersion": "1.9"
+        },
+        {
+            "moduleName": "com.hubspot.jinjava:jinjava",
+            "moduleUrl": "https://github.com/HubSpot/jinjava",
+            "moduleVersion": "2.8.3",
+            "moduleLicense": "The Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.hubspot:algebra",
+            "moduleVersion": "1.5"
         },
         {
             "moduleName": "com.nimbusds:content-type",
@@ -655,6 +719,13 @@
             "moduleUrl": "https://commons.apache.org/proper/commons-logging/",
             "moduleVersion": "1.3.6",
             "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "commons-net:commons-net",
+            "moduleUrl": "https://commons.apache.org/proper/commons-net/",
+            "moduleVersion": "3.9.0",
+            "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
@@ -1828,6 +1899,13 @@
             "moduleVersion": "9.0.1.Final",
             "moduleLicense": "Apache License 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.javassist:javassist",
+            "moduleUrl": "https://www.javassist.org/",
+            "moduleVersion": "3.30.2-GA",
+            "moduleLicense": "MPL 1.1",
+            "moduleLicenseUrl": "https://www.mozilla.org/en-US/MPL/1.1/"
         },
         {
             "moduleName": "org.jboss.logging:jboss-logging",
