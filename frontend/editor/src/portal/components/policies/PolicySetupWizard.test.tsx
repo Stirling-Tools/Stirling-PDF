@@ -5,7 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import {
   POLICY_CATEGORIES,
@@ -17,7 +17,7 @@ import {
 } from "@portal/api/policies";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, { wrapper: PortalTestProviders });
 
 // Deterministic i18n: return the fallback when given, else the key. initReactI18next is stubbed
 // because the import graph pulls core/i18n.ts, which registers it as a plugin.

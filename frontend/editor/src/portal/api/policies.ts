@@ -4,8 +4,8 @@
  * The portal calls the real Stirling policy API (`/api/v1/policies`);
  * Storybook and tests intercept the same calls with MSW handlers.
  *
- * `fetchPolicies()` assembles the decorated catalogue client-side from the
- * backend's flat `WirePolicy[]` + `PolicyRunView[]`, mirroring the same
+ * The flat `WirePolicy[]` + `PolicyRunView[]` responses are assembled into the
+ * decorated catalogue client-side by `assemblePolicies()`, mirroring the same
  * approach the editor uses for its own catalogue view.
  */
 
@@ -455,15 +455,27 @@ function decoratePolicy(
   };
 }
 
-/** GET /api/v1/policies + GET /api/v1/policies/runs → assembled catalogue. */
-export async function fetchPolicies(): Promise<PoliciesResponse> {
-  const [wirePolicies, runs] = await Promise.all([
-    apiClient.local.json<WirePolicy[]>("/api/v1/policies"),
-    apiClient.local
-      .json<PolicyRunView[]>("/api/v1/policies/runs")
-      .catch(() => [] as PolicyRunView[]),
-  ]);
+/** GET /api/v1/policies — the flat stored-policy records. */
+export function fetchPoliciesList(): Promise<WirePolicy[]> {
+  return apiClient.local.json<WirePolicy[]>("/api/v1/policies");
+}
 
+/** GET /api/v1/policies/runs — best-effort (empty on a backend without runs). */
+export function fetchPolicyRuns(): Promise<PolicyRunView[]> {
+  return apiClient.local
+    .json<PolicyRunView[]>("/api/v1/policies/runs")
+    .catch(() => [] as PolicyRunView[]);
+}
+
+/**
+ * Pure assembly of the decorated catalogue from the two raw responses. Split
+ * out so the React Query layer can fetch the list + runs as separate shared
+ * cache entries (deduped across Home + Policies) and assemble client-side.
+ */
+export function assemblePolicies(
+  wirePolicies: WirePolicy[],
+  runs: PolicyRunView[],
+): PoliciesResponse {
   const decodedByCategory = new Map<
     string,
     { decoded: PolicyDecodedState; isDefault: boolean }
