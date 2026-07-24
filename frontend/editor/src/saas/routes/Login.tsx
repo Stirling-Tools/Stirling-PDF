@@ -83,7 +83,7 @@ export default function Login() {
       "app.description",
       "The Free Adobe Acrobat alternative (10M+ Downloads)",
     ),
-    ogImage: `${baseUrl}/og_images/home.png`,
+    ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
@@ -269,7 +269,7 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm || showMagicLinkForm}>
+    <AuthLayout>
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
@@ -334,7 +334,7 @@ export default function Login() {
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "#059669",
+                      color: "var(--c-success)",
                       margin: 0,
                     }}
                   >
@@ -429,7 +429,7 @@ export default function Login() {
             cursor: "pointer",
             fontSize: "1rem",
             fontWeight: 700,
-            color: "var(--text-primary)",
+            color: "var(--c-text)",
           }}
         >
           {isSigningIn
@@ -454,7 +454,7 @@ export default function Login() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "#9ca3af",
+            color: "var(--c-text-subtle)",
           }}
         >
           {t("login.createAccount", "Create an account")}

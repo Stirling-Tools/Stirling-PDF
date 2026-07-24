@@ -2,15 +2,11 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { Button, EmptyState, Skeleton, Tabs } from "@app/ui";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import { useSectionFlags } from "@portal/hooks/useAsync";
+import { useSources } from "@portal/queries/sources";
 import { SourcesIcon } from "@portal/components/icons";
-import {
-  fetchSources,
-  type SourcesResponse,
-  type SourceView,
-} from "@portal/api/sources";
+import { type SourceView } from "@portal/api/sources";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { AgentBuilderAction } from "@portal/components/sources/AgentBuilderAction";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { ConnectionsTab } from "@portal/components/sources/ConnectionsTab";
@@ -25,7 +21,7 @@ export function Sources() {
   const activeTab: SourcesTab =
     searchParams.get("tab") === "connections" ? "connections" : "sources";
 
-  const state = useAsync<SourcesResponse>(() => fetchSources(), []);
+  const state = useSources();
   const { data, loading } = state;
   const { isLoading } = useSectionFlags(state);
 
@@ -55,7 +51,6 @@ export function Sources() {
         </div>
         {activeTab === "sources" && (
           <div className="portal-sources__actions">
-            <AgentBuilderAction />
             <Button
               onClick={openCreate}
               leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}

@@ -1,9 +1,9 @@
 /* ── Trigger ─────────────────────────────────────── */
 .trigger {
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   padding: 0.5rem 0.75rem;
-  background: var(--bg-surface);
+  background: var(--c-surface);
   cursor: pointer;
   flex: 1;
   min-width: 0;
@@ -47,8 +47,8 @@
   justify-content: space-between;
   padding: 0.3rem 0.45rem;
   gap: 0.4rem;
-  border-bottom: 1px solid var(--border-default);
-  background: var(--bg-surface);
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
 }
 
 .tabGroup {
@@ -66,7 +66,7 @@
   min-width: 0;
   min-height: 24px;
   max-height: 26px;
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-sm);
   background: color-mix(
     in srgb,
@@ -185,8 +185,8 @@
 /* ── Search / filter row ─────────────────────────── */
 .searchRow {
   padding: 0.3rem 0.45rem;
-  border-bottom: 1px solid var(--border-default);
-  background: var(--bg-surface);
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
 }
 
 .searchInput {
@@ -195,7 +195,7 @@
   height: 1.625rem;
   padding: 0 0.5rem;
   font-size: 0.7rem;
-  border: 1px solid var(--border-subtle, var(--border-default));
+  border: 1px solid var(--c-border-subtle, var(--c-border));
   border-radius: var(--radius-sm);
   background: var(--mantine-color-default-hover);
   color: var(--mantine-color-text);
@@ -233,7 +233,7 @@
   cursor: pointer;
   background: transparent;
   border: none;
-  border-top: 1px solid var(--border-default);
+  border-top: 1px solid var(--c-border);
   text-align: left;
   transition: background 0.08s ease;
 }

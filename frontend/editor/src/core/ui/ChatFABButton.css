@@ -7,7 +7,7 @@
   border-radius: 16px;
   border: none;
   background: var(--c-primary);
-  color: var(--p-white);
+  color: var(--c-text-on-primary);
   cursor: pointer;
   box-shadow: 0 4px 16px color-mix(in srgb, var(--c-primary) 40%, transparent);
   transition:
@@ -85,7 +85,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--c-success);
   animation: chat-fab-pulse 1.5s ease-in-out infinite;
 }
 
@@ -109,7 +109,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--c-success);
   display: flex;
   align-items: center;
   justify-content: center;

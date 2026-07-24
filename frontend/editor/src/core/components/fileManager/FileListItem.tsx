@@ -189,7 +189,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
           backgroundColor:
             isSelected || shouldShowHovered
               ? "var(--mantine-color-gray-1)"
-              : "var(--bg-file-list)",
+              : "var(--c-surface)",
           opacity: 1,
           transition: "background-color 0.15s ease",
           userSelect: "none",

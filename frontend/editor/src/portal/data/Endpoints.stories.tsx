@@ -21,7 +21,7 @@ type Story = StoryObj;
 export const ByVertical: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <div style={{ fontSize: 12, color: "var(--color-text-4)" }}>
+      <div style={{ fontSize: 12, color: "var(--c-text-subtle)" }}>
         {ALL_ENDPOINTS.length} endpoints across {VERTICALS.length} verticals
       </div>
       {VERTICALS.map((v) => (
@@ -42,12 +42,10 @@ export const ByVertical: Story = {
                 background: v.color,
               }}
             />
-            <h3
-              style={{ margin: 0, fontSize: 14, color: "var(--color-text-1)" }}
-            >
+            <h3 style={{ margin: 0, fontSize: 14, color: "var(--c-text)" }}>
               {v.label}
             </h3>
-            <span style={{ fontSize: 12, color: "var(--color-text-5)" }}>
+            <span style={{ fontSize: 12, color: "var(--c-text-subtle)" }}>
               {v.endpoints.length} endpoints
             </span>
           </div>
@@ -61,8 +59,8 @@ export const ByVertical: Story = {
                   gap: 12,
                   alignItems: "center",
                   padding: "0.625rem 0.875rem",
-                  background: "var(--color-surface)",
-                  border: "1px solid var(--color-border)",
+                  background: "var(--c-surface)",
+                  border: "1px solid var(--c-border)",
                   borderRadius: "var(--radius-md)",
                 }}
               >
@@ -71,7 +69,7 @@ export const ByVertical: Story = {
                   style={{
                     fontFamily: "var(--font-mono)",
                     fontSize: 12,
-                    color: "var(--color-text-2)",
+                    color: "var(--c-text-muted)",
                   }}
                 >
                   {e.endpoint}
@@ -81,7 +79,7 @@ export const ByVertical: Story = {
                     style={{
                       fontSize: 13,
                       fontWeight: 500,
-                      color: "var(--color-text-1)",
+                      color: "var(--c-text)",
                     }}
                   >
                     {e.name}
@@ -89,7 +87,7 @@ export const ByVertical: Story = {
                   <div
                     style={{
                       fontSize: 12,
-                      color: "var(--color-text-4)",
+                      color: "var(--c-text-subtle)",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
