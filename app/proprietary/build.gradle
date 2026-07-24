@@ -6,33 +6,6 @@ repositories {
 bootRun {
     enabled = false
 }
-
-spotless {
-        java {
-        target 'src/**/java/**/*.java'
-        targetExclude 'src/main/java/org/apache/**'
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
-        // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
-        suppressLintsFor { setStep('google-java-format') }
-
-        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    yaml {
-        target '**/*.yml', '**/*.yaml'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    format 'gradle', {
-        target '**/gradle/*.gradle', '**/*.gradle'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-}
 dependencies {
     implementation project(':common')
     api "com.google.guava:guava:${guavaVersion}"
@@ -66,6 +39,20 @@ dependencies {
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
 
+    // jinjava/jjwt transitively request older Jackson 2 versions; declare the current
+    // version directly so it is selected consistently (root build.gradle pins are the fallback).
+    runtimeOnly "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
+    runtimeOnly "com.fasterxml.jackson.core:jackson-databind:${jackson2Version}"
+
+    implementation("com.hubspot.jinjava:jinjava:${jinjavaVersion}") {
+        // Compile-time-only annotation artifacts (class-retention annotations, not needed at
+        // runtime) whose declared licences (LGPL / none) fail the licence compatibility check.
+        exclude group: 'com.google.code.findbugs', module: 'annotations'
+        exclude group: 'org.derive4j', module: 'derive4j-annotation'
+        exclude group: 'com.hubspot.immutables', module: 'hubspot-style'
+        exclude group: 'com.hubspot.immutables', module: 'immutable-collection-encodings'
+    }
+
     api 'io.micrometer:micrometer-registry-prometheus'
 
     api "io.jsonwebtoken:jjwt-api:${jwtVersion}"
@@ -89,6 +76,7 @@ dependencies {
     testImplementation "org.testcontainers:testcontainers:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:minio:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:localstack:${testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:postgresql:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
 }
 

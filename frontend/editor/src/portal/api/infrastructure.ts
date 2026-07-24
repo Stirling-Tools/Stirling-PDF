@@ -43,23 +43,33 @@ export interface RecentDeployment {
 /*  API Keys                                                                 */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export type ApiKeyStatus = "active" | "revoked" | "rotate-soon";
-export type ApiKeyPermission = "Read" | "Write" | "Admin";
+export type ApiKeyStatus = "active" | "revoked";
 
 export interface ApiKey {
   id: string;
   name: string;
-  /** Masked prefix shown in the list, e.g. "sk_live_a3f8…". */
+  /** Non-secret leading fragment, e.g. "sk_a3f81b2c". */
   prefix: string;
   created: string;
+  /** Formatted last-use time, or "Never". */
   lastUsed: string;
   status: ApiKeyStatus;
-  /** Requests/min ceiling. */
-  rateLimit: number;
-  permissions: ApiKeyPermission[];
-  allowedIps: string[];
+  /** Requests made today (UTC). */
   usageToday: number;
+  /** Requests in the trailing 30 days. */
   usageMonth: number;
+  /** Lifetime request count. */
+  usageTotal: number;
+}
+
+export interface ApiKeysResponse {
+  keys: ApiKey[];
+}
+
+/** Returned once on creation: the listed row plus the plaintext secret, shown once. */
+export interface CreatedApiKey {
+  key: ApiKey;
+  secret: string;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -278,11 +288,30 @@ export async function fetchDeployments(
   );
 }
 
-/** GET /v1/infrastructure/api-keys?tier=… */
-export async function fetchApiKeys(tier: Tier): Promise<ApiKey[]> {
-  return apiClient.local.json<ApiKey[]>(
-    `/v1/infrastructure/api-keys${q(tier)}`,
-  );
+const API_KEYS_PATH = "/api/v1/proprietary/ui-data/infrastructure/api-keys";
+
+// Always this instance's own backend: a key authenticates the instance that issued it, so a
+// self-hosted instance manages its own keys even when SaaS-linked (.local is the SaaS backend on SaaS).
+
+/** GET the caller's personal API keys; scoped server-side per user. */
+export async function fetchApiKeys(): Promise<ApiKeysResponse> {
+  return apiClient.local.json<ApiKeysResponse>(API_KEYS_PATH);
+}
+
+/** POST a new key; the response carries the one-time secret. */
+export async function createApiKey(body: {
+  name: string;
+}): Promise<CreatedApiKey> {
+  return apiClient.local.json<CreatedApiKey>(API_KEYS_PATH, {
+    method: "POST",
+    body,
+  });
+}
+
+/** DELETE (revoke) a key the caller owns. */
+export async function revokeApiKey(id: string): Promise<void> {
+  const path = `${API_KEYS_PATH}/${encodeURIComponent(id)}`;
+  await apiClient.local.json<void>(path, { method: "DELETE" });
 }
 
 /** GET /v1/infrastructure/security?tier=… */

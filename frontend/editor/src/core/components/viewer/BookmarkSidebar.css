@@ -32,16 +32,12 @@
 
 .bookmark-item--clickable {
   cursor: pointer;
-  background: color-mix(in srgb, var(--bg-toolbar) 86%, transparent);
+  background: color-mix(in srgb, var(--c-bg-raised) 86%, transparent);
 }
 
 .bookmark-item--clickable:hover {
-  background: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
-  border-color: color-mix(
-    in srgb,
-    var(--text-primary) 20%,
-    var(--border-subtle)
-  );
+  background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg-raised));
+  border-color: color-mix(in srgb, var(--c-text) 20%, var(--c-border-subtle));
   transform: translateX(2px);
 }
 
@@ -51,7 +47,7 @@
 
 .bookmark-item--clickable:focus-visible {
   outline: 2px solid
-    color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
+    color-mix(in srgb, var(--c-text) 30%, var(--c-border-subtle));
   outline-offset: 2px;
 }
 
@@ -75,7 +71,7 @@
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-size: 1.25rem;
   opacity: 0.5;
   font-weight: 300;
@@ -94,11 +90,11 @@
   line-height: 1.35;
   overflow-wrap: anywhere;
   word-break: break-word;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .bookmark-item--clickable:hover .bookmark-item__title {
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .bookmark-item__page {

@@ -58,6 +58,10 @@ class SupabaseAuthenticationFilterMoreTest {
     @Mock private SaasTeamService saasTeamService;
     @Mock private JwtDecoder jwtDecoder;
 
+    @Mock
+    private stirling.software.proprietary.security.service.ApiKeyAuthenticationService
+            apiKeyAuthenticationService;
+
     private SupabaseAuthenticationFilter filter;
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
@@ -68,7 +72,12 @@ class SupabaseAuthenticationFilterMoreTest {
         SecurityContextHolder.clearContext();
         filter =
                 new SupabaseAuthenticationFilter(
-                        teamService, userService, supabaseUserService, saasTeamService, jwtDecoder);
+                        teamService,
+                        userService,
+                        supabaseUserService,
+                        saasTeamService,
+                        jwtDecoder,
+                        apiKeyAuthenticationService);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         chain = new MockFilterChain();
@@ -234,7 +243,12 @@ class SupabaseAuthenticationFilterMoreTest {
         @DisplayName("returns true and skips lookup when an api key sets an authenticated context")
         void apiKeyValidStillAuthenticates() throws Exception {
             User user = newUser("alice");
-            when(userService.getUserByApiKey("k1")).thenReturn(Optional.of(user));
+            when(apiKeyAuthenticationService.authenticate("k1"))
+                    .thenReturn(
+                            Optional.of(
+                                    new stirling.software.proprietary.security.service
+                                            .ApiKeyAuthenticationService.ApiKeyAuthentication(
+                                            user, null, user.getAuthorities())));
 
             request.setRequestURI("/api/v1/something");
             request.setMethod("POST");
@@ -276,6 +290,8 @@ class SupabaseAuthenticationFilterMoreTest {
             filter.doFilter(request, response, chain);
 
             verify(userService, times(1)).saveUser(any(User.class));
+            // Guests get NO team; a home team + grant is provisioned only on signup/upgrade.
+            verify(saasTeamService, never()).ensurePersonalTeam(any());
             // Anonymous mirror row created with null email and anon flag true.
             verify(supabaseUserService).createSupabaseUser(supabaseId, null, true);
             assertThat(SecurityContextHolder.getContext().getAuthentication())

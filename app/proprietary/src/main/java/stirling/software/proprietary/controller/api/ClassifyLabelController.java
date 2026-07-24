@@ -31,11 +31,11 @@ import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.classification.ClassificationLabelProvider;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
-import stirling.software.proprietary.classification.store.ClassificationLabelStore;
 import stirling.software.proprietary.model.api.ai.AiPageText;
-import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.service.AiEngineClient;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.PdfContentExtractor;
 
 import tools.jackson.databind.JsonNode;
@@ -46,7 +46,7 @@ import tools.jackson.databind.node.ObjectNode;
  * Dispatchable tool that classifies a PDF and writes the result into its metadata.
  *
  * <p>Runs as a Classification-policy pipeline step: it reads a bounded page window, asks the AI
- * engine to classify the document against the caller's team label set, and stores the engine's JSON
+ * engine to classify the document against the built-in label set, and stores the engine's JSON
  * answer — minus the transport-only {@code outcome} field — in the custom Info-dictionary key
  * {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns the labelled PDF. Not intended for direct
  * client use.
@@ -68,17 +68,14 @@ public class ClassifyLabelController {
     private final PdfContentExtractor pdfContentExtractor;
     private final PdfMetadataService pdfMetadataService;
     private final AiEngineClient aiEngineClient;
+    private final AiFeatureGate aiFeatureGate;
     private final ObjectMapper objectMapper;
     private final UserServiceInterface userService;
 
     /**
-     * Present only when the policy subsystem is enabled ({@code policies.enabled}); the store and
-     * team authority are gated on it. Null otherwise, in which case there are no team labels to
-     * classify against and the document is passed through unlabelled.
+     * The fixed, built-in vocabulary shared by everyone — see {@link ClassificationLabelProvider}.
      */
-    private final ClassificationLabelStore labelStore;
-
-    private final PolicyManagementAuthority policyManagementAuthority;
+    private final ClassificationLabelProvider labelProvider;
 
     public ClassifyLabelController(
             CustomPDFDocumentFactory pdfDocumentFactory,
@@ -86,19 +83,19 @@ public class ClassifyLabelController {
             PdfContentExtractor pdfContentExtractor,
             PdfMetadataService pdfMetadataService,
             AiEngineClient aiEngineClient,
+            AiFeatureGate aiFeatureGate,
             ObjectMapper objectMapper,
-            @Autowired(required = false) UserServiceInterface userService,
-            @Autowired(required = false) ClassificationLabelStore labelStore,
-            @Autowired(required = false) PolicyManagementAuthority policyManagementAuthority) {
+            ClassificationLabelProvider labelProvider,
+            @Autowired(required = false) UserServiceInterface userService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.tempFileManager = tempFileManager;
         this.pdfContentExtractor = pdfContentExtractor;
         this.pdfMetadataService = pdfMetadataService;
         this.aiEngineClient = aiEngineClient;
+        this.aiFeatureGate = aiFeatureGate;
         this.objectMapper = objectMapper;
+        this.labelProvider = labelProvider;
         this.userService = userService;
-        this.labelStore = labelStore;
-        this.policyManagementAuthority = policyManagementAuthority;
     }
 
     @PostMapping(value = "/classify-and-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -111,14 +108,15 @@ public class ClassifyLabelController {
                             + " intended for direct client use.")
     public ResponseEntity<Resource> classifyAndLabel(
             @RequestParam("fileInput") MultipartFile fileInput) throws IOException {
+        aiFeatureGate.requireClassify();
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
 
             List<EngineLabel> allowed = resolveAllowedLabels();
             if (allowed.isEmpty()) {
-                // No vocabulary to classify against (the team stored no labels): pass the file
-                // through unlabelled rather than ask the engine to classify against nothing.
-                log.debug("[classify-and-label] {} has no team labels; skipping", fileName);
+                // No vocabulary to classify against: pass the file through unlabelled rather than
+                // ask the engine to classify against nothing.
+                log.debug("[classify-and-label] {} has no labels; skipping", fileName);
                 return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
             }
 
@@ -175,24 +173,13 @@ public class ClassifyLabelController {
     }
 
     /**
-     * The allowed labels for the caller's team as {@code {id, name}} pairs, de-duplicated by id.
-     * The engine shows the model the names and returns the ids (icons are presentational and never
-     * sent). Returns an empty list — the caller then skips classification — when the policy
-     * subsystem is disabled (no store) or the team has no stored labels. The engine holds no
-     * default vocabulary of its own, so a team's stored labels are the only source.
+     * The built-in vocabulary as {@code {id, name}} pairs, de-duplicated by id. The engine shows
+     * the model the names and returns the ids (icons are presentational and never sent). The engine
+     * holds no default vocabulary of its own, so this bundled set is the only source.
      */
     private List<EngineLabel> resolveAllowedLabels() {
-        if (labelStore == null) {
-            return List.of();
-        }
-        Long teamId =
-                policyManagementAuthority == null
-                        ? null
-                        : policyManagementAuthority.currentUserTeamId();
-
         Map<String, EngineLabel> byId = new LinkedHashMap<>();
-        labelStore.findByTeam(teamId).ifPresent(labels -> collectLabels(labels.labels(), byId));
-
+        collectLabels(labelProvider.labels(), byId);
         return List.copyOf(byId.values());
     }
 

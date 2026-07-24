@@ -22,6 +22,9 @@ export interface SourceTypeMeta {
  */
 export const EDITOR_SOURCE_TYPE = "editor";
 
+/** The webhook source type. Its delivery URL + signing secret are minted server-side on create. */
+export const WEBHOOK_SOURCE_TYPE = "webhook";
+
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
@@ -37,6 +40,11 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
     labelKey: "portal.sources.types.s3.label",
     icon: "☁",
     accent: "brand",
+  },
+  webhook: {
+    labelKey: "portal.sources.types.webhook.label",
+    icon: "↯",
+    accent: "warning",
   },
 };
 
@@ -54,7 +62,7 @@ export function sourceTypeMeta(type: string): SourceTypeMeta {
 export interface SourceFieldDef {
   key: string;
   labelKey: string;
-  control: "text" | "password" | "select";
+  control: "text" | "password" | "select" | "s3Connection";
   required?: boolean;
   placeholderKey?: string;
   helperTextKey?: string;
@@ -148,18 +156,11 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     descriptionKey: "portal.sources.types.s3.description",
     fields: [
       {
-        key: "bucket",
-        labelKey: "portal.sources.types.s3.fields.bucket.label",
-        control: "text",
+        key: "connectionId",
+        labelKey: "portal.sources.types.s3.fields.connection.label",
+        control: "s3Connection",
         required: true,
-        placeholderKey: "portal.sources.types.s3.fields.bucket.placeholder",
-      },
-      {
-        key: "region",
-        labelKey: "portal.sources.types.s3.fields.region.label",
-        control: "text",
-        defaultValue: "us-east-1",
-        placeholderKey: "portal.sources.types.s3.fields.region.placeholder",
+        helperTextKey: "portal.sources.types.s3.fields.connection.helperText",
       },
       {
         key: "prefix",
@@ -167,25 +168,6 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         control: "text",
         placeholderKey: "portal.sources.types.s3.fields.prefix.placeholder",
         helperTextKey: "portal.sources.types.s3.fields.prefix.helperText",
-      },
-      {
-        key: "accessKeyId",
-        labelKey: "portal.sources.types.s3.fields.accessKeyId.label",
-        control: "text",
-        required: true,
-      },
-      {
-        key: "secretAccessKey",
-        labelKey: "portal.sources.types.s3.fields.secretAccessKey.label",
-        control: "password",
-        required: true,
-      },
-      {
-        key: "endpoint",
-        labelKey: "portal.sources.types.s3.fields.endpoint.label",
-        control: "text",
-        placeholderKey: "portal.sources.types.s3.fields.endpoint.placeholder",
-        helperTextKey: "portal.sources.types.s3.fields.endpoint.helperText",
       },
       {
         key: "mode",
@@ -205,6 +187,12 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         ],
       },
     ],
+  },
+  {
+    type: WEBHOOK_SOURCE_TYPE,
+    labelKey: "portal.sources.types.webhook.label",
+    descriptionKey: "portal.sources.types.webhook.description",
+    fields: [],
   },
 ];
 

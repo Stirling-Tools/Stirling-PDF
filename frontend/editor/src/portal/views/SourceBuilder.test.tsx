@@ -1,0 +1,255 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type { ReactNode } from "react";
+import { SourceBuilder } from "@portal/views/SourceBuilder";
+import { UIProvider } from "@portal/contexts/UIContext";
+
+// SourceBuilder reads useUI() (open settings) and useQueryClient (list
+// invalidation), so provide the query client + Mantine + the UI context.
+const Providers = ({ children }: { children: ReactNode }) => (
+  <PortalTestProviders>
+    <UIProvider>{children}</UIProvider>
+  </PortalTestProviders>
+);
+
+const render = (ui: Parameters<typeof baseRender>[0]) =>
+  baseRender(ui, { wrapper: Providers });
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { changeLanguage: vi.fn() },
+  }),
+}));
+
+const createSource = vi.fn();
+const fetchSource = vi.fn();
+const deleteSource = vi.fn();
+const isFolderAccessDeniedError = vi.fn();
+vi.mock("@portal/api/sources", () => ({
+  createSource: (s: unknown) => createSource(s),
+  fetchSource: (id: string) => fetchSource(id),
+  deleteSource: (id: string) => deleteSource(id),
+  isFolderAccessDeniedError: (e: unknown) => isFolderAccessDeniedError(e),
+}));
+
+const fetchS3Connections = vi.fn();
+vi.mock("@portal/api/integrations", () => ({
+  fetchIntegrations: () => Promise.resolve([]),
+  fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
+  fetchS3Connections: () => fetchS3Connections(),
+  createIntegration: vi.fn(),
+}));
+
+function renderBuilder(initial: string) {
+  return render(
+    <MemoryRouter initialEntries={[initial]}>
+      <Routes>
+        <Route path="/processor/sources" element={<div>sources list</div>} />
+        <Route path="/processor/sources/new" element={<SourceBuilder />} />
+        <Route path="/processor/sources/:id" element={<SourceBuilder />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe("SourceBuilder", () => {
+  beforeEach(() => {
+    createSource.mockReset();
+    createSource.mockResolvedValue({ id: "src-1" });
+    fetchSource.mockReset();
+    deleteSource.mockReset();
+    deleteSource.mockResolvedValue(undefined);
+    isFolderAccessDeniedError.mockReset();
+    isFolderAccessDeniedError.mockReturnValue(false);
+    fetchS3Connections.mockReset();
+    fetchS3Connections.mockResolvedValue([]);
+  });
+
+  it("creates a folder source and returns to the list", async () => {
+    renderBuilder("/processor/sources/new");
+
+    // Folder is the first offered type; fill name + directory.
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Claims intake" },
+    });
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.folder\.fields\.directory\.label/,
+      ),
+      { target: { value: "/data/incoming" } },
+    );
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
+    expect(createSource).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Claims intake",
+        type: "folder",
+        options: expect.objectContaining({ directory: "/data/incoming" }),
+        enabled: true,
+      }),
+    );
+    expect(await screen.findByText("sources list")).toBeInTheDocument();
+  });
+
+  it("offers a Folder Access settings link when the folder is outside allowed roots", async () => {
+    createSource.mockRejectedValue(
+      new Error("outside the allowed folder roots"),
+    );
+    isFolderAccessDeniedError.mockReturnValue(true);
+    renderBuilder("/processor/sources/new");
+
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Claims intake" },
+    });
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.folder\.fields\.directory\.label/,
+      ),
+      { target: { value: "/etc" } },
+    );
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    expect(
+      await screen.findByText("portal.sources.builder.folderAccess.title"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.sources.builder.folderAccess.openSettings"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a plain error banner (no settings link) for other save failures", async () => {
+    createSource.mockRejectedValue(new Error("boom"));
+    isFolderAccessDeniedError.mockReturnValue(false);
+    renderBuilder("/processor/sources/new");
+
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Claims intake" },
+    });
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.folder\.fields\.directory\.label/,
+      ),
+      { target: { value: "/data/incoming" } },
+    );
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    expect(await screen.findByText("boom")).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.builder.folderAccess.openSettings"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("gates the s3 type on a chosen connection", async () => {
+    renderBuilder("/processor/sources/new");
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Bucket source" },
+    });
+    // Switch to the S3 type: the connection field appears and Create stays
+    // disabled until a connection is chosen (connectionId is required).
+    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
+    expect(
+      await screen.findByText(
+        "portal.sources.types.s3.fields.connection.label",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.sources.builder.create").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("reveals the delivery URL and signing secret once after creating a webhook", async () => {
+    createSource.mockResolvedValue({
+      id: "wh-1",
+      options: { webhookId: "whk_abc123", signingSecret: "whsec_topsecret" },
+    });
+    renderBuilder("/processor/sources/new");
+
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Partner uploads" },
+    });
+    // Webhook's connection is optional (self-hosted local-disk), so a name is enough to create.
+    fireEvent.click(screen.getByText("portal.sources.types.webhook.label"));
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
+    expect(createSource).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "webhook", name: "Partner uploads" }),
+    );
+
+    expect(
+      await screen.findByDisplayValue("whsec_topsecret"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue(/\/api\/v1\/webhooks\/whk_abc123$/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("sources list")).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByText("portal.sources.types.webhook.reveal.done"),
+    );
+    expect(await screen.findByText("sources list")).toBeInTheDocument();
+  });
+
+  it("blocks create until required fields are filled", async () => {
+    renderBuilder("/processor/sources/new");
+    // Name given but directory (required) still blank -> Create disabled.
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Nameonly" },
+    });
+    expect(
+      screen.getByText("portal.sources.builder.create").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("edits an existing source prefilled and saves with its id", async () => {
+    fetchSource.mockResolvedValue({
+      id: "src-9",
+      name: "Existing",
+      type: "folder",
+      options: { directory: "/old", mode: "consume" },
+      enabled: true,
+    });
+    renderBuilder("/processor/sources/src-9");
+
+    const directory = await screen.findByLabelText(
+      /portal\.sources\.types\.folder\.fields\.directory\.label/,
+    );
+    expect((directory as HTMLInputElement).value).toBe("/old");
+    fireEvent.change(directory, { target: { value: "/new" } });
+    fireEvent.click(screen.getByText("portal.sources.builder.save"));
+
+    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
+    expect(createSource).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "src-9",
+        options: expect.objectContaining({ directory: "/new" }),
+      }),
+    );
+  });
+
+  it("deletes an existing source after confirmation", async () => {
+    fetchSource.mockResolvedValue({
+      id: "src-9",
+      name: "Existing",
+      type: "folder",
+      options: { directory: "/old" },
+      enabled: true,
+    });
+    renderBuilder("/processor/sources/src-9");
+
+    fireEvent.click(await screen.findByText("portal.sources.builder.delete"));
+    fireEvent.click(await screen.findByText("portal.sources.delete.confirm"));
+
+    await waitFor(() => expect(deleteSource).toHaveBeenCalledWith("src-9"));
+    expect(await screen.findByText("sources list")).toBeInTheDocument();
+  });
+});

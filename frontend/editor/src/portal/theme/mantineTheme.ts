@@ -84,25 +84,25 @@ const purple = tuple(
  */
 export const suiCssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {
-    "--mantine-color-text": "var(--color-text-1)",
+    "--mantine-color-text": "var(--c-text)",
     "--mantine-color-placeholder": "var(--color-text-placeholder)",
-    "--mantine-color-body": "var(--color-bg)",
+    "--mantine-color-body": "var(--c-bg)",
   },
   light: {
     // Popover/dropdown background + combobox search input
-    "--mantine-color-white": "var(--color-surface)",
+    "--mantine-color-white": "var(--c-surface)",
     // Option hover background
-    "--mantine-color-gray-0": "var(--color-bg-hover)",
+    "--mantine-color-gray-0": "var(--c-hover)",
     // Dropdown border
-    "--mantine-color-gray-2": "var(--color-border)",
+    "--mantine-color-gray-2": "var(--c-border)",
   },
   dark: {
     // Popover/dropdown background (dark-6 is the floating surface in dark mode)
-    "--mantine-color-dark-6": "var(--color-surface)",
+    "--mantine-color-dark-6": "var(--c-surface)",
     // Deeper background used for option hover + combobox search input
-    "--mantine-color-dark-7": "var(--color-bg)",
+    "--mantine-color-dark-7": "var(--c-bg)",
     // Border in dark mode
-    "--mantine-color-dark-4": "var(--color-border)",
+    "--mantine-color-dark-4": "var(--c-border)",
   },
 });
 

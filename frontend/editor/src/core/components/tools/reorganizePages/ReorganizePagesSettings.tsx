@@ -40,7 +40,7 @@ export default function ReorganizePagesSettings({
       {selectedMode && (
         <div
           style={{
-            backgroundColor: "var(--information-text-bg)",
+            backgroundColor: "var(--c-surface)",
             color: "var(--information-text-color)",
             padding: "8px 12px",
             borderRadius: "8px",

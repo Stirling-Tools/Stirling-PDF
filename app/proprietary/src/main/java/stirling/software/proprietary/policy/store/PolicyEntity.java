@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import stirling.software.proprietary.integration.crypto.LenientEncryptedStringConverter;
+import stirling.software.proprietary.integration.crypto.LegacyDecryptStringConverter;
 
 /**
  * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}. The whole policy lives
@@ -58,9 +58,9 @@ public class PolicyEntity implements Serializable {
     @Column(name = "sort_order")
     private Integer sortOrder;
 
-    // Encrypted at rest: output options carry user-supplied credentials (e.g. an S3 secret
-    // access key). Lenient so rows written before encryption shipped still load.
-    @Convert(converter = LenientEncryptedStringConverter.class)
+    // Plaintext at rest: the S3 credentials that used to live here now sit in a referenced
+    // IntegrationConfig connection (still encrypted). Decrypts legacy ciphertext on read.
+    @Convert(converter = LegacyDecryptStringConverter.class)
     @Column(name = "policy_json", columnDefinition = "text")
     private String policyJson;
 }

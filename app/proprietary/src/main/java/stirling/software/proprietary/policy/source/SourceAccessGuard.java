@@ -3,7 +3,6 @@ package stirling.software.proprietary.policy.source;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,6 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class SourceAccessGuard {
 
     private final UserServiceInterface userService;

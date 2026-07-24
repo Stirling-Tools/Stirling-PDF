@@ -3,8 +3,8 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1.125rem 1.25rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   transition:
@@ -36,12 +36,12 @@
   cursor: pointer;
 }
 .sui-metric--interactive:hover {
-  border-color: var(--color-border-hover);
+  border-color: var(--c-border-strong);
   box-shadow: var(--shadow-lg);
   transform: translateY(-0.0625rem);
 }
 .sui-metric--interactive:focus-visible {
-  outline: 2px solid var(--color-blue);
+  outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
 
@@ -53,18 +53,18 @@
 }
 .sui-metric__label {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
 .sui-metric__icon {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   display: inline-flex;
 }
 .sui-metric__value {
   font-size: 1.625rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   line-height: 1.1;
 }
 .sui-metric__footer {
@@ -88,9 +88,7 @@
 .sui-metric__delta--down {
   color: var(--color-red);
 }
-.sui-metric__delta--flat {
-  color: var(--color-text-5);
-}
+.sui-metric__delta--flat,
 .sui-metric__desc {
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }

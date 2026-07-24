@@ -1,0 +1,393 @@
+/* Processor-flow visualiser: SVG overlay (bézier wires + rAF particle layer)
+   measured from the HTML cards. See ProcessorFlow.tsx. */
+
+.portal-pf {
+  --pf-accent: var(--color-green);
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.portal-pf__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.portal-pf__head-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.portal-pf__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex: none;
+}
+
+.portal-pf__live {
+  align-self: center;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--c-border);
+}
+
+.portal-pf__live--on {
+  background: var(--pf-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--pf-accent) 55%, transparent);
+  animation: pf-pulse 2.4s ease-out infinite;
+}
+
+.portal-pf__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-pf__connected {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Stage: relative box the SVG overlays are measured against ───────────── */
+.portal-pf__stage {
+  position: relative;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.portal-pf__wires,
+.portal-pf__particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.portal-pf__wires {
+  z-index: 0;
+}
+
+.portal-pf__particles {
+  z-index: 2;
+}
+
+.portal-pf__wire-path {
+  fill: none;
+  stroke: var(--c-border-subtle);
+  stroke-width: 1.25;
+}
+
+/* ── Columns ─────────────────────────────────────────────────────────────── */
+.portal-pf__cols {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.portal-pf__col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: none;
+  width: 15rem;
+}
+
+.portal-pf__col-head,
+.portal-pf__policies-head {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+  margin-bottom: 0.125rem;
+}
+
+/* ── Nodes (source + outcome cards) ─────────────────────────────────────────── */
+.portal-pf__node {
+  height: auto;
+  width: 100%;
+  text-align: left;
+  background: var(--c-bg);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  transition:
+    background var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.portal-pf__node .mantine-Button-label {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.portal-pf__node:hover {
+  background: var(--c-hover);
+  border-color: var(--c-border);
+}
+
+.portal-pf__node:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.portal-pf__node--soon {
+  background: transparent;
+  border-style: dashed;
+  opacity: 0.75;
+}
+
+.portal-pf__node-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
+}
+
+.portal-pf__node--soon .portal-pf__node-icon {
+  color: var(--c-text-subtle);
+  font-weight: 600;
+}
+
+.portal-pf__node--success .portal-pf__node-icon {
+  background: color-mix(in srgb, var(--color-green) 14%, transparent);
+  color: var(--color-green-dark);
+}
+
+.portal-pf__node--failed .portal-pf__node-icon {
+  background: color-mix(in srgb, var(--color-red) 14%, transparent);
+  color: var(--color-red-dark);
+}
+
+.portal-pf__node-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.portal-pf__node-text strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal-pf__node-text span {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+/* ── Policies card (core) ───────────────────────────────────────────────────── */
+.portal-pf__policies {
+  align-self: center;
+  flex: none;
+  width: 18rem;
+  padding: 0.75rem;
+  background: var(--c-bg);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.portal-pf__policies-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.25rem 0.5rem;
+}
+
+.portal-pf__policies-active {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-green-dark);
+}
+
+.portal-pf__policy {
+  padding: 0.5rem 0.25rem;
+}
+
+.portal-pf__policy + .portal-pf__policy {
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-pf__policy-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-pf__policy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--c-text-subtle);
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.portal-pf__policy--active .portal-pf__policy-icon {
+  color: var(--pf-accent);
+}
+
+.portal-pf__policy--locked .portal-pf__policy-icon {
+  color: var(--c-text-subtle);
+}
+
+/* Leading-LED blink: added for 150ms as a particle threads this row's lane,
+   then eased back out by the transition above. */
+.portal-pf__policy-icon.is-pulse {
+  color: var(--color-green-dark);
+  background-color: color-mix(in srgb, var(--color-green) 20%, transparent);
+  box-shadow: 0 0 8px 1px
+    color-mix(in srgb, var(--color-green) 55%, transparent);
+}
+
+.portal-pf__policy-label {
+  flex: 1 1 auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  min-width: 0;
+}
+
+.portal-pf__policy--active .portal-pf__policy-label {
+  color: var(--c-text);
+}
+
+.portal-pf__policy--locked .portal-pf__policy-label {
+  color: var(--c-text-subtle);
+  font-weight: 500;
+}
+
+.portal-pf__policy-count {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.portal-pf__policy-soon {
+  flex: none;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Vertical padding via the `py` prop; height auto so it grows with it. */
+.portal-pf__setup {
+  flex: none;
+  height: auto;
+}
+
+/* ── Footnote / loading ─────────────────────────────────────────────────────── */
+.portal-pf__foot {
+  margin: 0.875rem 0 0;
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-pf__loading {
+  padding: 0.5rem 0;
+}
+
+/* ── Sankey lens ────────────────────────────────────────────────────────────── */
+.portal-pf__sankey {
+  max-width: 46rem;
+  margin: 0.5rem auto 0;
+}
+
+.portal-pf__sankey svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.portal-pf__sankey-label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--c-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-pf__sankey-caption {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  fill: var(--c-text-subtle);
+}
+
+.portal-pf__sankey-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 11rem;
+}
+
+@keyframes pf-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pf-accent) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 0.4rem transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* ── Responsive: stack the columns; the measured-geometry flow overlay only
+   makes sense on the wide 3-column layout, so drop it below the breakpoint. ── */
+@media (max-width: 60rem) {
+  .portal-pf__wires,
+  .portal-pf__particles {
+    display: none;
+  }
+  .portal-pf__cols {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .portal-pf__col,
+  .portal-pf__policies {
+    width: 100%;
+    align-self: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-pf__live--on {
+    animation: none;
+  }
+}
