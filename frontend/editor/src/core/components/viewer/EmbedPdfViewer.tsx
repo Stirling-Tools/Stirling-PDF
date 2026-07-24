@@ -574,13 +574,13 @@ const EmbedPdfViewerContent = ({
           return;
         case "PageUp":
         case "ArrowLeft":
-          if (isInTextInput) return;
+          if (isInTextInput || event.altKey) return;
           event.preventDefault();
           scrollActions.scrollToPreviousPage();
           return;
         case "PageDown":
         case "ArrowRight":
-          if (isInTextInput) return;
+          if (isInTextInput || event.altKey) return;
           event.preventDefault();
           scrollActions.scrollToNextPage();
           return;
