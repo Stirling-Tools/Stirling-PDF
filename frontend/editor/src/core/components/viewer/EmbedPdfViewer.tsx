@@ -1214,7 +1214,7 @@ const EmbedPdfViewerContent = ({
   ]);
 
   const sidebarWidthRem = 15;
-  const commentsSidebarWidthRem = 18;
+  const commentsSidebarWidthRem = 15;
   const totalRightMargin =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +

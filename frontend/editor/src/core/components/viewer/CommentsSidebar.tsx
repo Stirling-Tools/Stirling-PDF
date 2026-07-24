@@ -1,7 +1,6 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
   Box,
-  ScrollArea,
   Text,
   Textarea,
   Stack,
@@ -36,8 +35,7 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
-
-const SIDEBAR_WIDTH = "18rem";
+import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
 /** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
 const STANDALONE_COMMENT_SUBTYPES = new Set([
@@ -455,17 +453,59 @@ export function CommentsSidebar({
     return ids;
   }, [state]);
 
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredByPage = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) {
+      return byPage;
+    }
+    const result: Record<number, SidebarAnnotationEntry[]> = {};
+    for (const [pageStr, entries] of Object.entries(byPage)) {
+      const matching = entries.filter((entry) => {
+        const ann = entry.annotation.object;
+        const contents = (ann.contents || "").toLowerCase();
+        const author = (ann.author || "").toLowerCase();
+        const replies = entry.replies || [];
+        const replyMatch = replies.some(
+          (r) =>
+            (r.object.contents || "").toLowerCase().includes(query) ||
+            (r.object.author || "").toLowerCase().includes(query),
+        );
+        return contents.includes(query) || author.includes(query) || replyMatch;
+      });
+      if (matching.length > 0) {
+        result[Number(pageStr)] = matching;
+      }
+    }
+    return result;
+  }, [byPage, searchTerm]);
+
   const pageNumbers = useMemo(
+    () =>
+      Object.keys(filteredByPage)
+        .map(Number)
+        .sort((a, b) => a - b),
+    [filteredByPage],
+  );
+
+  const totalCount = useMemo(
     () =>
       Object.keys(byPage)
         .map(Number)
-        .sort((a, b) => a - b),
+        .reduce((sum, p) => sum + (byPage[p]?.length ?? 0), 0),
     [byPage],
   );
-  const totalCount = useMemo(
-    () => pageNumbers.reduce((sum, p) => sum + (byPage[p]?.length ?? 0), 0),
-    [pageNumbers, byPage],
+
+  const totalFilteredCount = useMemo(
+    () =>
+      pageNumbers.reduce((sum, p) => sum + (filteredByPage[p]?.length ?? 0), 0),
+    [pageNumbers, filteredByPage],
   );
+
+  const isSearchActive = searchTerm.trim().length > 0;
+  const showSearchEmpty =
+    isSearchActive && totalCount > 0 && totalFilteredCount === 0;
 
   const handleContentsChange = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
@@ -670,189 +710,165 @@ export function CommentsSidebar({
 
   if (!visible) return null;
 
-  return (
-    <Box
-      ref={scrollViewportRef}
-      style={{
-        position: "fixed",
-        right: rightOffset,
-        top: 0,
-        bottom: 0,
-        width: SIDEBAR_WIDTH,
-        backgroundColor: "var(--c-bg)",
-        borderLeft: "1px solid var(--c-border-subtle)",
-        zIndex: 998,
-        display: "flex",
-        flexDirection: "column",
-        boxShadow: "-2px 0 8px rgba(0, 0, 0, 0.1)",
-      }}
-    >
-      <div
-        style={{
-          padding: "0.75rem 1rem",
-          borderBottom: "1px solid var(--c-border-subtle)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
-        }}
-      >
-        <LocalIcon
-          icon="comment"
-          width="1.25rem"
-          height="1.25rem"
-          style={{ color: "var(--mantine-color-dimmed)", flexShrink: 0 }}
-        />
-        <Text fw={600} size="sm" tt="uppercase" lts={0.5} style={{ flex: 1 }}>
-          {t("viewer.comments.title", "Comments")}
-        </Text>
-        {totalCount > 0 && (
-          <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
-            <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
-              <ActionIcon
-                variant="tertiary"
-                accent="neutral"
-                size="sm"
-                aria-label={t("viewer.comments.addComment", "Add comment")}
-                onClick={handleAddComment}
-              >
-                <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
-              </ActionIcon>
-            </Tooltip>
-            <Menu position="bottom-end" withArrow>
-              <Menu.Target>
-                <Tooltip
-                  label={t("viewer.comments.moreActions", "More actions")}
-                >
-                  <ActionIcon
-                    variant="tertiary"
-                    accent="neutral"
-                    size="sm"
-                    aria-label={t(
-                      "viewer.comments.moreActions",
-                      "More actions",
-                    )}
-                  >
-                    <MoreHorizIcon style={{ fontSize: 20 }} />
-                  </ActionIcon>
-                </Tooltip>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
-                  color="red"
-                  onClick={() => setClearAllModalOpen(true)}
-                >
-                  {t("viewer.comments.clearAll", "Clear all comments")}
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
-        )}
-        {toggleCommentsSidebar && (
+  const commentsHeaderActions =
+    totalCount > 0 ? (
+      <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
           <ActionIcon
             variant="tertiary"
             accent="neutral"
             size="sm"
-            onClick={toggleCommentsSidebar}
-            aria-label={t(
-              "viewer.comments.closeSidebar",
-              "Close comments sidebar",
-            )}
-            title={t("viewer.comments.close", "Close comments")}
+            aria-label={t("viewer.comments.addComment", "Add comment")}
+            onClick={handleAddComment}
           >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
           </ActionIcon>
+        </Tooltip>
+        <Menu position="bottom-end" withArrow>
+          <Menu.Target>
+            <Tooltip label={t("viewer.comments.moreActions", "More actions")}>
+              <ActionIcon
+                variant="tertiary"
+                accent="neutral"
+                size="sm"
+                aria-label={t("viewer.comments.moreActions", "More actions")}
+              >
+                <MoreHorizIcon style={{ fontSize: 20 }} />
+              </ActionIcon>
+            </Tooltip>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
+              color="red"
+              onClick={() => setClearAllModalOpen(true)}
+            >
+              {t("viewer.comments.clearAll", "Clear all comments")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
+    ) : null;
+
+  return (
+    <>
+      <SidebarBase
+        className="comments-sidebar"
+        title={t("viewer.comments.title", "Comments")}
+        icon={<LocalIcon icon="comment" width="1.1rem" height="1.1rem" />}
+        rightOffset={rightOffset}
+        visible={visible}
+        onClose={toggleCommentsSidebar}
+        closeLabel={t("viewer.comments.closeSidebar", "Close comments sidebar")}
+        headerActions={commentsHeaderActions}
+        searchTerm={searchTerm}
+        searchPlaceholder={t(
+          "viewer.comments.searchPlaceholder",
+          "Search comments",
         )}
-      </div>
-      <ScrollArea style={{ flex: 1 }}>
-        <Stack p="sm" gap="md">
-          {totalCount === 0 ? (
-            <Stack align="center" gap="sm" py="lg">
-              <LocalIcon
-                icon="comment"
-                width="2rem"
-                height="2rem"
-                style={{ color: "var(--mantine-color-dimmed)" }}
-              />
-              <Text size="sm" c="dimmed" ta="center">
+        onSearchChange={setSearchTerm}
+        viewportRef={scrollViewportRef}
+      >
+        {totalCount === 0 ? (
+          <Stack align="center" gap="sm" py="lg">
+            <LocalIcon
+              icon="comment"
+              width="2rem"
+              height="2rem"
+              style={{ color: "var(--mantine-color-dimmed)" }}
+            />
+            <Text size="sm" c="dimmed" ta="center">
+              {t(
+                "viewer.comments.hint",
+                "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page.",
+              )}
+            </Text>
+            {isPlacingComment ? (
+              <Button
+                variant="tertiary"
+                accent="warning"
+                size="sm"
+                onClick={handleCancelPlacingComment}
+                leftSection={
+                  <LocalIcon
+                    icon="touch-app-rounded"
+                    width="1rem"
+                    height="1rem"
+                  />
+                }
+              >
                 {t(
-                  "viewer.comments.hint",
-                  "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page.",
+                  "viewer.comments.placingHint",
+                  "Click a page to place… (cancel)",
                 )}
-              </Text>
-              {isPlacingComment ? (
-                <Button
-                  variant="tertiary"
-                  accent="warning"
-                  size="sm"
-                  onClick={handleCancelPlacingComment}
-                  leftSection={
-                    <LocalIcon
-                      icon="touch-app-rounded"
-                      width="1rem"
-                      height="1rem"
-                    />
-                  }
-                >
+              </Button>
+            ) : (
+              <Button
+                variant="tertiary"
+                size="sm"
+                onClick={handleAddComment}
+                leftSection={
+                  <LocalIcon icon="add" width="1rem" height="1rem" />
+                }
+              >
+                {t("viewer.comments.addComment", "Add comment")}
+              </Button>
+            )}
+          </Stack>
+        ) : (
+          <>
+            {isPlacingComment ? (
+              <Button
+                variant="tertiary"
+                accent="warning"
+                size="sm"
+                fullWidth
+                justify="start"
+                onClick={handleCancelPlacingComment}
+                leftSection={
+                  <LocalIcon
+                    icon="touch-app-rounded"
+                    width="0.9rem"
+                    height="0.9rem"
+                  />
+                }
+                style={{ paddingInline: 6 }}
+              >
+                {t(
+                  "viewer.comments.placingHint",
+                  "Click a page to place… (cancel)",
+                )}
+              </Button>
+            ) : (
+              <Button
+                variant="tertiary"
+                size="sm"
+                fullWidth
+                justify="start"
+                onClick={handleAddComment}
+                leftSection={
+                  <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+                }
+                style={{
+                  paddingInline: 6,
+                  marginBottom: "var(--space-xs)",
+                }}
+              >
+                {t("viewer.comments.addComment", "Add comment")}
+              </Button>
+            )}
+            {showSearchEmpty ? (
+              <div className="sidebar-base__empty-state">
+                <Text size="sm" c="dimmed" ta="center">
                   {t(
-                    "viewer.comments.placingHint",
-                    "Click a page to place… (cancel)",
+                    "viewer.comments.noMatch",
+                    "No comments match your search",
                   )}
-                </Button>
-              ) : (
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  onClick={handleAddComment}
-                  leftSection={
-                    <LocalIcon icon="add" width="1rem" height="1rem" />
-                  }
-                >
-                  {t("viewer.comments.addComment", "Add comment")}
-                </Button>
-              )}
-            </Stack>
-          ) : (
-            <>
-              {isPlacingComment ? (
-                <Button
-                  variant="tertiary"
-                  accent="warning"
-                  size="sm"
-                  fullWidth
-                  justify="start"
-                  onClick={handleCancelPlacingComment}
-                  leftSection={
-                    <LocalIcon
-                      icon="touch-app-rounded"
-                      width="0.9rem"
-                      height="0.9rem"
-                    />
-                  }
-                  style={{ paddingInline: 6 }}
-                >
-                  {t(
-                    "viewer.comments.placingHint",
-                    "Click a page to place… (cancel)",
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  fullWidth
-                  justify="start"
-                  onClick={handleAddComment}
-                  leftSection={
-                    <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-                  }
-                  style={{ paddingInline: 6 }}
-                >
-                  {t("viewer.comments.addComment", "Add comment")}
-                </Button>
-              )}
-              {pageNumbers.map((pageIndex) => {
-                const entries = byPage[pageIndex] ?? [];
+                </Text>
+              </div>
+            ) : (
+              pageNumbers.map((pageIndex) => {
+                const entries = filteredByPage[pageIndex] ?? [];
                 const pageNum = pageIndex + 1;
                 return (
                   <Box key={pageIndex} mb="md">
@@ -1291,11 +1307,11 @@ export function CommentsSidebar({
                     </Stack>
                   </Box>
                 );
-              })}
-            </>
-          )}
-        </Stack>
-      </ScrollArea>
+              })
+            )}
+          </>
+        )}
+      </SidebarBase>
 
       <Modal
         opened={!!deleteModal}
@@ -1351,6 +1367,6 @@ export function CommentsSidebar({
           </Button>
         </Group>
       </Modal>
-    </Box>
+    </>
   );
 }

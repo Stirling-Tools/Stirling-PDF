@@ -1,21 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Box,
-  ScrollArea,
-  Text,
-  Checkbox,
-  Stack,
-  Loader,
-  Tooltip,
-} from "@mantine/core";
+import { Text, Checkbox, Stack, Loader, Tooltip } from "@mantine/core";
 import LayersIcon from "@mui/icons-material/Layers";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
-import "@app/components/viewer/SidebarBase.css";
+import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import "@app/components/viewer/LayerSidebar.css";
 import {
   readPdfLayers,
@@ -39,8 +30,6 @@ interface LayerSidebarProps {
   /** Called when layer detection completes, reporting whether the PDF has layers. */
   onLayersDetected?: (hasLayers: boolean) => void;
 }
-
-const SIDEBAR_WIDTH = "15rem";
 
 type LoadStatus = "idle" | "loading" | "ready" | "no-layers" | "error";
 
@@ -318,116 +307,91 @@ export function LayerSidebar({
   const allVisible = leafIds.every((id) => visibility[id] !== false);
   const allHidden = leafIds.every((id) => visibility[id] === false);
 
-  return (
-    <Box
-      className="sidebar-base layer-sidebar"
-      style={{
-        position: "fixed",
-        right: `${rightOffset}rem`,
-        top: 0,
-        bottom: 0,
-        width: SIDEBAR_WIDTH,
-        zIndex: 998,
-      }}
-    >
-      {/* Header */}
-      <div className="sidebar-base__header">
-        <div className="sidebar-base__header-title">
-          <span className="sidebar-base__header-icon">
-            <LayersIcon fontSize="small" />
-          </span>
-          <Text fw={600} size="sm" tt="uppercase" lts={0.5} style={{ flex: 1 }}>
-            Layers
-          </Text>
-          {isApplying && <Loader size="xs" type="dots" />}
-        </div>
-        <div className="layer-sidebar__header-actions">
-          {status === "ready" && leafIds.length > 0 && (
-            <>
-              <ActionIcon
-                variant="tertiary"
-                size="sm"
-                onClick={showAll}
-                disabled={allVisible || isApplying}
-                aria-label={t("viewer.layers.showAll", "Show all layers")}
-                title={t("viewer.layers.showAll", "Show all layers")}
-              >
-                <VisibilityIcon sx={{ fontSize: "1rem" }} />
-              </ActionIcon>
-              <ActionIcon
-                variant="tertiary"
-                size="sm"
-                onClick={hideAll}
-                disabled={allHidden || isApplying}
-                aria-label={t("viewer.layers.hideAll", "Hide all layers")}
-                title={t("viewer.layers.hideAll", "Hide all layers")}
-              >
-                <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
-              </ActionIcon>
-            </>
-          )}
+  const layerHeaderActions = (
+    <>
+      {isApplying && <Loader size="xs" type="dots" />}
+      {status === "ready" && leafIds.length > 0 && (
+        <>
           <ActionIcon
             variant="tertiary"
-            accent="neutral"
             size="sm"
-            onClick={toggleLayerSidebar}
-            aria-label={t("viewer.layers.closeSidebar", "Close layers sidebar")}
-            title={t("viewer.layers.closeSidebar", "Close layers sidebar")}
+            onClick={showAll}
+            disabled={allVisible || isApplying}
+            aria-label={t("viewer.layers.showAll", "Show all layers")}
+            title={t("viewer.layers.showAll", "Show all layers")}
           >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            <VisibilityIcon sx={{ fontSize: "1rem" }} />
           </ActionIcon>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            onClick={hideAll}
+            disabled={allHidden || isApplying}
+            aria-label={t("viewer.layers.hideAll", "Hide all layers")}
+            title={t("viewer.layers.hideAll", "Hide all layers")}
+          >
+            <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
+          </ActionIcon>
+        </>
+      )}
+    </>
+  );
+
+  return (
+    <SidebarBase
+      className="layer-sidebar"
+      title={t("viewer.layers.title", "Layers")}
+      icon={<LayersIcon fontSize="small" />}
+      rightOffset={`${rightOffset}rem`}
+      visible={visible}
+      onClose={toggleLayerSidebar}
+      closeLabel={t("viewer.layers.closeSidebar", "Close layers sidebar")}
+      headerActions={layerHeaderActions}
+    >
+      {status === "idle" && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            Open a PDF to view its layers.
+          </Text>
         </div>
-      </div>
+      )}
 
-      {/* Content */}
-      <ScrollArea style={{ flex: 1 }}>
-        <Box p="sm" className="sidebar-base__content">
-          {status === "idle" && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                Open a PDF to view its layers.
-              </Text>
-            </div>
-          )}
+      {status === "loading" && (
+        <Stack
+          gap="md"
+          align="center"
+          c="dimmed"
+          py="xl"
+          className="sidebar-base__loading"
+        >
+          <Loader size="md" type="dots" />
+          <Text size="sm" ta="center">
+            Loading layers...
+          </Text>
+        </Stack>
+      )}
 
-          {status === "loading" && (
-            <Stack
-              gap="md"
-              align="center"
-              c="dimmed"
-              py="xl"
-              className="sidebar-base__loading"
-            >
-              <Loader size="md" type="dots" />
-              <Text size="sm" ta="center">
-                Loading layers...
-              </Text>
-            </Stack>
-          )}
+      {status === "error" && (
+        <div className="sidebar-base__error">
+          <Text size="sm" c="red" ta="center">
+            {loadError ?? "Failed to load layers."}
+          </Text>
+        </div>
+      )}
 
-          {status === "error" && (
-            <div className="sidebar-base__error">
-              <Text size="sm" c="red" ta="center">
-                {loadError ?? "Failed to load layers."}
-              </Text>
-            </div>
-          )}
+      {status === "no-layers" && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            This document has no layers.
+          </Text>
+        </div>
+      )}
 
-          {status === "no-layers" && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                This document has no layers.
-              </Text>
-            </div>
-          )}
-
-          {status === "ready" && layers.length > 0 && (
-            <div className="layer-list">
-              {layers.map((layer) => renderLayer({ ...layer, depth: 0 }))}
-            </div>
-          )}
-        </Box>
-      </ScrollArea>
-    </Box>
+      {status === "ready" && layers.length > 0 && (
+        <div className="layer-list">
+          {layers.map((layer) => renderLayer({ ...layer, depth: 0 }))}
+        </div>
+      )}
+    </SidebarBase>
   );
 }
