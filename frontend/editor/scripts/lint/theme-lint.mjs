@@ -330,7 +330,13 @@ function check() {
   }
 
   for (const name of THEME_FILES) {
-    const rel = relative(process.cwd(), join(THEME, name));
+    // Normalize to forward slashes: path.relative emits backslashes on
+    // Windows, which never equal the "/"-separated PRIMITIVES constant and
+    // falsely flagged every colour in primitives.css itself.
+    const rel = relative(process.cwd(), join(THEME, name)).replaceAll(
+      "\\",
+      "/",
+    );
     const isPrimitives = rel === PRIMITIVES;
     const text = stripComments(readFileSync(join(THEME, name), "utf8"));
 

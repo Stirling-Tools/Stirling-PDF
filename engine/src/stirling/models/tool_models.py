@@ -468,6 +468,15 @@ class EmlToPdfParams(ApiModel):
     )
 
 
+class EncodeCharcodesParams(ApiModel):
+    font_name: str | None = None
+    font_sha256: str | None = None
+    locator_char: str | None = None
+    page_index: int | None = None
+    pdf_base64: str | None = None
+    text: str | None = None
+
+
 class ExtractAttachmentsParams(ApiModel):
     pass
 
@@ -1417,6 +1426,7 @@ class Model(
         | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
+        | EncodeCharcodesParams
         | PdfToSinglePageParams
         | RearrangePagesParams
         | RemoveImagePdfParams
@@ -1490,6 +1500,7 @@ class Model(
         | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
+        | EncodeCharcodesParams
         | PdfToSinglePageParams
         | RearrangePagesParams
         | RemoveImagePdfParams
@@ -1564,6 +1575,7 @@ type ParamToolModel = (
     | EditTextParams
     | MergePdfsParams
     | MultiPageLayoutParams
+    | EncodeCharcodesParams
     | PdfToSinglePageParams
     | RearrangePagesParams
     | RemoveImagePdfParams
@@ -1639,6 +1651,7 @@ class ToolEndpoint(StrEnum):
     EDIT_TEXT = "/api/v1/general/edit-text"
     MERGE_PDFS = "/api/v1/general/merge-pdfs"
     MULTI_PAGE_LAYOUT = "/api/v1/general/multi-page-layout"
+    ENCODE_CHARCODES = "/api/v1/general/pdf-text-editor-v2/encode-charcodes"
     PDF_TO_SINGLE_PAGE = "/api/v1/general/pdf-to-single-page"
     REARRANGE_PAGES = "/api/v1/general/rearrange-pages"
     REMOVE_IMAGE_PDF = "/api/v1/general/remove-image-pdf"
@@ -1712,6 +1725,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.EDIT_TEXT: EditTextParams,
     ToolEndpoint.MERGE_PDFS: MergePdfsParams,
     ToolEndpoint.MULTI_PAGE_LAYOUT: MultiPageLayoutParams,
+    ToolEndpoint.ENCODE_CHARCODES: EncodeCharcodesParams,
     ToolEndpoint.PDF_TO_SINGLE_PAGE: PdfToSinglePageParams,
     ToolEndpoint.REARRANGE_PAGES: RearrangePagesParams,
     ToolEndpoint.REMOVE_IMAGE_PDF: RemoveImagePdfParams,
