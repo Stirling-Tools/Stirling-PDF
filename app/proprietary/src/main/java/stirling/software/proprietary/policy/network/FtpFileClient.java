@@ -102,11 +102,16 @@ final class FtpFileClient implements RemoteFileClient {
 
     @Override
     public RemoteFile stat(String path) throws IOException {
-        FTPFile entry = ftp.mlistFile(path);
-        if (entry == null) {
+        // LIST, not MLST: listing uses listFiles, so the re-stat that guards the consume delete
+        // must read the timestamp the same way or the version gate never matches (and many servers
+        // do not implement MLST at all, returning null and skipping the delete entirely).
+        FTPFile[] listed = ftp.listFiles(path);
+        if (listed.length == 0 || listed[0] == null) {
             return null;
         }
-        return new RemoteFile(path, entry.getName(), entry.getSize(), lastModified(entry));
+        FTPFile entry = listed[0];
+        String name = path.substring(path.lastIndexOf('/') + 1);
+        return new RemoteFile(path, name, entry.getSize(), lastModified(entry));
     }
 
     @Override
