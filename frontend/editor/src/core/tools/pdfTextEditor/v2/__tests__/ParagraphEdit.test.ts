@@ -119,6 +119,36 @@ describe("planPartialEdit surrogate-pair guard (astral chars)", () => {
   });
 });
 
+describe("planPartialEdit interior-insert guard (single word object)", () => {
+  it("bails when an inserted char splits a multi-char object's kept chars", () => {
+    // "world" is ONE object; inserting "a" mid-word ("world"->"worald") leaves
+    // the survivors at non-contiguous new-text positions (0,1,2,4,5). PDFium
+    // can't inject a glyph into an existing object, so the surgical path would
+    // append "a" after "world" and render "worlda". Bail so the caller
+    // re-emits the whole line in reading order.
+    const run = makeSingleSubRun("world");
+    expect(planPartialEdit(run, "world", "worald")).toBeNull();
+  });
+
+  it("bails on a mid-word char replace (delete+insert interior)", () => {
+    const run = makeSingleSubRun("world");
+    expect(planPartialEdit(run, "world", "worXd")).toBeNull();
+  });
+
+  it("keeps the surgical path for a boundary delete (survivors contiguous)", () => {
+    // Deleting from the END keeps survivors contiguous, so no scramble risk.
+    const run = makeSingleSubRun("world");
+    expect(planPartialEdit(run, "world", "worl")).not.toBeNull();
+  });
+
+  it("keeps the surgical path for a prefix insert (before the object)", () => {
+    // A char typed BEFORE the word anchors ahead of it, survivors stay
+    // contiguous - the surgical path is safe and preserved.
+    const run = makeSingleSubRun("world");
+    expect(planPartialEdit(run, "world", "aworld")).not.toBeNull();
+  });
+});
+
 describe("planParagraphEdit slot-range line mapping", () => {
   it("does NOT bail on a soft-wrapped paragraph (the collapse bug)", () => {
     // 4 visual lines, but only ONE hard break: "aaa bbb\nccc ddd".
@@ -188,17 +218,37 @@ describe("planParagraphEdit slot-range line mapping", () => {
     expect(entry?.nextLine).toBe("aaa Xbb ccc");
   });
 
-  it("keeps the in-place modify fast path for a single-word sub-run (no whitespace)", () => {
-    // Per-word sub-runs (no spaces inside any one) keep the surgical modify
-    // path - only multi-word single objects need the word-split re-emit.
+  it("keeps the in-place modify fast path for a boundary edit on a single-word sub-run", () => {
+    // Deleting a char at a word's END keeps the surviving chars CONTIGUOUS in
+    // the new text, so the surgical single-object modify path is safe.
+    const run = makeParagraph(["hello", "world"], ["\n"]);
+    const prev = run.text; // "hello\nworld"
+    const next = "hello\nworl"; // delete trailing "d"
+    const plan = planParagraphEdit(run, prev, next);
+    expect(plan).not.toBeNull();
+    const entry = plan?.perSlot.find((p) => p.slotIdx === 1);
+    // A non-null plan => surgical in-place edit kept (survivors contiguous).
+    expect(entry?.plan).not.toBeNull();
+  });
+
+  it("re-emits a mid-word char replace instead of scrambling it (interior-insert guard)", () => {
+    // Replacing a char in the MIDDLE of a single word object ("world"->"worXd")
+    // deletes 'l' and inserts 'X' between the surviving 'r' and 'd'. A PDFium
+    // text object is atomic - the inserted glyph can't go inside it, so the
+    // old surgical path SetText the survivors "word" and appended "X",
+    // rendering "wordX". The interior-insert guard detects the non-contiguous
+    // survivors and nulls the slot plan so the apply step re-emits the whole
+    // line in reading order.
     const run = makeParagraph(["hello", "world"], ["\n"]);
     const prev = run.text; // "hello\nworld"
     const next = "hello\nworXd";
     const plan = planParagraphEdit(run, prev, next);
     expect(plan).not.toBeNull();
     const entry = plan?.perSlot.find((p) => p.slotIdx === 1);
-    // A non-null plan => surgical in-place edit kept (sub-run has no spaces).
-    expect(entry?.plan).not.toBeNull();
+    expect(entry).toBeDefined();
+    // null slot plan => the apply step fresh-emits this line (correct order).
+    expect(entry?.plan).toBeNull();
+    expect(entry?.nextLine).toBe("worXd");
   });
 
   it("handles an all-hard-break paragraph (initial-load shape) too", () => {

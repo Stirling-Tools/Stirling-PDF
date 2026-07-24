@@ -387,6 +387,37 @@ export function planPartialEdit(
   // Map next-bIdx → aIdx via alignment array
   const bToA = new Map<number, number>();
   for (const { aIdx, bIdx } of alignment) bToA.set(bIdx, aIdx);
+
+  // INTERIOR-INSERT GUARD. Each kept/mixed sub-run is a SINGLE PDFium text
+  // object whose glyphs render as one atomic unit at one origin - PDFium has
+  // no API to inject a glyph into the middle of an existing object. So an
+  // inserted char that lands INSIDE a multi-char sub-run (between two of its
+  // surviving chars in the new text) can only be emitted as a separate object
+  // AFTER the kept one, scrambling the word: editing "developing"→"growing"
+  // (a single word object after a prior re-emit) kept "oing" in place and
+  // appended the inserted "gr"/"w", rendering "gr oingw". Detect it as a
+  // sub-run whose surviving chars occupy NON-CONTIGUOUS new-text positions,
+  // and bail so the caller re-emits the whole line/slot in reading order
+  // (the clean path). Single-char sub-runs have no interior, so a well-formed
+  // per-glyph structure never trips this and keeps the surgical path.
+  {
+    const keptMin = new Map<number, number>();
+    const keptMax = new Map<number, number>();
+    const keptCnt = new Map<number, number>();
+    for (const b of keptB) {
+      const a = bToA.get(b);
+      if (a === undefined) continue;
+      const sr = charToSubRun[a];
+      if (sr < 0) continue;
+      keptMin.set(sr, Math.min(keptMin.get(sr) ?? b, b));
+      keptMax.set(sr, Math.max(keptMax.get(sr) ?? b, b));
+      keptCnt.set(sr, (keptCnt.get(sr) ?? 0) + 1);
+    }
+    for (const [sr, cnt] of keptCnt) {
+      if (keptMax.get(sr)! - keptMin.get(sr)! + 1 !== cnt) return null;
+    }
+  }
+
   for (let b = 0; b < nextText.length; b++) {
     if (keptB.has(b)) {
       const a = bToA.get(b)!;
