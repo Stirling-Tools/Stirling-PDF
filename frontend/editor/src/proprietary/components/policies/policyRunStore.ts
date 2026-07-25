@@ -45,6 +45,9 @@ export interface PolicyRunRecord {
   /** Set while an auto-retry is pending after a transient (queue-full) rejection, so the activity
    *  feed shows a soft "busy" row instead of a hard failure during the backoff window. */
   retrying?: boolean;
+  /** Signed off in the review area: an acknowledged failure stops flagging its
+   *  file (badge + export gate clear) but stays in history. Persisted. */
+  acknowledged?: boolean;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;
 }
@@ -128,6 +131,7 @@ function read(): RunState {
               importedFileIds: Array.isArray(r.importedFileIds)
                 ? r.importedFileIds
                 : [],
+              acknowledged: r.acknowledged === true,
               // Records predating per-run targets all executed on SaaS.
               target: r.target === "local" ? "local" : "saas",
             }))

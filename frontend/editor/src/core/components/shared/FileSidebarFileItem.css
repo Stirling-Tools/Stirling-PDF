@@ -421,7 +421,7 @@
 /* ---- Thumbnail tooltip (hover preview) ---- */
 .file-sidebar-thumb-tooltip {
   position: fixed;
-  z-index: 9999;
+  z-index: var(--z-hover-preview);
   transform: translateY(-50%);
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);

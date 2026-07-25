@@ -731,8 +731,9 @@ async function importOutputs(
   }
 }
 
-/** Resolve the file's bytes, fire a backend run, and record it. */
-async function runPolicyOnFile(
+/** Resolve the file's bytes, fire a backend run, and record it. Exported so
+ *  other surfaces dispatch through the same path the controller polls. */
+export async function runPolicyOnFile(
   categoryId: string,
   backendId: string,
   fileId: FileId,

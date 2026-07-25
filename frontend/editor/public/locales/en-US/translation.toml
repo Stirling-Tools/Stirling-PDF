@@ -4705,6 +4705,11 @@ desc = "Replace or invert colors in PDF documents"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Replace & Invert Color"
 
+[home.review]
+desc = "Review processed documents: inspect what ran on a file and approve or delete it"
+tags = "review,approve,reject,sign off,audit,verify,check,quality,processing history,policy,pipeline"
+title = "Review"
+
 [home.rotate]
 desc = "Easily rotate your PDFs."
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,counterclockwise,counter-clockwise,fix orientation"
@@ -6209,6 +6214,9 @@ ssn = "Social Security numbers"
 
 [policy]
 badgeEnforcing = "{{name}} enforcing..."
+badgeFailed = "{{name}} policy failed on this file — needs review"
+badgeFailedAction = "{{name}} policy failed — click to review"
+badgeIgnored = "{{name}} policy failed but was reviewed and ignored"
 badgeRan = "{{name}} policy ran on this file"
 blockingAction = "{{action}} blocked while enforcing policy, please wait..."
 dismiss = "Dismiss overlay"
@@ -9470,6 +9478,63 @@ title = "High Contrast"
 [replaceColor.tooltip.invertAll]
 text = "Completely invert all colors in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
 title = "Invert All Colors"
+
+[reviewTool]
+approve = "Ignore"
+decline = "Delete"
+noIssues = "No outstanding issues on this document."
+subtitle = "Check everything that ran on this document, then approve or delete it."
+tags = "review,approve,decline,delete,sign off,audit,verify,check,quality,processing history,policy,pipeline"
+title = "Review"
+
+[reviewTool.delete]
+confirm = "Delete file"
+confirmBody = "This permanently removes the file from your workspace. This can't be undone."
+confirmTitle = "Delete this file?"
+
+[reviewTool.done]
+desc = "Every flagged document is resolved."
+title = "Nothing left to review"
+
+[reviewTool.empty]
+desc = "Open a file that a policy has run on to review it."
+title = "No document to review"
+
+[reviewTool.gate]
+bodyMany = "One or more of the selected documents needs review before you can {{action}} them."
+bodyOne = "This document needs review before you can {{action}} it."
+continueAnyway = "{{action}} anyway"
+reviewNow = "Review now"
+title = "Review required"
+
+[reviewTool.gate.verb]
+download = "download"
+print = "print"
+save = "save"
+share = "share"
+
+[reviewTool.queue]
+next = "Next file"
+opening = "Opening file..."
+position = "File {{current}} of {{total}}"
+previous = "Previous file"
+unavailable = "File no longer available"
+unavailableDesc = "This file was removed. Use Next to continue reviewing."
+
+[reviewTool.trail]
+empty = "No policy has run on this document yet — there is no processing history to review."
+enforcementRun = "Enforcement run"
+stepFailed = "failed"
+title = "Processing history"
+
+[reviewTool.trail.source]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool"
+
+[reviewTool.verdict]
+approved = "Ignored & marked approved"
+undo = "Undo"
 
 [rotate]
 rotateLeft = "Rotate Counterclockwise"

@@ -222,6 +222,7 @@ export default function Workbench() {
     >
       {/* Workbench Bar - animates in/out based on file presence */}
       {currentView !== "myFiles" &&
+        !selectedTool?.hideWorkbenchBar &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)
           ?.hideTopControls && (
           <div

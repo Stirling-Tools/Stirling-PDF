@@ -64,6 +64,7 @@ interface FileEditorThumbnailProps {
   toolMode?: boolean;
   isSupported?: boolean;
   policies?: FileItemPolicyRef[];
+  onReviewClick?: (fileId: FileId) => void;
 }
 
 const FileEditorThumbnail = ({
@@ -75,6 +76,7 @@ const FileEditorThumbnail = ({
   onUnzipFile,
   isSupported = true,
   policies = [],
+  onReviewClick,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -631,7 +633,13 @@ const FileEditorThumbnail = ({
           <span className={styles.fileNameText}>
             <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
           </span>
-          <PolicyBadges policies={policies} className={styles.fileNameBadges} />
+          <PolicyBadges
+            policies={policies}
+            className={styles.fileNameBadges}
+            onReviewClick={
+              onReviewClick ? () => onReviewClick(file.id) : undefined
+            }
+          />
         </p>
         <p className={styles.fileMeta}>{metaLine}</p>
       </div>

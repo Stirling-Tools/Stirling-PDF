@@ -266,6 +266,11 @@
       "title": "Fill Form - Stirling PDF",
       "description": "Fill PDF form fields interactively with a visual editor"
     },
+    "review": {
+      "image": "/og_images/home.png",
+      "title": "Review - Stirling PDF",
+      "description": "Review processed documents: inspect what ran on a file and approve or delete it"
+    },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
       "title": "Multi-Tool - Stirling PDF",
@@ -597,6 +602,7 @@
     "/booklet-imposition": "bookletImposition",
     "/pdf-text-editor": "pdfTextEditor",
     "/form-fill": "formFill",
+    "/review": "review",
     "/multi-tool": "multiTool",
     "/read": "read",
     "/automate": "automate",

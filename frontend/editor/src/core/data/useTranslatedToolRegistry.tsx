@@ -552,6 +552,30 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
         automationSettings: null,
       },
+      review: {
+        icon: (
+          <LocalIcon
+            icon="fact-check-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.review.title", "Review"),
+        component: lazy(() => import("@app/tools/Review")),
+        description: t(
+          "home.review.desc",
+          "Review processed documents: inspect what ran on a file and approve or delete it",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
+        workbench: "viewer",
+        hideWorkbenchBar: true,
+        hideFromPicker: true,
+        maxFiles: 1,
+        automationSettings: null,
+        synonyms: getSynonyms(t, "review"),
+        supportsAutomate: false,
+      },
       changeMetadata: {
         icon: (
           <LocalIcon

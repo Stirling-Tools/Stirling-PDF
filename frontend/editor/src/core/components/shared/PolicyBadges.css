@@ -22,6 +22,17 @@
   pointer-events: auto;
 }
 
+.policy-badge--clickable {
+  cursor: pointer;
+}
+.policy-badge--clickable:hover {
+  background: color-mix(in srgb, currentColor 28%, transparent);
+}
+.policy-badge--clickable:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
 /* Larger variant for standalone indicators (e.g. the minimised viewer overlay). */
 .policy-badge--lg {
   width: 28px;

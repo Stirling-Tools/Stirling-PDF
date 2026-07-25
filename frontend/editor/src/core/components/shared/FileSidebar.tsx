@@ -72,6 +72,7 @@ import {
 } from "@app/components/watchedFolders/watchedFolderDragState";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useOpenFileReview } from "@app/hooks/useOpenFileReview";
 import "@app/components/shared/FileSidebar.css";
 
 const COLLAPSED_WIDTH = "3.5rem";
@@ -244,6 +245,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
+    const openFileReview = useOpenFileReview();
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
 
@@ -791,6 +793,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           folders={memberFolders}
           onFolderClick={openWatchedFolder}
           policies={policyFileBadges.get(stub.id as string) ?? []}
+          onReviewClick={
+            isWatchedFoldersActive
+              ? undefined
+              : (id) => openFileReview(id as string)
+          }
           onDelete={isWatchedFoldersActive ? undefined : handleSidebarDelete}
           onSaveToCloud={isWatchedFoldersActive ? undefined : handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}

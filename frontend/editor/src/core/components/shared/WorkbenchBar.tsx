@@ -5,7 +5,6 @@ import React, {
   useRef,
   useSyncExternalStore,
 } from "react";
-import { Group, Loader, Progress, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
@@ -28,21 +27,13 @@ import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
-import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import {
-  POLICY_IN_FLIGHT_STATUSES,
-  usePolicyRuns,
-} from "@app/components/policies/policyRunStore";
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
-import { enforceExportPolicies } from "@app/services/policyExport";
-import { downloadFile as downloadRaw } from "@app/services/downloadService";
-import { alert as showAlert } from "@app/components/toast";
+import { useExportActions } from "@app/hooks/useExportActions";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
@@ -52,7 +43,6 @@ import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutl
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import "@app/components/shared/WorkbenchBar.css";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
@@ -119,67 +109,16 @@ export default function WorkbenchBar({
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const { sharingEnabled } = useSharingEnabled();
-  const viewerContext = React.useContext(ViewerContext);
 
   const { selectors } = useFileState();
-  const { selectedFiles, selectedFileIds } = useFileSelection();
+  const { selectedFileIds } = useFileSelection();
   const { actions: fileActions } = useFileActions();
   const activeFiles = selectors.getFiles();
   const { activeFileId, setActiveFileId } = useViewer();
-  const policyFileBadges = usePolicyFileBadges();
-  // Block print/export while any file the export would touch is under active
-  // policy enforcement: the viewer exports its active file, every other view
-  // exports the selection (or all files when nothing is selected).
-  const exportTargetIds: string[] =
-    currentView === "viewer"
-      ? activeFileId
-        ? [activeFileId]
-        : []
-      : selectedFileIds.length > 0
-        ? selectedFileIds
-        : activeFiles.filter(isStirlingFile).map((f) => f.fileId);
-  const enforcingFileId = exportTargetIds.find((id) =>
-    (policyFileBadges.get(id) ?? []).some((p) => p.enforcing),
-  );
-  const policyEnforcing = enforcingFileId != null;
-  const policyRuns = usePolicyRuns();
-  const enforcingRun = policyEnforcing
-    ? policyRuns.find(
-        (r) =>
-          r.fileId === enforcingFileId &&
-          (POLICY_IN_FLIGHT_STATUSES as readonly string[]).includes(r.status),
-      )
-    : undefined;
-  const enforcingProgress =
-    enforcingRun?.currentStep != null && enforcingRun.stepCount
-      ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
-      : undefined;
-  const makeEnforcingTooltip = (action: string): React.ReactNode => (
-    <Stack gap={6} py={2} w={200}>
-      <Group gap={6} wrap="nowrap">
-        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
-        <Text size="xs" fw={600}>
-          {t(
-            "policy.blockingAction",
-            "{{action}} blocked while enforcing policy, please wait",
-            { action },
-          )}
-        </Text>
-      </Group>
-      {enforcingProgress != null ? (
-        <Progress
-          w="100%"
-          size="xs"
-          radius="xl"
-          value={enforcingProgress}
-          striped
-          animated
-        />
-      ) : (
-        <Loader size="xs" />
-      )}
-    </Stack>
-  );
+
+  const exportActions = useExportActions();
+  const policyEnforcing = exportActions.enforcing;
+  const makeEnforcingTooltip = exportActions.enforcingTooltip;
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount =
     pageEditorFunctions?.selectedPageIds?.length ?? 0;
@@ -202,107 +141,6 @@ export default function WorkbenchBar({
       return { section, buttons: sectionButtons };
     }).filter((entry) => entry.buttons.length > 0);
   }, [buttons]);
-
-  const handleExportAll = useCallback(
-    async (forceNewFile = false) => {
-      if (currentView === "viewer") {
-        const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-        if (!buffer) return;
-        const fileToExport =
-          selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
-        if (!fileToExport) return;
-        const stub = isStirlingFile(fileToExport)
-          ? selectors.getStirlingFileStub(fileToExport.fileId)
-          : undefined;
-        try {
-          const result = await downloadFile({
-            data: new Blob([buffer], { type: "application/pdf" }),
-            filename: fileToExport.name,
-            localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
-          });
-          if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
-            fileActions.updateStirlingFileStub(stub.id, {
-              localFilePath: stub.localFilePath ?? result.savedPath,
-              isDirty: false,
-            });
-          }
-        } catch (error) {
-          console.error("[WorkbenchBar] Failed to export viewer file:", error);
-        }
-        return;
-      }
-
-      if (currentView === "pageEditor") {
-        pageEditorFunctions?.onExportAll?.();
-        return;
-      }
-
-      const filesToExport =
-        selectedFiles.length > 0 ? selectedFiles : activeFiles;
-      const stubs = filesToExport.map((file) =>
-        isStirlingFile(file)
-          ? selectors.getStirlingFileStub(file.fileId)
-          : undefined,
-      );
-
-      // Enforce all files in one batch so the toast shows progress across the
-      // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
-      let enforced: File[];
-      try {
-        enforced = await enforceExportPolicies(
-          filesToExport as File[],
-          stubs.map((s) => s?.id),
-        );
-      } catch {
-        enforced = filesToExport as File[];
-        showAlert({
-          alertType: "warning",
-          title: t("policies.enforcement.exportFailureTitle"),
-          body: t("policies.enforcement.exportFailureBody"),
-        });
-      }
-
-      for (let idx = 0; idx < filesToExport.length; idx++) {
-        const file = filesToExport[idx];
-        const stub = stubs[idx];
-        try {
-          const result = await downloadRaw({
-            data: enforced[idx],
-            filename: file.name,
-            localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
-          });
-          if (result.cancelled) continue;
-          if (!forceNewFile && stub && result.savedPath) {
-            fileActions.updateStirlingFileStub(stub.id, {
-              localFilePath: stub.localFilePath ?? result.savedPath,
-              isDirty: false,
-            });
-          }
-        } catch (error) {
-          console.error(
-            "[WorkbenchBar] Failed to export file:",
-            file.name,
-            error,
-          );
-        }
-      }
-    },
-    [
-      currentView,
-      selectedFiles,
-      activeFiles,
-      pageEditorFunctions,
-      viewerContext,
-      selectors,
-      fileActions,
-    ],
-  );
-
-  const handlePrint = useCallback(() => {
-    viewerContext?.printActions?.print?.();
-  }, [viewerContext]);
 
   const handleClose = useCallback(async () => {
     if (currentView === "fileEditor") {
@@ -563,7 +401,7 @@ export default function WorkbenchBar({
               variant="tertiary"
               hover={false}
               className="workbench-bar-action-icon"
-              onClick={handlePrint}
+              onClick={exportActions.print}
               disabled={
                 totalItems === 0 ||
                 allButtonsDisabled ||
@@ -586,7 +424,7 @@ export default function WorkbenchBar({
               variant="tertiary"
               hover={false}
               className="workbench-bar-action-icon"
-              onClick={() => handleExportAll()}
+              onClick={exportActions.download}
               disabled={
                 disableForFullscreen ||
                 totalItems === 0 ||
@@ -614,7 +452,7 @@ export default function WorkbenchBar({
               variant="tertiary"
               hover={false}
               className="workbench-bar-action-icon"
-              onClick={() => handleExportAll(true)}
+              onClick={exportActions.saveAs}
               disabled={
                 disableForFullscreen ||
                 totalItems === 0 ||
@@ -663,6 +501,7 @@ export default function WorkbenchBar({
               : t("workbenchBar.closePdf", "Close PDF"),
           )}
       </div>
+      {exportActions.gateModal}
     </div>
   );
 }

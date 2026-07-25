@@ -1,0 +1,109 @@
+/* Processing-history timeline: runs split by a hairline divider, each with a
+ * status-coloured rail. Colours route through semantic --c-* tokens. */
+
+.review-trail {
+  display: flex;
+  flex-direction: column;
+}
+
+.review-trail__run {
+  display: grid;
+  grid-template-columns: 3px 1fr;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+.review-trail__run + .review-trail__run {
+  border-top: 1px solid var(--c-border-subtle);
+}
+.review-trail__run:first-child {
+  padding-top: 0;
+}
+.review-trail__run:last-child {
+  padding-bottom: 0;
+}
+
+.review-trail__rail {
+  border-radius: 999px;
+  background: var(--c-border-strong);
+}
+.review-trail__run[data-status="completed"] .review-trail__rail {
+  background: var(--c-success);
+}
+.review-trail__run[data-status="failed"] .review-trail__rail {
+  background: var(--c-danger);
+}
+
+.review-trail__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.review-trail__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.review-trail__name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.review-trail__time {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+}
+
+.review-trail__step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.review-trail__step-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  line-height: 0;
+}
+.review-trail__step[data-status="completed"] .review-trail__step-icon {
+  color: var(--c-success);
+}
+.review-trail__step[data-status="failed"] .review-trail__step-icon {
+  color: var(--c-danger);
+}
+.review-trail__step[data-status="skipped"] .review-trail__step-icon {
+  color: var(--c-text-subtle);
+}
+
+.review-trail__step-name {
+  font-size: 0.8125rem;
+  color: var(--c-text);
+}
+.review-trail__step-name[data-failed="true"] {
+  font-weight: 600;
+}
+.review-trail__step-fail {
+  color: var(--c-danger);
+  font-weight: 600;
+}
+.review-trail__detail {
+  margin-top: 1px;
+  font-size: 0.6875rem;
+  color: var(--c-text-muted);
+}
+.review-trail__detail[data-failed="true"] {
+  color: var(--c-danger);
+}
+
+.review-trail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}

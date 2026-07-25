@@ -181,3 +181,155 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
     expect(enforcingOn(map, "in")).toBe(false);
   });
 });
+
+describe("buildPolicyBadgeMap — failed runs mark the file as needing attention", () => {
+  const failedOn = (map: Map<string, { failed?: boolean }[]>, id: string) =>
+    (map.get(id) ?? []).some((b) => b.failed);
+
+  it("marks the input file when its latest run FAILED (no output exists)", () => {
+    const map = buildPolicyBadgeMap(
+      [run({ status: "FAILED", outputFileIds: [] })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(failedOn(map, "in")).toBe(true);
+  });
+
+  it("a later successful retry of the same (policy, file) clears the warning", () => {
+    const map = buildPolicyBadgeMap(
+      [
+        run({
+          runId: "fail",
+          status: "FAILED",
+          outputFileIds: [],
+          startedAt: NOW - 2_000,
+        }),
+        run({ runId: "retry", status: "COMPLETED", startedAt: NOW - 1_000 }),
+      ],
+      [{ id: "in" }, { id: "out" }],
+      labels,
+      NOW,
+    );
+    expect(failedOn(map, "in")).toBe(false);
+    expect(failedOn(map, "out")).toBe(false);
+  });
+
+  it("a derived file inherits the warning via lineage", () => {
+    const map = buildPolicyBadgeMap(
+      [run({ status: "FAILED", outputFileIds: [] })],
+      [{ id: "in" }, { id: "edit", parentFileId: "in" }],
+      labels,
+      NOW,
+    );
+    expect(failedOn(map, "edit")).toBe(true);
+  });
+
+  const ignoredOn = (map: Map<string, { ignored?: boolean }[]>, id: string) =>
+    (map.get(id) ?? []).some((b) => b.ignored);
+
+  it("an acknowledged failure drops the warning for an 'ignored' marker", () => {
+    const map = buildPolicyBadgeMap(
+      [run({ status: "FAILED", outputFileIds: [], acknowledged: true })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(failedOn(map, "in")).toBe(false);
+    // Reviewed & ignored: the badge switches to the ignored marker (the render
+    // layer keeps the policy accent rather than the amber warning colour).
+    const badge = (map.get("in") ?? []).find((b) => b.id === "security");
+    expect(badge?.ignored).toBe(true);
+    expect(ignoredOn(map, "in")).toBe(true);
+  });
+
+  it("an acknowledged failure shows the ignored marker, never a 'ran' shield", () => {
+    // Produced this file earlier (green shield), then a later run failed and
+    // was approved: approving a failure must not read as a successful run.
+    const map = buildPolicyBadgeMap(
+      [
+        run({
+          runId: "ok",
+          fileId: "src",
+          outputFileIds: ["f"],
+          startedAt: NOW - 2_000,
+        }),
+        run({
+          runId: "bad",
+          fileId: "f",
+          status: "FAILED",
+          outputFileIds: [],
+          acknowledged: true,
+          startedAt: NOW - 1_000,
+        }),
+      ],
+      [{ id: "f" }],
+      labels,
+      NOW,
+    );
+    const badges = map.get("f") ?? [];
+    expect(badges).toHaveLength(1);
+    expect(badges[0].ignored).toBe(true);
+    expect(badges[0].failed ?? false).toBe(false);
+  });
+
+  it("a later SUCCESS after an acknowledged failure still shows the green shield", () => {
+    // Latest outcome is success (e.g. a retry that worked), so the honest "ran"
+    // badge returns — suppression only applies while failure is the last word.
+    const map = buildPolicyBadgeMap(
+      [
+        run({
+          runId: "bad",
+          fileId: "f",
+          status: "FAILED",
+          outputFileIds: [],
+          acknowledged: true,
+          startedAt: NOW - 2_000,
+        }),
+        run({
+          runId: "ok",
+          fileId: "f",
+          outputFileIds: ["f"],
+          startedAt: NOW - 1_000,
+        }),
+      ],
+      [{ id: "f" }],
+      labels,
+      NOW,
+    );
+    expect((map.get("f") ?? []).map((b) => b.id)).toEqual(["security"]);
+    expect(failedOn(map, "f")).toBe(false);
+  });
+
+  it("a retrying failed run shows the spinner, not the warning", () => {
+    const map = buildPolicyBadgeMap(
+      [run({ status: "FAILED", retrying: true, outputFileIds: [] })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(failedOn(map, "in")).toBe(false);
+    expect((map.get("in") ?? []).some((b) => b.enforcing)).toBe(true);
+  });
+
+  it("sorts failed badges ahead of healthy ones so truncation can't hide them", () => {
+    const map = buildPolicyBadgeMap(
+      [
+        run({ runId: "ok", categoryId: "watermark", outputFileIds: ["f"] }),
+        run({
+          runId: "bad",
+          categoryId: "security",
+          status: "FAILED",
+          fileId: "f",
+          outputFileIds: [],
+        }),
+      ],
+      [{ id: "f" }],
+      labels,
+      NOW,
+    );
+    const refs = map.get("f") ?? [];
+    expect(refs[0].id).toBe("security");
+    expect(refs[0].failed).toBe(true);
+  });
+});

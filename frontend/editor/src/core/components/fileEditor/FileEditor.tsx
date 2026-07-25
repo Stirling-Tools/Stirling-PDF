@@ -20,6 +20,7 @@ import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useOpenFileReview } from "@app/hooks/useOpenFileReview";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
@@ -71,6 +72,7 @@ const FileEditor = ({
 
   // Get viewer context for setting active file index and ID
   const { setActiveFileIndex, setActiveFileId } = useViewer();
+  const openFileReview = useOpenFileReview();
 
   const [_status, _setStatus] = useState<string | null>(null);
   const [_error, _setError] = useState<string | null>(null);
@@ -414,6 +416,7 @@ const FileEditor = ({
                       policyFileBadges.get(record.id as string) ??
                       EMPTY_POLICIES
                     }
+                    onReviewClick={openFileReview}
                   />
                 );
               })}

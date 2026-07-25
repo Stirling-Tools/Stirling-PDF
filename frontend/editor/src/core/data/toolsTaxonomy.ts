@@ -62,6 +62,10 @@ export type ToolRegistryEntry = {
   kind?: ToolKind;
   // Workbench type for navigation
   workbench?: WorkbenchType;
+  // Hide the workbench top bar while this tool is open (read-only surfaces).
+  hideWorkbenchBar?: boolean;
+  // Keep out of the picker and search; the tool stays reachable by URL.
+  hideFromPicker?: boolean;
   // Operation configuration for automation. TParams is erased at the registry
   // boundary; tools are authored type-safely via defineToolAutomation.
   operationConfig?: ToolOperationConfig<ErasedToolParams>;

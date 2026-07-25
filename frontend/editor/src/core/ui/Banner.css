@@ -7,31 +7,32 @@
   border: 1px solid transparent;
   font-size: 0.8125rem;
   line-height: 1.5;
+  color: var(--c-text);
 }
 
+/* Tones set --banner-accent; the tints below derive from it. Don't reach for
+   the legacy --color-*-light tokens: they're saturated fills, not tints. */
 .sui-banner--info {
-  background: var(--c-primary-tint);
-  color: var(--c-text-muted);
-  border-color: var(--c-primary-border);
+  --banner-accent: var(--c-primary);
 }
 .sui-banner--success {
-  background: var(--color-green-light);
-  color: var(--c-text-muted);
-  border-color: var(--color-green-border);
+  --banner-accent: var(--c-success);
 }
 .sui-banner--warning {
-  background: var(--color-amber-light);
-  color: var(--c-text-muted);
-  border-color: var(--color-amber-border);
+  --banner-accent: var(--c-warning);
 }
 .sui-banner--danger {
-  background: var(--color-red-light);
-  color: var(--c-text-muted);
-  border-color: var(--color-red-border);
+  --banner-accent: var(--c-danger);
+}
+.sui-banner--info,
+.sui-banner--success,
+.sui-banner--warning,
+.sui-banner--danger {
+  background: color-mix(in srgb, var(--banner-accent) 10%, var(--c-surface));
+  border-color: color-mix(in srgb, var(--banner-accent) 30%, var(--c-surface));
 }
 .sui-banner--neutral {
-  background: var(--color-bg-subtle);
-  color: var(--c-text-muted);
+  background: var(--c-surface-sunken);
   border-color: var(--c-border);
 }
 
@@ -44,17 +45,11 @@
   height: 1.25rem;
 }
 
-.sui-banner--info .sui-banner__icon {
-  color: var(--c-primary);
-}
-.sui-banner--success .sui-banner__icon {
-  color: var(--color-green);
-}
-.sui-banner--warning .sui-banner__icon {
-  color: var(--color-amber-dark);
-}
+.sui-banner--info .sui-banner__icon,
+.sui-banner--success .sui-banner__icon,
+.sui-banner--warning .sui-banner__icon,
 .sui-banner--danger .sui-banner__icon {
-  color: var(--color-red);
+  color: var(--banner-accent);
 }
 
 .sui-banner__body {
@@ -66,7 +61,7 @@
   color: var(--c-text);
 }
 .sui-banner__desc {
-  color: var(--c-text-subtle);
+  color: var(--c-text-muted);
   margin-top: 0.125rem;
 }
 

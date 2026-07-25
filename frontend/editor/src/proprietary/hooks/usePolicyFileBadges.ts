@@ -20,15 +20,20 @@ type LineageStub = {
 };
 
 /** Merge a ref into a list, deduping by policy id. A direct (recent) hit wins
- *  the glow over an inherited one for the same policy. */
+ *  the glow over an inherited one, and a failure marker is never lost. */
 function mergeRef(list: FileItemPolicyRef[], ref: FileItemPolicyRef): void {
   const existing = list.find((p) => p.id === ref.id);
   if (!existing) {
     list.push(ref);
-  } else if (ref.recent) {
-    existing.recent = true;
+    return;
   }
+  if (ref.recent) existing.recent = true;
+  if (ref.failed) existing.failed = true;
+  if (ref.ignored) existing.ignored = true;
 }
+
+/** Terminal statuses — the only ones that can decide a file's failure marker. */
+const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
 
 /**
  * Pure core of {@link usePolicyFileBadges} (no React/storage deps, so it's
@@ -51,13 +56,32 @@ export function buildPolicyBadgeMap(
   labelById: ReadonlyMap<string, string>,
   now: number,
 ): Map<string, FileItemPolicyRef[]> {
-  // Direct badges: a file that IS a policy run's output.
+  // The latest terminal run per (policy, file) is that file's current outcome,
+  // so a failure a later retry fixed stops counting.
+  const latestByKey = new Map<string, PolicyRunRecord>();
+  for (const run of runs) {
+    if (!run.fileId || !TERMINAL_STATUSES.has(run.status)) continue;
+    const key = `${run.categoryId}:${run.fileId}`;
+    const prev = latestByKey.get(key);
+    if (!prev || run.startedAt > prev.startedAt) latestByKey.set(key, run);
+  }
+
+  // Waived failures must not fall back to the "ran" shield below — approving a
+  // failure can't be allowed to read as success.
+  const acknowledgedFailureKeys = new Set<string>();
+  for (const [key, run] of latestByKey) {
+    if (run.status === "FAILED" && run.acknowledged) {
+      acknowledgedFailureKeys.add(key);
+    }
+  }
+
   const directByFile = new Map<string, FileItemPolicyRef[]>();
   for (const run of runs) {
     const name = labelById.get(run.categoryId);
     if (!name) continue;
     const recent = now - run.startedAt < RECENT_MS;
     for (const fileId of run.outputFileIds ?? []) {
+      if (acknowledgedFailureKeys.has(`${run.categoryId}:${fileId}`)) continue;
       const list = directByFile.get(fileId) ?? [];
       if (!list.some((p) => p.id === run.categoryId)) {
         list.push({
@@ -68,6 +92,31 @@ export function buildPolicyBadgeMap(
         });
         directByFile.set(fileId, list);
       }
+    }
+  }
+
+  // A failed run marks its INPUT file (a failure produces no output): unwaived
+  // → amber warning, waived → the ignored marker.
+  for (const run of latestByKey.values()) {
+    if (run.status !== "FAILED" || run.retrying) continue;
+    const name = labelById.get(run.categoryId);
+    if (!name) continue;
+    const mark = run.acknowledged
+      ? { ignored: true }
+      : { failed: true, recent: now - run.startedAt < RECENT_MS };
+    const list = directByFile.get(run.fileId) ?? [];
+    const existing = list.find((p) => p.id === run.categoryId);
+    if (existing) {
+      Object.assign(existing, mark);
+    } else {
+      list.push({
+        id: run.categoryId,
+        name,
+        accentColor: policyAccentVar(run.categoryId),
+        recent: false,
+        ...mark,
+      });
+      directByFile.set(run.fileId, list);
     }
   }
 
@@ -126,6 +175,11 @@ export function buildPolicyBadgeMap(
       });
       result.set(run.fileId, list);
     }
+  }
+
+  // Failures first, so truncating the row can never hide a warning.
+  for (const list of result.values()) {
+    list.sort((a, b) => Number(b.failed ?? false) - Number(a.failed ?? false));
   }
 
   return result;

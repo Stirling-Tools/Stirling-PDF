@@ -114,6 +114,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // invisible to the static scan. The raw catalogue value is the fallback.
       /^policies\.field\./,
       /^policyOption\./,
+      // ReviewTrail labels each run with t(`reviewTool.trail.source.${source}`),
+      // where the leaf is the run's source union member.
+      /^reviewTool\.trail\.source\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,

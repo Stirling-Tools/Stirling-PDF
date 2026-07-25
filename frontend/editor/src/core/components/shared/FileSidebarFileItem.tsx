@@ -156,6 +156,7 @@ export interface FileItemProps {
   onFolderClick?: (folderId: string) => void;
   /** Policies that have run on this file — rendered as small shield badges. */
   policies?: FileItemPolicyRef[];
+  onReviewClick?: (fileId: FileId) => void;
   /** The file's primary classification label (display name), shown in the meta
    *  row in place of the file type when present. */
   primaryLabel?: string;
@@ -191,6 +192,7 @@ export function FileItem({
   folders = [],
   onFolderClick,
   policies = [],
+  onReviewClick,
   primaryLabel,
   onDelete,
   onSaveToCloud,
@@ -308,13 +310,19 @@ export function FileItem({
                 )}
                 withArrow
                 position="top"
+                withinPortal
               >
                 <span className="file-sidebar-cloud-badge" data-no-select>
                   <CloudDoneIcon sx={{ fontSize: "0.85rem" }} />
                 </span>
               </Tooltip>
             )}
-            <PolicyBadges policies={policies} />
+            <PolicyBadges
+              policies={policies}
+              onReviewClick={
+                onReviewClick ? () => onReviewClick(fileId) : undefined
+              }
+            />
           </span>
           {folders.length > 0 && (
             <span className="file-sidebar-folder-tags" data-no-select>
