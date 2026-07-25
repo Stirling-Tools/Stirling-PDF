@@ -300,7 +300,9 @@ export function VersionTimeline({
                     c="dimmed"
                     style={{ wordBreak: "break-all", marginTop: "0.2rem" }}
                   >
-                    {nameChanged ? "Renamed: " : "File: "}
+                    {nameChanged
+                      ? `${t("filesPage.renamed", "Renamed")}: `
+                      : `${t("filesPage.file", "File")}: `}
                     <span style={{ color: "var(--c-text)", fontWeight: 500 }}>
                       {v.name}
                     </span>
