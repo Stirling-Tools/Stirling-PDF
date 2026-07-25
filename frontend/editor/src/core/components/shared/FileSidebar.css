@@ -1,8 +1,6 @@
 /* ========== FILE SIDEBAR ========== */
 
 .file-sidebar {
-  /* Sit on the app canvas so the section cards read as floating panels
-     (mirrors the processor sidebar). */
   background-color: var(--c-bg);
   display: flex;
   flex-direction: column;

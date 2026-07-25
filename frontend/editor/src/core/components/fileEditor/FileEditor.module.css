@@ -334,7 +334,6 @@
   max-width: 260px;
   height: calc(310px - 0.5rem);
   margin: 0.5rem auto 0;
-  /* Match the nav surface (sidebar boxes / workbench bar). */
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.625rem;

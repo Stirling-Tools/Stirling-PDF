@@ -72,6 +72,12 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
     docsProcessedThisPeriod: 50,
     uniquePdfsThisPeriod: 48,
     sizeMultiplierPdfsThisPeriod: 8,
+    // Illustrative prepaid bundle so the /dev/payg-preview route can design the
+    // prepaid-capacity card + banner (drawn ahead of the meter, outside the cap).
+    billingMode: "prepaid",
+    prepaidUnitsRemaining: 78_000,
+    prepaidUnitsTotal: 120_000,
+    prepaidExpiresAt: "2027-03-01",
     categoryDocs: { api: 18, ai: 14, automation: 18 },
     // Wave 1 backend (PR #6574) returns a per-category breakdown so the
     // hero panel can split AI / automation / API. Use realistic but
