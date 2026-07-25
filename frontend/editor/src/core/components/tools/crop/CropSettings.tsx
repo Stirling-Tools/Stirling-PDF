@@ -5,7 +5,6 @@ import {
   Box,
   Group,
   Center,
-  Alert,
   Checkbox,
 } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
