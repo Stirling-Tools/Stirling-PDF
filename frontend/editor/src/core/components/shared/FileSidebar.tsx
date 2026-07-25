@@ -30,6 +30,7 @@ import {
 import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { AppSwitcher } from "@app/components/shared/AppSwitcher";
+import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
@@ -831,6 +832,21 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         <div className="file-sidebar-inner">
           <div className="file-sidebar-brand">
             <AppSwitcher collapsed={collapsed} />
+            {onToggleCollapse && (
+              <ActionIcon
+                variant="tertiary"
+                size="md"
+                className="file-sidebar-collapse-toggle"
+                onClick={() => onToggleCollapse()}
+                aria-label={
+                  collapsed
+                    ? t("common.expand", "Expand")
+                    : t("common.collapse", "Collapse")
+                }
+              >
+                <SidebarToggleIcon size={18} />
+              </ActionIcon>
+            )}
           </div>
 
           {/* Box 1 — top controls (search + open / my files / cloud). No title. */}

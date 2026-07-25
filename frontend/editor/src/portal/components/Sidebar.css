@@ -8,11 +8,36 @@
   flex-shrink: 0;
   position: sticky;
   top: 0;
+  /* Slide between the full rail and the collapsed icon rail. Overridden by the
+     drawer's transform transition under the mobile breakpoint below. */
+  transition: width 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-sidebar {
+    transition: none;
+  }
+}
+
+/* Nav labels stay on one line and are clipped by the narrowing rail so they
+   reveal/hide cleanly as the width animates rather than wrapping. */
+.portal-sidebar__nav,
+.portal-sidebar__footer {
+  overflow-x: hidden;
+}
+.portal-sidebar .sui-navitem__label,
+.portal-sidebar__section-label {
+  white-space: nowrap;
 }
 
 /* Mobile close button (shared ActionIcon) — only shown inside the drawer. */
 .portal-sidebar__close {
   display: none;
+  flex-shrink: 0;
+}
+
+.portal-sidebar__collapse {
+  margin-left: auto;
   flex-shrink: 0;
 }
 
@@ -45,6 +70,61 @@
   .portal-sidebar__close {
     display: inline-flex;
   }
+  /* Collapse is a desktop affordance; the drawer is full-width on mobile. */
+  .portal-sidebar__collapse {
+    display: none;
+  }
+}
+
+/* ---- Collapsed icon rail (desktop only) ---- */
+.portal-sidebar[data-collapsed] {
+  width: 3.5rem;
+}
+.portal-sidebar[data-collapsed] .portal-sidebar__logo {
+  flex-direction: column;
+  height: auto;
+  padding: 0.5rem 0;
+  gap: 0.375rem;
+}
+.portal-sidebar[data-collapsed] .portal-sidebar__collapse {
+  margin-left: 0;
+}
+.portal-sidebar[data-collapsed] .portal-sidebar__nav {
+  padding-inline: 0.375rem;
+}
+.portal-sidebar[data-collapsed] .portal-sidebar__section {
+  padding-inline: 0;
+  align-items: center;
+}
+.portal-sidebar[data-collapsed] .portal-sidebar__section-label {
+  display: none;
+}
+.portal-sidebar[data-collapsed] .sui-navitem__label,
+.portal-sidebar[data-collapsed] .sui-navitem__trailing {
+  display: none;
+}
+.portal-sidebar[data-collapsed] .portal-sidebar__navtip {
+  display: flex;
+}
+.portal-sidebar[data-collapsed] .sui-navitem {
+  justify-content: center;
+  margin-inline: 0;
+  padding-inline: 0;
+  width: 100%;
+}
+/* Neutralise the active-item edge-bar geometry (negative margins + overhang)
+   that assumes the full-width rail. */
+.portal-sidebar[data-collapsed] .sui-navitem.is-active {
+  width: 100%;
+  margin-inline: 0;
+  border-left: none;
+  border-radius: 0.5rem;
+  padding-left: 0;
+}
+.portal-sidebar[data-collapsed] .portal-sidebar__footer {
+  margin-inline: 0.375rem;
+  padding-inline: 0;
+  align-items: center;
 }
 
 .portal-sidebar__logo {

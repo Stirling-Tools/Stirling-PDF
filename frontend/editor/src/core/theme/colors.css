@@ -60,12 +60,8 @@ html[data-app-theme="light"] {
      marks, vendor colours, categorical avatar dots, static illustrations,
      and the multi-hue gradients on feature/upgrade/onboarding surfaces.
      Named here so components reference a --c-* token, never a raw --p-*. */
-  --c-brand-mark: var(
-    --p-brand-red-650
-  ); 
-  --c-brand-mark-soft: var(
-    --p-brand-red-400
-  ); /* Stirling logo mark fill */
+  --c-brand-mark: var(--p-brand-red-650);
+  --c-brand-mark-soft: var(--p-brand-red-400); /* Stirling logo mark fill */
   --c-accent-stripe: var(--p-periwinkle-500); /* Stripe "connect" CTA */
 
   /* Feature-accent hues (fixed) used as stops in multi-hue gradients. */
