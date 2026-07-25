@@ -3314,7 +3314,6 @@ label = "Y Konumu"
 
 [crop.error]
 failed = "PDF kırpılamadı"
-invalidArea = "Kırpma alanı PDF sınırlarının dışına taşıyor"
 
 [crop.preview]
 title = "Kırpma Alanı Seçimi"

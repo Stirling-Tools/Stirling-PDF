@@ -3314,7 +3314,6 @@ label = "Položaj Y"
 
 [crop.error]
 failed = "Obrezovanje PDF-ja ni uspelo"
-invalidArea = "Območje obrezovanja presega meje PDF-ja"
 
 [crop.preview]
 title = "Izbira območja obrezovanja"

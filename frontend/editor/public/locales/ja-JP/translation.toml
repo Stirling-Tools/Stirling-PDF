@@ -3314,7 +3314,6 @@ label = "Y 位置"
 
 [crop.error]
 failed = "PDF の切り抜きに失敗しました"
-invalidArea = "切り抜き範囲が PDF の境界を超えています"
 
 [crop.preview]
 title = "切り抜き範囲の選択"

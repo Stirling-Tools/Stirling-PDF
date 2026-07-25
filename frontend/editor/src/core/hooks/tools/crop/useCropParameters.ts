@@ -8,6 +8,7 @@ import {
   Rectangle,
   PDFBounds,
   constrainCropAreaToPDF,
+  createDefaultCropArea,
   createFullPDFCropArea,
   roundCropArea,
   isRectangle,
@@ -29,6 +30,8 @@ export type CropParametersHook = BaseParametersHook<CropParameters> & {
   setCropArea: (cropArea: Rectangle, pdfBounds?: PDFBounds) => void;
   /** Get current crop area as CropArea object */
   getCropArea: () => Rectangle;
+  /** Reset to default inset crop area inside PDF bounds */
+  resetToDefaultCropArea: (pdfBounds: PDFBounds) => void;
   /** Reset to full PDF dimensions */
   resetToFullPDF: (pdfBounds: PDFBounds) => void;
   /** Check if current crop area is valid for the PDF */
@@ -72,6 +75,15 @@ export const useCropParameters = (): CropParametersHook => {
     [baseHook],
   );
 
+  // Reset to default crop area inside PDF bounds (10% inset)
+  const resetToDefaultCropArea = useCallback(
+    (pdfBounds: PDFBounds) => {
+      const defaultCropArea = createDefaultCropArea(pdfBounds);
+      setCropArea(defaultCropArea);
+    },
+    [setCropArea],
+  );
+
   // Reset to cover entire PDF
   const resetToFullPDF = useCallback(
     (pdfBounds: PDFBounds) => {
@@ -81,31 +93,11 @@ export const useCropParameters = (): CropParametersHook => {
     [setCropArea],
   );
 
-  // Check if current crop area is valid for the given PDF bounds
+  // Check if current crop area is valid (dimensions must be non-zero; out-of-bounds coordinates clamp automatically)
   const isCropAreaValid = useCallback(
-    (pdfBounds?: PDFBounds): boolean => {
+    (_pdfBounds?: PDFBounds): boolean => {
       const cropArea = getCropArea();
-
-      // Basic validation
-      if (
-        cropArea.x < 0 ||
-        cropArea.y < 0 ||
-        cropArea.width <= 0 ||
-        cropArea.height <= 0
-      ) {
-        return false;
-      }
-
-      // PDF bounds validation if provided
-      if (pdfBounds) {
-        const tolerance = 0.01; // Small tolerance for floating point precision
-        return (
-          cropArea.x + cropArea.width <= pdfBounds.actualWidth + tolerance &&
-          cropArea.y + cropArea.height <= pdfBounds.actualHeight + tolerance
-        );
-      }
-
-      return true;
+      return cropArea.width > 0 && cropArea.height > 0;
     },
     [getCropArea],
   );
@@ -170,6 +162,7 @@ export const useCropParameters = (): CropParametersHook => {
     validateParameters: () => validateParameters(),
     setCropArea,
     getCropArea,
+    resetToDefaultCropArea,
     resetToFullPDF,
     isCropAreaValid,
     isFullPDFCrop,

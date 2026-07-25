@@ -3314,7 +3314,6 @@ label = "Pozícia Y"
 
 [crop.error]
 failed = "Nepodarilo sa orezať PDF"
-invalidArea = "Oblasť orezania presahuje hranice PDF"
 
 [crop.preview]
 title = "Výber oblasti orezania"

@@ -3314,7 +3314,6 @@ label = "Y pozicija"
 
 [crop.error]
 failed = "Nije uspelo isecanje PDF-a"
-invalidArea = "Oblast isečka prelazi granice PDF-a"
 
 [crop.preview]
 title = "Izbor oblasti za isecanje"

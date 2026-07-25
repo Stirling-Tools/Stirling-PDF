@@ -170,7 +170,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     );
   }
 
-  const isCropValid = parameters.isCropAreaValid(pdfBounds);
   const isFullCrop = parameters.isFullPDFCrop(pdfBounds);
 
   return (
@@ -249,17 +248,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         />
       )}
 
-      {/* Validation Alert - Only show when autoCrop is false */}
-      {!parameters.parameters.autoCrop && !isCropValid && (
-        <Alert color="red" variant="light">
-          <Text size="xs">
-            {t(
-              "crop.error.invalidArea",
-              "Crop area extends beyond PDF boundaries",
-            )}
-          </Text>
-        </Alert>
-      )}
     </Stack>
   );
 };
