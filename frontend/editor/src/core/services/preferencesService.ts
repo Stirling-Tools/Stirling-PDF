@@ -52,7 +52,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   defaultToolPanelMode: DEFAULT_TOOL_PANEL_MODE,
   defaultStartupView: "tools",
   defaultViewerZoom: "auto",
-  loginLandingView: "processor",
+  loginLandingView: "editor",
   theme: "system",
   toolPanelModePromptSeen: false,
   hasSelectedToolPanelMode: false,
