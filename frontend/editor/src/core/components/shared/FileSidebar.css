@@ -182,7 +182,7 @@
 .file-sidebar-search-label {
   margin-left: 12px;
   font-size: 14px;
-  color: var(--c-text-muted);
+  color: var(--c-text);
 }
 
 /* ---- Scrollable content ---- */
@@ -257,7 +257,7 @@
 .file-sidebar-action-label {
   margin-left: 12px;
   font-size: 14px;
-  color: var(--c-text-muted);
+  color: var(--c-text);
   white-space: nowrap;
 }
 
