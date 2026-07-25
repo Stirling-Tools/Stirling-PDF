@@ -1,12 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import {
-  Stack,
-  Text,
-  Box,
-  Group,
-  Center,
-  Checkbox,
-} from "@mantine/core";
+import { Stack, Text, Box, Group, Center, Checkbox } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -246,7 +239,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           showAutomationInfo={false}
         />
       )}
-
     </Stack>
   );
 };
