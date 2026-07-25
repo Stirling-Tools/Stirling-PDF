@@ -840,8 +840,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 onClick={() => onToggleCollapse()}
                 aria-label={
                   collapsed
-                    ? t("common.expand", "Expand")
-                    : t("common.collapse", "Collapse")
+                    ? t("fileSidebar.expand", "Expand sidebar")
+                    : t("fileSidebar.collapse", "Collapse sidebar")
                 }
               >
                 <SidebarToggleIcon size={18} />

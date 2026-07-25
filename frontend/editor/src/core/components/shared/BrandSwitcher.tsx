@@ -12,8 +12,6 @@ import "@app/components/shared/BrandSwitcher.css";
 interface BrandSwitcherProps {
   /** The app this is rendered in (shown active in the menu). */
   current: AppSwitchTarget;
-  /** Resolved colour scheme, forwarded to the switcher's brand marks. */
-  theme: "light" | "dark";
   /** Called with the selected app (only for the non-current one). */
   onSwitch: (app: AppSwitchTarget) => void;
   /** Icon-only: drop the wordmark, keep the morphing mark as the trigger. */
@@ -29,7 +27,6 @@ interface BrandSwitcherProps {
  */
 export function BrandSwitcher({
   current,
-  theme,
   onSwitch,
   collapsed = false,
   className,
@@ -52,11 +49,7 @@ export function BrandSwitcher({
           </Button>
         </Dropdown.Trigger>
         <Dropdown.Menu width="11rem">
-          <AppSwitchMenuItems
-            current={current}
-            theme={theme}
-            onSwitch={onSwitch}
-          />
+          <AppSwitchMenuItems current={current} onSwitch={onSwitch} />
         </Dropdown.Menu>
       </Dropdown.Root>
     </div>

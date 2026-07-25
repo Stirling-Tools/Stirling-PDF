@@ -6,7 +6,6 @@ import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
-import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
@@ -29,7 +28,6 @@ const MOBILE_QUERY = "(max-width: 48rem)";
 
 export function Sidebar() {
   const { activeView, setActiveView } = useView();
-  const { theme } = useTheme();
   const {
     openSettings,
     mobileNavOpen,
@@ -103,7 +101,6 @@ export function Sidebar() {
       <div className="portal-sidebar__logo">
         <BrandSwitcher
           current="processor"
-          theme={theme}
           onSwitch={goToEditor}
           collapsed={collapsed}
         />
@@ -113,8 +110,8 @@ export function Sidebar() {
           className="portal-sidebar__collapse"
           aria-label={
             collapsed
-              ? t("common.expand", "Expand")
-              : t("common.collapse", "Collapse")
+              ? t("fileSidebar.expand", "Expand sidebar")
+              : t("fileSidebar.collapse", "Collapse sidebar")
           }
           onClick={toggleSidebarCollapsed}
         >

@@ -5,10 +5,9 @@ const meta: Meta<typeof BrandSwitcher> = {
   title: "Brand/BrandSwitcher",
   component: BrandSwitcher,
   parameters: { layout: "centered" },
-  args: { current: "processor", theme: "light", onSwitch: () => {} },
+  args: { current: "processor", onSwitch: () => {} },
   argTypes: {
     current: { control: "inline-radio", options: ["editor", "processor"] },
-    theme: { control: "inline-radio", options: ["light", "dark"] },
   },
 };
 export default meta;

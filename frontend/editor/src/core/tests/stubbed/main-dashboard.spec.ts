@@ -17,7 +17,10 @@ test.describe("2. Main Dashboard / Home Page", () => {
         page.locator('[data-testid="config-button"]').first(),
       ).toBeVisible();
 
-      await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
+      // Tool search is a header toggle; the field mounts only once pressed.
+      await expect(
+        page.getByRole("button", { name: /search tools/i }).first(),
+      ).toBeVisible();
 
       await expect(
         page.getByRole("button", { name: /fullscreen|sidebar/i }).first(),
@@ -74,7 +77,10 @@ test.describe("2. Main Dashboard / Home Page", () => {
 
       await page.goto("/");
 
-      await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
+      // Tool search is a header toggle; the field mounts only once pressed.
+      await expect(
+        page.getByRole("button", { name: /search tools/i }).first(),
+      ).toBeVisible();
     });
   });
 
