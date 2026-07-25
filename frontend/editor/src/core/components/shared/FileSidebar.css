@@ -136,60 +136,6 @@
   color: var(--mantine-color-blue-6, var(--c-primary));
 }
 
-/* ---- Header ---- */
-.file-sidebar-header {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  padding: 0 14px;
-  gap: 10px;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 4px 4px 0 4px;
-  flex-shrink: 0;
-  transition: background-color 0.15s ease;
-}
-
-/* Icons stay left-aligned during animation; overflow:hidden on inner clips text naturally */
-
-.file-sidebar-header:hover {
-  background-color: var(--c-hover);
-}
-
-.file-sidebar-menu-icon {
-  color: var(--c-text-subtle) !important;
-  font-size: 18px !important;
-  flex-shrink: 0;
-}
-
-/* Inherits font-size so swap-in icons render at 18px like the original. */
-.file-sidebar-menu-icon > svg {
-  font-size: inherit;
-  width: 1em;
-  height: 1em;
-}
-
-/* Flip directional toggle icons in RTL (skipped for the symmetric burger). */
-[dir="rtl"] .file-sidebar-menu-icon[data-toggle-flip-rtl="true"] > svg {
-  transform: scaleX(-1);
-}
-
-.file-sidebar-brand-text {
-  flex-shrink: 0;
-}
-
-/* App switcher (portal builds only) sits at the far end of the header row.
-   The content-fade animation makes this span a stacking context, which would
-   trap the menu's z-index below later sidebar rows — elevate the span so the
-   open menu paints above them. */
-.file-sidebar-app-switch {
-  margin-inline-start: auto;
-  display: flex;
-  align-items: center;
-  position: relative;
-  z-index: var(--z-dropdown);
-}
-
 /* ---- Search row ---- */
 .file-sidebar-search-row {
   display: flex;
