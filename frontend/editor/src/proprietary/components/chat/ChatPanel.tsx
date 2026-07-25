@@ -41,6 +41,7 @@ import {
 import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
+import { BrandMark } from "@app/components/shared/BrandMark";
 import { Logo } from "@app/ui/Logo";
 import { PanelHeader } from "@app/ui/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
@@ -474,7 +475,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   return (
     <Box className="chat-panel chat-panel--embedded">
       <PanelHeader
-        icon={<Logo variant="iconOnly" iconHeight="26px" />}
+        icon={<BrandMark height="26px" className="chat-panel__header-mark" />}
         title={
           <Logo
             variant="textOnly"

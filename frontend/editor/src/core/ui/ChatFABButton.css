@@ -5,9 +5,8 @@
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  border: none;
-  background: var(--c-surface);
-  color: var(--c-brand-mark);
+  border: 1px solid var(--c-btn-secondary-border);
+  background: var(--c-btn-secondary);
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
   transition:
