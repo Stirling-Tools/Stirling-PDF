@@ -71,8 +71,85 @@ fn parse_launch_files(args: &[String]) -> Vec<String> {
     .collect()
 }
 
+#[cfg(target_os = "linux")]
+fn configure_wayland_environment() {
+  use std::path::Path;
+
+  // APPIMAGE and APPDIR are provided by the AppImage runtime. Keep this
+  // workaround scoped to AppImages so deb/rpm packages and development
+  // builds retain their normal WebKitGTK environment.
+  let is_appimage = std::env::var_os("APPIMAGE").is_some()
+    || std::env::var_os("APPDIR").is_some();
+  if !is_appimage {
+    return;
+  }
+
+  let is_wayland = std::env::var_os("WAYLAND_DISPLAY").is_some()
+    || std::env::var("XDG_SESSION_TYPE")
+      .map(|session_type| session_type.eq_ignore_ascii_case("wayland"))
+      .unwrap_or(false);
+
+  if !is_wayland {
+    return;
+  }
+
+  // WebKitGTK runs in a child process. Set these before Tauri creates the
+  // webview so the child inherits them. This works around AppImages that
+  // bundle an incompatible libwayland-client on some Wayland distributions.
+  if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+  }
+  if std::env::var_os("WEBKIT_DISABLE_COMPOSITING_MODE").is_none() {
+    std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+  }
+
+  if std::env::var_os("LD_PRELOAD").is_some() {
+    return;
+  }
+
+  // Use architecture-specific candidates instead of distro checks. The
+  // AppImage may run on Fedora, Debian/Ubuntu, Arch, or another distribution,
+  // each of which can place the system library in a different directory.
+  let library_candidates: &[&str] = match std::env::consts::ARCH {
+    "x86_64" => &[
+      "/lib64/libwayland-client.so.0",
+      "/usr/lib64/libwayland-client.so.0",
+      "/lib/x86_64-linux-gnu/libwayland-client.so.0",
+      "/usr/lib/x86_64-linux-gnu/libwayland-client.so.0",
+      "/usr/lib/libwayland-client.so.0",
+    ],
+    "aarch64" => &[
+      "/lib64/libwayland-client.so.0",
+      "/usr/lib64/libwayland-client.so.0",
+      "/lib/aarch64-linux-gnu/libwayland-client.so.0",
+      "/usr/lib/aarch64-linux-gnu/libwayland-client.so.0",
+      "/usr/lib/libwayland-client.so.0",
+    ],
+    "arm" => &[
+      "/lib/arm-linux-gnueabihf/libwayland-client.so.0",
+      "/usr/lib/arm-linux-gnueabihf/libwayland-client.so.0",
+      "/usr/lib/libwayland-client.so.0",
+    ],
+    _ => &[],
+  };
+
+  let system_wayland_client = library_candidates
+    .iter()
+    .map(|path| Path::new(path))
+    .find(|path| path.is_file());
+
+  if let Some(path) = system_wayland_client {
+    std::env::set_var("LD_PRELOAD", path);
+  }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn configure_wayland_environment() {}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  configure_wayland_environment();
+
   tauri::Builder::default()
     .plugin(
       tauri_plugin_log::Builder::new()

@@ -453,6 +453,16 @@ jobs:
             exit 1
           fi
 
+      - name: Verify AppImage Wayland compatibility hook
+        if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_file="./frontend/editor/src-tauri/src/lib.rs"
+          grep -q 'APPIMAGE' "$source_file"
+          grep -q 'LD_PRELOAD' "$source_file"
+          echo "AppImage-only Wayland compatibility hook is present"
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
