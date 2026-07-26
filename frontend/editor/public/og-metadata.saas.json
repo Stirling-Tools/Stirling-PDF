@@ -17,7 +17,7 @@
       "description": "Adds signature to PDF by drawing, text or image"
     },
     "sharedSign": {
-      "image": "/og_images/home.png",
+      "image": "/og_images/shared-sign.png",
       "title": "Shared Signing - Stirling PDF",
       "description": "Request signatures from others and track signing sessions"
     },
