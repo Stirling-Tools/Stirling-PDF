@@ -2931,8 +2931,12 @@ close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
+assistant = "AI Assistant"
 agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
+
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
 
 [chat.input]
 disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
@@ -2990,6 +2994,9 @@ unknownTool = "Unknown tool"
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
+
 [color.eyeDropper]
 tooltip = "Pick color from screen"
 
@@ -3000,6 +3007,7 @@ title = "Choose color"
 back = "Back"
 cancel = "Cancel"
 close = "Close"
+enterValue = "Enter value"
 collapse = "Collapse"
 confirm = "Confirm"
 continue = "Continue"
@@ -3575,7 +3583,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Search..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Edit"
@@ -10056,6 +10068,7 @@ title = "Extracted JavaScript"
 activate = "Activate Signature Placement"
 add = "Add"
 addToAll = "Add to all pages"
+penSizePlaceholder = "Type or select pen size (1-200)"
 applySignatures = "Apply Signatures"
 clear = "Clear"
 deactivate = "Stop Placing Signatures"
