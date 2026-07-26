@@ -603,22 +603,25 @@ class AdminSettingsControllerTest {
     class RestartApplication {
 
         @Test
-        @DisplayName("restarts in-process when not running from a JAR (dev mode)")
-        void devModeRestartsInProcess() {
+        @DisplayName("restarts through the helper when not running from a JAR (dev mode)")
+        void devModeRestartsThroughHelper() throws IOException {
             controller = spy(controller);
             doNothing().when(controller).restartInDevelopmentMode(any(), anyList());
+            java.nio.file.Path helper =
+                    java.nio.file.Files.createTempFile("restart-helper-", ".jar");
 
             try (MockedStatic<stirling.software.common.util.JarPathUtil> jar =
                     mockStatic(stirling.software.common.util.JarPathUtil.class)) {
                 jar.when(stirling.software.common.util.JarPathUtil::currentJar).thenReturn(null);
                 jar.when(stirling.software.common.util.JarPathUtil::restartHelperJar)
-                        .thenReturn(java.nio.file.Path.of("build/libs/restart-helper.jar"));
+                        .thenReturn(helper);
 
                 ResponseEntity<Map<String, Object>> response = controller.restartApplication();
 
                 assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
                 verify(controller).restartInDevelopmentMode(any(), anyList());
             }
+            java.nio.file.Files.deleteIfExists(helper);
         }
 
         @Test
