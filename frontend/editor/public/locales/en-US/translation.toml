@@ -2926,17 +2926,17 @@ text = "To make these permissions unchangeable, use the Add Password tool to set
 [chat.actions]
 copy = "Copy message"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
-assistant = "AI Assistant"
 agentMenu = "Stirling agent options"
+assistant = "AI Assistant"
 clearChat = "Clear chat"
-
-[chat.emptyState]
-text = "Ask a question about your documents or get help with PDF tools."
 
 [chat.input]
 disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
@@ -2994,9 +2994,6 @@ unknownTool = "Unknown tool"
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
-[toolRenderer]
-notFound = "Tool not found: {{tool}}"
-
 [color.eyeDropper]
 tooltip = "Pick color from screen"
 
@@ -3007,13 +3004,13 @@ title = "Choose color"
 back = "Back"
 cancel = "Cancel"
 close = "Close"
-enterValue = "Enter value"
 collapse = "Collapse"
 confirm = "Confirm"
 continue = "Continue"
 copied = "Copied!"
 copy = "Copy"
 done = "Done"
+enterValue = "Enter value"
 error = "Error"
 expand = "Expand"
 loading = "Loading..."
@@ -10068,7 +10065,6 @@ title = "Extracted JavaScript"
 activate = "Activate Signature Placement"
 add = "Add"
 addToAll = "Add to all pages"
-penSizePlaceholder = "Type or select pen size (1-200)"
 applySignatures = "Apply Signatures"
 clear = "Clear"
 deactivate = "Stop Placing Signatures"
@@ -10079,6 +10075,7 @@ last = "Last page"
 maintainRatio = "Toggle maintain aspect ratio"
 next = "Next page"
 noSavedSigs = "No saved signatures found"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Personal Signatures"
 previous = "Previous page"
 redo = "Redo"
@@ -10749,6 +10746,9 @@ pageFormatting = "Page Formatting"
 removal = "Removal"
 signing = "Signing"
 verification = "Verification"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "No tools found"
