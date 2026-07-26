@@ -28,6 +28,12 @@ export interface UsersCapabilities {
   renameTeam: boolean;
   /** Invite by email. */
   emailInvite: boolean;
+  /**
+   * Manage pending invitations (list + cancel). On SaaS an invite is a pending
+   * TeamInvitation until accepted; self-hosted invites create the account at once,
+   * so there's nothing pending to manage - off there.
+   */
+  manageInvitations: boolean;
   /** Create an account directly with a password (self-hosted password login). */
   directCreate: boolean;
   /** Admin password reset. */

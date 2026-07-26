@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.model.DefaultAccessPolicy;
 import stirling.software.proprietary.access.model.OwnerScope;
 import stirling.software.proprietary.access.model.ResourceType;
@@ -43,6 +44,11 @@ public class IntegrationConfigService {
     private final OwnershipService ownership;
     private final SecretMasker secretMasker;
     private final ResourceGrantRepository grantRepository;
+    private final ApplicationProperties applicationProperties;
+    // Bean-discovered extension points: features that understand a type contribute its config
+    // schema and report what still references a config, without this module depending on them.
+    private final List<IntegrationConfigValidator> validators;
+    private final List<IntegrationConfigUsageCheck> usageChecks;
 
     // ---- commands ----
 
@@ -58,6 +64,7 @@ public class IntegrationConfigService {
                 && !ownership.isAdmin(currentUser)) {
             throw forbidden("S3 connections can only be created by administrators or team owners");
         }
+        requireCustomApiAllowed(cfg.getIntegrationType(), currentUser);
         cfg.setName(require(request.name(), "name"));
         cfg.setEnabled(request.enabled() == null || request.enabled());
         cfg.setLocked(request.locked() != null && request.locked());
@@ -66,13 +73,21 @@ public class IntegrationConfigService {
                         ? DefaultAccessPolicy.EXPLICIT_ONLY
                         : request.defaultAccess());
 
+        // TEAM scope may omit the team id: default to the caller's own team so clients (the
+        // portal) need not know it. assignOwnership still enforces admin-or-leader of that team.
+        Long ownerTeamId = request.ownerTeamId();
+        if (ownerTeamId == null && scope == OwnerScope.TEAM && currentUser.getTeam() != null) {
+            ownerTeamId = currentUser.getTeam().getId();
+        }
         ownership.assignOwnership(
                 cfg,
                 scope,
-                request.ownerTeamId(),
+                ownerTeamId,
                 currentUser,
                 () -> lockedServerExists(cfg.getIntegrationType()));
-        cfg.setConfig(writeJson(secretMasker.sanitize(request.config())));
+        Map<String, Object> config = secretMasker.sanitize(request.config());
+        validateConfig(cfg.getIntegrationType(), config);
+        cfg.setConfig(writeJson(config));
         return repository.save(cfg);
     }
 
@@ -101,10 +116,41 @@ public class IntegrationConfigService {
             cfg.setDefaultAccess(request.defaultAccess());
         }
         if (request.config() != null) {
-            cfg.setConfig(
-                    writeJson(secretMasker.merge(readJson(cfg.getConfig()), request.config())));
+            // Editing the config of a custom integration is the same authoring power as creating
+            // one - it is where the base URL and body live - so it is gated identically.
+            requireCustomApiAllowed(cfg.getIntegrationType(), currentUser);
+            Map<String, Object> merged =
+                    secretMasker.merge(readJson(cfg.getConfig()), request.config());
+            validateConfig(cfg.getIntegrationType(), merged);
+            cfg.setConfig(writeJson(merged));
         }
         return repository.save(cfg);
+    }
+
+    /**
+     * A custom API integration names its own host, path and body, so it can point the server
+     * anywhere. That is authoring power rather than self-serve configuration: admins only, and the
+     * operator can withdraw it entirely. The vendor presets are not gated here - they carry a fixed
+     * shape, so the worst a user can do is misconfigure their own connection.
+     */
+    private void requireCustomApiAllowed(IntegrationType type, User currentUser) {
+        if (type != IntegrationType.API) {
+            return;
+        }
+        if (!applicationProperties.getPolicies().isAllowCustomApiIntegrations()) {
+            throw forbidden(
+                    "Custom API integrations are disabled on this server"
+                            + " (policies.allowCustomApiIntegrations)");
+        }
+        if (!ownership.isAdmin(currentUser)) {
+            throw forbidden("Custom API integrations can only be created by administrators");
+        }
+    }
+
+    /** Whether this caller may author custom API integrations, for the UI to offer or hide it. */
+    public boolean canAuthorCustomApi(User currentUser) {
+        return applicationProperties.getPolicies().isAllowCustomApiIntegrations()
+                && ownership.isAdmin(currentUser);
     }
 
     @Transactional
@@ -112,6 +158,15 @@ public class IntegrationConfigService {
         IntegrationConfig cfg = load(id);
         if (!ownership.canManage(TYPE, cfg, currentUser)) {
             throw forbidden("You cannot manage this integration");
+        }
+        // Refuse to pull a connection out from under whatever still references it.
+        List<String> usages =
+                usageChecks.stream()
+                        .flatMap(check -> check.usagesOf(cfg.getId()).stream())
+                        .toList();
+        if (!usages.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Integration is in use by: " + String.join(", ", usages));
         }
         // Drop grants sharing this config so they do not dangle as dead rows.
         grantRepository.deleteByResourceTypeAndResourceId(TYPE, String.valueOf(cfg.getId()));
@@ -187,6 +242,19 @@ public class IntegrationConfigService {
     }
 
     // ---- integration-specific glue ----
+
+    /** Runs every registered validator for the type; unknown types save free-form. */
+    private void validateConfig(IntegrationType type, Map<String, Object> config) {
+        for (IntegrationConfigValidator validator : validators) {
+            if (validator.type() == type) {
+                try {
+                    validator.validate(config == null ? Map.of() : config);
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                }
+            }
+        }
+    }
 
     /** A non-admin can't create a personal config of a type an admin has locked at server scope. */
     private boolean lockedServerExists(IntegrationType type) {

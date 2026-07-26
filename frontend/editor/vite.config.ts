@@ -88,7 +88,12 @@ function compressStaticCopyPlugin(): PluginOption {
 // Pages). Otherwise URLs stay root-relative, which still resolves against whatever
 // origin serves the page (correct for self-hosted Docker). Logic lives in
 // scripts/og-prerender.mjs so it can be unit-tested without a full build.
-function prerenderOgPlugin(): PluginOption {
+function prerenderOgPlugin(isSaas: boolean): PluginOption {
+  // SaaS (stirling.com) prerenders the marketing cards from a dedicated
+  // manifest; every other flavour uses the tool-registry manifest.
+  const manifestFile = isSaas
+    ? "public/og-metadata.saas.json"
+    : "public/og-metadata.json";
   return {
     name: "prerender-og",
     apply: "build" as const,
@@ -105,14 +110,11 @@ function prerenderOgPlugin(): PluginOption {
       let manifest;
       try {
         manifest = JSON.parse(
-          await fs.readFile(
-            path.resolve(__dirname, "public/og-metadata.json"),
-            "utf8",
-          ),
+          await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
         );
       } catch {
         console.warn(
-          "[prerender-og] public/og-metadata.json missing; skipping OG prerender. " +
+          `[prerender-og] ${manifestFile} missing; skipping OG prerender. ` +
             "Run `node scripts/generate-og-metadata.mjs`.",
         );
         return;
@@ -182,7 +184,13 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   prototypes: "./tsconfig.prototypes.vite.json",
 };
 
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(async ({ mode, command }) => {
+  // Dev-only browser-tab label (worktree folder basename) surfaced by the
+  // top-level dev tasks so concurrent worktrees have distinguishable tabs.
+  // Only injected during `vite` (dev serve) — never baked into a production
+  // build — and carries only the folder name, no path/host/user info.
+  const devWorktreeLabel =
+    command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
   // Load env files relative to this config (frontend/editor/), regardless of
   // where the build was invoked from. The previous `process.cwd()` worked when
   // this file lived at frontend/, but after the editor was moved under
@@ -250,6 +258,9 @@ export default defineConfig(async ({ mode }) => {
         };
 
   return {
+    define: {
+      __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
+    },
     plugins: [
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
@@ -321,7 +332,7 @@ export default defineConfig(async ({ mode }) => {
         ],
       }),
       compressStaticCopyPlugin(),
-      prerenderOgPlugin(),
+      prerenderOgPlugin(effectiveMode === "saas"),
     ],
     server: {
       host: true,

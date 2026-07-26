@@ -41,6 +41,7 @@ jobs:
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
       docker-base: ${{ steps.changes.outputs.docker-base }}
+      dockerfiles: ${{ steps.changes.outputs.dockerfiles }}
       tauri: ${{ steps.changes.outputs.tauri }}
       engine: ${{ steps.changes.outputs.engine }}
       generated-models: ${{ steps.changes.outputs.generated-models }}
@@ -148,11 +149,11 @@ jobs:
     permissions:
       contents: read
       packages: read
-      id-token: write
     uses: ./.github/workflows/test-build-docker.yml
     secrets: inherit
     with:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
+      dockerfiles-changed: ${{ needs.files-changed.outputs.dockerfiles }}
 
   tauri-build:
     if: needs.files-changed.outputs.tauri == 'true'
@@ -162,6 +163,13 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
+    # PR smoke build: Linux only (fastest + cheapest to compile), unsigned,
+    # deb-only, no AppImage. The full signed multi-OS matrix runs on release;
+    # nightly still warms the Rust cache with all-OS defaults.
+    with:
+      platform: linux
+      sign: false
+      minimal: true
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'

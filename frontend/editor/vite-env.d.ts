@@ -17,6 +17,9 @@ interface ImportMetaEnv {
   // SaaS only (.env.saas)
   readonly VITE_USERBACK_TOKEN: string;
   readonly VITE_DEV_BYPASS_AUTH: string;
+  /** Role-based login landing: default "dynamic" (team leads → processor,
+   *  members → editor); set to "editor" to keep everyone on the editor. */
+  readonly VITE_LOGIN_LANDING_MODE: string;
 
   // Desktop only (.env.desktop)
   readonly VITE_DESKTOP_BACKEND_URL: string;
@@ -29,3 +32,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/**
+ * Dev-only worktree folder basename injected by vite.config at dev-serve time
+ * (empty string in production builds). Used to prefix the browser tab title so
+ * concurrent worktrees are distinguishable.
+ */
+declare const __DEV_WORKTREE_LABEL__: string;

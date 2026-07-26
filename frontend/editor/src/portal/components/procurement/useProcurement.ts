@@ -8,16 +8,19 @@ import {
   fetchLicenseFile,
   fetchQuotePdf,
   fetchSnapshot,
-  goLive,
   issueQuote,
   resetProcurement,
-  startAgreement,
   startTrial,
   type ProcurementSnapshot,
   type QuoteResult,
 } from "@portal/api/procurement";
 
-export type ProcurementExtra = null | "docs" | "schedule" | "trial";
+export type ProcurementExtra =
+  | null
+  | "license"
+  | "schedule"
+  | "trial"
+  | "setup";
 
 /**
  * Owns the procurement deal state and actions shared by the Home hero footer
@@ -46,13 +49,14 @@ export interface ProcurementController {
   extra: ProcurementExtra;
   setExtra: (e: ProcurementExtra) => void;
   invoicePdf: string | null;
+  /** Open the trial-setup dialog (deployment + seats) — the trial only starts once it's confirmed. */
   onStartTrial: () => void;
+  /** Confirm the setup dialog: start the trial with the chosen deployment/seats, then open the flow. */
+  onConfirmSetup: (deployment: string, seats: number) => void;
   onExtendTrial: () => void;
   onReset: () => void;
   onGenerate: (draft: QuoteResult) => void;
-  onAcceptQuote: () => void;
   onAgree: () => void;
-  onGoLive: () => void;
   onDownloadPdf: () => Promise<void>;
   onDownloadOfflineLicense: () => Promise<void>;
 }
@@ -99,7 +103,14 @@ export function useProcurement(autoOpen = false): ProcurementController {
     }
   }
 
-  const onStartTrial = () => run(startTrial);
+  // The setup dialog collects deployment + seats first; the trial starts on confirm.
+  const onStartTrial = () => setExtra("setup");
+  const onConfirmSetup = (deployment: string, seats: number) =>
+    run(async () => {
+      await startTrial(deployment, seats);
+      setExtra(null);
+      setOpen(true);
+    });
   const onExtendTrial = () => run(extendTrial);
   const onReset = () =>
     run(async () => {
@@ -112,15 +123,14 @@ export function useProcurement(autoOpen = false): ProcurementController {
       await issueQuote(draft.quoteId);
       setEditing(false);
     });
-  // Milestone → agreement (security) stage; then agreeing accepts into a subscription.
-  const onAcceptQuote = () => run(startAgreement);
+  // Quote + agreement are one step now: agreeing accepts the issued quote straight into a
+  // committed subscription (Stripe), and provisioning upgrades the licence server-side.
   const onAgree = () =>
     run(async () => {
       if (!latest) return;
       const res = await acceptQuote(latest.quoteId);
       setInvoicePdf(res.invoicePdf);
     });
-  const onGoLive = () => run(goLive);
 
   async function onDownloadPdf() {
     if (!latest) return;
@@ -194,12 +204,11 @@ export function useProcurement(autoOpen = false): ProcurementController {
     setExtra,
     invoicePdf,
     onStartTrial,
+    onConfirmSetup,
     onExtendTrial,
     onReset,
     onGenerate,
-    onAcceptQuote,
     onAgree,
-    onGoLive,
     onDownloadPdf,
     onDownloadOfflineLicense,
   };

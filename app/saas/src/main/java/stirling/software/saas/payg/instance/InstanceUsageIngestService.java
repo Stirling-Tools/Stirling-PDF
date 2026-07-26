@@ -116,7 +116,8 @@ public class InstanceUsageIngestService {
                             teamId,
                             JobSource.LINKED_INSTANCE,
                             ProcessType.SINGLE_TOOL,
-                            category),
+                            category,
+                            null),
                     units);
         }
         if (row == null) {

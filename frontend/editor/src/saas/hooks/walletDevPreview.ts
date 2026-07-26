@@ -67,6 +67,18 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
     noCap: false,
     stripeSubscriptionId: subscribed ? "sub_devpreview" : null,
     spendUnitsThisPeriod: 62,
+    // Count dimension (illustrative): input files processed vs the size-scaled
+    // meter units above — a few large PDFs pushed some charges past 1 unit.
+    docsProcessedThisPeriod: 50,
+    uniquePdfsThisPeriod: 48,
+    sizeMultiplierPdfsThisPeriod: 8,
+    // Illustrative prepaid bundle so the /dev/payg-preview route can design the
+    // prepaid-capacity card + banner (drawn ahead of the meter, outside the cap).
+    billingMode: "prepaid",
+    prepaidUnitsRemaining: 78_000,
+    prepaidUnitsTotal: 120_000,
+    prepaidExpiresAt: "2027-03-01",
+    categoryDocs: { api: 18, ai: 14, automation: 18 },
     // Wave 1 backend (PR #6574) returns a per-category breakdown so the
     // hero panel can split AI / automation / API. Use realistic but
     // tier-distinguishable mock values so the dev preview shows a

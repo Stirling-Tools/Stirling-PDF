@@ -1,8 +1,30 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient, HttpError } from "@portal/api/http";
 
 /**
  * Sources service layer: the backend contract.
  */
+
+/**
+ * Backend marker (on the error body) for a folder source rejected because its
+ * directory falls outside the allowed roots - the one folder-access failure an
+ * admin can fix in the Folder Access settings. Mirrors
+ * SourceController.FOLDER_ACCESS_DENIED_CODE.
+ */
+export const FOLDER_ACCESS_DENIED_CODE = "folderAccessDenied";
+
+/**
+ * True when a source save failed specifically because the folder is outside the
+ * allowed roots (so the caller can point the admin at settings), as opposed to
+ * any other 400 (blank directory, SaaS mode, the protected config dir).
+ */
+export function isFolderAccessDeniedError(error: unknown): boolean {
+  return (
+    error instanceof HttpError &&
+    typeof error.body === "object" &&
+    error.body !== null &&
+    (error.body as { code?: unknown }).code === FOLDER_ACCESS_DENIED_CODE
+  );
+}
 
 /** Overview row status: referenced and enabled, enabled-but-orphaned, or disabled. */
 export type SourceStatus = "active" | "unused" | "disabled";
@@ -32,6 +54,7 @@ export interface SourceView {
   docsTotal: number;
   docs24h: number;
   docs30d: number;
+  webhookPath?: string | null;
 }
 
 export interface SourceKpi {

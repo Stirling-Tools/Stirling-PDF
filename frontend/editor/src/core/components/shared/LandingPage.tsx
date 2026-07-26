@@ -82,13 +82,6 @@ const LandingPage = () => {
         <h3 className="landing-title">
           {t("landing.workbenchEmptyStateHero", "Drop a PDF anywhere")}
         </h3>
-        <p className="landing-subtitle">
-          {t(
-            "landing.heroSubtitle",
-            "Drop in or add an existing PDF to get started.",
-          )}
-        </p>
-
         <LandingActions
           fileInputRef={fileInputRef}
           onUploadClick={() => void handleNativeUploadClick()}

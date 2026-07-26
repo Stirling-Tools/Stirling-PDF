@@ -11,26 +11,40 @@ import type { ChipAccent } from "@app/ui";
 
 export interface SourceTypeMeta {
   labelKey: string;
-  icon: string;
   accent: ChipAccent;
 }
+
+/**
+ * The built-in editor source. It is virtual (never created/edited/deleted like a folder), always
+ * present in the list, and only tracks throughput - so rows of this type render without a config,
+ * a type chip, or edit/pause/delete actions.
+ */
+export const EDITOR_SOURCE_TYPE = "editor";
+
+/** The webhook source type. Its delivery URL + signing secret are minted server-side on create. */
+export const WEBHOOK_SOURCE_TYPE = "webhook";
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
-    icon: "⛁",
     accent: "default",
   },
   editor: {
     labelKey: "portal.sources.types.editor.label",
-    icon: "✏",
     accent: "success",
+  },
+  s3: {
+    labelKey: "portal.sources.types.s3.label",
+    accent: "brand",
+  },
+  webhook: {
+    labelKey: "portal.sources.types.webhook.label",
+    accent: "warning",
   },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
   labelKey: "portal.sources.types.unknown.label",
-  icon: "◇",
   accent: "neutral",
 };
 
@@ -42,7 +56,7 @@ export function sourceTypeMeta(type: string): SourceTypeMeta {
 export interface SourceFieldDef {
   key: string;
   labelKey: string;
-  control: "text" | "select";
+  control: "text" | "password" | "select" | "s3Connection";
   required?: boolean;
   placeholderKey?: string;
   helperTextKey?: string;
@@ -130,7 +144,78 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
     ],
   },
+  {
+    type: "s3",
+    labelKey: "portal.sources.types.s3.label",
+    descriptionKey: "portal.sources.types.s3.description",
+    fields: [
+      {
+        key: "connectionId",
+        labelKey: "portal.sources.types.s3.fields.connection.label",
+        control: "s3Connection",
+        required: true,
+        helperTextKey: "portal.sources.types.s3.fields.connection.helperText",
+      },
+      {
+        key: "prefix",
+        labelKey: "portal.sources.types.s3.fields.prefix.label",
+        control: "text",
+        placeholderKey: "portal.sources.types.s3.fields.prefix.placeholder",
+        helperTextKey: "portal.sources.types.s3.fields.prefix.helperText",
+      },
+      {
+        key: "mode",
+        labelKey: "portal.sources.types.s3.fields.mode.label",
+        control: "select",
+        defaultValue: "consume",
+        helperTextKey: "portal.sources.types.s3.fields.mode.helperText",
+        options: [
+          {
+            value: "consume",
+            labelKey: "portal.sources.types.s3.fields.mode.options.consume",
+          },
+          {
+            value: "snapshot",
+            labelKey: "portal.sources.types.s3.fields.mode.options.snapshot",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    type: WEBHOOK_SOURCE_TYPE,
+    labelKey: "portal.sources.types.webhook.label",
+    descriptionKey: "portal.sources.types.webhook.description",
+    fields: [],
+  },
 ];
+
+/** A source type on the roadmap: shown greyed out in the picker, not creatable. */
+export interface ComingSoonSourceType {
+  type: string;
+  labelKey: string;
+  descriptionKey: string;
+}
+
+/**
+ * Connectors we intend to support, listed so the picker answers "do you
+ * support X?" honestly instead of hiding the roadmap. Purely presentational -
+ * nothing here can be created and the backend never sees these type strings.
+ */
+export const COMING_SOON_SOURCE_TYPES: ComingSoonSourceType[] = [
+  "sharepoint",
+  "onedrive",
+  "googledrive",
+  "dropbox",
+  "box",
+  "network",
+  "sftp",
+  "email",
+].map((type) => ({
+  type,
+  labelKey: `portal.sources.types.${type}.label`,
+  descriptionKey: `portal.sources.types.${type}.description`,
+}));
 
 /** Default option values for a type's create form. */
 export function defaultOptions(

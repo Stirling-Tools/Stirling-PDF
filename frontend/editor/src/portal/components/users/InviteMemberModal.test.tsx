@@ -19,8 +19,11 @@ vi.mock("@portal/contexts/TierContext", () => ({
 vi.mock("@portal/api/users", () => ({
   createMember: vi.fn(),
   fetchUsers: vi.fn().mockResolvedValue({ members: [] }),
-  inviteMember: vi.fn(),
   ROLE_LABEL: { member: "Member", admin: "Admin" },
+}));
+// The email invite now routes through the usersBackend seam.
+vi.mock("@app/portal/usersBackend", () => ({
+  usersBackend: { inviteMember: vi.fn() },
 }));
 vi.mock("@portal/api/access", () => ({ createGrant: vi.fn() }));
 

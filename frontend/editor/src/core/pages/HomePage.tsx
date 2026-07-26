@@ -107,6 +107,19 @@ export default function HomePage() {
     setConfigModalOpen(isSettings);
   }, [location.pathname]);
 
+  useEffect(() => {
+    const handler = () => setConfigModalOpen(true);
+    window.addEventListener("appConfig:open", handler);
+    return () => window.removeEventListener("appConfig:open", handler);
+  }, []);
+
+  const handleCloseConfig = useCallback(() => {
+    setConfigModalOpen(false);
+    if (location.pathname.startsWith("/settings")) {
+      navigate("/", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
   const { actions } = useNavigationActions();
@@ -477,7 +490,7 @@ export default function HomePage() {
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
-              onClose={() => setConfigModalOpen(false)}
+              onClose={handleCloseConfig}
             />
           </div>
         ) : (
@@ -526,7 +539,7 @@ export default function HomePage() {
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
-              onClose={() => setConfigModalOpen(false)}
+              onClose={handleCloseConfig}
             />
           </Group>
         )}

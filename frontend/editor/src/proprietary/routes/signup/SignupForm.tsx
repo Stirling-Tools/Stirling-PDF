@@ -160,8 +160,11 @@ export default function SignupForm({
           !confirmPassword ||
           (showTerms && !agree)
         }
-        className="auth-button"
+        className="auth-submit"
         fullWidth
+        size="lg"
+        fontSize="sm"
+        accent="brand"
         loading={isSubmitting}
       >
         {isSubmitting ? t("signup.creatingAccount") : t("signup.signUp")}

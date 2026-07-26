@@ -28,6 +28,8 @@ export const SubscribedInProcurement: Story = {
           HttpResponse.json({
             dealId: 1,
             stage: "trial",
+            deployment: "cloud",
+            seats: 250,
             trialStartedAt: "2026-07-01T00:00:00.000Z",
             trialEndsAt: "2026-07-21T00:00:00.000Z",
             trialExtensionsUsed: 0,

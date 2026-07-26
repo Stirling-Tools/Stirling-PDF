@@ -12,6 +12,7 @@ import {
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   parameters: AddStampParameters;
@@ -29,6 +30,7 @@ export default function StampPreview({
   file,
   showQuickGrid,
 }: Props) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState<{
     width: number;
@@ -366,7 +368,9 @@ export default function StampPreview({
     <div>
       <div className={styles.previewHeader}>
         <div className={styles.divider} />
-        <div className={styles.previewLabel}>Preview Stamp</div>
+        <div className={styles.previewLabel}>
+          {t("addStamp.preview", "Preview Stamp")}
+        </div>
       </div>
       <div
         ref={containerRef}

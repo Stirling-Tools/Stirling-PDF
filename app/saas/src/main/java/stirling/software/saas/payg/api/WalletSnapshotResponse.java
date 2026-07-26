@@ -75,7 +75,34 @@ public record WalletSnapshotResponse(
         int spendUnitsThisPeriod,
         CategoryBreakdown categoryBreakdown,
         List<MemberRow> members,
-        List<ActivityRow> recent) {
+        List<ActivityRow> recent,
+        CategoryBreakdown categoryDocs,
+        int docsProcessedThisPeriod,
+        int uniquePdfsThisPeriod,
+        int sizeMultiplierPdfsThisPeriod,
+        long prepaidUnitsRemaining,
+        long prepaidUnitsTotal,
+        String prepaidExpiresAt,
+        String billingMode) {
+
+    // Prepaid usage bundles, aggregated across the team's in-term pools (drawn ahead of the meter,
+    // outside the spend cap):
+    //   prepaidUnitsRemaining — Σ units left across active pools (0 when exhausted / none)
+    //   prepaidUnitsTotal     — Σ capacity of in-term pools (the "X of Y used" denominator; 0 = no
+    //                           bundle this term, so the FE hides the prepaid card)
+    //   prepaidExpiresAt      — soonest term end (ISO date) for the countdown; null when no bundle
+    //   billingMode           — "prepaid" while prepaid units remain, else "payg" (the meter is
+    // live)
+
+    // The count dimension, kept distinct from units (which now scale with file size):
+    //   categoryDocs                — per-category INPUT-file counts (parallel to
+    // categoryBreakdown,
+    //                                 which stays the size-scaled unit totals)
+    //   docsProcessedThisPeriod     — total input files processed this period (Σ doc_count)
+    //   uniquePdfsThisPeriod        — distinct input documents (a file hit by N operations counts
+    //                                 once)
+    //   sizeMultiplierPdfsThisPeriod— input files on charges where the size multiplier applied
+    //                                 (units billed > input files)
 
     /** Per-category breakdown of {@code spendUnitsThisPeriod} for the in-app analytics widget. */
     public record CategoryBreakdown(int api, int ai, int automation) {}

@@ -75,7 +75,7 @@ export function DocumentLedger({
                     className="portal-proc__stage-label"
                     data-current={cur || undefined}
                   >
-                    {group.label}
+                    {t(group.label)}
                   </span>
                   {blurb && (
                     <span className="portal-proc__stage-hint">

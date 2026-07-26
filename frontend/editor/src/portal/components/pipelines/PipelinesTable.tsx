@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import AccountTreeRounded from "@mui/icons-material/AccountTreeRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
   Chip,
@@ -31,7 +32,7 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         render: (p) => (
           <div className="portal-pipelines__name-cell">
             <span className="portal-pipelines__pipe-dot" aria-hidden>
-              ⛓
+              <AccountTreeRounded style={{ fontSize: "1.2rem" }} />
             </span>
             <div className="portal-pipelines__name-text">
               <strong>{p.name}</strong>

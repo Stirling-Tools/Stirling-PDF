@@ -29,6 +29,9 @@ export interface OutputSpec {
   options: Record<string, unknown>;
 }
 
+/** The output destinations the pipeline builder can offer. */
+export type PipelineOutputMode = "inline" | "folder" | "s3";
+
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
  * the backend returns from GET/POST. Mirrors Policy.java exactly; `owner`/`teamId`
@@ -150,12 +153,26 @@ export async function fetchTriggers(): Promise<TriggerInfo[]> {
 }
 
 /**
- * POST /api/v1/policies/{id}/trigger: run the pipeline now against its configured
- * sources, regardless of the enabled flag. Returns the ids of the runs started
- * (empty when the sources yielded no work); poll {@link fetchRun} for each.
+ * What a manual trigger found and started. Mirrors the backend `SweepOutcome`:
+ * when `runIds` is empty, the counts say why - no files listed, all already
+ * processed at their current version, parked by a failed run, or still in
+ * flight from an earlier sweep.
  */
-export async function triggerPipeline(id: string): Promise<string[]> {
-  return apiClient.local.json<string[]>(
+export interface TriggerOutcome {
+  runIds: string[];
+  filesListed: number;
+  alreadyProcessed: number;
+  parked: number;
+  inFlight: number;
+}
+
+/**
+ * POST /api/v1/policies/{id}/trigger: run the pipeline now against its configured
+ * sources, regardless of the enabled flag. Returns the runs started plus what the
+ * sweep skipped; poll {@link fetchRun} for each run id.
+ */
+export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
+  return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
     { method: "POST" },
   );

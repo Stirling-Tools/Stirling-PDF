@@ -133,7 +133,14 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
     prev.capUsd !== next.capUsd ||
     prev.noCap !== next.noCap ||
     prev.stripeSubscriptionId !== next.stripeSubscriptionId ||
-    prev.spendUnitsThisPeriod !== next.spendUnitsThisPeriod
+    prev.spendUnitsThisPeriod !== next.spendUnitsThisPeriod ||
+    prev.docsProcessedThisPeriod !== next.docsProcessedThisPeriod ||
+    prev.uniquePdfsThisPeriod !== next.uniquePdfsThisPeriod ||
+    prev.sizeMultiplierPdfsThisPeriod !== next.sizeMultiplierPdfsThisPeriod ||
+    prev.billingMode !== next.billingMode ||
+    prev.prepaidUnitsRemaining !== next.prepaidUnitsRemaining ||
+    prev.prepaidUnitsTotal !== next.prepaidUnitsTotal ||
+    prev.prepaidExpiresAt !== next.prepaidExpiresAt
   ) {
     return next;
   }
@@ -143,7 +150,10 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
   if (
     prev.categoryBreakdown.api !== next.categoryBreakdown.api ||
     prev.categoryBreakdown.ai !== next.categoryBreakdown.ai ||
-    prev.categoryBreakdown.automation !== next.categoryBreakdown.automation
+    prev.categoryBreakdown.automation !== next.categoryBreakdown.automation ||
+    prev.categoryDocs.api !== next.categoryDocs.api ||
+    prev.categoryDocs.ai !== next.categoryDocs.ai ||
+    prev.categoryDocs.automation !== next.categoryDocs.automation
   ) {
     return next;
   }

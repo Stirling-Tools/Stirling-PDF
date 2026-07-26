@@ -15,12 +15,19 @@ import {
 import "@portal/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details"] as const;
-const TERM_DISCOUNT = [0, 0.05, 0.1, 0.12, 0.15]; // 1..5 years
-const SLA_UPLIFT: Record<string, number> = {
-  standard: 0,
-  priority: 0.15,
-  dedicated: 0.3,
-};
+const TERM_DISCOUNT = [0, 0.03, 0.05, 0.06, 0.07]; // 1..5 years — meter-only discount (D71)
+// Governance posture: the intensity (runs per PDF) fed to the committed-volume curve.
+const POSTURES = [
+  { intensity: 2, key: "essentials" },
+  { intensity: 4, key: "governed" },
+  { intensity: 7, key: "regulated" },
+] as const;
+// PDF-size tiers (D93): a multiplier on the rate. Default Standard (×1.4). Mirrors the server.
+const SIZE_TIERS = [
+  { mult: 1.0, key: "compact" },
+  { mult: 1.4, key: "standard" },
+  { mult: 2.4, key: "heavy" },
+] as const;
 
 /**
  * The enterprise quote builder — volume → commitment &amp; service → details. A client-side preview
@@ -30,10 +37,13 @@ const SLA_UPLIFT: Record<string, number> = {
  */
 export function QuoteBuilder({
   deployment,
+  seats = 0,
   initial,
   onGenerate,
 }: {
   deployment: string;
+  /** Seat count from the trial setup; seeds the users field + volume estimate on a fresh quote. */
+  seats?: number;
   /** Seed the builder from an existing quote's config (re-editing a quote). */
   initial?: QuoteConfigInput;
   /** Called with the priced DRAFT quote; the parent issues it as a Stripe Quote. */
@@ -43,17 +53,28 @@ export function QuoteBuilder({
   const [step, setStep] = useState(0);
   const [cfg, setCfg] = useState<QuoteConfigInput>(
     initial ?? {
-      volume: 1_000_000,
-      users: 0,
+      // Users-first: with no seats from the trial, leave volume empty so entering the team size
+      // auto-fills it (rather than pre-seeding a figure that hides the users → volume estimate).
+      volume: seats > 0 ? estimateVolume(seats) : 0,
+      users: Math.max(0, seats),
+      intensity: 4, // Governed — the default governance posture per the pricing alignment
+      sizeMult: 1.4, // Standard — the default PDF-size tier (D93)
       deployment,
       termYears: 3,
       serviceLevel: "priority",
       indemnification: false,
       training: false,
       qbr: false,
-      offlineLicense: false,
-      currency: "USD",
       businessName: "",
+      contactName: "",
+      contactEmail: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      region: "",
+      postalCode: "",
+      poNumber: "",
+      taxId: "",
     },
   );
   // A seeded quote carries a volume but no user count, so treat it as manually set.
@@ -159,6 +180,36 @@ export function QuoteBuilder({
             title={t("portal.procurement.builder.s2Title")}
             sub={t("portal.procurement.builder.s2Sub")}
           >
+            <Field label={t("portal.procurement.builder.posture")}>
+              <div className="portal-qb__opts">
+                {POSTURES.map((p) => (
+                  <OptCard
+                    key={p.key}
+                    on={cfg.intensity === p.intensity}
+                    title={t(`portal.procurement.builder.posture_${p.key}`)}
+                    sub={`${t("portal.procurement.builder.posture_count", {
+                      count: p.intensity,
+                    })} · ${t(`portal.procurement.builder.posture_${p.key}Sub`)}`}
+                    onClick={() => set("intensity", p.intensity)}
+                  />
+                ))}
+              </div>
+            </Field>
+
+            <Field label={t("portal.procurement.builder.pdfSize")}>
+              <div className="portal-qb__opts">
+                {SIZE_TIERS.map((s) => (
+                  <OptCard
+                    key={s.key}
+                    on={cfg.sizeMult === s.mult}
+                    title={t(`portal.procurement.builder.size_${s.key}`)}
+                    sub={`×${s.mult} · ${t(`portal.procurement.builder.size_${s.key}Sub`)}`}
+                    onClick={() => set("sizeMult", s.mult)}
+                  />
+                ))}
+              </div>
+            </Field>
+
             <Field label={t("portal.procurement.builder.term")}>
               <div className="portal-qb__pills">
                 {[1, 2, 3, 4, 5].map((y) => (
@@ -224,12 +275,6 @@ export function QuoteBuilder({
                   sub={t("portal.procurement.builder.qbrSub")}
                   onClick={() => set("qbr", !cfg.qbr)}
                 />
-                <AddOn
-                  on={cfg.offlineLicense}
-                  title={t("portal.procurement.builder.offlineLicense")}
-                  sub={t("portal.procurement.builder.offlineLicenseSub")}
-                  onClick={() => set("offlineLicense", !cfg.offlineLicense)}
-                />
               </div>
             </Field>
           </Step>
@@ -241,31 +286,97 @@ export function QuoteBuilder({
             title={t("portal.procurement.builder.s3Title")}
             sub={t("portal.procurement.builder.s3Sub")}
           >
-            <Field label={t("portal.procurement.builder.businessName")}>
+            <div className="portal-qb__row">
+              <Field label={t("portal.procurement.builder.businessName")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.businessNamePlaceholder",
+                  )}
+                  value={cfg.businessName}
+                  onChange={(e) => set("businessName", e.target.value)}
+                />
+              </Field>
+              <Field label={t("portal.procurement.builder.contactName")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.contactNamePlaceholder",
+                  )}
+                  value={cfg.contactName ?? ""}
+                  onChange={(e) => set("contactName", e.target.value)}
+                />
+              </Field>
+            </div>
+            <Field label={t("portal.procurement.builder.contactEmail")}>
+              <input
+                type="email"
+                placeholder={t(
+                  "portal.procurement.builder.contactEmailPlaceholder",
+                )}
+                value={cfg.contactEmail ?? ""}
+                onChange={(e) => set("contactEmail", e.target.value)}
+              />
+            </Field>
+            <Field label={t("portal.procurement.builder.addressLine1")}>
               <input
                 placeholder={t(
-                  "portal.procurement.builder.businessNamePlaceholder",
+                  "portal.procurement.builder.addressLine1Placeholder",
                 )}
-                value={cfg.businessName}
-                onChange={(e) => set("businessName", e.target.value)}
+                value={cfg.addressLine1 ?? ""}
+                onChange={(e) => set("addressLine1", e.target.value)}
+              />
+            </Field>
+            <Field label={t("portal.procurement.builder.addressLine2")}>
+              <input
+                placeholder={t(
+                  "portal.procurement.builder.addressLine2Placeholder",
+                )}
+                value={cfg.addressLine2 ?? ""}
+                onChange={(e) => set("addressLine2", e.target.value)}
               />
             </Field>
             <div className="portal-qb__row">
-              <Field label={t("portal.procurement.builder.country")}>
-                <select
-                  value={cfg.currency}
-                  onChange={(e) => set("currency", e.target.value)}
-                >
-                  <option value="USD">
-                    {t("portal.procurement.builder.countryUS")}
-                  </option>
-                  <option value="GBP">
-                    {t("portal.procurement.builder.countryUK")}
-                  </option>
-                  <option value="EUR">
-                    {t("portal.procurement.builder.countryEuro")}
-                  </option>
-                </select>
+              <Field label={t("portal.procurement.builder.city")}>
+                <input
+                  placeholder={t("portal.procurement.builder.cityPlaceholder")}
+                  value={cfg.city ?? ""}
+                  onChange={(e) => set("city", e.target.value)}
+                />
+              </Field>
+              <Field label={t("portal.procurement.builder.region")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.regionPlaceholder",
+                  )}
+                  value={cfg.region ?? ""}
+                  onChange={(e) => set("region", e.target.value)}
+                />
+              </Field>
+              <Field label={t("portal.procurement.builder.postalCode")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.postalCodePlaceholder",
+                  )}
+                  value={cfg.postalCode ?? ""}
+                  onChange={(e) => set("postalCode", e.target.value)}
+                />
+              </Field>
+            </div>
+            <div className="portal-qb__row">
+              <Field label={t("portal.procurement.builder.poNumber")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.poNumberPlaceholder",
+                  )}
+                  value={cfg.poNumber ?? ""}
+                  onChange={(e) => set("poNumber", e.target.value)}
+                />
+              </Field>
+              <Field label={t("portal.procurement.builder.taxId")}>
+                <input
+                  placeholder={t("portal.procurement.builder.taxIdPlaceholder")}
+                  value={cfg.taxId ?? ""}
+                  onChange={(e) => set("taxId", e.target.value)}
+                />
               </Field>
             </div>
             <label className="portal-qb__eula">
@@ -283,9 +394,9 @@ export function QuoteBuilder({
       <div className="portal-qb__foot">
         <span className="portal-qb__running">
           {t("portal.procurement.builder.running", {
-            annual: money(preview, cfg.currency),
+            annual: money(preview),
             years: cfg.termYears,
-            tcv: money(tcvPreview, cfg.currency),
+            tcv: money(tcvPreview),
           })}
         </span>
         <div className="portal-qb__foot-btns">
@@ -431,20 +542,31 @@ function estimateVolume(users: number): number {
   return Math.round(raw / stepSize) * stepSize;
 }
 
-function previewAnnualMinor(cfg: QuoteConfigInput): number {
-  const perPdf = cfg.volume >= 5_000_000 ? 3 : cfg.volume >= 1_000_000 ? 4 : 5;
-  const usage = Math.round(cfg.volume * perPdf);
-  const withSla = Math.round(usage * (1 + (SLA_UPLIFT[cfg.serviceLevel] ?? 0)));
-  const withInd = cfg.indemnification ? Math.round(withSla * 1.05) : withSla;
-  const disc = Math.round(
-    withInd * TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
-  );
-  // Flat annual add-ons (QBR, offline licence) sit outside the multi-year discount, mirroring the
-  // server (PricingRates: qbr 800_000, offline licence 1_200_000). TCV preview derives from this.
-  return (
-    withInd -
-    disc +
-    (cfg.qbr ? 800_000 : 0) +
-    (cfg.offlineLicense ? 1_200_000 : 0)
-  );
+// Client mirror of the server pricing curve (ProcurementPricingService / quotePricing). The server
+// is authoritative; this only drives the live footer estimate. Minor units (cents); the meter
+// rounds to whole dollars, exactly like the backend, so the preview matches the issued quote.
+// Exported for the pricing-parity test, which pins this client estimate to the mock and the
+// server's published fixtures so a rate-card change can't silently desync the footer from the
+// issued quote. This copy stays non-authoritative — the backend prices the real quote.
+export function previewAnnualMinor(cfg: QuoteConfigInput): number {
+  const LIST = 0.01;
+  const FLOOR = 0.005;
+  const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
+  const volDisc =
+    runVol > 1_000_000
+      ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
+      : 0;
+  const rate = Math.max(FLOOR, LIST * (1 - volDisc)) * (cfg.sizeMult || 1);
+  const termDisc = TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
+  const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100; // whole $ → minor units
+  const support = cfg.serviceLevel === "dedicated" ? 3_000_000 : 0; // std + priority included
+  const deploy =
+    cfg.deployment === "airgap"
+      ? 3_600_000
+      : cfg.deployment === "selfhost"
+        ? 1_200_000
+        : 0;
+  const indemnity = cfg.indemnification ? Math.round(meterNet * 0.05) : 0;
+  const qbr = cfg.qbr ? 800_000 : 0;
+  return meterNet + support + deploy + indemnity + qbr;
 }

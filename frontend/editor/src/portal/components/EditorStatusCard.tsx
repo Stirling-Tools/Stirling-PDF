@@ -1,20 +1,18 @@
 import type { ReactNode } from "react";
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
-import { useAsync } from "@portal/hooks/useAsync";
+import { useEditorDeployment } from "@portal/queries/infrastructure";
+import { type EditorInstance } from "@portal/api/editorDeploy";
 import {
-  fetchEditorDeployment,
-  type EditorDeploymentResponse,
-  type EditorInstance,
-} from "@portal/api/editorDeploy";
-import {
+  DownloadIcon,
   ExternalLinkIcon,
   UsersIcon,
   UserPlusIcon,
 } from "@portal/components/icons";
+import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
 import "@portal/components/EditorStatusCard.css";
 
 /** The Stirling brand mark, drawn at the hero size. Decorative. */
@@ -26,7 +24,7 @@ function StirlingMark() {
       fill="none"
       aria-hidden
     >
-      <rect width="256" height="256" rx="58" fill="#8E3131" />
+      <rect width="256" height="256" rx="58" fill="var(--c-brand-mark)" />
       <path
         d="M39.2638 127.834L155.374 32L155.375 121.499L39.2638 217.333L39.2638 127.834Z"
         fill="white"
@@ -73,10 +71,8 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
-  const { data, loading } = useAsync<EditorDeploymentResponse>(
-    () => fetchEditorDeployment(tier),
-    [tier],
-  );
+  const [installOpen, setInstallOpen] = useState(false);
+  const { data, loading } = useEditorDeployment(tier);
 
   const view = useMemo(() => {
     if (!data) return null;
@@ -138,26 +134,16 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
                   {t("portal.home.editor.name")}
                 </span>
                 {!hideChips && (
-                  <>
-                    <button
-                      type="button"
-                      className="portal-editor-hero__chip"
-                      onClick={() => setActiveView("users")}
-                    >
-                      <UsersIcon size={13} />
-                      {t("portal.home.editor.activeUsers", {
-                        n: view.activeUsers,
-                      })}
-                    </button>
-                    <button
-                      type="button"
-                      className="portal-editor-hero__chip"
-                      onClick={() => setActiveView("users")}
-                    >
-                      <UserPlusIcon size={13} />
-                      {t("portal.home.editor.invite")}
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    className="portal-editor-hero__chip"
+                    onClick={() => setActiveView("users")}
+                  >
+                    <UsersIcon size={13} />
+                    {t("portal.home.editor.activeUsers", {
+                      n: view.activeUsers,
+                    })}
+                  </button>
                 )}
               </div>
               <div className="portal-editor-hero__meta">
@@ -174,8 +160,29 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
         </div>
 
         <div className="portal-editor-hero__action">
+          {!hideChips && (
+            <button
+              type="button"
+              className="portal-editor-hero__icon-btn"
+              onClick={() => setActiveView("users")}
+              aria-label={t("portal.home.editor.invite")}
+              title={t("portal.home.editor.invite")}
+            >
+              <UserPlusIcon size={16} />
+            </button>
+          )}
+          <button
+            type="button"
+            className="portal-editor-hero__icon-btn"
+            onClick={() => setInstallOpen(true)}
+            aria-label={t("portal.home.editor.install")}
+            title={t("portal.home.editor.install")}
+          >
+            <DownloadIcon size={16} />
+          </button>
           <Button
             variant="primary"
+            className="portal-editor-hero__cta"
             leftSection={<ExternalLinkIcon size={13} />}
             disabled={!ready || !view}
             onClick={() => {
@@ -189,6 +196,11 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
       </div>
 
       {footer && <div className="portal-editor-hero__footer">{footer}</div>}
+
+      <DownloadEditorModal
+        open={installOpen}
+        onClose={() => setInstallOpen(false)}
+      />
     </section>
   );
 }

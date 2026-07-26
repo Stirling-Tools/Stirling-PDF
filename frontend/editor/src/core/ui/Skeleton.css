@@ -2,9 +2,9 @@
   display: inline-block;
   background: linear-gradient(
     90deg,
-    var(--color-bg-muted) 0%,
-    var(--color-bg-hover) 50%,
-    var(--color-bg-muted) 100%
+    var(--c-surface-sunken) 0%,
+    var(--c-hover) 50%,
+    var(--c-surface-sunken) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;

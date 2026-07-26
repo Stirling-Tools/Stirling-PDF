@@ -124,11 +124,17 @@ export function UsersDirectory({
     return owners.map((u) => nameByUsername.get(u) ?? u).join(", ");
   }
 
+  // A team whose name/membership is managed by the system - no rename/delete.
+  // SaaS personal teams (isPersonal) reject rename/delete at the backend too.
+  function isManagedTeam(team: TeamGroup): boolean {
+    return SYSTEM_TEAMS.has(team.name) || team.isPersonal === true;
+  }
+
   // Whether the team-header kebab has any actions (else it isn't rendered).
   function teamKebabHasItems(team: TeamGroup): boolean {
     return (
       capabilities.manageGrants ||
-      (!SYSTEM_TEAMS.has(team.name) &&
+      (!isManagedTeam(team) &&
         (capabilities.renameTeam || capabilities.deleteTeam))
     );
   }
@@ -145,10 +151,13 @@ export function UsersDirectory({
   }
 
   function rowKebab(m: Member) {
-    // Removal is org-delete (admin-only) - the only backed path. SaaS "remove from
-    // team" has no endpoint, so don't offer a control that would 403 or org-delete.
-    const canRemove = capabilities.removeScope === "org";
-    if (!rowKebabHasUpperActions(m) && !canRemove) return null;
+    // Both flavors have a backed remove now: org-delete (self-hosted) or
+    // team-remove (SaaS, via SaasTeamController's remove-member endpoint), so the
+    // kebab always carries at least the remove action.
+    const removeLabel =
+      capabilities.removeScope === "team"
+        ? t("users.action.removeTeam", "Remove from team")
+        : t("users.action.remove", "Remove from org");
     return (
       <Menu position="bottom-end" withinPortal shadow="md" width={210}>
         <Menu.Target>
@@ -190,16 +199,14 @@ export function UsersDirectory({
               {t("users.action.disableMfa", "Reset MFA")}
             </Menu.Item>
           )}
-          {canRemove && rowKebabHasUpperActions(m) && <Menu.Divider />}
-          {canRemove && (
-            <Menu.Item
-              color="red"
-              disabled={m.isSelf}
-              onClick={() => onRemove(m)}
-            >
-              {t("users.action.remove", "Remove from org")}
-            </Menu.Item>
-          )}
+          {rowKebabHasUpperActions(m) && <Menu.Divider />}
+          <Menu.Item
+            color="red"
+            disabled={m.isSelf}
+            onClick={() => onRemove(m)}
+          >
+            {removeLabel}
+          </Menu.Item>
         </Menu.Dropdown>
       </Menu>
     );
@@ -423,7 +430,7 @@ export function UsersDirectory({
                           )}
                         </Menu.Item>
                       ))}
-                    {!SYSTEM_TEAMS.has(team.name) &&
+                    {!isManagedTeam(team) &&
                       (capabilities.renameTeam || capabilities.deleteTeam) && (
                         <>
                           {capabilities.manageGrants && <Menu.Divider />}

@@ -2,6 +2,7 @@ package stirling.software.proprietary.access.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
@@ -238,10 +239,10 @@ class ResourceAccessServiceTest {
     }
 
     @Test
-    void teamLeadDefaultAllowsLeaderButNotRegularUser() {
+    void teamLeadDefaultAllowsActiveTeamLeaderButNotRegularUser() {
         stubGrants();
-        User leader = user(5);
-        when(teamLeadLookup.isAnyTeamLeader(leader)).thenReturn(true);
+        User leader = userInTeam(5, 7L);
+        when(teamLeadLookup.isLeaderOfTeam(leader, 7L)).thenReturn(true);
         assertThat(
                         service.canUseResource(
                                 TYPE, RID, null, DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS, leader))
@@ -258,6 +259,24 @@ class ResourceAccessServiceTest {
                 .isFalse();
     }
 
+    @Test
+    void teamLeadDefaultOnTeamResourceDeniesForeignTeamsLead() {
+        // Team-owned resource: the default admits only the owning team's leads. A lead of
+        // some other team must be denied even though an unscoped "is any team leader"
+        // check would admit them (lenient stub: the scoped path must never consult it).
+        stubGrants();
+        User foreignLead = user(6);
+        lenient().when(teamLeadLookup.isAnyTeamLeader(foreignLead)).thenReturn(true);
+        assertThat(
+                        service.canUseResource(
+                                TYPE,
+                                RID,
+                                PrincipalRef.team(7L),
+                                DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS,
+                                foreignLead))
+                .isFalse();
+    }
+
     // ---- portal convenience (default policy ADMINS_AND_TEAM_LEADS) ----
 
     @Test
@@ -270,6 +289,27 @@ class ResourceAccessServiceTest {
         when(grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, ""))
                 .thenReturn(List.of());
         assertThat(service.canAccessPortal(user(5))).isFalse();
+    }
+
+    @Test
+    void portalAllowedToLeaderOfActiveTeam() {
+        when(grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, ""))
+                .thenReturn(List.of());
+        User leader = userInTeam(10, 21L);
+        when(teamLeadLookup.isLeaderOfTeam(leader, 21L)).thenReturn(true);
+        assertThat(service.canAccessPortal(leader)).isTrue();
+    }
+
+    @Test
+    void portalDeniedToMemberWhoseActiveTeamTheyDoNotLead() {
+        // Durable home teams: a user still leads their dormant home team, but their ACTIVE
+        // team is one they only belong to -> no portal access (this is the bug-3 guard that
+        // active-team leadership preserves once home teams stop being deleted on join).
+        when(grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, ""))
+                .thenReturn(List.of());
+        User member = userInTeam(11, 22L);
+        // isLeaderOfTeam(member, 22L) left unstubbed -> false: member of active team.
+        assertThat(service.canAccessPortal(member)).isFalse();
     }
 
     // ---- helpers ----

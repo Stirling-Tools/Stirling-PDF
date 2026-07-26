@@ -1,29 +1,26 @@
 /**
- * OnboardingModalSlide Component
+ * OnboardingModalSlide
  *
- * Renders a single modal slide in the onboarding flow.
- * Handles the hero image, content, stepper, and button actions.
+ * Editor-flow adapter over the shared {@link OnboardingSlideShell}: maps a
+ * SLIDE_DEFINITIONS entry (hero + buttons) and its resolved content onto the
+ * shell so the editor onboarding renders the same card as every other flow.
  */
 
-import React from "react";
-import { Modal, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
 
 import type {
   SlideDefinition,
   ButtonAction,
+  ButtonDefinition,
 } from "@app/components/onboarding/onboardingFlowConfig";
 import type { OnboardingRuntimeState } from "@app/components/onboarding/orchestrator/onboardingConfig";
 import type { SlideConfig } from "@app/types/types";
-import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
-import OnboardingStepper from "@app/components/onboarding/OnboardingStepper";
-import { SlideButtons } from "@app/components/onboarding/InitialOnboardingModal/renderButtons";
+import OnboardingSlideShell, {
+  ShellHero,
+  type ShellButton,
+} from "@app/components/onboarding/OnboardingSlideShell";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { BASE_PATH } from "@app/constants/app";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 interface OnboardingModalSlideProps {
   slideDefinition: SlideDefinition;
@@ -36,6 +33,13 @@ interface OnboardingModalSlideProps {
   allowDismiss?: boolean;
 }
 
+const HERO_ICON: Record<string, string> = {
+  rocket: "rocket-launch",
+  shield: "verified-user-outline",
+  lock: "lock-outline",
+  analytics: "analytics",
+};
+
 export default function OnboardingModalSlide({
   slideDefinition,
   slideContent,
@@ -47,165 +51,60 @@ export default function OnboardingModalSlide({
   allowDismiss = true,
 }: OnboardingModalSlideProps) {
   const { t } = useTranslation();
-  const renderHero = () => {
-    if (slideDefinition.hero.type === "dual-icon") {
-      return (
-        <div className={styles.heroIconsContainer}>
-          <div className={styles.iconWrapper}>
-            <img
-              src={`${BASE_PATH}/modern-logo/logo512.png`}
-              alt="Stirling icon"
-              className={styles.downloadIcon}
-            />
-          </div>
-        </div>
-      );
-    }
+  const { licenseNotice } = runtimeState;
+  const flowState = { selectedRole: runtimeState.selectedRole };
 
-    return (
-      <div className={styles.heroLogoCircle}>
-        {slideDefinition.hero.type === "rocket" && (
-          <LocalIcon
-            icon="rocket-launch"
-            width={64}
-            height={64}
-            className={styles.heroIcon}
-          />
-        )}
-        {slideDefinition.hero.type === "shield" && (
-          <LocalIcon
-            icon="verified-user-outline"
-            width={64}
-            height={64}
-            className={styles.heroIcon}
-          />
-        )}
-        {slideDefinition.hero.type === "lock" && (
-          <LocalIcon
-            icon="lock-outline"
-            width={64}
-            height={64}
-            className={styles.heroIcon}
-          />
-        )}
-        {slideDefinition.hero.type === "analytics" && (
-          <LocalIcon
-            icon="analytics"
-            width={64}
-            height={64}
-            className={styles.heroIcon}
-          />
-        )}
-        {slideDefinition.hero.type === "diamond" && (
-          <DiamondOutlinedIcon sx={{ fontSize: 64, color: "#000000" }} />
-        )}
-        {slideDefinition.hero.type === "logo" && (
-          <img
-            src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`}
-            alt="Stirling logo"
-          />
-        )}
-      </div>
+  const heroType = slideDefinition.hero.type;
+  const hero =
+    heroType === "dual-icon" || heroType === "logo" ? (
+      <ShellHero appIcon />
+    ) : (
+      <ShellHero>
+        {heroType === "diamond" ? (
+          <DiamondOutlinedIcon sx={{ fontSize: 30 }} />
+        ) : HERO_ICON[heroType] ? (
+          <LocalIcon icon={HERO_ICON[heroType]} width={30} height={30} />
+        ) : null}
+      </ShellHero>
     );
+
+  const resolveLabel = (button: ButtonDefinition) => {
+    if (
+      button.type === "button" &&
+      slideDefinition.id === "server-license" &&
+      button.action === "see-plans" &&
+      licenseNotice.isOverLimit
+    ) {
+      return t("onboarding.serverLicense.upgrade", "Upgrade now →");
+    }
+    const label = button.label ?? "";
+    if (!label) return "";
+    const fallback = label.split(".").pop() || label;
+    return t(label, fallback);
   };
 
+  const buttons: ShellButton[] = slideDefinition.buttons.map((button) => ({
+    key: button.key,
+    back: button.type === "icon",
+    label: resolveLabel(button),
+    primary: (button.variant ?? "secondary") === "primary",
+    accent: button.accent,
+    action: button.action,
+    disabled: button.disabledWhen?.(flowState) ?? false,
+  }));
+
   return (
-    <Modal
-      opened={true}
+    <OnboardingSlideShell
+      hero={hero}
+      slideKey={slideContent.key}
+      title={slideContent.title}
+      body={slideContent.body}
+      stepIndex={currentModalSlideIndex}
+      stepCount={modalSlideCount}
+      buttons={buttons}
+      onAction={(action) => onAction(action as ButtonAction)}
       onClose={onSkip}
-      closeOnClickOutside={false}
-      closeOnEscape={allowDismiss}
-      centered
-      size="lg"
-      radius="lg"
-      withCloseButton={false}
-      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
-      styles={{
-        body: { padding: 0, maxHeight: "90vh", overflow: "hidden" },
-        content: {
-          overflow: "hidden",
-          border: "none",
-          background: "var(--bg-surface)",
-          maxHeight: "90vh",
-        },
-      }}
-    >
-      <Stack gap={0} className={styles.modalContent}>
-        <div className={styles.heroWrapper}>
-          <AnimatedSlideBackground
-            gradientStops={slideContent.background.gradientStops}
-            circles={slideContent.background.circles}
-            isActive
-            slideKey={slideContent.key}
-          />
-          {allowDismiss && (
-            <ActionIcon
-              onClick={onSkip}
-              variant="tertiary"
-              size="lg"
-              aria-label={t("common.close", "Close")}
-              style={{
-                position: "absolute",
-                top: 16,
-                right: 16,
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                color: "white",
-                backdropFilter: "blur(4px)",
-                zIndex: 10,
-              }}
-            >
-              <LocalIcon
-                icon="close-rounded"
-                width="1.25rem"
-                height="1.25rem"
-              />
-            </ActionIcon>
-          )}
-          <div className={styles.heroLogo} key={`logo-${slideContent.key}`}>
-            {renderHero()}
-          </div>
-        </div>
-
-        <div
-          className={styles.modalBody}
-          style={{ overflowY: "auto", maxHeight: "calc(90vh - 220px)" }}
-        >
-          <Stack gap={16}>
-            <div
-              key={`title-${slideContent.key}`}
-              className={`${styles.title} ${styles.titleText}`}
-            >
-              {slideContent.title}
-            </div>
-
-            <div className={styles.bodyText}>
-              <div
-                key={`body-${slideContent.key}`}
-                className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}
-              >
-                {slideContent.body}
-              </div>
-              <style>{`div strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
-            </div>
-
-            {modalSlideCount > 1 && (
-              <OnboardingStepper
-                totalSteps={modalSlideCount}
-                activeStep={currentModalSlideIndex}
-              />
-            )}
-
-            <div className={styles.buttonContainer}>
-              <SlideButtons
-                slideDefinition={slideDefinition}
-                licenseNotice={runtimeState.licenseNotice}
-                flowState={{ selectedRole: runtimeState.selectedRole }}
-                onAction={onAction}
-              />
-            </div>
-          </Stack>
-        </div>
-      </Stack>
-    </Modal>
+      allowDismiss={allowDismiss}
+    />
   );
 }

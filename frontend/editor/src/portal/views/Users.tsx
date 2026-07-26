@@ -2,36 +2,27 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@app/ui";
-import { useTier } from "@portal/contexts/TierContext";
-import { useAsync } from "@portal/hooks/useAsync";
 import {
   changeMemberRole,
   disableMemberMfa,
-  fetchAuthConfig,
-  fetchUsers,
-  removeMember,
   setMemberSuspended,
   unlockMember,
-  type AdminAuthConfig,
   type Member,
+  type PendingInvitation,
   type PortalAccessState,
   type RoleId,
-  type UsersResponse,
 } from "@portal/api/users";
+import { usersBackend } from "@app/portal/usersBackend";
 import {
   createGrant,
-  fetchGrants,
   revokeGrant,
   type ResourceGrant,
 } from "@portal/api/access";
-import {
-  deleteTeam as apiDeleteTeam,
-  fetchTeams,
-  type Team,
-} from "@portal/api/teams";
+import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
+import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
 import { NewTeamModal } from "@portal/components/users/NewTeamModal";
 import { ResetPasswordModal } from "@portal/components/users/ResetPasswordModal";
@@ -39,6 +30,7 @@ import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
 import type { TeamGroup } from "@portal/components/users/directory";
+import { useUsersData } from "@portal/views/usersData";
 
 interface Confirm {
   title: string;
@@ -48,22 +40,14 @@ interface Confirm {
   action: () => Promise<unknown>;
 }
 
+/**
+ * Users page: the org roster, teams, and portal-access management. Mutation
+ * handlers call `refresh` to invalidate the shared caches (see useUsersData).
+ */
 export function Users() {
   const { t } = useTranslation();
-  const { tier } = useTier();
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const usersState = useAsync<UsersResponse>(
-    () => fetchUsers(tier),
-    [tier, refreshKey],
-  );
-  // Grants are ADMIN-only; skip the fetch entirely on flavors that can't manage them.
-  const grantsState = useAsync<ResourceGrant[]>(
-    () => (caps.manageGrants ? fetchGrants("PORTAL") : Promise.resolve([])),
-    [tier, refreshKey],
-  );
-  const teamsState = useAsync<Team[]>(() => fetchTeams(), [tier, refreshKey]);
-  const authState = useAsync<AdminAuthConfig>(() => fetchAuthConfig(), []);
+  const { usersState, grantsState, teamsState, authState, refresh } =
+    useUsersData();
 
   const [actionError, setActionError] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -129,6 +113,8 @@ export function Users() {
   );
 
   const teams = teamsState.data ?? [];
+  // Pending invites ride along with the roster fetch (SaaS); empty on self-hosted.
+  const invitations = usersState.data?.invitations ?? [];
   const mailEnabled = usersState.data?.mailEnabled ?? false;
   // Email invites need SMTP + mail.enableInvites on self-hosted; SaaS (no directCreate path)
   // always has email via Supabase, so it isn't gated on a self-hosted mail config.
@@ -147,9 +133,8 @@ export function Users() {
       .catch((error) => setActionError(errorMessage(error)))
       // Refetch on success AND failure: a multi-step mutation (e.g. changeMemberRole)
       // has no rollback, so a mid-sequence failure must resync the roster to real state.
-      .finally(() => setRefreshKey((k) => k + 1));
+      .finally(() => refresh());
   }
-  const refresh = () => setRefreshKey((k) => k + 1);
 
   function changeRole(member: Member, role: RoleId) {
     run(() => changeMemberRole(member, role));
@@ -211,16 +196,39 @@ export function Users() {
     });
   }
   function removeUser(member: Member) {
+    // SaaS removes from the team (the account survives); self-hosted deletes the account.
+    const teamScope = caps.removeScope === "team";
     setConfirm({
       title: t("users.confirm.removeTitle", "Remove member"),
-      body: t(
-        "users.confirm.removeBody",
-        "Permanently remove {{name}} from the organization? This cannot be undone.",
-        { name: member.name },
-      ),
-      confirmLabel: t("users.action.remove", "Remove from org"),
+      body: teamScope
+        ? t(
+            "users.confirm.removeTeamBody",
+            "Remove {{name}} from the team? They keep their account but lose access to this team's resources.",
+            { name: member.name },
+          )
+        : t(
+            "users.confirm.removeBody",
+            "Permanently remove {{name}} from the organization? This cannot be undone.",
+            { name: member.name },
+          ),
+      confirmLabel: teamScope
+        ? t("users.action.removeTeam", "Remove from team")
+        : t("users.action.remove", "Remove from org"),
       danger: true,
-      action: () => removeMember(member),
+      action: () => usersBackend.removeMember(member),
+    });
+  }
+  function cancelInvite(invitation: PendingInvitation) {
+    setConfirm({
+      title: t("users.confirm.cancelInviteTitle", "Cancel invitation"),
+      body: t(
+        "users.confirm.cancelInviteBody",
+        "Cancel the invitation to {{email}}? They won't be able to join with the current link.",
+        { email: invitation.email },
+      ),
+      confirmLabel: t("users.action.cancelInvite", "Cancel invitation"),
+      danger: true,
+      action: () => usersBackend.cancelInvitation(invitation.id),
     });
   }
   function deleteTeamAction(team: TeamGroup) {
@@ -303,6 +311,10 @@ export function Users() {
             </Button>
           }
         />
+      )}
+
+      {caps.manageInvitations && !loading && invitations.length > 0 && (
+        <PendingInvitations invitations={invitations} onCancel={cancelInvite} />
       )}
 
       {!loading && members.length > 0 && (

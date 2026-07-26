@@ -12,6 +12,8 @@ export interface Team {
   userCount: number;
   /** Usernames of the team's owners (LEADER memberships). */
   owners: string[];
+  /** SaaS: an auto-created personal team (can't be renamed/deleted). Undefined self-hosted. */
+  isPersonal?: boolean;
 }
 
 interface TeamsDto {

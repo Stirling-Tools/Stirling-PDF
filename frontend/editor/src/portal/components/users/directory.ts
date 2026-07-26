@@ -8,6 +8,8 @@ export interface TeamGroup {
   /** Usernames of the team owners (resolved to display names by the UI). */
   owners: string[];
   members: Member[];
+  /** SaaS personal team - not renameable/deletable; the UI hides those controls. */
+  isPersonal?: boolean;
 }
 
 /** The roster split into Organization owners, teams, and guests. */
@@ -42,6 +44,7 @@ export function buildDirectory(members: Member[], teams: Team[]): Directory {
       name: t.name,
       owners: t.owners,
       members: byTeam.get(t.id) ?? [],
+      isPersonal: t.isPersonal,
     }))
     .filter((g) => g.members.length > 0)
     .sort((a, b) => a.name.localeCompare(b.name));
