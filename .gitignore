@@ -79,22 +79,7 @@ app/core/src/main/resources/static/css/cookieconsent.css
 app/core/src/main/resources/static/css/cookieconsentCustomisation.css
 app/core/src/main/resources/static/mockServiceWorker.js
 app/core/src/main/resources/static/js/thirdParty/cookieconsent.umd.js
-app/core/src/main/resources/static/images/arrow-right-short.svg
-app/core/src/main/resources/static/images/book.svg
-app/core/src/main/resources/static/images/clipboard.svg
-app/core/src/main/resources/static/images/discord.svg
-app/core/src/main/resources/static/images/docker.svg
-app/core/src/main/resources/static/images/file-earmark-pdf.svg
-app/core/src/main/resources/static/images/Files.svg
-app/core/src/main/resources/static/images/github.svg
 app/core/src/main/resources/static/images/google-drive.svg
-app/core/src/main/resources/static/images/redact-auto.svg
-app/core/src/main/resources/static/images/redact-manual.svg
-app/core/src/main/resources/static/images/rename.svg
-app/core/src/main/resources/static/images/split-auto.svg
-app/core/src/main/resources/static/images/split-chapters.svg
-app/core/src/main/resources/static/images/split-size.svg
-app/core/src/main/resources/static/images/update.svg
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
 # Gradle
