@@ -344,6 +344,13 @@ tasks.named('copyFrontendAssets').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
 }
 
+// Cleanup removes frontend-generated resources that are also visible to the resource/formatting
+// task graph. Keep all Spotless tasks ahead of cleanup so they never snapshot a path that has
+// just been removed.
+tasks.named('cleanFrontendAssets').configure {
+    mustRunAfter tasks.matching { it.name.startsWith('spotless') }
+}
+
 if (buildWithFrontend) {
     println "Editor frontend build enabled - JAR will include React frontend (mode=${frontendMode})"
     processResources.dependsOn copyFrontendAssets

@@ -157,6 +157,9 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           STIRLING_FLAVOR: ${{ matrix.flavor }}
+          # Configure the Gradle daemon explicitly; GRADLE_OPTS alone only
+          # configures the Gradle client JVM.
+          GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx4g -XX:+UseG1GC'
 
       - name: Check Test Reports Exist
         if: always()
