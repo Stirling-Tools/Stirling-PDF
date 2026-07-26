@@ -1115,7 +1115,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   <div className="file-sidebar-cloud-icon-wrapper">
                     <GoogleDriveIcon
                       className="file-sidebar-cloud-icon-gray"
-                      style={{ color: "var(--text-secondary)" }}
+                      style={{ color: "var(--c-text-muted)" }}
                     />
                     {isGoogleDriveEnabled && (
                       <GoogleDriveIcon
@@ -1146,7 +1146,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 aria-label={t("watchedFolders.sidebarTitle", "Watched Folders")}
                 style={
                   isWatchedFoldersActive
-                    ? { backgroundColor: "var(--active-bg)" }
+                    ? { backgroundColor: "var(--c-active)" }
                     : undefined
                 }
               >
@@ -1198,7 +1198,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
                 {!stubsLoaded ? (
                   <div className="file-sidebar-loading">
-                    <Loader size="sm" color="var(--text-muted)" />
+                    <Loader size="sm" color="var(--c-text-subtle)" />
                   </div>
                 ) : filteredFileStubs.length > 0 ? (
                   <div className="file-sidebar-file-list">

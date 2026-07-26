@@ -91,10 +91,10 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
             ? "light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))"
             : undefined,
           color: disabled
-            ? "var(--text-muted)"
+            ? "var(--c-text-subtle)"
             : isSelected
               ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3))"
-              : "var(--text-primary)",
+              : "var(--c-text)",
         }}
       >
         {label}
