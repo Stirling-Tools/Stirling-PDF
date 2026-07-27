@@ -1,5 +1,7 @@
+import { createElement, type ReactNode } from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("react-i18next", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-i18next")>();
@@ -138,8 +140,12 @@ vi.mock("@app/data/processorSearchIndex", () => ({
   ],
 }));
 
-vi.mock("@portal/api/users", () => ({
-  fetchUsers: vi.fn(),
+// The roster is fetched through the flavor-resolved usersBackend (the same
+// path the shared users query uses), not @portal/api/users directly.
+vi.mock("@app/portal/usersBackend", () => ({
+  usersBackend: {
+    fetchUsers: vi.fn(),
+  },
 }));
 
 // Keep the real (pure) assemblePolicies; only the network fetchers are mocked.
@@ -163,7 +169,7 @@ import type { PipelineView } from "@portal/api/pipelines";
 import { fetchPipelines } from "@portal/api/pipelines";
 import { fetchSources } from "@portal/api/sources";
 import type { Member, UsersResponse } from "@portal/api/users";
-import { fetchUsers } from "@portal/api/users";
+import { usersBackend } from "@app/portal/usersBackend";
 import {
   rankDocsResults,
   rankPortalPipelineResults,
@@ -285,11 +291,19 @@ function createDeferred<T>() {
   };
 }
 
+function queryWrapper() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client }, children);
+}
+
 describe("usePortalSearchResults helpers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockOpenSettings.mockReset();
-    vi.mocked(fetchUsers).mockResolvedValue(makeUsersResponse([]));
+    vi.mocked(usersBackend.fetchUsers).mockResolvedValue(makeUsersResponse([]));
     vi.mocked(fetchPoliciesList).mockResolvedValue([]);
     vi.mocked(fetchPolicyRuns).mockResolvedValue([]);
     vi.mocked(fetchPipelines).mockResolvedValue({ kpis: [], pipelines: [] });
@@ -349,8 +363,9 @@ describe("usePortalSearchResults helpers", () => {
   });
 
   it("forwards portal settings row hits with their focus anchor", () => {
-    const { result } = renderHook(() =>
-      usePortalSearchResults("smtp", true, { scopeIds: ["settings"] }),
+    const { result } = renderHook(
+      () => usePortalSearchResults("smtp", true, { scopeIds: ["settings"] }),
+      { wrapper: queryWrapper() },
     );
 
     const settingHit = result.current.flatResults[0];
@@ -358,19 +373,23 @@ describe("usePortalSearchResults helpers", () => {
 
     void settingHit?.onSelect();
     expect(mockOpenSettings).toHaveBeenCalledWith("email", "smtp-host");
-    expect(fetchUsers).not.toHaveBeenCalled();
+    expect(usersBackend.fetchUsers).not.toHaveBeenCalled();
   });
 
   it("fetches only the requested entity scope", async () => {
-    vi.mocked(fetchUsers).mockResolvedValue(
+    vi.mocked(usersBackend.fetchUsers).mockResolvedValue(
       makeUsersResponse([makeMember({ id: "member-2", name: "Alice" })]),
     );
 
-    const { result } = renderHook(() =>
-      usePortalSearchResults("alice", true, { scopeIds: ["portal-users"] }),
+    const { result } = renderHook(
+      () =>
+        usePortalSearchResults("alice", true, { scopeIds: ["portal-users"] }),
+      { wrapper: queryWrapper() },
     );
 
-    await waitFor(() => expect(fetchUsers).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(usersBackend.fetchUsers).toHaveBeenCalledTimes(1),
+    );
     await waitFor(() => expect(result.current.loadingFiles).toBe(false));
 
     expect(fetchPoliciesList).not.toHaveBeenCalled();
@@ -383,25 +402,28 @@ describe("usePortalSearchResults helpers", () => {
 
   it("reuses the in-flight query after close/reopen instead of sticking in loading", async () => {
     const firstUsers = createDeferred<UsersResponse>();
-    vi.mocked(fetchUsers).mockImplementationOnce(() => firstUsers.promise);
+    vi.mocked(usersBackend.fetchUsers).mockImplementationOnce(
+      () => firstUsers.promise,
+    );
 
     const { result, rerender } = renderHook(
       ({ query }) =>
         usePortalSearchResults(query, true, { scopeIds: ["portal-users"] }),
       {
         initialProps: { query: "alice" },
+        wrapper: queryWrapper(),
       },
     );
 
     await waitFor(() => expect(result.current.loadingFiles).toBe(true));
-    expect(fetchUsers).toHaveBeenCalledTimes(1);
+    expect(usersBackend.fetchUsers).toHaveBeenCalledTimes(1);
 
     rerender({ query: "" });
     await waitFor(() => expect(result.current.loadingFiles).toBe(false));
 
     rerender({ query: "alice" });
     await waitFor(() => expect(result.current.loadingFiles).toBe(true));
-    expect(fetchUsers).toHaveBeenCalledTimes(1);
+    expect(usersBackend.fetchUsers).toHaveBeenCalledTimes(1);
 
     firstUsers.resolve(
       makeUsersResponse([

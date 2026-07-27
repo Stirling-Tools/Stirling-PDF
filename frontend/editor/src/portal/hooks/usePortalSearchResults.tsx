@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { withBasePath } from "@app/constants/app";
 import {
   getToolUrlPath,
@@ -15,7 +16,6 @@ import {
   rankToolResults,
   useSearchScopeFilter,
 } from "@app/hooks/useSuperSearch";
-import { useScopedFetchCache } from "@app/hooks/useScopedFetchCache";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
   PORTAL_DOCS_SCOPE_ID,
@@ -27,19 +27,25 @@ import {
   type UseSuperSearchResult,
 } from "@app/types/superSearch";
 import type { ToolId } from "@app/types/toolId";
+import { usersBackend } from "@app/portal/usersBackend";
+import {
+  assemblePolicies,
+  fetchPoliciesList,
+  fetchPolicyRuns,
+} from "@portal/api/policies";
+import { fetchPipelines } from "@portal/api/pipelines";
+import { fetchSources } from "@portal/api/sources";
 import { EDITOR_IS_SAME_APP, EDITOR_URL } from "@portal/auth/editorUrl";
 import { useTier } from "@portal/contexts/TierContext";
 import { useUI } from "@portal/contexts/UIContext";
+import { qk } from "@portal/queries/keys";
 import {
-  ENTITY_REFRESH_MS,
   buildProcessorEntityGroups,
   defaultPortalEntityScopes,
-  fetchPortalEntityScope,
   isDocsSearchable,
   isVisiblePortalScope,
-  toProcessorEntities,
   withPortalEntityDependencies,
-  type PortalEntityScopeId,
+  type ProcessorEntities,
 } from "@portal/search/entitySearch";
 
 const EDITOR_GROUP_ORDER: SuperSearchGroupId[] = ["tools"];
@@ -50,7 +56,6 @@ const SETTINGS_SECTION_LABEL_KEY = "superSearch.group.settings";
 const SETTINGS_SECTION_LABEL_FALLBACK = "Settings";
 const EDITOR_SECTION_LABEL_KEY = "portal.nav.editor";
 const EDITOR_SECTION_LABEL_FALLBACK = "Editor";
-const NO_PORTAL_ENTITY_SCOPES: readonly PortalEntityScopeId[] = [];
 
 /**
  * Tool results live in the editor app, so selecting one is a full page load
@@ -124,27 +129,72 @@ export function usePortalSearchResults(
 
   const trimmed = query.trim();
   const { scopeEnabled } = useSearchScopeFilter(options);
-  const requestedEntityScopes = useMemo<readonly PortalEntityScopeId[]>(() => {
-    if (!active || trimmed.length === 0) return NO_PORTAL_ENTITY_SCOPES;
+  const requestedEntityScopes = useMemo(() => {
+    if (!active || trimmed.length === 0) return new Set<string>();
     const enabled = defaultPortalEntityScopes().filter((scopeId) =>
       scopeEnabled(scopeId),
     );
-    return withPortalEntityDependencies(enabled);
+    return new Set<string>(withPortalEntityDependencies(enabled));
   }, [active, scopeEnabled, trimmed]);
 
-  const fetchEntityScope = useCallback(
-    (scopeId: PortalEntityScopeId) => fetchPortalEntityScope(scopeId, tier),
-    [tier],
-  );
-  const { values: entityValues, loading: loadingEntities } =
-    useScopedFetchCache(
-      requestedEntityScopes,
-      fetchEntityScope,
-      ENTITY_REFRESH_MS,
-    );
-  const entities = useMemo(
-    () => toProcessorEntities(entityValues),
-    [entityValues],
+  // Entity data rides the portal's shared query layer — the same keys the
+  // views use, so searching warms the view (and vice versa) and the client's
+  // staleTime/retry policy replaces bespoke fetch discipline. `enabled` keeps
+  // each lane's fetch behind its scope chip and the active-query gate.
+  const usersQuery = useQuery({
+    queryKey: qk.usersRoster(tier),
+    queryFn: () => usersBackend.fetchUsers(tier),
+    enabled: requestedEntityScopes.has("portal-users"),
+  });
+  const policiesListQuery = useQuery({
+    queryKey: qk.policiesList(),
+    queryFn: fetchPoliciesList,
+    enabled: requestedEntityScopes.has("portal-policies"),
+  });
+  const policyRunsQuery = useQuery({
+    queryKey: qk.policyRuns(),
+    queryFn: fetchPolicyRuns,
+    enabled: requestedEntityScopes.has("portal-policies"),
+  });
+  const pipelinesQuery = useQuery({
+    queryKey: qk.pipelines(),
+    queryFn: fetchPipelines,
+    enabled: requestedEntityScopes.has("portal-pipelines"),
+  });
+  const sourcesQuery = useQuery({
+    queryKey: qk.sources(),
+    queryFn: fetchSources,
+    enabled: requestedEntityScopes.has("portal-sources"),
+  });
+
+  // Loading only counts for lanes the current search actually requests — a
+  // fetch left in flight after its lane was deselected (or the bar closed)
+  // must not hold the dropdown's no-results gate open.
+  const loadingEntities =
+    (requestedEntityScopes.has("portal-users") && usersQuery.isLoading) ||
+    (requestedEntityScopes.has("portal-policies") &&
+      (policiesListQuery.isLoading || policyRunsQuery.isLoading)) ||
+    (requestedEntityScopes.has("portal-pipelines") &&
+      pipelinesQuery.isLoading) ||
+    (requestedEntityScopes.has("portal-sources") && sourcesQuery.isLoading);
+
+  const entities = useMemo<ProcessorEntities>(
+    () => ({
+      users: usersQuery.data?.members ?? [],
+      policies: policiesListQuery.data
+        ? assemblePolicies(policiesListQuery.data, policyRunsQuery.data ?? [])
+            .catalogue
+        : [],
+      pipelines: pipelinesQuery.data?.pipelines ?? [],
+      sources: sourcesQuery.data?.sources ?? [],
+    }),
+    [
+      usersQuery.data,
+      policiesListQuery.data,
+      policyRunsQuery.data,
+      pipelinesQuery.data,
+      sourcesQuery.data,
+    ],
   );
 
   // Match what the editor bar can actually open: drop coming-soon placeholders

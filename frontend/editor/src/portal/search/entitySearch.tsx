@@ -143,8 +143,10 @@ export function defaultPortalEntityScopes(): readonly PortalEntityScopeId[] {
   );
 }
 
-/** One entity scope's fetch. `tier` shapes only presentational fields on the
- * users payload, never the lists — hosts without a TierContext pass "free". */
+/** One entity scope's fetch, for the editor seam (which has no QueryClient —
+ * the portal bar reads the shared query layer instead). `tier` shapes only
+ * presentational fields on the users payload, never the lists — hosts without
+ * a TierContext pass "free". */
 export async function fetchPortalEntityScope(
   scopeId: PortalEntityScopeId,
   tier: Tier,
