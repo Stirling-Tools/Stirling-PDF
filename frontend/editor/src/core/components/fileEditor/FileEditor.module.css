@@ -330,13 +330,15 @@
    ========================= */
 
 .addFileCard {
-  width: 260px;
-  max-width: 260px;
-  /* Occupy exactly the same band as a file card's thumbnail: 310px tall
-     (.thumbWrap) offset by the card's 10px padding-top. Centring against the
-     whole grid cell instead would sit too low, since the cell also contains
-     the filename/date caption under the thumbnail. */
+  /* Same footprint as a portrait PDF thumbnail: A4-ish aspect at the
+     .thumbWrap height of 310px, offset by the file card's 10px padding-top so
+     the two line up top and bottom. Centring against the whole grid cell
+     instead would sit too low, since the cell also carries the filename/date
+     caption beneath the thumbnail. */
   height: 310px;
+  aspect-ratio: var(--thumb-aspect, 8.5 / 11);
+  width: auto;
+  max-width: 100%;
   margin: 10px auto auto;
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
