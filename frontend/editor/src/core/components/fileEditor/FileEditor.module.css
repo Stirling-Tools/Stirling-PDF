@@ -330,16 +330,15 @@
    ========================= */
 
 .addFileCard {
-  /* Same footprint as a portrait PDF thumbnail: A4-ish aspect at the
-     .thumbWrap height of 310px, offset by the file card's 10px padding-top so
-     the two line up top and bottom. Centring against the whole grid cell
-     instead would sit too low, since the cell also carries the filename/date
-     caption beneath the thumbnail. */
-  height: 310px;
+  /* Same footprint as a rendered portrait page. The 310px .thumbWrap also
+     holds the always-reserved 26px toolchain bar (22px + 4px) above the page,
+     so the page itself is 284px tall and starts 36px down: the file card's
+     10px padding-top plus that bar. Match both so the two line up exactly. */
+  height: calc(310px - 26px);
   aspect-ratio: var(--thumb-aspect, 8.5 / 11);
   width: auto;
   max-width: 100%;
-  margin: 10px auto auto;
+  margin: 36px auto auto;
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.625rem;
