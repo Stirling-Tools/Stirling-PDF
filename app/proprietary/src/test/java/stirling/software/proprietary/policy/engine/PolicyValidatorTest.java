@@ -38,6 +38,7 @@ class PolicyValidatorTest {
     @Mock private PolicyTrigger trigger;
     @Mock private InputSource inputSource;
     @Mock private PolicyOutputSink outputSink;
+    @Mock private PipelineStepValidator stepValidator;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private PolicyValidator validator;
@@ -49,7 +50,10 @@ class PolicyValidatorTest {
                         List.of(trigger),
                         List.of(inputSource),
                         List.of(outputSink),
-                        List.of(new WatermarkStepValidator(), new RedactStepValidator()),
+                        List.of(
+                                stepValidator,
+                                new WatermarkStepValidator(),
+                                new RedactStepValidator()),
                         sourceStore);
     }
 

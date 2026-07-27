@@ -9,7 +9,7 @@
    :where, `.portal-scope button` would outweigh `.sui-btn` and strip its fill. */
 
 .portal-scope {
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -31,7 +31,7 @@
 }
 
 :where(.portal-scope) a {
-  color: var(--color-blue);
+  color: var(--c-primary);
   text-decoration: none;
 }
 

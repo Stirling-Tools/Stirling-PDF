@@ -4,8 +4,8 @@
   align-items: center;
   gap: 2px;
   padding: 4px 8px;
-  border-bottom: 1px solid var(--border-subtle);
-  background-color: var(--bg-toolbar);
+  border-bottom: 1px solid var(--c-border-subtle);
+  background-color: var(--c-bg-raised);
   flex-shrink: 0;
 }
 
@@ -13,115 +13,107 @@
 .tool-panel__fullscreen-surface-inner {
   --fullscreen-bg-surface-1: color-mix(
     in srgb,
-    var(--bg-toolbar) 96%,
+    var(--c-bg-raised) 96%,
     transparent
   );
-  --fullscreen-bg-surface-2: color-mix(
-    in srgb,
-    var(--bg-background) 90%,
-    transparent
-  );
-  --fullscreen-bg-header: var(--bg-toolbar);
-  --fullscreen-bg-controls-1: var(--bg-toolbar);
+  --fullscreen-bg-surface-2: color-mix(in srgb, var(--c-bg) 90%, transparent);
+  --fullscreen-bg-header: var(--c-bg-raised);
+  --fullscreen-bg-controls-1: var(--c-bg-raised);
   --fullscreen-bg-controls-2: color-mix(
     in srgb,
-    var(--bg-toolbar) 95%,
-    var(--bg-background)
+    var(--c-bg-raised) 95%,
+    var(--c-bg)
   );
-  --fullscreen-bg-body-1: color-mix(
-    in srgb,
-    var(--bg-background) 86%,
-    transparent
-  );
+  --fullscreen-bg-body-1: color-mix(in srgb, var(--c-bg) 86%, transparent);
   --fullscreen-bg-body-2: color-mix(
     in srgb,
-    var(--bg-toolbar) 78%,
+    var(--c-bg-raised) 78%,
     transparent
   );
-  --fullscreen-bg-group: color-mix(in srgb, var(--bg-toolbar) 82%, transparent);
-  --fullscreen-bg-item: color-mix(in srgb, var(--bg-toolbar) 88%, transparent);
+  --fullscreen-bg-group: color-mix(
+    in srgb,
+    var(--c-bg-raised) 82%,
+    transparent
+  );
+  --fullscreen-bg-item: color-mix(in srgb, var(--c-bg-raised) 88%, transparent);
   --fullscreen-bg-list-item: color-mix(
     in srgb,
-    var(--bg-toolbar) 86%,
+    var(--c-bg-raised) 86%,
     transparent
   );
   --fullscreen-bg-icon-detailed: color-mix(
     in srgb,
-    var(--bg-muted) 75%,
+    var(--c-surface-sunken) 75%,
     transparent
   );
   --fullscreen-bg-icon-compact: color-mix(
     in srgb,
-    var(--bg-muted) 70%,
+    var(--c-surface-sunken) 70%,
     transparent
   );
   --fullscreen-border-subtle-75: color-mix(
     in srgb,
-    var(--border-subtle) 75%,
+    var(--c-border-subtle) 75%,
     transparent
   );
   --fullscreen-border-subtle-70: color-mix(
     in srgb,
-    var(--border-subtle) 70%,
+    var(--c-border-subtle) 70%,
     transparent
   );
   --fullscreen-border-subtle-65: color-mix(
     in srgb,
-    var(--border-subtle) 65%,
+    var(--c-border-subtle) 65%,
     transparent
   );
   --fullscreen-border-favorites: color-mix(
     in srgb,
     var(--special-color-favorites) 25%,
-    var(--border-subtle)
+    var(--c-border-subtle)
   );
   --fullscreen-border-recommended: color-mix(
     in srgb,
     var(--special-color-recommended) 25%,
-    var(--border-subtle)
+    var(--c-border-subtle)
   );
   --fullscreen-shadow-primary: color-mix(
     in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.55)) 25%,
+    var(--shadow-color, color-mix(in srgb, black 55%, transparent)) 25%,
     transparent
   );
   --fullscreen-shadow-secondary: color-mix(
     in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.35)) 30%,
+    var(--shadow-color, color-mix(in srgb, black 35%, transparent)) 30%,
     transparent
   );
   --fullscreen-shadow-group: color-mix(
     in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.45)) 18%,
+    var(--shadow-color, color-mix(in srgb, black 45%, transparent)) 18%,
     transparent
   );
   --fullscreen-accent-hover: color-mix(
     in srgb,
-    var(--text-primary) 20%,
-    var(--border-subtle)
+    var(--c-text) 20%,
+    var(--c-border-subtle)
   );
   --fullscreen-accent-selected: color-mix(
     in srgb,
-    var(--text-primary) 30%,
-    var(--border-subtle)
+    var(--c-text) 30%,
+    var(--c-border-subtle)
   );
-  --fullscreen-accent-ring: color-mix(
-    in srgb,
-    var(--text-primary) 15%,
-    transparent
-  );
+  --fullscreen-accent-ring: color-mix(in srgb, var(--c-text) 15%, transparent);
   --fullscreen-accent-list-bg: color-mix(
     in srgb,
-    var(--text-primary) 8%,
-    var(--bg-toolbar)
+    var(--c-text) 8%,
+    var(--c-bg-raised)
   );
   --fullscreen-accent-list-border: color-mix(
     in srgb,
-    var(--text-primary) 20%,
-    var(--border-subtle)
+    var(--c-text) 20%,
+    var(--c-border-subtle)
   );
-  --fullscreen-text-icon: var(--text-primary);
-  --fullscreen-text-icon-compact: var(--text-primary);
+  --fullscreen-text-icon: var(--c-text);
+  --fullscreen-text-icon-compact: var(--c-text);
 }
 
 .tool-panel {
@@ -153,7 +145,7 @@
 
 .tool-panel__collapsed-divider {
   height: 1px;
-  background: var(--border-subtle);
+  background: var(--c-border-subtle);
   margin: 0 0.5rem 8px;
 }
 
@@ -178,7 +170,7 @@
   border: 1px solid transparent;
   border-radius: 0.5rem;
   background: transparent;
-  color: var(--tools-text-and-icon-color);
+  color: var(--c-text);
   cursor: pointer;
   transition:
     background 120ms ease-out,
@@ -198,8 +190,8 @@
 
 .tool-panel__expand-btn {
   flex-shrink: 0;
-  color: var(--text-secondary) !important;
-  border-color: var(--border-subtle) !important;
+  color: var(--c-text-muted) !important;
+  border-color: var(--c-border-subtle) !important;
 }
 
 /* The collapse/expand toggle keeps a stable identity across the collapsed strip
@@ -210,25 +202,25 @@
 }
 
 .tool-panel__expand-btn svg {
-  color: var(--text-secondary) !important;
+  color: var(--c-text-muted) !important;
 }
 
 .tool-panel__expand-btn:hover {
-  color: var(--text-primary) !important;
+  color: var(--c-text) !important;
   border-color: var(--border) !important;
 }
 
 .tool-panel__collapsed-search-btn {
   flex-shrink: 0;
-  color: var(--text-secondary) !important;
+  color: var(--c-text-muted) !important;
 }
 
 .tool-panel__collapsed-search-btn svg {
-  color: var(--text-secondary) !important;
+  color: var(--c-text-muted) !important;
 }
 
 .tool-panel__collapsed-search-btn:hover {
-  color: var(--text-primary) !important;
+  color: var(--c-text) !important;
 }
 
 .tool-panel__back-btn {
@@ -237,7 +229,7 @@
 
 .tool-panel__back-bar {
   flex-shrink: 0;
-  border-bottom: 1px solid var(--border-subtle) !important;
+  border-bottom: 1px solid var(--c-border-subtle) !important;
 }
 
 .tool-panel--fullscreen-active {
@@ -282,7 +274,7 @@
 /* Search that separates the Policies section from the Tools list below it. */
 .tool-panel__between-search {
   padding: 0.5rem 0.75rem 0.25rem;
-  border-top: 1px solid var(--border-subtle, var(--color-border));
+  border-top: 1px solid var(--c-border-subtle, var(--c-border));
 }
 
 .tool-panel__between-search .search-input-container {
@@ -292,7 +284,7 @@
 
 /* Slightly recessed search field so it reads as distinct from the panel. */
 .tool-panel__between-search input {
-  background-color: var(--bg-muted);
+  background-color: var(--c-surface-sunken);
 }
 
 ::view-transition-old(tool-rail) {
@@ -334,7 +326,7 @@
 }
 
 .tool-panel--fullscreen {
-  background: var(--bg-toolbar);
+  background: var(--c-bg-raised);
 }
 
 .tool-panel__placeholder {
@@ -342,7 +334,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-size: 0.9rem;
   padding: 1.5rem;
   text-align: center;
@@ -403,8 +395,8 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1.75rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
 }
 
 .tool-panel__fullscreen-brand {
@@ -428,8 +420,8 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1.75rem;
-  border-bottom: 1px solid var(--tool-panel-search-border-bottom);
-  background: var(--tool-panel-search-bg);
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface-sunken);
 }
 
 .tool-panel__fullscreen-controls .search-input-container {
@@ -546,7 +538,10 @@
 .tool-panel__fullscreen-item:hover:not([aria-disabled="true"]):not(:disabled) {
   transform: translateY(-2px);
   border-color: var(--fullscreen-accent-hover);
-  box-shadow: var(--shadow-xl, 0 18px 34px rgba(15, 23, 42, 0.14));
+  box-shadow: var(
+    --shadow-xl,
+    0 18px 34px color-mix(in srgb, black 14%, transparent)
+  );
 }
 
 .tool-panel__fullscreen-item--selected {
@@ -619,8 +614,8 @@
   inset: 0;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--text-primary) 12%, transparent),
-    color-mix(in srgb, var(--text-primary) 4%, transparent)
+    color-mix(in srgb, var(--c-text) 12%, transparent),
+    color-mix(in srgb, var(--c-text) 4%, transparent)
   );
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -630,8 +625,7 @@
 .tool-panel__fullscreen-item:hover:not([aria-disabled="true"])
   .tool-panel__fullscreen-icon {
   transform: scale(1.08);
-  box-shadow: 0 4px 12px
-    color-mix(in srgb, var(--text-primary) 15%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--c-text) 15%, transparent);
 }
 
 .tool-panel__fullscreen-item:hover:not([aria-disabled="true"])
@@ -656,7 +650,7 @@
 }
 
 .tool-panel__fullscreen-name {
-  color: var(--text-primary);
+  color: var(--c-text);
   font-size: 13px !important;
   font-weight: 500 !important;
 }
@@ -753,8 +747,8 @@
   inset: 0;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--text-primary) 10%, transparent),
-    color-mix(in srgb, var(--text-primary) 3%, transparent)
+    color-mix(in srgb, var(--c-text) 10%, transparent),
+    color-mix(in srgb, var(--c-text) 3%, transparent)
   );
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -764,7 +758,7 @@
 .tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"])
   .tool-panel__fullscreen-list-icon {
   transform: scale(1.06);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-primary) 12%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c-text) 12%, transparent);
 }
 
 .tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"])

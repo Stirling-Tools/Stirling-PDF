@@ -241,7 +241,7 @@ const FileThumbnail = ({
             <CheckboxIndicator
               checked={isSelected}
               onChange={() => onToggleFile(file.id)}
-              color="var(--checkbox-checked-bg)"
+              color="var(--c-primary)"
             />
           ) : (
             <div className={styles.unsupportedPill}>
@@ -372,7 +372,7 @@ const FileThumbnail = ({
                   objectFit: "contain",
                   borderRadius: 0,
                   background: "#ffffff",
-                  border: "1px solid var(--border-default)",
+                  border: "1px solid var(--c-border)",
                   display: "block",
                   marginLeft: "auto",
                   marginRight: "auto",

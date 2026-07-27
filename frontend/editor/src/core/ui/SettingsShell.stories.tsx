@@ -49,7 +49,7 @@ export const Default: Story = {
   render: () => {
     const [active, setActive] = useState("profile");
     return (
-      <div style={{ height: "36rem", border: "1px solid var(--color-border)" }}>
+      <div style={{ height: "36rem", border: "1px solid var(--c-border)" }}>
         <SettingsShell
           sections={SECTIONS}
           activeKey={active}
@@ -63,7 +63,7 @@ export const Default: Story = {
             </>
           }
         >
-          <p style={{ color: "var(--color-text-3)" }}>
+          <p style={{ color: "var(--c-text-subtle)" }}>
             Content for the “{LABELS[active]}” section renders here.
           </p>
         </SettingsShell>

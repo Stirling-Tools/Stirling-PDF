@@ -23,7 +23,7 @@ import {
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
-import { HttpError, errorMessage } from "@portal/api/http";
+import { errorMessage } from "@portal/api/http";
 import {
   policyEndpoint,
   policyStepFromWire,
@@ -33,12 +33,14 @@ import {
   type PolicyToolStep,
 } from "@app/policies/operations";
 import { isPolicyStepConfigured } from "@app/policies/stepValidity";
-import { fetchSources } from "@portal/api/sources";
+import { useSources } from "@portal/queries/sources";
+import { fetchIntegrations } from "@portal/api/integrations";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
+import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
@@ -89,7 +91,21 @@ function resolveFieldValues(
  * starts enabled — the user toggles tools off in the workflow.
  */
 // Temporary until the catalogue carries a defaultEnabled flag.
-const DISABLED_BY_DEFAULT = new Set<PolicyToolId>(["watermark"]);
+// Steps that cannot work until someone configures them, so they start off rather than failing
+// every run of a freshly created policy. Purview needs a tenant connection and a label GUID.
+const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
+  "watermark",
+  "purviewApplyLabel",
+  "purviewReadLabel",
+  "externalApiCall",
+]);
+
+// Steps that cannot work without a Purview tenant connection, so they are hidden entirely until one
+// is configured rather than offered as an option that can only fail.
+const PURVIEW_TOOLS = new Set<PolicyToolId>([
+  "purviewApplyLabel",
+  "purviewReadLabel",
+]);
 
 /**
  * Policy-facing framing for each capability a policy can include. Labels and
@@ -115,6 +131,14 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.sanitize.desc",
     descEn:
       "Removes hidden JavaScript so nothing can run automatically when the document is opened.",
+  },
+
+  timestampPdf: {
+    labelKey: "portal.policies.wizard.capability.timestampPdf.label",
+    labelEn: "Add a trusted timestamp",
+    descKey: "portal.policies.wizard.capability.timestampPdf.desc",
+    descEn:
+      "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server.",
   },
   watermark: {
     labelKey: "portal.policies.wizard.capability.watermark.label",
@@ -147,6 +171,27 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.classify.desc",
     descEn:
       "Identifies the document's type from your team's labels and tags it, so it files and searches by category.",
+  },
+  purviewApplyLabel: {
+    labelKey: "portal.policies.wizard.capability.purviewApplyLabel.label",
+    labelEn: "Apply a Microsoft Purview sensitivity label",
+    descKey: "portal.policies.wizard.capability.purviewApplyLabel.desc",
+    descEn:
+      "Marks the document with one of your organisation's Purview labels, so Purview-aware tools recognise how sensitive it is.",
+  },
+  purviewReadLabel: {
+    labelKey: "portal.policies.wizard.capability.purviewReadLabel.label",
+    labelEn: "Read the document's Purview label",
+    descKey: "portal.policies.wizard.capability.purviewReadLabel.desc",
+    descEn:
+      "Reports the Purview label a document already carries, so the rest of the policy can act on how sensitive it is.",
+  },
+  externalApiCall: {
+    labelKey: "portal.policies.wizard.capability.externalApiCall.label",
+    labelEn: "Send the document to another system",
+    descKey: "portal.policies.wizard.capability.externalApiCall.desc",
+    descEn:
+      "Hands the document to a system you have connected, and records what it answered.",
   },
 };
 
@@ -227,7 +272,7 @@ function PolicySetupWizardBody({
     policy?.state.sources ?? ["editor"],
   );
 
-  const sourcesAsync = useAsync(() => fetchSources(), []);
+  const sourcesAsync = useSources();
   const availableSources = useMemo(() => {
     const backendSources = (sourcesAsync.data?.sources ?? []).filter(
       (s) => s.status !== "disabled",
@@ -272,7 +317,32 @@ function PolicySetupWizardBody({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const enabledTools = useMemo(() => tools.filter((tl) => tl.enabled), [tools]);
+  const integrationsAsync = useAsync(() => fetchIntegrations(), []);
+  const hasPurviewConnection = useMemo(
+    () =>
+      (integrationsAsync.data ?? []).some(
+        (c) => c.integrationType === "PURVIEW",
+      ),
+    [integrationsAsync.data],
+  );
+
+  // Purview steps only appear once a tenant is connected. An already-enabled one (a saved policy,
+  // or a tenant connected earlier) stays visible so editing a policy never silently drops it.
+  const visibleTools = useMemo(
+    () =>
+      tools.filter(
+        (tl) =>
+          !PURVIEW_TOOLS.has(tl.toolId) || hasPurviewConnection || tl.enabled,
+      ),
+    [tools, hasPurviewConnection],
+  );
+
+  // Derive from the visible list: a hidden step is never submitted (hidden implies disabled).
+  const enabledTools = useMemo(
+    () => visibleTools.filter((tl) => tl.enabled),
+    [visibleTools],
+  );
+
   // Mirrors the backend's save-time step validation: while any enabled
   // capability is missing required config, save stays disabled.
   const misconfiguredTool = useMemo(
@@ -343,10 +413,11 @@ function PolicySetupWizardBody({
       });
     } catch (e) {
       setSubmitting(false);
-      // The backend validates at save (PolicyValidator) and returns a specific
-      // reason — show it rather than a generic failure when we have one.
-      const detail = e instanceof HttpError ? errorMessage(e) : null;
-      setError(detail ?? t("portal.policies.wizard.errors.saveFailed"));
+      // Surface the backend's actual reason (e.g. a step missing its account) rather than a
+      // generic failure the operator cannot act on.
+      setError(
+        errorMessage(e) || t("portal.policies.wizard.errors.saveFailed"),
+      );
     }
   }
 
@@ -457,7 +528,7 @@ function PolicySetupWizardBody({
           </p>
           <Card padding="none">
             <div className="portal-policies__capabilities">
-              {tools.map((tl) => {
+              {visibleTools.map((tl) => {
                 const meta = CAPABILITY_META[tl.toolId];
                 const label = meta
                   ? t(meta.labelKey, meta.labelEn)
@@ -500,6 +571,14 @@ function PolicySetupWizardBody({
                             parameters={tl.params}
                             onChange={(params) =>
                               setToolParams("watermark", params)
+                            }
+                          />
+                        )}
+                        {tl.toolId === "purviewApplyLabel" && (
+                          <PolicyPurviewConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("purviewApplyLabel", params)
                             }
                           />
                         )}

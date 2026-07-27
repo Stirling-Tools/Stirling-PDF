@@ -18,7 +18,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 
 /**
- * Validates a policy at save time by delegating each facet (trigger, sources, output, steps) to the
+ * Validates a policy at save time by delegating each facet (trigger, sources, steps, output) to the
  * bean that handles its type, so a misconfiguration fails fast rather than at run time. A null
  * trigger is a manual-only policy and skips trigger validation. Each referenced {@code sourceId}
  * must resolve to a persisted {@link Source} whose config its {@link InputSource} bean accepts.
@@ -30,7 +30,7 @@ public class PolicyValidator {
     private final List<PolicyTrigger> triggers;
     private final List<InputSource> inputSources;
     private final List<PolicyOutputSink> outputSinks;
-    private final List<PolicyStepValidator> stepValidators;
+    private final List<PipelineStepValidator> stepValidators;
     private final SourceStore sourceStore;
 
     /**
@@ -52,11 +52,24 @@ public class PolicyValidator {
             InputSpec spec = source.toInputSpec();
             inputSourceFor(spec).validate(spec);
         }
+        validateSteps(policy.steps());
         validateOutput(policy.output());
-        for (PipelineStep step : policy.steps()) {
-            stepValidators.stream()
-                    .filter(validator -> validator.supports(step.operation()))
-                    .forEach(validator -> validator.validate(step));
+    }
+
+    /**
+     * Validate each step against every registered {@link PipelineStepValidator}. Must be called on
+     * a request thread (caller's principal present) for the same reason as {@link
+     * #validateOutput(OutputSpec)}: a step that dereferences an integration connection by id is
+     * access-checked here or nowhere, since the worker thread that later runs it has no principal.
+     *
+     * @throws IllegalArgumentException if any step is invalid or references an inaccessible
+     *     resource
+     */
+    public void validateSteps(List<PipelineStep> steps) {
+        for (PipelineStep step : steps) {
+            for (PipelineStepValidator validator : stepValidators) {
+                validator.validate(step);
+            }
         }
     }
 

@@ -60,7 +60,7 @@ public class TeamMembership implements Serializable {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
+    @Column(name = "role", nullable = false, length = 50)
     @ToString.Include
     private TeamRole role = TeamRole.MEMBER;
 
