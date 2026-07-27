@@ -46,7 +46,10 @@ public class AutoRotateAnalysisResult {
 
         @Schema(
                 description =
-                        "Detected additional clockwise rotation that would make the page upright")
+                        "Detected additional clockwise rotation that would make the page upright."
+                                + " Reported for diagnostics even when it is not used (for example"
+                                + " an OSD verdict below the confidence threshold); 'apply' is the"
+                                + " authority on whether it is actually applied")
         private int correction;
 
         @Schema(

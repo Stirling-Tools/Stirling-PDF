@@ -18,10 +18,14 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -102,6 +106,87 @@ class AutoRotateControllerTest {
     private static PDDocument reload(ResponseEntity<?> response) throws IOException {
         Resource resource = (Resource) response.getBody();
         return Loader.loadPDF(resource.getContentAsByteArray());
+    }
+
+    private static PDDocument docWithTextAt(int textAngleDegrees, int pageRotation)
+            throws IOException {
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage(PDRectangle.LETTER);
+        document.addPage(page);
+        try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+            content.beginText();
+            content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+            content.setTextMatrix(
+                    Matrix.getRotateInstance(Math.toRadians(textAngleDegrees), 300, 400));
+            content.showText(SAMPLE_TEXT);
+            content.endText();
+        }
+        page.setRotation(pageRotation);
+        return document;
+    }
+
+    /**
+     * Reads the dominant glyph direction straight from a document, independently of the production
+     * detection code, so the round-trip assertion below validates the result rather than restating
+     * the formula under test.
+     */
+    private static int dominantGlyphDirection(PDDocument document) throws IOException {
+        int[] counts = new int[4];
+        PDFTextStripper stripper =
+                new PDFTextStripper() {
+                    @Override
+                    protected void processTextPosition(TextPosition text) {
+                        if (!text.getUnicode().isBlank()) {
+                            counts[Math.floorMod(Math.round(text.getDir()), 360) / 90]++;
+                        }
+                    }
+                };
+        stripper.setStartPage(1);
+        stripper.setEndPage(1);
+        stripper.getText(document);
+        int best = 0;
+        for (int i = 1; i < 4; i++) {
+            if (counts[i] > counts[best]) {
+                best = i;
+            }
+        }
+        return best * 90;
+    }
+
+    /**
+     * End-to-end round trip: build a page whose text is drawn at a known angle under a known
+     * /Rotate, run the real controller, then assert the output actually displays upright. Upright
+     * means the glyph direction and the page rotation cancel — computed here in the test, not via
+     * the production helper.
+     */
+    @ParameterizedTest
+    @CsvSource({
+        "0,   0",
+        "0,   90",
+        "0,   180",
+        "0,   270",
+        "90,  0",
+        "90,  90",
+        "180, 0",
+        "180, 270",
+        "270, 90",
+    })
+    void roundTripLeavesPageUpright(int textAngle, int pageRotation) throws Exception {
+        AutoRotatePdfRequest request = request(docWithTextAt(textAngle, pageRotation));
+        request.setDetectionMode("text");
+
+        ResponseEntity<?> response = controller.autoRotatePdf(request);
+
+        try (PDDocument corrected = reload(response)) {
+            int glyphDirection = dominantGlyphDirection(corrected);
+            int finalRotation = Math.floorMod(corrected.getPage(0).getRotation(), 360);
+            assertThat(Math.floorMod(glyphDirection - finalRotation, 360))
+                    .as(
+                            "text drawn at %d under /Rotate %d should display upright, got glyph"
+                                    + " direction %d with /Rotate %d",
+                            textAngle, pageRotation, glyphDirection, finalRotation)
+                    .isZero();
+        }
     }
 
     @Test

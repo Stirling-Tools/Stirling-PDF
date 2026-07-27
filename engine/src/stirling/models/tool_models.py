@@ -255,6 +255,7 @@ class AutoRotatePdfParams(ApiModel):
     confidence_threshold: float = Field(
         14.0,
         description="Minimum Tesseract OSD orientation confidence required before a correction is applied. Matches OCRmyPDF's --rotate-pages-threshold scale",
+        ge=0.0,
     )
     detection_mode: DetectionMode = Field(
         DetectionMode.auto,

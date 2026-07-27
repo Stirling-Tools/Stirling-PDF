@@ -122,16 +122,19 @@ public final class AutoRotateDetection {
         // counts[i] holds glyphs whose direction is i * 90 degrees
         final int[] counts = new int[4];
 
+        /**
+         * PDFBox snaps glyph direction to a quadrant, so getDir() only ever yields 0/90/180/270 —
+         * obliquely drawn text (30, 45, 135 degrees) is reported as 0 rather than as its true
+         * angle. Skew is therefore invisible to this signal by construction, which is consistent
+         * with skew being out of scope here: only 90-degree orientation is corrected.
+         */
         @Override
         protected void processTextPosition(TextPosition text) {
             String unicode = text.getUnicode();
             if (unicode == null || unicode.isBlank()) {
                 return;
             }
-            int dir = Math.floorMod(Math.round(text.getDir()), 360);
-            if (dir % 90 == 0) {
-                counts[dir / 90]++;
-            }
+            counts[Math.floorMod(Math.round(text.getDir()), 360) / 90]++;
             // super is intentionally not called: we only count, no text assembly needed
         }
     }

@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api.misc;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.Min;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -24,7 +26,9 @@ public class AutoRotatePdfRequest extends PDFFile {
             description =
                     "Minimum Tesseract OSD orientation confidence required before a correction is"
                             + " applied. Matches OCRmyPDF's --rotate-pages-threshold scale",
+            minimum = "0",
             defaultValue = "14.0")
+    @Min(value = 0, message = "Confidence threshold must be non-negative")
     private Double confidenceThreshold = 14.0;
 
     @Schema(

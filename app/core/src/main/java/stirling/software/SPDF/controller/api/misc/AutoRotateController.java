@@ -26,6 +26,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,7 +87,7 @@ public class AutoRotateController {
                             + " instead of the PDF. With pageRotations set, applies the given"
                             + " corrections without running detection."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<?> autoRotatePdf(@ModelAttribute AutoRotatePdfRequest request)
+    public ResponseEntity<?> autoRotatePdf(@Valid @ModelAttribute AutoRotatePdfRequest request)
             throws IOException, InterruptedException {
         String mode =
                 request.getDetectionMode() == null
