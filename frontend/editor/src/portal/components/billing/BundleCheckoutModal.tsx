@@ -206,7 +206,9 @@ export function BundleCheckoutModal({
   const { t } = useTranslation();
   const teamId = wallet.teamId;
   const currency = wallet.currency ?? "usd";
-  const pricePerDocMinor = wallet.pricePerDocMinor;
+  // The pool is priced per size-scaled RUN at the prepaid-bundle rate (bundle:processor), NOT the
+  // metered per-document rate — so the estimate matches the amount the checkout edge fn charges.
+  const ratePerRunMinor = wallet.bundleRatePerCreditMinor;
 
   const [phase, setPhase] = useState<Phase>("calc");
   const [users, setUsers] = useState(DEFAULT_USERS);
@@ -399,9 +401,9 @@ export function BundleCheckoutModal({
         posturePolicies: policiesFor(postureId),
         sizeMult: sizeMultFor(sizeId),
         pipelineMult: pipelineMultFor(pipelineId),
-        ratePerRunMinor: pricePerDocMinor,
+        ratePerRunMinor,
       }),
-    [users, postureId, sizeId, pipelineId, pricePerDocMinor],
+    [users, postureId, sizeId, pipelineId, ratePerRunMinor],
   );
 
   // The receipt shows the persisted (server) total on resume so it matches the quote the buyer
