@@ -332,11 +332,12 @@
 .addFileCard {
   width: 260px;
   max-width: 260px;
-  height: calc(310px - 0.5rem);
-  /* Auto margins centre the fixed-height card inside its grid cell, so its
-     midline matches the taller file cards (thumbnail + caption) beside it
-     rather than riding high against the top of the row. */
-  margin: auto;
+  /* Occupy exactly the same band as a file card's thumbnail: 310px tall
+     (.thumbWrap) offset by the card's 10px padding-top. Centring against the
+     whole grid cell instead would sit too low, since the cell also contains
+     the filename/date caption under the thumbnail. */
+  height: 310px;
+  margin: 10px auto auto;
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.625rem;
