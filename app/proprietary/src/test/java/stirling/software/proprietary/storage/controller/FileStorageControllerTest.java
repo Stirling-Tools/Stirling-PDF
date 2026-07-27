@@ -40,13 +40,14 @@ class FileStorageControllerTest {
 
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
+    @Mock private stirling.software.proprietary.service.AuditService auditService;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         FileStorageController controller =
-                new FileStorageController(fileStorageService, storageProvider);
+                new FileStorageController(fileStorageService, storageProvider, auditService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

@@ -1104,6 +1104,13 @@ public class ApplicationProperties {
         @Data
         public static class Encryption {
             private boolean enabled = false;
+
+            /**
+             * Emit an audit event for every decrypt of an encrypted blob. Compliance reviewers
+             * (HIPAA) expect read audit, so it defaults on; busy multi-user installs can disable.
+             * Denied decrypts and key lifecycle events are always audited regardless.
+             */
+            private boolean auditReads = true;
         }
 
         @Data

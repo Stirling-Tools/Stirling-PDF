@@ -9,13 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 
 /**
- * Holds the storage-encryption machinery for the always-installed {@link EncryptingStorageProvider}
- * decorator.
+ * Holds the storage-encryption machinery for the always-installed {@link
+ * EncryptingStorageProvider} decorator, shared with the admin API and migration job so kill-switch
+ * cache invalidation hits the caches the decorator reads.
  *
  * <p>The decorator is unconditional so a node whose config lags the cluster (flag off, rolling
  * deploy, config drift) can never stream raw ciphertext: it always sniffs the header and decrypts
- * or fails loudly. The expensive parts — resolving the master key (which may generate a key file)
- * and the key service — are created lazily: eagerly at startup only when the write flag is on or
+ * or fails loudly. The expensive parts - resolving the master key (which may generate a key file)
+ * and the key service - are created lazily: eagerly at startup only when the write flag is on or
  * key rows already exist (preserving the fail-fast master-key verification), otherwise on first
  * encounter with an encrypted blob.
  */
@@ -27,6 +28,7 @@ public class StorageEncryptionState {
     private final boolean writeEnabled;
     private final Supplier<FileEncryptionKeyService> keyServiceFactory;
     private final FileEncryptionKeyRepository keyRepository;
+    private final StorageEncryptionAuditListener auditListener;
 
     private volatile FileEncryptionKeyService keyService;
     private volatile boolean keysExistEverChecked;
@@ -36,17 +38,27 @@ public class StorageEncryptionState {
     public StorageEncryptionState(
             boolean writeEnabled,
             Supplier<FileEncryptionKeyService> keyServiceFactory,
-            FileEncryptionKeyRepository keyRepository) {
+            FileEncryptionKeyRepository keyRepository,
+            StorageEncryptionAuditListener auditListener) {
         this.writeEnabled = writeEnabled;
         this.keyServiceFactory = keyServiceFactory;
         this.keyRepository = keyRepository;
+        this.auditListener = auditListener;
     }
 
     /** Test convenience: a pre-materialised state around an existing service. */
     public static StorageEncryptionState of(
             boolean writeEnabled, FileEncryptionKeyService keyService) {
+        return of(writeEnabled, keyService, StorageEncryptionAuditListener.NOOP);
+    }
+
+    /** Test convenience: a pre-materialised state with an explicit audit listener. */
+    public static StorageEncryptionState of(
+            boolean writeEnabled,
+            FileEncryptionKeyService keyService,
+            StorageEncryptionAuditListener auditListener) {
         StorageEncryptionState state =
-                new StorageEncryptionState(writeEnabled, () -> keyService, null);
+                new StorageEncryptionState(writeEnabled, () -> keyService, null, auditListener);
         state.keyService = keyService;
         return state;
     }
@@ -56,9 +68,18 @@ public class StorageEncryptionState {
         return writeEnabled;
     }
 
+    /** True once the key machinery has been materialised (eagerly at boot or on first use). */
+    public boolean isMaterialised() {
+        return keyService != null;
+    }
+
+    public StorageEncryptionAuditListener auditListener() {
+        return auditListener;
+    }
+
     /**
-     * The key service, created on first use. A failure here (no key material, wrong key) is a loud,
-     * actionable error — never silently-served ciphertext.
+     * The key service, created on first use. A failure here (no key material, wrong key) is a
+     * loud, actionable error - never silently-served ciphertext.
      */
     public FileEncryptionKeyService keyService() throws StorageEncryptionException {
         FileEncryptionKeyService current = keyService;

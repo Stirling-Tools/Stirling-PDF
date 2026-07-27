@@ -73,4 +73,54 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
                     + "WHERE sf.workflowSession IN "
                     + "(SELECT ws FROM WorkflowSession ws WHERE ws.owner = :user)")
     void clearWorkflowSessionReferencesByOwner(@Param("user") User user);
+
+    // ---- storage encryption at rest ----------------------------------------------------
+
+    long countByEncryptionKeyIdIsNull();
+
+    long countByEncryptionKeyIdIsNotNull();
+
+    /**
+     * Next batch of plaintext files for the encrypt-existing migration. Cursor-based ({@code id >
+     * lastId}) so per-file failures don't wedge the loop, and owner is fetched eagerly because the
+     * job re-stores blobs under the owner's scope key outside a web transaction.
+     */
+    @Query(
+            "SELECT f FROM StoredFile f JOIN FETCH f.owner "
+                    + "WHERE f.encryptionKeyId IS NULL AND f.id > :lastId ORDER BY f.id ASC")
+    List<StoredFile> findMigratableAfter(
+            @Param("lastId") long lastId, org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Compare-and-swap updates for the migration: each blob's storage key only flips if it still
+     * holds the value the job read, so a user replacing the file mid-migration wins and the job
+     * discards its own copy. The main-blob swap also stamps the key id, which is what removes the
+     * row from the migration's selection.
+     */
+    @Modifying
+    @Transactional
+    @Query(
+            "UPDATE StoredFile f SET f.storageKey = :newKey, f.encryptionKeyId = :keyId "
+                    + "WHERE f.id = :id AND f.storageKey = :oldKey")
+    int swapMainBlob(
+            @Param("id") Long id,
+            @Param("oldKey") String oldKey,
+            @Param("newKey") String newKey,
+            @Param("keyId") String keyId);
+
+    @Modifying
+    @Transactional
+    @Query(
+            "UPDATE StoredFile f SET f.historyStorageKey = :newKey "
+                    + "WHERE f.id = :id AND f.historyStorageKey = :oldKey")
+    int swapHistoryBlob(
+            @Param("id") Long id, @Param("oldKey") String oldKey, @Param("newKey") String newKey);
+
+    @Modifying
+    @Transactional
+    @Query(
+            "UPDATE StoredFile f SET f.auditLogStorageKey = :newKey "
+                    + "WHERE f.id = :id AND f.auditLogStorageKey = :oldKey")
+    int swapAuditLogBlob(
+            @Param("id") Long id, @Param("oldKey") String oldKey, @Param("newKey") String newKey);
 }

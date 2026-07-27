@@ -62,5 +62,8 @@ public final class InMemoryKeyRepo {
                                         .filter(r -> r.getStatus() == inv.getArgument(0))
                                         .findFirst());
         when(mock.count()).thenAnswer(inv -> (long) rows.size());
+        when(mock.findAll()).thenAnswer(inv -> java.util.List.copyOf(rows.values()));
+        when(mock.findAll(any(org.springframework.data.domain.Sort.class)))
+                .thenAnswer(inv -> java.util.List.copyOf(rows.values()));
     }
 }

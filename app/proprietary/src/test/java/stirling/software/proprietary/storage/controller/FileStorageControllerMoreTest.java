@@ -48,12 +48,13 @@ class FileStorageControllerMoreTest {
 
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
+    @Mock private stirling.software.proprietary.service.AuditService auditService;
 
     private FileStorageController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new FileStorageController(fileStorageService, storageProvider);
+        controller = new FileStorageController(fileStorageService, storageProvider, auditService);
     }
 
     private User user() {

@@ -187,6 +187,53 @@ class FileEncryptionKeyServiceTest {
     }
 
     @Test
+    void setKeyStatus_disable_takesEffectImmediatelyOnSameService() throws Exception {
+        FileEncryptionKeyService.ScopeKek created = service.activeKekForOwner(teamUser(1));
+        // The unwrap cache is warm from creation; disabling must invalidate it, not wait for TTL.
+        service.setKeyStatus(created.keyId(), FileEncryptionKey.Status.DISABLED, "admin");
+        assertThatThrownBy(() -> service.kekForDecrypt(created.keyId()))
+                .isInstanceOf(StorageKeyRevokedException.class);
+        assertThat(repo.rows.get(created.keyId()).getStatusChangedBy()).isEqualTo("admin");
+
+        service.setKeyStatus(created.keyId(), FileEncryptionKey.Status.ACTIVE, "admin");
+        assertThat(service.kekForDecrypt(created.keyId())).isEqualTo(created.key());
+    }
+
+    @Test
+    void unwrap_fallsBackToPreviousMasterKeyDuringRotation() throws Exception {
+        FileEncryptionKeyService.ScopeKek created = service.activeKekForOwner(teamUser(1));
+
+        // New primary key B, old key A kept as previous, version bumped to 2.
+        FileEncryptionMasterKey rotated = new FileEncryptionMasterKey(MASTER_B, MASTER_A, 2, false);
+        FileEncryptionKeyService rotatedService = new FileEncryptionKeyService(repo.mock, rotated);
+        assertThat(rotatedService.kekForDecrypt(created.keyId())).isEqualTo(created.key());
+        rotatedService.verifyMasterKey(); // must pass via the previous-key fallback
+    }
+
+    @Test
+    void rotateMasterKey_rewrapsRowsBelowCurrentVersion() throws Exception {
+        FileEncryptionKeyService.ScopeKek created = service.activeKekForOwner(teamUser(1));
+        String wrappedBefore = repo.rows.get(created.keyId()).getWrappedKey();
+
+        FileEncryptionMasterKey rotated = new FileEncryptionMasterKey(MASTER_B, MASTER_A, 2, false);
+        FileEncryptionKeyService rotatedService = new FileEncryptionKeyService(repo.mock, rotated);
+        assertThat(rotatedService.rotateMasterKey()).isEqualTo(1);
+
+        FileEncryptionKey row = repo.rows.get(created.keyId());
+        assertThat(row.getMasterKeyVersion()).isEqualTo(2);
+        assertThat(row.getWrappedKey()).isNotEqualTo(wrappedBefore);
+
+        // Same key material now unwraps WITHOUT the previous key configured.
+        FileEncryptionKeyService afterCleanup =
+                new FileEncryptionKeyService(
+                        repo.mock, new FileEncryptionMasterKey(MASTER_B, null, 2, false));
+        assertThat(afterCleanup.kekForDecrypt(created.keyId())).isEqualTo(created.key());
+
+        // Second rotation call is a no-op.
+        assertThat(rotatedService.rotateMasterKey()).isZero();
+    }
+
+    @Test
     void createActive_raceWithoutWinner_rethrows() {
         doThrow(new DataIntegrityViolationException("duplicate key"))
                 .when(repo.mock)

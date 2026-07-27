@@ -31,7 +31,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.model.api.CreateShareLinkRequest;
@@ -56,6 +58,7 @@ public class FileStorageController {
 
     private final FileStorageService fileStorageService;
     private final StorageProvider storageProvider;
+    private final AuditService auditService;
 
     @PostMapping(
             value = "/files",
@@ -262,6 +265,21 @@ public class FileStorageController {
     private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(
             StoredFile file, boolean inline) {
         org.springframework.core.io.Resource resource = fileStorageService.loadFile(file);
+        if (file.getEncryptionKeyId() != null) {
+            // Compliance marker: a plaintext copy of encrypted-at-rest content left the platform
+            // (inline=true is an in-app view; false is a saved download).
+            auditService.audit(
+                    AuditEventType.STORAGE_ENCRYPTION,
+                    java.util.Map.of(
+                            "action",
+                            "plaintextExport",
+                            "fileId",
+                            file.getId(),
+                            "inline",
+                            inline,
+                            "keyId",
+                            file.getEncryptionKeyId()));
+        }
         String contentType =
                 file.getContentType() == null
                         ? MediaType.APPLICATION_OCTET_STREAM_VALUE

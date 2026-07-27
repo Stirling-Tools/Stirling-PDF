@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -237,6 +238,54 @@ class EncryptingStorageProviderTest {
         try (InputStream in = provider.load(stored.getStorageKey()).getInputStream()) {
             assertThat(in.readAllBytes()).isEqualTo(big);
         }
+    }
+
+    @Test
+    void auditListener_receivesEncryptDecryptAndDeniedEvents() throws IOException {
+        List<String> events = new java.util.ArrayList<>();
+        StorageEncryptionAuditListener recording =
+                new StorageEncryptionAuditListener() {
+                    @Override
+                    public void encrypted(String storageKey, UUID keyId) {
+                        events.add("encrypt:" + storageKey);
+                    }
+
+                    @Override
+                    public void decrypted(String storageKey, UUID keyId) {
+                        events.add("decrypt:" + storageKey);
+                    }
+
+                    @Override
+                    public void decryptDenied(UUID keyId, String reason) {
+                        events.add("denied:" + reason);
+                    }
+                };
+        FileEncryptionKeyService keyService =
+                new FileEncryptionKeyService(
+                        repo.mock, new FileEncryptionMasterKey(MASTER, false), recording);
+        EncryptingStorageProvider audited =
+                new EncryptingStorageProvider(inner, keyService, true, recording);
+
+        StoredObject stored = audited.store(owner, upload());
+        try (InputStream in = audited.load(stored.getStorageKey()).getInputStream()) {
+            in.readAllBytes();
+        }
+        // Legacy plaintext must NOT produce a decrypt event.
+        StoredObject legacy = inner.store(owner, upload());
+        audited.load(legacy.getStorageKey());
+
+        assertThat(events)
+                .containsExactly(
+                        "encrypt:" + stored.getStorageKey(), "decrypt:" + stored.getStorageKey());
+
+        repo.rows
+                .get(UUID.fromString(stored.getEncryptionKeyId()))
+                .setStatus(FileEncryptionKey.Status.DISABLED);
+        keyService.invalidate(UUID.fromString(stored.getEncryptionKeyId()));
+        assertThatThrownBy(() -> audited.load(stored.getStorageKey()))
+                .isInstanceOf(StorageKeyRevokedException.class);
+        assertThat(events).hasSize(3);
+        assertThat(events.get(2)).isEqualTo("denied:key disabled");
     }
 
     @Test

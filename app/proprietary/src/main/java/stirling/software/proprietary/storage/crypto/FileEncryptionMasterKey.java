@@ -43,16 +43,50 @@ public class FileEncryptionMasterKey {
     private static final String KEY_FILE = "file-encryption.key";
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    /** Bumped when master rotation ships (P2); recorded on every wrapped KEK row. */
+    /** Default master-key version when rotation has never been configured. */
     public static final int CURRENT_VERSION = 1;
 
     private final SecretKey key;
+    private final SecretKey previousKey;
+    private final int currentVersion;
 
     public FileEncryptionMasterKey(String configuredKey, boolean clusterEnabled) {
+        this(configuredKey, null, CURRENT_VERSION, clusterEnabled);
+    }
+
+    /**
+     * @param previousKeyBase64 optional outgoing master key kept only during rotation: {@link
+     *     #unwrap} falls back to it so existing KEK rows stay readable until {@code rotate}
+     *     re-wraps them under the primary key.
+     * @param currentVersion admin-bumped version stamped on newly wrapped KEK rows ({@code
+     *     stirling.security.fileEncryptionKeyVersion}); rotation re-wraps rows below it.
+     */
+    public FileEncryptionMasterKey(
+            String configuredKey,
+            String previousKeyBase64,
+            int currentVersion,
+            boolean clusterEnabled) {
         this.key = resolveKey(configuredKey, clusterEnabled);
+        this.previousKey =
+                previousKeyBase64 == null || previousKeyBase64.isBlank()
+                        ? null
+                        : new SecretKeySpec(
+                                Base64.getDecoder().decode(previousKeyBase64.trim()), ALGORITHM);
+        this.currentVersion = Math.max(1, currentVersion);
         log.info(
-                "Storage encryption master key initialised (AES-256-GCM, fingerprint {})",
-                fingerprint());
+                "Storage encryption master key initialised (AES-256-GCM, fingerprint {}, version"
+                        + " {}{})",
+                fingerprint(),
+                this.currentVersion,
+                previousKey != null ? ", previous key configured for rotation" : "");
+    }
+
+    public int currentVersion() {
+        return currentVersion;
+    }
+
+    public boolean hasPreviousKey() {
+        return previousKey != null;
     }
 
     private static SecretKey resolveKey(String configuredKey, boolean clusterEnabled) {
@@ -152,10 +186,22 @@ public class FileEncryptionMasterKey {
     }
 
     public byte[] unwrap(byte[] wrapped, byte[] associatedData) throws GeneralSecurityException {
+        try {
+            return unwrapWith(key, wrapped, associatedData);
+        } catch (GeneralSecurityException primaryFailure) {
+            if (previousKey == null) {
+                throw primaryFailure;
+            }
+            return unwrapWith(previousKey, wrapped, associatedData);
+        }
+    }
+
+    private static byte[] unwrapWith(SecretKey unwrapKey, byte[] wrapped, byte[] associatedData)
+            throws GeneralSecurityException {
         byte[] iv = Arrays.copyOfRange(wrapped, 0, IV_BYTES);
         byte[] ciphertext = Arrays.copyOfRange(wrapped, IV_BYTES, wrapped.length);
         Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-        cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(GCM_TAG_BITS, iv));
+        cipher.init(Cipher.DECRYPT_MODE, unwrapKey, new GCMParameterSpec(GCM_TAG_BITS, iv));
         cipher.updateAAD(associatedData);
         return cipher.doFinal(ciphertext);
     }
