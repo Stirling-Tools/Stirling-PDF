@@ -330,13 +330,14 @@
    ========================= */
 
 .addFileCard {
-  /* Same footprint as a rendered portrait page. The 310px .thumbWrap also
-     holds the always-reserved 26px toolchain bar (22px + 4px) above the page,
-     so the page itself is 284px tall and starts 36px down: the file card's
-     10px padding-top plus that bar. Match both so the two line up exactly. */
+  /* Fill the same slot a portrait page thumbnail does. Height: the 310px
+     .thumbWrap minus the always-reserved 26px toolchain bar (22px + 4px) that
+     sits above the page. Width: the file card's 260px minus its 10px side
+     padding. Offset 36px down (that padding-top + the bar) so the two line up.
+     A fixed size rather than an aspect-ratio, because each thumbnail derives
+     --thumb-aspect from its own PDF's page dimensions. */
   height: calc(310px - 26px);
-  aspect-ratio: var(--thumb-aspect, 8.5 / 11);
-  width: auto;
+  width: calc(260px - 20px);
   max-width: 100%;
   margin: 36px auto auto;
   background: var(--c-surface);
