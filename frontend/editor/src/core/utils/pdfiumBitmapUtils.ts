@@ -82,6 +82,82 @@ export interface DecodedImage {
   height: number;
 }
 
+function setImageObjectMatrix(
+  m: WrappedPdfiumModule,
+  imageObjPtr: number,
+  pdfX: number,
+  pdfY: number,
+  drawWidth: number,
+  drawHeight: number,
+): boolean {
+  const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
+  try {
+    m.pdfium.setValue(matrixPtr, drawWidth, "float");
+    m.pdfium.setValue(matrixPtr + 4, 0, "float");
+    m.pdfium.setValue(matrixPtr + 8, 0, "float");
+    m.pdfium.setValue(matrixPtr + 12, drawHeight, "float");
+    m.pdfium.setValue(matrixPtr + 16, pdfX, "float");
+    m.pdfium.setValue(matrixPtr + 20, pdfY, "float");
+    return m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr);
+  } finally {
+    m.pdfium.wasmExports.free(matrixPtr);
+  }
+}
+
+/**
+ * Create a PDFium image page object from decoded pixels.
+ *
+ * The caller owns the returned object until it is inserted into a page or
+ * appended to an annotation. Destroy it with FPDFPageObj_Destroy on failure.
+ */
+export function createBitmapImageObject(
+  m: WrappedPdfiumModule,
+  docPtr: number,
+  pagePtr: number,
+  image: DecodedImage,
+  pdfX: number,
+  pdfY: number,
+  drawWidth: number,
+  drawHeight: number,
+): number | null {
+  const bitmapPtr = m.FPDFBitmap_Create(image.width, image.height, 1);
+  if (!bitmapPtr) return null;
+
+  try {
+    const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
+    const stride = m.FPDFBitmap_GetStride(bitmapPtr);
+
+    copyRgbaToBgraHeap(
+      m,
+      image.rgba,
+      bufferPtr,
+      image.width,
+      image.height,
+      stride,
+    );
+
+    const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
+    if (!imageObjPtr) return null;
+
+    if (!m.FPDFImageObj_SetBitmap(pagePtr, 0, imageObjPtr, bitmapPtr)) {
+      m.FPDFPageObj_Destroy(imageObjPtr);
+      return null;
+    }
+
+    if (
+      !setImageObjectMatrix(m, imageObjPtr, pdfX, pdfY, drawWidth, drawHeight)
+    ) {
+      m.FPDFPageObj_Destroy(imageObjPtr);
+      return null;
+    }
+
+    return imageObjPtr;
+  } finally {
+    // FPDFImageObj_SetBitmap copies the bitmap data into the image object.
+    m.FPDFBitmap_Destroy(bitmapPtr);
+  }
+}
+
 /**
  * Create a PDFium bitmap from decoded RGBA pixels, attach it to a new image
  * page object, position it via an affine matrix, and insert it into the page.
@@ -99,70 +175,20 @@ export function embedBitmapImageOnPage(
   drawWidth: number,
   drawHeight: number,
 ): boolean {
-  const bitmapPtr = m.FPDFBitmap_Create(image.width, image.height, 1);
-  if (!bitmapPtr) return false;
+  const imageObjPtr = createBitmapImageObject(
+    m,
+    docPtr,
+    pagePtr,
+    image,
+    pdfX,
+    pdfY,
+    drawWidth,
+    drawHeight,
+  );
+  if (!imageObjPtr) return false;
 
-  try {
-    const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
-    const stride = m.FPDFBitmap_GetStride(bitmapPtr);
-
-    copyRgbaToBgraHeap(
-      m,
-      image.rgba,
-      bufferPtr,
-      image.width,
-      image.height,
-      stride,
-    );
-
-    const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
-    if (!imageObjPtr) return false;
-
-    const setBitmapOk = m.FPDFImageObj_SetBitmap(
-      pagePtr,
-      0,
-      imageObjPtr,
-      bitmapPtr,
-    );
-    if (!setBitmapOk) {
-      m.FPDFPageObj_Destroy(imageObjPtr);
-      return false;
-    }
-
-    // -- early-destroy the bitmap; PDFium has copied the pixel data internally
-    m.FPDFBitmap_Destroy(bitmapPtr);
-
-    // Set affine transform: [a b c d e f]
-    const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
-    try {
-      m.pdfium.setValue(matrixPtr, drawWidth, "float"); // a — scaleX
-      m.pdfium.setValue(matrixPtr + 4, 0, "float"); // b
-      m.pdfium.setValue(matrixPtr + 8, 0, "float"); // c
-      m.pdfium.setValue(matrixPtr + 12, drawHeight, "float"); // d — scaleY
-      m.pdfium.setValue(matrixPtr + 16, pdfX, "float"); // e — translateX
-      m.pdfium.setValue(matrixPtr + 20, pdfY, "float"); // f — translateY
-
-      if (!m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr)) {
-        m.FPDFPageObj_Destroy(imageObjPtr);
-        return false;
-      }
-    } finally {
-      m.pdfium.wasmExports.free(matrixPtr);
-    }
-
-    m.FPDFPage_InsertObject(pagePtr, imageObjPtr);
-    return true;
-  } finally {
-    // Safety net: FPDFBitmap_Destroy is a no-op if ptr is 0 in most PDFium
-    // builds but guard anyway.  If already destroyed above, the second call
-    // is harmless because we allow it to be idempotent.
-    // We use a try-catch to be safe across PDFium WASM builds.
-    try {
-      m.FPDFBitmap_Destroy(bitmapPtr);
-    } catch {
-      /* already freed */
-    }
-  }
+  m.FPDFPage_InsertObject(pagePtr, imageObjPtr);
+  return true;
 }
 /**
  * Draw a simple light-grey rectangle as a placeholder for annotations
@@ -206,8 +232,8 @@ export function decodeImageDataUrl(
     img.onload = () => {
       try {
         const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
         const ctx = canvas.getContext("2d");
         if (!ctx) {
           resolve(null);

@@ -39,7 +39,11 @@ class WalletSnapshotResponseTest {
                 /* categoryDocs= */ new CategoryBreakdown(3, 2, 1),
                 /* docsProcessedThisPeriod= */ 6,
                 /* uniquePdfsThisPeriod= */ 5,
-                /* sizeMultiplierPdfsThisPeriod= */ 2);
+                /* sizeMultiplierPdfsThisPeriod= */ 2,
+                /* prepaidUnitsRemaining= */ 40_000L,
+                /* prepaidUnitsTotal= */ 120_000L,
+                /* prepaidExpiresAt= */ "2027-06-01",
+                /* billingMode= */ "prepaid");
     }
 
     @Test
@@ -115,7 +119,11 @@ class WalletSnapshotResponseTest {
                         new CategoryBreakdown(0, 0, 0),
                         0,
                         0,
-                        0);
+                        0,
+                        0L,
+                        0L,
+                        null,
+                        "payg");
 
         assertThat(free.billableLimit()).isNull();
         assertThat(free.pricePerDocMinor()).isNull();

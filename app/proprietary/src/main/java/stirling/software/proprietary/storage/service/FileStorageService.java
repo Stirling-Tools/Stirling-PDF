@@ -943,7 +943,7 @@ public class FileStorageService {
         long maxFileBytes = toBytes(quotas.getMaxFileMb());
         if (maxFileBytes > 0 && newBytes > maxFileBytes) {
             throw new ResponseStatusException(
-                    HttpStatus.PAYLOAD_TOO_LARGE, "Stored file exceeds the maximum size");
+                    HttpStatus.CONTENT_TOO_LARGE, "Stored file exceeds the maximum size");
         }
 
         long delta = newBytes - existingBytes;
@@ -956,7 +956,7 @@ public class FileStorageService {
             long currentBytes = storedFileRepository.sumStorageBytesByOwner(owner);
             if (currentBytes + delta > maxUserBytes) {
                 throw new ResponseStatusException(
-                        HttpStatus.PAYLOAD_TOO_LARGE, "User storage quota exceeded");
+                        HttpStatus.CONTENT_TOO_LARGE, "User storage quota exceeded");
             }
         }
 
@@ -965,7 +965,7 @@ public class FileStorageService {
             long totalBytes = storedFileRepository.sumStorageBytesTotal();
             if (totalBytes + delta > maxTotalBytes) {
                 throw new ResponseStatusException(
-                        HttpStatus.PAYLOAD_TOO_LARGE, "System storage quota exceeded");
+                        HttpStatus.CONTENT_TOO_LARGE, "System storage quota exceeded");
             }
         }
     }

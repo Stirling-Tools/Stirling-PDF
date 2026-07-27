@@ -119,20 +119,20 @@
   --color-orange-400: var(--p-red-600);
 
   /* Auth page colors (dark mode) — mirror proprietary so the auth card themes dark */
-  --auth-bg-color: var(--bg-muted);
-  --auth-card-bg: var(--bg-surface);
-  --auth-label-text: var(--text-secondary);
-  --auth-input-border: var(--border-default);
-  --auth-input-bg: var(--bg-raised);
-  --auth-input-text: var(--text-primary);
+  --auth-bg-color: var(--c-surface-sunken);
+  --auth-card-bg: var(--c-surface);
+  --auth-label-text: var(--c-text-muted);
+  --auth-input-border: var(--c-border);
+  --auth-input-bg: var(--c-surface-raised);
+  --auth-input-text: var(--c-text);
   --auth-border-focus: var(--p-blue-500);
   --auth-focus-ring: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
   --auth-button-bg: var(--p-red-600);
   --auth-button-text: #ffffff;
-  --auth-magic-button-bg: var(--bg-raised);
-  --auth-magic-button-text: var(--text-primary);
-  --auth-text-primary: var(--text-primary);
-  --auth-text-secondary: var(--text-secondary);
+  --auth-magic-button-bg: var(--c-surface-raised);
+  --auth-magic-button-text: var(--c-text);
+  --auth-text-primary: var(--c-text);
+  --auth-text-secondary: var(--c-text-muted);
   --auth-error-bg: color-mix(in srgb, var(--p-red-500) 12%, transparent);
   --auth-error-border: color-mix(in srgb, var(--p-red-500) 35%, transparent);
   --auth-error-text: var(--p-red-400);

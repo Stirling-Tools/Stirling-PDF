@@ -66,10 +66,24 @@ export interface Wallet {
   categoryDocs: WalletCategoryBreakdown;
   /** Total input files processed this period (Σ doc_count). */
   docsProcessedThisPeriod: number;
-  /** Distinct input documents this period — a file hit by N operations counts once. */
+  /**
+   * Distinct input document-sets this period — `COUNT(DISTINCT document_fingerprint)`, where the
+   * fingerprint is the hash of a charge's whole input set. A file processed repeatedly within one
+   * run (chain/split) counts once; the same file reused across *different* groupings (e.g.
+   * standalone, then later in a merge {A,B}) has different fingerprints and so counts per grouping.
+   * A close approximation of "unique PDFs", exact for the single-input common case.
+   */
   uniquePdfsThisPeriod: number;
   /** Input files on charges where the size multiplier applied (units billed &gt; input files). */
   sizeMultiplierPdfsThisPeriod: number;
+  /** "prepaid" while prepaid-bundle units remain (drawn ahead of the meter), else "payg". */
+  billingMode: "prepaid" | "payg";
+  /** Prepaid units still available across the team's in-term bundles; 0 = none/exhausted. */
+  prepaidUnitsRemaining: number;
+  /** Total capacity of in-term prepaid bundles — the "X of Y used" denominator; 0 = no bundle. */
+  prepaidUnitsTotal: number;
+  /** Soonest bundle term-end (ISO yyyy-mm-dd) for the countdown; null when no bundle. */
+  prepaidExpiresAt: string | null;
   /** Populated for the leader view; empty for members / single-seat tenants. */
   members: WalletMember[];
   recent: WalletActivityRow[];
