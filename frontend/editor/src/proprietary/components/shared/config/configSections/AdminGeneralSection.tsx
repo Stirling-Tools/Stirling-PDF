@@ -482,7 +482,7 @@ export default function AdminGeneralSection() {
             </div>
 
             <div>
-              <Text size="sm" fw={500} mb={4}>
+              <Text component="div" size="sm" fw={500} mb={4}>
                 <Group gap="xs">
                   <span>
                     {t("admin.settings.general.logoStyle.label", "Logo Style")}

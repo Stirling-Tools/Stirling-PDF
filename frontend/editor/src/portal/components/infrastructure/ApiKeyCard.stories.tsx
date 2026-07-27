@@ -6,21 +6,20 @@ import "@portal/views/Infrastructure.css";
 const BASE: ApiKey = {
   id: "key-1",
   name: "Production · ingest",
-  prefix: "sk_live_a3f8…",
-  created: "Mar 2, 2026",
-  lastUsed: "2m ago",
+  prefix: "sk_a3f81b2c",
+  created: "2026-03-02",
+  lastUsed: "2026-07-10 09:14",
   status: "active",
-  rateLimit: 1200,
-  permissions: ["Read", "Write"],
-  allowedIps: ["52.14.0.0/16", "18.221.0.0/16"],
   usageToday: 84210,
   usageMonth: 2410933,
+  usageTotal: 9820145,
 };
 
 const meta: Meta<typeof ApiKeyCard> = {
   title: "Portal/Infrastructure/ApiKeyCard",
   component: ApiKeyCard,
   parameters: { layout: "padded" },
+  args: { onRevoke: (key: ApiKey) => console.log("revoke", key.id) },
   decorators: [
     (S) => (
       <div style={{ maxWidth: "44rem" }}>
@@ -32,37 +31,18 @@ const meta: Meta<typeof ApiKeyCard> = {
 export default meta;
 type Story = StoryObj<typeof ApiKeyCard>;
 
-export const Active: Story = { args: { apiKey: BASE } };
-
-export const RotateSoon: Story = {
-  args: {
-    apiKey: {
-      ...BASE,
-      name: "Ops · admin (legacy)",
-      status: "rotate-soon",
-      permissions: ["Read", "Write", "Admin"],
-      allowedIps: ["203.0.113.7/32"],
-      usageToday: 0,
-    },
-  },
-};
+export const Personal: Story = { args: { apiKey: BASE } };
 
 export const Revoked: Story = {
   args: {
     apiKey: {
       ...BASE,
       name: "Sandbox · webhook tester",
-      prefix: "sk_test_2c4a…",
+      prefix: "sk_2c4a91de",
       status: "revoked",
-      lastUsed: "never",
-      permissions: ["Read"],
-      allowedIps: [],
+      lastUsed: "Never",
       usageToday: 0,
       usageMonth: 0,
     },
   },
-};
-
-export const NoIpAllowlist: Story = {
-  args: { apiKey: { ...BASE, allowedIps: [] } },
 };

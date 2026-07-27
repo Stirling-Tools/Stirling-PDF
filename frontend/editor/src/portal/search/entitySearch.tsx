@@ -6,7 +6,12 @@ import {
   type SuperSearchResult,
 } from "@app/types/superSearch";
 import { rankByFuzzy } from "@app/utils/fuzzySearch";
-import { fetchPolicies, type CatalogueEntry } from "@portal/api/policies";
+import {
+  assemblePolicies,
+  fetchPoliciesList,
+  fetchPolicyRuns,
+  type CatalogueEntry,
+} from "@portal/api/policies";
 import { fetchPipelines, type PipelineView } from "@portal/api/pipelines";
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { fetchUsers, type Member } from "@portal/api/users";
@@ -147,8 +152,13 @@ export async function fetchPortalEntityScope(
   switch (scopeId) {
     case "portal-users":
       return (await fetchUsers(tier)).members;
-    case "portal-policies":
-      return (await fetchPolicies()).catalogue;
+    case "portal-policies": {
+      const [list, runs] = await Promise.all([
+        fetchPoliciesList(),
+        fetchPolicyRuns(),
+      ]);
+      return assemblePolicies(list, runs).catalogue;
+    }
     case "portal-pipelines":
       return (await fetchPipelines()).pipelines;
     case "portal-sources":

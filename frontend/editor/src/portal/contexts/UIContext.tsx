@@ -7,6 +7,12 @@ import {
 } from "react";
 
 interface UIContextValue {
+  /** Off-canvas sidebar drawer on small screens (no-op chrome on desktop). */
+  mobileNavOpen: boolean;
+  openMobileNav: () => void;
+  closeMobileNav: () => void;
+  toggleMobileNav: () => void;
+
   assistantOpen: boolean;
   openAssistant: () => void;
   closeAssistant: () => void;
@@ -43,6 +49,7 @@ interface UIContextValue {
 const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
@@ -61,6 +68,13 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<UIContextValue>(
     () => ({
+      // Opening any overlay (settings, link modal) dismisses the mobile nav
+      // drawer so overlays never stack on top of it.
+      mobileNavOpen,
+      openMobileNav: () => setMobileNavOpen(true),
+      closeMobileNav: () => setMobileNavOpen(false),
+      toggleMobileNav: () => setMobileNavOpen((o) => !o),
+
       assistantOpen,
       openAssistant: () => setAssistantOpen(true),
       closeAssistant: () => setAssistantOpen(false),
@@ -70,6 +84,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       settingsInitialSection,
       settingsInitialFocus,
       openSettings: (section?: string, focus?: string) => {
+        setMobileNavOpen(false);
         setSettingsInitialSection(section ?? null);
         setSettingsInitialFocus(focus ?? null);
         setSettingsOpen(true);
@@ -83,6 +98,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       linkModalOpen,
       linkModalMode,
       openLinkModal: (mode: "link" | "reauth" = "link") => {
+        setMobileNavOpen(false);
         setLinkModalMode(mode);
         // Never stack on Settings: close it first, and remember to reopen it on
         // the account-link section once the login modal closes.
@@ -106,6 +122,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       },
     }),
     [
+      mobileNavOpen,
       assistantOpen,
       settingsOpen,
       settingsInitialSection,

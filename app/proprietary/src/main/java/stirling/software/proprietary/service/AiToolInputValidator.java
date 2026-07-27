@@ -39,7 +39,7 @@ public final class AiToolInputValidator {
         }
         if (file.getSize() > MAX_INPUT_FILE_BYTES) {
             throw new ResponseStatusException(
-                    HttpStatus.PAYLOAD_TOO_LARGE,
+                    HttpStatus.CONTENT_TOO_LARGE,
                     "PDF exceeds maximum size of "
                             + (MAX_INPUT_FILE_BYTES / (1024 * 1024))
                             + " MB for AI tools");

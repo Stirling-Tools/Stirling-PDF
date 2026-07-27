@@ -142,8 +142,11 @@ vi.mock("@portal/api/users", () => ({
   fetchUsers: vi.fn(),
 }));
 
-vi.mock("@portal/api/policies", () => ({
-  fetchPolicies: vi.fn(),
+// Keep the real (pure) assemblePolicies; only the network fetchers are mocked.
+vi.mock("@portal/api/policies", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@portal/api/policies")>()),
+  fetchPoliciesList: vi.fn(),
+  fetchPolicyRuns: vi.fn(),
 }));
 
 vi.mock("@portal/api/pipelines", () => ({
@@ -155,7 +158,7 @@ vi.mock("@portal/api/sources", () => ({
 }));
 
 import type { CatalogueEntry } from "@portal/api/policies";
-import { fetchPolicies } from "@portal/api/policies";
+import { fetchPoliciesList, fetchPolicyRuns } from "@portal/api/policies";
 import type { PipelineView } from "@portal/api/pipelines";
 import { fetchPipelines } from "@portal/api/pipelines";
 import { fetchSources } from "@portal/api/sources";
@@ -287,15 +290,8 @@ describe("usePortalSearchResults helpers", () => {
     vi.clearAllMocks();
     mockOpenSettings.mockReset();
     vi.mocked(fetchUsers).mockResolvedValue(makeUsersResponse([]));
-    vi.mocked(fetchPolicies).mockResolvedValue({
-      summary: {
-        active: 0,
-        paused: 0,
-        categories: 0,
-        docsEnforced: 0,
-      },
-      catalogue: [],
-    });
+    vi.mocked(fetchPoliciesList).mockResolvedValue([]);
+    vi.mocked(fetchPolicyRuns).mockResolvedValue([]);
     vi.mocked(fetchPipelines).mockResolvedValue({ kpis: [], pipelines: [] });
     vi.mocked(fetchSources).mockResolvedValue({ kpis: [], sources: [] });
   });
@@ -377,7 +373,7 @@ describe("usePortalSearchResults helpers", () => {
     await waitFor(() => expect(fetchUsers).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(result.current.loadingFiles).toBe(false));
 
-    expect(fetchPolicies).not.toHaveBeenCalled();
+    expect(fetchPoliciesList).not.toHaveBeenCalled();
     expect(fetchPipelines).not.toHaveBeenCalled();
     expect(fetchSources).not.toHaveBeenCalled();
     expect(result.current.groups.map((group) => group.id)).toEqual([

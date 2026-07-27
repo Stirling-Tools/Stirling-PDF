@@ -120,21 +120,19 @@ export default function SpringLoginForm({
       {beforeEmailForm}
 
       {renderEmailForm && (
-        <div style={{ marginTop: hasProviders ? "1rem" : 0 }}>
-          <EmailPasswordForm
-            email={email}
-            password={password}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            mfaCode={mfaCode}
-            setMfaCode={setMfaCode}
-            showMfaField={requiresMfa || Boolean(mfaCode)}
-            requiresMfa={requiresMfa}
-            onSubmit={signInWithEmail}
-            isSubmitting={isSubmitting}
-            submitButtonText={submitLabel}
-          />
-        </div>
+        <EmailPasswordForm
+          email={email}
+          password={password}
+          setEmail={setEmail}
+          setPassword={setPassword}
+          mfaCode={mfaCode}
+          setMfaCode={setMfaCode}
+          showMfaField={requiresMfa || Boolean(mfaCode)}
+          requiresMfa={requiresMfa}
+          onSubmit={signInWithEmail}
+          isSubmitting={isSubmitting}
+          submitButtonText={submitLabel}
+        />
       )}
 
       {footer}

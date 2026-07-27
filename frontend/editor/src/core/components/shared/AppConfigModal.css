@@ -87,7 +87,8 @@
 }
 
 .modal-nav-scroll:hover {
-  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
+  scrollbar-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent)
+    transparent;
 }
 
 .modal-nav-scroll::-webkit-scrollbar {
@@ -105,11 +106,11 @@
 }
 
 .modal-nav-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(128, 128, 128, 0.5);
+  background-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent);
 }
 
 .modal-nav-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(128, 128, 128, 0.7);
+  background-color: color-mix(in srgb, var(--c-border-strong) 70%, transparent);
 }
 
 .modal-nav-section {
@@ -155,7 +156,8 @@
 }
 
 .modal-content-scroll:hover {
-  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
+  scrollbar-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent)
+    transparent;
 }
 
 .modal-content-scroll::-webkit-scrollbar {
@@ -173,11 +175,11 @@
 }
 
 .modal-content-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(128, 128, 128, 0.5);
+  background-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent);
 }
 
 .modal-content-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(128, 128, 128, 0.7);
+  background-color: color-mix(in srgb, var(--c-border-strong) 70%, transparent);
 }
 
 .modal-header {
@@ -226,8 +228,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--modal-content-bg);
-  border-top: 1px solid var(--modal-header-border);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-subtle);
   padding: 1rem 2rem;
   margin: 0 -2rem;
   margin-bottom: -1rem;
