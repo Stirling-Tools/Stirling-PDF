@@ -156,7 +156,7 @@
   /* Symmetric side padding leaves room for the retract handle pinned right
      without knocking the centred tool icons off-centre. */
   padding: 4px 36px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 /* Retract / reopen handle for the viewer tool row. */
@@ -167,7 +167,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   cursor: pointer;
   padding: 0;
   transition:
@@ -176,8 +176,8 @@
 }
 
 .workbench-bar-toolbar-handle:hover {
-  color: var(--text-primary);
-  background: var(--hover-bg);
+  color: var(--c-text);
+  background: var(--c-hover);
 }
 
 /* Pinned to the right edge of the tool row. */

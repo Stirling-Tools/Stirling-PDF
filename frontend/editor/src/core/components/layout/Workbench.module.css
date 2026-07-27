@@ -18,11 +18,11 @@
   justify-content: center;
   width: 2.25rem;
   height: 0.875rem;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--c-border-subtle);
   border-top: none;
   border-radius: 0 0 7px 7px;
-  background: var(--bg-toolbar);
-  color: var(--text-muted);
+  background: var(--c-bg-raised);
+  color: var(--c-text-subtle);
   cursor: pointer;
   z-index: 52;
   transition:
@@ -31,8 +31,8 @@
 }
 
 .workbenchBarReopenTab:hover {
-  color: var(--text-primary);
-  background: var(--hover-bg);
+  color: var(--c-text);
+  background: var(--c-hover);
 }
 
 .workbenchBarWrapper {

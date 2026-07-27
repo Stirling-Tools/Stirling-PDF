@@ -184,6 +184,7 @@ export function usePortalSearchResults(
         ? {
             isAdmin: config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
+            showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
     [config],

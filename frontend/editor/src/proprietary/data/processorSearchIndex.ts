@@ -59,11 +59,11 @@ const VIEWS: ProcessorSearchEntry[] = [
     keywords: ["audit", "files"],
   },
   {
-    id: "components",
-    labelKey: "portal.nav.components",
-    labelFallback: "Components",
-    path: `${PORTAL_BASENAME}/components`,
-    keywords: ["sdk", "embed"],
+    id: "integrations",
+    labelKey: "portal.nav.integrations",
+    labelFallback: "Integrations",
+    path: `${PORTAL_BASENAME}/integrations`,
+    keywords: ["connections", "external", "api", "webhooks"],
   },
   {
     id: "infrastructure",
@@ -77,15 +77,21 @@ const VIEWS: ProcessorSearchEntry[] = [
     labelKey: "portal.nav.usage",
     labelFallback: "Usage & Billing",
     path: `${PORTAL_BASENAME}/usage`,
-    keywords: ["billing", "invoices", "plan", "wallet"],
+    keywords: ["billing", "invoices", "plan", "wallet", "payg", "bundles"],
+  },
+  {
+    id: "procurement",
+    labelKey: "portal.nav.procurement",
+    labelFallback: "Procurement",
+    path: `${PORTAL_BASENAME}/procurement`,
+    keywords: ["enterprise", "trial", "pricing", "contract"],
   },
   {
     id: "docs",
     labelKey: "portal.nav.docs",
-    labelFallback: "Developer Docs",
-    path: "",
-    externalUrl: "https://docs.stirlingpdf.com/",
-    keywords: ["api", "documentation", "reference"],
+    labelFallback: "Documentation",
+    path: `${PORTAL_BASENAME}/docs`,
+    keywords: ["api", "documentation", "reference", "guides"],
   },
 ];
 

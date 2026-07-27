@@ -102,6 +102,7 @@ export function useSuperSearchGates(): SuperSearchGates | null {
             loginEnabled: config.enableLogin ?? false,
             portalAccessible: authState.portalAccess ?? false,
             isAnonymous: authState.isAnonymous,
+            showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
     [authState.isAdmin, authState.isAnonymous, authState.portalAccess, config],
@@ -301,9 +302,13 @@ export function rankSettingsResults(
   const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
     // Null gates (config still loading): hide every gated section.
     if (s.requiresLogin && !(gates?.loginEnabled ?? false)) return false;
-    // Admin-area sections mirror the builder's `isAdmin || !loginEnabled` gate.
-    if (s.adminArea && !(gates ? gates.isAdmin || !gates.loginEnabled : false))
-      return false;
+    // Admin-area sections mirror the builder's gate: admins always; no-login
+    // mode only while system.showSettingsWhenNoLogin keeps the admin preview.
+    const adminGateOpen =
+      !!gates &&
+      (gates.isAdmin ||
+        (!gates.loginEnabled && (gates.showSettingsWhenNoLogin ?? true)));
+    if (s.adminArea && !adminGateOpen) return false;
     // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
     if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
       return false;

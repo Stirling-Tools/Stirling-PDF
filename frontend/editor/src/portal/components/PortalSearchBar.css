@@ -4,8 +4,8 @@
   align-items: center;
   justify-content: center;
   padding: 0.22rem 1rem;
-  background: var(--color-sidebar-bg);
-  border-bottom: 1px solid var(--color-sidebar-divider);
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border-subtle);
   flex-shrink: 0;
 }
 
@@ -22,16 +22,10 @@
   font-size: 12.5px;
 }
 
-[data-mantine-color-scheme="dark"] .portal-searchbar .super-search input {
-  background-color: transparent;
-}
-
 /* The dropdown is portalled to <body>, so it can't inherit portal styling by
-   nesting — this class (passed via dropdownClassName) restyles it with the
-   portal's own surface vocabulary. */
+   nesting — this class (passed via dropdownClassName) is the portal's hook.
+   Colours come from the shared semantic tokens; only the roomier padding
+   differs from the editor dropdown. */
 .portal-search-dropdown.super-search-dropdown {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
   padding: 0.5rem;
 }

@@ -62,6 +62,12 @@ export interface SuperSearchGates {
   loginEnabled: boolean;
   portalAccessible?: boolean;
   /**
+   * Whether no-login mode keeps the read-only admin settings preview
+   * (`system.showSettingsWhenNoLogin`, default true). Mirrors the settings
+   * nav builder's admin gate: `isAdmin || (!loginEnabled && this)`.
+   */
+  showSettingsWhenNoLogin?: boolean;
+  /**
    * True for a signed-out (anonymous) session. Gates account-bound sections
    * on hosts where auth state, not the local backend config, is the truth
    * (SaaS). Hosts whose users are always signed in may omit it.

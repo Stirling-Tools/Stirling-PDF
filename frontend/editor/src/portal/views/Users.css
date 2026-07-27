@@ -361,7 +361,7 @@
 }
 @keyframes portal-users-row-flash {
   from {
-    background: var(--color-bg-hover);
+    background: var(--c-hover);
   }
   to {
     background: transparent;
