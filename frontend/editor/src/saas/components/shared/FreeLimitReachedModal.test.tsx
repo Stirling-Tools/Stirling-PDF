@@ -31,6 +31,10 @@ const wallet: Wallet = {
   docsProcessedThisPeriod: 0,
   uniquePdfsThisPeriod: 0,
   sizeMultiplierPdfsThisPeriod: 0,
+  billingMode: "payg",
+  prepaidUnitsRemaining: 0,
+  prepaidUnitsTotal: 0,
+  prepaidExpiresAt: null,
   members: [],
   recent: [],
 };

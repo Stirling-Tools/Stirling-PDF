@@ -6,12 +6,11 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
-import { SourceBuilder } from "@portal/views/SourceBuilder";
+import { SourceModal } from "@portal/components/sources/SourceModal";
 import { UIProvider } from "@portal/contexts/UIContext";
 
-// SourceBuilder reads useUI() (open settings) and useQueryClient (list
+// SourceModal reads useUI() (open settings) and useQueryClient (list
 // invalidation), so provide the query client + Mantine + the UI context.
 const Providers = ({ children }: { children: ReactNode }) => (
   <PortalTestProviders>
@@ -41,26 +40,29 @@ vi.mock("@portal/api/sources", () => ({
 }));
 
 const fetchS3Connections = vi.fn();
+const createIntegration = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
   fetchIntegrations: () => Promise.resolve([]),
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => fetchS3Connections(),
-  createIntegration: vi.fn(),
+  createIntegration: (body: unknown) => createIntegration(body),
 }));
 
-function renderBuilder(initial: string) {
-  return render(
-    <MemoryRouter initialEntries={[initial]}>
-      <Routes>
-        <Route path="/processor/sources" element={<div>sources list</div>} />
-        <Route path="/processor/sources/new" element={<SourceBuilder />} />
-        <Route path="/processor/sources/:id" element={<SourceBuilder />} />
-      </Routes>
-    </MemoryRouter>,
+function renderModal(sourceId: string | null = null) {
+  const onClose = vi.fn();
+  const onSaved = vi.fn();
+  render(
+    <SourceModal
+      open
+      sourceId={sourceId}
+      onClose={onClose}
+      onSaved={onSaved}
+    />,
   );
+  return { onClose, onSaved };
 }
 
-describe("SourceBuilder", () => {
+describe("SourceModal", () => {
   beforeEach(() => {
     createSource.mockReset();
     createSource.mockResolvedValue({ id: "src-1" });
@@ -71,13 +73,16 @@ describe("SourceBuilder", () => {
     isFolderAccessDeniedError.mockReturnValue(false);
     fetchS3Connections.mockReset();
     fetchS3Connections.mockResolvedValue([]);
+    createIntegration.mockReset();
+    createIntegration.mockResolvedValue({ id: 77, name: "Fresh bucket" });
   });
 
-  it("creates a folder source and returns to the list", async () => {
-    renderBuilder("/processor/sources/new");
+  it("creates a folder source through the staged flow and closes", async () => {
+    const { onClose, onSaved } = renderModal();
 
-    // Folder is the first offered type; fill name + directory.
-    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+    // Stage 1: pick the folder connector, then fill name + directory.
+    fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
       target: { value: "Claims intake" },
     });
     fireEvent.change(
@@ -97,7 +102,8 @@ describe("SourceBuilder", () => {
         enabled: true,
       }),
     );
-    expect(await screen.findByText("sources list")).toBeInTheDocument();
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(onClose).toHaveBeenCalled();
   });
 
   it("offers a Folder Access settings link when the folder is outside allowed roots", async () => {
@@ -105,9 +111,10 @@ describe("SourceBuilder", () => {
       new Error("outside the allowed folder roots"),
     );
     isFolderAccessDeniedError.mockReturnValue(true);
-    renderBuilder("/processor/sources/new");
+    renderModal();
 
-    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+    fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
       target: { value: "Claims intake" },
     });
     fireEvent.change(
@@ -129,9 +136,10 @@ describe("SourceBuilder", () => {
   it("shows a plain error banner (no settings link) for other save failures", async () => {
     createSource.mockRejectedValue(new Error("boom"));
     isFolderAccessDeniedError.mockReturnValue(false);
-    renderBuilder("/processor/sources/new");
+    renderModal();
 
-    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+    fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
       target: { value: "Claims intake" },
     });
     fireEvent.change(
@@ -149,13 +157,11 @@ describe("SourceBuilder", () => {
   });
 
   it("gates the s3 type on a chosen connection", async () => {
-    renderBuilder("/processor/sources/new");
-    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+    renderModal();
+    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
       target: { value: "Bucket source" },
     });
-    // Switch to the S3 type: the connection field appears and Create stays
-    // disabled until a connection is chosen (connectionId is required).
-    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
     expect(
       await screen.findByText(
         "portal.sources.types.s3.fields.connection.label",
@@ -171,43 +177,87 @@ describe("SourceBuilder", () => {
       id: "wh-1",
       options: { webhookId: "whk_abc123", signingSecret: "whsec_topsecret" },
     });
-    renderBuilder("/processor/sources/new");
+    const { onClose } = renderModal();
 
-    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+    fireEvent.click(screen.getByText("portal.sources.types.webhook.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
       target: { value: "Partner uploads" },
     });
-    // Webhook's connection is optional (self-hosted local-disk), so a name is enough to create.
-    fireEvent.click(screen.getByText("portal.sources.types.webhook.label"));
     fireEvent.click(screen.getByText("portal.sources.builder.create"));
 
     await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
-    expect(createSource).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "webhook", name: "Partner uploads" }),
-    );
-
     expect(
       await screen.findByDisplayValue("whsec_topsecret"),
     ).toBeInTheDocument();
     expect(
       screen.getByDisplayValue(/\/api\/v1\/webhooks\/whk_abc123$/),
     ).toBeInTheDocument();
-    expect(screen.queryByText("sources list")).not.toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
 
     fireEvent.click(
       screen.getByText("portal.sources.types.webhook.reveal.done"),
     );
-    expect(await screen.findByText("sources list")).toBeInTheDocument();
+    expect(onClose).toHaveBeenCalled();
   });
 
-  it("blocks create until required fields are filled", async () => {
-    renderBuilder("/processor/sources/new");
-    // Name given but directory (required) still blank -> Create disabled.
-    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
-      target: { value: "Nameonly" },
+  it("creates an S3 connection in-place without stacking a second modal", async () => {
+    renderModal();
+    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
+    // "New connection..." swaps the stage instead of opening another modal.
+    fireEvent.click(
+      await screen.findByText("portal.connections.picker.createNew"),
+    );
+    expect(document.querySelectorAll('[role="dialog"]').length).toBe(1);
+
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+      target: { value: "Fresh bucket" },
     });
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.connections\.types\.s3\.fields\.bucket\.label/,
+      ),
+      { target: { value: "fresh-bucket" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.connections\.types\.s3\.fields\.accessKeyId\.label/,
+      ),
+      { target: { value: "AKIA123" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.connections\.types\.s3\.fields\.secretAccessKey\.label/,
+      ),
+      { target: { value: "secret" } },
+    );
+    fireEvent.click(screen.getByText("portal.connections.picker.save"));
+
+    await waitFor(() => expect(createIntegration).toHaveBeenCalledTimes(1));
+    expect(createIntegration).toHaveBeenCalledWith(
+      expect.objectContaining({
+        integrationType: "S3",
+        name: "Fresh bucket",
+        scope: "TEAM",
+      }),
+    );
+    // Back on the source form with the new connection selected.
     expect(
-      screen.getByText("portal.sources.builder.create").closest("button"),
-    ).toBeDisabled();
+      await screen.findByText(
+        "portal.sources.types.s3.fields.connection.label",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("lists coming-soon connectors as inert cards", () => {
+    renderModal();
+    fireEvent.click(screen.getByText("portal.sources.types.sharepoint.label"));
+    // Still on the type stage: no configure form appeared.
+    expect(
+      screen.queryByLabelText(/portal\.integrations\.typedName/),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getAllByText("portal.sources.builder.comingSoon").length,
+    ).toBeGreaterThan(1);
   });
 
   it("edits an existing source prefilled and saves with its id", async () => {
@@ -218,7 +268,7 @@ describe("SourceBuilder", () => {
       options: { directory: "/old", mode: "consume" },
       enabled: true,
     });
-    renderBuilder("/processor/sources/src-9");
+    renderModal("src-9");
 
     const directory = await screen.findByLabelText(
       /portal\.sources\.types\.folder\.fields\.directory\.label/,
@@ -236,7 +286,7 @@ describe("SourceBuilder", () => {
     );
   });
 
-  it("deletes an existing source after confirmation", async () => {
+  it("deletes an existing source after the inline confirm", async () => {
     fetchSource.mockResolvedValue({
       id: "src-9",
       name: "Existing",
@@ -244,12 +294,12 @@ describe("SourceBuilder", () => {
       options: { directory: "/old" },
       enabled: true,
     });
-    renderBuilder("/processor/sources/src-9");
+    const { onSaved } = renderModal("src-9");
 
     fireEvent.click(await screen.findByText("portal.sources.builder.delete"));
     fireEvent.click(await screen.findByText("portal.sources.delete.confirm"));
 
     await waitFor(() => expect(deleteSource).toHaveBeenCalledWith("src-9"));
-    expect(await screen.findByText("sources list")).toBeInTheDocument();
+    expect(onSaved).toHaveBeenCalled();
   });
 });
