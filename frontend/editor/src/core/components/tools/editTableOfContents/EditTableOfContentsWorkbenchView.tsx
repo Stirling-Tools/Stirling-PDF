@@ -10,11 +10,11 @@ import BookmarkEditor from "@app/components/tools/editTableOfContents/BookmarkEd
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { downloadFromUrl } from "@app/services/downloadService";
 import { requestReviewClearance } from "@app/services/reviewGate";
-import { isStirlingFile } from "@app/types/fileContext";
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
   selectedFileName?: string;
+  sourceFileIds: string[];
   disabled: boolean;
   files: File[];
   thumbnails: (string | undefined)[];
@@ -77,6 +77,7 @@ const EditTableOfContentsWorkbenchView = ({
   const {
     bookmarks,
     selectedFileName,
+    sourceFileIds,
     disabled,
     downloadUrl,
     downloadFilename,
@@ -209,7 +210,7 @@ const EditTableOfContentsWorkbenchView = ({
                         // The result derives from the source document, so it
                         // inherits that document's review state.
                         const cleared = await requestReviewClearance(
-                          files.filter(isStirlingFile).map((f) => f.fileId),
+                          sourceFileIds,
                           "download",
                         );
                         if (!cleared) return;

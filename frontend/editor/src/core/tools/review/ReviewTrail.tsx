@@ -67,7 +67,7 @@ function TrailStepRow({ step }: { step: ReviewTrailStep }) {
 
 function TrailRun({ run }: { run: ReviewTrailRun }) {
   const { t } = useTranslation();
-  const sourceLabel = t(`review.trail.source.${run.source}`, run.source);
+  const sourceLabel = t(`reviewTool.trail.source.${run.source}`, run.source);
 
   return (
     <div className="review-trail__run" data-status={runStatus(run)}>
