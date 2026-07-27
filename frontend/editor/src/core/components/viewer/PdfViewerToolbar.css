@@ -1,0 +1,35 @@
+/* Floating viewer toolbar: a nav-surface card like the workbench rails rather
+   than a slab welded to the viewport edge. Shared by both consumers (the
+   viewer's bottom dock and the file-preview modal, which puts it up top). */
+.pdf-viewer-toolbar {
+  border-radius: 0.625rem;
+  border: 1px solid var(--c-border-subtle);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-md);
+}
+
+/* The viewer's fixed bottom dock. The reveal lives here, not on the toolbar
+   itself, so it only plays where the bar actually enters from off-screen —
+   mirroring the workbench top bar's 280ms ease, upwards instead of downwards. */
+.pdf-viewer-toolbar-dock {
+  animation: pdf-viewer-toolbar-in 280ms ease both;
+}
+
+@keyframes pdf-viewer-toolbar-in {
+  from {
+    /* The bar's own height plus its gutter, so it starts fully off-screen
+       however tall the controls wrap. */
+    transform: translateY(calc(100% + 0.5rem));
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-viewer-toolbar-dock {
+    animation: none;
+  }
+}
