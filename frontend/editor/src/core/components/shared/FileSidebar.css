@@ -6,7 +6,10 @@
   flex-direction: column;
   height: 100%;
   position: relative;
-  z-index: 10;
+  /* Above the workbench column (also z-10, but later in the DOM, so it would
+     otherwise paint over us). The brand switcher's menu is wider than the
+     collapsed rail and has to spill across that boundary intact. */
+  z-index: var(--z-dropdown);
   flex-shrink: 0;
   /* Slide the rail between collapsed/expanded. The delayed content-fade
      (sidebar-content-in, 0.18s) is timed against this 0.22s so labels resolve
