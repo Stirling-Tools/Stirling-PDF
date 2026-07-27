@@ -485,7 +485,12 @@ function PolicySetupWizardBody({
         variant="underline"
         ariaLabel={t("portal.policies.wizard.tabs.ariaLabel")}
         activeKey={step}
-        onChange={(k) => setStep(k as Step)}
+        // The tab is gated like the Continue button: leaving the workflow step
+        // with a half-configured capability would only defer the block to save.
+        onChange={(k) => {
+          if (k === "settings" && hasMisconfiguredTool) return;
+          setStep(k as Step);
+        }}
         items={[
           { key: "workflow", label: t("portal.policies.wizard.tabs.workflow") },
           { key: "settings", label: t("portal.policies.wizard.tabs.settings") },

@@ -130,7 +130,7 @@ class PolicyValidatorTest {
     void rejectsATextWatermarkStepWithNoText() {
         when(trigger.type()).thenReturn("schedule");
         when(inputSource.supports(any())).thenReturn(true);
-        when(outputSink.supports(any())).thenReturn(true);
+        // No outputSink stub: steps are validated before the output, so the sink is never reached.
         Policy policy =
                 withSteps(
                         new PipelineStep(
@@ -145,7 +145,7 @@ class PolicyValidatorTest {
     void rejectsAnAutomaticRedactStepWithNoPatterns() {
         when(trigger.type()).thenReturn("schedule");
         when(inputSource.supports(any())).thenReturn(true);
-        when(outputSink.supports(any())).thenReturn(true);
+        // No outputSink stub: steps are validated before the output, so the sink is never reached.
         Policy policy =
                 withSteps(
                         new PipelineStep(
