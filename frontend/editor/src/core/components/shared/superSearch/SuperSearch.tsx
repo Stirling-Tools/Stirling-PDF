@@ -192,6 +192,12 @@ export default function SuperSearch({
       ),
     [visibleSections, visibleCountFor],
   );
+  // Row index per result key — the render below would otherwise indexOf()
+  // every row against the flat list (quadratic in visible results).
+  const flatIndexByKey = useMemo(
+    () => new Map(visibleFlatResults.map((result, i) => [result.key, i])),
+    [visibleFlatResults],
+  );
 
   const moveHighlight = useCallback(
     (index: number) => {
@@ -524,7 +530,7 @@ export default function SuperSearch({
                         )}
                         <div className="super-search-group-results">
                           {group.results.slice(0, shownCount).map((result) => {
-                            const index = visibleFlatResults.indexOf(result);
+                            const index = flatIndexByKey.get(result.key) ?? -1;
                             const active = index === highlight;
                             return (
                               <Button

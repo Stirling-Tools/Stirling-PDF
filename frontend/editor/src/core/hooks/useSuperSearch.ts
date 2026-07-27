@@ -21,6 +21,7 @@ import { fileStorage } from "@app/services/fileStorage";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { detectFileExtension } from "@app/utils/fileUtils";
+import { openExternalUrl } from "@app/utils/safeNavigation";
 import {
   rankByFuzzy,
   idToWords,
@@ -301,6 +302,11 @@ export function rankSettingsResults(
   // the current build's settings modal can actually show.
   const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
     // Null gates (config still loading): hide every gated section.
+    // requiresLogin keys off the deployment's login *mode*, mirroring the nav
+    // builder: with login on the editor is login-walled (an unauthenticated
+    // visitor never reaches this code), and with login off those sections
+    // (account, API keys) have no meaning. Actual per-session auth state only
+    // matters on SaaS, where requiresAccount/isAnonymous carries it.
     if (s.requiresLogin && !(gates?.loginEnabled ?? false)) return false;
     // Admin-area sections mirror the builder's gate: admins always; no-login
     // mode only while system.showSettingsWhenNoLogin keeps the admin preview.
@@ -503,7 +509,7 @@ export function useSuperSearch(
       // editor's tool lists treat them.
       const link = toolRegistry[id]?.link;
       if (link) {
-        window.open(link, "_blank", "noopener,noreferrer");
+        openExternalUrl(link);
         return;
       }
       // Tools whose backend endpoint isn't served in this environment are
@@ -534,7 +540,7 @@ export function useSuperSearch(
   const selectProcessorEntry = useCallback(
     (item: ProcessorSearchEntry) => {
       if (item.externalUrl) {
-        window.open(item.externalUrl, "_blank", "noopener,noreferrer");
+        openExternalUrl(item.externalUrl);
       } else {
         navigate(item.path);
       }

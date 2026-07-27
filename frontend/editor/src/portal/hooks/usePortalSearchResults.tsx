@@ -27,6 +27,7 @@ import {
   type UseSuperSearchResult,
 } from "@app/types/superSearch";
 import type { ToolId } from "@app/types/toolId";
+import { assignLocation, openExternalUrl } from "@app/utils/safeNavigation";
 import { usersBackend } from "@app/portal/usersBackend";
 import {
   assemblePolicies,
@@ -215,10 +216,10 @@ export function usePortalSearchResults(
       // matching how the editor's tool lists treat them.
       const tool = allTools[id];
       if (tool?.link) {
-        window.open(tool.link, "_blank", "noopener,noreferrer");
+        openExternalUrl(tool.link);
         return;
       }
-      window.location.assign(editorHref(getToolUrlPath(id)));
+      assignLocation(editorHref(getToolUrlPath(id)));
     },
     [allTools],
   );
