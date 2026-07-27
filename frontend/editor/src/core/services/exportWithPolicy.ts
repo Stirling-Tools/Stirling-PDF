@@ -4,6 +4,9 @@
  * before it's downloaded. The enforcement itself is proprietary (a no-op in the
  * core build via the `@app/services/policyExport` stub), and never hard-blocks:
  * on failure the original file is downloaded.
+ *
+ * The review gate is enforced here too, so every download path is gated by
+ * construction rather than by each caller remembering to ask.
  */
 
 import {
@@ -12,10 +15,26 @@ import {
   type DownloadResult,
 } from "@app/services/downloadService";
 import { enforceExportPolicies } from "@app/services/policyExport";
+import { requestReviewClearance } from "@app/services/reviewGate";
+
+export interface PolicyDownloadRequest extends DownloadRequest {
+  /**
+   * Set when the caller already cleared the gate for this export, e.g. a batch
+   * that prompted once for all its files. Skips the per-file prompt.
+   */
+  reviewCleared?: boolean;
+}
 
 export async function downloadFileWithPolicy(
-  request: DownloadRequest,
+  request: PolicyDownloadRequest,
 ): Promise<DownloadResult> {
+  if (!request.reviewCleared) {
+    const cleared = await requestReviewClearance(
+      request.fileId ? [request.fileId] : [],
+      "download",
+    );
+    if (!cleared) return { cancelled: true };
+  }
   // enforceExportPolicies only touches PDFs and is a no-op without an active
   // export policy, so non-PDF / non-policy downloads pass straight through.
   const input =

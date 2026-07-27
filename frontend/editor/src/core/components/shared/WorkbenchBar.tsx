@@ -501,7 +501,6 @@ export default function WorkbenchBar({
               : t("workbenchBar.closePdf", "Close PDF"),
           )}
       </div>
-      {exportActions.gateModal}
     </div>
   );
 }

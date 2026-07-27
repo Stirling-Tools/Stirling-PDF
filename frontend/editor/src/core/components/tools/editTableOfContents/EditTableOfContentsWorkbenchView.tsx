@@ -9,6 +9,8 @@ import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
 import BookmarkEditor from "@app/components/tools/editTableOfContents/BookmarkEditor";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { downloadFromUrl } from "@app/services/downloadService";
+import { requestReviewClearance } from "@app/services/reviewGate";
+import { isStirlingFile } from "@app/types/fileContext";
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -202,12 +204,21 @@ const EditTableOfContentsWorkbenchView = ({
                 {downloadUrl && (
                   <Button
                     leftSection={<LocalIcon icon="download-rounded" />}
-                    onClick={() =>
-                      downloadFromUrl(
-                        downloadUrl,
-                        downloadFilename ?? "download",
-                      )
-                    }
+                    onClick={() => {
+                      void (async () => {
+                        // The result derives from the source document, so it
+                        // inherits that document's review state.
+                        const cleared = await requestReviewClearance(
+                          files.filter(isStirlingFile).map((f) => f.fileId),
+                          "download",
+                        );
+                        if (!cleared) return;
+                        await downloadFromUrl(
+                          downloadUrl,
+                          downloadFilename ?? "download",
+                        );
+                      })();
+                    }}
                   >
                     {terminology.download}
                   </Button>

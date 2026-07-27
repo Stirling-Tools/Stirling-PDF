@@ -13,6 +13,7 @@ import { useFileState } from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { enforceExportPolicies } from "@app/services/policyExport";
+import { requestReviewClearance } from "@app/services/reviewGate";
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import {
@@ -554,6 +555,16 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     const file = activeFileId
       ? selectors.getFiles([activeFileId as FileId])[0]
       : undefined;
+    // Printing is an export, so it clears the review gate first. Both the
+    // toolbar button and the viewer's "p" shortcut land here.
+    if (
+      !(await requestReviewClearance(
+        activeFileId ? [activeFileId] : [],
+        "print",
+      ))
+    ) {
+      return;
+    }
     if (!activeFileId || !file) {
       printActions.print();
       return;
