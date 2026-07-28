@@ -50,6 +50,12 @@ export interface Wallet {
   freeRemaining: number;
   /** Paid per-document rate in minor units (may be fractional); null = unknown (render "unknown", never substitute). */
   pricePerDocMinor: number | null;
+  /**
+   * Per-credit rate of the prepaid-bundle Stripe Price ({@code bundle:processor}) in minor units;
+   * null when unresolved. What the bundle calculator prices its pool at so the estimate matches the
+   * checkout charge — distinct from {@link pricePerDocMinor} (the metered per-doc rate).
+   */
+  bundleRatePerCreditMinor: number | null;
   /** Lower-case ISO 4217; null when unknown. */
   currency: string | null;
   /** Estimated charges so far this period in minor units; null when the rate is unknown. The Stripe invoice is authoritative. */

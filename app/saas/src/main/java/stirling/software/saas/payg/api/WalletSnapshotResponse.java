@@ -55,6 +55,11 @@ import java.util.List;
  * @param members leader-only roster of team members + their per-member sub-caps. Empty for member
  *     callers.
  * @param recent latest wallet-ledger entries (newest first) for the activity feed.
+ * @param bundleRatePerCreditMinor per-credit rate of the prepaid-bundle Stripe Price (lookup key
+ *     {@code bundle:processor}) in minor units of {@code currency} (may be fractional); {@code
+ *     null} when unresolved. The in-app bundle calculator multiplies its pool by this so its
+ *     estimate matches the checkout edge fn's charge. Distinct from {@code pricePerDocMinor} (the
+ *     metered per-document rate) — the two must not be conflated.
  */
 public record WalletSnapshotResponse(
         Long teamId,
@@ -83,7 +88,8 @@ public record WalletSnapshotResponse(
         long prepaidUnitsRemaining,
         long prepaidUnitsTotal,
         String prepaidExpiresAt,
-        String billingMode) {
+        String billingMode,
+        BigDecimal bundleRatePerCreditMinor) {
 
     // Prepaid usage bundles, aggregated across the team's in-term pools (drawn ahead of the meter,
     // outside the spend cap):
