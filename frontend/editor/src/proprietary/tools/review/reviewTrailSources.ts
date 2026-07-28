@@ -6,6 +6,7 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  forgetFile,
   updateRun,
   usePolicyRuns,
 } from "@app/components/policies/policyRunStore";
@@ -195,4 +196,8 @@ export function useReviewApproval(
   }, [runs, stub]);
 
   return { needsReview: failedIds.length > 0, markApproved, undoApproved };
+}
+
+export function useForgetFileReview(): (fileId: FileId) => void {
+  return useCallback((fileId: FileId) => forgetFile(fileId), []);
 }

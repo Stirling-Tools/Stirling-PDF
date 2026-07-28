@@ -276,6 +276,27 @@ export function removeRun(runId: string) {
   emit();
 }
 
+/**
+ * Drop every trace of a file: its runs (as input or output) and its dispatch
+ * keys. For a file deleted from storage, whose runs would otherwise keep it in
+ * the review queue and badge maps forever, pointing at bytes that are gone.
+ */
+export function forgetFile(fileId: string) {
+  const runs = state.runs.filter(
+    (r) => r.fileId !== fileId && !(r.outputFileIds ?? []).includes(fileId),
+  );
+  const suffix = `:${fileId}`;
+  const dispatched = state.dispatched.filter((key) => !key.endsWith(suffix));
+  if (
+    runs.length === state.runs.length &&
+    dispatched.length === state.dispatched.length
+  ) {
+    return;
+  }
+  state = { ...state, runs, dispatched };
+  emit();
+}
+
 /** Reset the store — used by tests to isolate it. */
 export function resetPolicyRuns() {
   state = { runs: [], dispatched: [], waveStartedAt: 0 };

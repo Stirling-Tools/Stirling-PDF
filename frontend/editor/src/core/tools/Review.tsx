@@ -23,6 +23,7 @@ import { FileId } from "@app/types/file";
 import { ReviewTrail } from "@app/tools/review/ReviewTrail";
 import {
   useFileIdsNeedingReview,
+  useForgetFileReview,
   usePolicyTrailRuns,
   useReviewApproval,
 } from "@app/tools/review/reviewTrailSources";
@@ -40,6 +41,7 @@ const Review = (_props: BaseToolProps) => {
   const { activeFileId, setActiveFileId } = useViewer();
   const { workbench, setWorkbench } = useNavigation();
   const needsReviewIds = useFileIdsNeedingReview();
+  const forgetFileReview = useForgetFileReview();
 
   // Files signed off in this session — drives the "approved" confirmation.
   const [approvedIds, setApprovedIds] = useState<Set<FileId>>(new Set());
@@ -50,10 +52,41 @@ const Review = (_props: BaseToolProps) => {
     () => new Set(),
   );
 
-  // Frozen on first render with anything to review: a ref, not state, so
-  // approving/deleting/paging can never reorder what the reviewer is walking.
+  // A file deleted since it was flagged leaves its runs behind, which would keep
+  // queueing a review that can never happen — so the panel opens on a list of
+  // files the reviewer already dealt with. Drop those runs before the queue
+  // freezes, rather than discovering them one dead entry at a time.
+  const [swept, setSwept] = useState(false);
+  useEffect(() => {
+    if (swept) return;
+    let cancelled = false;
+    void (async () => {
+      const loaded = new Set(fileStubs.map((s) => s.id as string));
+      const missing: FileId[] = [];
+      for (const id of needsReviewIds) {
+        if (loaded.has(id as string)) continue;
+        const stored = await fileStorage
+          .getStirlingFileStub(id)
+          .catch(() => null);
+        if (!stored) missing.push(id);
+      }
+      if (cancelled) return;
+      for (const id of missing) forgetFileReview(id);
+      setSwept(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Deliberately keyed on `swept` alone: this runs once per mount, so
+    // re-opening the panel sweeps again, but approving or deleting mid-session
+    // can't re-trigger it and rebuild the queue under the reviewer.
+  }, [swept]);
+
+  // Frozen on the first render after the sweep: a ref, not state, so approving/
+  // deleting/paging can never reorder what the reviewer is walking.
   const queueRef = useRef<FileId[] | null>(null);
   if (
+    swept &&
     queueRef.current === null &&
     (fileStubs.length > 0 || needsReviewIds.length > 0)
   ) {
@@ -73,6 +106,9 @@ const Review = (_props: BaseToolProps) => {
     }
   }
   const queue = queueRef.current ?? [];
+  // The active file as this panel last saw it, to tell a selection made outside
+  // the panel from the panel's own cursor-driven activation.
+  const seenActiveRef = useRef<string | null>(activeFileId as string | null);
 
   const currentId = queue[cursor] ?? null;
   const stub = currentId
@@ -85,10 +121,32 @@ const Review = (_props: BaseToolProps) => {
   // Show the queue's current file, opening it from storage when unloaded.
   // Activating only when `stub` exists matters: a deleted file's id lingers in
   // the frozen queue, and the viewer drops it — re-setting it loops forever.
+  //
+  // Usually the cursor leads and the viewer follows. But the active file can
+  // also change from outside the panel — clicking a failed badge in the file
+  // list while review is already open — and then the viewer leads: the cursor
+  // moves to that file rather than snapping the reviewer back to the old one.
   useEffect(() => {
+    const seen = seenActiveRef.current;
+    seenActiveRef.current = activeFileId as string | null;
+    if (activeFileId && activeFileId !== seen && activeFileId !== currentId) {
+      const idx = queue.indexOf(activeFileId as FileId);
+      if (idx >= 0) {
+        setCursor(idx);
+      } else {
+        // Flagged after the queue froze, so append rather than drop the click.
+        queueRef.current = [...queue, activeFileId as FileId];
+        setCursor(queue.length);
+      }
+      return;
+    }
     if (!currentId) return;
     if (stub) {
-      if (currentId !== activeFileId) setActiveFileId(currentId);
+      if (currentId !== activeFileId) {
+        setActiveFileId(currentId);
+        // Our own push, so the next pass doesn't read it as an outside change.
+        seenActiveRef.current = currentId;
+      }
       return;
     }
     if (unresolvableIds.has(currentId)) return;
@@ -115,6 +173,7 @@ const Review = (_props: BaseToolProps) => {
     setActiveFileId,
     fileActions,
     unresolvableIds,
+    queue,
   ]);
   useEffect(() => {
     if (workbench !== "viewer") setWorkbench("viewer");
@@ -158,12 +217,20 @@ const Review = (_props: BaseToolProps) => {
     if (!stub) return;
     setConfirmingDelete(false);
     void removeFiles([stub.id]);
+    // removeFiles deletes from storage, so the file is gone for good. Drop its
+    // review state too, or it stays queued (and badged) for a review it can
+    // never receive — which is what the reviewer sees on their next visit.
+    forgetFileReview(stub.id);
     // Tombstone the frozen slot up front, so it never tries to reload the file
     // we just deleted, then step off it: forward if possible, otherwise back.
     setUnresolvableIds((prev) => new Set(prev).add(stub.id as string));
     if (!atEnd) goNext();
     else if (!atStart) goPrev();
-  }, [stub, removeFiles, atEnd, atStart, goNext, goPrev]);
+  }, [stub, removeFiles, forgetFileReview, atEnd, atStart, goNext, goPrev]);
+
+  // Nothing to show until the sweep settles, and showing "no document to
+  // review" first would be wrong the moment it finishes with a queue.
+  if (!swept) return null;
 
   // An empty workbench is fine — queued files open from storage on demand.
   // Once every entry is gone (all deleted), the queue is done rather than empty.

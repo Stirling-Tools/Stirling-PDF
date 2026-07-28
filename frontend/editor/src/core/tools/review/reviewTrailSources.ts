@@ -36,3 +36,11 @@ export function useReviewApproval(
 ): ReviewApproval {
   return { needsReview: false, markApproved: () => {}, undoApproved: () => {} };
 }
+
+/**
+ * Forget a deleted file's review state. Called after the file is removed from
+ * storage, so it stops being queued for review it can never receive.
+ */
+export function useForgetFileReview(): (fileId: FileId) => void {
+  return () => {};
+}
