@@ -23,7 +23,9 @@ import {
 const THUMBNAIL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export interface StoredStirlingFileRecord extends BaseFileMetadata {
-  data: ArrayBuffer;
+  // Blob since the large-file OOM fix (stored by reference, no JS-side copy);
+  // ArrayBuffer records predate it and are still readable.
+  data: ArrayBuffer | Blob;
   fileId: FileId; // Matches runtime StirlingFile.fileId exactly
   quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
@@ -114,7 +116,6 @@ class FileStorageService {
     stub: StirlingFileStub,
   ): Promise<void> {
     const db = await this.getDatabase();
-    const arrayBuffer = await stirlingFile.arrayBuffer();
 
     const record: StoredStirlingFileRecord = {
       id: stirlingFile.fileId,
@@ -125,7 +126,9 @@ class FileStorageService {
       size: stirlingFile.size,
       lastModified: stirlingFile.lastModified,
       createdAt: stub.createdAt,
-      data: arrayBuffer,
+      // Store the File (a Blob) itself: IndexedDB persists it by reference and
+      // streams to disk, so multi-GB files never materialize in JS memory.
+      data: stirlingFile,
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
       isLeaf: stub.isLeaf ?? true,
