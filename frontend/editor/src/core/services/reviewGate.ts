@@ -3,7 +3,7 @@
  * has failed and not been reviewed.
  *
  * Lives in a service, not a hook, because the export paths it guards include
- * plain functions (download services, save-on-exit) that cannot call hooks.
+ * plain functions (the download and save services) that cannot call hooks.
  * Callers await {@link requestReviewClearance}; a mounted host renders the
  * modal and resolves the promise. With no host mounted the gate is inert, so a
  * headless context can never deadlock waiting on a modal that cannot render.

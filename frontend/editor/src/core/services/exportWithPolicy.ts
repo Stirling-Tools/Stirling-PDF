@@ -5,8 +5,9 @@
  * core build via the `@app/services/policyExport` stub), and never hard-blocks:
  * on failure the original file is downloaded.
  *
- * The review gate is enforced here too, so every download path is gated by
- * construction rather than by each caller remembering to ask.
+ * The review gate is enforced here too, but only for callers that pass a
+ * `fileId`: without one there is nothing to look up, so the download proceeds
+ * ungated. Any caller that has a file id must pass it.
  */
 
 import {
