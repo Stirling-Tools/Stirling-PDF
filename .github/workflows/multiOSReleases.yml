@@ -527,18 +527,20 @@ jobs:
           rm -f "$WORK/squashfs-root/usr/lib/"libwayland-*
           curl -fsSL -o "$WORK/appimagetool" \
             https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          # Pinned checksum: never execute an unverified downloaded binary. On
+          # mismatch (upstream rebuilt continuous) the step aborts and the
+          # original AppImage ships unchanged - update the pin deliberately.
+          echo "a6d71e2b6cd66f8e8d16c37ad164658985e0cf5fcaa950c90a482890cb9d13e0  $WORK/appimagetool" | sha256sum -c -
           chmod +x "$WORK/appimagetool"
           SIGN_ARGS=()
           if [ "$GPG_SIGN" = "1" ] && [ -n "${SIGN_KEY:-}" ]; then
             SIGN_ARGS=(--sign --sign-key "$SIGN_KEY")
           fi
           "$WORK/appimagetool" --appimage-extract-and-run "${SIGN_ARGS[@]}" "$WORK/squashfs-root" "$AI.new"
-          # Updater payload signature must match the repacked bytes.
+          # Updater payload signature must match the repacked bytes. The CLI
+          # reads the key/password from env - never pass secrets as argv.
           if [ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
-            (cd frontend && npx tauri signer sign \
-              -k "$TAURI_SIGNING_PRIVATE_KEY" \
-              -p "${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-}" \
-              "$AI.new")
+            (cd frontend && npx tauri signer sign "$AI.new")
             mv "$AI.new.sig" "$AI.sig"
           fi
           mv "$AI.new" "$AI"

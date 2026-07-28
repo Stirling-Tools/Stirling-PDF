@@ -470,6 +470,10 @@ jobs:
           rm -f "$WORK/squashfs-root/usr/lib/"libwayland-*
           curl -fsSL -o "$WORK/appimagetool" \
             https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          # Pinned checksum: never execute an unverified downloaded binary. On
+          # mismatch (upstream rebuilt continuous) the step aborts and the
+          # original AppImage ships unchanged - update the pin deliberately.
+          echo "a6d71e2b6cd66f8e8d16c37ad164658985e0cf5fcaa950c90a482890cb9d13e0  $WORK/appimagetool" | sha256sum -c -
           chmod +x "$WORK/appimagetool"
           "$WORK/appimagetool" --appimage-extract-and-run "$WORK/squashfs-root" "$AI.new"
           mv "$AI.new" "$AI"
