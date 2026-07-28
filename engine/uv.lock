@@ -605,6 +605,7 @@ name = "engine"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cryptography" },
     { name = "fastapi" },
     { name = "opentelemetry-sdk" },
     { name = "pgvector" },
@@ -631,6 +632,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = ">=44.0.0" },
     { name = "fastapi", specifier = ">=0.116.0" },
     { name = "opentelemetry-sdk", specifier = ">=1.39.0" },
     { name = "pgvector", specifier = ">=0.3.6" },

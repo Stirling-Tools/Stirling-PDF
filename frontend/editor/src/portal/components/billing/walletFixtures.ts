@@ -23,6 +23,10 @@ export const freeWallet: Wallet = {
   docsProcessedThisPeriod: 90,
   uniquePdfsThisPeriod: 84,
   sizeMultiplierPdfsThisPeriod: 12,
+  billingMode: "payg",
+  prepaidUnitsRemaining: 0,
+  prepaidUnitsTotal: 0,
+  prepaidExpiresAt: null,
   members: [],
   recent: [],
 };
@@ -50,6 +54,10 @@ export const subscribedWallet: Wallet = {
   docsProcessedThisPeriod: 1750,
   uniquePdfsThisPeriod: 1600,
   sizeMultiplierPdfsThisPeriod: 320,
+  billingMode: "payg",
+  prepaidUnitsRemaining: 0,
+  prepaidUnitsTotal: 0,
+  prepaidExpiresAt: null,
   members: [
     {
       userId: "u1",
@@ -65,4 +73,17 @@ export const subscribedWallet: Wallet = {
     },
   ],
   recent: [],
+};
+
+/**
+ * Subscribed team currently drawing on a prepaid bundle — {@code billingMode:
+ * "prepaid"} with a mid-drawn pool (78k of 120k left) expiring in-term. Drives the
+ * prepaid-capacity card + the "Prepaid year" chip.
+ */
+export const prepaidWallet: Wallet = {
+  ...subscribedWallet,
+  billingMode: "prepaid",
+  prepaidUnitsRemaining: 78000,
+  prepaidUnitsTotal: 120000,
+  prepaidExpiresAt: "2027-03-01",
 };

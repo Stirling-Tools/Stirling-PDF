@@ -5,7 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
@@ -15,7 +15,7 @@ import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 const render = (
   ui: Parameters<typeof baseRender>[0],
   options?: Parameters<typeof baseRender>[1],
-) => baseRender(ui, { wrapper: MantineProvider, ...options });
+) => baseRender(ui, { wrapper: PortalTestProviders, ...options });
 
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({
@@ -53,6 +53,9 @@ vi.mock("@portal/api/policies", () => ({
 const fetchS3Connections = vi.fn();
 const createIntegration = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
+  fetchIntegrations: () => fetchS3Connections(),
+  // Custom-API authoring is a server decision; these tests assert the default view.
+  fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => fetchS3Connections(),
   createIntegration: (...args: unknown[]) => createIntegration(...args),
 }));
@@ -208,25 +211,24 @@ describe("PipelineBuilder", () => {
     fireEvent.click(
       await screen.findByText("portal.connections.picker.createNew"),
     );
-    fireEvent.change(
-      screen.getByLabelText(/portal\.connections\.s3\.fields\.name/),
-      { target: { value: "Claims bucket" } },
-    );
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+      target: { value: "Claims bucket" },
+    });
     fireEvent.change(
       screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.bucket\.label/,
+        /portal\.connections\.types\.s3\.fields\.bucket\.label/,
       ),
       { target: { value: "claims-processed" } },
     );
     fireEvent.change(
       screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.accessKeyId\.label/,
+        /portal\.connections\.types\.s3\.fields\.accessKeyId\.label/,
       ),
       { target: { value: "AKIAEXAMPLE" } },
     );
     fireEvent.change(
       screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.secretAccessKey\.label/,
+        /portal\.connections\.types\.s3\.fields\.secretAccessKey\.label/,
       ),
       { target: { value: "shh-secret" } },
     );
@@ -330,6 +332,28 @@ describe("PipelineBuilder", () => {
     ).toBeDisabled();
   });
 
+  it("blocks saving an integration step with no account chosen", async () => {
+    // A Discord step added but left without an account would fail at run time with a raw backend
+    // rejection; the builder must refuse to save it and say why, where the fix is one click away.
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(await screen.findByRole("textbox"), {
+      target: { value: "Notify only" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(
+      await screen.findByText("portal.policies.operations.discordNotify.label"),
+    );
+
+    // Operation chosen, account not: still not saveable.
+    expect(
+      await screen.findByText("portal.pipelines.builder.stepsNeedSetup"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).toBeDisabled();
+  });
+
   it("deletes an existing pipeline after confirmation", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
@@ -353,6 +377,49 @@ describe("PipelineBuilder", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByText("portal.pipelines.builder.discard"));
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
+  });
+
+  it("keeps the account chosen for an integration step", async () => {
+    // The regression: integration steps are deliberately toolId-less, and the builder's param
+    // update used to skip exactly those, so picking an account looked like it did nothing.
+    fetchS3Connections.mockResolvedValue([
+      {
+        id: 9,
+        name: "Ops alerts",
+        integrationType: "API",
+        config: { presetId: "discord" },
+      },
+    ]);
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(await screen.findByRole("textbox"), {
+      target: { value: "Notify on processed" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(
+      await screen.findByText("portal.policies.operations.discordNotify.label"),
+    );
+
+    fireEvent.click(
+      await screen.findByPlaceholderText(
+        "portal.connections.picker.placeholder",
+      ),
+    );
+    fireEvent.click(await screen.findByText("Ops alerts"));
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    const saved = savePipeline.mock.calls[0][0] as Policy;
+    const step = saved.steps[0] as unknown as {
+      operation: string;
+      parameters: Record<string, string>;
+    };
+    expect(step.operation).toBe("/api/v1/integration/external-api-call");
+    // The selection survived all the way to the wire, not just to the dropdown.
+    expect(step.parameters.connectionId).toBe("9");
+    expect(step.parameters.operationId).toBe("discordNotify");
   });
 
   it("leaves immediately when there are no unsaved edits", async () => {
