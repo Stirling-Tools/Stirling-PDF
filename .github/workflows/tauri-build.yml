@@ -613,7 +613,14 @@ jobs:
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && needs.build.result == 'success'
+    # Fork and Dependabot pull_request runs receive a read-only GITHUB_TOKEN,
+    # so the API cannot create or update PR comments there. The artifacts are
+    # still uploaded and remain available from the Actions run page.
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.build.result == 'success' &&
+      !github.event.pull_request.head.repo.fork &&
+      github.actor != 'dependabot[bot]'
     permissions:
       pull-requests: write
     steps:
