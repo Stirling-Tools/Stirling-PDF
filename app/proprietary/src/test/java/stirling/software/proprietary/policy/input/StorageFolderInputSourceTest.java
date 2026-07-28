@@ -3,6 +3,8 @@ package stirling.software.proprietary.policy.input;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
@@ -50,9 +53,14 @@ class StorageFolderInputSourceTest {
     private StorageFolderInputSource source;
     private InProcessProcessedLedger ledger;
     private RecordingContext ctx;
+    // Stands in for the blob store: hashing reads whatever this currently holds.
+    private byte[] blobContent = "content-v1".getBytes();
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        lenient()
+                .when(storageProvider.load(anyString()))
+                .thenAnswer(invocation -> new ByteArrayResource(blobContent));
         source =
                 new StorageFolderInputSource(
                         storedFileRepository,
@@ -105,9 +113,24 @@ class StorageFolderInputSourceTest {
 
         source.resolve(spec(), ctx).get(0).onComplete().accept(true);
 
-        // The user re-uploads: the gate changes and the file becomes fresh work.
+        // The user re-uploads: gate and content both change — fresh work.
         file.setUpdatedAt(T2);
+        blobContent = "content-v2".getBytes();
         assertEquals(1, source.resolve(spec(), ctx).size());
+    }
+
+    @Test
+    void aMetadataOnlyBumpDoesNotReprocess() throws IOException {
+        StoredFile file = storedFile(1L, "doc.pdf", T1);
+        when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
+        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
+
+        source.resolve(spec(), ctx).get(0).onComplete().accept(true);
+
+        // A folder move / rename bumps updatedAt but not the content: the hash tier refreshes the
+        // gate instead of reprocessing.
+        file.setUpdatedAt(T2);
+        assertTrue(source.resolve(spec(), ctx).isEmpty());
     }
 
     @Test
@@ -131,6 +154,7 @@ class StorageFolderInputSourceTest {
         // Failed at this version: not retried until the content changes.
         assertTrue(source.resolve(spec(), ctx).isEmpty());
         file.setUpdatedAt(T2);
+        blobContent = "content-v2".getBytes();
         assertEquals(1, source.resolve(spec(), ctx).size());
     }
 

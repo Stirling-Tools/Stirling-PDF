@@ -300,7 +300,7 @@ public class PolicyEngine {
                     outputs.addAll(
                             sinkFor(destination)
                                     .deliver(
-                                            new OutputDelivery(runId, run.getPolicyId()),
+                                            new OutputDelivery(runId, run.getPolicyId(), inputs),
                                             result.files(),
                                             destination));
                 }
