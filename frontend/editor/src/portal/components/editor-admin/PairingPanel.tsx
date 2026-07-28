@@ -1,12 +1,21 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import CastRounded from "@mui/icons-material/CastRounded";
+import TerminalRounded from "@mui/icons-material/TerminalRounded";
+import VpnKeyRounded from "@mui/icons-material/VpnKeyRounded";
 import { Button, Card, Chip, CodeBlock } from "@app/ui";
 import type { PairingMethod, PairingOption } from "@portal/api/editorDeploy";
 
-const METHOD_ICON: Record<PairingMethod, string> = {
-  token: "🔑",
-  shortcode: "📺",
-  iac: "🧱",
+const METHOD_ICON: Record<PairingMethod, typeof VpnKeyRounded> = {
+  token: VpnKeyRounded,
+  shortcode: CastRounded,
+  iac: TerminalRounded,
+};
+
+const METHOD_TONE: Record<PairingMethod, "blue" | "purple" | "green"> = {
+  token: "blue",
+  shortcode: "purple",
+  iac: "green",
 };
 
 interface Props {
@@ -36,6 +45,7 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
     <div className="portal-editor__pairings">
       {pairings.map((p) => {
         const isCode = p.method === "iac";
+        const Icon = METHOD_ICON[p.method];
         return (
           <Card
             key={p.method}
@@ -43,8 +53,11 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
             className="portal-editor__pairing"
           >
             <div className="portal-editor__pairing-head">
-              <span className="portal-editor__pairing-icon" aria-hidden>
-                {METHOD_ICON[p.method]}
+              <span
+                className={`portal-editor__pairing-icon portal-editor__pairing-icon--${METHOD_TONE[p.method]}`}
+                aria-hidden
+              >
+                <Icon style={{ fontSize: "1.2rem" }} />
               </span>
               <div className="portal-editor__pairing-titles">
                 <h3 className="portal-editor__pairing-name">{p.label}</h3>

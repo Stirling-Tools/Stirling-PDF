@@ -116,7 +116,7 @@ export default function OnboardingSlideShell({
         content: {
           overflow: "hidden",
           border: "none",
-          background: "var(--bg-surface)",
+          background: "var(--c-surface)",
           maxHeight: "90vh",
         },
       }}
@@ -193,7 +193,7 @@ export default function OnboardingSlideShell({
 
           <div key={`body-${slideKey}`} className={styles.bodyNew}>
             {body}
-            <style>{`.${styles.bodyNew} strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
+            <style>{`.${styles.bodyNew} strong{color: var(--c-text); font-weight: 600;}`}</style>
           </div>
 
           <div className={styles.footer}>

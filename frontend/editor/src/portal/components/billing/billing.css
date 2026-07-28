@@ -28,7 +28,7 @@
 .portal-billing__spend-foot {
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--c-border);
 }
 .portal-billing__spend-foot:not(:first-child) {
   margin-top: 1.25rem;
@@ -42,25 +42,25 @@
   padding: 0.3rem 0.7rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-blue);
+  color: var(--c-primary);
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--c-border);
   border-radius: 999px;
   cursor: pointer;
 }
 .portal-billing__suggested:hover {
-  border-color: var(--color-blue);
+  border-color: var(--c-primary);
 }
 .portal-billing__guardrail {
   margin-top: 0.85rem;
   padding: 0.7rem 0.85rem;
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   background: var(--color-bg-subtle);
   border-radius: 0.6rem;
 }
 .portal-billing__guardrail strong {
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .portal-billing__edit-actions {
   display: flex;
@@ -99,27 +99,27 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   margin-bottom: 0.25rem;
 }
 
 .portal-billing__section-title {
   font-size: 1.05rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   margin: 0 0 0.25rem;
 }
 
 .portal-billing__section-sub {
   font-size: 0.875rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   margin: 0 0 1rem;
 }
 
 /* Free grant still offsetting spend — reads as a positive credit note, pulled up
    under the "PDFs processed" line. */
 .portal-billing__free-remaining {
-  color: var(--color-green-600, var(--color-green));
+  color: var(--color-green);
   margin-top: -0.5rem;
 }
 
@@ -127,16 +127,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-/* Widen the checkout modal past the ~1000px iframe threshold where Stripe
-   Embedded Checkout flips from its single-column ("mobile") layout to the
-   two-column desktop one — matching the SaaS Plan page's UpgradeModal (1100px
-   cap → ~1056px iframe). Two-class selector so it beats .sui-modal--xl's
-   max-width regardless of stylesheet order. width:100% still shrinks it on
-   narrow viewports, where Stripe falls back to single column on its own. */
-.sui-modal.portal-billing__checkout-modal {
-  max-width: 1100px;
 }
 
 /* Post-checkout activation state, shown inside the checkout modal while the
@@ -153,25 +143,25 @@
 .portal-billing__checkout-status-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   margin: 0.25rem 0 0;
 }
 
 .portal-billing__checkout-status-body {
   font-size: 0.9375rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   margin: 0;
   max-width: 32rem;
 }
 
 .portal-billing__checkout-status-hint {
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   margin: 0;
 }
 
 .portal-billing__error {
-  color: var(--color-red, #b91c1c);
+  color: var(--color-red, var(--color-red-dark));
   font-size: 0.875rem;
   margin: 0.5rem 0;
 }
@@ -188,7 +178,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-billing__meter-figures {
@@ -206,21 +196,21 @@
 .portal-billing__meter-num {
   font-size: 1.75rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-billing__meter-num--muted {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-billing__meter-label {
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-billing__meter-track {
   height: 0.5rem;
-  background: var(--color-bg-subtle, #e5e7eb);
+  background: var(--color-bg-subtle, var(--c-surface-sunken));
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: 0.75rem;
@@ -228,18 +218,14 @@
 
 .portal-billing__meter-fill {
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    var(--color-blue, #0a8bff),
-    var(--color-purple, #8b5cf6)
-  );
+  background: linear-gradient(90deg, var(--c-primary), var(--color-purple));
   border-radius: 999px;
   transition: width 200ms ease;
 }
 
 .portal-billing__meter-foot {
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   margin: 0.75rem 0 0;
 }
 
@@ -269,12 +255,12 @@
   font-weight: 750;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: var(--color-text-1, #0f172a);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 .paygf-meter__cap {
   font-size: 0.85rem;
-  color: var(--color-text-3, #64748b);
+  color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
 }
 .paygf-meter .payg-bar {
@@ -287,7 +273,7 @@
   align-items: center;
   gap: 6px 10px;
   font-size: 0.78rem;
-  color: var(--color-text-2, #475569);
+  color: var(--c-text-muted);
 }
 
 /* Status chip (Healthy / Approaching / Cap reached). Solid hex colours
@@ -308,28 +294,28 @@
   border-radius: 999px;
 }
 .payg-status[data-state="FULL"] {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-green-light);
+  color: var(--color-green-dark);
 }
 .payg-status[data-state="FULL"] .payg-status__dot {
-  background: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+  background: var(--color-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-green) 18%, transparent);
 }
 .payg-status[data-state="WARNED"] {
-  background: #fef3c7;
-  color: #a16207;
+  background: var(--color-amber-light);
+  color: var(--color-amber-dark);
 }
 .payg-status[data-state="WARNED"] .payg-status__dot {
-  background: #eab308;
-  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+  background: var(--color-amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-amber) 20%, transparent);
 }
 .payg-status[data-state="DEGRADED"] {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-red-light);
+  color: var(--color-red-dark);
 }
 .payg-status[data-state="DEGRADED"] .payg-status__dot {
-  background: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  background: var(--color-red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-red) 20%, transparent);
 }
 
 /* Segmented usage bar */
@@ -337,7 +323,7 @@
   margin-top: 18px;
   height: 10px;
   border-radius: 999px;
-  background: var(--color-bg-subtle, #e5e7eb);
+  background: var(--color-bg-subtle, var(--c-surface-sunken));
   overflow: hidden;
   position: relative;
 }
@@ -347,13 +333,13 @@
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .payg-bar__fill[data-state="FULL"] {
-  background: linear-gradient(90deg, #0a8bff, #38bdf8);
+  background: var(--c-primary);
 }
 .payg-bar__fill[data-state="WARNED"] {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  background: var(--color-amber);
 }
 .payg-bar__fill[data-state="DEGRADED"] {
-  background: linear-gradient(90deg, #dc2626, #f87171);
+  background: var(--color-red);
 }
 
 /* ── Plan card (free state) ─────────────────────────────────────────────── */
@@ -367,12 +353,12 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-billing__plan-sub {
   font-size: 0.9375rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   margin: 0 0 0.5rem;
 }
 
@@ -387,14 +373,14 @@
 
 .portal-billing__plan-features li {
   font-size: 0.875rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   padding-left: 1.25rem;
   position: relative;
 }
 
 .portal-billing__plan-features li::before {
   content: "✓";
-  color: var(--color-green, #10b981);
+  color: var(--color-green);
   position: absolute;
   left: 0;
   font-weight: 600;
@@ -409,12 +395,12 @@
 
 .portal-billing__plan-reassure {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-billing__plan-readonly {
   font-size: 0.875rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   font-style: italic;
   margin: 0;
 }
@@ -436,16 +422,16 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-billing__breakdown-value {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-billing__breakdown-track {
   height: 0.5rem;
-  background: var(--color-bg-subtle, #e5e7eb);
+  background: var(--color-bg-subtle, var(--c-surface-sunken));
   border-radius: 999px;
   overflow: hidden;
 }
@@ -457,15 +443,15 @@
 }
 
 .portal-billing__breakdown-fill--blue {
-  background: #0a8bff;
+  background: var(--c-primary);
 }
 
 .portal-billing__breakdown-fill--purple {
-  background: #8b5cf6;
+  background: var(--color-purple);
 }
 
 .portal-billing__breakdown-fill--teal {
-  background: #06b6d4;
+  background: var(--color-cat-extraction);
 }
 
 /* ── Cap control ────────────────────────────────────────────────────────── */
@@ -482,13 +468,13 @@
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-billing__cap-input {
   width: 8rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border, #d1d5db);
+  border: 1px solid var(--c-border);
   border-radius: 0.375rem;
   font-size: 0.9375rem;
   font-family: inherit;
@@ -499,7 +485,7 @@
   align-items: center;
   gap: 0.375rem;
   font-size: 0.875rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   cursor: pointer;
 }
 
@@ -516,12 +502,12 @@
 
 .portal-billing__member-name {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-billing__member-email {
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-billing__invoice-num {
@@ -530,7 +516,7 @@
 }
 
 .portal-billing__invoice-desc {
-  color: var(--color-text-1, #0f172a);
+  color: var(--c-text);
   font-size: 0.9375rem;
 }
 
@@ -570,26 +556,26 @@
    Same class names + structure so the visual is identical to the SaaS Plan
    page; when the shared-component move lands, these dedupe to one stylesheet. */
 .scc {
-  --scc-accent: #0a8bff;
-  --scc-accent-text: #0a8bff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.12);
-  --scc-accent-border: rgba(10, 139, 255, 0.25);
-  --scc-chip-bg: var(--color-bg-muted, #f8fafc);
-  --scc-chip-border: var(--color-border, #e2e8f0);
-  --scc-text-primary: var(--color-text-1, #0f172a);
-  --scc-text-secondary: var(--color-text-2, #475569);
-  --scc-text-muted: var(--color-text-3, #64748b);
-  --scc-border-strong: var(--color-text-4, #94a3b8);
+  --scc-accent: var(--c-primary);
+  --scc-accent-text: var(--c-primary);
+  --scc-accent-soft: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  --scc-accent-border: color-mix(in srgb, var(--c-primary) 25%, transparent);
+  --scc-chip-bg: var(--c-surface-sunken);
+  --scc-chip-border: var(--c-border);
+  --scc-text-primary: var(--c-text);
+  --scc-text-secondary: var(--c-text-muted);
+  --scc-text-muted: var(--c-text-subtle);
+  --scc-border-strong: var(--c-text-subtle);
   display: flex;
   flex-direction: column;
   gap: 14px;
   margin-top: 0.75rem;
 }
-[data-mantine-color-scheme="dark"] .scc {
-  --scc-accent-text: #66b8ff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.16);
-  --scc-chip-bg: #272d35;
-  --scc-chip-border: #3d444e;
+[data-theme="dark"] .scc {
+  --scc-accent-text: var(--c-primary);
+  --scc-accent-soft: color-mix(in srgb, var(--c-primary) 16%, transparent);
+  --scc-chip-bg: var(--c-surface-sunken);
+  --scc-chip-border: var(--c-border);
 }
 
 .scc-row {
@@ -723,7 +709,7 @@
 }
 .portal-billing__planhead-eyebrow {
   font-size: 0.78rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 .portal-billing__role-pill {
   display: inline-flex;
@@ -736,14 +722,14 @@
   white-space: nowrap;
 }
 .portal-billing__role-pill[data-leader="true"] {
-  background: rgba(10, 139, 255, 0.12);
-  color: #0a8bff;
-  border: 1px solid rgba(10, 139, 255, 0.25);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  color: var(--c-primary);
+  border: 1px solid color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
 .portal-billing__role-pill[data-leader="false"] {
-  background: var(--color-bg-muted);
-  color: var(--color-text-3);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
+  border: 1px solid var(--c-border);
 }
 .portal-billing__planhead-split {
   display: grid;
@@ -755,7 +741,7 @@
 .portal-billing__planhead-col--meter {
   padding-right: 0;
   padding-left: 22px;
-  border-left: 1px solid var(--color-border);
+  border-left: 1px solid var(--c-border);
 }
 .portal-billing__planhead-lbl {
   display: inline-flex;
@@ -768,30 +754,30 @@
   margin-bottom: 8px;
 }
 .portal-billing__planhead-lbl--free {
-  color: #10b981;
+  color: var(--color-green);
 }
 .portal-billing__planhead-lbl--meter {
-  color: #0a8bff;
+  color: var(--c-primary);
 }
 .portal-billing__planhead-title {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--color-text-1);
+  color: var(--c-text);
   letter-spacing: -0.01em;
   line-height: 1.25;
 }
 .portal-billing__planhead-body {
   margin: 5px 0 0;
   font-size: 0.85rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   line-height: 1.5;
 }
 /* The period meter merged into the plan-head card, divided from the split. */
 .portal-billing__planhead-meter {
   margin-top: 18px;
   padding-top: 18px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--c-border);
 }
 @media (max-width: 640px) {
   .portal-billing__planhead-split {
@@ -805,7 +791,7 @@
     padding-left: 0;
     padding-top: 16px;
     border-left: none;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--c-border);
   }
 }
 
@@ -824,7 +810,7 @@
   border-radius: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-1, #0f172a);
+  color: var(--c-text);
   text-decoration: none;
   border: 1px solid transparent;
   transition:
@@ -833,14 +819,14 @@
 }
 
 .portal-billing__invoice-link:hover {
-  background: var(--color-bg-muted, #f1f5f9);
-  border-color: var(--color-border, #e2e8f0);
+  background: var(--c-surface-sunken);
+  border-color: var(--c-border);
 }
 
 .portal-billing__invoice-link:focus-visible {
   outline: none;
-  border-color: var(--color-blue, #0a8bff);
-  background: var(--color-bg-muted, #f1f5f9);
+  border-color: var(--c-primary);
+  background: var(--c-surface-sunken);
 }
 
 .portal-billing__invoice-footer {
@@ -865,7 +851,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 /* ── Free PDF Editors (fleet) card ───────────────────────────────────── */
@@ -884,8 +870,8 @@
   line-height: 0;
   border-radius: 0.65rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  color: var(--color-blue);
+  border: 1px solid var(--c-border);
+  color: var(--c-primary);
 }
 /* Identity, stats, and the "Invite teammates" action all sit on one line; the
    metric cells render flat (no per-stat box) and are divided by hairlines, so
@@ -906,7 +892,7 @@
   background: transparent;
   border: 0;
   box-shadow: none;
-  border-left: 1px solid var(--color-border);
+  border-left: 1px solid var(--c-border);
   padding: 0 0 0 1.5rem;
   min-width: 0;
   gap: 0.3rem;
@@ -935,7 +921,7 @@
   border-radius: 0;
   font-size: 0.85rem;
   font-weight: 400;
-  color: var(--color-text-3, #64748b);
+  color: var(--c-text-subtle);
 }
 .portal-billing__trial-meter .payg-status__dot,
 .portal-billing__spend-meter .payg-status__dot {
@@ -952,6 +938,12 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+}
+/* Keep the CTA on one line at its natural width — in the narrow subscribed
+   column it was shrinking and clipping its label. */
+.portal-billing__enterprise-head > .sui-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 /* Bare variant — embeds in another card's column without its own surface. */
 .portal-billing__enterprise-bare {
@@ -970,31 +962,31 @@
   font-weight: 750;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 .portal-billing__bignum-unit {
   font-size: 0.85rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 .portal-billing__segbar {
   display: flex;
   height: 0.55rem;
   border-radius: 999px;
   overflow: hidden;
-  background: var(--color-bg-muted, #f1f5f9);
+  background: var(--c-surface-sunken);
 }
 .portal-billing__segbar-seg {
   height: 100%;
 }
 .portal-billing__segbar-seg--blue {
-  background: #0a8bff;
+  background: var(--c-primary);
 }
 .portal-billing__segbar-seg--purple {
-  background: #8b5cf6;
+  background: var(--color-purple);
 }
 .portal-billing__segbar-seg--teal {
-  background: #06b6d4;
+  background: var(--color-cat-extraction);
 }
 .portal-billing__seglegend {
   display: flex;
@@ -1016,75 +1008,97 @@
   flex-shrink: 0;
 }
 .portal-billing__dot--blue {
-  background: #0a8bff;
+  background: var(--c-primary);
 }
 .portal-billing__dot--purple {
-  background: #8b5cf6;
+  background: var(--color-purple);
 }
 .portal-billing__dot--teal {
-  background: #06b6d4;
+  background: var(--color-cat-extraction);
 }
 .portal-billing__seglegend-label {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .portal-billing__seglegend-val {
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   font-variant-numeric: tabular-nums;
 }
 .portal-billing__seglegend-desc {
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* ── Spend-limit projection line ─────────────────────────────────────── */
 .portal-billing__projection {
   margin: 0.85rem 0 0;
   font-size: 0.85rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 .portal-billing__projection strong {
-  color: var(--color-amber, #d97706);
+  color: var(--color-amber, var(--c-warning));
 }
 
-/* ── Checkout modal: 2-step (spend limit → payment) ──────────────────── */
+/* ── Checkout modal: spend-limit + payment steps ─────────────────────────
+   Framed layout: the PrepayModalHeader stays fixed and only the content below
+   it scrolls (not the whole modal). The phase fills the modal body as a flex
+   column — header (fixed) + a scroll region. */
+.portal-billing__checkout-modal--framed .sui-modal__body {
+  padding: 0;
+  overflow: hidden;
+  /* Flex column + min-height:0 so the body is bounded by the modal's max-height and its children's
+     flex sizing takes effect — otherwise the phase grows to full content height and nothing scrolls. */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* Checkout step only: wider than the xl preset so the embedded Stripe iframe clears its ~1000px
+   two-column threshold (otherwise it renders the narrow single-column "portrait" layout). Two-class
+   selector to beat .sui-modal--xl's max-width regardless of stylesheet order. */
+.sui-modal.portal-billing__checkout-modal--wide {
+  max-width: 1120px;
+}
+/* Let the Stripe embedded checkout fill the scroll region's full width (it's the widest thing here). */
+.portal-billing__checkout-embed {
+  width: 100%;
+}
 .portal-billing__checkout-cap,
 .portal-billing__checkout-pay {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* Header owns its padding now that the modal body's is removed; stays fixed at the top. */
+.portal-billing__checkout-modal--framed .portal-billing__bundle-head {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+  padding: 1rem 1.125rem 0.875rem;
+}
+.portal-billing__checkout-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-}
-
-.portal-billing__checkout-progress {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-.portal-billing__checkout-steps {
-  display: flex;
-  gap: 0.375rem;
-  flex: 1;
-}
-.portal-billing__checkout-steps span {
-  height: 4px;
-  flex: 1;
-  border-radius: var(--radius-pill);
-  background: var(--color-border);
-}
-.portal-billing__checkout-steps span.is-done {
-  background: var(--color-blue);
-}
-.portal-billing__checkout-stepcount {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-5);
-  white-space: nowrap;
+  padding: 0.25rem 1.125rem 1.125rem;
 }
 
 .portal-billing__checkout-finePrint {
   margin: 0;
   font-size: 0.75rem;
   line-height: 1.55;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
+}
+
+/* Payment-step recap of the spend limit chosen on step 1 (the card form itself is Stripe's iframe). */
+.portal-billing__checkout-limit {
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
 }
 .portal-billing__checkout-cap-actions {
   display: flex;
@@ -1093,15 +1107,100 @@
   margin-top: 0.25rem;
 }
 
+/* Amount-first spend-limit picker (step 1): the $ /mo field is the primary control; the quick chips
+   below just write into it. Flat estimate (no accent box) to match the demo. */
+.portal-billing__caplimit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.portal-billing__caplimit-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface);
+}
+.portal-billing__caplimit-field:focus-within {
+  border-color: var(--c-primary);
+}
+.portal-billing__caplimit-sym {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--c-text-subtle);
+}
+.portal-billing__caplimit-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--c-text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.portal-billing__caplimit-input::placeholder {
+  color: var(--c-text-subtle);
+  font-weight: 600;
+}
+.portal-billing__caplimit-suffix {
+  font-size: 0.9375rem;
+  color: var(--c-text-subtle);
+}
+.portal-billing__caplimit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.portal-billing__caplimit-chip {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.portal-billing__caplimit-chip:hover:not(:disabled) {
+  border-color: var(--c-text-subtle);
+  color: var(--c-text);
+}
+.portal-billing__caplimit-chip[data-selected="true"] {
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+.portal-billing__caplimit-chip:disabled {
+  opacity: 0.45;
+}
+.portal-billing__caplimit-estimate {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.portal-billing__caplimit-estimate-main {
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+.portal-billing__caplimit-estimate-sub {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
 /* Card-form placeholder shown when Stripe isn't configured (Storybook / preview). */
 .portal-billing__card-placeholder {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  border: 1px solid var(--color-border-input);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--c-surface);
 }
 .portal-billing__card-placeholder-head {
   display: flex;
@@ -1109,14 +1208,14 @@
   justify-content: space-between;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 .portal-billing__card-placeholder-badge {
   font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   background: var(--color-bg-code);
   padding: 0.125rem 0.375rem;
   border-radius: var(--radius-sm);
@@ -1127,15 +1226,399 @@
   gap: 0.625rem;
   padding: 0.75rem 0.875rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 .portal-billing__card-placeholder-note {
   margin: 0;
   font-size: 0.6875rem;
   line-height: 1.5;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
+}
+
+/* ── Prepaid bundle: buy nudge + top-up + purchase modal ───────────────────── */
+
+/* Slim commit-nudge card shown when the team holds no bundle: title/subtitle
+   left, "Review offer" CTA right. Mirrors the demo's prepay nudge. */
+.portal-billing__prepaid-offer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.portal-billing__prepaid-offer-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+  max-width: 46ch;
+}
+
+/* Meter card foot: the "used before metered billing" note + a leader Top-up. */
+.portal-billing__prepaid-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.portal-billing__prepaid-foot .portal-billing__section-sub {
+  margin: 0;
+}
+
+/* Purchase modal — calculator step. */
+.portal-billing__bundle-calc {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.portal-billing__bundle-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.portal-billing__bundle-field-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  margin-bottom: 0.375rem;
+}
+.portal-billing__bundle-field-hint {
+  margin: 0.375rem 0 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  line-height: 1.4;
+}
+.portal-billing__bundle-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+}
+.portal-billing__bundle-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9375rem;
+}
+.portal-billing__bundle-summary-row strong {
+  font-size: 1rem;
+}
+.portal-billing__bundle-savings {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+.portal-billing__bundle-pool {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  line-height: 1.45;
+}
+
+/* Users field — compact stepper box (demo D147: hugs its content). */
+.portal-billing__bundle-users {
+  max-width: 12rem;
+}
+
+/* Progressive-disclosure finer settings: summary rows that bloom a card picker. */
+.portal-billing__bundle-rows {
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.portal-billing__bundle-row + .portal-billing__bundle-row {
+  border-top: 1px solid var(--c-border-subtle);
+}
+.portal-billing__bundle-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.portal-billing__bundle-row-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+}
+.portal-billing__bundle-row-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  text-align: right;
+}
+.portal-billing__bundle-row-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-primary);
+  flex-shrink: 0;
+}
+.portal-billing__bundle-row-body {
+  padding: 0 0.875rem 0.875rem;
+}
+
+/* Card pickers (deployment / sizing / governance / pipelines). */
+.portal-billing__bundle-cards {
+  display: flex;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+.portal-billing__bundle-card {
+  flex: 1;
+  min-width: 9.5rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.portal-billing__bundle-card--active {
+  border-color: var(--c-primary);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+}
+.portal-billing__bundle-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.portal-billing__bundle-card-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-billing__bundle-card--active .portal-billing__bundle-card-title {
+  color: var(--c-primary);
+}
+.portal-billing__bundle-card-meta {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  flex-shrink: 0;
+}
+.portal-billing__bundle-card--active .portal-billing__bundle-card-meta {
+  color: var(--c-primary);
+}
+.portal-billing__bundle-card-desc {
+  margin-top: 0.1875rem;
+  font-size: 0.7188rem;
+  line-height: 1.4;
+  color: var(--c-text-subtle);
+}
+
+/* Receipt card — "your Processor / your year / pool / download". */
+.portal-billing__bundle-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+}
+.portal-billing__bundle-receipt-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+.portal-billing__bundle-receipt-row strong {
+  font-size: 0.9375rem;
+  color: var(--c-text);
+}
+/* First row reads as the header — bold both sides ("Your Processor / handles N credits / mo"). */
+.portal-billing__bundle-receipt-row--head span {
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-billing__bundle-receipt-price {
+  color: var(--c-primary) !important;
+}
+.portal-billing__bundle-consent {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+/* Recipient fields on the payment step, kept compact so the step fits without scrolling. */
+.portal-billing__bundle-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+/* Company name + PO number share a row. */
+.portal-billing__bundle-field-row {
+  display: flex;
+  gap: 0.625rem;
+}
+.portal-billing__bundle-field-row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* Bundle modal header — brand · step badge · progress · step title. */
+.portal-billing__bundle-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+.portal-billing__bundle-head-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.portal-billing__bundle-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--c-text);
+}
+/* Trademarked wordmark SVG (theme-switched via .wordmark-light-only/.wordmark-dark-only). Height
+   matches the portal nav's 22px wordmark so the modal and app read as one brand. No `display` here —
+   the theme-switch utilities own visibility. */
+.portal-billing__bundle-wordmark {
+  height: 1.375rem;
+  width: auto;
+}
+.portal-billing__bundle-head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal-billing__bundle-step {
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+}
+.portal-billing__bundle-progress {
+  display: flex;
+  gap: 0.375rem;
+}
+.portal-billing__bundle-progress > span {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--c-border-subtle);
+}
+.portal-billing__bundle-progress > span.is-filled {
+  background: var(--c-primary);
+}
+.portal-billing__bundle-head-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+/* Payment step: quote receipt + recipient fields + consent. */
+.portal-billing__bundle-pay {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+/* "Download quote (PDF) · share for approval" — a quiet link under the receipt. */
+.portal-billing__bundle-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0 0;
+  border: none;
+  border-top: 1px solid var(--c-border-subtle);
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-primary);
+  text-align: left;
+}
+.portal-billing__bundle-download-share {
+  color: var(--c-text-subtle);
+  font-weight: 400;
+}
+.portal-billing__bundle-foot-end {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Activation fork (demo D97): two "how do you want to pay?" door-cards. */
+.portal-billing__door-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+/* "Maybe later" — a quiet dismiss under the door-cards, left-aligned. */
+.portal-billing__door-later {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 1rem;
+}
+@media (max-width: 560px) {
+  .portal-billing__door-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.portal-billing__door {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.portal-billing__door--accent {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+.portal-billing__door-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.portal-billing__door-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.portal-billing__door-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-primary);
+  background: var(--c-surface);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.portal-billing__door-sub {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
 }

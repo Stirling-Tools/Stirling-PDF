@@ -6521,63 +6521,6 @@ title_other = "Processe {{allowance}} PDF gratuitamente"
 titleWithRate_one = "Processe {{allowance}} PDF gratuitamente, depois {{rate}}/PDF"
 titleWithRate_other = "Processe {{allowance}} PDF gratuitamente, depois {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Bloqueado"
-openAriaLabel = "Abrir componente {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Adicionar ao projeto"
-ariaLabel = "Detalhe do componente"
-tabsAriaLabel = "Secções de detalhe do componente"
-upgradeToUnlock = "Atualizar para desbloquear"
-
-[portal.catalogue.detail.code]
-install = "Instalar"
-usage = "Utilização"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} está incluído a partir do plano {{tier}}. Atualize para o incorporar."
-title = "Não disponível no seu plano"
-
-[portal.catalogue.detail.preview]
-badge = "Pré-visualização em direto"
-note = "A sandbox interativa é renderizada aqui"
-
-[portal.catalogue.detail.pricing]
-note = "Medido por {{unit}}. A utilização para além da quota gratuita mensal é faturada na sua conta e discriminada em Utilização e faturação."
-
-[portal.catalogue.detail.stats]
-billedOn = "Faturado em"
-embeds30d = "Incorporações (30 d)"
-freeQuota = "Quota gratuita"
-freeQuotaValue = "{{amount}} / mês"
-maturity = "Maturidade"
-none = "Nenhum"
-perAction = "Por ação"
-price = "Preço"
-
-[portal.catalogue.detail.tabs]
-code = "Código"
-overview = "Visão geral"
-pricing = "Preços"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "opcional"
-required = "obrigatório"
-
-[portal.catalogue.props.columns]
-description = "Descrição"
-name = "Prop"
-required = "Obrigatório"
-type = "Tipo"
-
-[portal.catalogue.summary]
-componentsGa = "Componentes GA"
-componentSpendMtd = "Gasto com componentes (MTD)"
-embedsThisMonth = "Incorporações este mês"
-inBeta = "Em beta"
-
 [portal.components.billingUnit]
 approval = "aprovação"
 check = "verificação"
@@ -6590,18 +6533,6 @@ signature = "assinatura"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Widgets SDK incorporáveis que coloca na sua própria aplicação — um visualizador, um fluxo de assinatura eletrónica, um painel de revisão por IA. Cada um é medido por ação. Clique num cartão para instalação, utilização e props."
-title = "Componentes"
-
-[portal.componentsView.empty]
-description = "Não foi possível carregar o catálogo de componentes. Tente novamente em breve."
-title = "Nenhum componente disponível"
-
-[portal.componentsView.lockedBanner]
-description = "Os componentes GA estão disponíveis em Pay-as-you-go; alguns componentes Beta são exclusivos para enterprise. Os cartões bloqueados mostram um incentivo à atualização."
-title = "Alguns componentes precisam de um plano pago"
 
 [portal.docs.authentication]
 codeCaption = "cada pedido"

@@ -6521,63 +6521,6 @@ title_other = "{{allowance}} PDF'yi ücretsiz işleyin"
 titleWithRate_one = "{{allowance}} PDF'yi ücretsiz işleyin, sonra PDF başına {{rate}}"
 titleWithRate_other = "{{allowance}} PDF'yi ücretsiz işleyin, sonra PDF başına {{rate}}"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Kilitli"
-openAriaLabel = "{{name}} bileşenini aç"
-
-[portal.catalogue.detail]
-addToProject = "Projeye ekle"
-ariaLabel = "Bileşen ayrıntısı"
-tabsAriaLabel = "Bileşen ayrıntı bölümleri"
-upgradeToUnlock = "Kilidi açmak için yükselt"
-
-[portal.catalogue.detail.code]
-install = "Kurulum"
-usage = "Kullanım"
-
-[portal.catalogue.detail.locked]
-description = "{{name}}, {{tier}} planından itibaren dahildir. Gömülü kullanmak için yükseltin."
-title = "Planınızda mevcut değil"
-
-[portal.catalogue.detail.preview]
-badge = "Canlı önizleme"
-note = "Etkileşimli sandbox burada oluşturulur"
-
-[portal.catalogue.detail.pricing]
-note = "{{unit}} başına ölçümlenir. Aylık ücretsiz kotanın üzerindeki kullanım hesabınıza faturalandırılır ve Kullanım ve Faturalandırma altında kalemlendirilir."
-
-[portal.catalogue.detail.stats]
-billedOn = "Faturalandırma ölçütü"
-embeds30d = "Embed'ler (30g)"
-freeQuota = "Ücretsiz kota"
-freeQuotaValue = "{{amount}} / ay"
-maturity = "Olgunluk"
-none = "Yok"
-perAction = "Eylem başına"
-price = "Fiyat"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Genel bakış"
-pricing = "Fiyatlandırma"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "isteğe bağlı"
-required = "gerekli"
-
-[portal.catalogue.props.columns]
-description = "Açıklama"
-name = "Prop"
-required = "Gerekli"
-type = "Tür"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Bileşen harcaması (MTD)"
-embedsThisMonth = "Bu ayki embed'ler"
-inBeta = "Beta'da"
-
 [portal.components.billingUnit]
 approval = "onay"
 check = "kontrol"
@@ -6590,18 +6533,6 @@ signature = "imza"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Kendi uygulamanıza ekleyebileceğiniz gömülebilir SDK widget'ları — bir görüntüleyici, e-imza akışı, AI inceleme paneli. Her biri eylem başına ölçümlenir. Kurulum, kullanım ve props için bir karta tıklayın."
-title = "Bileşenler"
-
-[portal.componentsView.empty]
-description = "Bileşen kataloğu yüklenemedi. Kısa süre sonra tekrar deneyin."
-title = "Kullanılabilir bileşen yok"
-
-[portal.componentsView.lockedBanner]
-description = "GA bileşenleri Pay-as-you-go planında mevcuttur; birkaç Beta bileşeni yalnızca enterprise içindir. Kilitli kartlar yükseltme önerisi gösterir."
-title = "Bazı bileşenler ücretli plan gerektirir"
 
 [portal.docs.authentication]
 codeCaption = "her istek"

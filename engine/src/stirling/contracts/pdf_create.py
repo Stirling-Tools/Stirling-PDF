@@ -1,14 +1,14 @@
 """Contracts for the PDF Create Agent.
 
 The agent accepts a natural-language prompt and returns a single
-CREATE_PDF_FROM_HTML_AGENT plan step carrying the rendered HTML.
+CREATE_PDF_FROM_HTML_AGENT plan step carrying the assembled document.
 
 Pipeline:
   1. PlannerAgent (smart_model) → DocumentPlan: structured skeleton, no body text.
   2. Python chunks the plan by token budget.
   3. SectionWriterAgents (smart_model, parallel) → WrittenSections per chunk.
   4. Assembler collects sections in plan order → GeneratedDocument.
-  5. Jinja renders GeneratedDocument → HTML. The LLM never writes HTML.
+  5. The document is emitted as structured fields. The LLM never writes HTML.
 """
 
 from __future__ import annotations
@@ -81,14 +81,12 @@ type DocumentSection = Annotated[
 ]
 
 
-# Named colour or hex only — anything else is dropped so a colour can't inject CSS into the
-# <style> block (which would let WeasyPrint fetch an attacker-controlled url() → SSRF).
-_SAFE_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{3,8}$|^[a-zA-Z]{1,30}$")
+# Colours must be a 6-digit hex code (#RRGGBB); anything else is dropped to None.
+_SAFE_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 class DocumentStyle(ApiModel):
-    """Document colours, inferred by the meta planner and rendered into the engine's Jinja
-    template (never sent to Java). Unsafe colours are dropped to ``None``."""
+    """Document colours, inferred by the meta planner. Non-hex values are dropped to ``None``."""
 
     primary_color: str | None = Field(default=None)
     background_color: str | None = Field(default=None)
@@ -103,7 +101,7 @@ class DocumentStyle(ApiModel):
 
 
 class GeneratedDocument(ApiModel):
-    """The full document model passed to Jinja for HTML rendering."""
+    """The full document model emitted for rendering."""
 
     title: str
     subtitle: str | None = None

@@ -3,18 +3,20 @@ import { Button } from "@app/ui/Button";
 import "@app/auth/ui/auth.css";
 import { TextInput, PasswordInput } from "@mantine/core";
 
-// Force light mode styles for auth inputs
-const authInputStyles = {
+// Theme-aware auth input colours (the --auth-* vars flip in dark mode via
+// auth-theme.css). Exported so other auth screens (e.g. invite accept) render
+// their Mantine inputs identically to login.
+export const authInputStyles = {
   input: {
-    backgroundColor: "var(--auth-input-bg-light-only)",
-    color: "var(--auth-input-text-light-only)",
-    borderColor: "var(--auth-input-border-light-only)",
+    backgroundColor: "var(--auth-input-bg)",
+    color: "var(--auth-input-text)",
+    borderColor: "var(--auth-input-border)",
     "&:focus": {
-      borderColor: "var(--auth-border-focus-light-only)",
+      borderColor: "var(--auth-border-focus)",
     },
   },
   label: {
-    color: "var(--auth-label-text-light-only)",
+    color: "var(--auth-label-text)",
   },
 };
 
@@ -130,7 +132,10 @@ export default function EmailPasswordForm({
           (requiresMfa && !mfaCode.trim())
         }
         fullWidth
+        size="lg"
+        fontSize="sm"
         loading={isSubmitting}
+        className="auth-submit"
         // Stirling-red brand CTA; the brand accent sets the colour inline so the
         // host app's Mantine primaryColor can't win (editor vs portal differ).
         accent="brand"

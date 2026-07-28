@@ -104,7 +104,7 @@ const GroupedFormatDropdown = ({
             cursor: disabled ? "not-allowed" : "pointer",
             width: "100%",
             color: disabled
-              ? "var(--dropdown-trigger-text-disabled)"
+              ? "var(--c-text-subtle)"
               : "var(--dropdown-trigger-text)",
           }}
         >

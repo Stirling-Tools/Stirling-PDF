@@ -6521,63 +6521,6 @@ title_other = "Обработете {{allowance}} PDF безплатно"
 titleWithRate_one = "Обработете {{allowance}} PDF безплатно, после {{rate}}/PDF"
 titleWithRate_other = "Обработете {{allowance}} PDF безплатно, после {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Заключено"
-openAriaLabel = "Отвори компонент {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Добави към проект"
-ariaLabel = "Детайли за компонента"
-tabsAriaLabel = "Секции с детайли за компонента"
-upgradeToUnlock = "Надстройте, за да отключите"
-
-[portal.catalogue.detail.code]
-install = "Инсталиране"
-usage = "Употреба"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} е включен от план {{tier}}. Надстройте, за да го вградите."
-title = "Не е налично във вашия план"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Интерактивният sandbox се рендира тук"
-
-[portal.catalogue.detail.pricing]
-note = "Измерва се на {{unit}}. Използването над месечната безплатна квота се таксува към вашия акаунт и се детайлизира в Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Таксува се по"
-embeds30d = "Вграждания (30 дни)"
-freeQuota = "Безплатна квота"
-freeQuotaValue = "{{amount}} / мес"
-maturity = "Зрялост"
-none = "Няма"
-perAction = "На действие"
-price = "Цена"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Общ преглед"
-pricing = "Ценообразуване"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "по избор"
-required = "задължително"
-
-[portal.catalogue.props.columns]
-description = "Описание"
-name = "Prop"
-required = "Задължително"
-type = "Тип"
-
-[portal.catalogue.summary]
-componentsGa = "Компоненти GA"
-componentSpendMtd = "Разход за компоненти (MTD)"
-embedsThisMonth = "Вграждания този месец"
-inBeta = "В beta"
-
 [portal.components.billingUnit]
 approval = "одобрение"
 check = "проверка"
@@ -6590,18 +6533,6 @@ signature = "подпис"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Вградими SDK widgets, които поставяте в собственото си приложение — viewer, e-sign поток, AI панел за преглед. Всеки се измерва на действие. Щракнете върху карта за инсталиране, употреба и props."
-title = "Компоненти"
-
-[portal.componentsView.empty]
-description = "Каталогът с компоненти не можа да бъде зареден. Опитайте отново след малко."
-title = "Няма налични компоненти"
-
-[portal.componentsView.lockedBanner]
-description = "GA компонентите са налични при Pay-as-you-go; няколко Beta компонента са само за enterprise. Заключените карти показват подкана за надстройване."
-title = "Някои компоненти изискват платен план"
 
 [portal.docs.authentication]
 codeCaption = "всяка заявка"

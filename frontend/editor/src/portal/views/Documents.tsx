@@ -2,11 +2,9 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
-import { useAsync } from "@portal/hooks/useAsync";
+import { useDocuments } from "@portal/queries/documents";
 import {
-  fetchDocuments,
   DOCUMENT_STATUS_LABEL,
-  type DocumentsResponse,
   type ReviewDocument,
 } from "@portal/api/documents";
 import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
@@ -66,7 +64,7 @@ function toCsv(docs: ReviewDocument[], t: TFunction): string {
 export function Documents() {
   const { t } = useTranslation();
   const { tier } = useTier();
-  const state = useAsync<DocumentsResponse>(() => fetchDocuments(tier), [tier]);
+  const state = useDocuments(tier);
   const documents = state.data?.documents ?? [];
 
   function exportCsv() {

@@ -1,6 +1,5 @@
 import type { TFunction } from "i18next";
 import type { SignatureValidationSignature } from "@app/types/validateSignature";
-import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
 
 export type SignatureStatusKind = "valid" | "warning" | "invalid" | "neutral";
 
@@ -130,17 +129,4 @@ export const computeSignatureStatus = (
     label: t("validateSignature.status.valid", "Valid"),
     details: issues,
   };
-};
-
-export const statusKindToPdfColor = (kind: SignatureStatusKind) => {
-  switch (kind) {
-    case "valid":
-      return colorPalette.success;
-    case "warning":
-      return colorPalette.warning;
-    case "invalid":
-      return colorPalette.danger;
-    default:
-      return colorPalette.neutral;
-  }
 };

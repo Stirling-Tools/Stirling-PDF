@@ -6521,63 +6521,6 @@ title_other = "{{allowance}} PDFs मुफ़्त process करें"
 titleWithRate_one = "{{allowance}} PDFs मुफ़्त process करें, फिर {{rate}}/PDF"
 titleWithRate_other = "{{allowance}} PDFs मुफ़्त process करें, फिर {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Locked"
-openAriaLabel = "{{name}} component खोलें"
-
-[portal.catalogue.detail]
-addToProject = "project में जोड़ें"
-ariaLabel = "Component detail"
-tabsAriaLabel = "Component detail sections"
-upgradeToUnlock = "अनलॉक करने के लिए upgrade करें"
-
-[portal.catalogue.detail.code]
-install = "Install"
-usage = "Usage"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} {{tier}} प्लान से शामिल है। इसे embed करने के लिए upgrade करें।"
-title = "आपके प्लान पर उपलब्ध नहीं"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interactive sandbox यहाँ render होता है"
-
-[portal.catalogue.detail.pricing]
-note = "प्रति {{unit}} metered। मासिक free quota से अधिक usage का बिल आपके account से लिया जाता है और Usage & Billing के अंतर्गत itemise किया जाता है।"
-
-[portal.catalogue.detail.stats]
-billedOn = "Billed on"
-embeds30d = "Embeds (30d)"
-freeQuota = "Free quota"
-freeQuotaValue = "{{amount}} / mo"
-maturity = "Maturity"
-none = "कोई नहीं"
-perAction = "Per action"
-price = "Price"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Overview"
-pricing = "Pricing"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "optional"
-required = "required"
-
-[portal.catalogue.props.columns]
-description = "विवरण"
-name = "Prop"
-required = "Required"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Component spend (MTD)"
-embedsThisMonth = "इस माह embeds"
-inBeta = "Beta में"
-
 [portal.components.billingUnit]
 approval = "approval"
 check = "check"
@@ -6590,18 +6533,6 @@ signature = "signature"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Embeddable SDK widgets जिन्हें आप अपने app में डालते हैं — viewer, e-sign flow, AI review panel। हर action पर metered। install, usage और props के लिए card पर क्लिक करें।"
-title = "Components"
-
-[portal.componentsView.empty]
-description = "component catalogue लोड नहीं किया जा सका। थोड़ी देर में फिर कोशिश करें।"
-title = "कोई components उपलब्ध नहीं"
-
-[portal.componentsView.lockedBanner]
-description = "GA components Pay-as-you-go पर उपलब्ध हैं; कुछ Beta components केवल enterprise के लिए हैं। Locked cards upgrade nudge दिखाते हैं।"
-title = "कुछ components के लिए paid plan चाहिए"
 
 [portal.docs.authentication]
 codeCaption = "हर request"

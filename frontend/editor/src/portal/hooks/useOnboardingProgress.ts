@@ -1,18 +1,17 @@
 import { useTier } from "@portal/contexts/TierContext";
-import { useAsync } from "@portal/hooks/useAsync";
 import { useEditorInstalled } from "@portal/hooks/useEditorInstalled";
-import { fetchEditorDeployment } from "@portal/api/editorDeploy";
-import { fetchPolicies } from "@portal/api/policies";
-import { fetchUsers } from "@portal/api/users";
+import { useEditorDeployment } from "@portal/queries/infrastructure";
+import { usePoliciesOverview } from "@portal/queries/policies";
+import { useUsersRoster } from "@portal/queries/users";
 
 /**
- * Getting-started completion, derived live from the org's real state. Drives
- * both the per-step checks on the home hero's setup steps and the collapse to
- * the deployed-status header once every step is done.
+ * Getting-started completion, derived live from the org's real state, composed
+ * from the shared editor-deployment / policies / users queries.
  *
- * Each fetch is independently best-effort: an endpoint that isn't served yet
- * (e.g. editor-deployment on a bare backend) simply leaves its step incomplete
- * rather than breaking the card.
+ * Best-effort per source: a step reads `data ?? fallback` and query errors are
+ * never folded into `loading`, so an endpoint that isn't served yet (e.g.
+ * editor-deployment on a bare backend) leaves its step incomplete instead of
+ * breaking the card.
  */
 export interface OnboardingProgress {
   loading: boolean;
@@ -31,17 +30,13 @@ export interface OnboardingProgress {
 export function useOnboardingProgress(): OnboardingProgress {
   const { tier } = useTier();
   const editorInstalled = useEditorInstalled();
-  const { data, loading } = useAsync(
-    () =>
-      Promise.all([
-        fetchEditorDeployment(tier).catch(() => null),
-        fetchPolicies().catch(() => null),
-        fetchUsers(tier).catch(() => null),
-      ]),
-    [tier],
-  );
+  const deployQuery = useEditorDeployment(tier);
+  const policiesQuery = usePoliciesOverview();
+  const usersQuery = useUsersRoster(tier);
 
-  const [deploy, policies, users] = data ?? [null, null, null];
+  const deploy = deployQuery.data;
+  const policies = policiesQuery.data;
+  const users = usersQuery.data;
 
   const deployed = (deploy?.instances.length ?? 0) > 0;
   // Authoritative signal is a deployed instance; the user's own download/Done
@@ -56,7 +51,7 @@ export function useOnboardingProgress(): OnboardingProgress {
   const inviteDone = (users?.summary.totalMembers ?? 0) > 1;
 
   return {
-    loading,
+    loading: deployQuery.loading || policiesQuery.loading || usersQuery.loading,
     deployed,
     editorDone,
     policiesDone,

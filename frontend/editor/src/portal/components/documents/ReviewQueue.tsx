@@ -157,7 +157,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
               <Button
                 variant="secondary"
                 onClick={() =>
-                  navigate(`${toPortalPath(VIEW_PATHS.sources)}?new`)
+                  navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`)
                 }
               >
                 {t("portal.documents.queue.empty.connectSource")}

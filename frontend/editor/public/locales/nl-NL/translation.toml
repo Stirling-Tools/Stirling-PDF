@@ -6521,63 +6521,6 @@ title_other = "Verwerk {{allowance}} PDF's gratis"
 titleWithRate_one = "Verwerk {{allowance}} PDF's gratis, daarna {{rate}}/PDF"
 titleWithRate_other = "Verwerk {{allowance}} PDF's gratis, daarna {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Vergrendeld"
-openAriaLabel = "Component {{name}} openen"
-
-[portal.catalogue.detail]
-addToProject = "Toevoegen aan project"
-ariaLabel = "Componentdetail"
-tabsAriaLabel = "Componentdetailsecties"
-upgradeToUnlock = "Upgrade om te ontgrendelen"
-
-[portal.catalogue.detail.code]
-install = "Installeren"
-usage = "Gebruik"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} is inbegrepen vanaf het {{tier}}-abonnement. Upgrade om het in te sluiten."
-title = "Niet beschikbaar in je abonnement"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interactieve sandbox wordt hier weergegeven"
-
-[portal.catalogue.detail.pricing]
-note = "Verbruiksgemeten per {{unit}}. Gebruik boven het maandelijkse gratis quotum wordt gefactureerd aan je account en gespecificeerd onder Gebruik en facturering."
-
-[portal.catalogue.detail.stats]
-billedOn = "Gefactureerd op"
-embeds30d = "Embeds (30d)"
-freeQuota = "Gratis quotum"
-freeQuotaValue = "{{amount}} / mnd"
-maturity = "Volwassenheid"
-none = "Geen"
-perAction = "Per actie"
-price = "Prijs"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Overzicht"
-pricing = "Prijzen"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "optioneel"
-required = "vereist"
-
-[portal.catalogue.props.columns]
-description = "Beschrijving"
-name = "Prop"
-required = "Vereist"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Componenten GA"
-componentSpendMtd = "Componentuitgaven (MTD)"
-embedsThisMonth = "Embeds deze maand"
-inBeta = "In beta"
-
 [portal.components.billingUnit]
 approval = "goedkeuring"
 check = "controle"
@@ -6590,18 +6533,6 @@ signature = "handtekening"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Insluitbare SDK-widgets die je in je eigen app plaatst — een viewer, een e-sign-flow, een AI-beoordelingspaneel. Elk wordt per actie gemeten. Klik op een kaart voor installatie, gebruik en props."
-title = "Componenten"
-
-[portal.componentsView.empty]
-description = "De componentencatalogus kon niet worden geladen. Probeer het binnenkort opnieuw."
-title = "Geen componenten beschikbaar"
-
-[portal.componentsView.lockedBanner]
-description = "GA-componenten zijn beschikbaar met Pay-as-you-go; enkele Beta-componenten zijn alleen voor enterprise. Vergrendelde kaarten tonen een upgrade-aanmoediging."
-title = "Sommige componenten hebben een betaald abonnement nodig"
 
 [portal.docs.authentication]
 codeCaption = "elk verzoek"

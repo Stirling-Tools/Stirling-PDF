@@ -6521,63 +6521,6 @@ title_other = "ประมวลผล {{allowance}} PDFs ฟรี"
 titleWithRate_one = "ประมวลผล {{allowance}} PDFs ฟรี จากนั้น {{rate}}/PDF"
 titleWithRate_other = "ประมวลผล {{allowance}} PDFs ฟรี จากนั้น {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "ถูกล็อก"
-openAriaLabel = "เปิดคอมโพเนนต์ {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "เพิ่มไปยังโปรเจกต์"
-ariaLabel = "รายละเอียดคอมโพเนนต์"
-tabsAriaLabel = "ส่วนรายละเอียดคอมโพเนนต์"
-upgradeToUnlock = "อัปเกรดเพื่อปลดล็อก"
-
-[portal.catalogue.detail.code]
-install = "ติดตั้ง"
-usage = "การใช้งาน"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} รวมอยู่ตั้งแต่แผน {{tier}} อัปเกรดเพื่อฝังใช้งาน"
-title = "ไม่มีในแผนของคุณ"
-
-[portal.catalogue.detail.preview]
-badge = "ตัวอย่างสด"
-note = "แซนด์บ็อกซ์แบบโต้ตอบจะแสดงที่นี่"
-
-[portal.catalogue.detail.pricing]
-note = "คิดตามปริมาณต่อ {{unit}} การใช้งานเกินโควต้าฟรีรายเดือนจะถูกเรียกเก็บเงินไปยังบัญชีของคุณและแยกรายการใต้ Usage & Billing"
-
-[portal.catalogue.detail.stats]
-billedOn = "เรียกเก็บเงินตาม"
-embeds30d = "การฝัง (30d)"
-freeQuota = "โควต้าฟรี"
-freeQuotaValue = "{{amount}} / เดือน"
-maturity = "ระดับความพร้อม"
-none = "ไม่มี"
-perAction = "ต่อการดำเนินการ"
-price = "ราคา"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "ภาพรวม"
-pricing = "ราคา"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "ไม่บังคับ"
-required = "จำเป็น"
-
-[portal.catalogue.props.columns]
-description = "คำอธิบาย"
-name = "Prop"
-required = "จำเป็น"
-type = "ประเภท"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "ค่าใช้จ่ายคอมโพเนนต์ (MTD)"
-embedsThisMonth = "การฝังในเดือนนี้"
-inBeta = "อยู่ใน Beta"
-
 [portal.components.billingUnit]
 approval = "การอนุมัติ"
 check = "การตรวจสอบ"
@@ -6590,18 +6533,6 @@ signature = "ลายเซ็น"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "วิดเจ็ต SDK ที่ฝังได้ซึ่งคุณวางในแอปของคุณเอง — viewer, โฟลว์ e-sign, แผงรีวิว AI แต่ละรายการคิดตามปริมาณต่อการดำเนินการ คลิกการ์ดเพื่อดูการติดตั้ง การใช้งาน และ props"
-title = "คอมโพเนนต์"
-
-[portal.componentsView.empty]
-description = "ไม่สามารถโหลดแค็ตตาล็อกคอมโพเนนต์ได้ ลองอีกครั้งในไม่ช้า"
-title = "ไม่มีคอมโพเนนต์พร้อมใช้งาน"
-
-[portal.componentsView.lockedBanner]
-description = "คอมโพเนนต์ GA พร้อมใช้งานในแบบจ่ายตามการใช้งาน; คอมโพเนนต์ Beta บางรายการสำหรับ enterprise เท่านั้น การ์ดที่ถูกล็อกจะแสดงคำแนะนำให้อัปเกรด"
-title = "คอมโพเนนต์บางรายการต้องใช้แผนแบบชำระเงิน"
 
 [portal.docs.authentication]
 codeCaption = "ทุกคำขอ"

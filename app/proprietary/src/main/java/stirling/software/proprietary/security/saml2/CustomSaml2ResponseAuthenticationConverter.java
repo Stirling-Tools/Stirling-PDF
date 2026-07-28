@@ -99,7 +99,11 @@ public class CustomSaml2ResponseAuthenticationConverter
 
         CustomSaml2AuthenticatedPrincipal principal =
                 new CustomSaml2AuthenticatedPrincipal(
-                        userIdentifier, attributes, userIdentifier, sessionIndexes);
+                        userIdentifier,
+                        attributes,
+                        userIdentifier,
+                        sessionIndexes,
+                        responseToken.getToken().getSaml2Response());
 
         return new Saml2Authentication(
                 principal,

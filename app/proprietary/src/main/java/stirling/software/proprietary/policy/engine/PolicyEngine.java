@@ -9,7 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import org.slf4j.MDC;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -57,7 +56,6 @@ import stirling.software.proprietary.service.DownstreamEntitlementError;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyEngine {
 
     // Admission weight for one run. Weighted heavy: a run chains many tools and holds intermediate
@@ -136,6 +134,10 @@ public class PolicyEngine {
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
         taskManager.createTask(runId);
+        // Tag the shared job entry with the policy id so peers can list it as a policy run.
+        if (policyId != null) {
+            taskManager.putMetadata(runId, "policyId", policyId);
+        }
         PolicyRun run = new PolicyRun(runId, policyId, definition);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();

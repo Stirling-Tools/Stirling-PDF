@@ -4,10 +4,10 @@
 
 .portal-welcome {
   border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   overflow: hidden;
   isolation: isolate;
-  background: var(--color-surface);
+  background: var(--c-surface);
 }
 
 /* ── Dark product header strip ── */
@@ -18,7 +18,7 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.875rem 1.25rem;
-  background: var(--color-hero-navy);
+  background: color-mix(in srgb, var(--c-primary) 22%, var(--c-hero-dark));
 }
 
 .portal-welcome__brand {
@@ -90,7 +90,7 @@
 .portal-welcome__header .portal-welcome__cta.sui-btn {
   background: #ffffff;
   border-color: #ffffff;
-  color: var(--color-hero-navy);
+  color: var(--c-hero-dark-cta-text);
 }
 .portal-welcome__header .portal-welcome__cta.sui-btn:hover {
   background: rgba(255, 255, 255, 0.88);
@@ -99,5 +99,5 @@
 
 /* ── Steps + enterprise (setup checklist) sit directly under the header ── */
 .portal-welcome__footer {
-  background: var(--color-surface);
+  background: var(--c-surface);
 }

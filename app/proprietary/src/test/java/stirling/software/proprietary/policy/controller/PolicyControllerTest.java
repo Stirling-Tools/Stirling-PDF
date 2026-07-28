@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import stirling.software.common.cluster.JobStore;
+import stirling.software.common.cluster.inprocess.InProcessJobStore;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.service.JobOwnershipService;
@@ -77,6 +80,7 @@ class PolicyControllerTest {
     @Mock private JobOwnershipService jobOwnershipService;
 
     private ApplicationProperties applicationProperties;
+    private final JobStore jobStore = new InProcessJobStore();
     private PolicyController controller;
 
     private final java.util.List<stirling.software.proprietary.policy.trigger.PolicyTrigger>
@@ -105,7 +109,8 @@ class PolicyControllerTest {
                         policyTriggers,
                         applicationProperties,
                         tempFileManager,
-                        jobOwnershipService);
+                        jobOwnershipService,
+                        jobStore);
     }
 
     private static stirling.software.proprietary.policy.trigger.PolicyTrigger trigger(
@@ -194,6 +199,29 @@ class PolicyControllerTest {
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.BAD_REQUEST));
         }
+
+        @Test
+        @DisplayName("rejects an ad-hoc output the caller cannot use, on the request thread")
+        void rejectsUnauthorizedAdHocOutput() {
+            // The confused-deputy guard: an S3 output referencing a connection the caller may not
+            // use is validated here (principal present) and refused before any worker dispatch.
+            PipelineDefinition definition =
+                    new PipelineDefinition(
+                            "pipe",
+                            List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)),
+                            new OutputSpec("s3", Map.of("connectionId", 999)));
+            doThrow(new IllegalArgumentException("unknown or inaccessible s3 connection"))
+                    .when(policyValidator)
+                    .validateOutput(any());
+
+            assertThatThrownBy(() -> controller.run(definition, new PolicyRunFiles()))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.BAD_REQUEST));
+            verify(policyRunner, never()).runAdHoc(any(), any(), any());
+        }
     }
 
     @Nested
@@ -240,6 +268,8 @@ class PolicyControllerTest {
         @DisplayName("returns 404 when run is unknown")
         void notFound() {
             when(runRegistry.get("missing")).thenReturn(null);
+            when(jobOwnershipService.extractJobId("missing")).thenReturn("missing");
+            when(jobOwnershipService.createScopedJobKey("missing")).thenReturn("missing");
 
             ResponseEntity<PolicyRunView> response = controller.status("missing");
 
