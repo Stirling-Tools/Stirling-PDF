@@ -5,7 +5,6 @@ import { fetchIntegrations } from "@portal/api/integrations";
 import { usePoliciesList } from "@portal/queries/policies";
 import { fromWirePolicy } from "@app/policies/codec";
 import {
-  VARIABLE_GROUPS,
   variableGroupsFor,
   type VariableGroup,
 } from "@portal/components/policies/variables";
@@ -17,8 +16,11 @@ import {
  * sensitivity-label ones only where Purview is connected - so those groups are offered only when
  * the team's data says they exist. Fail-open: until (or unless) the answers arrive, everything is
  * offered, because hiding a variable from a team that uses it is the worse mistake.
+ *
+ * `stepPosition` is the configured step's 1-based place in its chain; with it known, the steps
+ * group offers only the steps that actually ran before this one (see variableGroupsFor).
  */
-export function useVariableGroups(): VariableGroup[] {
+export function useVariableGroups(stepPosition?: number): VariableGroup[] {
   const integrations = useQuery({
     queryKey: qk.integrations(),
     queryFn: fetchIntegrations,
@@ -26,21 +28,25 @@ export function useVariableGroups(): VariableGroup[] {
   const policies = usePoliciesList();
 
   return useMemo(() => {
-    if (!integrations.data || !policies.data) return VARIABLE_GROUPS;
-    return variableGroupsFor({
-      sensitivityLabel: integrations.data.some(
-        (connection) => connection.integrationType === "PURVIEW",
-      ),
-      classification: policies.data.some((wire) => {
-        try {
-          return (
-            wire.enabled && fromWirePolicy(wire).categoryId === "classification"
-          );
-        } catch {
-          // One malformed stored policy must not decide the menu.
-          return false;
-        }
-      }),
-    });
-  }, [integrations.data, policies.data]);
+    const availability =
+      !integrations.data || !policies.data
+        ? undefined
+        : {
+            sensitivityLabel: integrations.data.some(
+              (connection) => connection.integrationType === "PURVIEW",
+            ),
+            classification: policies.data.some((wire) => {
+              try {
+                return (
+                  wire.enabled &&
+                  fromWirePolicy(wire).categoryId === "classification"
+                );
+              } catch {
+                // One malformed stored policy must not decide the menu.
+                return false;
+              }
+            }),
+          };
+    return variableGroupsFor(availability, stepPosition);
+  }, [integrations.data, policies.data, stepPosition]);
 }

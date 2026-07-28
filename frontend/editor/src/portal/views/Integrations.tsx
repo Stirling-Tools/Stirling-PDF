@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -365,7 +365,10 @@ export function Integrations() {
                 </button>
                 {open && (
                   <div className="portal-integrations__instances">
-                    <TasksList typeId={type.id} />
+                    <TasksList
+                      typeId={type.id}
+                      allowCustom={capabilities?.customApi !== false}
+                    />
                     {list.map((connection) => (
                       <div
                         key={connection.id}
@@ -429,6 +432,7 @@ export function Integrations() {
               key={type.id}
               type={type}
               chips={worksWith(type).map(chip)}
+              allowCustom={capabilities?.customApi !== false}
               onConnect={() => openCreate(type.id)}
             />
           ))}
@@ -480,10 +484,22 @@ export function Integrations() {
   );
 }
 
-/** The task list an integration unlocks, shown inside an expanded row panel. */
-function TasksList({ typeId }: { typeId: string }) {
+/**
+ * The task list an integration unlocks, shown inside an expanded row panel. The custom-call
+ * entry follows the same server gate the rest of the UI honours - listing it for a team the
+ * server refuses it to would advertise a task that cannot run.
+ */
+function TasksList({
+  typeId,
+  allowCustom,
+}: {
+  typeId: string;
+  allowCustom: boolean;
+}) {
   const { t } = useTranslation();
-  const tasks = operationsForConnectionType(typeId);
+  const tasks = operationsForConnectionType(typeId).filter(
+    (op) => allowCustom || !op.custom,
+  );
   if (tasks.length === 0) return null;
   return (
     <div className="portal-integrations__instance-tasks">
@@ -515,15 +531,21 @@ function TasksList({ typeId }: { typeId: string }) {
 function AvailableRow({
   type,
   chips,
+  allowCustom,
   onConnect,
 }: {
   type: CreatableConnectionType;
   chips: React.ReactNode;
+  allowCustom: boolean;
   onConnect: () => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const hasTasks = operationsForConnectionType(type.id).length > 0;
+  const panelId = useId();
+  const hasTasks =
+    operationsForConnectionType(type.id).filter(
+      (op) => allowCustom || !op.custom,
+    ).length > 0;
 
   return (
     <div className="portal-integrations__group">
@@ -542,8 +564,11 @@ function AvailableRow({
             <button
               type="button"
               className="portal-integrations__info"
-              aria-label={t("portal.connections.picker2.tasksInfo")}
+              aria-label={t("portal.connections.picker2.tasksInfo", {
+                name: t(type.labelKey),
+              })}
               aria-expanded={open}
+              aria-controls={open ? panelId : undefined}
               onClick={() => setOpen((o) => !o)}
             >
               <InfoOutlinedIcon fontSize="inherit" />
@@ -558,8 +583,8 @@ function AvailableRow({
         </span>
       </div>
       {open && (
-        <div className="portal-integrations__instances">
-          <TasksList typeId={type.id} />
+        <div id={panelId} className="portal-integrations__instances">
+          <TasksList typeId={type.id} allowCustom={allowCustom} />
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -127,6 +127,7 @@ function TypeCard({
 }) {
   const { t } = useTranslation();
   const [showTasks, setShowTasks] = useState(false);
+  const panelId = useId();
   const tasks = operationsForConnectionType(type.id);
   const label = t(type.labelKey);
 
@@ -159,8 +160,11 @@ function TypeCard({
         <button
           type="button"
           className="portal-conn-picker__info"
-          aria-label={t("portal.connections.picker2.tasksInfo")}
+          aria-label={t("portal.connections.picker2.tasksInfo", {
+            name: label,
+          })}
           aria-expanded={showTasks}
+          aria-controls={showTasks ? panelId : undefined}
           onClick={() => setShowTasks((open) => !open)}
         >
           <InfoOutlinedIcon fontSize="inherit" />
@@ -168,7 +172,7 @@ function TypeCard({
       )}
 
       {showTasks && (
-        <div className="portal-conn-picker__tasks">
+        <div id={panelId} className="portal-conn-picker__tasks">
           <p className="portal-conn-picker__tasks-title">
             {t("portal.connections.picker2.tasksTitle")}
           </p>

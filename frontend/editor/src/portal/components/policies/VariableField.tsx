@@ -41,7 +41,8 @@ interface VariableFieldProps {
 /** A closed reference, or the plain text between them. */
 function segments(text: string): { text: string; token: boolean }[] {
   const out: { text: string; token: boolean }[] = [];
-  const pattern = /\{\{[\w.]+\}\}/g;
+  // Spaces inside the braces are tolerated, matching the backend's resolver.
+  const pattern = /\{\{\s*[\w.]+\s*\}\}/g;
   let last = 0;
   for (const match of text.matchAll(pattern)) {
     if (match.index > last) {
@@ -82,6 +83,13 @@ export function VariableField({
     }
     pendingCursor.current = null;
   });
+
+  // Keep the active row visible: the menu scrolls rather than truncating the matches.
+  useEffect(() => {
+    if (!open) return;
+    const row = document.getElementById(`${menuId}-opt-${highlight}`);
+    row?.scrollIntoView?.({ block: "nearest" });
+  }, [open, highlight, menuId]);
 
   function syncScroll() {
     const editor = editorRef.current;
@@ -139,7 +147,6 @@ export function VariableField({
     if (!multiline && e.key === "Enter") e.preventDefault();
   }
 
-  const visible = matches.slice(0, 8);
   const activeId = open ? `${menuId}-opt-${highlight}` : undefined;
 
   return (
@@ -172,6 +179,9 @@ export function VariableField({
           value={value}
           placeholder={placeholder}
           aria-label={ariaLabel}
+          // The combobox role is what makes aria-expanded/-controls/-activedescendant apply;
+          // a bare textbox does not support them.
+          role="combobox"
           aria-autocomplete="list"
           aria-expanded={open !== null}
           aria-controls={open ? menuId : undefined}
@@ -181,6 +191,12 @@ export function VariableField({
             onChange(e.target.value);
             refresh(e.target.value, e.target.selectionStart ?? 0);
           }}
+          // Caret movement too: an open menu whose recorded `{{` start no longer matches the
+          // cursor would insert the completion at the stale position, corrupting the text.
+          onSelect={(e) => {
+            const el = e.currentTarget;
+            refresh(el.value, el.selectionStart ?? 0);
+          }}
           onKeyDown={handleKeyDown}
           onScroll={syncScroll}
           // Blur may be a click landing on the list; let that click run first.
@@ -188,7 +204,7 @@ export function VariableField({
         />
       </div>
 
-      {open && visible.length > 0 && (
+      {open && matches.length > 0 && (
         <ul
           id={menuId}
           className="portal-varfield__menu"
@@ -196,8 +212,10 @@ export function VariableField({
           aria-label={t("portal.policies.variables.menuLabel")}
         >
           {/* Options are plain listbox rows, not buttons: focus stays in the editor and the
-              active row is conveyed via aria-activedescendant, per the combobox pattern. */}
-          {visible.map((def, index) => (
+              active row is conveyed via aria-activedescendant, per the combobox pattern.
+              Every match renders (the menu scrolls); arrow-cycling and the rows must never
+              disagree about the list. */}
+          {matches.map((def, index) => (
             <li
               key={def.path}
               id={`${menuId}-opt-${index}`}
@@ -269,7 +287,10 @@ export function VariablesReference({
       {open && (
         <div id={bodyId} className="portal-varref__body">
           <p className="portal-varref__intro">{t(`${PREFIX}.intro`)}</p>
-          <p className="portal-varref__intro">{t(`${PREFIX}.introSteps`)}</p>
+          {/* Step 1 has no earlier steps, so the cross-step explainer would only mislead. */}
+          {groups.some((group) => group.id === "steps") && (
+            <p className="portal-varref__intro">{t(`${PREFIX}.introSteps`)}</p>
+          )}
           {groups.map((group) => (
             <section key={group.id} className="portal-varref__group">
               <h5 className="portal-varref__group-title">

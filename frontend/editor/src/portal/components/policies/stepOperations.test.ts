@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   STEP_OPERATIONS,
   buildStepParameters,
+  customCallUnknownReference,
   emptyOperationValues,
   operationById,
+  operationFieldIssue,
   operationFormValid,
   operationsForConnectionType,
   searchOperations,
@@ -130,6 +132,42 @@ describe("operation form", () => {
     const cloudmersive = operationById("cloudmersiveScan")!;
     expect(operationFormValid(cloudmersive, {})).toBe(true);
   });
+
+  it("refuses a reference the run cannot fill in", () => {
+    // {{document.flename}} saves cleanly without this check and then fails every run.
+    const discord = operationById("discordNotify")!;
+    expect(
+      operationFormValid(discord, { message: "{{document.flename}}" }),
+    ).toBe(false);
+    expect(
+      operationFormValid(discord, { message: "{{document.filename}}" }),
+    ).toBe(true);
+  });
+
+  it("refuses a forward or self step reference when the position is known", () => {
+    const discord = operationById("discordNotify")!;
+    const values = { message: "see {{steps.2.body.url}}" };
+    expect(operationFormValid(discord, values, undefined, 3)).toBe(true);
+    expect(operationFormValid(discord, values, undefined, 2)).toBe(false);
+    expect(operationFormValid(discord, values, undefined, 1)).toBe(false);
+  });
+
+  it("checks the custom call's own path, headers and body template", () => {
+    expect(
+      customCallUnknownReference({
+        path: "/v1/{{document.filename}}",
+        headers: '{"X-Doc": "{{document.sha256}}"}',
+        bodyTemplate: "",
+      }),
+    ).toBeNull();
+    expect(
+      customCallUnknownReference({
+        path: "",
+        headers: "",
+        bodyTemplate: '{"file": "{{document.base46}}"}',
+      }),
+    ).toBe("document.base46");
+  });
 });
 
 describe("searchOperations", () => {
@@ -250,6 +288,30 @@ describe("substituting an answer into the URL path", () => {
     });
     expect(params.path).toBe("/v3/mg.acme.com/messages");
   });
+
+  it("keeps a {{document.*}} reference inside an answer for the backend pass", () => {
+    // Encoding the braces would send the reference literally, never resolved - the backend's
+    // URL_PATH pass resolves it per document and percent-encodes the value itself.
+    const op = operationById("nextcloudUpload")!;
+    const params = buildStepParameters(op, "9", {
+      username: "svc",
+      remotePath: "Processed/{{document.filename}}",
+    });
+    expect(params.path).toBe(
+      "/remote.php/dav/files/svc/Processed/{{document.filename}}",
+    );
+  });
+
+  it("keeps a path-valued answer's slashes as separators, encoding each segment", () => {
+    const op = operationById("nextcloudUpload")!;
+    const params = buildStepParameters(op, "9", {
+      username: "svc",
+      remotePath: "My Reports/2026/x.pdf",
+    });
+    expect(params.path).toBe(
+      "/remote.php/dav/files/svc/My%20Reports/2026/x.pdf",
+    );
+  });
 });
 
 describe("operationsForConnectionType", () => {
@@ -294,20 +356,29 @@ describe("per-step size limit", () => {
     expect(params.maxRequestBytes).toBe("0");
   });
 
-  it("treats a blank or non-numeric limit as no cap", () => {
+  it("treats a blank limit as no cap - the helper text promises exactly that", () => {
     const op = operationById("discordAttach")!;
+    const values = { ...emptyOperationValues(op), maxFileMb: "" };
+    expect(buildStepParameters(op, "5", values).maxRequestBytes).toBe("0");
+    expect(operationFormValid(op, values)).toBe(true);
+  });
+
+  it("refuses to save a limit it would otherwise silently drop", () => {
+    // "abc" or "-5" coerced to "no cap" is the unsafe direction: the operator set a safeguard
+    // and it silently stopped existing. The form must block the save instead.
+    const op = operationById("discordAttach")!;
+    const field = op.fields!.find((f) => f.key === "maxFileMb")!;
+    expect(field.control).toBe("number");
+    for (const bad of ["abc", "-5", "0", "25 MB"]) {
+      expect(
+        operationFormValid(op, { ...emptyOperationValues(op), maxFileMb: bad }),
+        bad,
+      ).toBe(false);
+      expect(operationFieldIssue(field, bad)).toEqual({ kind: "number" });
+    }
     expect(
-      buildStepParameters(op, "5", {
-        ...emptyOperationValues(op),
-        maxFileMb: "",
-      }).maxRequestBytes,
-    ).toBe("0");
-    expect(
-      buildStepParameters(op, "5", {
-        ...emptyOperationValues(op),
-        maxFileMb: "abc",
-      }).maxRequestBytes,
-    ).toBe("0");
+      operationFormValid(op, { ...emptyOperationValues(op), maxFileMb: "25" }),
+    ).toBe(true);
   });
 });
 

@@ -52,6 +52,38 @@ describe("VariableField", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
+  it("closes the menu when the caret moves out of the open reference", async () => {
+    // Regression: with no selection handler, moving the caret left a stale menu whose recorded
+    // {{ start no longer matched - accepting then spliced the completion into the wrong place.
+    render(<Harness />);
+    await userEvent.type(editor(), "x {{{{doc");
+    await screen.findByRole("listbox");
+
+    const el = editor();
+    el.setSelectionRange(0, 0);
+    fireEvent.select(el);
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+    // Enter with the menu closed must not splice a completion into the text.
+    await userEvent.keyboard("{Enter}");
+    expect(el.value).toBe("x {{doc");
+  });
+
+  it("reopens the menu when the caret returns into an open reference", async () => {
+    render(<Harness />);
+    await userEvent.type(editor(), "{{{{doc");
+    await screen.findByRole("listbox");
+
+    const el = editor();
+    el.setSelectionRange(0, 0);
+    fireEvent.select(el);
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+    el.setSelectionRange(el.value.length, el.value.length);
+    fireEvent.select(el);
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
   it("closes on Escape and leaves the text alone", async () => {
     render(<Harness />);
     await userEvent.type(editor(), "{{{{steps");

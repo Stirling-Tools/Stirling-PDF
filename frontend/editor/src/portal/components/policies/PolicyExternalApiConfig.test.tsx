@@ -49,12 +49,19 @@ vi.mock("@portal/api/http", () => ({
 // A stateful host so the controlled component behaves as it does in the builder, and the test can
 // read the parameters after each change.
 let latest: ExternalApiStepParams;
-function Harness({ initial }: { initial: ExternalApiStepParams }) {
+function Harness({
+  initial,
+  stepPosition,
+}: {
+  initial: ExternalApiStepParams;
+  stepPosition?: number;
+}) {
   const [params, setParams] = useState(initial);
   latest = params;
   return (
     <PolicyExternalApiConfig
       parameters={params}
+      stepPosition={stepPosition}
       onChange={(p) => {
         latest = p;
         setParams(p);
@@ -87,5 +94,66 @@ describe("switching an operation's vendor", () => {
     await waitFor(() => expect(latest.operationId).toBe("jiraAttach"));
     // The Discord account did not ride across to the Jira step.
     expect(latest.connectionId).toBe("");
+  });
+});
+
+describe("field validation surfaced at the field", () => {
+  it("flags an unparseable size cap instead of silently dropping it", () => {
+    const op = operationById("discordAttach")!;
+    render(
+      <Harness
+        initial={buildStepParameters(op, "5", {
+          message: "",
+          maxFileMb: "abc",
+        })}
+      />,
+    );
+    expect(
+      screen.getByText("portal.policies.operations.errors.invalidNumber"),
+    ).toBeInTheDocument();
+  });
+
+  it("accepts a plain positive cap without complaint", () => {
+    const op = operationById("discordAttach")!;
+    render(
+      <Harness
+        initial={buildStepParameters(op, "5", {
+          message: "",
+          maxFileMb: "25",
+        })}
+      />,
+    );
+    expect(
+      screen.queryByText("portal.policies.operations.errors.invalidNumber"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("flags a reference the run cannot fill in", () => {
+    const op = operationById("discordNotify")!;
+    render(
+      <Harness
+        initial={buildStepParameters(op, "5", {
+          message: "did {{document.flename}}",
+        })}
+      />,
+    );
+    expect(
+      screen.getByText("portal.policies.operations.errors.unknownVariable"),
+    ).toBeInTheDocument();
+  });
+
+  it("flags a self-referencing steps variable in step 1", () => {
+    const op = operationById("discordNotify")!;
+    render(
+      <Harness
+        initial={buildStepParameters(op, "5", {
+          message: "see {{steps.1.body.url}}",
+        })}
+        stepPosition={1}
+      />,
+    );
+    expect(
+      screen.getByText("portal.policies.operations.errors.unknownVariable"),
+    ).toBeInTheDocument();
   });
 });

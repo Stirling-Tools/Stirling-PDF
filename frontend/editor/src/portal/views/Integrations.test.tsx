@@ -188,6 +188,30 @@ describe("Integrations view", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the custom-call task out of a connected group when the server withholds it", async () => {
+    // A stored custom-API connection still lists; the task the server would refuse must not
+    // be advertised in its panel (same gate the catalogue honours).
+    const custom = {
+      id: 3,
+      integrationType: "API",
+      name: "In-house API",
+      config: { baseUrl: "https://api.internal" },
+      canManage: true,
+    } as unknown as IntegrationConfig;
+    fetchIntegrations.mockResolvedValue([custom]);
+    render(<Integrations />);
+
+    fireEvent.click(
+      await screen.findByText("portal.connections.types.api.label"),
+    );
+    expect(
+      await screen.findByText("portal.integrations.addAnother"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.policies.operations.customApiCall.label"),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows a connected group's tasks in its expanded panel", async () => {
     const slack = {
       id: 9,

@@ -19,7 +19,9 @@
   outline-offset: -1px;
 }
 
-/* The shared text metrics. */
+/* The shared text metrics. The stable scrollbar gutter matters on classic (non-overlay)
+   scrollbars: without it the editor's scrollbar narrows its wrap width while the hidden-overflow
+   render layer keeps the full width, and the two layers wrap at different columns. */
 .portal-varfield__editor,
 .portal-varfield__render {
   font-family: var(--font-mono, ui-monospace, monospace);
@@ -28,6 +30,7 @@
   padding: 0.5rem 0.75rem;
   white-space: pre-wrap;
   overflow-wrap: break-word;
+  scrollbar-gutter: stable;
 }
 
 .portal-varfield__editor {

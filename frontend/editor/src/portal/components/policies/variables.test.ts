@@ -5,6 +5,7 @@ import {
   VARIABLE_GROUPS,
   insertVariable,
   openReferenceAt,
+  unknownReferences,
   variableGroupsFor,
   variableSuggestions,
 } from "@portal/components/policies/variables";
@@ -108,5 +109,94 @@ describe("variableGroupsFor", () => {
     expect(ids).toContain("classification");
     expect(ids).not.toContain("sensitivityLabel");
     expect(ids).toEqual(expect.arrayContaining(["document", "run", "steps"]));
+  });
+
+  it("offers no steps group to step 1 - its only completion would be a self-reference", () => {
+    const ids = variableGroupsFor(undefined, 1).map((g) => g.id);
+    expect(ids).not.toContain("steps");
+  });
+
+  it("offers one concrete pair per earlier step, nothing at or past this one", () => {
+    const steps = variableGroupsFor(undefined, 3).find(
+      (g) => g.id === "steps",
+    )!;
+    expect(steps.variables.map((d) => d.path)).toEqual([
+      "steps.1.body",
+      "steps.1.status",
+      "steps.2.body",
+      "steps.2.status",
+    ]);
+    // Concrete paths: nothing left for the operator to edit before it resolves.
+    expect(steps.variables.every((d) => !d.template)).toBe(true);
+  });
+
+  it("keeps the generic steps template when the position is unknown", () => {
+    const steps = variableGroupsFor(undefined).find((g) => g.id === "steps")!;
+    expect(steps.variables.map((d) => d.path)).toEqual([
+      "steps.1.body",
+      "steps.1.status",
+    ]);
+  });
+});
+
+describe("unknownReferences", () => {
+  it("passes catalogue paths and flags typos", () => {
+    expect(
+      unknownReferences("{{document.filename}} at {{run.timestamp}}"),
+    ).toEqual([]);
+    expect(unknownReferences("{{document.flename}}")).toEqual([
+      "document.flename",
+    ]);
+  });
+
+  it("tolerates spaces inside the braces, like the backend resolver", () => {
+    expect(unknownReferences("{{ document.filename }}")).toEqual([]);
+  });
+
+  it("allows dotted paths into deep variables only", () => {
+    expect(unknownReferences("{{classification.confidence}}")).toEqual([]);
+    // document.filename is a scalar; reaching inside it fails at run time.
+    expect(unknownReferences("{{document.filename.x}}")).toEqual([
+      "document.filename.x",
+    ]);
+  });
+
+  it("accepts steps references only for steps that ran earlier", () => {
+    expect(
+      unknownReferences("{{steps.1.body.ocs.data.url}}", undefined, 2),
+    ).toEqual([]);
+    expect(unknownReferences("{{steps.1.status}}", undefined, 2)).toEqual([]);
+    // The self- and forward references that fail every run.
+    expect(unknownReferences("{{steps.2.body}}", undefined, 2)).toEqual([
+      "steps.2.body",
+    ]);
+    expect(unknownReferences("{{steps.1.body}}", undefined, 1)).toEqual([
+      "steps.1.body",
+    ]);
+  });
+
+  it("accepts any step number when the position is unknown", () => {
+    expect(unknownReferences("{{steps.7.body.url}}")).toEqual([]);
+  });
+
+  it("rejects steps shapes the executor cannot resolve", () => {
+    expect(unknownReferences("{{steps.1.status.x}}", undefined, 2)).toEqual([
+      "steps.1.status.x",
+    ]);
+    expect(unknownReferences("{{steps.1}}", undefined, 2)).toEqual(["steps.1"]);
+  });
+
+  it("ignores prose braces that are not references", () => {
+    expect(unknownReferences("a {{ b c }} d")).toEqual([]);
+  });
+
+  it("honours the groups it is given", () => {
+    const withoutConditionals = variableGroupsFor({
+      classification: false,
+      sensitivityLabel: false,
+    });
+    expect(
+      unknownReferences("{{classification.label}}", withoutConditionals),
+    ).toEqual(["classification.label"]);
   });
 });

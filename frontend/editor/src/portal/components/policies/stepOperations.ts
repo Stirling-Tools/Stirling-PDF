@@ -18,6 +18,11 @@
 
 import type { IntegrationType } from "@portal/api/integrations";
 import type { ConnectionCategory } from "@portal/components/sources/connectionTypes";
+import {
+  VARIABLE_GROUPS,
+  unknownReferences,
+  type VariableGroup,
+} from "@portal/components/policies/variables";
 
 /**
  * The complete parameter set of the `external-api-call` step. Every key is present and every
@@ -50,12 +55,18 @@ const PREFIX = "portal.policies.operations";
 export interface OperationFieldDef {
   key: string;
   labelKey: string;
-  control: "text" | "textarea" | "select";
+  /** "number" is a plain numeric input: no variables, validated as a positive number. */
+  control: "text" | "textarea" | "select" | "number";
   required?: boolean;
   placeholderKey?: string;
   helperTextKey?: string;
   defaultValue?: string;
   options?: { value: string; labelKey: string }[];
+  /**
+   * True when the value is a path whose slashes are separators (Nextcloud's remotePath), so
+   * substitutePath encodes each segment rather than the whole value.
+   */
+  pathValue?: boolean;
 }
 
 /**
@@ -378,6 +389,7 @@ export const STEP_OPERATIONS: StepOperation[] = [
         required: true,
         helperTextKey: `${PREFIX}.fields.remotePath.helperText`,
         defaultValue: "Processed/{{document.filename}}",
+        pathValue: true,
       },
     ],
   },
@@ -406,6 +418,7 @@ export const STEP_OPERATIONS: StepOperation[] = [
         labelKey: `${PREFIX}.fields.shareRemotePath.label`,
         control: "text",
         required: true,
+        placeholderKey: `${PREFIX}.fields.shareRemotePath.placeholder`,
         helperTextKey: `${PREFIX}.fields.shareRemotePath.helperText`,
         defaultValue: "Processed/{{document.filename}}",
       },
@@ -629,7 +642,7 @@ export const STEP_OPERATIONS: StepOperation[] = [
       {
         key: "maxFileMb",
         labelKey: `${PREFIX}.fields.maxFileMb.label`,
-        control: "text",
+        control: "number",
         required: false,
         helperTextKey: `${PREFIX}.fields.maxFileMb.helperText`,
         defaultValue: "25",
@@ -743,12 +756,49 @@ export function emptyOperationValues(
   return values;
 }
 
+/** Why a field's current value cannot be saved, or null when it can. */
+export type OperationFieldIssue =
+  | { kind: "number" }
+  | { kind: "reference"; path: string };
+
+/**
+ * Save-time validation for one operator field. A number field must be blank (no cap) or a
+ * positive number - silently coercing "abc" to "no cap" would fail open on a safeguard. A text
+ * field's `{{references}}` must all be ones the run can fill in, because the backend hard-fails
+ * an unknown path on every run.
+ */
+export function operationFieldIssue(
+  field: OperationFieldDef,
+  value: string,
+  groups: VariableGroup[] = VARIABLE_GROUPS,
+  stepPosition?: number,
+): OperationFieldIssue | null {
+  if (field.control === "number") {
+    const trimmed = value.trim();
+    if (trimmed === "") return null;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) && parsed > 0 ? null : { kind: "number" };
+  }
+  if (field.control === "select") return null;
+  const unknown = unknownReferences(value, groups, stepPosition);
+  return unknown.length > 0 ? { kind: "reference", path: unknown[0] } : null;
+}
+
 export function operationFormValid(
   op: StepOperation,
   values: Record<string, string>,
+  groups: VariableGroup[] = VARIABLE_GROUPS,
+  stepPosition?: number,
 ): boolean {
   return (op.fields ?? []).every(
-    (field) => !field.required || (values[field.key] ?? "").trim() !== "",
+    (field) =>
+      (!field.required || (values[field.key] ?? "").trim() !== "") &&
+      operationFieldIssue(
+        field,
+        values[field.key] ?? "",
+        groups,
+        stepPosition,
+      ) === null,
   );
 }
 
@@ -765,12 +815,35 @@ export function buildStepParameters(
   connectionId: string,
   values: Record<string, string>,
 ): ExternalApiStepParams {
+  const fieldsByKey = new Map(
+    (op.fields ?? []).map((field) => [field.key, field]),
+  );
+  // A {{document.*}}-style reference inside the answer must stay for the backend's own URL_PATH
+  // pass, which resolves and percent-encodes its value at run time; encoding the braces here
+  // would send the reference literally, never resolved.
+  const encodePathAnswer = (text: string, segmented: boolean): string =>
+    text
+      .split(/(\{\{[\w.]+\}\})/g)
+      .map((part) =>
+        /^\{\{[\w.]+\}\}$/.test(part)
+          ? part
+          : segmented
+            ? part.split("/").map(encodeURIComponent).join("/")
+            : encodeURIComponent(part),
+      )
+      .join("");
   // Substituted into the URL path: the answer is percent-encoded, so a space or slash in a key
   // (a Jira "OPS 1", a path-shaped id) is a value, not a change to the target. Matches the
-  // backend's URL_PATH escaping for its own {{document.*}} pass.
+  // backend's URL_PATH escaping for its own {{document.*}} pass. A pathValue field keeps its
+  // slashes as separators and encodes per segment instead.
   const substitutePath = (text: string): string =>
     text.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (whole, key: string) =>
-      key in values ? encodeURIComponent(values[key]) : whole,
+      key in values
+        ? encodePathAnswer(
+            values[key],
+            fieldsByKey.get(key)?.pathValue === true,
+          )
+        : whole,
     );
   // Substituted into an already-serialised JSON string: a quote or backslash in an answer would
   // otherwise break the body, and the backend rejects it as invalid JSON.
@@ -805,8 +878,9 @@ export function buildStepParameters(
 }
 
 /**
- * The size cap in bytes for this call, from the operator's MB field, or "0" for no cap. A blank or
- * unparseable value is treated as no cap rather than an error - the field is a safeguard, not a gate.
+ * The size cap in bytes for this call, from the operator's MB field, or "0" for no cap. Blank
+ * deliberately means no cap; anything else non-positive or unparseable also yields "0" here, but
+ * operationFieldIssue refuses to save it - coercing "abc" into "no cap" would fail open.
  */
 function maxRequestBytes(
   call: OperationCall,
@@ -816,6 +890,23 @@ function maxRequestBytes(
   const mb = Number.parseFloat(values[call.maxBytesFromField] ?? "");
   if (!Number.isFinite(mb) || mb <= 0) return "0";
   return String(Math.round(mb * 1024 * 1024));
+}
+
+/**
+ * The first unresolvable reference across a custom call's operator-authored parameters, or null.
+ * The custom operation has no fields; its path, headers and body template are typed directly, so
+ * they get the same save-time reference check the field values do.
+ */
+export function customCallUnknownReference(
+  params: Pick<ExternalApiStepParams, "path" | "headers" | "bodyTemplate">,
+  groups: VariableGroup[] = VARIABLE_GROUPS,
+  stepPosition?: number,
+): string | null {
+  for (const text of [params.path, params.headers, params.bodyTemplate]) {
+    const unknown = unknownReferences(text ?? "", groups, stepPosition);
+    if (unknown.length > 0) return unknown[0];
+  }
+  return null;
 }
 
 /** The operations a given connection type unlocks - what an integration lets you actually do. */

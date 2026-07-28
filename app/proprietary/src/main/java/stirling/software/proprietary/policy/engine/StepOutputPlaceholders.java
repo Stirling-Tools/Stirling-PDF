@@ -4,6 +4,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.StringNode;
 
 /**
  * Substitutes {@code {{steps.N...}}} references in a step's parameters against the reports the
@@ -58,6 +61,30 @@ final class StepOutputPlaceholders {
         }
         matcher.appendTail(out);
         return out.toString();
+    }
+
+    /**
+     * Resolve every string inside a parsed JSON tree, leaving structure and non-strings alone.
+     * Mirrors the document-scope resolver: a substituted value lands in a text node and is escaped
+     * on serialise, so a response can never inject fields into the JSON the operator wrote.
+     */
+    static JsonNode resolveTree(JsonNode node, JsonNode context) {
+        if (node instanceof ObjectNode object) {
+            for (String name : new java.util.ArrayList<>(object.propertyNames())) {
+                object.set(name, resolveTree(object.get(name), context));
+            }
+            return object;
+        }
+        if (node instanceof ArrayNode array) {
+            for (int i = 0; i < array.size(); i++) {
+                array.set(i, resolveTree(array.get(i), context));
+            }
+            return array;
+        }
+        if (node != null && node.isString()) {
+            return StringNode.valueOf(resolve(node.asString(), context));
+        }
+        return node;
     }
 
     private static JsonNode lookup(JsonNode context, String path) {

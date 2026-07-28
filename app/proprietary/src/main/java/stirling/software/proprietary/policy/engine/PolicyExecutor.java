@@ -201,7 +201,7 @@ public class PolicyExecutor {
 
     private Object resolveValue(Object value, JsonNode runContext) {
         if (value instanceof String s) {
-            return StepOutputPlaceholders.resolve(s, runContext);
+            return resolveString(s, runContext);
         }
         if (value instanceof List<?> list) {
             List<Object> out = new ArrayList<>(list.size());
@@ -211,6 +211,38 @@ public class PolicyExecutor {
             return out;
         }
         return value;
+    }
+
+    /**
+     * A JSON-shaped parameter (bodyTemplate, fields, headers) is resolved inside its parsed tree,
+     * so an earlier step's response can only ever become a value in it. String-level substitution
+     * would let a response like {@code x", "admin": true, "y": "} inject fields into the JSON the
+     * operator wrote; a plain-text parameter keeps the plain substitution.
+     */
+    private String resolveString(String value, JsonNode runContext) {
+        if (!StepOutputPlaceholders.references(value)) {
+            return value;
+        }
+        JsonNode tree = parseJsonContainer(value);
+        if (tree == null) {
+            return StepOutputPlaceholders.resolve(value, runContext);
+        }
+        return objectMapper.writeValueAsString(
+                StepOutputPlaceholders.resolveTree(tree, runContext));
+    }
+
+    /** The value parsed as a JSON object or array, or null when it is anything else. */
+    private JsonNode parseJsonContainer(String value) {
+        String trimmed = value.trim();
+        if (trimmed.isEmpty() || (trimmed.charAt(0) != '{' && trimmed.charAt(0) != '[')) {
+            return null;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(value);
+            return (node.isObject() || node.isArray()) ? node : null;
+        } catch (JacksonException e) {
+            return null;
+        }
     }
 
     /**

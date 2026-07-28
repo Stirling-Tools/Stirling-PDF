@@ -16,6 +16,8 @@ export interface VariableDef {
   descKey: string;
   /** True when the path contains a part the operator must edit (the N in steps.N). */
   template?: boolean;
+  /** True when the value is JSON a dotted path may reach inside (classification, steps.N.body). */
+  deep?: boolean;
 }
 
 export interface VariableGroup {
@@ -35,6 +37,13 @@ const v = (path: string, template = false): VariableDef => ({
   path,
   descKey: `${PREFIX}.defs.${path.replaceAll(".", "_")}`,
   template,
+});
+
+/** A steps.N def: the description key is shared across every N, so it is set explicitly. */
+const stepVar = (n: number | string, kind: "body" | "status"): VariableDef => ({
+  path: `steps.${n}.${kind}`,
+  descKey: `${PREFIX}.defs.steps_${kind}`,
+  template: typeof n === "string",
 });
 
 /** Grouped for the reference panel; flattened for the autocomplete. */
@@ -72,7 +81,11 @@ export const VARIABLE_GROUPS: VariableGroup[] = [
     id: "classification",
     labelKey: `${PREFIX}.groups.classification.label`,
     descKey: `${PREFIX}.groups.classification.description`,
-    variables: [v("classification.label"), v("classification")],
+    // classification is the verdict's whole JSON, so dotted paths may reach inside it.
+    variables: [
+      v("classification.label"),
+      { ...v("classification"), deep: true },
+    ],
   },
   {
     id: "sensitivityLabel",
@@ -90,7 +103,9 @@ export const VARIABLE_GROUPS: VariableGroup[] = [
     descKey: `${PREFIX}.groups.steps.description`,
     // Only the two shapes every step report actually has; the worked example below teaches
     // reaching deeper. N is the 1-based position of the earlier step whose answer is wanted.
-    variables: [v("steps.1.body", true), v("steps.1.status", true)],
+    // This generic form is offered only when the step's own position is unknown - when it is
+    // known, variableGroupsFor swaps in one concrete pair per earlier step.
+    variables: [stepVar("1", "body"), stepVar("1", "status")],
     example: {
       path: "steps.1.body.ocs.data.url",
       descKey: `${PREFIX}.groups.steps.example`,
@@ -113,17 +128,75 @@ export interface VariableAvailability {
   sensitivityLabel: boolean;
 }
 
-/** The groups to offer; undefined availability (still loading, or unknowable) offers everything. */
+/**
+ * The groups to offer; undefined availability (still loading, or unknowable) offers everything.
+ *
+ * `stepPosition` is the configured step's own 1-based place in the chain. With it known, the
+ * steps group offers one concrete pair per *earlier* step - and nothing at all for step 1 -
+ * because the only alternative is a steps.1 template that, accepted verbatim in step 1, is a
+ * self-reference the backend rightly fails every run on.
+ */
 export function variableGroupsFor(
   availability: VariableAvailability | undefined,
+  stepPosition?: number,
 ): VariableGroup[] {
-  if (!availability) return VARIABLE_GROUPS;
-  return VARIABLE_GROUPS.filter((group) =>
+  const groups = VARIABLE_GROUPS.filter((group) =>
     group.id === "classification"
-      ? availability.classification
+      ? (availability?.classification ?? true)
       : group.id === "sensitivityLabel"
-        ? availability.sensitivityLabel
+        ? (availability?.sensitivityLabel ?? true)
         : true,
+  );
+  if (stepPosition === undefined) return groups;
+  return groups.flatMap((group) => {
+    if (group.id !== "steps") return [group];
+    if (stepPosition <= 1) return [];
+    const variables: VariableDef[] = [];
+    for (let n = 1; n < stepPosition; n++) {
+      variables.push(stepVar(n, "body"), stepVar(n, "status"));
+    }
+    return [{ ...group, variables }];
+  });
+}
+
+/**
+ * The `{{references}}` in `text` that name nothing the run can substitute, deduplicated.
+ *
+ * The backend hard-fails an unknown path at run time, so a typo saved today fails every run
+ * tomorrow; this is the save-time check that catches it while the fix is one keystroke away.
+ * Matches the backend's tolerance for spaces inside the braces. steps.N references are valid
+ * for any earlier step (N below `stepPosition` when the position is known); `deep` variables
+ * (classification, steps.N.body) accept dotted paths reaching inside their JSON.
+ */
+export function unknownReferences(
+  text: string,
+  groups: VariableGroup[] = VARIABLE_GROUPS,
+  stepPosition?: number,
+): string[] {
+  const out = new Set<string>();
+  for (const match of text.matchAll(/\{\{\s*([\w.]+)\s*\}\}/g)) {
+    const path = match[1];
+    if (!referenceValid(path, groups, stepPosition)) out.add(path);
+  }
+  return [...out];
+}
+
+function referenceValid(
+  path: string,
+  groups: VariableGroup[],
+  stepPosition?: number,
+): boolean {
+  const step = /^steps\.(\d+)\.(?:body(?:\.\w+)*|status)$/.exec(path);
+  if (step) {
+    if (!groups.some((group) => group.id === "steps")) return false;
+    const n = Number(step[1]);
+    return n >= 1 && (stepPosition === undefined || n < stepPosition);
+  }
+  return groups.some((group) =>
+    group.variables.some(
+      (def) =>
+        def.path === path || (def.deep && path.startsWith(def.path + ".")),
+    ),
   );
 }
 

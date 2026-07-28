@@ -6732,7 +6732,7 @@ heading = "What do you want to connect?"
 noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
 noResultsTitle = "Nothing matches \"{{query}}\""
 searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
-tasksInfo = "Show the tasks this integration adds"
+tasksInfo = "Show the tasks {{name}} adds"
 tasksTitle = "Tasks you can add"
 
 [portal.connections.types.api]
@@ -7751,6 +7751,7 @@ back = "Back to pipelines"
 chooseAccount = "Choose an account"
 chooseOperation = "Choose what this step does"
 discard = "Discard changes"
+fixStepFields = "Fix the highlighted fields"
 enabled = "Enabled"
 keepEditing = "Keep editing"
 needsUpload = "Needs an uploaded file"
@@ -8071,6 +8072,10 @@ note = "Discord caps uploads at 25 MB by default; a channel's Nitro tier can rai
 description = "Tells a channel that the policy handled a document."
 label = "Post a message to Discord"
 
+[portal.policies.operations.errors]
+invalidNumber = "Enter a number greater than zero, or leave it blank for no limit."
+unknownVariable = "'{{path}}' is not a variable this step can use, so every run would fail."
+
 [portal.policies.operations.elasticIndex]
 description = "Records what the policy did as a searchable document."
 label = "Index an audit event in Elasticsearch"
@@ -8300,8 +8305,8 @@ run_timestamp = "When the step ran (ISO 8601)"
 sensitivityLabel_labelId = "The label's id in Microsoft Purview"
 sensitivityLabel_name = "The sensitivity label's name, e.g. Confidential"
 sensitivityLabel_protected = "Whether the label applies protection (true/false)"
-steps_1_body = "Step N's whole JSON answer - add a dotted path to reach into it"
-steps_1_status = "The HTTP status step N's call returned"
+steps_body = "That step's whole JSON answer - add a dotted path to reach into it"
+steps_status = "The HTTP status that step's call returned"
 
 [portal.policies.variables.groups.classification]
 description = "The classifier's verdict, when a classification step has run."

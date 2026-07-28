@@ -143,13 +143,18 @@ export function SourceModal({
     setReveal(null);
     setSubmitting(false);
     setDeleting(false);
+    // The modal is permanently mounted, so an edit closed mid-fetch leaves loading stuck true
+    // (its cleanup stops the .finally from resetting it) unless every open resets it.
+    setLoading(false);
+    // Reset before any fetch too: a rejected edit fetch must not leave the previous source's
+    // values in a saveable form - saving would write that source's config onto this one.
+    setType(OFFERED_TYPES[0]);
+    setName("");
+    setOptions(defaultOptions(OFFERED_TYPES[0]));
+    setEnabled(true);
+    setLoaded(null);
     if (!sourceId) {
       setStage("type");
-      setType(OFFERED_TYPES[0]);
-      setName("");
-      setOptions(defaultOptions(OFFERED_TYPES[0]));
-      setEnabled(true);
-      setLoaded(null);
       return;
     }
     setStage("configure");

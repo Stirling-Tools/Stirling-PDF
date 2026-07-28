@@ -73,6 +73,45 @@ class StepOutputPlaceholdersTest {
     }
 
     @Test
+    void resolveTreeKeepsAnInjectionAttemptAsAValue() {
+        // The classic JSON break-out: a response value that tries to close the string and add a
+        // field. Tree-level resolution keeps it a value; serialising escapes the quotes.
+        ObjectNode ctx = contextWithStep1Url("x\", \"admin\": true, \"y\": \"");
+        var template = mapper.readTree("{\"msg\": \"{{steps.1.body.url}}\"}");
+        var resolved = StepOutputPlaceholders.resolveTree(template, ctx);
+
+        assertEquals("x\", \"admin\": true, \"y\": \"", resolved.get("msg").asString());
+        assertNull(resolved.get("admin"));
+        var reparsed = mapper.readTree(mapper.writeValueAsString(resolved));
+        assertEquals(1, reparsed.size());
+        assertEquals("x\", \"admin\": true, \"y\": \"", reparsed.get("msg").asString());
+    }
+
+    @Test
+    void resolveTreeResolvesNestedStringsAndLeavesTheRestAlone() {
+        ObjectNode ctx = contextWithStep1Url("https://s/1");
+        var template =
+                mapper.readTree(
+                        "{\"a\": [{\"link\": \"{{steps.1.body.url}}\"}], \"n\": 7,"
+                                + " \"doc\": \"{{document.filename}}\"}");
+        var resolved = StepOutputPlaceholders.resolveTree(template, ctx);
+
+        assertEquals("https://s/1", resolved.get("a").get(0).get("link").asString());
+        assertEquals(7, resolved.get("n").asInt());
+        // Document scope stays for the downstream tool, same as the string resolver.
+        assertEquals("{{document.filename}}", resolved.get("doc").asString());
+    }
+
+    @Test
+    void resolveTreeFailsClosedOnAMissingReference() {
+        ObjectNode ctx = contextWithStep1Url("u");
+        var template = mapper.readTree("{\"msg\": \"{{steps.2.body.url}}\"}");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> StepOutputPlaceholders.resolveTree(template, ctx));
+    }
+
+    @Test
     void referencesDetectsStepsOnly() {
         assertTrue(StepOutputPlaceholders.references("x {{steps.1.a}}"));
         assertFalse(StepOutputPlaceholders.references("{{document.filename}}"));

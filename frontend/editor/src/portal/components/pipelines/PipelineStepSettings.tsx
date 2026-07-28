@@ -13,6 +13,8 @@ import type { ExternalApiStepParams } from "@portal/components/policies/stepOper
 
 interface PipelineStepSettingsProps {
   step: WorkingToolStep;
+  /** The step's 1-based place in the chain, so cross-step variables offer only earlier steps. */
+  stepPosition?: number;
   registry: Partial<ToolRegistry>;
   onChange: (params: ErasedToolParams) => void;
 }
@@ -24,6 +26,7 @@ interface PipelineStepSettingsProps {
  */
 export function PipelineStepSettings({
   step,
+  stepPosition,
   registry,
   onChange,
 }: PipelineStepSettingsProps) {
@@ -37,6 +40,7 @@ export function PipelineStepSettings({
     return (
       <PolicyExternalApiConfig
         parameters={step.params as unknown as ExternalApiStepParams}
+        stepPosition={stepPosition}
         onChange={(params) => onChange(params as never)}
       />
     );
