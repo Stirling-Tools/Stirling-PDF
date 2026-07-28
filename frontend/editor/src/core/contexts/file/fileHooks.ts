@@ -71,23 +71,36 @@ export function useFileSelector<T>(
   );
 }
 
-/** Wrap every selector so a call made during render logs loudly (dev/test only).
- *  Render-time vs event-time isn't statically lintable, so this is the guard. */
+/** Selectors that read `ui.selectedFileIds`. A hook that doesn't subscribe to
+ *  that slice must not let consumers call these during render. */
+const SELECTION_SELECTORS: ReadonlyArray<keyof FileContextSelectors> = [
+  "getSelectedFiles",
+  "getSelectedStirlingFileStubs",
+];
+
+/** Wrap selectors so a call made during render logs loudly (dev/test only).
+ *  Render-time vs event-time isn't statically lintable, so this is the guard.
+ *  `keys` limits the wrap to the selectors whose slice the calling hook does NOT
+ *  subscribe to — the rest are safe to read during render and pass through. */
 function guardSelectors(
   selectors: FileContextSelectors,
   isRendering: () => boolean,
+  hookName: string,
+  keys?: ReadonlyArray<keyof FileContextSelectors>,
 ): FileContextSelectors {
-  const guarded: Record<string, unknown> = {};
-  for (const key of Object.keys(selectors)) {
-    const original = selectors[
-      key as keyof FileContextSelectors
-    ] as unknown as (...args: unknown[]) => unknown;
+  const guardedKeys =
+    keys ?? (Object.keys(selectors) as Array<keyof FileContextSelectors>);
+  const guarded: Record<string, unknown> = { ...selectors };
+  for (const key of guardedKeys) {
+    const original = selectors[key] as unknown as (
+      ...args: unknown[]
+    ) => unknown;
     guarded[key] = (...args: unknown[]) => {
       if (isRendering()) {
         console.error(
-          `[useFileSelectors] ${key}() was called during render. These reads ` +
-            "don't subscribe, so the UI can go stale — use useFileSelector / " +
-            "useAllFiles / useStirlingFileStub for render-time data.",
+          `[${hookName}] ${key}() was called during render. This read doesn't ` +
+            "subscribe to the state it depends on, so the UI can go stale — use " +
+            "useFileSelector / useFileSelection / useAllFiles for render-time data.",
         );
       }
       return original(...args);
@@ -97,13 +110,15 @@ function guardSelectors(
 }
 
 /**
- * Stable selector API with NO state subscription — never re-renders. For
- * event-time reads (callbacks/effects), which see live state when invoked.
- * Render-time reads need a reactive hook (useAllFiles/useFileSelector) or
- * they go stale — calling one during render logs an error outside production.
+ * Wrap a hook's exposed selectors in the render-phase misuse guard (no-op in
+ * production). `keys` names the selectors the calling hook doesn't subscribe to;
+ * omit it to guard every selector (for hooks that subscribe to nothing).
  */
-export function useFileSelectors(): FileContextSelectors {
-  const { selectors } = useFileStore();
+function useGuardedSelectors(
+  selectors: FileContextSelectors,
+  hookName: string,
+  keys?: ReadonlyArray<keyof FileContextSelectors>,
+): FileContextSelectors {
   // True exactly while this consumer is rendering: set on every render, cleared
   // by the layout effect once that render commits.
   const renderPhase = useRef(false);
@@ -114,10 +129,21 @@ export function useFileSelectors(): FileContextSelectors {
   return useMemo(
     () =>
       GUARD_MISUSE
-        ? guardSelectors(selectors, () => renderPhase.current)
+        ? guardSelectors(selectors, () => renderPhase.current, hookName, keys)
         : selectors,
-    [selectors],
+    [selectors, hookName, keys],
   );
+}
+
+/**
+ * Stable selector API with NO state subscription — never re-renders. For
+ * event-time reads (callbacks/effects), which see live state when invoked.
+ * Render-time reads need a reactive hook (useAllFiles/useFileSelector) or
+ * they go stale — calling one during render logs an error outside production.
+ */
+export function useFileSelectors(): FileContextSelectors {
+  const { selectors } = useFileStore();
+  return useGuardedSelectors(selectors, "useFileSelectors");
 }
 
 /**
@@ -127,6 +153,8 @@ export function useFileSelectors(): FileContextSelectors {
 export function useFileState(): FileContextStateValue {
   const store = useFileStore();
   const state = useFileSelector((s) => s);
+  // Selectors are exposed unguarded on purpose: this hook subscribes to the
+  // WHOLE state, so a render-time selector read can't go stale.
   return useMemo(
     () => ({ state, selectors: store.selectors }),
     [state, store.selectors],
@@ -327,9 +355,16 @@ export function useFileContext() {
     (s) => ({ files: s.files, pinnedFiles: s.pinnedFiles }),
     shallowEqual,
   );
+  // This hook subscribes to files + pinnedFiles, so those selectors are safe to
+  // read during render; the SELECTION ones aren't (no subscription to
+  // ui.selectedFileIds), so they carry the misuse guard.
+  const selectors = useGuardedSelectors(
+    store.selectors,
+    "useFileContext",
+    SELECTION_SELECTORS,
+  );
 
   return useMemo(() => {
-    const { selectors } = store;
     return {
       // Lifecycle management
       trackBlobUrl: actions.trackBlobUrl,
@@ -375,5 +410,5 @@ export function useFileContext() {
       actions,
       selectors,
     };
-  }, [files, pinnedFiles, actions, store]);
+  }, [files, pinnedFiles, actions, store, selectors]);
 }

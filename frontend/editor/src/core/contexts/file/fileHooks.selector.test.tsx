@@ -5,6 +5,7 @@ import { MantineProvider } from "@mantine/core";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import {
   useAllFiles,
+  useFileContext,
   useFileSelection,
   useFileSelectors,
   useStirlingFileStub,
@@ -162,5 +163,61 @@ describe("useFileSelectors — render-phase misuse guard", () => {
     );
     expect(guardErrors(spy)).toHaveLength(0);
     spy.mockRestore();
+  });
+});
+
+describe("useFileContext — render-phase misuse guard", () => {
+  // useFileContext subscribes to files + pinnedFiles only, so a render-time read
+  // of the SELECTION slice through its exposed selectors would silently go
+  // stale. The guard covers exactly those selectors and nothing else.
+  const guardErrors = (spy: ReturnType<typeof vi.spyOn>) =>
+    spy.mock.calls.filter((args) =>
+      String(args[0]).includes("[useFileContext]"),
+    );
+
+  const renderWithGuard = (node: React.ReactNode) => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <MantineProvider>
+        <FileContextProvider enableUrlSync={false}>{node}</FileContextProvider>
+      </MantineProvider>,
+    );
+    const errors = guardErrors(spy);
+    spy.mockRestore();
+    return errors;
+  };
+
+  function SelectionReadDuringRender() {
+    const { selectors } = useFileContext();
+    selectors.getSelectedFiles(); // unsubscribed slice — must be flagged
+    return null;
+  }
+
+  function FilesReadDuringRender() {
+    const { selectors } = useFileContext();
+    selectors.getStirlingFileStubs(); // files slice IS subscribed — legitimate
+    return null;
+  }
+
+  function SelectionReadFromEffect() {
+    const { selectors } = useFileContext();
+    useEffect(() => {
+      selectors.getSelectedFiles(); // after commit — legitimate
+    }, [selectors]);
+    return null;
+  }
+
+  it("flags a selection read during render", () => {
+    expect(
+      renderWithGuard(<SelectionReadDuringRender />).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("does not flag reads of a slice it subscribes to", () => {
+    expect(renderWithGuard(<FilesReadDuringRender />)).toHaveLength(0);
+  });
+
+  it("does not flag selection reads from effects", () => {
+    expect(renderWithGuard(<SelectionReadFromEffect />)).toHaveLength(0);
   });
 });

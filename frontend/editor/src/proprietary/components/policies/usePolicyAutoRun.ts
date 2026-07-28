@@ -363,7 +363,8 @@ export function usePolicyAutoRun(): void {
         // stale snapshot would no-op on the dead id and lose the labels.
         void importClassificationLabels(
           run,
-          () => classificationLabelTargets(run.fileId, fileStubsRef.current),
+          () =>
+            classificationLabelTargetStubs(run.fileId, fileStubsRef.current),
           { updateStirlingFileStub, bumpRevision },
         ).finally(() => importing.current.delete(run.runId));
         continue;
@@ -540,73 +541,122 @@ interface ClassificationImportContext {
 
 /** Workspace stubs to tag with a classification run's labels: the file it ran
  *  on plus any live descendants, so an edit made during the async run (which
- *  forks a new leaf) still shows the tags. Falls back to the run's own file. */
-export function classificationLabelTargets(
+ *  forks a new leaf) still shows the tags. Empty once the document has left the
+ *  workspace (closed, or a reconciled run with no local input link). */
+export function classificationLabelTargetStubs(
   runFileId: string,
   stubs: ReadonlyArray<StirlingFileStub>,
-): FileId[] {
-  const targets = stubs
-    .filter(
-      (s) =>
-        (s.id as string) === runFileId ||
-        s.parentFileId === runFileId ||
-        s.sourceFileIds?.includes(runFileId as FileId),
-    )
-    .map((s) => s.id as FileId);
-  return targets.length > 0 ? targets : [runFileId as FileId];
+): StirlingFileStub[] {
+  return stubs.filter(
+    (s) =>
+      (s.id as string) === runFileId ||
+      s.parentFileId === runFileId ||
+      s.sourceFileIds?.includes(runFileId as FileId),
+  );
+}
+
+/** Attempts to read a completed run's labels before giving up, and the backoff
+ *  between them (delay × attempt). The import effect only re-runs when the run
+ *  store changes, so a transient read failure has to be retried HERE: bailing
+ *  out would leave the run unsettled and the file's "running" pill spinning
+ *  until unrelated policy activity happened to nudge the effect. */
+const LABEL_READ_ATTEMPTS = 3;
+const LABEL_READ_RETRY_MS = 2000;
+
+/**
+ * Read classification labels out of a completed run's output PDF. A 404 means
+ * that output aged out, so it's skipped; any other failure is transient and
+ * retried with backoff. Returns null when there are genuinely no labels to
+ * apply (including a run with no outputs), so the caller can settle the run.
+ */
+async function readRunLabels(run: PolicyRunRecord): Promise<string[] | null> {
+  for (let attempt = 0; attempt < LABEL_READ_ATTEMPTS; attempt++) {
+    if (attempt > 0) await delay(LABEL_READ_RETRY_MS * attempt);
+    let transientFailure = false;
+    for (const out of run.outputs) {
+      try {
+        const blob = await downloadPolicyOutput(out.fileId, run.target);
+        const file = new File([blob], out.fileName ?? run.fileName, {
+          type: blob.type || "application/pdf",
+        });
+        const labels = await readClassificationLabelsFromFile(file);
+        if (labels && labels.length > 0) return labels;
+      } catch (err) {
+        if (!isNotFoundError(err)) transientFailure = true;
+      }
+    }
+    // Every output was read (or had aged out): there are no labels to apply.
+    if (!transientFailure) return null;
+  }
+  // Out of attempts. Settle the run unlabelled rather than spin forever; the
+  // file keeps its classification badge, just without tags.
+  return null;
 }
 
 /**
- * Stamp a classification run's labels onto the target stubs in place (workspace
- * + storage) — no versioned child, no history entry, only tags.
+ * Stamp `labels` onto the run's live descendants in place (workspace + storage)
+ * — no versioned child, no history entry, only tags. Returns the tagged ids.
  *
- * `resolveTargets` is called twice: once up front (is there anything to tag at
- * all?) and again right before stamping. The download/parse between the two is
- * an async window during which a manual tool run can consume the input file and
- * fork a new leaf; resolving again at write time tags the live descendants
- * instead of no-oping on the consumed id and silently losing the labels.
+ * Runs twice, because `resolveTargets` reads a rendered snapshot of the
+ * workspace: a CONSUME_FILES that was dispatched but not yet rendered when the
+ * first pass ran leaves its target already gone by the time UPDATE_FILE_RECORD
+ * is processed, so that stamp no-ops and the labels would be silently lost. The
+ * second pass sees the forked leaf and tags it. Each id is stamped at most once
+ * across both passes, so the pass costs nothing when no consume raced.
+ */
+async function stampClassificationLabels(
+  labels: string[],
+  resolveTargets: () => StirlingFileStub[],
+  ctx: ClassificationImportContext,
+): Promise<FileId[]> {
+  const updates = { classificationLabels: labels };
+  const tagged = new Set<FileId>();
+
+  for (let pass = 0; pass < 2; pass++) {
+    // Resolve and stamp the store in one synchronous block — no await between
+    // them, so a target can't be consumed in between. A consume AFTER the stamp
+    // is safe too: the CONSUME_FILES reducer carries classificationLabels onto
+    // the new leaf.
+    const fresh = resolveTargets().filter((s) => !tagged.has(s.id));
+    for (const stub of fresh) {
+      tagged.add(stub.id);
+      ctx.updateStirlingFileStub(stub.id, updates);
+    }
+
+    let mutated = false;
+    for (const stub of fresh) {
+      if (await fileStorage.updateFileMetadata(stub.id, updates))
+        mutated = true;
+    }
+    if (mutated) ctx.bumpRevision();
+
+    // Yield a macrotask so React processes this pass's stamps (and any consume
+    // that raced them) before the next pass re-resolves.
+    if (pass === 0) await new Promise((resolve) => setTimeout(resolve));
+  }
+  return Array.from(tagged);
+}
+
+/**
+ * Deliver a classification run: read its labels and tag the live document with
+ * them. Metadata-only — nothing is versioned.
  */
 async function importClassificationLabels(
   run: PolicyRunRecord,
-  resolveTargets: () => FileId[],
+  resolveTargets: () => StirlingFileStub[],
   ctx: ClassificationImportContext,
 ): Promise<void> {
   if (resolveTargets().length === 0) {
-    // Server-reconciled run with no local input link — nothing to tag.
+    // The document left the workspace (closed, or a server-reconciled run with
+    // no local input link) — nothing to tag.
     updateRun(run.runId, { imported: true });
     return;
   }
-  // Read labels from the returned PDF. A non-404 failure is transient — bail and
-  // retry next tick; a 404 (output aged out) just skips that output. Empty
-  // outputs (nothing to read) fall through and settle the run below.
-  let labels: string[] | null = null;
-  for (const out of run.outputs) {
-    try {
-      const blob = await downloadPolicyOutput(out.fileId, run.target);
-      const file = new File([blob], out.fileName ?? run.fileName, {
-        type: blob.type || "application/pdf",
-      });
-      labels = await readClassificationLabelsFromFile(file);
-      if (labels && labels.length > 0) break;
-    } catch (err) {
-      if (!isNotFoundError(err)) return; // transient — retry on a later tick.
-    }
-  }
-  let targetIds: FileId[] = [];
-  if (labels && labels.length > 0) {
-    // Resolve NOW, and stamp the store for every target in this same synchronous
-    // block — no await between resolution and the store writes, so the targets
-    // can't be consumed in between. A consume AFTER the stamp is also safe: the
-    // CONSUME_FILES reducer carries classificationLabels onto the new leaf.
-    targetIds = resolveTargets();
-    const updates = { classificationLabels: labels };
-    for (const id of targetIds) ctx.updateStirlingFileStub(id, updates);
-    let mutated = false;
-    for (const id of targetIds) {
-      if (await fileStorage.updateFileMetadata(id, updates)) mutated = true;
-    }
-    if (mutated) ctx.bumpRevision();
-  }
+  const labels = await readRunLabels(run);
+  const targetIds =
+    labels && labels.length > 0
+      ? await stampClassificationLabels(labels, resolveTargets, ctx)
+      : [];
   // Settle either way so it stops re-importing. outputFileIds are the TAGGED
   // workspace files (no forked version), so their policy badge persists. Safe
   // to chain-key on: classification is always last, so nothing chains off it.

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 /**
@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
     id: string;
     sourceFileIds?: string[];
     derivedFromTool?: boolean;
+    classificationLabels?: string[];
   }>,
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
@@ -116,6 +117,14 @@ beforeEach(() => {
   );
   mocks.getStirlingFileStub.mockResolvedValue(null);
   mocks.updateFileMetadata.mockResolvedValue(true);
+  // Apply stub updates to the shared workspace, as the real reducer does — the
+  // label stamp's second pass reads them back to stay idempotent.
+  mocks.updateStirlingFileStub.mockImplementation(
+    (id: string, updates: Record<string, unknown>) => {
+      const stub = mocks.workspace.find((s) => s.id === id);
+      if (stub) Object.assign(stub, updates);
+    },
+  );
   mocks.runStoredPolicy.mockResolvedValue("run-0");
   mocks.getPolicyRun.mockResolvedValue({
     runId: "run-0",
@@ -128,13 +137,13 @@ beforeEach(() => {
   });
 });
 
-async function settleImport() {
+async function settleImport(timeout = 8000) {
   await act(async () => {
     await vi.waitFor(
       () => {
         expect(latestRuns.filter((r) => r.imported)).toHaveLength(1);
       },
-      { timeout: 8000, interval: 20 },
+      { timeout, interval: 20 },
     );
   });
 }
@@ -196,5 +205,84 @@ describe("classification vs a mid-run manual tool edit", () => {
       classificationLabels: ["Invoice"],
     });
     expect(latestRuns[0].outputFileIds).toEqual(["file-0"]);
+  });
+
+  it("stamps the forked leaf when the consume lands in the same frame as the first stamp", async () => {
+    // Tighter than the case above: the consume is dispatched but hasn't rendered
+    // when the labels are stamped, so the workspace snapshot still shows file-0
+    // and that stamp no-ops against the real reducer. The post-commit second pass
+    // is what saves the labels.
+    mocks.downloadPolicyOutput.mockResolvedValue(
+      new Blob(["x"], { type: "application/pdf" }),
+    );
+    mocks.updateStirlingFileStub.mockImplementation((id: string) => {
+      // file-0 is already consumed, so its stamp is lost (no Object.assign) and
+      // the forked leaf only becomes visible afterwards. Mutate the workspace in
+      // place: the hook holds it by ref, which is what the second pass re-reads.
+      if (id === "file-0") {
+        mocks.workspace.splice(0, mocks.workspace.length, {
+          id: "file-0~redacted",
+          sourceFileIds: ["file-0"],
+        });
+        return;
+      }
+      const stub = mocks.workspace.find((s) => s.id === id);
+      if (stub) Object.assign(stub, { classificationLabels: ["Invoice"] });
+    });
+
+    renderHook(() => Harness());
+    await settleImport();
+
+    const stampedIds = mocks.updateStirlingFileStub.mock.calls.map((c) => c[0]);
+    expect(stampedIds).toEqual(["file-0", "file-0~redacted"]);
+    // The leaf becoming visible also queues its own classification run, so pick
+    // the settled one rather than assuming an index.
+    const imported = latestRuns.find((r) => r.imported);
+    expect(imported?.outputFileIds).toContain("file-0~redacted");
+  });
+});
+
+// The label read backs off between attempts (2s, then 4s), so these run on fake
+// timers — sleeping for real would hold a worker long enough to starve the suite.
+describe("classification label-read failures", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  async function settleOnFakeTime(maxMs = 30_000) {
+    for (let elapsed = 0; elapsed < maxMs; elapsed += 250) {
+      if (latestRuns.some((r) => r.imported)) return;
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+    }
+    throw new Error("classification run never settled");
+  }
+
+  it("retries a transient failure instead of leaving the run unsettled", async () => {
+    // The import effect only re-runs when the run store changes, so bailing out
+    // on a transient failure would leave this run "running" forever.
+    mocks.downloadPolicyOutput
+      .mockRejectedValueOnce(new Error("network blip"))
+      .mockResolvedValue(new Blob(["x"], { type: "application/pdf" }));
+
+    renderHook(() => Harness());
+    await settleOnFakeTime();
+
+    expect(mocks.downloadPolicyOutput).toHaveBeenCalledTimes(2);
+    expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("file-0", {
+      classificationLabels: ["Invoice"],
+    });
+  });
+
+  it("settles a run whose labels never become readable", async () => {
+    // Permanent failure: give up after the retry budget and settle unlabelled,
+    // rather than spinning the file's "running" pill indefinitely.
+    mocks.downloadPolicyOutput.mockRejectedValue(new Error("network down"));
+
+    renderHook(() => Harness());
+    await settleOnFakeTime();
+
+    expect(mocks.updateStirlingFileStub).not.toHaveBeenCalled();
+    expect(latestRuns.find((r) => r.imported)?.outputFileIds).toEqual([]);
   });
 });

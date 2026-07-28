@@ -12,7 +12,7 @@ const FILE_COUNT = 61;
 // the workbench, mirrored into useAllFiles. consumeFiles mutates it in place
 // (input id → output id) exactly as the real silent reducer would.
 const mocks = vi.hoisted(() => ({
-  workspace: [] as Array<{ id: string }>,
+  workspace: [] as Array<{ id: string; classificationLabels?: string[] }>,
   consumeSilentCalls: 0,
   consumeNonSilentCalls: 0,
   persistCalls: 0,
@@ -147,6 +147,14 @@ beforeEach(() => {
   mocks.updateFileMetadata.mockResolvedValue(true);
   mocks.downloadPolicyOutput.mockResolvedValue(
     new Blob(["x"], { type: "application/pdf" }),
+  );
+  // Apply stub updates to the shared workspace, as the real reducer does — the
+  // label stamp's second pass reads them back to stay idempotent.
+  mocks.updateStirlingFileStub.mockImplementation(
+    (id: string, updates: Record<string, unknown>) => {
+      const stub = mocks.workspace.find((s) => s.id === id);
+      if (stub) Object.assign(stub, updates);
+    },
   );
 
   // Each dispatch gets a unique run id; the run's single backend output likewise.
