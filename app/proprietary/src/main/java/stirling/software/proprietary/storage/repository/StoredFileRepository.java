@@ -2,6 +2,7 @@ package stirling.software.proprietary.storage.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -59,6 +60,9 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     List<StoredFile> findByWorkflowSession(WorkflowSession workflowSession);
 
     List<StoredFile> findAllByOwner(User owner);
+
+    /** Every file placed in the given storage folder — the working set of a processing folder. */
+    List<StoredFile> findAllByFolderId(UUID folderId);
 
     /**
      * Bulk lookup used by the folder-placement controller. Returns only files owned by {@code
