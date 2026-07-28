@@ -6,7 +6,10 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -22,6 +25,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
@@ -64,7 +68,11 @@ class SftpNetworkSourceIntegrationTest {
     private RecordingContext ctx;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        // Each run's container has a fresh host key, so drop pins from earlier runs: a reused
+        // mapped port would otherwise trip the trust-on-first-use "key changed" refusal.
+        Files.deleteIfExists(
+                Path.of(InstallationPathConfig.getConfigPath(), SftpFileClient.KNOWN_HOSTS_FILE));
         // The container resolves to loopback, so the private-host opt-in must be on.
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateNetworkSources(true);
@@ -122,6 +130,49 @@ class SftpNetworkSourceIntegrationTest {
         assertThatThrownBy(() -> source.validate(new InputSpec("sftp", wrong)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("cannot access");
+    }
+
+    @Test
+    void acceptsTheServersRealHostKeyFingerprint() throws Exception {
+        String fingerprint =
+                exec("ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub | awk '{print $2}'").trim();
+        Map<String, Object> pinned = new HashMap<>(baseOptions());
+        pinned.put("hostKeyFingerprint", fingerprint);
+        source.validate(new InputSpec("sftp", pinned));
+    }
+
+    @Test
+    void rejectsAWrongHostKeyFingerprint() {
+        Map<String, Object> wrong = new HashMap<>(baseOptions());
+        wrong.put("hostKeyFingerprint", "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        // Refused during the handshake, before any credentials are sent.
+        assertThatThrownBy(() -> source.validate(new InputSpec("sftp", wrong)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("cannot access");
+    }
+
+    @Test
+    void refusesAChangedHostKey() throws Exception {
+        source.validate(spec(Map.of())); // pins the current key (trust-on-first-use)
+
+        Path knownHosts =
+                Path.of(InstallationPathConfig.getConfigPath(), SftpFileClient.KNOWN_HOSTS_FILE);
+        String pinned = Files.readString(knownHosts);
+        // Swap the pinned key for a valid-but-different one so the server's real key reads as
+        // changed rather than unparseable.
+        Files.writeString(knownHosts, pinned.replaceFirst("(?m) [^ ]+$", " " + bogusEd25519Key()));
+
+        assertThatThrownBy(() -> source.validate(spec(Map.of())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("cannot access");
+    }
+
+    /** A structurally valid ssh-ed25519 public key blob (all-zero key material), base64. */
+    private static String bogusEd25519Key() {
+        byte[] type = "ssh-ed25519".getBytes(StandardCharsets.US_ASCII);
+        ByteBuffer blob = ByteBuffer.allocate(4 + type.length + 4 + 32);
+        blob.putInt(type.length).put(type).putInt(32);
+        return java.util.Base64.getEncoder().encodeToString(blob.array());
     }
 
     private Map<String, Object> baseOptions() {

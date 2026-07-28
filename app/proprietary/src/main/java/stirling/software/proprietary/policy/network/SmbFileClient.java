@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.hierynomus.msdtyp.AccessMask;
 import com.hierynomus.mserref.NtStatus;
@@ -15,8 +16,11 @@ import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.mssmb2.SMB2CreateDisposition;
 import com.hierynomus.mssmb2.SMB2ShareAccess;
 import com.hierynomus.mssmb2.SMBApiException;
+import com.hierynomus.protocol.commons.socket.ProxySocketFactory;
 import com.hierynomus.smbj.SMBClient;
+import com.hierynomus.smbj.SmbConfig;
 import com.hierynomus.smbj.auth.AuthenticationContext;
+import com.hierynomus.smbj.common.SMBRuntimeException;
 import com.hierynomus.smbj.connection.Connection;
 import com.hierynomus.smbj.session.Session;
 import com.hierynomus.smbj.share.DiskShare;
@@ -29,6 +33,8 @@ import com.hierynomus.smbj.share.DiskShare;
  */
 final class SmbFileClient implements RemoteFileClient {
 
+    private static final int CONNECT_TIMEOUT_MS = 15_000;
+    private static final int READ_TIMEOUT_MS = 60_000;
     private static final int MAX_DEPTH = 64;
 
     private final SMBClient smbClient;
@@ -45,7 +51,15 @@ final class SmbFileClient implements RemoteFileClient {
     }
 
     static SmbFileClient connect(NetworkConfig config) throws IOException {
-        SMBClient smbClient = new SMBClient();
+        // Bounded connect and read timeouts (both default to unlimited) so a host that accepts
+        // the TCP connection then stalls cannot wedge a poller.
+        SmbConfig smbConfig =
+                SmbConfig.builder()
+                        .withSocketFactory(new ProxySocketFactory(CONNECT_TIMEOUT_MS))
+                        .withSoTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                        .withTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                        .build();
+        SMBClient smbClient = new SMBClient(smbConfig);
         Connection connection = smbClient.connect(config.host(), config.port());
         try {
             char[] password =
@@ -76,8 +90,19 @@ final class SmbFileClient implements RemoteFileClient {
         return files;
     }
 
-    private void collect(String directory, boolean recursive, int depth, List<RemoteFile> out) {
-        for (FileIdBothDirectoryInformation info : share.list(directory)) {
+    private void collect(String directory, boolean recursive, int depth, List<RemoteFile> out)
+            throws IOException {
+        List<FileIdBothDirectoryInformation> entries;
+        try {
+            entries = share.list(directory);
+        } catch (SMBRuntimeException e) {
+            // smbj throws unchecked; surface as IOException like the SFTP/FTP clients.
+            throw new IOException("cannot list " + slashed(directory) + ": " + e.getMessage(), e);
+        }
+        for (FileIdBothDirectoryInformation info : entries) {
+            if (out.size() >= MAX_FILES) {
+                return;
+            }
             String name = info.getFileName();
             if (name.equals(".") || name.equals("..") || name.startsWith(".")) {
                 continue;

@@ -6720,6 +6720,7 @@ active = "Active"
 passive = "Passive (recommended)"
 
 [portal.connections.types.ftp.fields.security]
+helperText = "Plain FTP sends credentials and files unencrypted; choose FTPS if the server supports it."
 label = "Encryption"
 
 [portal.connections.types.ftp.fields.security.options]
@@ -6798,6 +6799,11 @@ label = "SendGrid"
 description = "Poll an SFTP (SSH) server for new documents."
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Optional. The server's SHA-256 host key fingerprint (from `ssh-keyscan host | ssh-keygen -lf -`). When set, only a server presenting this key is accepted; when blank, the key seen on first connect is pinned and later changes are refused."
+label = "Host key fingerprint"
+placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
 label = "Key passphrase"

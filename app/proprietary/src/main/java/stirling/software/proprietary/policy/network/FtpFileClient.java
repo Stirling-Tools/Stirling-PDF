@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.network;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import org.apache.commons.net.ftp.FTPSClient;
 final class FtpFileClient implements RemoteFileClient {
 
     private static final int CONNECT_TIMEOUT_MS = 15_000;
+    private static final int READ_TIMEOUT_MS = 60_000;
     private static final int MAX_DEPTH = 64;
 
     private final FTPClient ftp;
@@ -32,6 +34,10 @@ final class FtpFileClient implements RemoteFileClient {
     static FtpFileClient connect(NetworkConfig config) throws IOException {
         FTPClient ftp = clientFor(config);
         ftp.setConnectTimeout(CONNECT_TIMEOUT_MS);
+        // Read timeouts so a server that connects then stalls cannot hang a poller: default
+        // becomes the control socket's SO timeout at connect, data covers transfer sockets.
+        ftp.setDefaultTimeout(READ_TIMEOUT_MS);
+        ftp.setDataTimeout(Duration.ofMillis(READ_TIMEOUT_MS));
         try {
             ftp.connect(config.host(), config.port());
             int reply = ftp.getReplyCode();
@@ -80,6 +86,9 @@ final class FtpFileClient implements RemoteFileClient {
             throws IOException {
         FTPFile[] entries = ftp.listFiles(directory);
         for (FTPFile entry : entries) {
+            if (out.size() >= MAX_FILES) {
+                return;
+            }
             if (entry == null) {
                 continue;
             }

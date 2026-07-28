@@ -15,7 +15,16 @@ import java.util.List;
  */
 public interface RemoteFileClient extends Closeable {
 
-    /** Every regular, non-hidden file under {@code directory}, optionally descending into it. */
+    /**
+     * Listing cap: a listing stops once this many files are collected, bounding memory against a
+     * huge (or maliciously deep) tree. Consume mode drains the rest on later sweeps.
+     */
+    int MAX_FILES = 10_000;
+
+    /**
+     * Every regular, non-hidden file under {@code directory}, optionally descending into it,
+     * truncated at {@link #MAX_FILES}.
+     */
     List<RemoteFile> list(String directory, boolean recursive) throws IOException;
 
     /** The current metadata for one path, or null when it no longer exists. */

@@ -77,6 +77,12 @@ public class NetworkInputSource implements InputSource {
         try (RemoteFileClient client = clientFactory.connect(config)) {
             files = client.list(config.directory(), config.recursive());
         }
+        if (files.size() >= RemoteFileClient.MAX_FILES) {
+            log.warn(
+                    "Network source listing hit the {}-file cap; remaining files are picked up"
+                            + " on later sweeps",
+                    RemoteFileClient.MAX_FILES);
+        }
 
         if (config.snapshot()) {
             return files.stream()

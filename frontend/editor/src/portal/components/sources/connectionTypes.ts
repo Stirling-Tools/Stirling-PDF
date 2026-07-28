@@ -29,6 +29,12 @@ export interface ConnectionFieldDef {
   defaultValue?: string;
   /** Shown only when another field has one of these values, e.g. auth fields per authType. */
   visibleWhen?: { key: string; oneOf: string[] };
+  /**
+   * When this field changes, move another field onto the default paired with the new value (FTP
+   * port per encryption mode) — but only while the target still holds a default, never a custom
+   * value the operator typed.
+   */
+  syncsDefault?: { targetKey: string; map: Record<string, string> };
 }
 
 export interface CreatableConnectionType {
@@ -161,6 +167,13 @@ const SFTP_FIELDS: ConnectionFieldDef[] = [
     labelKey: `${PREFIX}.sftp.fields.passphrase.label`,
     control: "password",
   },
+  {
+    key: "hostKeyFingerprint",
+    labelKey: `${PREFIX}.sftp.fields.hostKeyFingerprint.label`,
+    control: "text",
+    placeholderKey: `${PREFIX}.sftp.fields.hostKeyFingerprint.placeholder`,
+    helperTextKey: `${PREFIX}.sftp.fields.hostKeyFingerprint.helperText`,
+  },
 ];
 
 const FTP_FIELDS: ConnectionFieldDef[] = [
@@ -194,6 +207,12 @@ const FTP_FIELDS: ConnectionFieldDef[] = [
     labelKey: `${PREFIX}.ftp.fields.security.label`,
     control: "select",
     defaultValue: "NONE",
+    helperTextKey: `${PREFIX}.ftp.fields.security.helperText`,
+    // Implicit FTPS listens on 990; follow the untouched port default across modes.
+    syncsDefault: {
+      targetKey: "port",
+      map: { NONE: "21", EXPLICIT: "21", IMPLICIT: "990" },
+    },
     options: [
       { value: "NONE", labelKey: `${PREFIX}.ftp.fields.security.options.none` },
       {

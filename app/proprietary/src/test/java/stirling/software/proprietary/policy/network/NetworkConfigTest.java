@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,6 +36,16 @@ class NetworkConfigTest {
         Map<String, Object> smb = base("smb");
         smb.put("share", "docs");
         assertEquals(445, NetworkConfig.from(smb).port());
+    }
+
+    @Test
+    void implicitFtpsDefaultsToPort990() {
+        Map<String, Object> implicit = base("ftp");
+        implicit.put("security", "implicit");
+        assertEquals(990, NetworkConfig.from(implicit).port());
+
+        implicit.put("port", "2121");
+        assertEquals(2121, NetworkConfig.from(implicit).port());
     }
 
     @Test
@@ -105,6 +116,14 @@ class NetworkConfigTest {
         Map<String, Object> bad = base("sftp");
         bad.put("mode", "sometimes");
         assertThrows(IllegalArgumentException.class, () -> NetworkConfig.from(bad));
+    }
+
+    @Test
+    void carriesTheHostKeyFingerprint() {
+        Map<String, Object> options = base("sftp");
+        options.put("hostKeyFingerprint", " SHA256:abc123 ");
+        assertEquals("SHA256:abc123", NetworkConfig.from(options).hostKeyFingerprint());
+        assertNull(NetworkConfig.from(base("sftp")).hostKeyFingerprint());
     }
 
     @Test

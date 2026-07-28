@@ -17,6 +17,7 @@ public record NetworkConfig(
         String password,
         String privateKey,
         String privateKeyPassphrase,
+        String hostKeyFingerprint,
         String domain,
         String share,
         FtpSecurity security,
@@ -53,6 +54,7 @@ public record NetworkConfig(
     private static final String PASSWORD_OPTION = "password";
     private static final String PRIVATE_KEY_OPTION = "privateKey";
     private static final String PRIVATE_KEY_PASSPHRASE_OPTION = "privateKeyPassphrase";
+    private static final String HOST_KEY_FINGERPRINT_OPTION = "hostKeyFingerprint";
     private static final String DOMAIN_OPTION = "domain";
     private static final String SHARE_OPTION = "share";
     private static final String SECURITY_OPTION = "security";
@@ -73,7 +75,8 @@ public record NetworkConfig(
         if (host == null) {
             throw new IllegalArgumentException("network config requires a 'host'");
         }
-        int port = port(options.get(PORT_OPTION), protocol.defaultPort());
+        FtpSecurity security = FtpSecurity.fromOption(str(options.get(SECURITY_OPTION)));
+        int port = port(options.get(PORT_OPTION), defaultPort(protocol, security));
         String username = trimmed(options.get(USERNAME_OPTION));
         if (username == null) {
             throw new IllegalArgumentException("network config requires a 'username'");
@@ -81,9 +84,9 @@ public record NetworkConfig(
         String password = trimmed(options.get(PASSWORD_OPTION));
         String privateKey = trimmed(options.get(PRIVATE_KEY_OPTION));
         String passphrase = trimmed(options.get(PRIVATE_KEY_PASSPHRASE_OPTION));
+        String fingerprint = trimmed(options.get(HOST_KEY_FINGERPRINT_OPTION));
         String domain = trimmed(options.get(DOMAIN_OPTION));
         String share = trimmed(options.get(SHARE_OPTION));
-        FtpSecurity security = FtpSecurity.fromOption(str(options.get(SECURITY_OPTION)));
         boolean passive = parseBoolean(options.get(PASSIVE_OPTION), true);
         String directory = directory(options.get(DIRECTORY_OPTION));
         boolean recursive = parseBoolean(options.get(RECURSIVE_OPTION), false);
@@ -110,6 +113,7 @@ public record NetworkConfig(
                 password,
                 privateKey,
                 passphrase,
+                fingerprint,
                 domain,
                 share,
                 security,
@@ -117,6 +121,14 @@ public record NetworkConfig(
                 directory,
                 snapshot,
                 recursive);
+    }
+
+    /** Implicit FTPS listens on 990, not the plain-FTP 21. */
+    private static int defaultPort(NetworkProtocol protocol, FtpSecurity security) {
+        if (protocol == NetworkProtocol.FTP && security == FtpSecurity.IMPLICIT) {
+            return 990;
+        }
+        return protocol.defaultPort();
     }
 
     private static int port(Object value, int fallback) {
