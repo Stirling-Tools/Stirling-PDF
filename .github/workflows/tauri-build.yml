@@ -418,7 +418,9 @@ jobs:
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
           # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+          args: >-
+            ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+            --config tauri.unsigned.conf.json
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
