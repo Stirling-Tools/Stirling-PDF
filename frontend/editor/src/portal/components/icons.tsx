@@ -300,3 +300,24 @@ export function IntegrationsIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <line x1="8" y1="3" x2="8" y2="7" />
+      <line x1="16" y1="3" x2="16" y2="7" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </Svg>
+  );
+}
+
+export function KeyIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="8" cy="16" r="5" />
+      <line x1="11.6" y1="12.4" x2="21" y2="3" />
+      <line x1="17" y1="7" x2="20" y2="10" />
+    </Svg>
+  );
+}

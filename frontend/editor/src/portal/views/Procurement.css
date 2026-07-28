@@ -995,25 +995,56 @@
   gap: 1rem;
   flex-wrap: wrap;
 }
+.portal-hero__ident {
+  flex: 1;
+  min-width: 0;
+}
 .portal-hero__eyebrow {
   display: block;
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--c-primary);
+  color: var(--c-text-subtle);
+  margin-bottom: 0.55rem;
 }
-.portal-hero__company {
-  display: block;
-  font-size: 1.0625rem;
-  font-weight: 650;
+/* The journey band: one segment per stage, filled through the current one. A progress indicator,
+   so it lives inside the block whose progress it reports and deliberately does not pulse. */
+.portal-hero__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.625rem;
+}
+.portal-hero__bar span {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--c-hover);
+  transition: background 0.3s ease;
+}
+.portal-hero__bar span[data-on] {
+  background: var(--c-primary);
+}
+/* Bold stage · what it asks. Next: … — replaces the labelled dot stepper on the hero. */
+.portal-hero__sentence {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+.portal-hero__sentence strong {
+  font-weight: 700;
   color: var(--c-text);
-  margin-top: 0.2rem;
+}
+.portal-hero__sentence-next {
+  color: var(--c-text-subtle);
 }
 .portal-hero__chips {
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 .portal-hero__chip {
   font-size: 0.6875rem;
@@ -1023,32 +1054,71 @@
   border-radius: 999px;
   padding: 0.2rem 0.6rem;
 }
-.portal-hero__stepper {
-  overflow-x: auto;
-}
-.portal-hero__next {
+/* One action row: the stage's primary CTA leads, quiet icon actions sit beside it. No dividers. */
+.portal-hero__cta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--c-border-subtle);
 }
-.portal-hero__next-label {
+.portal-hero__icons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal-hero__iconbtn {
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  justify-content: center;
+  border-radius: 9px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
   color: var(--c-text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
-.portal-hero__next-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: var(--c-primary);
-  box-shadow: 0 0 0 3px var(--c-primary-subtle);
+.portal-hero__iconbtn:hover {
+  background: var(--c-hover);
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
+}
+/* Terminal state: the deal is done, so the row reports rather than asks. */
+.portal-hero__live {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.portal-hero__live-tile {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  color: var(--c-success);
+  background: var(--c-success-subtle);
+}
+.portal-hero__live-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.portal-hero__live-title {
+  font-size: 0.90625rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-hero__live-sub {
+  font-size: 0.78125rem;
+  color: var(--c-text-subtle);
+  margin-top: 1px;
 }
 
 /* ── Full-screen takeover modal (procurement flow) ────────────────────────── */
@@ -1194,13 +1264,7 @@
 }
 
 /* Hero next-step action row (primary CTA + optional extend-trial). */
-.portal-hero__next-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-/* Hero quick-action chips (clickable pills next to the company name). */
+/* Hero quick-action chips (the trial countdown pill under the stage sentence). */
 .portal-hero__chip--action {
   border: 1px solid var(--c-border);
   cursor: pointer;
