@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.storage.model.FilePurpose;
@@ -82,7 +83,12 @@ public class StorageFolderInputSource implements InputSource {
         for (StoredFile file : files) {
             String identity = identity(file);
             String gate = gate(file);
-            if (!ctx.claim(identity, gate, null)) {
+            // The hash tier turns metadata-only gate bumps (a folder move, a rename) into a gate
+            // refresh instead of a reprocess; only genuinely new content runs again.
+            if (!ctx.claim(
+                    identity,
+                    gate,
+                    () -> StorageFileIdentities.contentHash(storageProvider, file))) {
                 continue;
             }
             Long fileId = file.getId();
@@ -103,12 +109,20 @@ public class StorageFolderInputSource implements InputSource {
      */
     private void settleAtCurrentVersion(
             ResolveContext ctx, Long fileId, String identity, String claimedGate, boolean success) {
-        String finalGate =
-                storedFileRepository
-                        .findById(fileId)
-                        .map(StorageFolderInputSource::gate)
-                        .orElse(claimedGate);
-        ctx.settle(identity, finalGate, null, success);
+        StoredFile current = storedFileRepository.findById(fileId).orElse(null);
+        if (current == null) {
+            ctx.settle(identity, claimedGate, null, success);
+            return;
+        }
+        // Settle with the content hash so a later metadata-only bump (move/rename) refreshes the
+        // gate instead of reprocessing. Hash failures fall back to gate-only semantics.
+        String finalContentHash = null;
+        try {
+            finalContentHash = StorageFileIdentities.contentHash(storageProvider, current);
+        } catch (RuntimeException e) {
+            log.debug("Could not hash {} at settle: {}", identity, e.getMessage());
+        }
+        ctx.settle(identity, gate(current), finalContentHash, success);
     }
 
     /** Only generic user files are processed — purpose-bound artifacts belong to their feature. */
@@ -117,11 +131,11 @@ public class StorageFolderInputSource implements InputSource {
     }
 
     private static String identity(StoredFile file) {
-        return "storage:" + file.getId();
+        return StorageFileIdentities.identity(file);
     }
 
     private static String gate(StoredFile file) {
-        return file.getUpdatedAt() + ":" + file.getSizeBytes();
+        return StorageFileIdentities.gate(file);
     }
 
     private static UUID folderId(InputSpec spec) {
@@ -138,18 +152,26 @@ public class StorageFolderInputSource implements InputSource {
      * filename (the storage key is opaque). Content is not version-pinned: a concurrent in-place
      * replace is read as-is and reconciled by the gate on the next sweep.
      */
-    private static final class StoredFileResource extends AbstractResource {
+    private static final class StoredFileResource extends AbstractResource
+            implements StoredFileBacked {
 
         private final StorageProvider storageProvider;
+        private final Long fileId;
         private final String storageKey;
         private final String filename;
         private final long sizeBytes;
 
         private StoredFileResource(StorageProvider storageProvider, StoredFile file) {
             this.storageProvider = storageProvider;
+            this.fileId = file.getId();
             this.storageKey = file.getStorageKey();
             this.filename = file.getOriginalFilename();
             this.sizeBytes = file.getSizeBytes();
+        }
+
+        @Override
+        public Long storedFileId() {
+            return fileId;
         }
 
         @Override

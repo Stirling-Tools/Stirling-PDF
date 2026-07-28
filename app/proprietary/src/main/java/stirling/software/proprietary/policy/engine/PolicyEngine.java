@@ -216,7 +216,7 @@ public class PolicyEngine {
                 List<ResultFile> outputs =
                         sinkFor(output)
                                 .deliver(
-                                        new OutputDelivery(runId, run.getPolicyId()),
+                                        new OutputDelivery(runId, run.getPolicyId(), inputs),
                                         result.files(),
                                         output);
                 taskManager.setMultipleFileResults(runId, outputs);
