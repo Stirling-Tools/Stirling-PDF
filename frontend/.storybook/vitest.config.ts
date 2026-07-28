@@ -15,13 +15,23 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
  * Run with: npx vitest run --config .storybook/vitest.config.ts
  */
 export default defineConfig({
-  // Pre-scan every story + the preview up front so Vite discovers and bundles
-  // ALL deps in a single optimize pass. Without this, the huge dep surface of
-  // the story set (embedpdf plugins, @mui icons, etc.) is discovered lazily
-  // mid-run, triggering "optimized dependencies changed, reloading" which tears
-  // down browser test workers and spuriously fails whichever stories were loading.
   optimizeDeps: {
+    // Pre-scan every story + the preview so Vite discovers the story set's large
+    // dep surface (embedpdf plugins, @mui icons, …) in one pass up front.
     entries: ["editor/src/**/*.stories.@(ts|tsx)", ".storybook/preview.tsx"],
+    // `entries` alone does not catch deps reached only through a transformed
+    // JSX runtime import, so Vite optimizes them lazily mid-run and emits
+    // "optimized dependencies changed, reloading". That reload tears down the
+    // browser worker and whichever stories were mid-load fail with a bogus
+    // "Failed to fetch dynamically imported module" — a result that looks real.
+    // Naming them here keeps a run deterministic.
+    include: [
+      "react",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "react-dom",
+      "react-dom/client",
+    ],
   },
   test: {
     projects: [
@@ -32,6 +42,12 @@ export default defineConfig({
         plugins: [storybookTest({ configDir: resolve(__dirname) })],
         test: {
           name: "storybook",
+          // Mounting a story takes well over Vitest's 5s default on the heavier
+          // screens, and a story that trips the timeout is reported as a failure
+          // with no message — which reads like a crash. Give it room; a
+          // genuinely hung story still fails, just later.
+          testTimeout: 60_000,
+          hookTimeout: 60_000,
           browser: {
             enabled: true,
             headless: true,

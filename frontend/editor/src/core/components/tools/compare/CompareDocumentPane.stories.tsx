@@ -18,6 +18,11 @@ const buildPages = (count: number): PagePreview[] =>
 const meta = {
   title: "Tools/Compare/CompareDocumentPane",
   component: CompareDocumentPane,
+  // Excluded from the automated (Vitest browser) test run: mounting several of
+  // these panes in one page exhausts the headless browser's memory and the page
+  // is dropped mid-run, which fails the whole file rather than this component.
+  // It still renders in the Storybook UI.
+  tags: ["!test"],
   args: {
     pane: "base",
     layout: "side-by-side",

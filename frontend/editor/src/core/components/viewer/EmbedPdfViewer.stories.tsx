@@ -11,6 +11,11 @@ import EmbedPdfViewer from "@app/components/viewer/EmbedPdfViewer";
 const meta = {
   title: "Viewer/EmbedPdfViewer",
   component: EmbedPdfViewer,
+  // Excluded from the automated (Vitest browser) test run: the viewer pulls in
+  // the PDFium/EmbedPDF WebAssembly engine, whose .wasm binary isn't served in
+  // the headless scan, so it throws on compile. Still renders in the Storybook
+  // UI for manual review.
+  tags: ["!test"],
   parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (
