@@ -50,11 +50,14 @@ function DoorCard({
  * before any card is entered. Two door-cards, matching the demo —
  *
  *   - Pay as you go → the metered subscription checkout (spend limit + card).
- *   - Prepay a year → the discounted bundle (calculator + one-time payment); the
- *     backend silently stands up the metered subscription off the saved card so
- *     metering resumes when the pool empties, so no spend-limit step is needed.
+ *   - Prepay a year → the discounted bundle (calculator + one-time payment); no
+ *     spend-limit step, since the buyer commits to a fixed pool up front.
  *
  * Same per-PDF rate on both paths — prepay just front-loads two free months.
+ *
+ * Note: auto-standing-up the metered subscription off the saved card so metering
+ * resumes once a prepaid pool empties is a known follow-up, NOT yet wired — a
+ * prepay-only team isn't metered past its pool today.
  */
 export function ActivationChoiceModal({
   open,

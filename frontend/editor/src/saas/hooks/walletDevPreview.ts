@@ -61,6 +61,7 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
     // default policy's USD Price so the upgrade-flow cap estimate ("≈ N paid
     // PDFs/month") can render before subscribing. Mirror that here.
     pricePerDocMinor: 2,
+    bundleRatePerCreditMinor: 1,
     currency: "usd",
     estimatedBillMinor: subscribed ? 0 : null,
     capUsd: subscribed ? 25 : null,
