@@ -191,8 +191,13 @@ public class PdfTextEditorV2CharcodeController {
             resp.setError("pdf too large");
             return ResponseEntity.status(413).body(resp);
         }
-        if (request.getText().length() > MAX_TEXT_CHARS || request.getLocatorChar().length() > 4) {
+        // Reported separately: a combined check names only one cause and misleads the caller.
+        if (request.getText().length() > MAX_TEXT_CHARS) {
             resp.setError("text too long");
+            return ResponseEntity.badRequest().body(resp);
+        }
+        if (request.getLocatorChar().length() > 4) {
+            resp.setError("locatorChar too long");
             return ResponseEntity.badRequest().body(resp);
         }
         byte[] pdfBytes;
