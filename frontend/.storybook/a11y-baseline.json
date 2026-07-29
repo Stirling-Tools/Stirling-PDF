@@ -1,4 +1,7 @@
 {
+  "editor/src/core/assets/Brand.stories.tsx :: Logos": [
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/components/StorageStatsCard.stories.tsx :: Default": [
     "aria-progressbar-name",
     "color-contrast"
@@ -1374,8 +1377,17 @@
   "editor/src/core/ui/ChatFABButton.stories.tsx :: Tick While Loading": [
     "button-name"
   ],
-  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Open": ["color-contrast"],
-  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Toggle": ["color-contrast"],
+  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Closed": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Open": [
+    "color-contrast",
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Toggle": [
+    "color-contrast",
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/ui/Chip.stories.tsx :: Accents": ["color-contrast"],
   "editor/src/core/ui/Chip.stories.tsx :: Dashed Add": ["nested-interactive"],
   "editor/src/core/ui/Chip.stories.tsx :: In Context Op Chain": [
@@ -1396,6 +1408,12 @@
     "scrollable-region-focusable"
   ],
   "editor/src/core/ui/CodeBlock.stories.tsx :: Playground": ["color-contrast"],
+  "editor/src/core/ui/Collapsible.stories.tsx :: Accordion": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/ui/Collapsible.stories.tsx :: Default": [
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/ui/Drawer.stories.tsx :: Playground": [
     "aria-allowed-role",
     "color-contrast"
@@ -1562,11 +1580,16 @@
   "editor/src/core/ui/Table.stories.tsx :: Basic": ["color-contrast"],
   "editor/src/core/ui/Table.stories.tsx :: Interactive": ["color-contrast"],
   "editor/src/core/ui/Tabs.stories.tsx :: In Context Document Verticals": [
-    "color-contrast"
+    "color-contrast",
+    "scrollable-region-focusable"
   ],
-  "editor/src/core/ui/Tabs.stories.tsx :: Playground": ["color-contrast"],
+  "editor/src/core/ui/Tabs.stories.tsx :: Playground": [
+    "color-contrast",
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/ui/Tabs.stories.tsx :: With Disabled Tab": [
-    "color-contrast"
+    "color-contrast",
+    "scrollable-region-focusable"
   ],
   "editor/src/core/ui/Toast.stories.tsx :: Triggers": ["color-contrast"],
   "editor/src/portal/components/AppShell.stories.tsx :: Mobile": [
