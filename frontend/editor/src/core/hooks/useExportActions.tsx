@@ -19,10 +19,7 @@ import {
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { enforceExportPolicies } from "@app/services/policyExport";
 import { downloadFile as downloadRaw } from "@app/services/downloadService";
-import {
-  requestReviewClearance,
-  type ExportVerb,
-} from "@app/services/reviewGate";
+import { withReviewClearance, type ExportVerb } from "@app/services/reviewGate";
 import { alert as showAlert } from "@app/components/toast";
 
 export type { ExportVerb };
@@ -45,7 +42,7 @@ export interface ExportActions {
    * Run a bespoke export-type flow (e.g. share) behind the same review gate.
    * Use this for any new action that lets a document leave the app.
    */
-  runGuarded: (verb: ExportVerb, proceed: () => void) => void;
+  runGuarded: (verb: ExportVerb, proceed: () => void | Promise<void>) => void;
 }
 
 /**
@@ -124,12 +121,11 @@ export function useExportActions(): ExportActions {
   );
 
   // Batch exports clear the gate once for all their targets, so the reviewer
-  // gets a single prompt instead of one per file.
+  // gets a single prompt instead of one per file: the clearance holds for as
+  // long as `proceed` runs, so the chokepoints inside it stay quiet.
   const runGuarded = useCallback(
-    (verb: ExportVerb, proceed: () => void) => {
-      void requestReviewClearance(targetIds, verb).then((cleared) => {
-        if (cleared) proceed();
-      });
+    (verb: ExportVerb, proceed: () => void | Promise<void>) => {
+      void withReviewClearance(targetIds, verb, proceed);
     },
     // targetIds is derived per render; the callback identity follows its content.
     [targetIds.join("|")],
@@ -152,7 +148,6 @@ export function useExportActions(): ExportActions {
             filename: fileToExport.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
             fileId: stub?.id,
-            reviewCleared: true,
           });
           if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
             fileActions.updateStirlingFileStub(stub.id, {
@@ -238,11 +233,11 @@ export function useExportActions(): ExportActions {
   );
 
   const download = useCallback(
-    () => runGuarded("download", () => void performExport(false)),
+    () => runGuarded("download", () => performExport(false)),
     [runGuarded, performExport],
   );
   const saveAs = useCallback(
-    () => runGuarded("save", () => void performExport(true)),
+    () => runGuarded("save", () => performExport(true)),
     [runGuarded, performExport],
   );
   // No runGuarded here: the viewer's print action gates itself, so both this

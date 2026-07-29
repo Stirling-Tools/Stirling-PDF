@@ -1,6 +1,5 @@
 import type { FileId, StirlingFileStub } from "@app/types/fileContext";
 import { downloadFromUrl, DownloadResult } from "@app/services/downloadService";
-import { requestReviewClearance } from "@app/services/reviewGate";
 
 export interface OperationSaveContext {
   downloadUrl: string | null;
@@ -17,19 +16,15 @@ export async function saveOperationResults(
 ): Promise<DownloadResult | null> {
   if (!context.downloadUrl) return null;
 
-  // Results download straight from a blob URL, so the gate is checked here
-  // against the output ids rather than inside the download service.
-  const cleared = await requestReviewClearance(
-    (context.outputFileIds ?? []) as string[],
-    "save",
-  );
-  if (!cleared) return null;
-
-  const result = await downloadFromUrl(
-    context.downloadUrl,
-    context.downloadFilename || "download",
-    context.downloadLocalPath || undefined,
-  );
+  // Results come straight from a blob URL, so the gate checks the output ids.
+  const result = await downloadFromUrl({
+    url: context.downloadUrl,
+    filename: context.downloadFilename || "download",
+    localPath: context.downloadLocalPath || undefined,
+    fileIds: context.outputFileIds,
+    verb: "save",
+  });
+  if (result.cancelled) return null;
 
   if (context.outputFileIds && result.savedPath) {
     for (const fileId of context.outputFileIds) {

@@ -557,14 +557,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       : undefined;
     // Printing is an export, so it clears the review gate first. Both the
     // toolbar button and the viewer's "p" shortcut land here.
-    if (
-      !(await requestReviewClearance(
-        activeFileId ? [activeFileId] : [],
-        "print",
-      ))
-    ) {
-      return;
-    }
+    if (!(await requestReviewClearance(activeFileId, "print"))) return;
     if (!activeFileId || !file) {
       printActions.print();
       return;

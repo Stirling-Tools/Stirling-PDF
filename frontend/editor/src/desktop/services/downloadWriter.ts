@@ -1,7 +1,7 @@
 import type {
   DownloadRequest,
   DownloadResult,
-} from "@core/services/downloadService";
+} from "@core/services/downloadWriter";
 import {
   saveToLocalPath,
   showSaveDialog,
@@ -9,7 +9,7 @@ import {
 
 export type { DownloadRequest, DownloadResult };
 
-export async function downloadFile(
+export async function writeFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
   if (request.localPath) {
@@ -33,7 +33,7 @@ export async function downloadFile(
   return { savedPath: savePath };
 }
 
-export async function downloadFromUrl(
+export async function writeFromUrl(
   url: string,
   filename: string,
   localPath?: string,
@@ -43,5 +43,5 @@ export async function downloadFromUrl(
     throw new Error(`Download failed (${response.status})`);
   }
   const blob = await response.blob();
-  return downloadFile({ data: blob, filename, localPath });
+  return writeFile({ data: blob, filename, localPath });
 }

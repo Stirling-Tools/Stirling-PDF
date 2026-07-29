@@ -4,7 +4,7 @@ import { zipFileService } from "@app/services/zipFileService";
 import { downloadFile } from "@app/services/downloadService";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { enforceExportPolicies } from "@app/services/policyExport";
-import { requestReviewClearance } from "@app/services/reviewGate";
+import { withReviewClearance } from "@app/services/reviewGate";
 
 /**
  * Downloads a blob as a file using browser download API
@@ -79,27 +79,25 @@ export async function downloadFilesAsZip(
     throw new Error("No valid files found in storage for ZIP download");
   }
 
-  // One prompt covers the whole archive, rather than one per flagged file.
-  const cleared = await requestReviewClearance(
-    fileIds.filter((id): id is string => !!id),
-    "download",
-  );
-  if (!cleared) return;
+  // The archive itself has no file id, so the gate is asked about the files
+  // going into it — once for the whole archive, and before any zipping or
+  // policy enforcement work is done.
+  await withReviewClearance(fileIds, "download", async () => {
+    // Enforce any export-triggered policy on each PDF before they're zipped.
+    const enforced = await enforceExportPolicies(filesToZip, fileIds);
 
-  // Enforce any export-triggered policy on each PDF before they're zipped.
-  const enforced = await enforceExportPolicies(filesToZip, fileIds);
+    // Generate default filename if not provided
+    const finalZipFilename =
+      zipFilename ||
+      `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.zip`;
 
-  // Generate default filename if not provided
-  const finalZipFilename =
-    zipFilename ||
-    `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.zip`;
-
-  // Create and download ZIP
-  const { zipFile } = await zipFileService.createZipFromFiles(
-    enforced,
-    finalZipFilename,
-  );
-  await downloadFile({ data: zipFile, filename: finalZipFilename });
+    // Create and download ZIP
+    const { zipFile } = await zipFileService.createZipFromFiles(
+      enforced,
+      finalZipFilename,
+    );
+    await downloadFile({ data: zipFile, filename: finalZipFilename });
+  });
 }
 
 /**

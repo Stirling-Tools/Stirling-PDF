@@ -5,6 +5,7 @@ import {
   requestReviewClearance,
   resetReviewGate,
   settleReviewGate,
+  withReviewClearance,
 } from "@app/services/reviewGate";
 
 describe("reviewGate", () => {
@@ -47,6 +48,49 @@ describe("reviewGate", () => {
     expect(getReviewGateRequest()?.verb).toBe("download");
     settleReviewGate(true);
     await expect(first).resolves.toBe(true);
+  });
+
+  it("takes a single id as readily as a list", async () => {
+    registerNeedsReviewResolver((ids) => ids);
+    const allowed = requestReviewClearance("bad", "download");
+    expect(getReviewGateRequest()).toEqual({
+      fileIds: ["bad"],
+      verb: "download",
+    });
+    settleReviewGate(true);
+    await expect(allowed).resolves.toBe(true);
+  });
+
+  it("prompts once for a batch: chokepoints inside it don't ask again", async () => {
+    registerNeedsReviewResolver((ids) => ids);
+    const inner: boolean[] = [];
+    const ran = withReviewClearance(["a", "b"], "download", async () => {
+      // Stands in for the download/print chokepoints the export passes through.
+      inner.push(await requestReviewClearance("a", "download"));
+      inner.push(await requestReviewClearance(["a", "b"], "save"));
+      return "exported";
+    });
+    settleReviewGate(true);
+    await expect(ran).resolves.toBe("exported");
+    expect(inner).toEqual([true, true]);
+    // The clearance ends with the export: a later one prompts again.
+    void requestReviewClearance("a", "download");
+    expect(getReviewGateRequest()).toEqual({
+      fileIds: ["a"],
+      verb: "download",
+    });
+  });
+
+  it("skips the action and reports nothing when the user cancels", async () => {
+    registerNeedsReviewResolver((ids) => ids);
+    let ran = false;
+    const result = withReviewClearance(["bad"], "share", () => {
+      ran = true;
+      return "sent";
+    });
+    settleReviewGate(false);
+    await expect(result).resolves.toBeUndefined();
+    expect(ran).toBe(false);
   });
 
   it("stops consulting a resolver once its host unmounts", async () => {

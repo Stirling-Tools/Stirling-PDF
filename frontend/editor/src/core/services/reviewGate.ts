@@ -18,10 +18,26 @@ export interface ReviewGateRequest {
   verb: ExportVerb;
 }
 
+/**
+ * What a caller is exporting: one file id, several, or none at all (a download
+ * with no id behind it). Callers pass whatever they have, so no site needs its
+ * own ternary or filter to reach an array.
+ */
+export type ClearanceTarget =
+  | string
+  | null
+  | undefined
+  | readonly (string | null | undefined)[];
+
 /** Supplied by the host, which can read the per-file policy badge map. */
 type NeedsReviewResolver = (fileIds: string[]) => string[];
 
 let resolveNeedsReview: NeedsReviewResolver | null = null;
+// Ids the user has just cleared for an export that is still running, so the
+// chokepoints inside it don't ask again (a batch prompts once). Restored by
+// {@link withReviewClearance} when its action settles; if concurrent exports
+// interleave, the loser simply prompts again rather than skipping the gate.
+let clearedScope: ReadonlySet<string> | null = null;
 // `request` is stored as one stable object: useSyncExternalStore compares
 // snapshots by identity, so building a fresh one per read would never settle.
 let pending: {
@@ -52,11 +68,15 @@ export function registerNeedsReviewResolver(
  * host is mounted to ask, or the user chose to continue anyway.
  */
 export function requestReviewClearance(
-  fileIds: readonly string[],
+  target: ClearanceTarget,
   verb: ExportVerb,
 ): Promise<boolean> {
-  const ids = fileIds.filter(Boolean) as string[];
-  const flagged = resolveNeedsReview?.(ids) ?? [];
+  const ids = (typeof target === "string" ? [target] : (target ?? [])).filter(
+    (id): id is string => !!id,
+  );
+  const flagged = (resolveNeedsReview?.(ids) ?? []).filter(
+    (id) => !clearedScope?.has(id),
+  );
   if (flagged.length === 0) return Promise.resolve(true);
   // A second prompt while one is open would orphan the first; treat the
   // overlapping export as cancelled rather than stacking modals.
@@ -72,6 +92,33 @@ export function requestReviewClearance(
     };
     emit();
   });
+}
+
+/**
+ * Prompt once, then run `action` with those files counted as cleared, so the
+ * chokepoints it goes through (download, save, print) don't ask a second time.
+ * Returns undefined when the user cancelled and the action never ran.
+ *
+ * `action` must return its promise, or the clearance ends before the export
+ * it kicked off reaches a chokepoint.
+ */
+export async function withReviewClearance<T>(
+  target: ClearanceTarget,
+  verb: ExportVerb,
+  action: () => T | Promise<T>,
+): Promise<T | undefined> {
+  if (!(await requestReviewClearance(target, verb))) return undefined;
+  const ids = typeof target === "string" ? [target] : (target ?? []);
+  const outer = clearedScope;
+  clearedScope = new Set([
+    ...(outer ?? []),
+    ...ids.filter((id): id is string => !!id),
+  ]);
+  try {
+    return await action();
+  } finally {
+    clearedScope = outer;
+  }
 }
 
 /** Answer the open prompt. No-op when nothing is pending. */
@@ -92,5 +139,6 @@ export function getReviewGateRequest(): ReviewGateRequest | null {
 export function resetReviewGate(): void {
   pending = null;
   resolveNeedsReview = null;
+  clearedScope = null;
   emit();
 }

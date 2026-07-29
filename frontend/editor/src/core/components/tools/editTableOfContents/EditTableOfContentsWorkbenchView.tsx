@@ -9,7 +9,6 @@ import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
 import BookmarkEditor from "@app/components/tools/editTableOfContents/BookmarkEditor";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { downloadFromUrl } from "@app/services/downloadService";
-import { requestReviewClearance } from "@app/services/reviewGate";
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -206,19 +205,13 @@ const EditTableOfContentsWorkbenchView = ({
                   <Button
                     leftSection={<LocalIcon icon="download-rounded" />}
                     onClick={() => {
-                      void (async () => {
-                        // The result derives from the source document, so it
-                        // inherits that document's review state.
-                        const cleared = await requestReviewClearance(
-                          sourceFileIds,
-                          "download",
-                        );
-                        if (!cleared) return;
-                        await downloadFromUrl(
-                          downloadUrl,
-                          downloadFilename ?? "download",
-                        );
-                      })();
+                      // The result derives from the source document, so it
+                      // inherits that document's review state.
+                      void downloadFromUrl({
+                        url: downloadUrl,
+                        filename: downloadFilename ?? "download",
+                        fileIds: sourceFileIds,
+                      });
                     }}
                   >
                     {terminology.download}
