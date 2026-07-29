@@ -347,8 +347,9 @@ export function useViewerWorkbenchBarButtons(
               tooltip: reviewLabel,
               ariaLabel: reviewLabel,
               section: "top" as const,
-              // Far right of the top controls, after the viewer's own tools.
-              order: 58.5,
+              // Dead last: highest order in the group, so it sits at the far
+              // right of the viewer's toggles, next to print/download.
+              order: 999,
               active: isReviewSidebarVisible,
               onClick: () => {
                 toggleReviewSidebar();

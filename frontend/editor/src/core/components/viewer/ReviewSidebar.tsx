@@ -17,6 +17,7 @@ import {
   usePolicyTrailRuns,
   useReviewApproval,
 } from "@app/components/viewer/review/reviewTrailSources";
+import "@app/components/viewer/SidebarBase.css";
 
 const SIDEBAR_WIDTH = "18rem";
 
@@ -98,39 +99,29 @@ export function ReviewSidebar({ visible, rightOffset }: ReviewSidebarProps) {
 
   return (
     <Box
+      className="sidebar-base"
       style={{
         position: "fixed",
         right: rightOffset,
         top: 0,
         bottom: 0,
         width: SIDEBAR_WIDTH,
-        backgroundColor: "var(--c-bg)",
-        borderLeft: "1px solid var(--c-border-subtle)",
         zIndex: 998,
-        display: "flex",
-        flexDirection: "column",
-        boxShadow: "-2px 0 8px rgba(0, 0, 0, 0.1)",
       }}
     >
-      <div
-        style={{
-          padding: "0.75rem 1rem",
-          borderBottom: "1px solid var(--c-border-subtle)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
-        }}
-      >
-        <WarningAmberRoundedIcon
-          fontSize="small"
-          style={{
-            color: needsReview ? "var(--c-warning)" : "var(--c-text-muted)",
-            flexShrink: 0,
-          }}
-        />
-        <Text fw={600} size="sm" tt="uppercase" lts={0.5} style={{ flex: 1 }}>
-          {t("viewer.review.title", "Review")}
-        </Text>
+      <div className="sidebar-base__header">
+        <div className="sidebar-base__header-title">
+          <WarningAmberRoundedIcon
+            fontSize="small"
+            style={{
+              color: needsReview ? "var(--c-warning)" : "var(--c-text-muted)",
+              flexShrink: 0,
+            }}
+          />
+          <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
+            {t("viewer.review.title", "Review")}
+          </Text>
+        </div>
         <ActionIcon
           variant="tertiary"
           size="sm"
