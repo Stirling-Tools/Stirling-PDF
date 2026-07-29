@@ -40,6 +40,7 @@ jobs:
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
+      storybook: ${{ steps.changes.outputs.storybook }}
       docker-base: ${{ steps.changes.outputs.docker-base }}
       dockerfiles: ${{ steps.changes.outputs.dockerfiles }}
       tauri: ${{ steps.changes.outputs.tauri }}
@@ -103,7 +104,7 @@ jobs:
   # branch touches so a regression is visible in review, but a browser scan is
   # too new here to block merges on. Promote it once its pass/fail proves stable.
   frontend-a11y:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.storybook == 'true'
     needs: [files-changed]
     permissions:
       contents: read

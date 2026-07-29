@@ -88,6 +88,18 @@ frontend: &frontend
   - .github/workflows/e2e-stubbed.yml
   - .github/workflows/e2e-live.yml
 
+storybook: &storybook
+  - *ci
+  - frontend/.storybook/**
+  - frontend/editor/src/**/*.stories.@(ts|tsx|mdx)
+  - frontend/package.json
+  - frontend/package-lock.json
+  - .taskfiles/frontend.yml
+  - Taskfile.yml
+  - .github/workflows/frontend-a11y.yml
+  - .github/workflows/nightly.yml
+  - .github/workflows/PR-Auto-Deploy-V2.yml
+
 # Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
 # job on changes to any of these.
 tauri: &tauri
