@@ -306,6 +306,11 @@ jobs:
           scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose-v2.yml
 
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+            # Without this the remote script's exit status is whatever the trailing
+            # cleanup returned, so a failed 'compose up' still reported success and the
+            # job posted a URL for a container that was never created.
+            set -e
+
             # Create V2 PR-specific directories
             mkdir -p /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs,storage}
 
@@ -315,6 +320,12 @@ jobs:
             # Stop any existing container and clean up
             cd /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}
             docker-compose down --remove-orphans 2>/dev/null || true
+
+            # Every preview creates its own network and closed PRs left theirs behind,
+            # until Docker ran out of address pools and no new preview could start at
+            # all ("all predefined address pools have been fully subnetted"). Reclaim
+            # the unused ones first; networks of running previews are untouched.
+            docker network prune -f || true
 
             # Start the new container
             docker-compose pull
@@ -375,14 +386,14 @@ jobs:
           # The container was only just started; wait for it to serve before asking it
           # to talk to SaaS.
           ready=false
-          for _ in $(seq 1 60); do
+          for _ in $(seq 1 100); do
             if curl -fsS --max-time 5 "$BASE_URL/api/v1/info/status" 2>/dev/null | grep -q UP; then
               ready=true
               break
             fi
             sleep 3
           done
-          [ "$ready" = true ] || finish false "instance did not become healthy within 3 minutes"
+          [ "$ready" = true ] || finish false "instance did not become healthy within 5 minutes"
 
           # Admin session on the preview itself (the link endpoints are ADMIN-only).
           ADMIN_JWT=$(curl -fsS --max-time 20 -X POST "$BASE_URL/api/v1/auth/login" \
@@ -672,6 +683,10 @@ jobs:
             # Remove this PR's Storybook preview (container + files), if any.
             docker rm -f storybook-pr-${{ github.event.pull_request.number }} 2>/dev/null || true
             rm -rf /stirling/SB-PR-${{ github.event.pull_request.number }}
+
+            # Reclaim the closed PR's network. Without this they accumulate until
+            # Docker's address pools are exhausted and no preview can start.
+            docker network prune -f || true
 
             # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
             docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
