@@ -556,11 +556,12 @@ jobs:
 
             const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${v2Port}`;
 
-            // Only mention the portal when this image actually embeds it.
-            // Use the direct IP URL - the SSL hostname isn't supported yet.
+            // Only mention the portal when this image actually embeds it. It mounts at
+            // PORTAL_BASENAME, which is /processor - /portal is not served and never
+            // redirected. Use the direct IP URL - the SSL hostname isn't supported yet.
             const withPortal = "${{ env.BUILD_PORTAL }}" === "true";
             const portalNote = withPortal
-              ? `🧩 **Admin portal** included - try it at [${deploymentUrl}/portal](${deploymentUrl}/portal).\n\n`
+              ? `🧩 **Processor** (admin) included - try it at [${deploymentUrl}/processor](${deploymentUrl}/processor).\n\n`
               : ``;
 
             // Storybook preview: only present when this PR changed stories/config.
