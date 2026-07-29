@@ -22,8 +22,8 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
-  SegmentedControl,
 } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
@@ -364,24 +364,18 @@ const FormFill = (_props: BaseToolProps) => {
         <SegmentedControl
           value={mode}
           onChange={(val) => setMode(val as FormMode)}
-          data={MODE_TABS.map((tab) => ({
+          options={MODE_TABS.map((tab) => ({
             value: tab.id,
             label: (
               <div className={styles.segmentedLabel}>
                 {tab.icon}
-                <span>{tab.label}</span>
+                <span className={styles.segmentedInnerLabel}>{tab.label}</span>
               </div>
             ),
           }))}
           fullWidth
-          radius="xs"
           size="xs"
-          classNames={{
-            root: styles.segmentedRoot,
-            indicator: styles.segmentedIndicator,
-            control: styles.segmentedControl,
-            label: styles.segmentedInnerLabel,
-          }}
+          ariaLabel={t("formFill.mode.label", "Form editor mode")}
         />
       </div>
 

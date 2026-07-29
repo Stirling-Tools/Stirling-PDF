@@ -11,11 +11,11 @@ import {
   Select,
   Switch,
   Group,
-  ActionIcon,
-  Button,
   Text,
   Alert,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -203,8 +203,8 @@ export function FormFieldPropertyEditor({
               />
               <ActionIcon
                 size="sm"
-                variant="subtle"
-                color="red"
+                variant="tertiary"
+                accent="danger"
                 aria-label={t("formFill.editor.removeOption", "Remove option")}
                 onClick={() => removeOption(i)}
               >
@@ -213,8 +213,8 @@ export function FormFieldPropertyEditor({
             </Group>
           ))}
           <Button
-            size="compact-xs"
-            variant="light"
+            size="sm"
+            variant="tertiary"
             leftSection={<AddIcon sx={{ fontSize: 14 }} />}
             onClick={addOption}
           >

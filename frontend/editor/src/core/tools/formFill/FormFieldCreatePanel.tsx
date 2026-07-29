@@ -6,16 +6,9 @@
  * them to the PDF in one request.
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Stack,
-  Text,
-  Button,
-  Group,
-  Alert,
-  Collapse,
-  ActionIcon,
-  Paper,
-} from "@mantine/core";
+import { Stack, Text, Group, Alert, Collapse, Paper } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditIcon from "@mui/icons-material/Edit";
@@ -102,8 +95,8 @@ export function FormFieldCreatePanel({
             return (
               <Button
                 key={type}
-                size="xs"
-                variant={armed ? "filled" : "default"}
+                size="sm"
+                variant={armed ? "primary" : "secondary"}
                 leftSection={FIELD_TYPE_ICON[type]}
                 onClick={() => setCreationType(armed ? null : type)}
                 data-testid={`form-create-type-${type}`}
@@ -169,7 +162,7 @@ export function FormFieldCreatePanel({
                     <Group gap={2} wrap="nowrap">
                       <ActionIcon
                         size="sm"
-                        variant="subtle"
+                        variant="tertiary"
                         aria-label={t(
                           "formFill.create.editField",
                           "Edit field",
@@ -181,8 +174,8 @@ export function FormFieldCreatePanel({
                       </ActionIcon>
                       <ActionIcon
                         size="sm"
-                        variant="subtle"
-                        color="red"
+                        variant="tertiary"
+                        accent="danger"
                         aria-label={t(
                           "formFill.create.removeField",
                           "Remove field",
@@ -215,7 +208,7 @@ export function FormFieldCreatePanel({
         )}
 
         <Button
-          size="xs"
+          size="sm"
           onClick={handleCommit}
           loading={committing}
           disabled={!currentFile || pendingFields.length === 0}

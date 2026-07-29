@@ -16,7 +16,10 @@ import type { Page, Route } from "@playwright/test";
  * JUnit tests.
  */
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 const PDF_BYTES = readFileSync(SAMPLE_PDF);
 
 /** Two text fields on page 0, in the shape the backend emits. */

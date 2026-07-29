@@ -9,16 +9,16 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Text,
-  Button,
   Group,
   Alert,
   Collapse,
-  ActionIcon,
   Paper,
   NumberInput,
   ScrollArea,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
 import RestoreIcon from "@mui/icons-material/Restore";
@@ -170,7 +170,7 @@ export function FormFieldModifyPanel({
         )}
 
         <Button
-          size="xs"
+          size="sm"
           onClick={handleCommit}
           loading={committing}
           disabled={!currentFile || !hasUncommittedChanges}
@@ -252,8 +252,8 @@ export function FormFieldModifyPanel({
                       >
                         <ActionIcon
                           size="sm"
-                          variant="subtle"
-                          color={deleted ? "blue" : "red"}
+                          variant="tertiary"
+                          accent={deleted ? "default" : "danger"}
                           aria-label={
                             deleted
                               ? t("formFill.modify.restore", "Restore")
