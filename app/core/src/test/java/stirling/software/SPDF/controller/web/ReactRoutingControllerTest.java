@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.function.HandlerFunction;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
+import org.springframework.web.servlet.function.support.RouterFunctionMapping;
 import org.springframework.web.util.ServletRequestPathUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -213,7 +215,7 @@ class ReactRoutingControllerTest {
     @Test
     void spaDeepLinkFallback_servesIndexForDeepRoute() throws Exception {
         controller.init();
-        RouterFunction<ServerResponse> router = controller.spaDeepLinkFallback();
+        RouterFunction<ServerResponse> router = routerOf(controller.spaDeepLinkFallbackMapping());
 
         ServerRequest deepRequest = serverRequest("GET", "/processor/pipelines/new");
         Optional<HandlerFunction<ServerResponse>> handler = router.route(deepRequest);
@@ -229,11 +231,31 @@ class ReactRoutingControllerTest {
     @Test
     void spaDeepLinkFallback_ignoresApiFilesAndNonGet() {
         controller.init();
-        RouterFunction<ServerResponse> router = controller.spaDeepLinkFallback();
+        RouterFunction<ServerResponse> router = routerOf(controller.spaDeepLinkFallbackMapping());
 
         assertTrue(router.route(serverRequest("GET", "/api/v1/policies/run")).isEmpty());
         assertTrue(router.route(serverRequest("GET", "/branding/sub/logo.png")).isEmpty());
         assertTrue(router.route(serverRequest("POST", "/processor/pipelines/new")).isEmpty());
+    }
+
+    @Test
+    void spaDeepLinkFallback_runsAfterControllersAndBeforeResources() {
+        controller.init();
+        int order = controller.spaDeepLinkFallbackMapping().getOrder();
+
+        // A catch-all denylist is only safe below every annotated controller; Spring's own
+        // RouterFunctionMapping sits at -1, which would shadow /v1/api-docs, /error and friends.
+        assertTrue(order > 0, "SPA fallback must run after annotated controllers");
+        assertTrue(
+                order < Ordered.LOWEST_PRECEDENCE - 1,
+                "SPA fallback must run before the static-resource chain");
+    }
+
+    private static RouterFunction<ServerResponse> routerOf(RouterFunctionMapping mapping) {
+        @SuppressWarnings("unchecked")
+        RouterFunction<ServerResponse> router =
+                (RouterFunction<ServerResponse>) mapping.getRouterFunction();
+        return router;
     }
 
     private static ServerRequest serverRequest(String method, String uri) {

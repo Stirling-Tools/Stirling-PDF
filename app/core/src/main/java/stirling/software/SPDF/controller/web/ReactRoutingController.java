@@ -5,22 +5,26 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.RouterFunctions;
 import org.springframework.web.servlet.function.ServerResponse;
+import org.springframework.web.servlet.function.support.RouterFunctionMapping;
 import org.springframework.web.util.HtmlUtils;
 import org.springframework.web.util.JavaScriptUtils;
 
@@ -59,6 +63,10 @@ public class ReactRoutingController {
                     "Login",
                     "og_images",
                     "samples");
+
+    // After the annotated controllers (order 0), before the resource chain
+    // (LOWEST_PRECEDENCE - 1).
+    private static final int SPA_FALLBACK_ORDER = Ordered.LOWEST_PRECEDENCE - 2;
 
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
@@ -286,26 +294,40 @@ public class ReactRoutingController {
 
     // The regex mappings above only cover 1- and 2-segment paths (Spring path variables cannot
     // span '/'), so deep SPA links like /processor/pipelines/new 404d on direct navigation.
+    //
+    // Registered as its own mapping rather than exposed as a bare RouterFunction @Bean:
+    // Spring's own RouterFunctionMapping is ordered -1, ahead of the annotated controllers at
+    // order 0, so a plain bean would shadow every dot-free backend route the denylist below
+    // does not name (/v1/api-docs, /error, /actuator, ...). LOWEST_PRECEDENCE - 2 puts it after
+    // the controllers and before the resource chain (LOWEST_PRECEDENCE - 1), which is the only
+    // position where a catch-all fallback is safe.
     @Bean
-    public RouterFunction<ServerResponse> spaDeepLinkFallback() {
-        return RouterFunctions.route(
-                request -> {
-                    HttpServletRequest servletRequest = request.servletRequest();
-                    return "GET".equals(servletRequest.getMethod())
-                            && isSpaFallbackRoute(
-                                    stripContextPath(
-                                            servletRequest.getContextPath(),
-                                            servletRequest.getRequestURI()));
-                },
-                request ->
-                        ServerResponse.ok()
-                                .cacheControl(CacheControl.noCache().mustRevalidate())
-                                .contentType(MediaType.TEXT_HTML)
-                                .body(serveIndexHtml(request.servletRequest()).getBody()));
+    public RouterFunctionMapping spaDeepLinkFallbackMapping() {
+        RouterFunction<ServerResponse> fallback =
+                RouterFunctions.route(
+                        request -> {
+                            HttpServletRequest servletRequest = request.servletRequest();
+                            return "GET".equals(servletRequest.getMethod())
+                                    && isSpaFallbackRoute(
+                                            stripContextPath(
+                                                    servletRequest.getContextPath(),
+                                                    servletRequest.getRequestURI()));
+                        },
+                        request ->
+                                ServerResponse.ok()
+                                        .cacheControl(CacheControl.noCache().mustRevalidate())
+                                        .contentType(MediaType.TEXT_HTML)
+                                        .body(serveIndexHtml(request.servletRequest()).getBody()));
+        RouterFunctionMapping mapping = new RouterFunctionMapping(fallback);
+        mapping.setOrder(SPA_FALLBACK_ORDER);
+        mapping.setMessageConverters(
+                List.of(new StringHttpMessageConverter(StandardCharsets.UTF_8)));
+        return mapping;
     }
 
-    // Runs after annotated controllers but before the static-resource chain. Dot-free paths
-    // only, so requests for real files still fall through to the resource handlers.
+    // Dot-free paths only, so requests for real files still fall through to the resource
+    // handlers. This is a denylist, so it is only safe because the mapping above runs after
+    // the annotated controllers - see spaDeepLinkFallbackMapping.
     static boolean isSpaFallbackRoute(String path) {
         if (path == null || path.isEmpty() || "/".equals(path) || path.indexOf('.') >= 0) {
             return false;
