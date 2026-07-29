@@ -23,6 +23,11 @@ customFiles/
 configs/
 watchedFolders/
 clientWebUI/
+# Runtime staging for webhook-source deliveries, under the installation base
+# path (app/core in dev). Transient: files are deleted once a policy consumes
+# them, so nothing here belongs in the repo.
+policy-webhook-spool/
+logs/
 # Scratch dir used by local fixture-regeneration runs (see
 # app/proprietary/src/test/resources/db-migration-fixtures/README.md).
 # Holds downloaded JARs and disposable workdirs. Never committed.

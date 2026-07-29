@@ -9,7 +9,9 @@ from pydantic_ai.output import NativeOutput
 from stirling.contracts import (
     ClassifyDocumentRequest,
     ClassifyDocumentResponse,
+    ConsideredLabel,
     DocumentClassificationResponse,
+    LabelAssignment,
     LabelOption,
     PageText,
 )
@@ -32,21 +34,61 @@ _SYSTEM_PROMPT = (
     "fixed list of allowed labels you are given.\n"
     "\n"
     "Rules:\n"
-    f"- Pick up to {MAX_ASSIGNED_LABELS} labels that describe this document's type.\n"
+    f"- Assign up to {MAX_ASSIGNED_LABELS} labels that describe this document's type.\n"
     "- Only use labels from the allowed list, spelled exactly as listed.\n"
-    "- Return an empty list if none fit.\n"
+    "- Give every assigned label a calibrated confidence between 0 and 1 — how "
+    "sure you are that the label applies.\n"
+    "- If you seriously considered a label — especially a consequential one, such "
+    "as a medical or legal document — but were not sure enough to assign it, do "
+    "not silently drop it: list it as considered, with a LOW confidence "
+    "reflecting your uncertainty and a one-line reason.\n"
+    "- Assign nothing if no label fits; leave considered empty if you weighed "
+    "nothing seriously.\n"
     "- Judge from the document's content and structure, not from keywords alone. "
     "The document may be in any language.\n"
     "- You are shown only the first and last pages; that is enough to identify the type."
 )
 
 
+class _AssignedLabel(ApiModel):
+    """One label the model assigns, by name, with its calibrated confidence."""
+
+    label: str = Field(
+        description="A label from the allowed list, spelled exactly as listed.",
+    )
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="Calibrated confidence that the label applies, from 0 to 1.",
+    )
+
+
+class _ConsideredLabel(ApiModel):
+    """A label the model weighed seriously but was not sure enough to assign."""
+
+    label: str = Field(
+        description="A label from the allowed list, spelled exactly as listed.",
+    )
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+        description=("How sure you are that the label applies — low, since you did not assign it."),
+    )
+    reason: str = Field(
+        description="One short line on why you considered the label but did not assign it.",
+    )
+
+
 class _ClassifierOutput(ApiModel):
     """Raw model answer, before it is validated against the allowed vocabulary."""
 
-    labels: list[str] = Field(
+    assignments: list[_AssignedLabel] = Field(
         default_factory=list,
         description="Labels from the allowed list that describe this document's type.",
+    )
+    considered: list[_ConsideredLabel] = Field(
+        default_factory=list,
+        description=("Labels you seriously considered but were not sure enough to assign."),
     )
 
 
@@ -81,21 +123,35 @@ def validate_labels(output: _ClassifierOutput, allowed: list[LabelOption]) -> Do
 
     The model answers with names; they are matched case-insensitively to the
     allowed vocabulary and returned as that label's id. Anything off-list is
-    dropped, duplicates collapse to the first occurrence, and the result is
-    capped at ``MAX_ASSIGNED_LABELS`` in the model's order. The model identifies;
-    these rules decide what is allowed to stand.
+    dropped, duplicates collapse to the first occurrence, and assignments are
+    capped at ``MAX_ASSIGNED_LABELS`` in the model's order. The same rules
+    apply to ``considered``, which additionally may not repeat an assigned
+    label. ``labels`` is derived from the surviving assignments, so the two can
+    never disagree. The model identifies; these rules decide what is allowed to
+    stand.
     """
     id_by_lower_name = {label.name.lower(): label.id for label in allowed}
 
-    kept: list[str] = []
-    for name in output.labels:
-        label_id = id_by_lower_name.get(name.strip().lower())
-        if label_id is not None and label_id not in kept:
-            kept.append(label_id)
-        if len(kept) == MAX_ASSIGNED_LABELS:
+    assignments: list[LabelAssignment] = []
+    assigned_ids: list[str] = []
+    for assigned in output.assignments:
+        label_id = id_by_lower_name.get(assigned.label.strip().lower())
+        if label_id is not None and label_id not in assigned_ids:
+            assigned_ids.append(label_id)
+            assignments.append(LabelAssignment(label_id=label_id, confidence=assigned.confidence))
+        if len(assignments) == MAX_ASSIGNED_LABELS:
             break
 
-    return DocumentClassificationResponse(labels=kept)
+    considered: list[ConsideredLabel] = []
+    considered_ids: list[str] = []
+    for candidate in output.considered:
+        label_id = id_by_lower_name.get(candidate.label.strip().lower())
+        if label_id is None or label_id in assigned_ids or label_id in considered_ids:
+            continue
+        considered_ids.append(label_id)
+        considered.append(ConsideredLabel(label_id=label_id, confidence=candidate.confidence, reason=candidate.reason))
+
+    return DocumentClassificationResponse(labels=assigned_ids, assignments=assignments, considered=considered)
 
 
 class DocumentClassifierAgent:

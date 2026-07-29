@@ -10,7 +10,9 @@ from stirling.api.dependencies import get_document_classifier_agent
 from stirling.contracts import (
     ClassifyDocumentRequest,
     ClassifyDocumentResponse,
+    ConsideredLabel,
     DocumentClassificationResponse,
+    LabelAssignment,
 )
 
 
@@ -28,7 +30,14 @@ class StubClassifierAgent:
 def classification_client() -> Iterator[TestClient]:
     app.dependency_overrides[get_document_classifier_agent] = lambda: StubClassifierAgent(
         # The result is label ids (the model's name answers, mapped to ids).
-        DocumentClassificationResponse(labels=["nda", "contract"])
+        DocumentClassificationResponse(
+            labels=["nda", "contract"],
+            assignments=[
+                LabelAssignment(label_id="nda", confidence=0.93),
+                LabelAssignment(label_id="contract", confidence=0.71),
+            ],
+            considered=[ConsideredLabel(label_id="invoice", confidence=0.2, reason="mentions a fee schedule")],
+        )
     )
     try:
         yield TestClient(app)
@@ -49,7 +58,14 @@ def test_classify_returns_assigned_labels(classification_client: TestClient) -> 
         },
     )
     assert response.status_code == 200
-    assert response.json() == {"labels": ["nda", "contract"]}
+    assert response.json() == {
+        "labels": ["nda", "contract"],
+        "assignments": [
+            {"labelId": "nda", "confidence": 0.93},
+            {"labelId": "contract", "confidence": 0.71},
+        ],
+        "considered": [{"labelId": "invoice", "confidence": 0.2, "reason": "mentions a fee schedule"}],
+    }
 
 
 def test_classify_accepts_allowed_labels_on_the_request(classification_client: TestClient) -> None:

@@ -1,4 +1,5 @@
 import type { Tier } from "@portal/contexts/TierContext";
+import type { ReviewItemStatus } from "@portal/api/review";
 
 /**
  * The portal's TanStack Query keys, in one place. Convention:
@@ -13,6 +14,9 @@ export const qk = {
   policiesList: () => ["portal", "policies", "list"] as const,
   policyRuns: () => ["portal", "policies", "runs"] as const,
   sources: () => ["portal", "sources"] as const,
+  reviewConfig: () => ["portal", "review", "config"] as const,
+  reviewItems: (status?: ReviewItemStatus) =>
+    ["portal", "review", "items", status ?? "all"] as const,
   pipelines: () => ["portal", "pipelines"] as const,
   fleetStats: () => ["portal", "fleetStats"] as const,
   appConfig: () => ["portal", "appConfig"] as const,

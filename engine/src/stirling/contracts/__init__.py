@@ -45,7 +45,9 @@ from .contradiction import (
 from .document_classifier import (
     ClassifyDocumentRequest,
     ClassifyDocumentResponse,
+    ConsideredLabel,
     DocumentClassificationResponse,
+    LabelAssignment,
     LabelOption,
 )
 from .documents import (
@@ -151,6 +153,7 @@ __all__ = [
     "ConfigModelsSection",
     "ConfigPushRequest",
     "ConfigRagSection",
+    "ConsideredLabel",
     "Contradiction",
     "ContradictionReport",
     "ContradictionSeverity",
@@ -159,6 +162,7 @@ __all__ = [
     "PurgeOwnerResponse",
     "Discrepancy",
     "DocumentClassificationResponse",
+    "LabelAssignment",
     "LabelOption",
     "DocumentMeta",
     "DocumentSections",

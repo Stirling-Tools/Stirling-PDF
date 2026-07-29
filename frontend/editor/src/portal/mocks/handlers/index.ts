@@ -16,6 +16,7 @@ import { documentsHandlers } from "@portal/mocks/handlers/documents";
 import { editorDeployHandlers } from "@portal/mocks/handlers/editorDeploy";
 import { linkHandlers } from "@portal/mocks/handlers/link";
 import { integrationsHandlers } from "@portal/mocks/handlers/integrations";
+import { reviewHandlers } from "@portal/mocks/handlers/review";
 
 export const handlers = [
   ...authHandlers,
@@ -36,8 +37,10 @@ export const handlers = [
   ...editorDeployHandlers,
   ...linkHandlers,
   ...integrationsHandlers,
+  ...reviewHandlers,
 ];
 
 export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";
 export { resetProcurementStore } from "@portal/mocks/handlers/procurement";
 export { resetTeamSaasStore } from "@portal/mocks/handlers/teamSaas";
+export { resetReviewStore } from "@portal/mocks/handlers/review";

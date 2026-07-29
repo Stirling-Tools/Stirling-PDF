@@ -8,6 +8,9 @@ export interface ToggleSwitchProps {
   label?: string;
   /** Optional helper text rendered next to the label. */
   description?: string;
+  /** Accessible name when the switch sits in a row that already shows its
+   *  label, so no duplicate visible text is rendered. */
+  ariaLabel?: string;
   disabled?: boolean;
   size?: "sm" | "md";
   id?: string;
@@ -24,6 +27,7 @@ export function ToggleSwitch({
   onChange,
   label,
   description,
+  ariaLabel,
   disabled,
   size = "md",
   id,
@@ -39,6 +43,7 @@ export function ToggleSwitch({
         id={controlId}
         type="checkbox"
         role="switch"
+        aria-label={ariaLabel}
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}

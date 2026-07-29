@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -35,10 +36,12 @@ import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
+import stirling.software.proprietary.policy.model.RunOrigin;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.review.ReviewGate;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
 
 /**
@@ -74,6 +77,7 @@ public class PolicyEngine {
     private final List<PolicyOutputSink> outputSinks;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
+    private final ReviewGate reviewGate;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
@@ -104,12 +108,16 @@ public class PolicyEngine {
         // async
         // worker.
         String principal = currentActingPrincipal();
-        return submitForPrincipal(principal, principal, policyId, definition, inputs, listener);
+        return submitForPrincipal(
+                principal, principal, policyId, definition, inputs, listener, RunOrigin.AD_HOC);
     }
 
-    /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
+    /**
+     * Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. {@code
+     * origin} says who is watching — the review bucket holds only {@link RunOrigin#SOURCE} runs.
+     */
     public PolicyRunHandle runPolicy(
-            Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
+            Policy policy, PolicyInputs inputs, PolicyProgressListener listener, RunOrigin origin) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -120,7 +128,13 @@ public class PolicyEngine {
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), policy.toDefinition(), inputs, listener);
+                policy.owner(),
+                fileOwner,
+                policy.id(),
+                policy.toDefinition(),
+                inputs,
+                listener,
+                origin);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -129,7 +143,8 @@ public class PolicyEngine {
             String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
-            PolicyProgressListener listener) {
+            PolicyProgressListener listener,
+            RunOrigin origin) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
@@ -153,7 +168,7 @@ public class PolicyEngine {
                                 billingPrincipal,
                                 fileOwner,
                                 definition.name(),
-                                () -> runToCompletion(run, inputs, tracking, completion));
+                                () -> runToCompletion(run, origin, inputs, tracking, completion));
 
         // One admission unit per run; steps run synchronously within it, so this gates heavy work
         // without the pool-within-pool risk of queueing each tool call.
@@ -200,6 +215,7 @@ public class PolicyEngine {
 
     private void runToCompletion(
             PolicyRun run,
+            RunOrigin origin,
             PolicyInputs inputs,
             PolicyProgressListener listener,
             CompletableFuture<PolicyRun> completion) {
@@ -212,16 +228,25 @@ public class PolicyEngine {
                 run.markRunning();
                 PolicyExecutionResult result =
                         stepExecutor.execute(run.getDefinition(), inputs, listener);
-                OutputSpec output = run.getDefinition().output();
-                List<ResultFile> outputs =
-                        sinkFor(output)
-                                .deliver(
-                                        new OutputDelivery(runId, run.getPolicyId()),
-                                        result.files(),
-                                        output);
-                taskManager.setMultipleFileResults(runId, outputs);
-                taskManager.setComplete(runId);
-                run.complete(outputs);
+                // Review gate sits between execution and delivery: a held run parks in
+                // WAITING_FOR_INPUT with its outputs persisted, and the review endpoints
+                // deliver (or discard) them later.
+                Optional<WaitState> hold = reviewGate.holdIfNeeded(run, origin, result.files());
+                if (hold.isPresent()) {
+                    run.waitForInput(hold.get());
+                    taskManager.addNote(runId, "Held for review");
+                } else {
+                    OutputSpec output = run.getDefinition().output();
+                    List<ResultFile> outputs =
+                            sinkFor(output)
+                                    .deliver(
+                                            new OutputDelivery(runId, run.getPolicyId()),
+                                            result.files(),
+                                            output);
+                    taskManager.setMultipleFileResults(runId, outputs);
+                    taskManager.setComplete(runId);
+                    run.complete(outputs);
+                }
             } catch (PolicyInputRequiredException e) {
                 // Expected path: suspend rather than fail. Persist intermediates as fileIds so the
                 // run
@@ -238,6 +263,7 @@ public class PolicyEngine {
                         e.getMessage());
                 run.fail(message);
                 taskManager.setError(runId, message);
+                reviewGate.recordFailure(run, origin, inputs.primary());
             } catch (RestClientResponseException e) {
                 // A downstream tool call returned an error status. When it's a structured
                 // entitlement
@@ -267,11 +293,13 @@ public class PolicyEngine {
                     run.fail(message);
                     taskManager.setError(runId, message);
                 }
+                reviewGate.recordFailure(run, origin, inputs.primary());
             } catch (Exception e) {
                 String message = "Policy run failed: " + e.getMessage();
                 log.error("Policy run {} failed", runId, e);
                 run.fail(message);
                 taskManager.setError(runId, message);
+                reviewGate.recordFailure(run, origin, inputs.primary());
             } finally {
                 // Always resolve so stream/await callers unblock.
                 completion.complete(run);

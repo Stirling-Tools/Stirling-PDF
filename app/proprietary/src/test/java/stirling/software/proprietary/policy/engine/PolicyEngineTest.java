@@ -54,8 +54,10 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
+import stirling.software.proprietary.policy.model.RunOrigin;
 import stirling.software.proprietary.policy.output.InlineOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.review.ReviewGate;
 
 import tools.jackson.databind.json.JsonMapper;
 
@@ -78,6 +80,7 @@ class PolicyEngineTest {
     @Mock private JobOwnershipService jobOwnershipService;
     @Mock private ResourceMonitor resourceMonitor;
     @Mock private JobQueue jobQueue;
+    @Mock private ReviewGate reviewGate;
 
     @TempDir Path tempDir;
 
@@ -107,7 +110,12 @@ class PolicyEngineTest {
                         jobOwnershipService,
                         List.of(sink),
                         resourceMonitor,
-                        jobQueue);
+                        jobQueue,
+                        reviewGate);
+        // The gate is exercised in its own tests; here it always waves runs through.
+        lenient()
+                .when(reviewGate.holdIfNeeded(any(), any(), any()))
+                .thenReturn(java.util.Optional.empty());
 
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.
@@ -230,7 +238,8 @@ class PolicyEngineTest {
                 engine.runPolicy(
                         policy,
                         PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        PolicyProgressListener.NOOP);
+                        PolicyProgressListener.NOOP,
+                        RunOrigin.EDITOR);
 
         PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
         assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
@@ -273,7 +282,8 @@ class PolicyEngineTest {
         engine.runPolicy(
                         policy,
                         PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        PolicyProgressListener.NOOP)
+                        PolicyProgressListener.NOOP,
+                        RunOrigin.EDITOR)
                 .completion()
                 .get(10, TimeUnit.SECONDS);
 

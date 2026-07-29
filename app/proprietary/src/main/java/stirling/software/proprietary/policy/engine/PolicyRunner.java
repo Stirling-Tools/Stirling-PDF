@@ -19,6 +19,7 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
+import stirling.software.proprietary.policy.model.RunOrigin;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.Source;
@@ -104,7 +105,7 @@ public class PolicyRunner {
      */
     public PolicyRunHandle runWith(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
-        PolicyRunHandle handle = policyEngine.runPolicy(policy, inputs, listener);
+        PolicyRunHandle handle = policyEngine.runPolicy(policy, inputs, listener, RunOrigin.EDITOR);
         docCounter.record(EditorSource.counterKey(policy.teamId()), inputs.primary().size());
         return handle;
     }
@@ -159,7 +160,8 @@ public class PolicyRunner {
     private String startRun(Policy policy, PolicyInputs inputs, Consumer<Boolean> onComplete) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
         PolicyRunHandle handle =
-                policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP);
+                policyEngine.runPolicy(
+                        policy, inputs, PolicyProgressListener.NOOP, RunOrigin.SOURCE);
         handle.completion()
                 .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
         return handle.runId();

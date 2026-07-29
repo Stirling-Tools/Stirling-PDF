@@ -236,7 +236,7 @@ const Review = (_props: BaseToolProps) => {
           {stub?.name ??
             (unavailable
               ? t("reviewTool.queue.unavailable", "File no longer available")
-              : t("reviewTool.queue.opening", "Opening file…"))}
+              : t("reviewTool.queue.opening", "Opening file..."))}
         </span>
         <span className="review-panel__subtitle">
           {t(

@@ -41,6 +41,7 @@ import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig"
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
+import { ReviewBucketConfigForm } from "@portal/components/review/ReviewBucketConfigForm";
 import "@portal/views/Policies.css";
 
 /** Outline icon for a source tile, keyed by the backend source `type`. */
@@ -69,7 +70,9 @@ interface PolicySetupWizardProps {
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
 }
 
-type Step = "workflow" | "settings";
+// "review" (human-in-the-loop conditions) exists only for classification
+// policies, whose labels are what the review bucket watches.
+type Step = "workflow" | "settings" | "review";
 
 /** A policy step plus whether it runs. */
 type ToolState = PolicyToolStep & { enabled: boolean };
@@ -438,15 +441,23 @@ function PolicySetupWizardBody({
                 variant="secondary"
                 size="sm"
                 style={{ marginLeft: "auto" }}
-                onClick={() => setStep("workflow")}
+                onClick={() =>
+                  setStep(step === "review" ? "settings" : "workflow")
+                }
               >
                 {t("portal.policies.wizard.actions.back")}
               </Button>
-              <Button size="sm" onClick={submit} loading={submitting}>
-                {isEdit
-                  ? t("portal.policies.wizard.actions.saveChanges")
-                  : t("portal.policies.wizard.actions.enablePolicy")}
-              </Button>
+              {step === "settings" && isClassification ? (
+                <Button size="sm" onClick={() => setStep("review")}>
+                  {t("portal.policies.wizard.actions.continue")}
+                </Button>
+              ) : (
+                <Button size="sm" onClick={submit} loading={submitting}>
+                  {isEdit
+                    ? t("portal.policies.wizard.actions.saveChanges")
+                    : t("portal.policies.wizard.actions.enablePolicy")}
+                </Button>
+              )}
             </>
           )}
         </div>
@@ -460,6 +471,14 @@ function PolicySetupWizardBody({
         items={[
           { key: "workflow", label: t("portal.policies.wizard.tabs.workflow") },
           { key: "settings", label: t("portal.policies.wizard.tabs.settings") },
+          ...(isClassification
+            ? [
+                {
+                  key: "review",
+                  label: t("portal.policies.wizard.tabs.review", "Review"),
+                },
+              ]
+            : []),
         ]}
       />
 
@@ -750,6 +769,18 @@ function PolicySetupWizardBody({
             )}
             {/* TODO: reviewer user-picker goes here */}
           </div>
+        </div>
+      )}
+
+      {step === "review" && (
+        <div className="portal-policies__wizard-section">
+          <p className="portal-policies__wizard-desc">
+            {t(
+              "portal.policies.wizard.review.description",
+              "Optionally hold classified files for a person to approve before they are delivered. The conditions are team-wide and can also be changed later from the Review page.",
+            )}
+          </p>
+          <ReviewBucketConfigForm />
         </div>
       )}
     </Modal>

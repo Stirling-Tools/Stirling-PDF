@@ -13,6 +13,7 @@ describe("sidebarGroups (SaaS)", () => {
       "policies",
       "pipelines",
       "documents",
+      "review",
     ]);
   });
 

@@ -34,18 +34,67 @@ class ClassifyDocumentRequest(ApiModel):
     labels: list[LabelOption] = Field(min_length=1)
 
 
+class LabelAssignment(ApiModel):
+    """One label the model assigned to the document, with its calibrated
+    confidence."""
+
+    label_id: str = Field(
+        min_length=1,
+        description="Id of the assigned label, from the allowed vocabulary.",
+    )
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="Calibrated confidence that the label applies, from 0 to 1.",
+    )
+
+
+class ConsideredLabel(ApiModel):
+    """A label the model weighed seriously but declined to assign."""
+
+    label_id: str = Field(
+        min_length=1,
+        description="Id of the considered label, from the allowed vocabulary.",
+    )
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+        description=(
+            "How sure the model is that the label applies — deliberately low, "
+            "since it was not sure enough to assign it."
+        ),
+    )
+    reason: str = Field(
+        description="One short line on why the label was considered but not assigned.",
+    )
+
+
 class DocumentClassificationResponse(ApiModel):
     """Terminal classification result.
 
-    ``labels`` is the subset of the allowed vocabulary the model assigned to the
-    document, as label **ids**: at most five entries, deduplicated, in the
-    model's order. An empty list is a valid answer — nothing in the vocabulary
-    fit. This is a plain answer from a dedicated endpoint — it carries no
-    ``outcome`` discriminator (it isn't one of the orchestrator's
-    WorkflowOutcome-routed union responses).
+    ``assignments`` is the subset of the allowed vocabulary the model assigned
+    to the document, as label **ids** with calibrated confidences: at most five
+    entries, deduplicated, in the model's order. ``labels`` mirrors the ids in
+    ``assignments`` (same order) and is kept for backward compatibility.
+    ``considered`` lists labels the model weighed seriously but declined to
+    assign; a label never appears in both lists. Empty lists are a valid answer
+    — nothing in the vocabulary fit. This is a plain answer from a dedicated
+    endpoint — it carries no ``outcome`` discriminator (it isn't one of the
+    orchestrator's WorkflowOutcome-routed union responses).
     """
 
-    labels: list[str] = Field(default_factory=list)
+    labels: list[str] = Field(
+        default_factory=list,
+        description="Ids of the assigned labels — mirrors ``assignments``, in order.",
+    )
+    assignments: list[LabelAssignment] = Field(
+        default_factory=list,
+        description="Labels assigned to the document, each with a confidence.",
+    )
+    considered: list[ConsideredLabel] = Field(
+        default_factory=list,
+        description="Labels seriously weighed but not assigned.",
+    )
 
 
 # Only one response shape today; kept as a named alias so routes and agents have

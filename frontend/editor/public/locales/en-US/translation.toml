@@ -7735,6 +7735,7 @@ integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
+review = "Review"
 settings = "Settings"
 sources = "Sources"
 usage = "Usage & Billing"
@@ -8310,6 +8311,9 @@ helper = "When the policy fires: on upload, or before export."
 label = "Run on"
 upload = "Upload"
 
+[portal.policies.wizard.review]
+description = "Optionally hold classified files for a person to approve before they are delivered. The conditions are team-wide and can also be changed later from the Review page."
+
 [portal.policies.wizard.settings]
 heading = "Settings"
 
@@ -8319,6 +8323,7 @@ loading = "Loading sources…"
 
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"
+review = "Review"
 settings = "Settings"
 workflow = "Actions"
 
@@ -8649,6 +8654,144 @@ homeBadge = "Enterprise"
 homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutable audit, and a dedicated SE."
 homeCta = "Start Trial →"
 homeHeadline = "Process millions of PDFs."
+
+[portal.review]
+subtitle = "Files held before delivery because they hit one of your review conditions."
+title = "Review"
+
+[portal.review.actions]
+approve = "Approve"
+approveHint = "Releases the file to {{destination}}."
+confirmReject = "Confirm reject"
+reject = "Reject"
+retryHint = "Ignores the error and sends the file through the pipeline again (to {{destination}}). The copy kept for review is deleted."
+
+[portal.review.bulk]
+approveAll = "Approve all"
+cancel = "Cancel"
+partial = "{{succeeded}} resolved, {{count}} could not be. They may already have been decided elsewhere."
+rejectAll = "Reject and delete all"
+
+[portal.review.bulk.approve]
+confirm = "Approve {{count}} files"
+destinations = "Sending to: {{destinations}}"
+title = "Approve all {{count}} files?"
+warning = "These files were held so a person could read them. Approving them all sends every one to its destination without anyone checking it. Classification can be wrong."
+
+[portal.review.bulk.reject]
+confirm = "Delete {{count}} files"
+title = "Reject and delete all {{count}} files?"
+warning = "The held copies are deleted from the server and never reach their destination. This cannot be undone."
+
+[portal.review.config]
+disclaimer = "Classification can be wrong. Check documents before sharing them."
+save = "Save review settings"
+saved = "Saved"
+
+[portal.review.config.advanced]
+heading = "Advanced conditions"
+
+[portal.review.config.categories]
+heading = "Watched categories"
+hint = "Hold every document classified into a category, or expand one to watch specific types."
+none = "Nothing watched yet"
+tally_one = "{{count}} document type watched"
+tally_other = "{{count}} document types watched"
+
+[portal.review.config.enabled]
+description = "Files from your sources (S3, folders, webhooks) that match a condition below wait here for approval instead of being delivered. Files people work on in the editor are never held."
+label = "Hold files for review"
+
+[portal.review.config.family]
+all = "All types"
+aria = "Hold all {{category}} documents"
+off = "Off"
+some = "{{selected}} of {{total}}"
+
+[portal.review.config.holdFailedRuns]
+description = "When a run fails, keep its files here rather than dropping them."
+label = "Hold failed runs"
+
+[portal.review.config.holdLowConfidence]
+description = "Hold documents the AI could not classify confidently."
+label = "Hold low-confidence classifications"
+
+[portal.review.config.holdUnlabeled]
+description = "Hold documents the classifier could not match to any type."
+label = "Hold documents that get no label"
+
+[portal.review.config.threshold]
+label = "Confidence threshold"
+
+[portal.review.empty.filtered]
+description = "No held files match these filters."
+title = "No matches"
+
+[portal.review.empty.pending]
+description = "Files that hit a review condition will wait here before delivery."
+title = "Nothing to review"
+
+[portal.review.empty.resolved]
+description = "Approved and rejected files will be listed here."
+title = "No decisions yet"
+
+[portal.review.filters]
+allLabels = "All labels"
+allPolicies = "All policies"
+allReasons = "All reasons"
+clear = "Clear filters"
+label = "Label"
+policy = "Policy"
+reason = "Reason"
+showing = "{{shown}} of {{total}}"
+
+[portal.review.modal]
+destination = "Destination: {{destination}}"
+held = "Held {{when}}"
+heldBecause = "Held because"
+labels = "Labels"
+nextPage = "Next page"
+pageAlt = "Page {{page}} of {{total}}"
+pageCount = "{{page}} / {{total}}"
+pipeline = "Pipeline"
+prevPage = "Previous page"
+stepsUnavailable = "Pipeline steps unavailable (policy may have been deleted)."
+
+[portal.review.reason]
+lowConfidence = "Low confidence: {{label}}"
+noLabel = "No label matched"
+runFailed = "Policy run failed"
+skippedLabel = "Possible {{label}}, not assigned"
+watchedLabel = "Watched label: {{label}}"
+
+[portal.review.reasonKind]
+lowConfidence = "Low confidence"
+noLabel = "No label"
+runFailed = "Run failed"
+skippedLabel = "Possible label"
+watchedLabel = "Watched label"
+
+[portal.review.status]
+approved = "Approved"
+rejected = "Rejected"
+
+[portal.review.table]
+decision = "Decision"
+file = "File"
+held = "Held"
+inputCopy = "Original input (never processed)"
+labels = "Labels"
+noFiles = "No files kept"
+policy = "Policy"
+reason = "Reason"
+resolvedBy = "Reviewed by"
+sortByDate = "Sort by date held"
+
+[portal.review.tabs]
+aria = "Review queue"
+pending = "Awaiting review"
+resolved = "Resolved"
+settings = "Settings"
 
 [portal.search]
 ariaLabel = "Search"

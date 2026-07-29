@@ -8,6 +8,7 @@ import {
   PoliciesIcon,
   PipelinesIcon,
   DocumentsIcon,
+  ReviewIcon,
   InfrastructureIcon,
   UsageIcon,
   DocsIcon,
@@ -36,6 +37,7 @@ export const GROUP_PROCESSOR: NavEntry[] = [
   { id: "policies", icon: <PoliciesIcon /> },
   { id: "pipelines", icon: <PipelinesIcon /> },
   { id: "documents", icon: <DocumentsIcon /> },
+  { id: "review", icon: <ReviewIcon /> },
 ];
 
 // The wider platform around the processor: people, connections, infra, billing, docs.

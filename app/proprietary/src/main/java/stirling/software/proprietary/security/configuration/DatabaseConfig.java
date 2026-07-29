@@ -35,6 +35,7 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
             "stirling.software.proprietary.policy.store",
             "stirling.software.proprietary.policy.source",
             "stirling.software.proprietary.policy.ledger",
+            "stirling.software.proprietary.policy.review.store",
             "stirling.software.proprietary.accountlink",
             "stirling.software.proprietary.access.repository",
             "stirling.software.proprietary.integration.repository"
@@ -47,6 +48,7 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
     "stirling.software.proprietary.policy.store",
     "stirling.software.proprietary.policy.source",
     "stirling.software.proprietary.policy.ledger",
+    "stirling.software.proprietary.policy.review.store",
     "stirling.software.proprietary.accountlink",
     "stirling.software.proprietary.access.model",
     "stirling.software.proprietary.integration.model"

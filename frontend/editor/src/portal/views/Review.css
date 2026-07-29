@@ -1,0 +1,128 @@
+/* Matches the other processor pages (Sources, EditorAdmin): centred column,
+   not full-bleed. */
+.portal-review {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+.portal-review__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.portal-review__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.portal-review__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+
+/* filter bar */
+.portal-review__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-review__filters > div,
+.portal-review__filters > label {
+  min-width: 11rem;
+}
+
+/* whole-queue decisions, after the count so they sit at the right edge */
+.portal-review__bulk {
+  display: flex;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.portal-review__count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+
+/* sortable column header sits flush in the header cell */
+.portal-review__sort {
+  padding: 0;
+  height: auto;
+  font: inherit;
+  font-weight: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+}
+
+.portal-review__sort-icon {
+  font-size: 0.875rem !important;
+  transition: transform 0.15s;
+}
+
+.portal-review__sort-icon--asc {
+  transform: rotate(180deg);
+}
+
+.portal-review__table-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.portal-review__muted {
+  color: var(--c-text-muted);
+}
+
+.portal-review__file-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.portal-review__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.portal-review__actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.portal-review__settings {
+  margin-top: 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg, 0.75rem);
+  background: var(--c-surface);
+}
+
+.portal-review__settings-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+/* filename buttons sit flush-left so they align with the note text below */
+.portal-review__file-btn {
+  padding-inline: 0;
+  height: auto;
+  justify-content: flex-start;
+}

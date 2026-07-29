@@ -1,0 +1,151 @@
+.review-modal__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  gap: 1.25rem;
+  min-height: 28rem;
+}
+
+/* ── preview (left) ────────────────────────────────────────────────── */
+
+.review-modal__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.review-modal__files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.review-modal__loading {
+  flex: 1 1 auto;
+}
+
+.review-modal__page-wrap {
+  flex: 1 1 auto;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md, 0.5rem);
+  padding: 0.75rem;
+  max-height: 60vh;
+}
+
+.review-modal__page {
+  max-width: 100%;
+  height: auto;
+  box-shadow: var(--shadow-md);
+  background: white;
+}
+
+.review-modal__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.review-modal__page-count {
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+  min-width: 4rem;
+  text-align: center;
+}
+
+/* ── details rail (right) ──────────────────────────────────────────── */
+
+.review-modal__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-left: 1px solid var(--c-border-subtle);
+  padding-left: 1.25rem;
+  min-width: 0;
+}
+
+.review-modal__heading {
+  margin: 0 0 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+
+.review-modal__reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.review-modal__detail {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--c-text-muted);
+  word-break: break-word;
+  /* Failure details can embed whole stack traces; keep the rail sane. */
+  max-height: 7.5rem;
+  overflow-y: auto;
+}
+
+.review-modal__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.review-modal__policy {
+  margin: 0 0 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.review-modal__steps {
+  margin: 0;
+  padding-left: 1.125rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  text-transform: capitalize;
+}
+
+.review-modal__meta {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.review-modal__actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+@media (max-width: 48rem) {
+  .review-modal__body {
+    grid-template-columns: 1fr;
+  }
+
+  .review-modal__rail {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--c-border-subtle);
+    padding-top: 1rem;
+  }
+}

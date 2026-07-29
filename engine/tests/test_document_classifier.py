@@ -9,14 +9,18 @@ import pytest
 from stirling.agents.document_classifier import (
     MAX_ASSIGNED_LABELS,
     DocumentClassifierAgent,
+    _AssignedLabel,
     _ClassifierOutput,
+    _ConsideredLabel,
     render_labels,
     select_window,
     validate_labels,
 )
 from stirling.contracts import (
     ClassifyDocumentRequest,
+    ConsideredLabel,
     DocumentClassificationResponse,
+    LabelAssignment,
     LabelOption,
     PageText,
 )
@@ -34,6 +38,11 @@ def _slug(name: str) -> str:
 def _opts(*names: str) -> list[LabelOption]:
     """Allowed vocabulary from names, with slug ids (mirrors the frontend)."""
     return [LabelOption(id=_slug(name), name=name) for name in names]
+
+
+def _output(*names: str, confidence: float = 0.9) -> _ClassifierOutput:
+    """Model answer assigning the given names, all with the same confidence."""
+    return _ClassifierOutput(assignments=[_AssignedLabel(label=name, confidence=confidence) for name in names])
 
 
 # ── select_window ───────────────────────────────────────────────────────────
@@ -64,46 +73,101 @@ def test_select_window_zero_returns_all() -> None:
 
 def test_valid_labels_are_preserved_in_order() -> None:
     # Model answers with names; the result is the matching label ids.
-    output = _ClassifierOutput(labels=["Invoice", "Receipt"])
+    output = _output("Invoice", "Receipt")
     result = validate_labels(output, _opts("Invoice", "Receipt", "Purchase order"))
     assert isinstance(result, DocumentClassificationResponse)
     assert result.labels == ["invoice", "receipt"]
 
 
 def test_off_list_labels_are_dropped() -> None:
-    output = _ClassifierOutput(labels=["Invoice", "Warp core", "Receipt"])
+    output = _output("Invoice", "Warp core", "Receipt")
     result = validate_labels(output, _opts("Invoice", "Receipt"))
     assert result.labels == ["invoice", "receipt"]
 
 
 def test_matching_is_case_insensitive_and_returns_ids() -> None:
-    output = _ClassifierOutput(labels=["invoice", " CREDIT NOTE "])
+    output = _output("invoice", " CREDIT NOTE ")
     result = validate_labels(output, _opts("Invoice", "Credit note"))
     assert result.labels == ["invoice", "credit-note"]
 
 
 def test_duplicates_collapse_to_first_occurrence() -> None:
-    output = _ClassifierOutput(labels=["Invoice", "invoice", "Receipt", "INVOICE"])
+    output = _output("Invoice", "invoice", "Receipt", "INVOICE")
     result = validate_labels(output, _opts("Invoice", "Receipt"))
     assert result.labels == ["invoice", "receipt"]
 
 
 def test_result_is_capped_at_max_assigned_labels() -> None:
     allowed = _opts(*[f"Label {n}" for n in range(10)])
-    output = _ClassifierOutput(labels=[label.name for label in allowed])
+    output = _output(*[label.name for label in allowed])
     result = validate_labels(output, allowed)
     assert result.labels == [label.id for label in allowed[:MAX_ASSIGNED_LABELS]]
+    assert [a.label_id for a in result.assignments] == result.labels
 
 
 def test_empty_answer_is_valid() -> None:
-    result = validate_labels(_ClassifierOutput(labels=[]), _opts("Invoice"))
+    result = validate_labels(_ClassifierOutput(), _opts("Invoice"))
     assert result.labels == []
+    assert result.assignments == []
+    assert result.considered == []
 
 
 def test_entirely_off_list_answer_yields_empty_result() -> None:
-    output = _ClassifierOutput(labels=["Spaceship", "Boarding pass"])
+    output = _output("Spaceship", "Boarding pass")
     result = validate_labels(output, _opts("Invoice", "Receipt"))
     assert result.labels == []
+
+
+def test_assignment_confidences_survive_name_to_id_mapping() -> None:
+    output = _ClassifierOutput(
+        assignments=[
+            _AssignedLabel(label="invoice", confidence=0.93),
+            _AssignedLabel(label=" CREDIT NOTE ", confidence=0.41),
+        ]
+    )
+    result = validate_labels(output, _opts("Invoice", "Credit note"))
+    assert result.assignments == [
+        LabelAssignment(label_id="invoice", confidence=0.93),
+        LabelAssignment(label_id="credit-note", confidence=0.41),
+    ]
+
+
+def test_considered_labels_are_mapped_and_off_list_entries_dropped() -> None:
+    output = _ClassifierOutput(
+        assignments=[_AssignedLabel(label="Invoice", confidence=0.9)],
+        considered=[
+            _ConsideredLabel(label=" MEDICAL FORM ", confidence=0.35, reason="mentions a patient"),
+            _ConsideredLabel(label="Warp core", confidence=0.2, reason="off the list"),
+        ],
+    )
+    result = validate_labels(output, _opts("Invoice", "Medical form"))
+    assert result.considered == [ConsideredLabel(label_id="medical-form", confidence=0.35, reason="mentions a patient")]
+
+
+def test_assigned_labels_are_removed_from_considered() -> None:
+    output = _ClassifierOutput(
+        assignments=[_AssignedLabel(label="Invoice", confidence=0.9)],
+        considered=[
+            _ConsideredLabel(label="invoice", confidence=0.3, reason="also weighed"),
+            _ConsideredLabel(label="Receipt", confidence=0.25, reason="has line items"),
+        ],
+    )
+    result = validate_labels(output, _opts("Invoice", "Receipt"))
+    assert result.labels == ["invoice"]
+    assert [c.label_id for c in result.considered] == ["receipt"]
+
+
+def test_labels_always_mirror_assignment_ids() -> None:
+    output = _ClassifierOutput(
+        assignments=[
+            _AssignedLabel(label="Receipt", confidence=0.8),
+            _AssignedLabel(label="Off list", confidence=0.7),
+            _AssignedLabel(label="Invoice", confidence=0.6),
+        ]
+    )
+    result = validate_labels(output, _opts("Invoice", "Receipt"))
+    assert result.labels == [a.label_id for a in result.assignments]
+    assert result.labels == ["receipt", "invoice"]
 
 
 # ── render_labels ────────────────────────────────────────────────────────────
@@ -123,7 +187,8 @@ def test_render_labels_handles_empty_vocabulary() -> None:
 
 
 def _stub_model_answer(agent: DocumentClassifierAgent, labels: list[str]) -> AsyncMock:
-    mock = AsyncMock(return_value=SimpleNamespace(output=_ClassifierOutput(labels=labels)))
+    output = _ClassifierOutput(assignments=[_AssignedLabel(label=name, confidence=0.9) for name in labels])
+    mock = AsyncMock(return_value=SimpleNamespace(output=output))
     agent._agent.run = mock
     return mock
 

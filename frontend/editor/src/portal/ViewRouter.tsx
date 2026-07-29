@@ -8,6 +8,7 @@ import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
 import { Integrations } from "@portal/views/Integrations";
 import { Policies } from "@portal/views/Policies";
+import { Review } from "@portal/views/Review";
 import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
@@ -56,6 +57,7 @@ export function ViewRouter() {
       <Route path={rel(VIEW_PATHS.integrations)} element={<Integrations />} />
       <Route path={rel(VIEW_PATHS.policies)} element={<Policies />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
+      <Route path={rel(VIEW_PATHS.review)} element={<Review />} />
       <Route path={rel(VIEW_PATHS.editor)} element={<EditorAdmin />} />
       <Route
         path={rel(VIEW_PATHS.infrastructure)}
