@@ -89,10 +89,15 @@
     "color-contrast"
   ],
   "editor/src/core/components/filesPage/FolderAppearancePicker.stories.tsx :: Default": [
-    "color-contrast"
+    "color-contrast",
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/components/filesPage/FolderAppearancePicker.stories.tsx :: Disabled": [
+    "scrollable-region-focusable"
   ],
   "editor/src/core/components/filesPage/FolderAppearancePicker.stories.tsx :: No Appearance Set": [
-    "color-contrast"
+    "color-contrast",
+    "scrollable-region-focusable"
   ],
   "editor/src/core/components/filesPage/FolderNameDialog.stories.tsx :: Default": [
     "button-name",
@@ -352,6 +357,15 @@
   ],
   "editor/src/core/components/shared/PageSelectionSyntaxHint.stories.tsx :: Syntax Error": [
     "color-contrast"
+  ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Default": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Empty": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Enforcing": [
+    "scrollable-region-focusable"
   ],
   "editor/src/core/components/shared/ShareFileModal.stories.tsx :: Default": [
     "button-name",
