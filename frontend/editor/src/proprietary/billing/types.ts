@@ -50,6 +50,12 @@ export interface Wallet {
   freeRemaining: number;
   /** Paid per-document rate in minor units (may be fractional); null = unknown (render "unknown", never substitute). */
   pricePerDocMinor: number | null;
+  /**
+   * Per-credit rate of the prepaid-bundle Stripe Price ({@code bundle:processor}) in minor units;
+   * null when unresolved. What the bundle calculator prices its pool at so the estimate matches the
+   * checkout charge — distinct from {@link pricePerDocMinor} (the metered per-doc rate).
+   */
+  bundleRatePerCreditMinor: number | null;
   /** Lower-case ISO 4217; null when unknown. */
   currency: string | null;
   /** Estimated charges so far this period in minor units; null when the rate is unknown. The Stripe invoice is authoritative. */
@@ -76,6 +82,14 @@ export interface Wallet {
   uniquePdfsThisPeriod: number;
   /** Input files on charges where the size multiplier applied (units billed &gt; input files). */
   sizeMultiplierPdfsThisPeriod: number;
+  /** "prepaid" while prepaid-bundle units remain (drawn ahead of the meter), else "payg". */
+  billingMode: "prepaid" | "payg";
+  /** Prepaid units still available across the team's in-term bundles; 0 = none/exhausted. */
+  prepaidUnitsRemaining: number;
+  /** Total capacity of in-term prepaid bundles — the "X of Y used" denominator; 0 = no bundle. */
+  prepaidUnitsTotal: number;
+  /** Soonest bundle term-end (ISO yyyy-mm-dd) for the countdown; null when no bundle. */
+  prepaidExpiresAt: string | null;
   /** Populated for the leader view; empty for members / single-seat tenants. */
   members: WalletMember[];
   recent: WalletActivityRow[];
