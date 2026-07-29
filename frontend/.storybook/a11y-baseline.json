@@ -363,6 +363,15 @@
     "button-name",
     "color-contrast"
   ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Default": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Empty": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Enforcing": [
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/components/shared/ShareFileModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
@@ -1357,30 +1366,72 @@
   "editor/src/core/components/viewer/nonpdf/TextViewer.stories.tsx :: Markdown": [
     "color-contrast"
   ],
-  "editor/src/core/tokens/Tokens.stories.tsx :: Colours": ["color-contrast"],
-  "editor/src/core/ui/Banner.stories.tsx :: Playground": ["color-contrast"],
-  "editor/src/core/ui/Banner.stories.tsx :: Success": ["color-contrast"],
-  "editor/src/core/ui/Banner.stories.tsx :: Tone Matrix": ["color-contrast"],
-  "editor/src/core/ui/Banner.stories.tsx :: With Action": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Accents": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Disabled Dark": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Loading": ["button-name"],
-  "editor/src/core/ui/Button.stories.tsx :: Padding": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Playground": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Shape": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Sizes": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Variants": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: With Icons": ["color-contrast"],
-  "editor/src/core/ui/ChatFABButton.stories.tsx :: Default": ["button-name"],
-  "editor/src/core/ui/ChatFABButton.stories.tsx :: Loading": ["button-name"],
-  "editor/src/core/ui/ChatFABButton.stories.tsx :: Tick": ["button-name"],
+  "editor/src/core/tokens/Tokens.stories.tsx :: Colours": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Banner.stories.tsx :: Playground": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Banner.stories.tsx :: Success": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Banner.stories.tsx :: Tone Matrix": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Banner.stories.tsx :: With Action": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: Accents": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: Disabled Dark": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: Loading": [
+    "button-name"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: Padding": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: Playground": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: Shape": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: Sizes": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: Variants": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Button.stories.tsx :: With Icons": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/ChatFABButton.stories.tsx :: Default": [
+    "button-name"
+  ],
+  "editor/src/core/ui/ChatFABButton.stories.tsx :: Loading": [
+    "button-name"
+  ],
+  "editor/src/core/ui/ChatFABButton.stories.tsx :: Tick": [
+    "button-name"
+  ],
   "editor/src/core/ui/ChatFABButton.stories.tsx :: Tick While Loading": [
     "button-name"
   ],
-  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Open": ["color-contrast"],
-  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Toggle": ["color-contrast"],
-  "editor/src/core/ui/Chip.stories.tsx :: Accents": ["color-contrast"],
-  "editor/src/core/ui/Chip.stories.tsx :: Dashed Add": ["nested-interactive"],
+  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Open": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Toggle": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Chip.stories.tsx :: Accents": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Chip.stories.tsx :: Dashed Add": [
+    "nested-interactive"
+  ],
   "editor/src/core/ui/Chip.stories.tsx :: In Context Op Chain": [
     "color-contrast"
   ],
@@ -1398,7 +1449,9 @@
     "color-contrast",
     "scrollable-region-focusable"
   ],
-  "editor/src/core/ui/CodeBlock.stories.tsx :: Playground": ["color-contrast"],
+  "editor/src/core/ui/CodeBlock.stories.tsx :: Playground": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/Drawer.stories.tsx :: Playground": [
     "aria-allowed-role",
     "color-contrast"
@@ -1407,10 +1460,18 @@
     "aria-allowed-role",
     "color-contrast"
   ],
-  "editor/src/core/ui/EmptyState.stories.tsx :: With CT As": ["color-contrast"],
-  "editor/src/core/ui/FilePicker.stories.tsx :: Accept Pdf": ["color-contrast"],
-  "editor/src/core/ui/FilePicker.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/FilePicker.stories.tsx :: Multiple": ["color-contrast"],
+  "editor/src/core/ui/EmptyState.stories.tsx :: With CT As": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/FilePicker.stories.tsx :: Accept Pdf": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/FilePicker.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/FilePicker.stories.tsx :: Multiple": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/Forms.stories.tsx :: Checkbox Grid Of Categories": [
     "color-contrast"
   ],
@@ -1418,10 +1479,18 @@
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/Forms.stories.tsx :: Input Default": ["color-contrast"],
-  "editor/src/core/ui/Forms.stories.tsx :: Input Error": ["color-contrast"],
-  "editor/src/core/ui/Forms.stories.tsx :: Input With Icon": ["color-contrast"],
-  "editor/src/core/ui/Forms.stories.tsx :: Radio Group": ["color-contrast"],
+  "editor/src/core/ui/Forms.stories.tsx :: Input Default": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Forms.stories.tsx :: Input Error": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Forms.stories.tsx :: Input With Icon": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Forms.stories.tsx :: Radio Group": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/Forms.stories.tsx :: Radio Horizontal": [
     "color-contrast"
   ],
@@ -1433,10 +1502,18 @@
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/Inline.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/Inline.stories.tsx :: Space Between": ["color-contrast"],
-  "editor/src/core/ui/Inline.stories.tsx :: Wrap": ["color-contrast"],
-  "editor/src/core/ui/ListRow.stories.tsx :: In Card": ["color-contrast"],
+  "editor/src/core/ui/Inline.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Inline.stories.tsx :: Space Between": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Inline.stories.tsx :: Wrap": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/ListRow.stories.tsx :: In Card": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/MantineForms.stories.tsx :: Color Input Default": [
     "button-name",
     "color-contrast"
@@ -1511,14 +1588,24 @@
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MethodBadge.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/MethodBadge.stories.tsx :: In Row": ["color-contrast"],
-  "editor/src/core/ui/MethodBadge.stories.tsx :: Matrix": ["color-contrast"],
-  "editor/src/core/ui/MetricCard.stories.tsx :: Playground": ["color-contrast"],
+  "editor/src/core/ui/MethodBadge.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/MethodBadge.stories.tsx :: In Row": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/MethodBadge.stories.tsx :: Matrix": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/MetricCard.stories.tsx :: Playground": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/MetricCard.stories.tsx :: Pro Tier Strip": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MetricStrip.stories.tsx :: Default": ["color-contrast"],
+  "editor/src/core/ui/MetricStrip.stories.tsx :: Default": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/NavItem.stories.tsx :: In Context Sidebar Group": [
     "color-contrast"
   ],
@@ -1540,16 +1627,36 @@
   "editor/src/core/ui/SegmentedControl.stories.tsx :: With Icons": [
     "color-contrast"
   ],
-  "editor/src/core/ui/SettingsRow.stories.tsx :: List": ["label"],
-  "editor/src/core/ui/SettingsRow.stories.tsx :: Select Control": ["label"],
-  "editor/src/core/ui/SettingsRow.stories.tsx :: Toggle": ["label"],
-  "editor/src/core/ui/SettingsRow.stories.tsx :: With Description": ["label"],
-  "editor/src/core/ui/SettingsShell.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/StatTile.stories.tsx :: Tone Row": ["color-contrast"],
-  "editor/src/core/ui/StatusBadge.stories.tsx :: All Tones": ["color-contrast"],
-  "editor/src/core/ui/StatusBadge.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/StatusBadge.stories.tsx :: Live": ["color-contrast"],
-  "editor/src/core/ui/StatusBadge.stories.tsx :: Sizes": ["color-contrast"],
+  "editor/src/core/ui/SettingsRow.stories.tsx :: List": [
+    "label"
+  ],
+  "editor/src/core/ui/SettingsRow.stories.tsx :: Select Control": [
+    "label"
+  ],
+  "editor/src/core/ui/SettingsRow.stories.tsx :: Toggle": [
+    "label"
+  ],
+  "editor/src/core/ui/SettingsRow.stories.tsx :: With Description": [
+    "label"
+  ],
+  "editor/src/core/ui/SettingsShell.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/StatTile.stories.tsx :: Tone Row": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/StatusBadge.stories.tsx :: All Tones": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/StatusBadge.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/StatusBadge.stories.tsx :: Live": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/StatusBadge.stories.tsx :: Sizes": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/StepIndicator.stories.tsx :: Small": [
     "aria-progressbar-name"
   ],
@@ -1562,16 +1669,24 @@
   "editor/src/core/ui/StepIndicator.stories.tsx :: Step 3": [
     "aria-progressbar-name"
   ],
-  "editor/src/core/ui/Table.stories.tsx :: Basic": ["color-contrast"],
-  "editor/src/core/ui/Table.stories.tsx :: Interactive": ["color-contrast"],
+  "editor/src/core/ui/Table.stories.tsx :: Basic": [
+    "color-contrast"
+  ],
+  "editor/src/core/ui/Table.stories.tsx :: Interactive": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/Tabs.stories.tsx :: In Context Document Verticals": [
     "color-contrast"
   ],
-  "editor/src/core/ui/Tabs.stories.tsx :: Playground": ["color-contrast"],
+  "editor/src/core/ui/Tabs.stories.tsx :: Playground": [
+    "color-contrast"
+  ],
   "editor/src/core/ui/Tabs.stories.tsx :: With Disabled Tab": [
     "color-contrast"
   ],
-  "editor/src/core/ui/Toast.stories.tsx :: Triggers": ["color-contrast"],
+  "editor/src/core/ui/Toast.stories.tsx :: Triggers": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/AppShell.stories.tsx :: Mobile": [
     "color-contrast"
   ],
@@ -2252,11 +2367,15 @@
   "editor/src/portal/data/Endpoints.stories.tsx :: By Vertical": [
     "color-contrast"
   ],
-  "editor/src/portal/data/Ops.stories.tsx :: Agents": ["color-contrast"],
+  "editor/src/portal/data/Ops.stories.tsx :: Agents": [
+    "color-contrast"
+  ],
   "editor/src/portal/data/Ops.stories.tsx :: Library By Category": [
     "color-contrast"
   ],
-  "editor/src/portal/data/Ops.stories.tsx :: Pipeline Ops": ["color-contrast"],
+  "editor/src/portal/data/Ops.stories.tsx :: Pipeline Ops": [
+    "color-contrast"
+  ],
   "editor/src/portal/theme/MantineIntegration.stories.tsx :: Side By Side": [
     "color-contrast"
   ],
@@ -2281,7 +2400,9 @@
     "landmark-no-duplicate-banner",
     "landmark-unique"
   ],
-  "editor/src/portal/views/Home.stories.tsx :: Free Tier": ["color-contrast"],
+  "editor/src/portal/views/Home.stories.tsx :: Free Tier": [
+    "color-contrast"
+  ],
   "editor/src/portal/views/Home.stories.tsx :: Pro Tier": [
     "color-contrast",
     "landmark-no-duplicate-banner",
@@ -2309,8 +2430,12 @@
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/views/Policies.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/portal/views/Policies.stories.tsx :: Empty": ["color-contrast"],
+  "editor/src/portal/views/Policies.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/portal/views/Policies.stories.tsx :: Empty": [
+    "color-contrast"
+  ],
   "editor/src/portal/views/Sources.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
