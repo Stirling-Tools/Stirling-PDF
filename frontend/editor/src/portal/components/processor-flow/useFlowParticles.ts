@@ -4,10 +4,12 @@ import {
   cbez,
   coreEntryY,
   smooth,
+  EMIT_DIVISOR,
+  EMIT_SPREAD_CAP,
+  MAX_EMIT_PER_SEC,
   MAX_PARTICLES,
   MIN_EMIT_GAP,
   OUTCOME_FILL,
-  SPEED,
   type Geo,
   type Lens,
   type Particle,
@@ -28,17 +30,8 @@ interface FlowParticlesOptions {
   outcomeKeys: FlowOutcomeKey[];
 }
 
-/**
- * Drives the rAF particle loop: emits dots per source on a jittered schedule
- * (min-gap floored), routes each to an outcome via a weighted round-robin so
- * the split matches the counts, threads it through a policy lane (blinking that
- * row's LED), and recolours it to the outcome on arrival. Reads geometry live
- * from `geoRef`, so it tracks card movement without restarting.
- *
- * Returns the `<g>` ref the caller mounts inside the particle overlay `<svg>`.
- * The loop only runs on the flow lens, when `animate` is set, and outside
- * reduced-motion; browsers pause rAF for hidden tabs (desirable).
- */
+/** rAF particle loop: emits jittered dots per source, routes each to an outcome by
+ *  weighted round-robin through a policy lane. Returns the overlay `<g>` ref. */
 export function useFlowParticles({
   geoRef,
   animate,
@@ -76,25 +69,30 @@ export function useFlowParticles({
     let raf = 0;
     const glowTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 
-    // Per-source emission schedule. Mean interval keeps each source's share of
-    // the flow proportional to its rate; the scheduled model (vs. a steady
-    // accumulator) is what lets us jitter departures and floor the gap.
-    const meanInterval = rates.map((r) => {
-      const perSec = (r / 86400) * SPEED;
-      return perSec > 0 ? 1000 / perSec : Infinity;
-    });
+    // Per-source dots/sec: ~linear with volume, capped at MAX_EMIT_PER_SEC.
+    // Scheduled (not accumulated) so we can jitter departures and floor the gap.
+    const rawPerSec = rates.map((r) =>
+      r > 0 ? Math.min(MAX_EMIT_PER_SEC, r / EMIT_DIVISOR) : 0,
+    );
+    // Bound the spread: the busiest source emits at most EMIT_SPREAD_CAP× the
+    // quietest, so a dominant source can't starve the others.
+    const busiest = Math.max(0, ...rawPerSec);
+    const floorPerSec = busiest / EMIT_SPREAD_CAP;
+    const meanInterval = rawPerSec.map((p) =>
+      p > 0 ? 1000 / Math.max(p, floorPerSec) : Infinity,
+    );
     // Stagger the first emission so sources don't all fire together at t=0.
     const nextEmit = meanInterval.map((mi) =>
       Number.isFinite(mi) ? last + Math.random() * mi : Infinity,
     );
-    // Random departure within [0.5×, 1.5×] the mean, but never closer than the
-    // minimum gap — a random flow with no two dots out at once per source.
+    // Random departure within [0.4×, 1.7×] the mean, but never closer than the
+    // minimum gap — a scattered flow with no two dots out at once per source.
     const scheduleNext = (i: number, now: number): number =>
-      now + Math.max(MIN_EMIT_GAP, meanInterval[i] * (0.5 + Math.random()));
+      now +
+      Math.max(MIN_EMIT_GAP, meanInterval[i] * (0.4 + Math.random() * 1.3));
 
-    // Weighted round-robin so the outcome split visibly matches the counts
-    // (e.g. 3 failed / 30 delivered → ~1 in 11 dots to Failed), interleaved
-    // rather than clustered like independent random draws.
+    // Weighted round-robin so the outcome split matches the counts, evenly
+    // interleaved (e.g. 3 failed / 30 delivered → ~1 in 11 dots to Failed).
     const outAcc = weights.map(() => 0);
     const pickOut = (): number => {
       if (!weights.length) return 0;
@@ -142,7 +140,7 @@ export function useFlowParticles({
             ) as SVGCircleElement;
             c.setAttribute("r", "2.5");
             c.setAttribute("opacity", "0.75");
-            c.style.fill = "var(--color-blue)";
+            c.style.fill = "var(--c-primary)";
             pg.appendChild(c);
             particles.push({
               el: c,
@@ -151,9 +149,10 @@ export function useFlowParticles({
               lane: pickLane(),
               phase: 0,
               t: 0,
-              d0: 900 + Math.random() * 300,
-              d1: 760,
-              d2: 780 + Math.random() * 200,
+              // Faster travel than before (~2× quicker) so the flow reads lively.
+              d0: 460 + Math.random() * 220,
+              d1: 380,
+              d2: 400 + Math.random() * 200,
               pulsed: false,
             });
             nextEmit[i] = scheduleNext(i, now);
@@ -203,21 +202,24 @@ export function useFlowParticles({
               yy = entY + (exitY - entY) * f1;
             } else if (f1 < 0.25) {
               yy = entY + (ly1 - entY) * smooth(f1 / 0.25);
-            } else if (f1 < 0.75) {
-              yy = ly1;
+            } else {
+              // Pulse once on reaching the lane — even if a slow frame overshoots
+              // the 0.25–0.75 window straight into the glide-out segment.
               if (!p.pulsed) {
                 p.pulsed = true;
                 pulseLane(g, p.lane);
               }
-            } else {
-              yy = ly1 + (exitY - ly1) * smooth((f1 - 0.75) / 0.25);
+              yy =
+                f1 < 0.75
+                  ? ly1
+                  : ly1 + (exitY - ly1) * smooth((f1 - 0.75) / 0.25);
             }
             pos = { x: g.core.l + (g.core.r - g.core.l) * f1, y: yy };
             if (f1 >= 1) {
               p.phase = 2;
               p.t = 0;
               p.el.style.fill =
-                OUTCOME_FILL[outcomeKeys[p.out]] ?? "var(--color-blue)";
+                OUTCOME_FILL[outcomeKeys[p.out]] ?? "var(--c-primary)";
               p.el.setAttribute("r", "2.5");
               p.el.setAttribute("opacity", "0.75");
             }

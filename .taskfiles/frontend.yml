@@ -194,6 +194,22 @@ tasks:
     cmds:
       - npx storybook build {{.CLI_ARGS}}
 
+  storybook:browser:
+    internal: true
+    desc: "Install the Chromium build the story scan runs in"
+    run: once
+    deps: [install]
+    cmds:
+      - npx playwright install chromium
+
+  storybook:test:
+    desc: "Scan every story in real Chromium — each must mount without throwing"
+    deps: [install, storybook:browser]
+    cmds:
+      # Runs each story as a browser test. Pass a filter through, e.g.
+      #   task frontend:storybook:test -- Button
+      - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
+
   # ============================================================
   # Code quality
   # ============================================================
@@ -207,10 +223,14 @@ tasks:
       - task: lint:colors
 
   lint:colors:
-    desc: "Enforce theme tokens — colours in core/theme route through the palette"
+    desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
+    aliases: [lint:colours]
     deps: [install]
     cmds:
       - node editor/scripts/lint/theme-lint.mjs
+      - node editor/scripts/lint/theme-lint.mjs css-colors
+      - node editor/scripts/lint/theme-lint.mjs code-colors
+      - node editor/scripts/lint/theme-lint.mjs no-primitives
 
   contrast:
     desc: "Report low-contrast theme token pairs (warning only, never blocks)"

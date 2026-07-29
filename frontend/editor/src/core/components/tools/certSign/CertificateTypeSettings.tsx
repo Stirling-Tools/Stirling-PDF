@@ -75,7 +75,7 @@ const CertificateTypeSettings = ({
   if (!hasAlternativeSources) {
     return (
       <Stack gap="md">
-        <div style={{ color: "var(--text-muted)", fontSize: "11px" }}>
+        <div style={{ color: "var(--c-text-subtle)", fontSize: "11px" }}>
           {t(
             "certSign.source.noOtherSources",
             "No other certificate sources are available.",

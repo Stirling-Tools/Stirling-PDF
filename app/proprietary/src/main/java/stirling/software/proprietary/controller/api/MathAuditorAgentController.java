@@ -2,6 +2,7 @@ package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.api.ai.Verdict;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiToolInputValidator;
 import stirling.software.proprietary.service.MathAuditorOrchestrator;
 
@@ -46,7 +48,9 @@ import stirling.software.proprietary.service.MathAuditorOrchestrator;
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class MathAuditorAgentController {
 
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
     private final MathAuditorOrchestrator orchestrator;
+    private final AiFeatureGate aiFeatureGate;
 
     @PostMapping(value = "/math-auditor-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -77,15 +81,17 @@ public class MathAuditorAgentController {
                                             + " ignored (default: 0.01)")
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
                     BigDecimal tolerance) {
+        aiFeatureGate.requireMathAuditor();
 
         AiToolInputValidator.validatePdfUpload(fileInput);
         if (tolerance.compareTo(BigDecimal.ZERO) < 0) {
             return ResponseEntity.badRequest().build();
         }
 
+        String originalFilename = fileInput.getOriginalFilename();
         String safeName =
-                fileInput.getOriginalFilename() != null
-                        ? fileInput.getOriginalFilename().replaceAll("[\\r\\n]", "_")
+                originalFilename != null
+                        ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
                         : "<unnamed>";
         log.info("[math-auditor-agent] request file={} tolerance={}", safeName, tolerance);
 

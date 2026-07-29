@@ -48,13 +48,23 @@ import {
 import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
-import { fetchSources, type SourceView } from "@portal/api/sources";
+import { type SourceView } from "@portal/api/sources";
+import { useSources } from "@portal/queries/sources";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
+import {
+  integrationStepConfigured,
+  isIntegrationStep,
+  newIntegrationStep,
+  stepOperation,
+} from "@portal/components/pipelines/integrationStep";
 import "@portal/views/PipelineBuilder.css";
 
 type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
@@ -104,6 +114,16 @@ function parseTrigger(trigger: TriggerConfig | null): {
 export function PipelineBuilder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  // Pipelines are stored as policies, so a save/delete must invalidate both the
+  // pipelines overview and the policies caches (Policies page + Home) before
+  // navigating back to the list.
+  const invalidatePipelines = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: qk.pipelines() }),
+      queryClient.invalidateQueries({ queryKey: qk.policiesList() }),
+      queryClient.invalidateQueries({ queryKey: qk.policyRuns() }),
+    ]);
   const { id } = useParams();
   const isEdit = Boolean(id);
   const { allTools } = useToolRegistry();
@@ -116,24 +136,28 @@ export function PipelineBuilder() {
     async () => (id ? await fetchPipeline(id) : null),
     [id],
   );
-  const sourcesState = useAsync<SourceView[]>(
-    // The editor is a built-in, client-driven source (it runs on editor upload, not as a pipeline
-    // input), so it's excluded from the sources a pipeline can pull from.
-    async () =>
-      (await fetchSources()).sources.filter(
-        (source) => source.type !== EDITOR_SOURCE_TYPE,
-      ),
-    [],
-  );
+  const sourcesState = useSources();
   const triggersState = useAsync<TriggerInfo[]>(
     async () => await fetchTriggers(),
     [],
   );
-  const availableSources = sourcesState.data ?? [];
+  // The editor is a built-in, client-driven source (it runs on editor upload,
+  // not as a pipeline input), so it's excluded from a pipeline's inputs.
+  const availableSources = useMemo<SourceView[]>(
+    () =>
+      (sourcesState.data?.sources ?? []).filter(
+        (source) => source.type !== EDITOR_SOURCE_TYPE,
+      ),
+    [sourcesState.data],
+  );
   // A destination is a source used as a write target: only writable types (folder/S3, filtered per
   // deployment) can be picked, and the virtual editor is already excluded from availableSources.
-  const writableSources = availableSources.filter((s) =>
-    (availableOutputModes() as string[]).includes(s.type),
+  const writableSources = useMemo<SourceView[]>(
+    () =>
+      availableSources.filter((source) =>
+        (availableOutputModes() as string[]).includes(source.type),
+      ),
+    [availableSources],
   );
   const triggers = useMemo(
     () => triggersState.data ?? [],
@@ -228,6 +252,15 @@ export function PipelineBuilder() {
     );
   }
 
+  function addOperationStep(op: (typeof STEP_OPERATIONS)[number]) {
+    setSteps((current) => {
+      const next = [...current, newIntegrationStep(op)];
+      setSelectedIndex(next.length - 1);
+      return next;
+    });
+    setPickerOpen(false);
+  }
+
   function addStep(tool: ExecutableTool) {
     setSteps((current) => {
       const next = [...current, newWorkingToolStep(tool, allTools)];
@@ -256,12 +289,22 @@ export function PipelineBuilder() {
   function updateStepParams(index: number, params: ErasedToolParams) {
     setSteps((current) =>
       current.map((step, i) =>
-        i === index && step.toolId !== null ? { ...step, params } : step,
+        // Integration steps are deliberately toolId-less, so they must be editable too; only a
+        // genuinely unrecognised step has no editor to send changes from.
+        i === index && (step.toolId !== null || isIntegrationStep(step))
+          ? { ...step, params }
+          : step,
       ),
     );
   }
 
   function stepLabel(step: WorkingToolStep): string {
+    // An integration step's endpoint is the same for every vendor, so the raw path would read
+    // "External api call" for all of them. Name it by the operation instead.
+    const op = stepOperation(step);
+    if (op) return t(op.labelKey);
+    if (isIntegrationStep(step))
+      return t("portal.pipelines.builder.sendToSystem");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -270,6 +313,13 @@ export function PipelineBuilder() {
   // policy, so a later run would send null for that field (see stepRequiresUpload).
   const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
   const hasUploadSteps = uploadStepLabels.length > 0;
+
+  // An integration step with no operation or no account chosen would fail at run time with a raw
+  // backend rejection, so block saving on it here where the fix is one click away.
+  const unconfiguredStepLabels = steps
+    .filter((step) => !integrationStepConfigured(step))
+    .map(stepLabel);
+  const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
   // Track unsaved edits: snapshot the form and compare against the state captured just after
   // seeding, so leaving the builder can prompt to save or discard.
@@ -301,6 +351,7 @@ export function PipelineBuilder() {
     scheduleCountValid &&
     outputValid &&
     !hasUploadSteps &&
+    !hasUnconfiguredSteps &&
     !submitting;
 
   const triggerOptions = [
@@ -368,6 +419,7 @@ export function PipelineBuilder() {
     };
     try {
       await savePipeline(policy);
+      await invalidatePipelines();
       navigate(destination);
     } catch (e) {
       setError(errorMessage(e));
@@ -478,6 +530,7 @@ export function PipelineBuilder() {
     setDeleting(true);
     try {
       await deletePipeline(id);
+      await invalidatePipelines();
       close();
     } catch (e) {
       setError(errorMessage(e));
@@ -593,6 +646,14 @@ export function PipelineBuilder() {
           tone="warning"
           description={t("portal.pipelines.builder.uploadUnsupported", {
             tools: uploadStepLabels.join(", "),
+          })}
+        />
+      )}
+      {hasUnconfiguredSteps && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.builder.stepsNeedSetup", {
+            tools: unconfiguredStepLabels.join(", "),
           })}
         />
       )}
@@ -724,7 +785,17 @@ export function PipelineBuilder() {
                       <span className="portal-builder__step-name">
                         {stepLabel(step)}
                       </span>
-                      {stepRequiresUpload(step) ? (
+                      {isIntegrationStep(step) ? (
+                        !stepOperation(step) ? (
+                          <span className="portal-builder__step-note">
+                            {t("portal.pipelines.builder.chooseOperation")}
+                          </span>
+                        ) : !integrationStepConfigured(step) ? (
+                          <span className="portal-builder__step-note">
+                            {t("portal.pipelines.builder.chooseAccount")}
+                          </span>
+                        ) : null
+                      ) : stepRequiresUpload(step) ? (
                         <span className="portal-builder__step-note">
                           {t("portal.pipelines.builder.needsUpload")}
                         </span>
@@ -779,6 +850,8 @@ export function PipelineBuilder() {
             <ToolPicker
               tools={executableTools}
               onPick={addStep}
+              operations={STEP_OPERATIONS}
+              onPickOperation={addOperationStep}
               onClose={() => setPickerOpen(false)}
             />
           ) : (

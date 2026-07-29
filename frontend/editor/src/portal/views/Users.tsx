@@ -2,28 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@app/ui";
-import { useTier } from "@portal/contexts/TierContext";
-import { useAsync } from "@portal/hooks/useAsync";
 import {
   changeMemberRole,
   disableMemberMfa,
   setMemberSuspended,
   unlockMember,
-  type AdminAuthConfig,
   type Member,
   type PendingInvitation,
   type PortalAccessState,
   type RoleId,
-  type UsersResponse,
 } from "@portal/api/users";
 import { usersBackend } from "@app/portal/usersBackend";
 import {
   createGrant,
-  fetchGrants,
   revokeGrant,
   type ResourceGrant,
 } from "@portal/api/access";
-import { deleteTeam as apiDeleteTeam, type Team } from "@portal/api/teams";
+import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
@@ -35,6 +30,7 @@ import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
 import type { TeamGroup } from "@portal/components/users/directory";
+import { useUsersData } from "@portal/views/usersData";
 
 interface Confirm {
   title: string;
@@ -44,28 +40,14 @@ interface Confirm {
   action: () => Promise<unknown>;
 }
 
+/**
+ * Users page: the org roster, teams, and portal-access management. Mutation
+ * handlers call `refresh` to invalidate the shared caches (see useUsersData).
+ */
 export function Users() {
   const { t } = useTranslation();
-  const { tier } = useTier();
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const usersState = useAsync<UsersResponse>(
-    () => usersBackend.fetchUsers(tier),
-    [tier, refreshKey],
-  );
-  // Grants are ADMIN-only; skip the fetch entirely on flavors that can't manage them.
-  const grantsState = useAsync<ResourceGrant[]>(
-    () => (caps.manageGrants ? fetchGrants("PORTAL") : Promise.resolve([])),
-    [tier, refreshKey],
-  );
-  const teamsState = useAsync<Team[]>(
-    () => usersBackend.fetchTeams(),
-    [tier, refreshKey],
-  );
-  const authState = useAsync<AdminAuthConfig>(
-    () => usersBackend.fetchAuthConfig(),
-    [],
-  );
+  const { usersState, grantsState, teamsState, authState, refresh } =
+    useUsersData();
 
   const [actionError, setActionError] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -151,9 +133,8 @@ export function Users() {
       .catch((error) => setActionError(errorMessage(error)))
       // Refetch on success AND failure: a multi-step mutation (e.g. changeMemberRole)
       // has no rollback, so a mid-sequence failure must resync the roster to real state.
-      .finally(() => setRefreshKey((k) => k + 1));
+      .finally(() => refresh());
   }
-  const refresh = () => setRefreshKey((k) => k + 1);
 
   function changeRole(member: Member, role: RoleId) {
     run(() => changeMemberRole(member, role));

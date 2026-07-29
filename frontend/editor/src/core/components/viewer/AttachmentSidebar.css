@@ -21,7 +21,7 @@
   border-radius: 0.65rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: color-mix(in srgb, var(--bg-toolbar) 86%, transparent);
+  background: color-mix(in srgb, var(--c-bg-raised) 86%, transparent);
   border: 1px solid transparent;
   width: 100%;
   box-sizing: border-box;
@@ -31,12 +31,8 @@
 }
 
 .attachment-item:hover {
-  background: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
-  border-color: color-mix(
-    in srgb,
-    var(--text-primary) 20%,
-    var(--border-subtle)
-  );
+  background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg-raised));
+  border-color: color-mix(in srgb, var(--c-text) 20%, var(--c-border-subtle));
   transform: translateX(2px);
 }
 
@@ -46,7 +42,7 @@
 
 .attachment-item:focus-visible {
   outline: 2px solid
-    color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
+    color-mix(in srgb, var(--c-text) 30%, var(--c-border-subtle));
   outline-offset: 2px;
 }
 
@@ -54,7 +50,7 @@
 .attachment-item__download-icon {
   flex-shrink: 0;
   transition: transform 0.2s ease;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 .attachment-item:hover .attachment-item__download-icon {
@@ -75,7 +71,7 @@
   line-height: 1.35;
   overflow-wrap: anywhere;
   word-break: break-word;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .attachment-item__meta {
