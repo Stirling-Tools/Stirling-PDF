@@ -251,6 +251,12 @@ const withProviders: Decorator = (Story, context) => {
 
 const preview: Preview = {
   loaders: [mswLoader],
+  // The scan runs once per theme (SCAN_THEME=light|dark, forwarded by
+  // .storybook/vitest.config.ts); pinning the global here themes every story in
+  // the run. Unset — the Storybook UI — falls back to the toolbar default.
+  initialGlobals: {
+    theme: import.meta.env.VITE_SCAN_THEME === "dark" ? "dark" : "light",
+  },
   parameters: {
     layout: "padded",
     controls: {
