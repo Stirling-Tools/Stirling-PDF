@@ -45,4 +45,12 @@ for (const f of changed) {
     if (existsSync(s)) stories.add(s);
 }
 
-process.stdout.write([...stories].sort().join("\n"));
+// One line, each path quoted: the output is interpolated into a task command,
+// where a newline would end the command after the first story and an unquoted
+// space would split a path into two arguments.
+process.stdout.write(
+  [...stories]
+    .sort()
+    .map((s) => `"${s}"`)
+    .join(" "),
+);
