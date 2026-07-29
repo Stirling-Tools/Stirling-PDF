@@ -251,7 +251,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Refs rather than state: the auth effect below has an intentionally empty
   // dependency array, so it must read values that are stable across renders.
   const loadedForRef = useRef<string | null>(null);
-  const inFlightRef = useRef<Promise<void> | null>(null);
+  const inFlightRef = useRef<{ key: string; promise: Promise<void> } | null>(
+    null,
+  );
 
   /**
    * Sole owner of the per-user data fetching. Both mount-time initialisation
@@ -280,7 +282,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const key = `${user.id}:${Boolean(user.is_anonymous)}`;
       if (!opts?.force && loadedForRef.current === key)
         return Promise.resolve();
-      if (inFlightRef.current) return inFlightRef.current;
+
+      // Coalesce only a duplicate load of the same identity. A different
+      // identity - or a forced reload - must start its own: adopting the
+      // in-flight promise would silently drop it, which is exactly what the
+      // guest upgrade does when it lands mid-load.
+      if (!opts?.force && inFlightRef.current?.key === key)
+        return inFlightRef.current.promise;
 
       loadedForRef.current = key;
       const run = (async () => {
@@ -304,10 +312,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.debug("[Auth Debug] Failed to load user data:", err);
         })
         .finally(() => {
-          inFlightRef.current = null;
+          // Only clear our own entry; a newer load may have superseded us.
+          if (inFlightRef.current?.promise === run) inFlightRef.current = null;
         });
 
-      inFlightRef.current = run;
+      inFlightRef.current = { key, promise: run };
       return run;
     },
     [fetchProStatus, fetchProfilePictureMetadata, fetchProfilePicture],

@@ -205,6 +205,45 @@ describe("AuthProvider user-data loading", () => {
     expect(synchronizeUserUpgrade).toHaveBeenCalledWith("google");
   });
 
+  it("does not drop an upgrade that lands while the guest load is in flight", async () => {
+    // The guest load and the upgrade overlap on a slow connection. Coalescing
+    // on "something is in flight" alone would hand the upgrade the guest's
+    // promise and never fetch the real user's data.
+    getSession.mockResolvedValue({
+      data: { session: makeSession({ anonymous: true }) },
+      error: null,
+    });
+    sessionStorage.setItem("pendingUpgrade", "true");
+    sessionStorage.setItem("upgradeProvider", "google");
+
+    let releaseGuestLoad = () => {};
+    const guestLoadBlocked = new Promise<void>((resolve) => {
+      releaseGuestLoad = resolve;
+    });
+    rpc.mockImplementationOnce(async () => {
+      await guestLoadBlocked;
+      return { data: false, error: null };
+    });
+
+    const { fire } = renderProvider();
+    await waitFor(() => expect(rpc).toHaveBeenCalledTimes(1));
+
+    // Deliver the upgrade with the guest load still deliberately unsettled, so
+    // the guard genuinely has an in-flight load to reason about.
+    await fire("USER_UPDATED", makeSession({ anonymous: false }));
+    await waitFor(() => expect(rpc).toHaveBeenCalledTimes(2), {
+      timeout: 1000,
+    });
+
+    // Let the abandoned guest load settle inside act, so its trailing state
+    // updates do not land after the test finishes.
+    await act(async () => {
+      releaseGuestLoad();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+  });
+
   it("reloads for the same user after a sign-out", async () => {
     const { fire } = renderProvider();
     await waitFor(() => expect(createSignedUrl).toHaveBeenCalled());
