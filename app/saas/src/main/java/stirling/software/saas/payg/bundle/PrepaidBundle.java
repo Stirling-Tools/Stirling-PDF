@@ -34,22 +34,17 @@ import lombok.Setter;
 @Entity
 @Table(
         name = "payg_prepaid_bundle",
-        // Declared here for ddl-auto (fresh schemas) and to document intent. The authoritative
-        // creator
-        // in production is the Supabase CLI migration 20260720000000_payg_prepaid_bundle, which
-        // builds
+        // Declared here for ddl-auto (fresh schemas) and to document intent. The authoritative creator
+        // in production is the Supabase CLI migration 20260720000000_payg_prepaid_bundle, which builds
         // the partial forms (WHERE units_remaining > 0 / WHERE stripe_ref IS NOT NULL). Flyway was
         // retired for SaaS (#7100), so there is no migration twin — names match the CLI migration.
         indexes = {
-            // Hot-path FIFO draw lookup — findDrawableForUpdate runs a locked read on every
-            // billable
-            // charge past the free grant; without it that degrades to a locked scan as the table
-            // grows.
+            // Hot-path FIFO draw lookup — findDrawableForUpdate runs a locked read on every billable
+            // charge past the free grant; without it that degrades to a locked scan as the table grows.
             @Index(
                     name = "idx_payg_prepaid_bundle_team_expiry",
                     columnList = "team_id, expires_at"),
-            // One pool per Stripe payment — the idempotency guard so a redelivered invoice.paid
-            // can't
+            // One pool per Stripe payment — the idempotency guard so a redelivered invoice.paid can't
             // credit the same purchase twice.
             @Index(
                     name = "uq_payg_prepaid_bundle_stripe_ref",
