@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.controller.ProcessingFolderController;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -23,8 +24,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * Builds the unified Pipelines overview: one row per policy the caller's team owns, with its
  * sources resolved to live display names, its steps, and a trigger/output summary. This lists EVERY
  * policy - both pipelines built in the full builder and the friendly "suggested" policies - since
- * the two surfaces were merged (a policy is a pipeline the org requires). No catalogue filter any
- * more.
+ * the two surfaces were merged (a policy is a pipeline the org requires). Only processing folders
+ * are excluded: they share the engine but are the editor's own surface.
  */
 @Service
 @RequiredArgsConstructor
@@ -36,7 +37,12 @@ public class PolicyOverviewService {
     private final SourceAccessGuard sourceAccessGuard;
 
     public PoliciesOverviewResponse overview() {
-        List<Policy> policies = policyAccessGuard.visibleFrom(policyStore).stream().toList();
+        // Processing folders are the editor's own surface (ProcessingFolderController); the
+        // portal's pipelines overview never sees them.
+        List<Policy> policies =
+                policyAccessGuard.visibleFrom(policyStore).stream()
+                        .filter(policy -> !ProcessingFolderController.isProcessingFolder(policy))
+                        .toList();
         Map<String, String> sourceNames = sourceNames();
 
         List<PolicyView> views =
