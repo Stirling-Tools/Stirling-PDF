@@ -208,6 +208,13 @@
   margin: 0 0 14px;
   line-height: 1.45;
 }
+/* Field caption above a segmented control in the bundle calculator. */
+.upm-field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--upm-text);
+  margin-bottom: 6px;
+}
 
 /* Cap selection (presets + custom + no-cap + estimate) now lives in the shared
    SpendCapControl (SpendCapControl.css). The old upm-cap-* / upm-no-cap-toggle

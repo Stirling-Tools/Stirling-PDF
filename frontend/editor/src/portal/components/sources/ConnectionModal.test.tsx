@@ -49,7 +49,7 @@ describe("ConnectionModal", () => {
       ),
     );
 
-    await fill("portal.connections.fields.name", "Corp Purview");
+    await fill("portal.integrations.typedName", "Corp Purview");
     await fill(
       "portal.connections.types.purview.fields.tenantId",
       "cb46c030-1825-4e81-a295-151c039dbf02",
@@ -82,7 +82,7 @@ describe("ConnectionModal", () => {
       ),
     );
 
-    await fill("portal.connections.fields.name", "Notarius");
+    await fill("portal.integrations.typedName", "Notarius");
     await fill(
       "portal.connections.types.consigno.fields.baseUrl",
       "https://acme.consignocloud.com/api/v1",
@@ -163,7 +163,7 @@ describe("ConnectionModal", () => {
     const save = screen.getByText("portal.connections.picker.save");
     expect(save.closest("button")).toBeDisabled();
 
-    await fill("portal.connections.fields.name", "Corp");
+    await fill("portal.integrations.typedName", "Corp");
     // Name alone is not enough: Purview needs a tenant id.
     expect(save.closest("button")).toBeDisabled();
   });

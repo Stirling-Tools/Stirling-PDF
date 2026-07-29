@@ -11,7 +11,6 @@ import type { ChipAccent } from "@app/ui";
 
 export interface SourceTypeMeta {
   labelKey: string;
-  icon: string;
   accent: ChipAccent;
 }
 
@@ -28,29 +27,24 @@ export const WEBHOOK_SOURCE_TYPE = "webhook";
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
-    icon: "⛁",
     accent: "default",
   },
   editor: {
     labelKey: "portal.sources.types.editor.label",
-    icon: "✏",
     accent: "success",
   },
   s3: {
     labelKey: "portal.sources.types.s3.label",
-    icon: "☁",
     accent: "brand",
   },
   webhook: {
     labelKey: "portal.sources.types.webhook.label",
-    icon: "↯",
     accent: "warning",
   },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
   labelKey: "portal.sources.types.unknown.label",
-  icon: "◇",
   accent: "neutral",
 };
 
@@ -195,6 +189,33 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     fields: [],
   },
 ];
+
+/** A source type on the roadmap: shown greyed out in the picker, not creatable. */
+export interface ComingSoonSourceType {
+  type: string;
+  labelKey: string;
+  descriptionKey: string;
+}
+
+/**
+ * Connectors we intend to support, listed so the picker answers "do you
+ * support X?" honestly instead of hiding the roadmap. Purely presentational -
+ * nothing here can be created and the backend never sees these type strings.
+ */
+export const COMING_SOON_SOURCE_TYPES: ComingSoonSourceType[] = [
+  "sharepoint",
+  "onedrive",
+  "googledrive",
+  "dropbox",
+  "box",
+  "network",
+  "sftp",
+  "email",
+].map((type) => ({
+  type,
+  labelKey: `portal.sources.types.${type}.label`,
+  descriptionKey: `portal.sources.types.${type}.description`,
+}));
 
 /** Default option values for a type's create form. */
 export function defaultOptions(

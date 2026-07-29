@@ -16,7 +16,7 @@
  *     V1 — so it shows a real empty state, not fabricated rows
  */
 import React, { useState } from "react";
-import { Group, Stack, Text } from "@mantine/core";
+import { Alert, Badge, Group, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -27,6 +27,10 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMoreRounded";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
 import { alert as showToast } from "@app/components/toast";
+import {
+  PrepaidCapacityMeterPanel,
+  prepaidSnapshotFromWallet,
+} from "@app/components/shared/config/configSections/usageMeters";
 // Relative (not @app/*) so the co-located CSS + sibling component resolve directly.
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
@@ -665,6 +669,59 @@ function StripePortalLink({
   );
 }
 
+// ─── Prepaid bundle ───────────────────────────────────────────────────────
+
+function daysUntil(iso: string | null): number | null {
+  if (!iso) return null;
+  const end = new Date(iso).getTime();
+  if (Number.isNaN(end)) return null;
+  return Math.ceil((end - Date.now()) / 86_400_000);
+}
+
+/**
+ * Contextual nudge when prepaid capacity is running low, exhausted, or its term
+ * is nearly up (the demo's "top up to keep processing" strip). Leader-only CTA —
+ * members can't buy. Returns null when nothing needs saying.
+ */
+function PrepaidBanner({
+  snap,
+}: {
+  snap: NonNullable<ReturnType<typeof prepaidSnapshotFromWallet>>;
+}) {
+  const { t } = useTranslation();
+  const pctLeft = snap.total > 0 ? (snap.remaining / snap.total) * 100 : 0;
+  const days = daysUntil(snap.expiresAt);
+  const exhausted = snap.remaining <= 0;
+  const low = !exhausted && pctLeft <= 20;
+  const expiringSoon = days != null && days >= 0 && days <= 30;
+  if (!exhausted && !low && !expiringSoon) return null;
+
+  const message = exhausted
+    ? t(
+        "payg.prepaid.banner.exhausted",
+        "Your prepaid capacity is used up — metered billing has resumed. Top up to keep the discount.",
+      )
+    : low
+      ? t(
+          "payg.prepaid.banner.low",
+          "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted.",
+          { pct: Math.max(1, Math.round(pctLeft)) },
+        )
+      : t(
+          "payg.prepaid.banner.expiring",
+          "Your prepaid year ends in {{count}} days. Unused capacity expires — top up to start a fresh year.",
+          // This arm only renders when expiringSoon (days is a valid number); ?? 0 satisfies the
+          // count option's number type.
+          { count: days ?? 0 },
+        );
+
+  return (
+    <Alert color={exhausted ? "red" : "yellow"} variant="light">
+      <span>{message}</span>
+    </Alert>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────
 
 const Payg: React.FC<PaygProps> = ({
@@ -676,6 +733,10 @@ const Payg: React.FC<PaygProps> = ({
   useRenderCount(role === "LEADER" ? "PaygLeader" : "PaygMember");
   const { t } = useTranslation();
   const isLeader = role === "LEADER";
+  const prepaid = prepaidSnapshotFromWallet(wallet);
+  // Read-only prepaid display. The buy/top-up flow lives on the portal Processor page (the
+  // create-payg-bundle-checkout edge fn is driven from there); this editor Plan page only shows an
+  // existing prepaid balance and is slated for removal on a separate branch.
 
   const fmt = (iso: string) =>
     new Date(iso).toLocaleDateString(undefined, {
@@ -686,6 +747,8 @@ const Payg: React.FC<PaygProps> = ({
   return (
     <div className="payg">
       <Stack gap="md">
+        {prepaid && <PrepaidBanner snap={prepaid} />}
+
         {/* The modal chrome already renders the section title ("Billing &
             usage"), so we lead with the descriptive subtitle + role pill. */}
         <div className="payg-planhead">
@@ -700,11 +763,18 @@ const Payg: React.FC<PaygProps> = ({
                 },
               )}
             </span>
-            <span className="payg-role-pill" data-leader={isLeader}>
-              {isLeader
-                ? t("payg.role.leader", "Team owner")
-                : t("payg.role.member", "Member")}
-            </span>
+            <Group gap="xs" wrap="nowrap">
+              {wallet.billingMode === "prepaid" && (
+                <Badge color="blue" variant="light" radius="sm">
+                  {t("payg.prepaid.chip", "Prepaid year")}
+                </Badge>
+              )}
+              <span className="payg-role-pill" data-leader={isLeader}>
+                {isLeader
+                  ? t("payg.role.leader", "Team owner")
+                  : t("payg.role.member", "Member")}
+              </span>
+            </Group>
           </div>
 
           <div className="payg-planhead__split">
@@ -750,6 +820,25 @@ const Payg: React.FC<PaygProps> = ({
         </div>
 
         <UsageHero wallet={wallet} />
+
+        {prepaid && (
+          <div className="payg-card">
+            <Stack gap="sm">
+              <div>
+                <div className="payg-card__title">
+                  {t("payg.prepaid.card.title", "Prepaid capacity")}
+                </div>
+                <div className="payg-card__subtitle">
+                  {t(
+                    "payg.prepaid.card.subtitle",
+                    "Used before metered billing and outside your spend cap.",
+                  )}
+                </div>
+              </div>
+              <PrepaidCapacityMeterPanel snap={prepaid} />
+            </Stack>
+          </div>
+        )}
 
         {isLeader ? (
           <CapEditor
