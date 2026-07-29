@@ -60,18 +60,24 @@ const Review = (_props: BaseToolProps) => {
     if (swept) return;
     let cancelled = false;
     void (async () => {
-      const loaded = new Set(fileStubs.map((s) => s.id as string));
-      const missing: FileId[] = [];
-      for (const id of needsReviewIds) {
-        if (loaded.has(id as string)) continue;
-        const stored = await fileStorage
-          .getStirlingFileStub(id)
-          .catch(() => null);
-        if (!stored) missing.push(id);
+      try {
+        const loaded = new Set(fileStubs.map((s) => s.id as string));
+        const missing: FileId[] = [];
+        for (const id of needsReviewIds) {
+          if (loaded.has(id as string)) continue;
+          const stored = await fileStorage
+            .getStirlingFileStub(id)
+            .catch(() => null);
+          if (!stored) missing.push(id);
+        }
+        if (cancelled) return;
+        for (const id of missing) forgetFileReview(id);
+      } finally {
+        // Always mark the sweep done, even if storage or a forget threw: it only
+        // prunes dead queue entries, and a failure must never leave the panel
+        // waiting on it.
+        if (!cancelled) setSwept(true);
       }
-      if (cancelled) return;
-      for (const id of missing) forgetFileReview(id);
-      setSwept(true);
     })();
     return () => {
       cancelled = true;
@@ -206,9 +212,11 @@ const Review = (_props: BaseToolProps) => {
     else if (!atStart) goPrev();
   }, [stub, removeFiles, forgetFileReview, atEnd, atStart, goNext, goPrev]);
 
-  // Nothing to show until the sweep settles, and showing "no document to
-  // review" first would be wrong the moment it finishes with a queue.
-  if (!swept) return null;
+  // The panel never renders nothing: whatever the queue sweep is doing, the open
+  // document's review is derived from state we already have. Gating the whole
+  // panel on the sweep meant a stalled IndexedDB read (a second tab holding a
+  // transaction is enough) left the reviewer staring at a blank rail. The sweep
+  // only gates the pager, which hides itself until the queue exists.
 
   // No open document means nothing to review — the reviewer closed it, or came
   // in with an empty workbench. Every flagged file already dealt with reads as
@@ -216,6 +224,12 @@ const Review = (_props: BaseToolProps) => {
   const queueDone =
     queue.length > 0 && queue.every((id) => unresolvableIds.has(id));
   if (!currentId || queueDone) {
+    // Nothing open, but flagged documents exist (e.g. several files loaded, none
+    // active). Offer to open one rather than leaving the reviewer at a dead end.
+    const firstFlagged = queueDone
+      ? null
+      : (needsReviewIds.find((id) => !unresolvableIds.has(id as string)) ??
+        null);
     return (
       <Stack p="sm">
         <EmptyState
@@ -232,6 +246,13 @@ const Review = (_props: BaseToolProps) => {
                   "reviewTool.empty.desc",
                   "Open a file that a policy has run on to review it.",
                 )
+          }
+          actions={
+            firstFlagged ? (
+              <Button size="sm" onClick={() => void openQueued(firstFlagged)}>
+                {t("reviewTool.empty.openFlagged", "Review flagged document")}
+              </Button>
+            ) : undefined
           }
         />
       </Stack>
@@ -306,7 +327,17 @@ const Review = (_props: BaseToolProps) => {
               "This file was removed. Use Next to continue reviewing.",
             )}
           />
-        ) : null
+        ) : (
+          // Active document whose stub hasn't landed yet. Rare and brief, but it
+          // must say so rather than render an empty panel.
+          <Banner
+            tone="neutral"
+            description={t(
+              "reviewTool.queue.openingDesc",
+              "Opening this document…",
+            )}
+          />
+        )
       ) : (
         <>
           <Stack gap="xs">

@@ -9490,6 +9490,7 @@ title = "Nothing left to review"
 
 [reviewTool.empty]
 desc = "Open a file that a policy has run on to review it."
+openFlagged = "Review flagged document"
 title = "No document to review"
 
 [reviewTool.gate]
@@ -9511,6 +9512,7 @@ opening = "Opening file..."
 position = "File {{current}} of {{total}}"
 previous = "Previous file"
 unavailable = "File no longer available"
+openingDesc = "Opening this document…"
 unavailableDesc = "This file was removed. Use Next to continue reviewing."
 
 [reviewTool.trail]
