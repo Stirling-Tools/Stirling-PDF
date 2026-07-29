@@ -183,8 +183,8 @@ export function FormFieldCreationOverlay({
         const wPx = def.w * scaleX;
         const hPx = def.h * scaleY;
         pixelRect = {
-          left: start.x,
-          top: start.y,
+          left: start.x - wPx / 2,
+          top: start.y - hPx / 2,
           width: wPx,
           height: hPx,
         };

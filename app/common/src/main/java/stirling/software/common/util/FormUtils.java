@@ -2016,6 +2016,11 @@ public class FormUtils {
     public void addNewFields(PDDocument document, List<NewFormFieldDefinition> definitions)
             throws IOException {
         if (document == null || definitions == null || definitions.isEmpty()) return;
+        // A page-less document has nowhere to put a widget; the clamp below cannot make it safe.
+        if (document.getNumberOfPages() == 0) {
+            log.warn("Cannot add form fields: document has no pages");
+            return;
+        }
 
         PDAcroForm acroForm = getAcroFormSafely(document);
         if (acroForm == null) {
