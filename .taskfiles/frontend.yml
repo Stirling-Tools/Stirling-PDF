@@ -242,7 +242,7 @@ tasks:
             echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
-          node .storybook/a11y-scan.mjs {{.CHANGED}}
+          node .storybook/a11y-scan.mjs {{.CHANGED | replace "\n" " "}}
           node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
 
   storybook:a11y:record:
