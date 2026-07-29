@@ -115,7 +115,10 @@ jobs:
       # Hosted SaaS backend the preview links to. Drives both the image build-arg
       # (portal -> SaaS attended reads) and the container's account-link base URL
       # (instance -> SaaS register/entitlement).
-      SAAS_API_URL: "https://api.stirlingpdf.com"
+      # This is the host committed in frontend/editor/.env.desktop. Do NOT use the
+      # api.stirlingpdf.com literal that tauri-build.yml/multiOSReleases.yml fall back
+      # to - it does not resolve, which is what made linking fail with a 502.
+      SAAS_API_URL: "https://api2.stirling.com"
 
     steps:
       - name: Harden Runner
