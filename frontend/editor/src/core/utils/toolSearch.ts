@@ -15,9 +15,7 @@ export function filterToolRegistryByQuery(
   toolRegistry: Partial<ToolRegistry>,
   query: string,
 ): RankedToolItem[] {
-  const entries = (
-    Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]
-  ).filter(([, tool]) => !tool.hideFromPicker);
+  const entries = Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][];
   if (!query.trim()) {
     return entries.map(([id, tool]) => ({
       item: [id, tool] as [ToolId, ToolRegistryEntry],

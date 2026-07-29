@@ -103,6 +103,7 @@ import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
+import { ReviewSidebar } from "@app/components/viewer/ReviewSidebar";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
 import { accountService } from "@app/services/accountService";
@@ -125,6 +126,8 @@ interface LocalEmbedPDFProps {
   fileId?: string | null;
   /** Comments sidebar visibility and offset (from EmbedPdfViewer) */
   isCommentsSidebarVisible?: boolean;
+  isReviewSidebarVisible?: boolean;
+  reviewSidebarRightOffset?: string;
   commentsSidebarRightOffset?: string;
   /** When true, blocks the general ink/pen annotation tool (sign tool context). */
   isSignMode?: boolean;
@@ -163,6 +166,8 @@ export function LocalEmbedPDF({
   redactionTrackerRef,
   fileId,
   isCommentsSidebarVisible = false,
+  isReviewSidebarVisible = false,
+  reviewSidebarRightOffset = "0rem",
   commentsSidebarRightOffset = "0rem",
   isSignMode = false,
   pdfRenderMode = "normal",
@@ -1181,6 +1186,10 @@ export function LocalEmbedPDF({
                       />
                     </Viewport>
                   </GlobalPointerProvider>
+                  <ReviewSidebar
+                    visible={isReviewSidebarVisible}
+                    rightOffset={reviewSidebarRightOffset}
+                  />
                   {enableAnnotations && (
                     <CommentAuthorProvider displayName={commentAuthorName}>
                       <CommentsSidebar

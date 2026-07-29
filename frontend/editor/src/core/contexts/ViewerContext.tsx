@@ -105,6 +105,10 @@ export interface ViewerContextType {
   isCommentsSidebarVisible: boolean;
   setCommentsSidebarVisible: (visible: boolean) => void;
   toggleCommentsSidebar: () => void;
+  /** Review panel: what ran on the open document, and its ignore/delete actions. */
+  isReviewSidebarVisible: boolean;
+  setReviewSidebarVisible: (visible: boolean) => void;
+  toggleReviewSidebar: () => void;
 
   /** Request focus or highlight of a comment card in the sidebar (opens sidebar, then scrolls + flashes or focuses input). */
   highlightCommentRequest: {
@@ -231,6 +235,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     useState(false);
   const [isLayerSidebarVisible, setIsLayerSidebarVisible] = useState(false);
   const [hasLayers, setHasLayers] = useState(false);
+  const [isReviewSidebarVisible, setIsReviewSidebarVisible] =
+    useState<boolean>(false);
   const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] =
     useState(false);
   const [highlightCommentRequest, setHighlightCommentRequest] = useState<{
@@ -372,6 +378,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const toggleCommentsSidebar = () => {
     setIsCommentsSidebarVisible((prev) => !prev);
+  };
+
+  const setReviewSidebarVisible = (visible: boolean) => {
+    setIsReviewSidebarVisible(visible);
+  };
+
+  const toggleReviewSidebar = () => {
+    setIsReviewSidebarVisible((prev) => !prev);
   };
 
   const requestCommentFocus = useCallback(
@@ -600,6 +614,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     isCommentsSidebarVisible,
     setCommentsSidebarVisible,
     toggleCommentsSidebar,
+    isReviewSidebarVisible,
+    setReviewSidebarVisible,
+    toggleReviewSidebar,
     highlightCommentRequest,
     requestCommentFocus,
     clearHighlightCommentRequest,

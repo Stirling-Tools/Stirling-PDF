@@ -11,7 +11,7 @@ import {
   ReviewTrailRun,
   ReviewTrailStep,
 } from "@app/types/review";
-import "@app/tools/review/ReviewTrail.css";
+import "@app/components/viewer/review/ReviewTrail.css";
 
 const SOURCE_TONE: Record<ReviewRunSource, "neutral" | "info" | "purple"> = {
   tool: "neutral",

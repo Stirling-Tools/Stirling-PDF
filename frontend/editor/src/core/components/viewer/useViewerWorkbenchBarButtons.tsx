@@ -27,6 +27,8 @@ import LayersIcon from "@mui/icons-material/Layers";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
@@ -42,6 +44,9 @@ export function useViewerWorkbenchBarButtons(
     hasLayers,
     isCommentsSidebarVisible,
     toggleCommentsSidebar,
+    isReviewSidebarVisible,
+    toggleReviewSidebar,
+    activeFileId,
     isSearchInterfaceVisible,
     registerImmediatePanUpdate,
   } = viewer;
@@ -115,6 +120,15 @@ export function useViewerWorkbenchBarButtons(
   );
   const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
+  const reviewLabel = t("workbenchBar.review", "Needs review");
+  // The badge button only exists while the open document has an unresolved
+  // failed policy run — same signal the file-list badges and export gate use.
+  const policyFileBadges = usePolicyFileBadges();
+  const activeNeedsReview =
+    !!activeFileId &&
+    (policyFileBadges.get(activeFileId) ?? []).some(
+      (p) => p.failed && !p.enforcing,
+    );
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
   const formFillLabel = t("workbenchBar.formFill", "Fill Form");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
@@ -316,6 +330,28 @@ export function useViewerWorkbenchBarButtons(
               active: isLayerSidebarVisible,
               onClick: () => {
                 viewer.toggleLayerSidebar();
+              },
+            },
+          ]
+        : []),
+      ...(activeNeedsReview
+        ? [
+            {
+              id: "viewer-toggle-review",
+              icon: (
+                <WarningAmberRoundedIcon
+                  fontSize="small"
+                  style={{ color: "var(--c-warning)" }}
+                />
+              ),
+              tooltip: reviewLabel,
+              ariaLabel: reviewLabel,
+              section: "top" as const,
+              // Far right of the top controls, after the viewer's own tools.
+              order: 58.5,
+              active: isReviewSidebarVisible,
+              onClick: () => {
+                toggleReviewSidebar();
               },
             },
           ]
@@ -567,6 +603,10 @@ export function useViewerWorkbenchBarButtons(
     handleReadAloud,
     handleSpeechRateChange,
     handleSpeechLanguageChange,
+    reviewLabel,
+    activeNeedsReview,
+    isReviewSidebarVisible,
+    toggleReviewSidebar,
   ]);
 
   useWorkbenchBarButtons(viewerButtons);
