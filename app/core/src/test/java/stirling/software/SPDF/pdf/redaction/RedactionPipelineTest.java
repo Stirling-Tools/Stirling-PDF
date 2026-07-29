@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Color;
@@ -1004,16 +1005,148 @@ class RedactionPipelineTest {
         }
     }
 
+    @Test
+    @DisplayName("buildPatterns rejects an invalid user regex instead of silently dropping it")
+    void buildPatternsRejectsInvalidRegex() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> RedactionPipeline.buildPatterns(new String[] {"Acct[0-9"}, true, false),
+                "an uncompilable regex must fail the request, not no-op into a 200");
+    }
+
+    @Test
+    @DisplayName("whole-word patterns match punctuation-edged terms at natural boundaries")
+    void wholeWordHandlesPunctuationEdgedTerms() {
+        List<Pattern> pats =
+                RedactionPipeline.buildPatterns(new String[] {"(secret)"}, false, true);
+        assertEquals(1, pats.size());
+        assertTrue(
+                pats.get(0).matcher("see (secret) here").find(),
+                "whole-word must match when surrounded by spaces");
+        assertFalse(
+                pats.get(0).matcher("abc(secret)").find(),
+                "glued to a word char is not a whole-word occurrence");
+    }
+
+    @Test
+    @DisplayName("whole-page wipe detaches the page's AcroForm widgets so field values die too")
+    void wholePageWipeDropsWidgetFieldValues() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDAcroForm form = new PDAcroForm(doc);
+            doc.getDocumentCatalog().setAcroForm(form);
+            PDTextField field = new PDTextField(form);
+            field.setPartialName("secretField");
+            form.getFields().add(field);
+            var widget = field.getWidgets().get(0);
+            widget.setRectangle(new PDRectangle(50, 700, 200, 20));
+            widget.setPage(page);
+            page.getAnnotations().add(widget);
+            // Set /V directly to avoid appearance regeneration needing fonts.
+            field.getCOSObject().setString(COSName.V, "TOPSECRET-VALUE");
+
+            RedactionPipeline.redactWholePages(doc, List.of(0), Color.BLACK);
+            bytes =
+                    RedactionPipeline.finalize(
+                            doc, Collections.emptySet(), Collections.emptyList());
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            PDAcroForm reForm = reopened.getDocumentCatalog().getAcroForm();
+            assertTrue(
+                    reForm == null || reForm.getFields().isEmpty(),
+                    "field shown only on the wiped page must be detached from the AcroForm");
+        }
+        String raw = new String(bytes, StandardCharsets.ISO_8859_1);
+        assertFalse(
+                raw.contains("TOPSECRET-VALUE"),
+                "the wiped page's field value must not survive anywhere in the file");
+    }
+
+    @Test
+    @DisplayName("area-captured tokens scrub carriers at word boundaries, without mangling")
+    void areaCapturedTokensDoNotMangleCarriers() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            PDDocumentOutline outline = new PDDocumentOutline();
+            doc.getDocumentCatalog().setDocumentOutline(outline);
+            PDOutlineItem safe = new PDOutlineItem();
+            safe.setTitle("Theory of Operation");
+            outline.addLast(safe);
+            PDOutlineItem hit = new PDOutlineItem();
+            hit.setTitle("Refer to SECRETWORD here");
+            outline.addLast(hit);
+
+            Set<String> captured = new LinkedHashSet<>(List.of("the", "SECRETWORD"));
+            bytes =
+                    RedactionPipeline.finalizeAreas(
+                            doc, Collections.emptyMap(), Collections.emptySet(), captured);
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            PDOutlineItem first =
+                    reopened.getDocumentCatalog().getDocumentOutline().getFirstChild();
+            assertEquals(
+                    "Theory of Operation",
+                    first.getTitle(),
+                    "token 'the' must not substring-mangle an unrelated bookmark");
+            assertFalse(
+                    first.getNextSibling().getTitle().contains("SECRETWORD"),
+                    "a real captured word must still be stripped from carriers");
+        }
+    }
+
+    @Test
+    @DisplayName("rasterised 90-rotated page keeps its displayed (landscape) geometry")
+    void rasterisedRotatedPageKeepsDisplayedGeometry() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            page.setRotation(90);
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(100, 700);
+                cs.showText("ROTATED SECRET");
+                cs.endText();
+            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            bytes = baos.toByteArray();
+        }
+
+        try (PDDocument rasterised = RedactionRasteriser.rasterisePages(bytes, Set.of(0))) {
+            PDPage page = rasterised.getPage(0);
+            assertEquals(0, page.getRotation(), "rotation must be baked into the raster");
+            PDRectangle crop = page.getCropBox();
+            // A4 displayed at /Rotate 90 is landscape; the raster page must stay landscape,
+            // not squash the swapped-dimension render back into the portrait crop.
+            assertEquals(PDRectangle.A4.getHeight(), crop.getWidth(), 0.5f);
+            assertEquals(PDRectangle.A4.getWidth(), crop.getHeight(), 0.5f);
+            PDImageXObject raster = firstImage(page);
+            assertNotNull(raster, "rasterised page must carry the page image");
+            assertTrue(
+                    raster.getWidth() > raster.getHeight(),
+                    "rendered image must be landscape to match the displayed page");
+        }
+    }
+
     private static boolean pageHasImage(PDPage page) throws Exception {
+        return firstImage(page) != null;
+    }
+
+    private static PDImageXObject firstImage(PDPage page) throws Exception {
         PDResources res = page.getResources();
         if (res == null) {
-            return false;
+            return null;
         }
         for (COSName n : res.getXObjectNames()) {
-            if (res.getXObject(n) instanceof PDImageXObject) {
-                return true;
+            if (res.getXObject(n) instanceof PDImageXObject img) {
+                return img;
             }
         }
-        return false;
+        return null;
     }
 }

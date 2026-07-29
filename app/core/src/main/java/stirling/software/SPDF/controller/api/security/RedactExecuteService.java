@@ -34,6 +34,7 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.pdf.parser.PageColumnLayout;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
 import stirling.software.SPDF.pdf.redaction.RedactionPipeline;
+import stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
@@ -110,8 +111,9 @@ class RedactExecuteService {
             if (hasTextOps && !foundTexts.isEmpty() && !overlayOnly) {
                 needsOverlayOnly = applyTextRemoval(document, request);
             } else if (overlayOnly) {
-                log.info(
-                        "[redact/execute] overlay-only mode requested - skipping content-stream rewriting");
+                log.warn(
+                        "[redact/execute] overlay-only mode requested - text stays extractable "
+                                + "under the boxes and verification is skipped");
             }
 
             // Reload fresh document on fallback so we overlay onto clean content.
@@ -175,6 +177,13 @@ class RedactExecuteService {
 
         } catch (Exception e) {
             log.error("Execute redaction failed: {}", e.getMessage(), e);
+            // Typed failures keep their HTTP mapping (400 invalid input, 422 unverifiable).
+            if (e instanceof IllegalArgumentException iae) {
+                throw iae;
+            }
+            if (e instanceof RedactionVerificationFailedException rvfe) {
+                throw rvfe;
+            }
             throw new RuntimeException("Failed to perform PDF redaction: " + e.getMessage(), e);
         } finally {
             if (document != null) {
@@ -301,8 +310,13 @@ class RedactExecuteService {
                 PDPage page = allPages.get(idx);
                 List<float[]> elementBoxes =
                         pageElementBoxes.getOrDefault(idx, Collections.emptyList());
+                // Same wipe guarantees as the manual path: widget field values, annotations and
+                // the page thumbnail must not survive a "wiped" page.
+                RedactionPipeline.detachAcroFormWidgets(document, page);
                 page.getCOSObject().removeItem(COSName.CONTENTS);
                 page.setResources(new PDResources());
+                page.getCOSObject().removeItem(COSName.ANNOTS);
+                page.getCOSObject().removeItem(COSName.getPDFName("Thumb"));
                 try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
                     cs.setNonStrokingColor(pageColor);
                     if (elementBoxes.isEmpty()) {
@@ -356,7 +370,9 @@ class RedactExecuteService {
                         rangeEnd);
             }
         } catch (Exception e) {
-            log.warn("[redact/execute] range redaction failed: {}", e.getMessage());
+            // Fail closed: a throwing range op must not come back as an unredacted 200.
+            throw new RuntimeException(
+                    "Range redaction failed for start='" + rangeStart + "': " + e.getMessage(), e);
         }
         return Collections.emptySet();
     }
@@ -366,6 +382,11 @@ class RedactExecuteService {
      */
     private Set<Integer> applyImageBoxRedaction(
             PDDocument document, ImageBox box, RedactStyle style) throws IOException {
+        if (box.pageIndex() < 0 || box.pageIndex() >= document.getNumberOfPages()) {
+            // Nothing was drawn, so don't schedule a pointless rasterise/reload cycle.
+            log.warn("[redact/execute] image box references out-of-range page {}", box.pageIndex());
+            return Collections.emptySet();
+        }
         List<float[]> boxes =
                 List.of(
                         new float[] {

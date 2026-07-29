@@ -40,6 +40,9 @@ final class RedactionVerifier {
 
     private static final int MAX_XOBJECT_DEPTH = 10;
 
+    private static final Pattern WHITESPACE_RUN = Pattern.compile("\\s+");
+    private static final Pattern BREAK_HYPHEN = Pattern.compile("-\\s+");
+
     // Latched false when the native PDFium binding can't load, so the host falls back to the PDFBox
     // pass.
     private static volatile boolean jpdfiumAvailable = true;
@@ -74,7 +77,8 @@ final class RedactionVerifier {
                 if (font == null || !visited.add(font)) {
                     continue;
                 }
-                if (font instanceof PDType0Font || font instanceof PDTrueTypeFont) {
+                if ((font instanceof PDType0Font || font instanceof PDTrueTypeFont)
+                        && font.isEmbedded()) {
                     anyEmbedded = true;
                 }
             }
@@ -102,27 +106,31 @@ final class RedactionVerifier {
                 (affectedPages == null || affectedPages.isEmpty())
                         ? null
                         : new TreeSet<>(affectedPages);
-        // PDFBox pass, blind to /ActualText so a benign override can't mask real glyphs.
-        boolean needNativePass;
-        try (PDDocument reopened = Loader.loadPDF(bytes)) {
-            assertNoTarget(extractText(reopened, pageSet), literalTargets, patterns);
-            needNativePass = documentHasUnreliableFont(reopened);
-        } catch (IOException e) {
-            throw new RedactionVerificationFailedException(
-                    "Failed to reopen redacted PDF for verification", e);
-        }
-        // Additive producer-independent pass: native PDFium sees glyphs PDFBox may miss (fonts with
-        // no ToUnicode).
-        if (needNativePass) {
-            String nativeText = extractTextJPDFium(bytes, pageSet);
-            if (nativeText == null) {
-                // Required independent pass could not run (native unavailable or doc over the size
-                // guard); fail closed.
+        try (DeadlineCharSequence.BudgetScope scope = DeadlineCharSequence.armSharedBudget()) {
+            // PDFBox pass, blind to /ActualText so a benign override can't mask real glyphs.
+            boolean needNativePass;
+            try (PDDocument reopened = Loader.loadPDF(bytes)) {
+                assertNoTarget(extractText(reopened, pageSet), literalTargets, patterns);
+                // Reliability only matters for the pages this verification actually reads.
+                needNativePass = documentHasUnreliableFont(reopened, pageSet);
+            } catch (IOException e) {
                 throw new RedactionVerificationFailedException(
-                        "Independent native verification could not run for a document whose fonts "
-                                + "PDFBox cannot reliably extract; cannot confirm removal");
+                        "Failed to reopen redacted PDF for verification", e);
             }
-            assertNoTarget(nativeText, literalTargets, patterns);
+            // Additive producer-independent pass: native PDFium sees glyphs PDFBox may miss
+            // (fonts with no ToUnicode).
+            if (needNativePass) {
+                String nativeText = extractTextJPDFium(bytes, pageSet);
+                if (nativeText == null) {
+                    // Required independent pass could not run (native unavailable, unreadable
+                    // page, or doc over the size guard); fail closed.
+                    throw new RedactionVerificationFailedException(
+                            "Independent native verification could not run for a document whose "
+                                    + "fonts PDFBox cannot reliably extract; cannot confirm "
+                                    + "removal");
+                }
+                assertNoTarget(nativeText, literalTargets, patterns);
+            }
         }
     }
 
@@ -134,16 +142,43 @@ final class RedactionVerifier {
      * inspection failure so the native pass runs whenever reliability is uncertain.
      */
     static boolean documentHasUnreliableFont(PDDocument document) {
+        return documentHasUnreliableFont(document, null);
+    }
+
+    /** Page-scoped variant: only inspects the given 0-based pages (all pages when null). */
+    static boolean documentHasUnreliableFont(PDDocument document, Set<Integer> pageIndexes) {
         try {
             Set<COSBase> visited = new HashSet<>();
+            int pageIndex = 0;
             for (PDPage page : document.getPages()) {
-                if (resourcesHaveUnreliableFont(page.getResources(), visited, 0)) {
+                boolean inScope = pageIndexes == null || pageIndexes.contains(pageIndex);
+                if (inScope && resourcesHaveUnreliableFont(page.getResources(), visited, 0)) {
                     return true;
                 }
+                pageIndex++;
             }
             return false;
         } catch (RuntimeException e) {
             return true;
+        }
+    }
+
+    /** 0-based pages whose resources carry an unreliable font; null when inspection fails. */
+    private static Set<Integer> pagesWithUnreliableFont(PDDocument document) {
+        try {
+            Set<Integer> pages = new TreeSet<>();
+            int pageIndex = 0;
+            for (PDPage page : document.getPages()) {
+                // Fresh visited set per page: a shared resource dict must count for every
+                // page that references it.
+                if (resourcesHaveUnreliableFont(page.getResources(), new HashSet<>(), 0)) {
+                    pages.add(pageIndex);
+                }
+                pageIndex++;
+            }
+            return pages;
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 
@@ -212,16 +247,18 @@ final class RedactionVerifier {
         if (extracted == null) {
             return;
         }
-        String normalised = extracted.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+        String normalised =
+                WHITESPACE_RUN.matcher(extracted.toLowerCase(Locale.ROOT)).replaceAll(" ");
         // De-hyphenated view catches a target split by a soft hyphen (U+00AD) or a line-break
         // hyphen ("-" + space).
-        String dehyphenated = normalised.replace("\u00ad", "").replaceAll("-\\s+", "");
+        String dehyphenated = BREAK_HYPHEN.matcher(normalised.replace("\u00ad", "")).replaceAll("");
         if (literalTargets != null) {
             for (String target : literalTargets) {
                 if (target == null || target.isEmpty()) {
                     continue;
                 }
-                String needle = target.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+                String needle =
+                        WHITESPACE_RUN.matcher(target.toLowerCase(Locale.ROOT)).replaceAll(" ");
                 if (normalised.contains(needle) || dehyphenated.contains(needle)) {
                     throw new RedactionVerificationFailedException(
                             "Redacted text still extractable: '" + target + "'");
@@ -283,12 +320,20 @@ final class RedactionVerifier {
             int n = doc.pageCount();
             if (pageIndexes == null) {
                 for (int i = 0; i < n; i++) {
-                    sb.append(jpdfiumPlainText(doc, i)).append('\n');
+                    String pageText = jpdfiumPlainText(doc, i);
+                    if (pageText == null) {
+                        return null; // one unreadable page = the whole pass proves nothing
+                    }
+                    sb.append(pageText).append('\n');
                 }
             } else {
                 for (Integer p : pageIndexes) {
                     if (p != null && p >= 0 && p < n) {
-                        sb.append(jpdfiumPlainText(doc, p)).append('\n');
+                        String pageText = jpdfiumPlainText(doc, p);
+                        if (pageText == null) {
+                            return null;
+                        }
+                        sb.append(pageText).append('\n');
                     }
                 }
             }
@@ -299,11 +344,13 @@ final class RedactionVerifier {
         }
     }
 
+    /** Plain text of one page; null (NOT empty) when the page can't be read, to fail closed. */
     private static String jpdfiumPlainText(PdfDocument doc, int i) {
         try {
             return PdfTextExtractor.extractPage(doc, i).plainText();
         } catch (RuntimeException | Error e) {
-            return "";
+            log.debug("JPDFium could not extract page {}: {}", i + 1, e.toString());
+            return null;
         }
     }
 
@@ -350,23 +397,42 @@ final class RedactionVerifier {
     static Set<Integer> findLeakingPages(
             byte[] bytes, Set<String> literalTargets, List<Pattern> patterns) {
         List<String> jpdfiumPages = extractPagesJPDFium(bytes);
-        try (PDDocument reopened = Loader.loadPDF(bytes)) {
-            // Native pass required but unavailable: PDFBox can't localise the leak, so rasterise
-            // every page.
-            if (jpdfiumPages == null && documentHasUnreliableFont(reopened)) {
-                log.warn(
-                        "Independent native pass unavailable on an unreliable-font document; "
-                                + "rasterising all pages to guarantee removal.");
-                return null;
-            }
+        try (DeadlineCharSequence.BudgetScope scope = DeadlineCharSequence.armSharedBudget();
+                PDDocument reopened = Loader.loadPDF(bytes)) {
             Set<Integer> leaking = new TreeSet<>();
+            if (jpdfiumPages == null) {
+                // Native pass unavailable: PDFBox can only be blind on unreliable-font pages,
+                // so treat exactly those as leaking (fail closed, page-scoped).
+                Set<Integer> uncertain = pagesWithUnreliableFont(reopened);
+                if (uncertain == null) {
+                    log.warn(
+                            "Independent native pass unavailable and font inspection failed; "
+                                    + "rasterising all pages to guarantee removal.");
+                    return null;
+                }
+                if (!uncertain.isEmpty()) {
+                    log.warn(
+                            "Independent native pass unavailable; rasterising unreliable-font "
+                                    + "page(s) {} to guarantee removal.",
+                            uncertain);
+                    leaking.addAll(uncertain);
+                }
+            }
             GlyphOnlyTextStripper stripper = new GlyphOnlyTextStripper();
             for (int i = 0; i < reopened.getNumberOfPages(); i++) {
+                if (leaking.contains(i)) {
+                    continue; // already being rasterised
+                }
                 stripper.setStartPage(i + 1);
                 stripper.setEndPage(i + 1);
                 String pdfboxText = stripper.getText(reopened);
                 String jpdfiumText =
                         jpdfiumPages != null && i < jpdfiumPages.size() ? jpdfiumPages.get(i) : "";
+                if (jpdfiumText == null) {
+                    // Native pass could not read this page, so it can't be proven clean.
+                    leaking.add(i);
+                    continue;
+                }
                 String combined = (pdfboxText == null ? "" : pdfboxText) + "\n" + jpdfiumText;
                 if (pageLeaks(combined, literalTargets, patterns)) {
                     leaking.add(i);
@@ -440,7 +506,8 @@ final class RedactionVerifier {
             TokenIndexCollector collector = new TokenIndexCollector(areaRects);
             collector.setStartPage(pageIndex + 1);
             collector.setEndPage(pageIndex + 1);
-            collector.getText(doc);
+            // Only the glyph positions matter; discard the assembled text.
+            collector.writeText(doc, java.io.Writer.nullWriter());
             return collector.anyGlyphInRect();
         } catch (Exception e) {
             return true; // cannot prove the rect is clean - rasterise to be safe

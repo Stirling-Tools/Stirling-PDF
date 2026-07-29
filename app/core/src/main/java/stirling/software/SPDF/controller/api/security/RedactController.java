@@ -36,6 +36,7 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyl
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.redaction.RedactionPipeline;
+import stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -109,13 +110,14 @@ public class RedactController {
             PDPageTree allPages = document.getDocumentCatalog().getPages();
 
             // Whole-page wipes drop content; areas drop glyphs + overlay, verified later.
-            manualRedactionService.redactPages(request, document, allPages);
+            List<Integer> wipedPages =
+                    manualRedactionService.redactPages(request, document, allPages);
             ManualRedactionService.AreaRedactionResult areaResult =
                     manualRedactionService.redactAreas(request.getRedactions(), document, allPages);
 
             TempFile out =
                     manualRedactionService.finalizeManual(
-                            document, areaResult, request.getConvertPDFToImage());
+                            document, areaResult, wipedPages, request.getConvertPDFToImage());
             return WebResponseUtils.pdfFileToWebResponse(out, filename);
         }
     }
@@ -269,6 +271,13 @@ public class RedactController {
 
         } catch (Exception e) {
             log.error("Redaction operation failed: {}", e.getMessage(), e);
+            // Typed failures keep their HTTP mapping (400 invalid input, 422 unverifiable).
+            if (e instanceof IllegalArgumentException iae) {
+                throw iae;
+            }
+            if (e instanceof RedactionVerificationFailedException rvfe) {
+                throw rvfe;
+            }
             throw new RuntimeException("Failed to perform PDF redaction: " + e.getMessage(), e);
 
         } finally {

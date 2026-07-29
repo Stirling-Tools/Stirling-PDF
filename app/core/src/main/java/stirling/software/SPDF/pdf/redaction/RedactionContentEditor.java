@@ -6,12 +6,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -117,7 +115,8 @@ final class RedactionContentEditor {
 
     // Per-page content-stream rewrite (literal/regex based)
 
-    static void rewritePageContent(PDDocument document, PDPage page, List<Pattern> patterns)
+    static void rewritePageContent(
+            PDDocument document, PDPage page, List<Pattern> patterns, Set<COSBase> visitedForms)
             throws IOException {
         PDResources resources = page.getResources();
         if (resources == null) {
@@ -128,8 +127,8 @@ final class RedactionContentEditor {
         if (modified) {
             writePageTokens(document, page, tokens);
         }
-        // Recurse into form XObjects referenced by this page (shared visited set + depth cap).
-        rewriteFormXObjects(resources, resources, patterns, new HashSet<>(), 0);
+        // Document-shared visited set: a form referenced from many pages is rewritten once.
+        rewriteFormXObjects(resources, resources, patterns, visitedForms, 0);
     }
 
     private static void rewriteFormXObjects(
@@ -159,6 +158,8 @@ final class RedactionContentEditor {
                 boolean modified = rewriteTokens(tokens, formResources, patterns);
                 if (modified) {
                     // A form XObject's content IS its own stream body; overwrite it in place.
+                    // Drop stale /DecodeParms so they can't clash with the new Flate filter.
+                    form.getCOSObject().removeItem(COSName.DECODE_PARMS);
                     PDStream formStream = new PDStream(form.getCOSObject());
                     try (var out = formStream.createOutputStream(COSName.FLATE_DECODE)) {
                         new ContentStreamWriter(out).writeTokens(tokens);
@@ -304,20 +305,24 @@ final class RedactionContentEditor {
         StringBuilder sb = new StringBuilder(bytes.length);
         int[] codeStart = new int[bytes.length];
         int[] codeLen = new int[bytes.length];
+        int[] codes = new int[bytes.length];
         for (int i = 0; i < bytes.length; i++) {
             sb.append((char) (bytes[i] & 0xFF));
             codeStart[i] = i;
             codeLen[i] = 1;
+            codes[i] = bytes[i] & 0xFF;
         }
-        return new DecodeResult(sb.toString(), bytes, codeStart, codeLen);
+        return new DecodeResult(sb.toString(), bytes, codeStart, codeLen, codes, true);
     }
 
     /** Decode a COSString to Unicode via the font; null if decoding fails. */
     private static DecodeResult decodeCosString(COSString cosString, PDFont font) {
         byte[] bytes = cosString.getBytes();
-        StringBuilder text = new StringBuilder();
-        List<Integer> starts = new ArrayList<>();
-        List<Integer> lens = new ArrayList<>();
+        StringBuilder text = new StringBuilder(bytes.length);
+        int[] starts = new int[Math.max(8, bytes.length)];
+        int[] lens = new int[starts.length];
+        int[] codes = new int[starts.length];
+        int n = 0;
         try (ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
             int pos = 0;
             while (in.available() > 0) {
@@ -345,9 +350,17 @@ final class RedactionContentEditor {
                 }
                 text.append(unicode);
                 // Associate every Unicode character produced with the same code byte range
+                if (n + unicode.length() > starts.length) {
+                    int cap = Math.max(starts.length * 2, n + unicode.length());
+                    starts = Arrays.copyOf(starts, cap);
+                    lens = Arrays.copyOf(lens, cap);
+                    codes = Arrays.copyOf(codes, cap);
+                }
                 for (int c = 0; c < unicode.length(); c++) {
-                    starts.add(pos);
-                    lens.add(consumed);
+                    starts[n] = pos;
+                    lens[n] = consumed;
+                    codes[n] = code;
+                    n++;
                 }
                 if (consumed == 0) {
                     // Defensive: avoid infinite loop on malformed fonts.
@@ -358,15 +371,18 @@ final class RedactionContentEditor {
         } catch (IOException e) {
             return null;
         }
-        int[] startArr = starts.stream().mapToInt(Integer::intValue).toArray();
-        int[] lenArr = lens.stream().mapToInt(Integer::intValue).toArray();
-        return new DecodeResult(text.toString(), bytes, startArr, lenArr);
+        return new DecodeResult(
+                text.toString(),
+                bytes,
+                Arrays.copyOf(starts, n),
+                Arrays.copyOf(lens, n),
+                Arrays.copyOf(codes, n),
+                false);
     }
 
     /** Null if no pattern matches; else a per-char drop mask over the text. */
     private static boolean[] findDroppedCharsMask(String text, List<Pattern> patterns) {
-        boolean any = false;
-        boolean[] mask = new boolean[text.length()];
+        boolean[] mask = null;
         for (Pattern pattern : patterns) {
             Matcher m;
             try {
@@ -378,13 +394,16 @@ final class RedactionContentEditor {
                 int s = m.start();
                 int e = m.end();
                 if (e <= s) continue;
+                if (mask == null) {
+                    // Most tokens never match; allocate only on the first hit.
+                    mask = new boolean[text.length()];
+                }
                 for (int i = s; i < e; i++) {
                     mask[i] = true;
                 }
-                any = true;
             }
         }
-        return any ? mask : null;
+        return mask;
     }
 
     private static COSString buildFilteredCosString(
@@ -394,39 +413,46 @@ final class RedactionContentEditor {
 
     private static COSString buildFilteredCosStringRaw(
             DecodeResult decoded, boolean[] drop, PDFont font, byte[] originalBytes) {
-        // Collect code byte-ranges to drop.
-        Set<Integer> dropStarts = new HashSet<>();
-        for (int i = 0; i < drop.length; i++) {
-            if (drop[i]) {
-                dropStarts.add(decoded.codeStarts[i]);
+        // Space encoded once per string, and with a 1-byte 0x20 after a latin fallback: the
+        // real font's multi-byte space would shift the byte grid and scramble what follows.
+        byte[] spaceBytes = tryEncodeSpace(decoded.latinFallback ? null : font);
+        ByteArrayOutputStream out = new ByteArrayOutputStream(originalBytes.length);
+        int nChars = decoded.codeStarts.length;
+        int ci = 0;
+        int bytePos = 0;
+        // Code starts ascend from 0, so walk codes: chars sharing a start form one code.
+        while (ci < nChars) {
+            int start = decoded.codeStarts[ci];
+            int len = decoded.codeLens[ci];
+            if (start > bytePos) {
+                // Bytes no decoded char covers (e.g. empty ToUnicode entry): keep verbatim.
+                out.write(originalBytes, bytePos, start - bytePos);
             }
-        }
-        // Map byte-start -> code length once (O(n)); findCodeLenAt was an O(n^2) linear scan.
-        Map<Integer, Integer> lenByStart = new HashMap<>();
-        for (int j = 0; j < decoded.codeStarts.length; j++) {
-            lenByStart.putIfAbsent(decoded.codeStarts[j], decoded.codeLens[j]);
-        }
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int i = 0;
-        while (i < originalBytes.length) {
-            int start = i;
-            int len = lenByStart.getOrDefault(start, -1);
+            boolean dropCode = false;
+            int cj = ci;
+            while (cj < nChars && decoded.codeStarts[cj] == start) {
+                dropCode |= drop[cj];
+                cj++;
+            }
             if (len <= 0) {
-                // Unknown - keep the byte verbatim.
-                out.write(originalBytes[i] & 0xFF);
-                i += 1;
+                // Malformed decode stall: leave the remaining bytes to the trailing keep.
+                bytePos = start;
+                ci = cj;
                 continue;
             }
-            if (dropStarts.contains(start)) {
-                // Replace dropped code with encoded space if possible.
-                byte[] spaceBytes = tryEncodeSpace(font);
+            if (dropCode) {
                 if (spaceBytes != null) {
                     out.write(spaceBytes, 0, spaceBytes.length);
                 }
             } else {
                 out.write(originalBytes, start, len);
             }
-            i += len;
+            bytePos = start + len;
+            ci = cj;
+        }
+        if (bytePos < originalBytes.length) {
+            // Trailing bytes the decode never reached: keep verbatim.
+            out.write(originalBytes, bytePos, originalBytes.length - bytePos);
         }
         return new COSString(out.toByteArray());
     }
@@ -448,12 +474,22 @@ final class RedactionContentEditor {
         final byte[] bytes;
         final int[] codeStarts;
         final int[] codeLens;
+        final int[] codes;
+        final boolean latinFallback;
 
-        DecodeResult(String text, byte[] bytes, int[] codeStarts, int[] codeLens) {
+        DecodeResult(
+                String text,
+                byte[] bytes,
+                int[] codeStarts,
+                int[] codeLens,
+                int[] codes,
+                boolean latinFallback) {
             this.text = text;
             this.bytes = bytes;
             this.codeStarts = codeStarts;
             this.codeLens = codeLens;
+            this.codes = codes;
+            this.latinFallback = latinFallback;
         }
     }
 
@@ -502,7 +538,8 @@ final class RedactionContentEditor {
      * or an image sits under a rect - leaving the page stream untouched so the raster is correct.
      */
     static boolean removeTokensIntersectingRects(
-            PDDocument document, PDPage page, List<PDRectangle> rects) throws IOException {
+            PDDocument document, PDPage page, int pageIndex, List<PDRectangle> rects)
+            throws IOException {
 
         List<Rectangle2D.Float> areaRects = new ArrayList<>();
         for (PDRectangle rect : rects) {
@@ -512,11 +549,11 @@ final class RedactionContentEditor {
                             rect.getLowerLeftX(), pdfY, rect.getWidth(), rect.getHeight()));
         }
 
-        int pageIndex = document.getPages().indexOf(page);
         TokenIndexCollector collector = new TokenIndexCollector(areaRects);
         collector.setStartPage(pageIndex + 1);
         collector.setEndPage(pageIndex + 1);
-        collector.getText(document);
+        // Only the glyph indexes matter; discard the assembled text instead of building it.
+        collector.writeText(document, java.io.Writer.nullWriter());
         int collectorTextOps = collector.totalTextOps();
 
         List<Object> tokens = parseTokens(new PDFStreamParser(page));
@@ -581,25 +618,6 @@ final class RedactionContentEditor {
         return true;
     }
 
-    /** Distinct code byte-starts in order (one per glyph/code) from a per-char DecodeResult. */
-    private static int[] distinctCodeStarts(DecodeResult d) {
-        List<Integer> starts = new ArrayList<>();
-        int last = -1;
-        for (int s : d.codeStarts) {
-            if (s != last) {
-                starts.add(s);
-                last = s;
-            }
-        }
-        return starts.stream().mapToInt(Integer::intValue).toArray();
-    }
-
-    private static int codeAt(PDFont font, byte[] bytes, int start, int len) throws IOException {
-        try (ByteArrayInputStream in = new ByteArrayInputStream(bytes, start, len)) {
-            return font.readCode(in);
-        }
-    }
-
     /**
      * Rebuild a Tj/TJ operand as a TJ array that keeps every glyph EXCEPT the given 0-based
      * indexes, replacing each dropped run with a numeric adjustment equal to its advance so the
@@ -644,14 +662,12 @@ final class RedactionContentEditor {
                 return null;
             }
             byte[] b = s.getBytes();
-            int[] starts = distinctCodeStarts(d);
-            Map<Integer, Integer> lenByStart = new HashMap<>();
-            for (int j = 0; j < d.codeStarts.length; j++) {
-                lenByStart.putIfAbsent(d.codeStarts[j], d.codeLens[j]);
-            }
-            for (int k = 0; k < starts.length; k++) {
-                int bs = starts[k];
-                int len = lenByStart.getOrDefault(bs, -1);
+            int nChars = d.codeStarts.length;
+            int ci = 0;
+            // Walk distinct code starts (chars sharing a start form one glyph/code).
+            while (ci < nChars) {
+                int bs = d.codeStarts[ci];
+                int len = d.codeLens[ci];
                 if (len <= 0) {
                     return null;
                 }
@@ -661,7 +677,7 @@ final class RedactionContentEditor {
                         seg.reset();
                     }
                     try {
-                        pendingAdvance += font.getWidth(codeAt(font, b, bs, len));
+                        pendingAdvance += font.getWidth(d.codes[ci]);
                     } catch (Exception e) {
                         return null;
                     }
@@ -673,6 +689,9 @@ final class RedactionContentEditor {
                     seg.write(b, bs, len);
                 }
                 globalCode++;
+                while (ci < nChars && d.codeStarts[ci] == bs) {
+                    ci++;
+                }
             }
         }
         if (pendingAdvance != 0f) {

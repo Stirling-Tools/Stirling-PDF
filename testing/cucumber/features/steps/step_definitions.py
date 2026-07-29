@@ -289,17 +289,12 @@ _DEJAVU_TTF = os.path.normpath(
         "app", "core", "src", "main", "resources", "static", "fonts", "DejaVuSans.ttf",
     )
 )
-_embedded_font_registered = False
-
-
 def _ensure_embedded_font():
-    global _embedded_font_registered
-    if not _embedded_font_registered:
-        from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.pdfbase import pdfmetrics
 
-        pdfmetrics.registerFont(TTFont("DejaVuEmbedded", _DEJAVU_TTF))
-        _embedded_font_registered = True
+    # registerFont is idempotent for the same name, so no cached flag is needed.
+    pdfmetrics.registerFont(TTFont("DejaVuEmbedded", _DEJAVU_TTF))
 
 
 @given('the pdf pages all contain the text "{text}" in an embedded font')

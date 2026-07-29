@@ -13,16 +13,23 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.utils.text.TextFinderUtils;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
 
 /**
@@ -49,6 +56,15 @@ public final class RedactionPipeline {
             Map<Integer, List<PDRectangle>> rectsByPageIndex,
             Color overlayColor)
             throws IOException {
+        RedactionResult result = removeAreas(document, rectsByPageIndex);
+        overlayAreas(document, rectsByPageIndex, overlayColor);
+        return result;
+    }
+
+    /** Capture + surgical glyph removal + annotation drop for the rects, without overlays. */
+    public static RedactionResult removeAreas(
+            PDDocument document, Map<Integer, List<PDRectangle>> rectsByPageIndex)
+            throws IOException {
 
         Set<String> capturedStrings = new LinkedHashSet<>();
         Set<Integer> forceRasterPages = new LinkedHashSet<>();
@@ -67,15 +83,31 @@ public final class RedactionPipeline {
             boolean surgical =
                     RedactionContentEditor.isSurgicallySafe(page)
                             && RedactionContentEditor.removeTokensIntersectingRects(
-                                    document, page, rects);
+                                    document, page, pageIndex, rects);
             if (!surgical) {
                 forceRasterPages.add(pageIndex);
             }
             RedactionContentEditor.removeOverlappingAnnotations(page, rects);
-            RedactionContentEditor.drawOverlay(document, page, rects, overlayColor);
         }
 
         return new RedactionResult(capturedStrings, forceRasterPages);
+    }
+
+    /** Draw opaque overlays over the rects in one colour (removal happens in removeAreas). */
+    public static void overlayAreas(
+            PDDocument document,
+            Map<Integer, List<PDRectangle>> rectsByPageIndex,
+            Color overlayColor)
+            throws IOException {
+        for (Map.Entry<Integer, List<PDRectangle>> entry : rectsByPageIndex.entrySet()) {
+            int pageIndex = entry.getKey();
+            List<PDRectangle> rects = entry.getValue();
+            if (pageIndex < 0 || pageIndex >= document.getNumberOfPages() || rects.isEmpty()) {
+                continue;
+            }
+            RedactionContentEditor.drawOverlay(
+                    document, document.getPage(pageIndex), rects, overlayColor);
+        }
     }
 
     /** Wipe whole pages: drop all content/resources, fill with a rectangle. */
@@ -88,6 +120,9 @@ public final class RedactionPipeline {
             PDPage page = document.getPage(pageIndex);
             PDRectangle media = page.getMediaBox();
 
+            // Widgets stay reachable via /AcroForm even after /Annots goes, so their field
+            // values would survive the wipe; detach them first.
+            detachAcroFormWidgets(document, page);
             // Drop existing content streams and page resources outright.
             page.getCOSObject().removeItem(COSName.CONTENTS);
             page.setResources(new PDResources());
@@ -109,28 +144,99 @@ public final class RedactionPipeline {
         }
     }
 
+    /** Remove this page's widgets from the AcroForm tree; fields left widgetless go entirely. */
+    public static void detachAcroFormWidgets(PDDocument document, PDPage page) {
+        try {
+            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+            if (acroForm == null) {
+                return;
+            }
+            Set<COSDictionary> pageWidgets = new HashSet<>();
+            for (PDAnnotation ann : page.getAnnotations()) {
+                if (ann instanceof PDAnnotationWidget) {
+                    pageWidgets.add(ann.getCOSObject());
+                }
+            }
+            if (pageWidgets.isEmpty()) {
+                return;
+            }
+            removeFieldsWithWidgets(
+                    acroForm.getCOSObject().getCOSArray(COSName.FIELDS), pageWidgets, 0);
+        } catch (Exception e) {
+            log.warn(
+                    "Could not detach AcroForm widgets from a wiped page; field values may "
+                            + "survive: {}",
+                    e.toString());
+        }
+    }
+
+    private static void removeFieldsWithWidgets(
+            COSArray fields, Set<COSDictionary> widgets, int depth) {
+        if (fields == null || depth > 32) {
+            return;
+        }
+        for (int i = fields.size() - 1; i >= 0; i--) {
+            if (!(fields.getObject(i) instanceof COSDictionary field)) {
+                continue;
+            }
+            COSArray kids = field.getCOSArray(COSName.KIDS);
+            if (kids != null) {
+                removeFieldsWithWidgets(kids, widgets, depth + 1);
+            }
+            boolean mergedWidget = widgets.contains(field);
+            boolean widgetlessAfterPrune = kids != null && kids.size() == 0;
+            if (mergedWidget || widgetlessAfterPrune) {
+                // Only shown on wiped pages: drop the field (and its /V) with the widget.
+                fields.remove(i);
+            }
+        }
+    }
+
     /** Physically remove every literal/regex match from all page content streams. */
     public static void redactLiteralTerms(
             PDDocument document, Set<String> literalTargets, List<Pattern> patterns)
+            throws IOException {
+        redactLiteralTerms(document, literalTargets, patterns, null);
+    }
+
+    /**
+     * Scoped variant: rewrite only the given 0-based pages (all pages when null). Sound whenever
+     * the scope comes from a finder pass, because the full verification pass still backstops any
+     * page the finder could not see into.
+     */
+    public static void redactLiteralTerms(
+            PDDocument document,
+            Set<String> literalTargets,
+            List<Pattern> patterns,
+            Set<Integer> pageIndexes)
             throws IOException {
         List<Pattern> effectivePatterns =
                 RedactionContentEditor.effectivePatterns(literalTargets, patterns);
         if (effectivePatterns.isEmpty()) {
             return;
         }
-        int pageIndex = 0;
-        for (PDPage page : document.getPages()) {
-            try {
-                RedactionContentEditor.rewritePageContent(document, page, effectivePatterns);
-            } catch (IOException | RuntimeException e) {
-                // Never let one page's font quirk (e.g. Type3 encode, damaged program)
-                log.warn(
-                        "Content-stream rewrite failed on page {} ({}); leaving it for the "
-                                + "verification/rasterisation pass.",
-                        pageIndex + 1,
-                        e.toString());
+        // Shared across pages so a form XObject referenced everywhere is rewritten once.
+        Set<COSBase> visitedForms = new HashSet<>();
+        try (DeadlineCharSequence.BudgetScope scope = DeadlineCharSequence.armSharedBudget()) {
+            int pageIndex = 0;
+            for (PDPage page : document.getPages()) {
+                if (pageIndexes != null && !pageIndexes.contains(pageIndex)) {
+                    pageIndex++;
+                    continue;
+                }
+                try {
+                    RedactionContentEditor.rewritePageContent(
+                            document, page, effectivePatterns, visitedForms);
+                } catch (IOException | RuntimeException e) {
+                    // Never let one page's font quirk (e.g. Type3 encode, damaged program)
+                    log.warn(
+                            "Content-stream rewrite failed on page {} ({}); leaving it for the "
+                                    + "verification/rasterisation pass.",
+                            pageIndex + 1,
+                            e.toString());
+                }
+                pageIndex++;
             }
-            pageIndex++;
         }
     }
 
@@ -178,8 +284,11 @@ public final class RedactionPipeline {
                 RedactionVerifier.verify(rasterBytes, literalTargets, patterns, affectedPages);
                 return rasterBytes;
             } catch (IOException e) {
-                throw new RedactionVerificationFailedException(
-                        "Rasterisation fallback failed after primary redaction leak", e);
+                RedactionVerificationFailedException wrapped =
+                        new RedactionVerificationFailedException(
+                                "Rasterisation fallback failed after primary redaction leak", e);
+                wrapped.addSuppressed(primaryFailure);
+                throw wrapped;
             }
         }
     }
@@ -193,10 +302,18 @@ public final class RedactionPipeline {
             throws IOException {
 
         // Text captured under the rects may also live in a bookmark / form value / annotation / JS
-        // carrier.
-        Set<String> carrierTargets =
-                capturedTargets == null ? Collections.emptySet() : capturedTargets;
-        CatalogScrubber.scrub(document, carrierTargets, Collections.emptyList());
+        // carrier. Tokens are fuzzy though: skip tiny ones and match at word boundaries so
+        // carriers are not substring-mangled (token "the" must not turn "Theory" into "ory").
+        Set<String> carrierTargets = new LinkedHashSet<>();
+        if (capturedTargets != null) {
+            for (String token : capturedTargets) {
+                if (token != null
+                        && token.trim().length() >= CatalogScrubber.MIN_CARRIER_DROP_LITERAL) {
+                    carrierTargets.add(token);
+                }
+            }
+        }
+        CatalogScrubber.scrub(document, carrierTargets, Collections.emptyList(), true);
         RedactionVerifier.warnAboutEmbeddedFontGlyphs(document);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -266,7 +383,10 @@ public final class RedactionPipeline {
                 // handling of user-supplied regex; ReDoS is bounded by DeadlineCharSequence.
                 patterns.add(RegexPatternUtils.getInstance().createSearchPattern(core, true));
             } catch (PatternSyntaxException e) {
-                log.debug("Skipping invalid regex '{}': {}", trimmed, e.getMessage());
+                // Fail closed: silently dropping the pattern would return an unredacted 200.
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.redaction.invalid.regex",
+                        "Invalid regex pattern: '" + trimmed + "' (" + e.getMessage() + ")");
             }
         }
         return patterns;

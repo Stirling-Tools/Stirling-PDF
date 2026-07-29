@@ -5,11 +5,17 @@ package stirling.software.SPDF.pdf.redaction;
  * the request thread: every {@link #charAt(int)} the matcher performs checks a wall-clock deadline
  * and throws once it is exceeded. The thrown {@link RegexTimeoutException} is a {@link
  * RuntimeException}, so the redaction match sites' existing fail-closed catches handle it.
+ *
+ * <p>Pipeline phases call {@link #armSharedBudget()} so every match in the phase draws from ONE
+ * budget; otherwise each token would get its own budget and the guard would not bound the request.
  */
 final class DeadlineCharSequence implements CharSequence {
 
-    /** Per-match wall-clock budget. A legitimate whole-document match finishes far inside this. */
+    /** Per-match wall-clock budget used when no shared phase budget is armed. */
     static final long DEFAULT_BUDGET_MILLIS = 2_000L;
+
+    /** Whole-phase budget; a legitimate whole-document pass finishes far inside this. */
+    static final long SHARED_BUDGET_MILLIS = 30_000L;
 
     static final class RegexTimeoutException extends RuntimeException {
         RegexTimeoutException(long budgetMillis) {
@@ -17,24 +23,56 @@ final class DeadlineCharSequence implements CharSequence {
         }
     }
 
+    /** Scope handle for an armed phase budget; close() restores the previous state. */
+    interface BudgetScope extends AutoCloseable {
+        @Override
+        void close();
+    }
+
+    private static final ThreadLocal<Long> SHARED_DEADLINE = new ThreadLocal<>();
+
     private final CharSequence inner;
     private final long deadlineNanos;
     private final long budgetMillis;
+    private int accessCount;
 
-    private DeadlineCharSequence(CharSequence inner, long budgetMillis) {
+    private DeadlineCharSequence(CharSequence inner, long deadlineNanos, long budgetMillis) {
         this.inner = inner;
+        this.deadlineNanos = deadlineNanos;
         this.budgetMillis = budgetMillis;
-        this.deadlineNanos = System.nanoTime() + budgetMillis * 1_000_000L;
     }
 
-    /** Wrap {@code text} with the default budget; null becomes an empty sequence. */
+    /**
+     * Arm one shared budget for every subsequent {@link #of} on this thread until close(). An
+     * already-armed outer scope wins so nesting keeps the outermost deadline.
+     */
+    static BudgetScope armSharedBudget() {
+        Long prev = SHARED_DEADLINE.get();
+        if (prev == null) {
+            SHARED_DEADLINE.set(System.nanoTime() + SHARED_BUDGET_MILLIS * 1_000_000L);
+            return SHARED_DEADLINE::remove;
+        }
+        return () -> {};
+    }
+
+    /** Wrap {@code text} with the armed shared budget, or a fresh default budget; null = empty. */
     static DeadlineCharSequence of(String text) {
-        return new DeadlineCharSequence(text == null ? "" : text, DEFAULT_BUDGET_MILLIS);
+        CharSequence inner = text == null ? "" : text;
+        Long shared = SHARED_DEADLINE.get();
+        if (shared != null) {
+            return new DeadlineCharSequence(inner, shared, SHARED_BUDGET_MILLIS);
+        }
+        return new DeadlineCharSequence(
+                inner,
+                System.nanoTime() + DEFAULT_BUDGET_MILLIS * 1_000_000L,
+                DEFAULT_BUDGET_MILLIS);
     }
 
     @Override
     public char charAt(int index) {
-        if (System.nanoTime() > deadlineNanos) {
+        // Poll the clock every 1024 accesses: keeps hot regex loops cheap while a
+        // backtracking blow-up (millions of reads/ms) still trips almost instantly.
+        if ((++accessCount & 1023) == 0 && System.nanoTime() > deadlineNanos) {
             throw new RegexTimeoutException(budgetMillis);
         }
         return inner.charAt(index);

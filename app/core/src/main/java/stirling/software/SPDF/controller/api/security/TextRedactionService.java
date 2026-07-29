@@ -698,6 +698,8 @@ class TextRedactionService {
             PDDocument document, PDFormXObject formXObject, List<Object> redactedTokens)
             throws IOException {
         // A form XObject's content IS its own stream body; overwrite it in place.
+        // Drop stale /DecodeParms so they can't clash with the new Flate filter.
+        formXObject.getCOSObject().removeItem(COSName.DECODE_PARMS);
         PDStream formStream = new PDStream(formXObject.getCOSObject());
         try (var out = formStream.createOutputStream(COSName.FLATE_DECODE)) {
             ContentStreamWriter writer = new ContentStreamWriter(out);

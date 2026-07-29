@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -102,13 +103,14 @@ class ManualRedactionService {
                         .add(rect);
             }
 
+            // One capture/removal pass per page for ALL rects; colour only matters for overlays.
+            RedactionPipeline.RedactionResult result =
+                    RedactionPipeline.removeAreas(document, Map.of(pageIndex, allRects));
+            capturedStrings.addAll(result.getCapturedStrings());
+            forceRasterPages.addAll(result.getForceRasterPages());
             for (Map.Entry<Color, List<PDRectangle>> colorEntry : byColor.entrySet()) {
-                Map<Integer, List<PDRectangle>> singlePage = new HashMap<>();
-                singlePage.put(pageIndex, colorEntry.getValue());
-                RedactionPipeline.RedactionResult result =
-                        RedactionPipeline.redactAreas(document, singlePage, colorEntry.getKey());
-                capturedStrings.addAll(result.getCapturedStrings());
-                forceRasterPages.addAll(result.getForceRasterPages());
+                RedactionPipeline.overlayAreas(
+                        document, Map.of(pageIndex, colorEntry.getValue()), colorEntry.getKey());
             }
             rectsByPage.put(pageIndex, allRects);
         }
@@ -362,8 +364,15 @@ class ManualRedactionService {
                                 convertedPdf, Collections.emptySet(), Collections.emptyList());
             }
         } else {
-            // Strip matched glyphs, then scrub/verify/rasterise via finalize.
-            RedactionPipeline.redactLiteralTerms(document, literalTargets, patterns);
+            // Strip matched glyphs only on pages the finder matched; the full verification in
+            // finalize still backstops pages it could not see into (ActualText, carriers).
+            if (!allFoundTextsByPage.isEmpty()) {
+                RedactionPipeline.redactLiteralTerms(
+                        document,
+                        literalTargets,
+                        patterns,
+                        new HashSet<>(allFoundTextsByPage.keySet()));
+            }
             outputBytes = RedactionPipeline.finalize(document, literalTargets, patterns);
             // Geometric (range/image-box) redactions can't be text-removed; rasterise their pages.
             outputBytes =
@@ -376,7 +385,10 @@ class ManualRedactionService {
 
     /** Finalize a manual redaction; forced + verified-leaking pages are rasterised. */
     TempFile finalizeManual(
-            PDDocument document, AreaRedactionResult areaResult, Boolean convertToImage)
+            PDDocument document,
+            AreaRedactionResult areaResult,
+            List<Integer> wipedPages,
+            Boolean convertToImage)
             throws IOException {
 
         byte[] outputBytes;
@@ -387,10 +399,28 @@ class ManualRedactionService {
                                 convertedPdf, Collections.emptySet(), Collections.emptyList());
             }
         } else {
+            // Wiped pages get a full-page verification rect: the post-save glyph check then
+            // proves the wipe held (any surviving glyph or annotation forces rasterisation).
+            Map<Integer, List<PDRectangle>> verifyRects = new HashMap<>(areaResult.rectsByPage);
+            if (wipedPages != null) {
+                for (Integer pageIndex : wipedPages) {
+                    if (pageIndex == null
+                            || pageIndex < 0
+                            || pageIndex >= document.getNumberOfPages()) {
+                        continue;
+                    }
+                    PDRectangle bbox = document.getPage(pageIndex).getBBox();
+                    List<PDRectangle> forPage =
+                            new ArrayList<>(
+                                    verifyRects.getOrDefault(pageIndex, Collections.emptyList()));
+                    forPage.add(new PDRectangle(bbox.getWidth(), bbox.getHeight()));
+                    verifyRects.put(pageIndex, forPage);
+                }
+            }
             outputBytes =
                     RedactionPipeline.finalizeAreas(
                             document,
-                            areaResult.rectsByPage,
+                            verifyRects,
                             areaResult.forceRasterPages,
                             areaResult.capturedStrings);
         }
