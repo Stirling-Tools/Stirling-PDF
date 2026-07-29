@@ -23,10 +23,12 @@
   border-bottom: 1px solid var(--c-border);
   white-space: nowrap;
 }
+
 .sui-table__th--right,
 .sui-table__td--right {
   text-align: right;
 }
+
 .sui-table__th--center,
 .sui-table__td--center {
   text-align: center;
@@ -38,6 +40,7 @@
   border-bottom: 1px solid var(--c-border-subtle);
   vertical-align: middle;
 }
+
 .sui-table tbody tr:last-child .sui-table__td {
   border-bottom: none;
 }
@@ -46,9 +49,11 @@
   cursor: pointer;
   transition: background var(--motion-fast);
 }
+
 .sui-table__row--interactive:hover {
   background: var(--c-hover);
 }
+
 .sui-table__row--interactive:focus-visible {
   outline: 0.125rem solid var(--c-primary);
   outline-offset: -0.125rem;

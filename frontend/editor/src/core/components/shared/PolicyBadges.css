@@ -33,10 +33,12 @@
 .policy-badge--enforcing svg {
   animation: policy-badge-spin 1s linear infinite;
 }
+
 @keyframes policy-badge-spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -45,16 +47,19 @@
 .policy-badge--recent {
   animation: policy-badge-pulse 4.5s ease-in-out forwards;
 }
+
 @keyframes policy-badge-pulse {
   0%,
   24%,
   48% {
     box-shadow: 0 0 0 0 transparent;
   }
+
   12%,
   36% {
     box-shadow: 0 0 5px 2px currentColor;
   }
+
   60%,
   100% {
     box-shadow: 0 0 0 0 transparent;

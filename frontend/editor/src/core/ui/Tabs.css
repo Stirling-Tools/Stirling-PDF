@@ -4,8 +4,6 @@
   flex-wrap: wrap;
 }
 
-.sui-tabs--pill {
-}
 .sui-tabs--underline {
   border-bottom: 1px solid var(--c-border-subtle);
   padding-bottom: var(--space-1);
@@ -41,6 +39,7 @@
 .sui-tabs--pill .sui-tabs__tab {
   border-radius: var(--radius-pill);
 }
+
 .sui-tabs--pill .sui-tabs__tab.is-active {
   color: var(--sui-tab-accent, var(--c-primary));
   background: var(--c-primary-tint);
@@ -55,6 +54,7 @@
   padding-bottom: var(--space-2);
   margin-bottom: -1px;
 }
+
 .sui-tabs--underline .sui-tabs__tab.is-active {
   color: var(--sui-tab-accent, var(--c-primary));
   border-bottom-color: var(--sui-tab-accent, var(--c-primary));

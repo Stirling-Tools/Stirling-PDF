@@ -8,9 +8,11 @@
   gap: 0;
   padding: 10px 10px 12px;
   position: relative;
+
   --file-text-height: 58px;
   --file-text-bottom: 12px;
   --thumb-text-gap: 6px;
+
   padding-bottom: calc(
     var(--file-text-bottom) + var(--file-text-height) + var(--thumb-text-gap)
   );
@@ -106,6 +108,7 @@
   height: var(--file-text-height);
   text-align: center;
   pointer-events: none;
+
   --file-name-line-height: 18px;
   --file-name-lines: 2;
   --file-meta-line-height: 14px;
@@ -169,9 +172,9 @@
 }
 
 .card:hover
-  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
+[data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
 .card:focus-within
-  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+[data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
   opacity: 1;
   pointer-events: auto;
 }

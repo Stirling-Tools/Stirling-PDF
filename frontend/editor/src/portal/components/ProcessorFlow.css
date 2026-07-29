@@ -360,9 +360,11 @@
   0% {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--pf-accent) 55%, transparent);
   }
+
   70% {
     box-shadow: 0 0 0 0.4rem transparent;
   }
+
   100% {
     box-shadow: 0 0 0 0 transparent;
   }
@@ -375,10 +377,12 @@
   .portal-pf__particles {
     display: none;
   }
+
   .portal-pf__cols {
     flex-direction: column;
     gap: 0.75rem;
   }
+
   .portal-pf__col,
   .portal-pf__policies {
     width: 100%;

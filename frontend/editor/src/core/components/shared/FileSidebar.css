@@ -8,6 +8,7 @@
   height: 100%;
   position: relative;
   z-index: 10;
+
   /* Animating width + min-width + max-width together can leave the flex layout
      stuck on the pre-animation size in some browsers. Snap instead and rely
      on the inner content fade for visual smoothness. */
@@ -67,7 +68,7 @@
   gap: 10px;
   cursor: pointer;
   border-radius: 4px;
-  margin: 4px 4px 0 4px;
+  margin: 4px 4px 0;
   flex-shrink: 0;
   transition: background-color 0.15s ease;
 }
@@ -164,6 +165,7 @@
 }
 
 /* ---- Scrollable content ---- */
+
 /* This is a flex column - action rows are fixed, only the file list scrolls */
 .file-sidebar-scroll {
   flex: 1;
@@ -176,9 +178,11 @@
 .file-sidebar-scroll::-webkit-scrollbar {
   width: 4px;
 }
+
 .file-sidebar-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .file-sidebar-scroll::-webkit-scrollbar-thumb {
   background: rgb(var(--border));
   border-radius: 2px;
@@ -207,6 +211,7 @@
   cursor: not-allowed;
   pointer-events: auto;
 }
+
 .file-sidebar-action-row.disabled:hover {
   background-color: transparent;
 }
@@ -326,6 +331,7 @@
   font-weight: 600;
   text-align: left;
 }
+
 .file-sidebar-group-header:hover {
   background: var(--c-hover, var(--c-hover));
 }
@@ -356,15 +362,18 @@
 .file-sidebar-group-items {
   padding-left: 0;
 }
+
 .file-sidebar-group-items .file-sidebar-file-item {
   padding: 5px 10px 5px 1.4rem;
   gap: 8px;
   border-radius: 0;
 }
+
 /* Hover reads neutral (not the default blue tint); selected stays blue. */
 .file-sidebar-group-items .file-sidebar-file-item:hover:not(.selected) {
   background-color: var(--c-hover);
 }
+
 /* A plain circle where the selected check sits — on hover, and blue when selected. */
 .file-sidebar-group-items .file-sidebar-file-checkbox-hover,
 .file-sidebar-group-items .file-sidebar-file-check {
@@ -395,6 +404,7 @@
 .file-sidebar-group-items .file-sidebar-kebab-btn {
   display: none;
 }
+
 .file-sidebar-group-items .file-sidebar-file-item:hover .file-sidebar-eye-btn,
 .file-sidebar-group-items .file-sidebar-file-item:hover .file-sidebar-kebab-btn,
 .file-sidebar-group-items .file-sidebar-kebab-btn[aria-expanded="true"],
@@ -420,9 +430,11 @@
   text-align: left;
   overflow: visible;
 }
+
 .file-sidebar-view-all::before {
   display: none;
 }
+
 .file-sidebar-view-all:hover {
   background: var(--c-hover);
 }
@@ -430,20 +442,23 @@
 .file-sidebar-file-list::-webkit-scrollbar {
   width: 4px;
 }
+
 .file-sidebar-file-list::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .file-sidebar-file-list::-webkit-scrollbar-thumb {
   background: rgb(var(--border));
   border-radius: 2px;
 }
+
 .file-sidebar-file-list::-webkit-scrollbar-thumb:hover {
   background: var(--c-text-subtle);
 }
 
 .file-sidebar-section-divider {
   border-top: 1px solid var(--c-border-subtle);
-  margin: 10px 14px 6px 14px;
+  margin: 10px 14px 6px;
 }
 
 .file-sidebar-section-header {
@@ -451,8 +466,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 12px 14px 6px 14px;
-  margin: 4px 0 0 0;
+  padding: 12px 14px 6px;
+  margin: 4px 0 0;
 }
 
 .file-sidebar-section-header {
@@ -476,6 +491,7 @@
 .file-sidebar-bulk-add {
   padding: 4px 14px 8px;
 }
+
 .file-sidebar-bulk-add-label {
   display: flex;
   align-items: center;
@@ -484,15 +500,18 @@
   color: var(--c-text-subtle);
   margin-bottom: 4px;
 }
+
 .file-sidebar-bulk-add-count {
   font-variant-numeric: tabular-nums;
 }
+
 .file-sidebar-bulk-add-track {
   height: 3px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--c-primary) 15%, transparent);
   overflow: hidden;
 }
+
 .file-sidebar-bulk-add-bar {
   height: 100%;
   border-radius: 999px;
@@ -549,12 +568,14 @@
 }
 
 /* ---- Sidebar content fade (for collapsed state) ---- */
+
 /* Elements are conditionally rendered so use animation (not transition) to fade in from 0.
    Delay until the width animation is nearly done (0.18s of 0.22s) to avoid squashed-text effect. */
 @keyframes sidebar-content-in {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

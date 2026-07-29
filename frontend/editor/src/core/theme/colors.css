@@ -1,4 +1,5 @@
 /* COLORS — canonical semantic core (~21 --c-* tokens) mapped from primitives.css per theme; compat.css aliases legacy names onto these. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Portal/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
+
 /* Surface elevation: --c-bg (canvas) < --c-bg-raised (sidebars) < --c-surface (cards) < --c-surface-raised < --c-surface-sunken; plus --c-input-bg, --c-hover, --c-active, --c-overlay. */
 
 /* ── LIGHT ───────────────────────────────────────────────────────────────── */
@@ -14,29 +15,26 @@ html[data-app-theme="light"] {
   --c-hover: var(--p-gray-50);
   --c-active: var(--p-gray-100);
   --c-overlay: rgba(0, 0, 0, 0.5);
-
   --c-text: var(--p-gray-900);
   --c-text-muted: var(--p-gray-600);
   --c-text-subtle: var(--p-gray-500);
   --c-text-on-primary: var(--p-white);
-
   --c-border: var(--p-gray-250);
   --c-border-subtle: var(--p-gray-200);
   --c-border-strong: var(--p-gray-400);
-
   --c-primary: var(--p-blue-500);
   --c-primary-hover: var(--p-blue-600);
   --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
-
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
   --c-warning: var(--p-amber-600);
+
   /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
   --c-highlight: var(--p-flash-yellow);
+
   /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */
   --c-brand: var(--p-brand-red);
   --c-brand-hover: var(--p-brand-red-600);
-
   --c-primary-tint: color-mix(in srgb, var(--c-primary) 14%, var(--c-surface));
   --c-primary-border: color-mix(
     in srgb,
@@ -119,20 +117,16 @@ html[data-app-theme="midnight"] {
   --c-hover: var(--p-gray-800);
   --c-active: var(--p-gray-800);
   --c-overlay: rgba(0, 0, 0, 0.6);
-
   --c-text: var(--p-zinc-100);
   --c-text-muted: var(--p-zinc-200);
   --c-text-subtle: var(--p-zinc-300);
   --c-text-on-primary: var(--p-white);
-
   --c-border: var(--p-zinc-650);
   --c-border-subtle: rgba(255, 255, 255, 0.05);
   --c-border-strong: var(--p-zinc-500);
-
   --c-primary: var(--p-blue-500);
   --c-primary-hover: var(--p-blue-700);
   --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 15%, transparent);
-
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
   --c-warning: var(--p-amber-500);
@@ -189,6 +183,7 @@ html[data-app-theme="custom"] {
   --color-primary-900: color-mix(in srgb, var(--c-primary) 46%, var(--p-black));
   --mantine-primary-color-filled: var(--c-primary);
   --mantine-primary-color-filled-hover: var(--c-primary-hover);
+
   /* Mantine "light" variant surfaces (chips, subtle buttons, some panels). */
   --mantine-primary-color-light: color-mix(
     in srgb,
@@ -269,6 +264,7 @@ html[data-app-theme="custom"] {
 
 /* ── DARK — editor dark theme: neutral text/borders/icons + accent-tinted surfaces (default override opts out). After :root so it wins for dark. ── */
 html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
+
   /* Neutral text / borders / overlay (not accent-tinted). */
   --c-text: var(--p-zinc-100);
   --c-text-muted: var(--p-zinc-200);

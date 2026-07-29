@@ -29,6 +29,7 @@
   padding-bottom: 0.5rem;
   font-size: 0.75rem;
   color: var(--c-text-subtle);
+
   /* Align the text with tool labels to account for icon gutter */
   padding-left: 1rem;
 }
@@ -74,6 +75,7 @@
 .tool-button .mantine-Button-label {
   font-size: 0.84rem;
   font-weight: 500;
+
   /* ≥1.4 so the overflow:hidden label box contains glyph descenders (g/y/p);
      row height is icon-bound (~24px) so this doesn't change row size. */
   line-height: 1.4;

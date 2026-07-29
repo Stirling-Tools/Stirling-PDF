@@ -4,7 +4,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 8px 0 8px;
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -13,9 +13,11 @@
 .file-sidebar-file-list::-webkit-scrollbar {
   width: 4px;
 }
+
 .file-sidebar-file-list::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .file-sidebar-file-list::-webkit-scrollbar-thumb {
   background: var(--c-border);
   border-radius: 2px;
@@ -31,6 +33,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.12s ease;
+
   /* Skip layout/paint for offscreen rows — with hundreds of files the browser
      only renders the viewport's worth. The intrinsic-size hint keeps scrollbar
      geometry stable for unrendered rows. */
@@ -296,6 +299,7 @@
   top: 0;
   bottom: 0;
   z-index: 2;
+
   /* solid base + green tint overlay so content behind doesn't bleed through */
   background-color: var(--c-bg-raised);
   background-image: linear-gradient(
@@ -335,11 +339,13 @@
 .file-sidebar-eye-open {
   display: block !important;
 }
+
 .file-sidebar-eye-closed,
 /* On hover over a viewed item: swap to eye-closed */
 .file-sidebar-file-item.viewed:hover .file-sidebar-eye-open {
   display: none !important;
 }
+
 .file-sidebar-file-item.viewed:hover .file-sidebar-eye-closed {
   display: block !important;
 }
@@ -381,7 +387,7 @@
   font-size: 11px;
   font-weight: 500;
   color: var(--c-text-subtle);
-  padding: 0 10px 2px 10px;
+  padding: 0 10px 2px;
   margin-top: 8px;
   user-select: none;
 }
@@ -401,14 +407,14 @@
 
 /* ---- Empty state ---- */
 .file-sidebar-empty {
-  padding: 12px 16px 24px 16px;
+  padding: 12px 16px 24px;
   text-align: center;
 }
 
 .file-sidebar-empty-text {
   font-size: 12px;
   color: var(--c-text-subtle);
-  margin: 0 0 2px 0;
+  margin: 0 0 2px;
 }
 
 .file-sidebar-empty-hint {
@@ -445,6 +451,7 @@
     opacity: 0;
     transform: translateY(-50%) scale(0.94);
   }
+
   to {
     opacity: 1;
     transform: translateY(-50%) scale(1);

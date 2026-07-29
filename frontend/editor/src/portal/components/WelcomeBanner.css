@@ -1,6 +1,6 @@
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Free-tier welcome hero — compact product header + steps                  */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Free-tier welcome hero — compact product header + steps
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-welcome {
   border-radius: var(--radius-xl);
@@ -33,6 +33,7 @@
   place-items: center;
   flex-shrink: 0;
 }
+
 .portal-welcome__mark img {
   display: block;
   height: 1.75rem;
@@ -69,6 +70,7 @@
   align-items: center;
   gap: 0.5rem;
 }
+
 .portal-welcome__icon-btn {
   display: grid;
   place-items: center;
@@ -82,16 +84,18 @@
   cursor: pointer;
   transition: background var(--motion-fast);
 }
+
 .portal-welcome__icon-btn:hover {
   background: rgba(255, 255, 255, 0.16);
 }
 
 /* White CTA on the dark header, matching the marketing card. */
 .portal-welcome__header .portal-welcome__cta.sui-btn {
-  background: #ffffff;
-  border-color: #ffffff;
+  background: #fff;
+  border-color: #fff;
   color: var(--c-hero-dark-cta-text);
 }
+
 .portal-welcome__header .portal-welcome__cta.sui-btn:hover {
   background: rgba(255, 255, 255, 0.88);
   border-color: rgba(255, 255, 255, 0.88);

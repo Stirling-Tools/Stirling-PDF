@@ -10,6 +10,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem; /* 12px */
+
   /* Center "or" between the last OAuth button and the input box: the larger top
      margin balances the field label + input that sit below the smaller bottom
      margin, so the gap to the button ≈ the gap to the input. */
@@ -193,6 +194,7 @@
   border-radius: 999px;
   min-height: 3.5rem; /* 56px */
 }
+
 .oauth-button-fullwidth.sui-btn.mantine-Button-root {
   border-radius: 0.625rem; /* 10px */
   min-height: 0;
@@ -245,9 +247,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   /* Vertical padding is driven by the shared Button's --sui-btn-py so it beats
      the Button's own padding-block; horizontal stays in the shorthand. */
   --sui-btn-py: 1rem; /* 16px (md) */
+
   padding: 1rem 1.5rem; /* 16px 24px */
   border: 1px solid var(--auth-input-border);
   border-radius: 999px;
@@ -463,6 +467,7 @@
   background: var(--c-surface-sunken);
   border-color: var(--c-border);
 }
+
 .oauth-button-right {
   display: flex;
   align-items: center;
@@ -714,9 +719,11 @@
 .auth-logo-header--dark {
   display: none;
 }
+
 [data-mantine-color-scheme="dark"] .auth-logo-header--light {
   display: none;
 }
+
 [data-mantine-color-scheme="dark"] .auth-logo-header--dark {
   display: block;
 }
@@ -727,6 +734,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -777,9 +785,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
   /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
      own padding-block); horizontal stays in the shorthand. */
   --sui-btn-py: 0.625rem; /* 10px */
+
   padding: 0.625rem 1rem; /* 10px 16px */
   border: 1px solid var(--c-border);
   border-radius: 0.625rem; /* 10px */
@@ -814,7 +824,7 @@
 }
 
 [data-mantine-color-scheme="dark"]
-  .oauth-button-fullwidth:hover:not(:disabled) {
+.oauth-button-fullwidth:hover:not(:disabled) {
   background-color: var(--c-surface-raised);
   box-shadow: none;
 }

@@ -8,9 +8,11 @@
   border: none;
   text-align: left;
 }
+
 button.sui-sectionhdr {
   cursor: pointer;
 }
+
 .sui-sectionhdr__title {
   flex: 1;
   font-size: 0.6875rem;
@@ -19,15 +21,18 @@ button.sui-sectionhdr {
   letter-spacing: 0.05em;
   color: var(--c-text-subtle);
 }
+
 .sui-sectionhdr__count {
   font-size: 0.6875rem;
   color: var(--c-text-subtle);
 }
+
 .sui-sectionhdr__chevron {
   color: var(--c-text-subtle);
   flex-shrink: 0;
   transition: transform var(--motion-fast);
 }
+
 .sui-sectionhdr__chevron[data-collapsed="true"] {
   transform: rotate(-90deg);
 }

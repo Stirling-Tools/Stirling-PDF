@@ -20,14 +20,17 @@
     transparent
   );
 }
+
 .sui-status--sm {
   font-size: 0.6875rem;
   padding: 0.125rem 0.5rem;
 }
+
 .sui-status--md {
   font-size: 0.75rem;
   padding: 0.1875rem 0.625rem;
 }
+
 .sui-status--lg {
   font-size: 0.8125rem;
   padding: 0.3125rem 0.75rem;
@@ -40,6 +43,7 @@
   background: currentColor;
   position: relative;
 }
+
 .sui-status__dot--pulse::after {
   content: "";
   position: absolute;
@@ -55,20 +59,25 @@
   background: var(--c-surface-sunken);
   border-color: var(--c-border-subtle);
 }
+
 /* Tones only pick the accent; the base rule builds the fill + border. `-dark`
    is theme-adaptive, so text stays legible on the pale fill in both themes. */
 .sui-status--success {
   --sui-status-c: var(--color-green-dark);
 }
+
 .sui-status--warning {
   --sui-status-c: var(--color-amber-dark);
 }
+
 .sui-status--danger {
   --sui-status-c: var(--color-red-dark);
 }
+
 .sui-status--info {
   --sui-status-c: var(--c-primary-hover);
 }
+
 .sui-status--purple {
   --sui-status-c: var(--color-purple-dark);
 }

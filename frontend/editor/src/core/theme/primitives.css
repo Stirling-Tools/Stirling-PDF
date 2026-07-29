@@ -1,8 +1,8 @@
 /* PRIMITIVES — the raw palette (theme-agnostic). The ONE place literal colours live: neutral ramps (gray=light, zinc=dark) + status hues; colors.css and compat.css reference these. */
 
 :root {
-  --p-white: #ffffff;
-  --p-black: #000000;
+  --p-white: #fff;
+  --p-black: #000;
   --p-gray-50: #f9fafb;
   --p-gray-100: #f3f4f6;
   --p-gray-150: #eef0f2;
@@ -147,6 +147,7 @@
   --p-c-acacac: #acacac;
   --p-c-c084fc: #c084fc;
   --p-art-red-muted: #c56565;
+
   /* Muted category hues for connection-picker marks. */
   --p-art-blue-muted: #4a7ab5;
   --p-art-green-muted: #5d8348;

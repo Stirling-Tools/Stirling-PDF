@@ -41,7 +41,7 @@
 .landing-sheet {
   position: absolute;
   border-radius: 12px;
-  background-color: #ffffff;
+  background-color: #fff;
   cursor: default;
 }
 
@@ -105,6 +105,7 @@
   border-radius: 9999px;
   background-color: var(--c-illustration-line);
 }
+
 .landing-bar--strong {
   background-color: var(--c-illustration-line-strong);
 }
@@ -125,6 +126,7 @@
   background-color: var(--landing-button-bg, var(--c-surface)) !important;
   color: var(--c-accent-fg, var(--c-text)) !important;
 }
+
 .landing-btn-secondary:hover {
   background-color: var(
     --landing-button-hover-bg,
@@ -144,6 +146,7 @@
   outline: 2px dashed var(--c-primary);
   outline-offset: 4px;
 }
+
 .landing-dropzone[data-reject] {
   outline: 2px dashed var(--mantine-color-red-6);
   outline-offset: 4px;

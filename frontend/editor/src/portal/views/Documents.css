@@ -178,7 +178,7 @@
   position: relative;
   display: flex;
   gap: 0.75rem;
-  padding: 0 0 1rem 0;
+  padding: 0 0 1rem;
 }
 
 .portal-documents__timeline-item:last-child {
@@ -197,7 +197,7 @@
 
 /* Connecting line between successive timeline dots. */
 .portal-documents__timeline-item:not(:last-child)
-  .portal-documents__timeline-dot::after {
+.portal-documents__timeline-dot::after {
   content: "";
   position: absolute;
   left: 50%;

@@ -15,13 +15,16 @@
   --scc-accent-border: color-mix(in srgb, var(--c-primary) 25%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
   --scc-chip-border: var(--c-border);
+
   /* Consistent vertical rhythm between the control row, the estimate, and any
      note — without it the blocks sit flush. */
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 [data-mantine-color-scheme="dark"] .scc {
+
   /* Chip surface/border track the neutral --c-* tokens (base rule); only the
      brand-azure accent is tuned brighter for dark. */
   --scc-accent-text: var(--c-primary);
@@ -58,15 +61,18 @@
     border-color 0.12s ease,
     background 0.12s ease;
 }
+
 .scc-chip:hover:not(:disabled) {
   color: var(--c-text);
   border-color: var(--c-border-strong);
 }
+
 .scc-chip[data-selected="true"] {
   background: var(--scc-accent-soft);
   border-color: var(--scc-accent);
   color: var(--scc-accent-text);
 }
+
 .scc-chip:disabled {
   opacity: 0.45;
   cursor: default;
@@ -89,23 +95,28 @@
     border-color 0.12s ease,
     background 0.12s ease;
 }
+
 .scc-custom:hover {
   border-color: var(--c-border-strong);
 }
+
 .scc-custom[data-active="true"] {
   border-style: solid;
   border-color: var(--scc-accent);
   background: var(--scc-accent-soft);
 }
+
 .scc-custom__symbol {
   color: var(--c-text-subtle);
   font-size: 0.85rem;
   font-weight: 600;
 }
+
 .scc-custom[data-active="true"] .scc-custom__symbol,
 .scc-custom[data-active="true"] .scc-custom__input {
   color: var(--scc-accent-text);
 }
+
 .scc-custom__input {
   width: 70px;
   border: none;
@@ -117,10 +128,12 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+
 .scc-custom__input::placeholder {
   color: var(--c-text-subtle);
   font-weight: 600;
 }
+
 .scc-custom:disabled,
 .scc-custom[data-disabled="true"] {
   opacity: 0.45;
@@ -141,15 +154,18 @@
   background: var(--scc-accent-soft);
   border: 1px solid var(--scc-accent-border);
 }
+
 .scc-estimate__icon {
   color: var(--scc-accent-text);
   display: flex;
 }
+
 .scc-estimate__main {
   font-size: 0.875rem;
   font-weight: 550;
   color: var(--c-text);
 }
+
 .scc-estimate__sub {
   font-size: 0.75rem;
   color: var(--c-text-subtle);

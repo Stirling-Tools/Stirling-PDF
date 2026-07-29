@@ -4,10 +4,12 @@
   border: 1px solid black; /* Represents the PDF page */
   position: relative;
 }
+
 .line {
   position: absolute;
   background-color: red; /* Line color */
 }
+
 #pageToSplitSection {
   display: none;
 }

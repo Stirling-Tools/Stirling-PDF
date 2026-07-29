@@ -35,14 +35,17 @@
       transform var(--motion-fast),
       visibility var(--motion-fast);
   }
+
   [dir="rtl"] .portal-sidebar {
     --sui-dir: -1;
   }
+
   .portal-sidebar--open {
     transform: translateX(0);
     visibility: visible;
     box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.35);
   }
+
   .portal-sidebar__close {
     display: inline-flex;
   }
@@ -81,9 +84,11 @@
 .portal-sidebar__wordmark--dark {
   display: none;
 }
+
 [data-mantine-color-scheme="dark"] .portal-sidebar__wordmark--light {
   display: none;
 }
+
 [data-mantine-color-scheme="dark"] .portal-sidebar__wordmark--dark {
   display: block;
 }

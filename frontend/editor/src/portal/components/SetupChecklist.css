@@ -1,6 +1,6 @@
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Getting-started steps (home-hero body)                                   */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Getting-started steps (home-hero body)
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-setup {
   display: flex;
@@ -27,9 +27,11 @@
   cursor: pointer;
   transition: background var(--motion-fast);
 }
+
 .portal-setup__item:first-child .portal-setup__row {
   border-top: none;
 }
+
 .portal-setup__row:hover {
   background: var(--c-hover);
 }
@@ -47,12 +49,14 @@
   font-weight: 600;
   color: var(--c-text-subtle);
 }
+
 /* Completed step: filled green check. */
 .portal-setup__num.is-done {
   border-color: var(--color-green);
   background: var(--color-green);
   color: #fff;
 }
+
 .portal-setup__row.is-done .portal-setup__text strong {
   color: var(--c-text-muted);
 }
@@ -62,11 +66,13 @@
   flex-direction: column;
   min-width: 0;
 }
+
 .portal-setup__text strong {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--c-text);
 }
+
 .portal-setup__text span {
   font-size: 0.75rem;
   line-height: 1.4;
@@ -116,6 +122,7 @@
   color: var(--c-text-subtle);
   min-width: 0;
 }
+
 .portal-setup__enterprise-text strong {
   color: var(--c-text);
   font-weight: 700;

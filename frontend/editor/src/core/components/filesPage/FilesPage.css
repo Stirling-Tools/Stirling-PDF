@@ -9,15 +9,16 @@
 }
 
 .files-page-header {
+
   /* 3-column grid keeps the search bar position-stable regardless of
    * breadcrumb length. Left column flexes for the breadcrumb (truncating
    * via overflow:hidden), middle column holds the search, right column
    * holds the action buttons right-aligned. */
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(min(14rem, 100%), 40rem) minmax(
-      0,
-      1fr
-    );
+    0,
+    1fr
+  );
   align-items: center;
   gap: 1rem;
   min-height: 48px;
@@ -43,6 +44,7 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
+
 .files-page-breadcrumbs::-webkit-scrollbar {
   display: none;
 }
@@ -64,6 +66,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .files-page-breadcrumb:hover,
 .files-page-breadcrumb.is-current {
   background: var(--c-hover);
@@ -87,6 +90,7 @@
   border: 1px solid var(--c-border-subtle);
   border-radius: 999px;
   padding: 0.2rem 0.75rem;
+
   /* Fills its grid cell; the cell's minmax(...) clamps to a sensible range. */
   width: 100%;
   min-width: 0;
@@ -181,6 +185,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
   /* Allow this container to shrink below its intrinsic content width so
      the bulk-action group + filter selects + view toggle can compete for
      space without bursting out of the toolbar (which previously bled
@@ -199,17 +204,21 @@
   padding-right: 0.55rem;
   flex-shrink: 0;
 }
+
 .files-page-toolbar-actions .mantine-Button-section[data-position="left"] {
   margin-right: 0;
 }
+
 .files-page-toolbar-actions .mantine-Button-label {
   display: none;
 }
+
 /* Pin the view toggle: never let it clip off the right. flex-shrink:0
    keeps its width fixed; the rest of the row shrinks around it. */
 .files-page-toolbar-actions .mantine-SegmentedControl-root {
   flex-shrink: 0;
 }
+
 /* Clip overflow on the toolbar itself as a safety net - the content
    should always fit thanks to the rules above, but if a future addition
    ever breaks that, this prevents the action group from bleeding into
@@ -354,6 +363,7 @@
   background: var(--c-hover);
   color: var(--c-text);
 }
+
 .files-page-list-row:not(.is-header):hover,
 .files-page-list-row.is-selected {
   background: var(--c-hover);
@@ -591,6 +601,7 @@
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.6;
     transform: scale(0.85);
@@ -614,11 +625,11 @@
   background: linear-gradient(
     180deg,
     color-mix(
-        in srgb,
-        var(--mantine-color-teal-6, var(--c-success)) 6%,
-        transparent
-      )
-      0%,
+      in srgb,
+      var(--mantine-color-teal-6, var(--c-success)) 6%,
+      transparent
+    )
+    0%,
     transparent 40%
   );
   z-index: 0;
@@ -685,6 +696,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -788,6 +800,7 @@
 }
 
 .files-page-details-header {
+
   /* Tight vertical padding so the "DETAILS" label hugs the body content
      below it - it's a quiet section header, not a banner, and the old
      ~16px top + 18px body padding wasted nearly two character heights
@@ -808,10 +821,12 @@
 }
 
 .files-page-details-body {
+
   /* Smaller top padding to pair with the tightened header above. Side
      and bottom padding stays at 1.1rem so the content still breathes
      against the panel edges. */
   padding: 0.3rem 1.1rem 1.1rem;
+
   /* Grow to fill the panel and scroll internally so the action footer below
      stays pinned and visible regardless of how tall the content gets. */
   flex: 1;
@@ -853,11 +868,13 @@
 .files-page-details-collapse-chevron {
   transition: transform 0.15s ease;
 }
+
 .files-page-details-collapse-chevron.is-open {
   transform: rotate(180deg);
 }
 
 .files-page-details-thumb {
+
   /* Compact fixed height (was a tall 4:3 box that dominated the panel and
      pushed the action buttons off the bottom). */
   height: 6.5rem;
@@ -869,6 +886,7 @@
   justify-content: center;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
   /* Inside an overflow-y:auto flex column, `aspect-ratio` alone doesn't
      guarantee intrinsic height - flex-shrink:1 (default) can squash the
      thumb to a 2px sliver when the column gets cramped (notably after
@@ -967,6 +985,7 @@
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.5rem;
 }
+
 .files-page-details-version-timeline-label {
   display: flex;
   align-items: center;
@@ -976,6 +995,7 @@
   letter-spacing: 0.05em;
   color: var(--c-text-subtle);
 }
+
 .files-page-details-version-timeline-count {
   margin-left: auto;
   font-weight: 600;
@@ -983,6 +1003,7 @@
   text-transform: none;
   letter-spacing: 0;
 }
+
 .files-page-details-version-timeline-list {
   list-style: none;
   margin: 0;
@@ -990,6 +1011,7 @@
   display: flex;
   flex-direction: column;
 }
+
 .files-page-details-version-timeline-row,
 .files-page-details-version-timeline-ellipsis {
   display: flex;
@@ -997,6 +1019,7 @@
   padding: 0.15rem 0;
   position: relative;
 }
+
 .files-page-details-version-timeline-rail {
   display: flex;
   flex-direction: column;
@@ -1005,6 +1028,7 @@
   width: 0.8rem;
   padding-top: 0.45rem;
 }
+
 .files-page-details-version-timeline-rail-dot {
   width: 0.55rem;
   height: 0.55rem;
@@ -1014,17 +1038,20 @@
   z-index: 1;
   flex-shrink: 0;
 }
+
 .files-page-details-version-timeline-rail-dot.is-active {
   background: var(--c-primary);
   border-color: var(--c-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
+
 .files-page-details-version-timeline-rail-dot.is-ellipsis {
   width: 0.35rem;
   height: 0.35rem;
   background: var(--c-text-subtle);
   border-color: transparent;
 }
+
 .files-page-details-version-timeline-rail-line {
   width: 2px;
   flex: 1;
@@ -1032,6 +1059,7 @@
   min-height: 0.6rem;
   margin-top: 2px;
 }
+
 .files-page-details-version-timeline-body {
   flex: 1;
   min-width: 0;
@@ -1042,10 +1070,12 @@
   border-radius: 0.35rem;
   transition: background-color 0.12s ease;
 }
+
 .files-page-details-version-timeline-row.is-active
-  .files-page-details-version-timeline-body {
+.files-page-details-version-timeline-body {
   background: color-mix(in srgb, var(--c-primary) 10%, transparent);
 }
+
 .files-page-details-version-timeline-summary {
   appearance: none;
   background: none;
@@ -1060,10 +1090,12 @@
   color: inherit;
   font: inherit;
 }
+
 .files-page-details-version-timeline-summary:hover
-  .files-page-details-version-timeline-chevron {
+.files-page-details-version-timeline-chevron {
   color: var(--c-text);
 }
+
 .files-page-details-version-timeline-delta {
   font-size: 0.82rem;
   color: var(--c-text);
@@ -1075,26 +1107,32 @@
   align-items: baseline;
   gap: 0.25rem;
 }
+
 .files-page-details-version-timeline-delta.is-origin {
   font-weight: 400;
   color: var(--c-text-subtle);
   font-style: italic;
 }
+
 .files-page-details-version-timeline-delta-plus {
   color: var(--c-primary);
   font-weight: 700;
 }
+
 .files-page-details-version-timeline-spacer {
   flex: 1;
 }
+
 .files-page-details-version-timeline-chevron {
   color: var(--c-text-subtle);
   transition: transform 0.15s ease;
 }
+
 .files-page-details-version-timeline-chevron.is-expanded {
   transform: rotate(180deg);
   color: var(--c-text);
 }
+
 .files-page-details-version-timeline-meta-line {
   display: flex;
   align-items: center;
@@ -1102,6 +1140,7 @@
   font-size: 0.7rem;
   color: var(--c-text-subtle);
 }
+
 .files-page-details-version-timeline-expanded {
   display: flex;
   flex-direction: column;
@@ -1110,17 +1149,20 @@
   padding-top: 0.5rem;
   border-top: 1px dashed var(--c-border-subtle);
 }
+
 .files-page-details-version-timeline-toolchain {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
 }
+
 .files-page-details-version-timeline-toolchain-label {
   font-size: 0.65rem;
   color: var(--c-text-subtle);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
 .files-page-details-version-timeline-ellipsis-btn,
 .files-page-details-version-timeline-collapse-btn {
   appearance: none;
@@ -1137,11 +1179,13 @@
     border-color 0.12s ease,
     color 0.12s ease;
 }
+
 .files-page-details-version-timeline-ellipsis-btn:hover,
 .files-page-details-version-timeline-collapse-btn:hover {
   color: var(--c-text);
   border-color: var(--c-border-strong, var(--c-text-subtle));
 }
+
 .files-page-details-version-timeline-collapse-btn {
   align-self: flex-start;
   margin-top: 0.2rem;
@@ -1194,6 +1238,7 @@
     border-color: var(--c-primary);
     transform: scale(1);
   }
+
   50% {
     border-color: color-mix(in srgb, var(--c-primary) 60%, transparent);
     transform: scale(1.005);
@@ -1204,12 +1249,14 @@
   .files-page-tree {
     width: 14rem;
   }
+
   .files-page-details {
     width: 18rem;
   }
 }
 
 @media (max-width: 800px) {
+
   /* Tree slot inside the inline layout can't fit at this width - the
      tree itself is still reachable via the FolderTreePanel slide-out.
      Details panel visibility is controlled by JSX (conditional Drawer)
@@ -1219,6 +1266,7 @@
   .files-page-tree {
     display: none;
   }
+
   .files-page-content {
     padding: 0.75rem;
   }
@@ -1234,13 +1282,16 @@
    right edge. The header stays in desktop layout here (it has fewer
    items and the side panels disappearing actually GIVES it room). */
 .files-page-header [data-desktop-hide="true"] {
+
   /* The mobile-only overflow menu trigger. Hidden by default; shown
      inside the mobile breakpoint below. Live as inline-flex so it
      sits next to the Upload button without breaking the action row. */
   display: none;
 }
+
 @media (max-width: 900px) {
   .files-page-toolbar {
+
     /* nowrap so "7 items" + "Select all" sit on the same row as the
        filter dropdowns and view-toggle instead of stacking on three
        separate lines. Per-child min-width:0 lets them shrink as needed.
@@ -1253,7 +1304,9 @@
     min-height: auto;
     overflow-x: hidden;
   }
+
   .files-page-toolbar-info {
+
     /* Was `flex-basis: 100%` which forced a row break. Let it share
        the row, shrink hard if needed, and ellipsize so the count line
        collapses gracefully (was overlapping the bulk-action buttons
@@ -1264,12 +1317,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   .files-page-toolbar-actions {
     flex-wrap: nowrap;
     gap: 0.3rem;
   }
+
   .files-page-toolbar-actions .mantine-Select-root,
   .files-page-toolbar-actions .mantine-Select-input {
+
     /* Mantine Select defaults to ~12rem which is huge for narrow widths.
        The inline `style={{ width: 140|160 }}` on the Selects gets
        overridden here so they actually shrink. */
@@ -1277,6 +1333,7 @@
     max-width: 7.5rem;
     width: auto !important;
   }
+
   /* The "Select all" / "Clear selection" toggle is a Mantine Button
      directly inside .files-page-toolbar (NOT inside the actions group),
      so the icon-only collapse from base styles doesn't apply to it.
@@ -1295,6 +1352,7 @@
    and the first to go. Same for "Upload" - the user can use the
    centre drop overlay. */
 @media (max-width: 640px) {
+
   /* Drop the 3-column grid on phones; flex-wrap lets the search slip onto
    * its own row when chrome is too cramped to share. */
   .files-page-header {
@@ -1304,31 +1362,39 @@
     padding: 0 0.4rem;
     overflow-x: hidden;
   }
+
   .files-page-header [data-mobile-hide="true"] {
     display: none !important;
   }
+
   .files-page-header [data-desktop-hide="true"] {
     display: inline-flex !important;
   }
+
   /* Mobile-hide for sub-toolbar create buttons. */
   .files-page-toolbar [data-mobile-hide="true"] {
     display: none !important;
   }
+
   .files-page-header-actions {
     margin-left: auto;
     gap: 0.3rem;
     flex-wrap: nowrap;
   }
+
   .files-page-search {
     flex: 1 1 100%;
   }
+
   .files-page-breadcrumbs {
     font-size: 0.85rem;
     flex-wrap: nowrap;
     overflow-x: auto;
     min-width: 0;
   }
+
   .files-page-search {
+
     /* Shrink hard so the search bar doesn't eat the whole action row.
        Users still see the icon + a few chars of the placeholder.
        `overflow: hidden` clips the input's natural intrinsic width so
@@ -1338,13 +1404,16 @@
     max-width: 6.5rem;
     overflow: hidden;
   }
+
   .files-page-search input {
+
     /* `min-width: 0` lets flex actually shrink the input below its
        default ~20-char intrinsic size - without this, the placeholder
        extends beyond the parent's clip box and bleeds onto neighbours. */
     min-width: 0;
     text-overflow: ellipsis;
   }
+
   /* Upload becomes an icon-only square button on mobile so the action
      row stops getting clipped. Scoped to `.files-page-header-actions`
      so the Back button at the header level keeps its visible "Back"
@@ -1353,23 +1422,28 @@
     padding-left: 0.55rem;
     padding-right: 0.55rem;
   }
+
   .files-page-header-actions .mantine-Button-section[data-position="left"] {
     margin-right: 0;
   }
+
   .files-page-header-actions .mantine-Button-label {
     display: none;
   }
+
   /* Grid: single column on very narrow phones; two columns from ~440px */
   .files-page-grid {
     grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
     gap: 0.75rem;
   }
+
   .files-page-content {
     padding: 0.5rem;
   }
 }
 
 @media (max-width: 420px) {
+
   /* Don't force 1fr - auto-fill with the 9rem floor already keeps two cards
      per row on a 360px phone, which feels right for one-handed taps. The
      real fix at this width is the list view, which had 6 columns that wouldn't
@@ -1378,11 +1452,13 @@
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
   }
+
   /* List view at tiny widths becomes cramped - drop the size + type + modified
      columns and let name + actions take the room. */
   .files-page-list-row {
     grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
   }
+
   .files-page-list-row > :nth-child(3),
   .files-page-list-row > :nth-child(4),
   .files-page-list-row > :nth-child(5) {
@@ -1398,16 +1474,20 @@
   .files-page-drop-overlay {
     animation: none;
   }
+
   .files-page-card,
   .files-page-card-thumb img {
     transition: none;
   }
+
   .files-page-card:hover {
     transform: none;
   }
+
   .files-page-card.is-folder.is-drop-target {
     transform: none;
   }
+
   .files-page-card.is-folder.is-drop-target .files-page-card-thumb {
     transform: none;
   }

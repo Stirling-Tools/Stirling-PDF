@@ -1,6 +1,7 @@
 /* SaaS-specific CSS variables — imported alongside core theme.css */
 
 :root {
+
   /* Orange scale (used for warning toasts) */
   --color-orange-50: var(--p-amber-400);
   --color-orange-100: var(--p-amber-400);
@@ -30,11 +31,11 @@
   --auth-input-text: var(--p-gray-800);
   --auth-label-text: var(--p-zinc-650);
   --auth-button-bg: var(--p-red-600);
-  --auth-button-text: #ffffff;
+  --auth-button-text: #fff;
   --auth-magic-button-bg: var(--p-red-600);
-  --auth-magic-button-text: #ffffff;
-  --auth-bg-color: #ffffff;
-  --auth-card-bg: #ffffff;
+  --auth-magic-button-text: #fff;
+  --auth-bg-color: #fff;
+  --auth-card-bg: #fff;
   --auth-text-primary: var(--p-zinc-650);
   --auth-text-secondary: var(--p-gray-800);
   --auth-border-focus: var(--p-gray-300);
@@ -60,14 +61,14 @@
     var(--p-blue-500) 8%,
     transparent
   );
-  --modal-content-bg: #ffffff;
+  --modal-content-bg: #fff;
   --modal-header-border: rgba(0, 0, 0, 0.06);
 
   /* API usage progress bar colors (light mode) */
   --usage-inactive: var(--p-gray-200);
 
   /* API Keys section colors (light mode) */
-  --api-keys-card-bg: #ffffff;
+  --api-keys-card-bg: #fff;
   --api-keys-card-border: var(--p-gray-200);
   --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
   --api-keys-input-bg: var(--p-gray-50);
@@ -75,6 +76,7 @@
 }
 
 [data-mantine-color-scheme="dark"] {
+
   /* Compare highlight colors (dark mode) */
   --spdf-compare-removed-bg: color-mix(
     in srgb,
@@ -128,7 +130,7 @@
   --auth-border-focus: var(--p-blue-500);
   --auth-focus-ring: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
   --auth-button-bg: var(--p-red-600);
-  --auth-button-text: #ffffff;
+  --auth-button-text: #fff;
   --auth-magic-button-bg: var(--c-surface-raised);
   --auth-magic-button-text: var(--c-text);
   --auth-text-primary: var(--c-text);

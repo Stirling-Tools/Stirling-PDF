@@ -22,6 +22,7 @@
 .sui-dd__menu--start {
   left: 0;
 }
+
 .sui-dd__menu--end {
   right: 0;
 }
@@ -36,6 +37,7 @@
   font-size: 0.8125rem;
   color: var(--c-text-muted);
   border-radius: var(--radius-sm);
+
   /* Explicit button reset: hosts without a global button reset (e.g. the
      editor) would otherwise show the UA's buttonface background and border. */
   background: none;

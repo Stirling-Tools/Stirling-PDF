@@ -12,7 +12,9 @@
 
 :root,
 [data-theme="light"] {
+
   /* Text hierarchy */
+
   /* text-5 was #94a3b8 (≈2.85:1 on white — fails WCAG AA). Bumped to #64748b
      so meta/timestamp copy at small sizes still passes contrast. The visual
      hierarchy now collapses text-4 and text-5 into the same shade — use weight
@@ -22,7 +24,7 @@
   /* Body text colour for use on coloured / gradient backgrounds (blue buttons,
      assistant header, onboarding "done" badges). Theme-stable: even in dark
      mode the underlying surface is the brand gradient, so the text is white. */
-  --color-text-on-accent: #ffffff;
+  --color-text-on-accent: #fff;
 
   /* Brand / status */
   --color-purple: var(--p-blue-400);
@@ -109,7 +111,6 @@
   /* Sidebar */
   --color-usage-text: var(--p-gray-500);
   --color-usage-value: var(--p-gray-700);
-
   --color-toggle-off: var(--p-gray-300);
   --color-badge-red: var(--p-red-500);
 
@@ -156,9 +157,9 @@
 }
 
 [data-theme="dark"] {
+
   /* Bumped from #475569 (fails AA) — see light-theme note. */
   --color-text-placeholder: var(--p-gray-600);
-
   --color-purple: var(--p-blue-400);
   --color-purple-light: var(--p-zinc-750);
   --color-purple-border: var(--p-zinc-600);
@@ -182,6 +183,7 @@
     var(--p-zinc-900)
   );
   --color-amber-border: var(--p-amber-600);
+
   /* Deeper than the base so it stays distinct (hover shade + amber text on
      dark surfaces). ~7.4:1 on --color-amber-light, passes WCAG AA. Was
      #fbbf24 — identical to the base — which left Mantine's amber hover a
@@ -195,21 +197,15 @@
   );
   --color-orange-border: var(--p-red-600);
   --color-orange-dark: var(--p-amber-400);
-
   --color-bg-subtle: var(--c-surface-sunken);
   --color-bg-code: var(--p-zinc-900);
-
   --color-tooltip-bg: var(--p-gray-250);
   --color-tooltip-text: var(--p-blue-700);
-
   --color-section-label: var(--p-gray-600);
-
   --color-search-border-hover: var(--p-gray-600);
   --color-search-text: var(--p-gray-500);
-
   --color-usage-text: var(--p-gray-500);
   --color-usage-value: var(--p-gray-400);
-
   --color-toggle-off: var(--p-gray-600);
 
   /* Segmented control — blue-toned dark to match app surface colors */
@@ -217,7 +213,6 @@
   --shadow-sm: inset 0 0 0 1px var(--p-zinc-600);
   --shadow-md: inset 0 0 0 1px var(--p-zinc-600), 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-lg: inset 0 0 0 1px var(--p-zinc-600), 0 8px 24px rgba(0, 0, 0, 0.4);
-
   --grad-blue-btn: linear-gradient(
     180deg,
     var(--p-blue-500) 0%,
@@ -245,9 +240,11 @@
   --code-property: var(--p-c-0550ae);
   --code-comment: var(--p-c-6e7781);
   --code-border: var(--p-c-d0d7de);
+
   /* Window-chrome traffic-light dots in the code-block header. */
   --code-dot: var(--p-c-d0d7de);
 }
+
 [data-theme="dark"] {
   --code-bg: var(--p-c-0f172a);
   --code-bg-alt: var(--p-c-1e293b);
@@ -268,6 +265,7 @@
 
 /* Radii / typography / motion / spacing / z-index — theme-stable */
 :root {
+
   /* Home hero strip navy. Theme-stable by design — the white hero CTA keeps
      this deep navy text in both light and dark (branded surface). The hero
      background itself is accent-responsive (see EditorStatusCard/WelcomeBanner). */
@@ -288,65 +286,79 @@
     opacity: 0;
     transform: translateY(0.375rem);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
+
 @keyframes scaleIn {
   from {
     opacity: 0;
     transform: scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
+
 @keyframes slideInRight {
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(0);
   }
 }
+
 @keyframes pulse {
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
 }
+
 @keyframes pulseRing {
   0% {
     transform: scale(0.8);
     opacity: 1;
   }
+
   100% {
     transform: scale(2.2);
     opacity: 0;
   }
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }

@@ -4,7 +4,7 @@
 .sui-acc-default {
   --_solid: var(--c-primary);
   --_solid-hover: var(--c-primary-hover);
-  --_on: #ffffff;
+  --_on: #fff;
   --_text: var(--c-primary-hover);
   --_bd: color-mix(in srgb, var(--c-primary) 38%, var(--c-surface));
   --_tint: color-mix(in srgb, var(--c-primary) 12%, transparent);
@@ -13,37 +13,41 @@
 html[data-app-theme="custom"] .sui-acc-default {
   --_on: var(--c-text-on-primary);
 }
+
 /* Danger is pinned to a fixed deep red (not the theme-lightened coral), so the
    fill and the outline/text are the SAME red in both light and dark. */
 .sui-acc-danger {
   --_solid: var(--p-red-500);
   --_solid-hover: var(--p-red-600);
-  --_on: #ffffff;
+  --_on: #fff;
   --_text: var(--p-red-500);
   --_bd: color-mix(in srgb, var(--p-red-500) 45%, transparent);
   --_tint: color-mix(in srgb, var(--p-red-500) 12%, transparent);
 }
+
 .sui-acc-success {
   --_solid: var(--color-green);
   --_solid-hover: var(--color-green-dark);
-  --_on: #ffffff;
+  --_on: #fff;
   --_text: var(--color-green-dark);
   --_bd: var(--color-green-border);
   --_tint: color-mix(in srgb, var(--color-green) 12%, transparent);
 }
+
 .sui-acc-warning {
   --_solid: var(--color-amber);
   --_solid-hover: var(--color-amber-dark);
-  --_on: #ffffff;
+  --_on: #fff;
   --_text: var(--color-amber-dark);
   --_bd: var(--color-amber-border);
   --_tint: color-mix(in srgb, var(--color-amber) 12%, transparent);
 }
+
 /* premium: purple upgrade CTA — gradient fill (token), violet text/border. */
 .sui-acc-premium {
   --_solid: var(--grad-purple-btn);
   --_solid-hover: var(--grad-purple-btn);
-  --_on: #ffffff;
+  --_on: #fff;
   --_text: var(--color-purple-dark);
   --_bd: var(--color-purple-border);
   --_tint: color-mix(in srgb, var(--color-purple) 12%, transparent);
@@ -53,11 +57,12 @@ html[data-app-theme="custom"] .sui-acc-default {
 .sui-acc-neutral {
   --_solid: var(--p-c-475569);
   --_solid-hover: var(--p-c-334155);
-  --_on: #ffffff;
+  --_on: #fff;
   --_text: var(--p-c-475569);
   --_bd: var(--p-c-cbd5e1);
   --_tint: color-mix(in srgb, var(--p-c-475569) 10%, transparent);
 }
+
 [data-theme="dark"] .sui-acc-neutral {
   --_solid: var(--p-c-64748b);
   --_solid-hover: var(--p-c-475569);
@@ -65,20 +70,23 @@ html[data-app-theme="custom"] .sui-acc-default {
   --_bd: var(--p-c-334155);
   --_tint: color-mix(in srgb, var(--p-c-94a3b8) 16%, transparent);
 }
+
 /* brand: Stirling red — a bespoke brand colour, not part of the token palette. */
 .sui-acc-brand {
   --_solid: var(--p-brand-red-650);
   --_solid-hover: var(--p-brand-red-700);
-  --_on: #ffffff;
+  --_on: #fff;
   --_text: var(--p-brand-red-650);
   --_bd: var(--p-brand-red-200);
   --_tint: color-mix(in srgb, var(--p-brand-red-650) 9%, transparent);
 }
+
 [data-theme="dark"] .sui-acc-brand {
   --_text: var(--p-brand-red-300);
   --_bd: var(--p-brand-red-900);
   --_tint: color-mix(in srgb, var(--p-brand-red-300) 16%, transparent);
 }
+
 /* ai: multi-hue gradient for AI features — no single-colour token. */
 .sui-acc-ai {
   --_solid: linear-gradient(
@@ -95,11 +103,12 @@ html[data-app-theme="custom"] .sui-acc-default {
     var(--p-blue-500) 72%,
     var(--p-cyan-400) 100%
   );
-  --_on: #ffffff;
+  --_on: #fff;
   --_text: var(--p-indigo-500);
   --_bd: var(--p-indigo-200);
   --_tint: color-mix(in srgb, var(--p-indigo-500) 10%, transparent);
 }
+
 [data-theme="dark"] .sui-acc-ai {
   --_text: var(--p-indigo-300);
   --_bd: var(--p-indigo-800);

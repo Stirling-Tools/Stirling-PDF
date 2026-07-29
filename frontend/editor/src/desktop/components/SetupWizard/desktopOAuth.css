@@ -1,5 +1,5 @@
-/* Desktop-specific OAuth button styles for self-hosted server connections */
-/* These styles are isolated from the web SSO buttons to prevent conflicts */
+/* Desktop-specific OAuth button styles for self-hosted server connections
+These styles are isolated from the web SSO buttons to prevent conflicts */
 
 .oauth-container-vertical-desktop {
   display: flex;
@@ -13,10 +13,12 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
+
   /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
      own padding-block); horizontal stays in the shorthand. */
   --sui-btn-py: 1rem; /* 16px (md) */
-  padding: 1rem 1rem; /* 16px */
+
+  padding: 1rem; /* 16px */
   border: 1px solid var(--auth-input-border);
   border-radius: 0.75rem; /* 12px */
   background-color: var(--auth-card-bg);

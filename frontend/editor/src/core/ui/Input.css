@@ -21,6 +21,7 @@
   min-height: 1.75rem;
   padding: 0 var(--space-2);
 }
+
 .sui-input--md {
   min-height: 2.25rem;
   padding: 0 var(--space-3);
@@ -29,6 +30,7 @@
 .sui-input--invalid {
   border-color: var(--color-red);
 }
+
 .sui-input--invalid:focus-within {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-red) 16%, transparent);
 }

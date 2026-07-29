@@ -51,15 +51,18 @@
     background var(--motion-fast),
     color var(--motion-fast);
 }
+
 .sui-settings-shell__item:hover:not(:disabled) {
   background: var(--c-hover);
   color: var(--c-text);
 }
+
 .sui-settings-shell__item.is-active {
   background: var(--c-hover);
   color: var(--c-text);
   box-shadow: inset 2px 0 0 var(--c-primary);
 }
+
 .sui-settings-shell__item:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -70,6 +73,7 @@
   flex-shrink: 0;
   color: currentColor;
 }
+
 .sui-settings-shell__item-label {
   flex: 1;
   min-width: 0;
@@ -77,6 +81,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .sui-settings-shell__item-badge {
   flex-shrink: 0;
 }
@@ -99,16 +104,19 @@
   padding: 0.875rem 1.25rem;
   border-bottom: 1px solid var(--c-border-subtle);
 }
+
 .sui-settings-shell__title {
   font-size: 1rem;
   font-weight: 650;
   color: var(--c-text);
 }
+
 .sui-settings-shell__header-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
+
 /* Sizing/background/hover are owned by the Button; this just keeps it from
  * stretching. */
 .sui-settings-shell__close {
@@ -137,6 +145,7 @@
     flex-direction: column;
     height: 100%;
   }
+
   .sui-settings-shell__nav {
     width: 100%;
     flex-direction: row;
@@ -145,11 +154,13 @@
     border-right: none;
     border-bottom: 1px solid var(--c-border-subtle);
   }
+
   .sui-settings-shell__group {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0.25rem;
   }
+
   .sui-settings-shell__group-title {
     display: none;
   }

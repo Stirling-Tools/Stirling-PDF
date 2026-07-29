@@ -35,6 +35,7 @@
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -43,9 +44,11 @@
 .sui-drawer--sm {
   width: 22rem;
 }
+
 .sui-drawer--md {
   width: 27.5rem;
 }
+
 .sui-drawer--lg {
   width: 36rem;
 }

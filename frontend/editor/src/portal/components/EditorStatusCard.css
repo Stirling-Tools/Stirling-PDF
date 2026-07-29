@@ -1,6 +1,6 @@
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Subscribed-tier deployed-Editor hero                                     */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Subscribed-tier deployed-Editor hero
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor-hero {
   border-radius: var(--radius-xl);
@@ -28,6 +28,7 @@
     0 2px 8px rgba(0, 0, 0, 0.1),
     0 0 0 1px rgba(0, 0, 0, 0.06);
 }
+
 .portal-editor-hero__mark {
   width: 100%;
   height: 100%;
@@ -70,9 +71,11 @@
   cursor: pointer;
   transition: background var(--motion-fast);
 }
+
 .portal-editor-hero__chip:hover {
   background: rgba(255, 255, 255, 0.16);
 }
+
 .portal-editor-hero__chip svg {
   color: rgba(255, 255, 255, 0.6);
 }
@@ -85,11 +88,13 @@
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.5);
 }
+
 .portal-editor-hero__host {
   color: rgba(255, 255, 255, 0.92);
   font-family: var(--font-mono);
   font-weight: 500;
 }
+
 .portal-editor-hero__meta-sep {
   color: rgba(255, 255, 255, 0.3);
 }
@@ -115,16 +120,18 @@
   cursor: pointer;
   transition: background var(--motion-fast);
 }
+
 .portal-editor-hero__icon-btn:hover {
   background: rgba(255, 255, 255, 0.16);
 }
 
 /* White CTA on the dark header, matching the marketing card. */
 .portal-editor-hero__action .portal-editor-hero__cta.sui-btn {
-  background: #ffffff;
-  border-color: #ffffff;
+  background: #fff;
+  border-color: #fff;
   color: var(--c-hero-dark-cta-text);
 }
+
 .portal-editor-hero__action .portal-editor-hero__cta.sui-btn:hover {
   background: rgba(255, 255, 255, 0.88);
   border-color: rgba(255, 255, 255, 0.88);
@@ -134,6 +141,7 @@
   .portal-editor-hero__row {
     flex-wrap: wrap;
   }
+
   .portal-editor-hero__action {
     width: 100%;
   }

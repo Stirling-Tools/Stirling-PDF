@@ -1,4 +1,5 @@
 /* ========== WORKBENCH BAR ========== */
+
 /* Horizontal toolbar at the top of the workbench area. */
 
 .workbench-bar {
@@ -109,6 +110,7 @@
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
+
 .workbench-bar[data-wrapped="true"] .workbench-bar-center > * {
   flex-shrink: 0;
 }
@@ -135,6 +137,7 @@
  * hover feedback comes from the icon colour darkening, not a bg tint. */
 .workbench-bar-action-icon {
   color: var(--c-text-muted) !important;
+
   /* min-* too: Mantine's ActionIcon sets min-width/min-height from --ai-size
    * (36px), which floors the width and defeats the 24px clamp. */
   width: 24px !important;

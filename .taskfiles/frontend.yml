@@ -300,6 +300,29 @@ tasks:
     cmds:
       - npx eslint --fix
 
+  lint:css:check:
+    desc: "Run stylelintrc linting"
+    vars:
+      STYLELINT_CONFIG: '{{.STYLELINT_CONFIG | default "../devTools/.stylelintrc.json"}}'
+    cmds:
+      - >-
+        npm --prefix ../devTools exec -- stylelint
+        "../app/**/src/main/resources/static/css/*.css"
+        "../frontend/editor/src/**/*.css"
+        --config "{{.STYLELINT_CONFIG}}"
+
+  lint:css:fix:
+    desc: "Auto-fix CSS lint issues"
+    vars:
+      STYLELINT_CONFIG: '{{.STYLELINT_CONFIG | default "../devTools/.stylelintrc.json"}}'
+    cmds:
+      - >-
+        npm --prefix ../devTools exec -- stylelint
+        "../app/**/src/main/resources/static/css/*.css"
+        "../frontend/editor/src/**/*.css"
+        --config "{{.STYLELINT_CONFIG}}"
+        --fix
+
   format:
     desc: "Auto-fix code formatting"
     deps: [install]
