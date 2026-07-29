@@ -3,7 +3,7 @@ import {
   buildPolicyTrailRuns,
   failedRunIdsForFile,
   orderFileIdsNeedingReview,
-} from "@app/tools/review/reviewTrailSources";
+} from "@app/components/viewer/review/reviewTrailSources";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
 const labels = new Map([

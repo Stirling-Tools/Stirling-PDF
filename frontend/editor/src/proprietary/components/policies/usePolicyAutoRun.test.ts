@@ -71,6 +71,35 @@ describe("policy run poll loop", () => {
     );
   });
 
+  // Restarting the backend mid-run is the everyday case: the run's in-memory
+  // state is gone, so holding the file in "enforcing" for the whole step budget
+  // just leaves a spinner (and a blocked export) behind a run that can't finish.
+  it("gives up quickly when the server is unreachable (e.g. a restart)", async () => {
+    getRun.mockRejectedValue({ code: "ERR_NETWORK" });
+    const p = poll("r1");
+    await tick(3); // MAX_UNREACHABLE consecutive transport failures
+    await p;
+    expect(update).toHaveBeenCalledWith(
+      "r1",
+      expect.objectContaining({ status: "FAILED" }),
+    );
+    expect(getRun.mock.calls.length).toBe(3);
+  });
+
+  // A hung request must not freeze the loop: without a timeout the await never
+  // settles, the budget check never runs, and the file enforces forever.
+  it("treats a hung status poll as unreachable instead of stalling", async () => {
+    getRun.mockReturnValue(new Promise(() => {}) as never); // never settles
+    const p = poll("r1");
+    // Each attempt costs the cadence plus the poll timeout before it is abandoned.
+    await vi.advanceTimersByTimeAsync(3 * (POLL_MS + 8000));
+    await p;
+    expect(update).toHaveBeenCalledWith(
+      "r1",
+      expect.objectContaining({ status: "FAILED" }),
+    );
+  });
+
   it("does NOT fail on a brief not-found blip that then recovers", async () => {
     getRun
       .mockRejectedValueOnce({ code: "ERR_NOT_FOUND" })

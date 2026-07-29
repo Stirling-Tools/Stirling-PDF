@@ -127,8 +127,25 @@ export default function HomePage() {
   // Sync the /files* URL into the workbench state so the file manager view
   // takes over the workbench area when the user lands on it. This is the
   // only state-of-truth for the active workbench, so keep the URL pinned.
+  const prevFilesRouteWorkbenchRef = useRef(navigationState.workbench);
+  const prevFilesRouteToolRef = useRef(navigationState.selectedTool);
   useEffect(() => {
+    const prevWorkbench = prevFilesRouteWorkbenchRef.current;
+    const prevTool = prevFilesRouteToolRef.current;
+    prevFilesRouteWorkbenchRef.current = navigationState.workbench;
+    prevFilesRouteToolRef.current = navigationState.selectedTool;
+
     if (location.pathname.startsWith("/files")) {
+      // Opening a tool closes the file manager
+      const openedTool =
+        navigationState.selectedTool !== null &&
+        navigationState.selectedTool !== prevTool;
+      const leftMyFiles =
+        prevWorkbench === "myFiles" && navigationState.workbench !== "myFiles";
+      if (openedTool || leftMyFiles) {
+        navigate("/");
+        return;
+      }
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
       }
@@ -139,8 +156,10 @@ export default function HomePage() {
   }, [
     location.pathname,
     navigationState.workbench,
+    navigationState.selectedTool,
     actions,
     activeFiles.length,
+    navigate,
   ]);
 
   // Auto-collapse the FileSidebar while on /files; restore the user's persisted

@@ -36,6 +36,7 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
+import "@app/components/viewer/SidebarBase.css";
 
 const SIDEBAR_WIDTH = "18rem";
 
@@ -673,28 +674,19 @@ export function CommentsSidebar({
   return (
     <Box
       ref={scrollViewportRef}
+      className="sidebar-base"
       style={{
         position: "fixed",
         right: rightOffset,
         top: 0,
         bottom: 0,
         width: SIDEBAR_WIDTH,
-        backgroundColor: "var(--c-bg)",
-        borderLeft: "1px solid var(--c-border-subtle)",
         zIndex: 998,
-        display: "flex",
-        flexDirection: "column",
-        boxShadow: "-2px 0 8px rgba(0, 0, 0, 0.1)",
       }}
     >
       <div
-        style={{
-          padding: "0.75rem 1rem",
-          borderBottom: "1px solid var(--c-border-subtle)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
-        }}
+        className="sidebar-base__header"
+        style={{ justifyContent: "flex-start", gap: "0.5rem" }}
       >
         <LocalIcon
           icon="comment"

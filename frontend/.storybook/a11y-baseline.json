@@ -363,6 +363,15 @@
     "button-name",
     "color-contrast"
   ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Default": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Empty": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/components/shared/PolicyBadges.stories.tsx :: Enforcing": [
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/components/shared/ShareFileModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"

@@ -22,6 +22,8 @@ export async function saveOperationResults(
         data: file,
         filename: file.name,
         localPath: stub?.localFilePath,
+        fileId,
+        verb: "save",
       });
 
       if (result.savedPath) {
@@ -35,6 +37,9 @@ export async function saveOperationResults(
     context.downloadUrl,
     context.downloadFilename || "download",
     context.downloadLocalPath || undefined,
+    // The review gate checks the output ids the save derives from.
+    context.outputFileIds,
+    "save",
   );
 
   if (context.outputFileIds && result.savedPath) {

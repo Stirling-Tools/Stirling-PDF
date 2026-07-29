@@ -4,6 +4,7 @@ import { zipFileService } from "@app/services/zipFileService";
 import { downloadFile } from "@app/services/downloadService";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { enforceExportPolicies } from "@app/services/policyExport";
+import { requestReviewClearance } from "@app/services/reviewGate";
 
 /**
  * Downloads a blob as a file using browser download API
@@ -77,6 +78,11 @@ export async function downloadFilesAsZip(
   if (filesToZip.length === 0) {
     throw new Error("No valid files found in storage for ZIP download");
   }
+
+  // The archive itself has no file id the download gate could check, so the
+  // gate is asked here about the files going into it — once for the whole
+  // archive, before any zipping or policy enforcement work is done.
+  if (!(await requestReviewClearance(fileIds, "download"))) return;
 
   // Enforce any export-triggered policy on each PDF before they're zipped.
   const enforced = await enforceExportPolicies(filesToZip, fileIds);

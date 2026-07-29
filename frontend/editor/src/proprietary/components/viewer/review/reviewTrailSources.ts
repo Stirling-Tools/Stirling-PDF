@@ -6,6 +6,7 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  forgetFile,
   updateRun,
   usePolicyRuns,
 } from "@app/components/policies/policyRunStore";
@@ -16,7 +17,7 @@ import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ReviewStepStatus, ReviewTrailRun } from "@app/types/review";
 // Import the shared contract from core (this file shadows the core module, so
 // @app would resolve back to itself); re-export so @app consumers still see it.
-import type { ReviewApproval } from "@core/tools/review/reviewTrailSources";
+import type { ReviewApproval } from "@core/components/viewer/review/reviewTrailSources";
 
 export type { ReviewApproval };
 
@@ -195,4 +196,8 @@ export function useReviewApproval(
   }, [runs, stub]);
 
   return { needsReview: failedIds.length > 0, markApproved, undoApproved };
+}
+
+export function useForgetFileReview(): (fileId: FileId) => void {
+  return useCallback((fileId: FileId) => forgetFile(fileId), []);
 }

@@ -11,7 +11,7 @@ import {
   ReviewTrailRun,
   ReviewTrailStep,
 } from "@app/types/review";
-import "@app/tools/review/ReviewTrail.css";
+import "@app/components/viewer/review/ReviewTrail.css";
 
 const SOURCE_TONE: Record<ReviewRunSource, "neutral" | "info" | "purple"> = {
   tool: "neutral",
@@ -67,7 +67,7 @@ function TrailStepRow({ step }: { step: ReviewTrailStep }) {
 
 function TrailRun({ run }: { run: ReviewTrailRun }) {
   const { t } = useTranslation();
-  const sourceLabel = t(`review.trail.source.${run.source}`, run.source);
+  const sourceLabel = t(`reviewTool.trail.source.${run.source}`, run.source);
 
   return (
     <div className="review-trail__run" data-status={runStatus(run)}>

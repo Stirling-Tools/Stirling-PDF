@@ -58,8 +58,6 @@
   --z-dropdown: 25;
   --z-drawer: 50;
   --z-toast: 200;
-  /* Passive hover hints. Must stay below Mantine tooltips (300), or they hide them. */
-  --z-hover-preview: 250;
   /* Fullscreen tool-picker surfaces (editor) */
   --z-fullscreen-icon-svg: 1;
   --z-toolpicker-star: 1;

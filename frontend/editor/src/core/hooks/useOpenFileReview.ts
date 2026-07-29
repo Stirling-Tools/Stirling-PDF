@@ -1,28 +1,34 @@
 import { useCallback } from "react";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import type { FileId } from "@app/types/file";
 
 /**
- * Opens the Review tool for a file, loading it into the workbench first. Badges
- * show on the whole stored library, and the viewer drops an unloaded active id.
+ * Opens a file for review: loads it into the workbench if needed, shows it in
+ * the viewer, and opens the viewer's review panel. Used by the needs-review
+ * badges in the file lists and by the export gate's "Review now".
+ *
+ * Review is a viewer panel (like bookmarks or comments) rather than a tool, so
+ * this only has to put the right document on screen — the panel follows it.
  */
 export function useOpenFileReview(): (fileId: string) => void {
-  const { setActiveFileId } = useViewer();
-  const { handleToolSelect } = useToolWorkflow();
+  const { setActiveFileId, setReviewSidebarVisible } = useViewer();
+  const { actions: navActions } = useNavigationActions();
   const { state } = useFileState();
   const { actions } = useFileActions();
 
   return useCallback(
     (fileId: string) => {
-      const inWorkbench = state.files.ids.some(
-        (id) => (id as string) === fileId,
-      );
-      if (inWorkbench) {
+      const show = () => {
         setActiveFileId(fileId);
-        handleToolSelect("review");
+        navActions.setWorkbench("viewer");
+        setReviewSidebarVisible(true);
+      };
+
+      if (state.files.ids.some((id) => (id as string) === fileId)) {
+        show();
         return;
       }
       void (async () => {
@@ -33,10 +39,15 @@ export function useOpenFileReview(): (fileId: string) => void {
           .catch(() => null);
         if (!stub) return;
         await actions.addStirlingFileStubs([stub]);
-        setActiveFileId(fileId);
-        handleToolSelect("review");
+        show();
       })();
     },
-    [state.files.ids, actions, setActiveFileId, handleToolSelect],
+    [
+      state.files.ids,
+      actions,
+      navActions,
+      setActiveFileId,
+      setReviewSidebarVisible,
+    ],
   );
 }

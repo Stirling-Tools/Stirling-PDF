@@ -18,6 +18,7 @@ import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
 import { ChatFAB } from "@app/components/chat/ChatFAB";
+import { ReviewGateHost } from "@app/components/shared/ReviewGateHost";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -222,7 +223,6 @@ export default function Workbench() {
     >
       {/* Workbench Bar - animates in/out based on file presence */}
       {currentView !== "myFiles" &&
-        !selectedTool?.hideWorkbenchBar &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)
           ?.hideTopControls && (
           <div
@@ -245,6 +245,9 @@ export default function Workbench() {
 
       {/* Floating AI chat button + panel */}
       <ChatFAB />
+
+      {/* Prompts when an export targets a file that still needs review */}
+      <ReviewGateHost />
 
       {/* Main content area */}
       <Box

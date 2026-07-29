@@ -44,9 +44,7 @@ const ToolSearch = ({
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
     const entries = Object.entries(toolRegistry).filter(
-      ([id, tool]) =>
-        !tool.hideFromPicker &&
-        !(mode === "dropdown" && id === selectedToolKey),
+      ([id]) => !(mode === "dropdown" && id === selectedToolKey),
     );
     const ranked = rankByFuzzy(entries, value, [
       ([key]) => idToWords(key),

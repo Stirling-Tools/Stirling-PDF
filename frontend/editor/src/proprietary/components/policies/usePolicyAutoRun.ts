@@ -89,6 +89,36 @@ const QUEUE_RETRY_BASE_MS = 4000;
  *  to an instance that hasn't seen it) then fail, rather than polling forever. */
 const MAX_NOT_FOUND = 3;
 
+/** A status poll that takes longer than this is abandoned rather than awaited.
+ *  While the backend is down or restarting the request can hang instead of
+ *  failing, and a hung await freezes the poll loop — so the run never reaches
+ *  its budget check and the file enforces (spinner + export gate) forever. */
+const POLL_TIMEOUT_MS = 8000;
+
+/** Consecutive unreachable polls (hung, refused, 5xx) before the run is given
+ *  up. Run state lives in the server's memory, so a restart both causes these
+ *  AND loses the run: waiting out the multi-minute step budget only delays the
+ *  inevitable. Worst case here is ~3 × (2s cadence + 8s timeout) ≈ 30s, and a
+ *  run the server did finish is still rediscovered on the next load. */
+const MAX_UNREACHABLE = 3;
+
+/**
+ * Reject rather than hang forever; the abandoned request settles on its own.
+ * The timer is cleared once the race settles either way, so a poll that answers
+ * in time leaves nothing pending — otherwise every poll would hold a timer (and
+ * a rejection nobody is listening for) for the length of the timeout.
+ */
+function withPollTimeout<T>(promise: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error("Policy status poll timed out")),
+      POLL_TIMEOUT_MS,
+    );
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 /** A 404 (run status gone, or output file gone), across the web (axios) and
  *  desktop (tauri http client → {@code code: "ERR_NOT_FOUND"}) builds. */
 function isNotFoundError(err: unknown): boolean {
@@ -797,6 +827,7 @@ export async function poll(
   onTerminal?: (view: PolicyRunView) => void,
 ): Promise<void> {
   let notFoundStreak = 0;
+  let unreachableStreak = 0;
   // Sized to the server's worst case: each step may run up to STEP_TIMEOUT_MS
   // before the server itself aborts it, so the budget tracks the real pipeline
   // length (learned from the first status report) rather than a flat cap that
@@ -807,7 +838,7 @@ export async function poll(
     await delay(POLL_MS);
     let view;
     try {
-      view = await getPolicyRun(runId);
+      view = await withPollTimeout(getPolicyRun(runId));
     } catch (err) {
       // The server lost the run's (in-memory) state — a restart, or a poll that
       // hopped to an instance without it. Tolerate a brief blip, then fail so
@@ -825,10 +856,24 @@ export async function poll(
         }
       } else {
         notFoundStreak = 0; // a non-404 error doesn't confirm the run is gone.
+        // Unreachable rather than absent: the backend is down, restarting, or
+        // erroring. Give up quickly instead of holding the file in "enforcing"
+        // (spinner + blocked exports) for the multi-minute step budget.
+        if (++unreachableStreak >= MAX_UNREACHABLE) {
+          failRun(
+            runId,
+            i18n.t(
+              "policies.activity.serverUnreachable",
+              "Lost contact with the server while the run was in flight.",
+            ),
+          );
+          return;
+        }
       }
       continue; // keep trying within the budget.
     }
     notFoundStreak = 0;
+    unreachableStreak = 0;
     if (view.stepCount > 0) {
       budgetMs = view.stepCount * STEP_TIMEOUT_MS + POLL_GRACE_MS;
     }

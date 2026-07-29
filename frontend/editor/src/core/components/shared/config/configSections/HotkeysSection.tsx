@@ -55,10 +55,7 @@ const HotkeysSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const tools = useMemo(
-    () =>
-      (Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]).filter(
-        ([, tool]) => !tool.hideFromPicker,
-      ),
+    () => Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][],
     [toolRegistry],
   );
 

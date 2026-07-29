@@ -12,7 +12,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { useReviewExportGate } from "@app/hooks/useReviewExportGate";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
@@ -20,9 +19,10 @@ import {
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { enforceExportPolicies } from "@app/services/policyExport";
 import { downloadFile as downloadRaw } from "@app/services/downloadService";
+import { withReviewClearance, type ExportVerb } from "@app/services/reviewGate";
 import { alert as showAlert } from "@app/components/toast";
 
-export type ExportVerb = "download" | "save" | "print" | "share";
+export type { ExportVerb };
 
 export interface ExportActions {
   /** Files an export-type action would touch in the current view. */
@@ -42,17 +42,8 @@ export interface ExportActions {
    * Run a bespoke export-type flow (e.g. share) behind the same review gate.
    * Use this for any new action that lets a document leave the app.
    */
-  runGuarded: (verb: ExportVerb, proceed: () => void) => void;
-  /** Render once alongside the consumer. */
-  gateModal: React.ReactNode;
+  runGuarded: (verb: ExportVerb, proceed: () => void | Promise<void>) => void;
 }
-
-const VERB_KEYS: Record<ExportVerb, { key: string; fallback: string }> = {
-  download: { key: "reviewTool.gate.verb.download", fallback: "download" },
-  save: { key: "reviewTool.gate.verb.save", fallback: "save" },
-  print: { key: "reviewTool.gate.verb.print", fallback: "print" },
-  share: { key: "reviewTool.gate.verb.share", fallback: "share" },
-};
 
 /**
  * Single entry point for actions that let a document leave the app. Every
@@ -69,7 +60,6 @@ export function useExportActions(): ExportActions {
   const { pageEditorFunctions } = useToolWorkflow();
   const policyFileBadges = usePolicyFileBadges();
   const policyRuns = usePolicyRuns();
-  const { guardExport, gateModal } = useReviewExportGate();
 
   const activeFiles = selectors.getFiles();
 
@@ -130,13 +120,15 @@ export function useExportActions(): ExportActions {
     [t, enforcingProgress],
   );
 
+  // Batch exports clear the gate once for all their targets, so the reviewer
+  // gets a single prompt instead of one per file: the clearance holds for as
+  // long as `proceed` runs, so the chokepoints inside it stay quiet.
   const runGuarded = useCallback(
-    (verb: ExportVerb, proceed: () => void) => {
-      const { key, fallback } = VERB_KEYS[verb];
-      guardExport(t(key, fallback), targetIds, proceed);
+    (verb: ExportVerb, proceed: () => void | Promise<void>) => {
+      void withReviewClearance(targetIds, verb, proceed);
     },
     // targetIds is derived per render; the callback identity follows its content.
-    [guardExport, t, targetIds.join("|")],
+    [targetIds.join("|")],
   );
 
   const performExport = useCallback(
@@ -241,16 +233,18 @@ export function useExportActions(): ExportActions {
   );
 
   const download = useCallback(
-    () => runGuarded("download", () => void performExport(false)),
+    () => runGuarded("download", () => performExport(false)),
     [runGuarded, performExport],
   );
   const saveAs = useCallback(
-    () => runGuarded("save", () => void performExport(true)),
+    () => runGuarded("save", () => performExport(true)),
     [runGuarded, performExport],
   );
+  // No runGuarded here: the viewer's print action gates itself, so both this
+  // button and the viewer's "p" shortcut are covered without double-prompting.
   const print = useCallback(
-    () => runGuarded("print", () => viewerContext?.printActions?.print?.()),
-    [runGuarded, viewerContext],
+    () => viewerContext?.printActions?.print?.(),
+    [viewerContext],
   );
 
   return {
@@ -261,6 +255,5 @@ export function useExportActions(): ExportActions {
     saveAs,
     print,
     runGuarded,
-    gateModal,
   };
 }

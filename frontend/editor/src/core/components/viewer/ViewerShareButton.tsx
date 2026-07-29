@@ -51,8 +51,7 @@ export default function ViewerShareButton({
 
   // Review gate + enforcing state come from the shared export-actions hook, so
   // share is guarded the same way as download/print/save.
-  const { runGuarded, enforcing, enforcingTooltip, gateModal } =
-    useExportActions();
+  const { runGuarded, enforcing, enforcingTooltip } = useExportActions();
 
   const label = t("workbenchBar.share", "Share");
   const isDisabled = Boolean(disabled) || !stub || enforcing;
@@ -211,8 +210,6 @@ export default function ViewerShareButton({
           file={shareStub}
         />
       )}
-
-      {gateModal}
     </>
   );
 }

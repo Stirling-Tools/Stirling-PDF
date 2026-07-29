@@ -235,7 +235,10 @@ tasks:
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
       CHANGED:
-        sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
+        # Flattened to one line: the list is interpolated into the shell
+        # script below, and a newline-separated value breaks out of the
+        # quoted test, leaving the second path to run as a command.
+        sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}} | tr '\n' ' '
     cmds:
       - cmd: |
           if [ -z "{{.CHANGED}}" ]; then
