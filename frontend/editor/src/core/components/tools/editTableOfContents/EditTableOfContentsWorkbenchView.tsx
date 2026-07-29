@@ -204,15 +204,16 @@ const EditTableOfContentsWorkbenchView = ({
                 {downloadUrl && (
                   <Button
                     leftSection={<LocalIcon icon="download-rounded" />}
-                    onClick={() => {
-                      // The result derives from the source document, so it
-                      // inherits that document's review state.
-                      void downloadFromUrl({
-                        url: downloadUrl,
-                        filename: downloadFilename ?? "download",
-                        fileIds: sourceFileIds,
-                      });
-                    }}
+                    onClick={() =>
+                      // The result derives from the source document, so the
+                      // review gate checks the source file ids.
+                      void downloadFromUrl(
+                        downloadUrl,
+                        downloadFilename ?? "download",
+                        undefined,
+                        sourceFileIds,
+                      )
+                    }
                   >
                     {terminology.download}
                   </Button>

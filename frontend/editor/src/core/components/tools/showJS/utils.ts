@@ -386,7 +386,5 @@ export async function triggerDownload(
   url: string,
   filename: string,
 ): Promise<void> {
-  // Extracted script text, not the document itself, so there's no workspace
-  // file for the review gate to check.
-  await downloadFromUrl({ url, filename, fileIds: null });
+  await downloadFromUrl(url, filename);
 }

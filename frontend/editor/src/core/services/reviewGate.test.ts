@@ -7,6 +7,7 @@ import {
   settleReviewGate,
   withReviewClearance,
 } from "@app/services/reviewGate";
+import { downloadFile, downloadFromUrl } from "@app/services/downloadService";
 
 describe("reviewGate", () => {
   beforeEach(() => resetReviewGate());
@@ -99,5 +100,25 @@ describe("reviewGate", () => {
     await expect(requestReviewClearance(["bad"], "download")).resolves.toBe(
       true,
     );
+  });
+
+  // The download service owns the gate, so no call site can forget it: a
+  // declined file never reaches the write (nothing is appended to the DOM).
+  it("downloadFile refuses a flagged file the reviewer declines", async () => {
+    registerNeedsReviewResolver((ids) => ids);
+    const result = downloadFile({
+      data: new Blob(["x"]),
+      filename: "a.pdf",
+      fileId: "bad",
+    });
+    settleReviewGate(false);
+    await expect(result).resolves.toEqual({ cancelled: true });
+  });
+
+  it("downloadFromUrl gates on the ids the download derives from", async () => {
+    registerNeedsReviewResolver((ids) => ids);
+    const result = downloadFromUrl("blob:x", "result.pdf", undefined, ["bad"]);
+    settleReviewGate(false);
+    await expect(result).resolves.toEqual({ cancelled: true });
   });
 });

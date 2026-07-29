@@ -1,47 +1,33 @@
-/**
- * The one way a file leaves the app to disk. Both entry points enforce the
- * review gate before writing anything, so a caller cannot forget it — a
- * document flagged as needing review can't be downloaded without the reviewer
- * answering the prompt first.
- *
- * The platform-specific writing lives in `@app/services/downloadWriter`
- * (anchor click in the browser, native save dialog on desktop); this module is
- * shared, so the gate exists once rather than once per platform.
- *
- * Callers that also want export-triggered policies applied to the bytes use
- * `downloadFileWithPolicy` from `@app/services/exportWithPolicy`, which wraps
- * {@link downloadFile}.
- */
-
-import {
-  writeFile,
-  writeFromUrl,
-  type DownloadRequest,
-  type DownloadResult,
-} from "@app/services/downloadWriter";
 import {
   requestReviewClearance,
   type ClearanceTarget,
   type ExportVerb,
 } from "@app/services/reviewGate";
 
-export type { DownloadRequest, DownloadResult };
-
-export interface UrlDownloadRequest {
-  url: string;
+export interface DownloadRequest {
+  data: Blob | File;
   filename: string;
   localPath?: string;
-  /**
-   * Workspace file id(s) this download derives from — the subject of the review
-   * gate. Required, and explicitly `null` when no workspace file is behind it
-   * (extracted text, a generated report), so a new call site has to think about
-   * it rather than silently downloading past the gate.
-   */
-  fileIds: ClearanceTarget;
-  /** How the gate should name this action; "download" unless told otherwise. */
+  /** Workspace fileId of the file being exported, when known. Lets export-time
+   *  policy enforcement version the in-editor file (not just the download),
+   *  and tells the review gate which document is leaving. */
+  fileId?: string;
+  /** How the review gate names this action in its prompt; default "download". */
   verb?: ExportVerb;
 }
 
+export interface DownloadResult {
+  savedPath?: string;
+  cancelled?: boolean;
+}
+
+/**
+ * Both functions here check the review gate before writing anything, so a
+ * document flagged "needs review" cannot leave the app without the reviewer
+ * answering the prompt — call sites don't add their own gate. Document exports
+ * should still go through `downloadFileWithPolicy`, which additionally applies
+ * export-triggered policies to the bytes.
+ */
 export async function downloadFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
@@ -50,17 +36,41 @@ export async function downloadFile(
   ) {
     return { cancelled: true };
   }
-  return writeFile(request);
+  const url = URL.createObjectURL(request.data);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = request.filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+
+  return { savedPath: request.localPath };
 }
 
-/** Download whatever a URL serves — usually a blob URL from a tool result. */
+/**
+ * @param fileIds Workspace file id(s) the served bytes derive from — what the
+ *   review gate checks. Pass them whenever the download is document-derived;
+ *   omit only for generated artifacts (extracted text, JSON reports).
+ */
 export async function downloadFromUrl(
-  request: UrlDownloadRequest,
+  url: string,
+  filename: string,
+  localPath?: string,
+  fileIds?: ClearanceTarget,
+  verb: ExportVerb = "download",
 ): Promise<DownloadResult> {
-  if (
-    !(await requestReviewClearance(request.fileIds, request.verb ?? "download"))
-  ) {
+  if (!(await requestReviewClearance(fileIds, verb))) {
     return { cancelled: true };
   }
-  return writeFromUrl(request.url, request.filename, request.localPath);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  return { savedPath: localPath };
 }

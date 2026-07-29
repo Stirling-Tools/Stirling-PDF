@@ -1,17 +1,29 @@
 import type {
   DownloadRequest,
   DownloadResult,
-} from "@core/services/downloadWriter";
+} from "@core/services/downloadService";
 import {
   saveToLocalPath,
   showSaveDialog,
 } from "@app/services/localFileSaveService";
+import {
+  requestReviewClearance,
+  type ClearanceTarget,
+  type ExportVerb,
+} from "@app/services/reviewGate";
 
 export type { DownloadRequest, DownloadResult };
 
-export async function writeFile(
+// Same review-gate rule as the core implementation this shadows: nothing is
+// written until a flagged document has been cleared by the reviewer.
+export async function downloadFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
+  if (
+    !(await requestReviewClearance(request.fileId, request.verb ?? "download"))
+  ) {
+    return { cancelled: true };
+  }
   if (request.localPath) {
     const result = await saveToLocalPath(request.data, request.localPath);
     if (!result.success) {
@@ -33,15 +45,20 @@ export async function writeFile(
   return { savedPath: savePath };
 }
 
-export async function writeFromUrl(
+export async function downloadFromUrl(
   url: string,
   filename: string,
   localPath?: string,
+  fileIds?: ClearanceTarget,
+  verb: ExportVerb = "download",
 ): Promise<DownloadResult> {
+  if (!(await requestReviewClearance(fileIds, verb))) {
+    return { cancelled: true };
+  }
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Download failed (${response.status})`);
   }
   const blob = await response.blob();
-  return writeFile({ data: blob, filename, localPath });
+  return downloadFile({ data: blob, filename, localPath });
 }

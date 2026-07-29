@@ -33,13 +33,14 @@ export async function saveOperationResults(
     return null;
   }
 
-  const result = await downloadFromUrl({
-    url: context.downloadUrl,
-    filename: context.downloadFilename || "download",
-    localPath: context.downloadLocalPath || undefined,
-    fileIds: context.outputFileIds,
-    verb: "save",
-  });
+  const result = await downloadFromUrl(
+    context.downloadUrl,
+    context.downloadFilename || "download",
+    context.downloadLocalPath || undefined,
+    // The review gate checks the output ids the save derives from.
+    context.outputFileIds,
+    "save",
+  );
 
   if (context.outputFileIds && result.savedPath) {
     for (const fileId of context.outputFileIds) {

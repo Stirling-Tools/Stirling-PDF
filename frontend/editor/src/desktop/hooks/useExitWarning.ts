@@ -113,8 +113,6 @@ export function useExitWarning() {
     let failedCount = 0;
     let cancelled = false;
 
-    // Deliberately not review-gated: this writes unsaved changes back to files
-    // the user already has on disk, and blocking it on the way out would make no sense and be a poor user experience.
     for (const stub of dirtyStubs) {
       const file = filesById.get(stub.id);
       if (!file || !stub.localFilePath) {

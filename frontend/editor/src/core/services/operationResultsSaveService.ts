@@ -16,15 +16,14 @@ export async function saveOperationResults(
 ): Promise<DownloadResult | null> {
   if (!context.downloadUrl) return null;
 
-  // Results come straight from a blob URL, so the gate checks the output ids.
-  const result = await downloadFromUrl({
-    url: context.downloadUrl,
-    filename: context.downloadFilename || "download",
-    localPath: context.downloadLocalPath || undefined,
-    fileIds: context.outputFileIds,
-    verb: "save",
-  });
-  if (result.cancelled) return null;
+  const result = await downloadFromUrl(
+    context.downloadUrl,
+    context.downloadFilename || "download",
+    context.downloadLocalPath || undefined,
+    // The review gate checks the output ids the save derives from.
+    context.outputFileIds,
+    "save",
+  );
 
   if (context.outputFileIds && result.savedPath) {
     for (const fileId of context.outputFileIds) {
