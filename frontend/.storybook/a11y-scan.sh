@@ -62,11 +62,28 @@ while [ "$i" -lt "$TOTAL" ]; do
   # The scan exits non-zero whenever a story has a violation — expected here, so
   # the report is what matters, not the status. Output is teed to the log so a red
   # CI run still has the offending selectors and help text to work from.
+  #
+  # A batch is retried once when it produced no report, or when its report
+  # contains crash-class failures (failures with no axe rule in them). A one-off
+  # infrastructure death — the browser page dropping, a Vite dep re-optimize
+  # reloading mid-run — passes on the retry; a story that genuinely cannot
+  # render fails both attempts and is reported.
   for attempt in 1 2; do
     timeout 300 npx vitest run --config .storybook/vitest.config.ts \
       --reporter=json --outputFile="$out" "${filters[@]}" >>"$LOG" 2>&1
-    [ -s "$out" ] && break
-    echo "a11y-scan: batch $ci produced no report (attempt $attempt)" >&2
+    if [ ! -s "$out" ]; then
+      echo "a11y-scan: batch $ci produced no report (attempt $attempt)" >&2
+      continue
+    fi
+    if [ "$attempt" = 1 ]; then
+      crashes=$(node .storybook/a11y-crash-count.mjs "$out" 2>/dev/null || echo "?")
+      if [ "$crashes" != "0" ]; then
+        echo "a11y-scan: batch $ci has $crashes crash-class failure(s) — retrying once" >&2
+        rm -f "$out"
+        continue
+      fi
+    fi
+    break
   done
   if [ -s "$out" ]; then
     echo "  batch $ci/$NB done"

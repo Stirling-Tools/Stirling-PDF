@@ -218,23 +218,37 @@ tasks:
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
 
   storybook:a11y:changed:
-    desc: "a11y gate over stories changed vs a base ref (default origin/main)"
+    desc: "a11y gate over the stories this branch affects (default base origin/main)"
     summary: |
-      Scans only the stories this branch touches, which is what pull requests
-      run — a full scan takes ~30 minutes, far too long to sit in front of every
-      merge. The nightly job covers the rest of the suite.
+      Scans the stories a branch affects, which is what pull requests run — a
+      full scan takes ~30 minutes, far too long to sit in front of every merge.
+      A story is affected if its file changed, or if a same-named sibling
+      source file changed (editing Button.tsx or Button.css re-scans
+      Button.stories.tsx — the story renders the live component, so a component
+      edit changes what the story shows without touching the story file).
+      Changes that ripple further than a component's own stories are covered by
+      the nightly full sweep.
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
     deps: [install, storybook:browser]
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
-      # Stories touched by this branch, plus any not yet committed.
       CHANGED:
         sh: |
           { git diff --name-only --diff-filter=d {{.CLI_ARGS | default "origin/main"}}...HEAD -- '*.stories.ts' '*.stories.tsx';
             git diff --name-only --diff-filter=d -- '*.stories.ts' '*.stories.tsx';
-            git ls-files --others --exclude-standard -- '*.stories.ts' '*.stories.tsx'; } \
+            git ls-files --others --exclude-standard -- '*.stories.ts' '*.stories.tsx';
+            { git diff --name-only --diff-filter=d {{.CLI_ARGS | default "origin/main"}}...HEAD -- '*.ts' '*.tsx' '*.css';
+              git diff --name-only --diff-filter=d -- '*.ts' '*.tsx' '*.css'; } \
+            | sed 's|^frontend/||' \
+            | grep -vE '\.stories\.tsx?$|\.test\.tsx?$' \
+            | sed -E 's/\.(ts|tsx|css)$//' | sort -u \
+            | while read -r b; do
+                for s in "$b.stories.tsx" "$b.stories.ts"; do
+                  [ -f "$s" ] && echo "$s"
+                done
+              done; } \
           | sed 's|^frontend/||' | sort -u | tr '\n' ' '
     cmds:
       - cmd: |
