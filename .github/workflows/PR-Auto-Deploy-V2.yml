@@ -274,6 +274,12 @@ jobs:
             stirling-pdf-v2:
               container_name: stirling-pdf-v2-pr-${{ needs.check-pr.outputs.pr_number }}
               image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:${{ steps.commit-hash.outputs.image_tag }}
+              # Share the host's default bridge instead of creating a v2-pr-N network per
+              # preview. Those accumulated until Docker's address pools were exhausted and
+              # no preview could start; a prune does not help once the networks are in use
+              # by running containers. A preview is a single container, so it needs no
+              # private network of its own - only its published port.
+              network_mode: "bridge"
               ports:
                 - "${V2_PORT}:8080"
               volumes:
