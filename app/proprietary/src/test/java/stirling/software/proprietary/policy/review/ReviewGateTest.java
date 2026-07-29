@@ -32,8 +32,12 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.RunOrigin;
 import stirling.software.proprietary.policy.model.WaitState;
+import stirling.software.proprietary.policy.review.signal.ClassificationConfidenceSource;
+import stirling.software.proprietary.policy.review.signal.ConfidenceSignal;
+import stirling.software.proprietary.policy.review.signal.ConfidenceSignalSource;
 import stirling.software.proprietary.policy.review.store.ReviewStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.service.AiFeatureGate;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewGateTest {
@@ -41,6 +45,7 @@ class ReviewGateTest {
     @Mock private PolicyStore policyStore;
     @Mock private ReviewStore reviewStore;
     @Mock private ClassificationMetadataReader metadataReader;
+    @Mock private AiFeatureGate aiFeatureGate;
     @Mock private FileStorage fileStorage;
 
     private ReviewGate gate;
@@ -48,9 +53,43 @@ class ReviewGateTest {
     private PolicyRun run;
     private Resource output;
 
+    /** Stands in for any future tool that reports a confidence. */
+    private StubSignalSource otherTool;
+
+    /** A producer that isn't the classifier, to prove the rule isn't classification-specific. */
+    private static final class StubSignalSource implements ConfidenceSignalSource {
+        private List<ConfidenceSignal> signals = List.of();
+        private RuntimeException failure;
+
+        @Override
+        public String producer() {
+            return "ocr";
+        }
+
+        @Override
+        public List<ConfidenceSignal> read(Resource output) {
+            if (failure != null) {
+                throw failure;
+            }
+            return signals;
+        }
+    }
+
     @BeforeEach
     void setUp() throws IOException {
-        gate = new ReviewGate(policyStore, reviewStore, metadataReader, fileStorage);
+        ClassificationConfidenceSource classificationSignals =
+                new ClassificationConfidenceSource(metadataReader);
+        otherTool = new StubSignalSource();
+        gate =
+                new ReviewGate(
+                        policyStore,
+                        reviewStore,
+                        metadataReader,
+                        classificationSignals,
+                        List.of(classificationSignals, otherTool),
+                        aiFeatureGate,
+                        fileStorage);
+        lenient().when(aiFeatureGate.isClassifyAvailable()).thenReturn(true);
         policy =
                 new Policy(
                         "p1",
@@ -242,6 +281,101 @@ class ReviewGateTest {
         gate.recordFailure(run, RunOrigin.SOURCE, List.of(output));
 
         verify(reviewStore, never()).saveItem(any());
+    }
+
+    @Test
+    void lowConfidenceFromAnyToolHoldsTheRun() {
+        // Nothing classified this file; an unrelated tool simply said it wasn't sure.
+        configureTeam(enabledConfig(List.of(), false, true));
+        when(metadataReader.read(output)).thenReturn(Optional.empty());
+        otherTool.signals = List.of(new ConfidenceSignal("ocr", "page 3", 0.42, "faint scan"));
+
+        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isPresent());
+        ReviewReason reason = savedItem().reasons().get(0);
+        assertEquals(ReviewReasonKind.LOW_CONFIDENCE, reason.kind());
+        assertEquals("ocr", reason.producer());
+        assertEquals("page 3", reason.labelId());
+        assertEquals("faint scan", reason.detail());
+    }
+
+    @Test
+    void confidentOtherToolSignalSailsThrough() {
+        configureTeam(enabledConfig(List.of(), false, true));
+        when(metadataReader.read(output)).thenReturn(Optional.empty());
+        otherTool.signals = List.of(new ConfidenceSignal("ocr", "page 3", 0.99));
+
+        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        verify(reviewStore, never()).saveItem(any());
+    }
+
+    @Test
+    void otherToolSignalsAreIgnoredWhenLowConfidenceIsOff() {
+        configureTeam(enabledConfig(List.of(), false, false));
+        when(metadataReader.read(output)).thenReturn(Optional.empty());
+        otherTool.signals = List.of(new ConfidenceSignal("ocr", "page 3", 0.01));
+
+        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+    }
+
+    @Test
+    void aBrokenSignalSourceCannotBreakTheRun() {
+        configureTeam(enabledConfig(List.of(), false, true));
+        when(metadataReader.read(output)).thenReturn(Optional.empty());
+        otherTool.failure = new IllegalStateException("reader exploded");
+
+        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        verify(reviewStore, never()).saveItem(any());
+    }
+
+    @Test
+    void classificationConfidenceIsReadWithoutReopeningTheFile() {
+        configureTeam(enabledConfig(List.of(), false, true));
+        when(metadataReader.read(output))
+                .thenReturn(
+                        Optional.of(
+                                new ClassificationOutcome(
+                                        List.of(new LabelScore("invoice", 0.55)), List.of())));
+
+        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isPresent());
+        assertEquals("classification", savedItem().reasons().get(0).producer());
+        // One read for the label rules; the classifier's signals come off that same outcome.
+        verify(metadataReader).read(output);
+    }
+
+    @Test
+    void failedRunIsNotRecordedWhenItsAiStepIsUnavailable() {
+        // AI off + an AI-backed policy: every file would fail identically, and approving would just
+        // re-run the same missing step. Nothing actionable, so nothing queued.
+        configureTeam(enabledConfig(List.of(), false, false));
+        when(aiFeatureGate.isClassifyAvailable()).thenReturn(false);
+        run.fail("Policy run failed: AI feature 'classify' is disabled");
+
+        gate.recordFailure(run, RunOrigin.SOURCE, List.of(output));
+
+        verify(reviewStore, never()).saveItem(any());
+    }
+
+    @Test
+    void failedRunIsStillRecordedWithAiOffWhenThePolicyNeedsNoAi() {
+        Policy noAi =
+                new Policy(
+                        "p1",
+                        "Watermark Policy",
+                        "owner",
+                        true,
+                        null,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/security/add-watermark", Map.of())),
+                        OutputSpec.inline(),
+                        7L);
+        when(policyStore.get("p1")).thenReturn(Optional.of(noAi));
+        configureTeam(enabledConfig(List.of(), false, false));
+        when(aiFeatureGate.isClassifyAvailable()).thenReturn(false);
+        run.fail("Policy run failed: boom");
+
+        gate.recordFailure(run, RunOrigin.SOURCE, List.of(output));
+
+        assertEquals(ReviewReasonKind.RUN_FAILED, savedItem().reasons().get(0).kind());
     }
 
     @Test

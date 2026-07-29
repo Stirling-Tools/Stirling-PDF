@@ -84,6 +84,25 @@ export const CategoriesWatched: Story = {
   ),
 };
 
+/**
+ * AI engine off: the label and confidence conditions have no data to read, so they
+ * are hidden rather than left as settings that do nothing. Failed runs still work,
+ * and the types stored while the engine was on are kept (not cleared) on save.
+ */
+export const AiEngineOff: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.get("*/api/v1/config/app-config", () =>
+          HttpResponse.json({ aiEngineEnabled: false }),
+        ),
+        ...withConfig(config({ watchedLabelIds: ["invoice", "receipt"] })).msw
+          .handlers,
+      ],
+    },
+  },
+};
+
 /** Non-default advanced rules force the Advanced block open on load. */
 export const AdvancedDeviates: Story = {
   parameters: withConfig(

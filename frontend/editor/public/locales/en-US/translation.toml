@@ -8673,8 +8673,10 @@ partial = "{{succeeded}} resolved, {{count}} could not be. They may already have
 rejectAll = "Reject and delete all"
 
 [portal.review.bulk.approve]
+andMore = "{{named}} and {{count}} more"
 confirm = "Approve {{count}} files"
-destinations = "Sending to: {{destinations}}"
+destination = "Sending to: {{destination}}"
+destinations = "Sending to {{count}} destinations: {{destinations}}"
 title = "Approve all {{count}} files?"
 warning = "These files were held so a person could read them. Approving them all sends every one to its destination without anyone checking it. Classification can be wrong."
 
@@ -8684,6 +8686,7 @@ title = "Reject and delete all {{count}} files?"
 warning = "The held copies are deleted from the server and never reach their destination. This cannot be undone."
 
 [portal.review.config]
+aiOff = "Document types and confidence need the AI engine, which is switched off here, so those conditions are hidden. Failed runs can still be held. Any types this team picked earlier are kept and start working again if the engine is turned back on."
 disclaimer = "Classification can be wrong. Check documents before sharing them."
 save = "Save review settings"
 saved = "Saved"
@@ -8713,8 +8716,8 @@ description = "When a run fails, keep its files here rather than dropping them."
 label = "Hold failed runs"
 
 [portal.review.config.holdLowConfidence]
-description = "Hold documents the AI could not classify confidently."
-label = "Hold low-confidence classifications"
+description = "Hold a document when a step reports it was unsure. Covers the classifier and any other tool that scores its own output."
+label = "Hold low-confidence results"
 
 [portal.review.config.holdUnlabeled]
 description = "Hold documents the classifier could not match to any type."
@@ -8759,6 +8762,8 @@ stepsUnavailable = "Pipeline steps unavailable (policy may have been deleted)."
 
 [portal.review.reason]
 lowConfidence = "Low confidence: {{label}}"
+lowConfidenceFrom = "Low {{producer}} confidence: {{subject}}"
+lowConfidenceTool = "Low {{producer}} confidence"
 noLabel = "No label matched"
 runFailed = "Policy run failed"
 skippedLabel = "Possible {{label}}, not assigned"

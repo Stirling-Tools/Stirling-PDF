@@ -173,7 +173,10 @@
   z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Save stays on the trailing edge even when the row's other children are absent
+     (the classification disclaimer is hidden when the label rules are), which
+     space-between would silently turn into a left-aligned button. */
+  justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 0.25rem;
   padding: 0.75rem 0 0;
@@ -193,7 +196,8 @@
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  margin: 0;
+  /* Holds the leading edge, so the actions row reads the same with or without it. */
+  margin: 0 auto 0 0;
   min-width: 0;
   font-size: 0.75rem;
   line-height: 1.4;

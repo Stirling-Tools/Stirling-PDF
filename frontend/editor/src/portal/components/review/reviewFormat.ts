@@ -6,6 +6,10 @@ const LABEL_NAMES = new Map(
   DEFAULT_CLASSIFICATION_LABELS.map((label) => [label.id, label.name]),
 );
 
+/** Producer token the backend stamps on classifier-sourced confidences
+ *  (ClassificationConfidenceSource.PRODUCER). */
+const CLASSIFICATION_PRODUCER = "classification";
+
 /** Display name for a classification label id (translated, falls back to the
  *  built-in name, then the raw id). */
 export function labelName(t: TFunction, id: string | null): string {
@@ -42,6 +46,22 @@ export function reasonText(t: TFunction, reason: ReviewReason): string {
         defaultValue: "Watched label: {{label}}",
       });
     case "LOW_CONFIDENCE":
+      // Any step can report a confidence, so the sentence names the step unless it
+      // was the classifier (whose subject is a label the reader already knows).
+      if (reason.producer && reason.producer !== CLASSIFICATION_PRODUCER) {
+        return (
+          (reason.labelId
+            ? t("portal.review.reason.lowConfidenceFrom", {
+                producer: reason.producer,
+                subject: reason.labelId,
+                defaultValue: "Low {{producer}} confidence: {{subject}}",
+              })
+            : t("portal.review.reason.lowConfidenceTool", {
+                producer: reason.producer,
+                defaultValue: "Low {{producer}} confidence",
+              })) + pct
+        );
+      }
       return (
         t("portal.review.reason.lowConfidence", {
           label: labelName(t, reason.labelId),

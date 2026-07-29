@@ -1,20 +1,15 @@
 package stirling.software.proprietary.policy.review;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 
 import tools.jackson.databind.JsonNode;
@@ -31,34 +26,26 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class ClassificationMetadataReader {
 
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final PdfInfoKeyReader keyReader;
     private final ObjectMapper objectMapper;
 
     /** Whether the resource looks like a PDF worth opening for metadata. */
     public boolean isPdf(Resource resource) {
-        String name = resource.getFilename();
-        return name != null && name.toLowerCase(Locale.ROOT).endsWith(".pdf");
+        return keyReader.isPdf(resource);
     }
 
     public Optional<ClassificationOutcome> read(Resource resource) {
-        if (!isPdf(resource)) {
-            return Optional.empty();
-        }
-        try (InputStream in = resource.getInputStream();
-                PDDocument document = pdfDocumentFactory.load(in, true)) {
-            String json =
-                    document.getDocumentInformation()
-                            .getCustomMetadataValue(PdfMetadataService.CLASSIFICATION_KEY);
-            if (json == null || json.isBlank()) {
-                return Optional.empty();
-            }
+        // An unreadable output must not fail the run; it just can't feed label rules.
+        return keyReader
+                .read(resource, PdfMetadataService.CLASSIFICATION_KEY)
+                .flatMap(this::parseQuietly);
+    }
+
+    private Optional<ClassificationOutcome> parseQuietly(String json) {
+        try {
             return Optional.of(parse(json));
-        } catch (IOException | RuntimeException e) {
-            // An unreadable output must not fail the run; it just can't feed label rules.
-            log.warn(
-                    "Could not read classification metadata from {}: {}",
-                    resource.getFilename(),
-                    e.getMessage());
+        } catch (RuntimeException e) {
+            log.warn("Could not parse classification metadata: {}", e.getMessage());
             return Optional.empty();
         }
     }

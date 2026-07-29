@@ -37,12 +37,18 @@ export type ReviewReasonKind =
 /** Why an item was held. Each item carries some subset of the kinds. */
 export interface ReviewReason {
   kind: ReviewReasonKind;
-  /** Classification label id, when the reason concerns one. */
+  /** What the reason is about: a classification label id, or for a confidence
+   *  from another tool, whatever that tool scoped its number to. */
   labelId: string | null;
-  /** 0–1 classifier confidence, when the reason concerns one. */
+  /** 0-1 confidence, when the reason concerns one. */
   confidence: number | null;
   /** Free-text backend detail (e.g. the run's failure message). */
   detail: string | null;
+  /** Which step reported the confidence ("classification", "ocr", ...). Absent on
+   *  reasons that aren't about one, and on items held before producers existed
+   *  (their stored JSON has no such key), so treat a missing value as the
+   *  classifier — the only producer that existed then. */
+  producer?: string | null;
 }
 
 export interface ReviewItemFile {

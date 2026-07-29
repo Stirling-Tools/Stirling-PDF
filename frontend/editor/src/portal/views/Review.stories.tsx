@@ -76,8 +76,24 @@ const ITEMS: ReviewItem[] = [
     labels: [{ labelId: "intake-form", confidence: 0.88 }],
   }),
   item({
-    id: "failed-run",
+    id: "faint-scan",
     createdAt: BASE - 4 * HOUR,
+    policyName: "Scan intake",
+    // Not a classifier confidence: any step that reports one can hold a file, and
+    // the reason names the step instead of a label.
+    reasons: [
+      {
+        kind: "LOW_CONFIDENCE",
+        labelId: "page 3",
+        confidence: 0.42,
+        detail: "faint scan",
+        producer: "OCR",
+      },
+    ],
+  }),
+  item({
+    id: "failed-run",
+    createdAt: BASE - 5 * HOUR,
     filesAreInputs: true,
     reasons: [
       {

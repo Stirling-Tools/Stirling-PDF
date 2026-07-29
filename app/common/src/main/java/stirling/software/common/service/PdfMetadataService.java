@@ -21,6 +21,14 @@ public class PdfMetadataService {
     /** ({@code {labels}}). Written by the classify-and-label tool. */
     public static final String CLASSIFICATION_KEY = "StirlingPDFClassification";
 
+    /**
+     * Optional per-tool confidence signals, as a JSON array of {@code {producer, subject,
+     * confidence, detail}} (confidence 0..1; subject and detail optional). Any tool that can say
+     * how sure it was may append here, and the review bucket's low-confidence rule will act on it
+     * without further wiring. Read by {@code MetadataConfidenceSource}.
+     */
+    public static final String SIGNALS_KEY = "StirlingPDFSignals";
+
     private final ApplicationProperties applicationProperties;
     private final String stirlingPDFLabel;
     private final UserServiceInterface userService;

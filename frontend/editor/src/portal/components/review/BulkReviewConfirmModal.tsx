@@ -1,8 +1,26 @@
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Modal } from "@app/ui";
 import "@portal/components/review/BulkReviewConfirmModal.css";
 
 export type BulkDecision = "approve" | "reject";
+
+/** How many destinations to name before summarising the rest. A queue can span
+ *  every source a team has, and an unbounded comma list would run off the modal. */
+const NAMED_DESTINATIONS = 3;
+
+/** "a, b, c and 4 more". The count in the surrounding sentence covers the total
+ *  either way, so the tail only has to account for what isn't named. */
+function listed(t: TFunction, destinations: string[]): string {
+  const named = destinations.slice(0, NAMED_DESTINATIONS).join(", ");
+  const rest = destinations.length - NAMED_DESTINATIONS;
+  if (rest <= 0) return named;
+  return t("portal.review.bulk.approve.andMore", {
+    named,
+    count: rest,
+    defaultValue: "{{named}} and {{count}} more",
+  });
+}
 
 interface BulkReviewConfirmModalProps {
   decision: BulkDecision;
@@ -88,10 +106,17 @@ export function BulkReviewConfirmModal({
       />
       {approving && destinations.length > 0 && (
         <p className="review-bulk__destinations">
-          {t("portal.review.bulk.approve.destinations", {
-            destinations: destinations.join(", "),
-            defaultValue: "Sending to: {{destinations}}",
-          })}
+          {destinations.length === 1
+            ? t("portal.review.bulk.approve.destination", {
+                destination: destinations[0],
+                defaultValue: "Sending to: {{destination}}",
+              })
+            : t("portal.review.bulk.approve.destinations", {
+                count: destinations.length,
+                destinations: listed(t, destinations),
+                defaultValue:
+                  "Sending to {{count}} destinations: {{destinations}}",
+              })}
         </p>
       )}
     </Modal>

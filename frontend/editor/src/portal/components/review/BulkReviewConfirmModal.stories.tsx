@@ -29,6 +29,23 @@ export const MixedDestinations: Story = {
   },
 };
 
+/** A queue spanning more destinations than the sentence names: the rest are
+ *  summarised so the modal can't be pushed off screen by a long list. */
+export const ManyDestinations: Story = {
+  args: {
+    decision: "approve",
+    count: 31,
+    destinations: [
+      "Amazon S3 · processed/",
+      "Folder · /srv/out",
+      "Webhook · billing-intake",
+      "Amazon S3 · archive/",
+      "Folder · /mnt/legal",
+      "Webhook · crm-sync",
+    ],
+  },
+};
+
 export const Working: Story = {
   args: { decision: "reject", busy: true },
 };

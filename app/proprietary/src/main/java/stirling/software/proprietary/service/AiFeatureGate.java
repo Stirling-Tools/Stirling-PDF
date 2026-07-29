@@ -53,4 +53,14 @@ public class AiFeatureGate {
     public void requireClassify() {
         require(features().isClassify(), "classify");
     }
+
+    /**
+     * Whether classification would actually run, without throwing. For callers that need to behave
+     * differently when the engine is off rather than reject a request — e.g. the review bucket,
+     * which must not fill up with "the AI engine is disabled" items on a deployment that never had
+     * one.
+     */
+    public boolean isClassifyAvailable() {
+        return applicationProperties.getAiEngine().isEnabled() && features().isClassify();
+    }
 }
