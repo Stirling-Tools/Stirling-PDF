@@ -43,7 +43,8 @@ class WalletSnapshotResponseTest {
                 /* prepaidUnitsRemaining= */ 40_000L,
                 /* prepaidUnitsTotal= */ 120_000L,
                 /* prepaidExpiresAt= */ "2027-06-01",
-                /* billingMode= */ "prepaid");
+                /* billingMode= */ "prepaid",
+                /* bundleRatePerCreditMinor= */ new BigDecimal("1"));
     }
 
     @Test
@@ -123,10 +124,12 @@ class WalletSnapshotResponseTest {
                         0L,
                         0L,
                         null,
-                        "payg");
+                        "payg",
+                        null);
 
         assertThat(free.billableLimit()).isNull();
         assertThat(free.pricePerDocMinor()).isNull();
+        assertThat(free.bundleRatePerCreditMinor()).isNull();
         assertThat(free.currency()).isNull();
         assertThat(free.estimatedBillMinor()).isNull();
         assertThat(free.capUsd()).isNull();
