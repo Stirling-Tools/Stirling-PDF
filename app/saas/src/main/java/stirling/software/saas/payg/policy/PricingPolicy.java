@@ -115,6 +115,21 @@ public class PricingPolicy implements Serializable {
     private Set<String> stripePriceIds = new HashSet<>();
 
     /**
+     * One-time Stripe Price id for prepaid-bundle checkout — same {@code unit_amount} as the
+     * metered price (Stripe {@code currency_options} cover all currencies on one Price). Read by
+     * the create-payg-bundle-checkout edge fn via {@code payg_get_bundle_checkout_context}. Null =
+     * bundles not offered for this policy. Money lives in Stripe; this is just the handle.
+     */
+    @Column(name = "bundle_stripe_price_id", length = 128)
+    private String bundleStripePriceId;
+
+    // No bundle_coupon_id field: the 12-for-10 discount is minted per-quote as an inline amount_off
+    // coupon by the create-payg-bundle-quote edge fn (computed from the bundle Price), so the
+    // pre-made percent coupon this policy used to carry is no longer consulted by anything. The
+    // column still exists (payg_get_bundle_pricing returns it) and is dropped in a later cleanup;
+    // ddl-auto=update never drops columns, so removing the mapping here is safe.
+
+    /**
      * Exactly one row in the table has {@code is_default = true}; enforced by partial unique idx.
      */
     @Column(name = "is_default", nullable = false)
