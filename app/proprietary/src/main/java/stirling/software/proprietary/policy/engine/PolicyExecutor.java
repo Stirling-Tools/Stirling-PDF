@@ -51,6 +51,10 @@ public class PolicyExecutor {
 
     private static final String FILTER_OPERATION_PREFIX = "/api/v1/filter/filter-";
 
+    // Nested list parameters are walked recursively; cap the depth so a pathological
+    // pipeline cannot overflow the stack.
+    private static final int MAX_PARAMETER_DEPTH = 32;
+
     private final InternalApiClient internalApiClient;
     private final ToolMetadataService toolMetadataService;
     private final TempFileManager tempFileManager;
@@ -190,23 +194,37 @@ public class PolicyExecutor {
     }
 
     private boolean referencesStep(Object value) {
+        return referencesStep(value, 0);
+    }
+
+    private boolean referencesStep(Object value, int depth) {
+        if (depth > MAX_PARAMETER_DEPTH) {
+            return false;
+        }
         if (value instanceof String s) {
             return StepOutputPlaceholders.references(s);
         }
         if (value instanceof List<?> list) {
-            return list.stream().anyMatch(this::referencesStep);
+            return list.stream().anyMatch(item -> referencesStep(item, depth + 1));
         }
         return false;
     }
 
     private Object resolveValue(Object value, JsonNode runContext) {
+        return resolveValue(value, runContext, 0);
+    }
+
+    private Object resolveValue(Object value, JsonNode runContext, int depth) {
+        if (depth > MAX_PARAMETER_DEPTH) {
+            return value;
+        }
         if (value instanceof String s) {
             return resolveString(s, runContext);
         }
         if (value instanceof List<?> list) {
             List<Object> out = new ArrayList<>(list.size());
             for (Object item : list) {
-                out.add(resolveValue(item, runContext));
+                out.add(resolveValue(item, runContext, depth + 1));
             }
             return out;
         }

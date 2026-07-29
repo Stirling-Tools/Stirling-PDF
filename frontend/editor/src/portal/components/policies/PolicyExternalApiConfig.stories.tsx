@@ -33,6 +33,7 @@ const EMPTY_PARAMS: ExternalApiParams = {
   bodyTemplate: "",
   includeContext: "",
   includeFile: "",
+  maxRequestBytes: "",
   operationId: "",
   operationValues: "",
 };

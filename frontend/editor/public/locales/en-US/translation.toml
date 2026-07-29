@@ -7751,8 +7751,8 @@ back = "Back to pipelines"
 chooseAccount = "Choose an account"
 chooseOperation = "Choose what this step does"
 discard = "Discard changes"
-fixStepFields = "Fix the highlighted fields"
 enabled = "Enabled"
+fixStepFields = "Fix the highlighted fields"
 keepEditing = "Keep editing"
 needsUpload = "Needs an uploaded file"
 noToolMatches = "No tools match your search."
@@ -8072,13 +8072,13 @@ note = "Discord caps uploads at 25 MB by default; a channel's Nitro tier can rai
 description = "Tells a channel that the policy handled a document."
 label = "Post a message to Discord"
 
-[portal.policies.operations.errors]
-invalidNumber = "Enter a number greater than zero, or leave it blank for no limit."
-unknownVariable = "'{{path}}' is not a variable this step can use, so every run would fail."
-
 [portal.policies.operations.elasticIndex]
 description = "Records what the policy did as a searchable document."
 label = "Index an audit event in Elasticsearch"
+
+[portal.policies.operations.errors]
+invalidNumber = "Enter a number greater than zero, or leave it blank for no limit."
+unknownVariable = "'{{path}}' is not a variable this step can use, so every run would fail."
 
 [portal.policies.operations.fields.bodyMode]
 helperText = "Multipart suits upload APIs; JSON suits APIs that want the file inside a payload; binary sends the raw bytes."
