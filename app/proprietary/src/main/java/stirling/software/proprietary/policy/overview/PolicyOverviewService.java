@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.controller.ProcessingFolderController;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -36,7 +37,12 @@ public class PolicyOverviewService {
     private final SourceAccessGuard sourceAccessGuard;
 
     public PoliciesOverviewResponse overview() {
-        List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
+        // Processing folders are the editor's own surface (ProcessingFolderController); the
+        // portal's pipelines overview never sees them.
+        List<Policy> policies =
+                policyAccessGuard.visibleFrom(policyStore).stream()
+                        .filter(policy -> !ProcessingFolderController.isProcessingFolder(policy))
+                        .toList();
         Map<String, String> sourceNames = sourceNames();
 
         List<PolicyView> views =

@@ -400,6 +400,9 @@ public class PolicyController {
                             + " values.")
     public List<Policy> listPolicies() {
         return policyAccessGuard.visibleFrom(policyStore).stream()
+                // Processing folders share the engine but are the editor's own surface,
+                // served exclusively by ProcessingFolderController.
+                .filter(policy -> !ProcessingFolderController.isProcessingFolder(policy))
                 .map(PolicyController::withMaskedOutputSecrets)
                 .toList();
     }
