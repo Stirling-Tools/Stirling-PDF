@@ -239,7 +239,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                         && !supabaseUser.isAnonymous()) {
                     user = upgradeAnonymousUser(user, supabaseUser, jwt);
                 }
-                return user;
+                return recoverMissingTeam(user);
             }
 
             return createUser(jwt, supabaseId, email, appMetadata);
@@ -404,6 +404,28 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         return savedUser;
+    }
+
+    /**
+     * Recover an account stranded without a team: signup is the only other place one is assigned,
+     * so a null team_id is otherwise permanent — and portal access derives from leading a team.
+     * Guests get none by design.
+     */
+    private User recoverMissingTeam(User user) {
+        if (user.getTeam() != null
+                || ANONYMOUS.toString().equalsIgnoreCase(user.getAuthenticationType())) {
+            return user;
+        }
+        try {
+            user.setTeam(saasTeamService.ensurePersonalTeam(user));
+            log.info("Assigned a personal team to user {} which had none", user.getId());
+        } catch (Exception e) {
+            log.warn(
+                    "Could not assign a personal team to user {}: {}",
+                    user.getId(),
+                    e.getMessage());
+        }
+        return user;
     }
 
     private boolean apiKeyAuthenticated(HttpServletRequest request) throws AuthenticationException {
