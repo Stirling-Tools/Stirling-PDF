@@ -88,6 +88,7 @@ public class FormDetectionModelManager {
     private volatile int progress = 0;
     private volatile String error = null;
     private volatile String activeSha = null;
+    private volatile String downloadingModelId = null;
 
     @PostConstruct
     void init() {
@@ -185,6 +186,7 @@ public class FormDetectionModelManager {
         state = FormDetectionStatus.DOWNLOADING;
         progress = 0;
         error = null;
+        downloadingModelId = modelId;
         final String fUrl = url;
         final String fSha = sha;
         Thread.ofVirtual()
@@ -202,6 +204,7 @@ public class FormDetectionModelManager {
                                                 ? FormDetectionStatus.READY
                                                 : FormDetectionStatus.FAILED;
                             } finally {
+                                downloadingModelId = null;
                                 installing.set(false);
                             }
                         });
@@ -389,7 +392,8 @@ public class FormDetectionModelManager {
                 catalog.getAll(),
                 isFeatureEnabled(),
                 applicationProperties.getFormDetection().getExecutionMode(),
-                SERVER_ENGINE_AVAILABLE);
+                SERVER_ENGINE_AVAILABLE,
+                downloadingModelId);
     }
 
     public Optional<Path> getActiveModelFile() {

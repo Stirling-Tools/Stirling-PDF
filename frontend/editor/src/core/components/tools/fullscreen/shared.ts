@@ -70,6 +70,25 @@ export const getToolDisabledReason = (
   return null;
 };
 
+const AVAILABILITY_REASONS: ToolDisabledReason[] = [
+  "disabledByAdmin",
+  "missingDependency",
+  "unknownUnavailable",
+];
+
+/** Per-tool override for availability-driven disabled labels, else the generic one. */
+export const resolveDisabledMessage = (
+  t: (key: string, fallback: string) => string,
+  disabledReason: ToolDisabledReason,
+  tool: ToolRegistryEntry,
+): string => {
+  if (tool.unavailableMessage && AVAILABILITY_REASONS.includes(disabledReason)) {
+    return tool.unavailableMessage;
+  }
+  const { key, fallback } = getDisabledLabel(disabledReason);
+  return t(key, fallback);
+};
+
 export const getDisabledLabel = (
   disabledReason: ToolDisabledReason,
 ): { key: string; fallback: string } => {

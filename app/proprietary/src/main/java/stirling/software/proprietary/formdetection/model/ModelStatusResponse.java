@@ -43,4 +43,6 @@ public class ModelStatusResponse {
 
     /** True if the server-side ONNX engine is bundled in this build (else only browser works). */
     private boolean serverEngineAvailable;
+
+    private String downloadingModelId;
 }

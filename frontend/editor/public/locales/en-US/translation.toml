@@ -564,37 +564,53 @@ error = "Error"
 expand = "Expand"
 
 [admin.formDetection]
-active = "Active"
-description = "Install the AI model used to auto-detect form fields. The selected model is downloaded on demand (about 40-100MB) into the configs volume and is not bundled with Stirling-PDF."
+confirmUninstall = "Click to confirm"
+description = "Lets users make PDFs fillable by detecting text fields, checkboxes and signature areas with a local AI model. No data leaves your deployment."
+downloadingNote = "{{percent}}% of {{size}}"
 enableFeature = "Enable feature"
-engineDescription = "Browser keeps the PDF on the device (downloads a ~12MB runtime once, then cached); Server runs it on the backend; Auto prefers the browser and falls back to the server."
 engineLabel = "Where detection runs"
+errorTitle = "Something went wrong"
 install = "Install"
-license = "License"
-notAvailable = "This catalog entry has no download URL/checksum configured yet, so it cannot be installed."
+installFailed = "Install failed"
+modelsLabel = "Detection model"
+notAvailable = "No download URL/checksum configured yet, so this model cannot be installed."
 notWritable = "The model directory is not writable; check the configs volume mount."
-selectModel = "Model"
-selectPlaceholder = "Select a model"
-status = "Status"
-switch = "Switch to this model"
+saveFailed = "Failed to save setting"
+sizeUnknown = "size unknown"
+switch = "Use this model"
 title = "AI Form Detection"
 uninstall = "Uninstall"
+uninstallFailed = "Uninstall failed"
+verifyingNote = "Verifying SHA-256 checksum..."
 
 [admin.formDetection.airgap]
-hide = "Hide offline install instructions"
-intro = "No internet on the server? Install the model manually:"
+intro = "No internet on the server? Download the model elsewhere, verify it, and copy it into the model directory. It is picked up on restart."
 noSha = "(checksum not set)"
-show = "Air-gapped / offline install instructions"
-step1 = "1. On a machine with internet, download the model file:"
-step2 = "2. Verify its SHA-256 checksum matches:"
-step3 = "3. Copy it onto the Stirling-PDF server into the model directory:"
-step4 = "4. Set formDetection.activeModelId to this model's id in settings.yml, then restart (an installed model is auto-detected on boot). <configs> is the configs volume (e.g. /configs in Docker). The Docker image also pre-bundles this model, so it is ready with no download."
+show = "Offline / air-gapped install"
+step1 = "1. Download on a machine with internet:"
+step2 = "2. Check the SHA-256 checksum matches:"
+step3 = "3. Copy it into the model directory on this server:"
+step4 = "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The Docker image already pre-bundles the small model."
+
+[admin.formDetection.badge]
+active = "Active"
+installed = "Installed"
 
 [admin.formDetection.engine]
 auto = "Auto"
-browser = "Browser"
-server = "Server"
-serverUnavailable = "The server engine is not bundled in this build, so detection runs in the browser. Use Auto or Browser."
+autoHint = "Prefers the user's browser (PDFs stay on their device) and falls back to this server if that fails."
+browser = "User's browser"
+browserHint = "Always in the user's browser - PDFs never reach this server. Each device downloads a ~12 MB runtime once."
+server = "This server"
+serverHint = "Always on this server - PDFs are uploaded for detection. Best for weak client devices."
+serverUnavailable = "(The server engine is not bundled in this build, so detection always runs in the browser.)"
+
+[admin.formDetection.state]
+downloading = "Downloading..."
+failed = "Failed"
+notInstalled = "No model installed"
+ready = "Ready"
+verifying = "Verifying..."
 
 [admin.settings]
 discard = "Discard"
@@ -2097,13 +2113,55 @@ title = "Smart Renaming"
 
 [autoFormDetection]
 loading = "Detecting form fields..."
-submit = "Detect & make fillable"
+submit = "Detect form fields"
+
+[autoFormDetection.detects]
+checkboxes = "Checkboxes"
+label = "Finds and makes fillable"
+signatures = "Signatures"
+text = "Text fields"
 
 [autoFormDetection.error]
 failed = "An error occurred while detecting form fields."
 
+[autoFormDetection.progress]
+analyzing = "Analyzing page {{page}} of {{pageCount}}..."
+applying = "Building fillable fields..."
+downloadNote = "One-time setup - future runs start instantly."
+downloading = "Fetching AI model..."
+downloadingSized = "Fetching AI model ({{loaded}} of {{total}})..."
+loadingModel = "Getting the model ready..."
+rendering = "Preparing page {{page}} of {{pageCount}}..."
+starting = "Preparing detection..."
+uploading = "Analyzing your document..."
+
 [autoFormDetection.results]
-title = "Detected Form Fields"
+title = "Review fillable PDF"
+
+[autoFormDetection.sensitivity]
+balanced = "Balanced"
+balancedHint = "Recommended for most forms."
+high = "Thorough"
+highHint = "Finds more fields, but may add some where none belong."
+label = "Detection sensitivity"
+low = "Strict"
+lowHint = "Only very confident matches - fewer fields, fewer mistakes."
+
+[autoFormDetection.settings]
+title = "Settings"
+
+[autoFormDetection.summary]
+checkboxes = "Checkboxes"
+noneBody = 'The document may not contain form-like areas. Undo, switch sensitivity to "Thorough", and run again to look harder.'
+noneTitle = "No form fields found"
+pages_one = "Across {{count}} page."
+pages_other = "Across {{count}} pages."
+radioButtons = "Radio buttons"
+signatures = "Signatures"
+stepTitle = "Detection results"
+textFields = "Text fields"
+title_one = "{{count}} fillable field added"
+title_other = "{{count}} fillable fields added"
 
 [automate]
 copyToSaved = "Copy to Saved"
@@ -4532,6 +4590,7 @@ title = "Annotate"
 desc = "Automatically detect form fields with AI and make your PDF fillable."
 tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
 title = "Auto Form Detection"
+unavailable = "Needs the AI detection model, which isn't installed on this server. An administrator can add it under Settings > Features > AI Form Detection."
 
 [home.automate]
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."

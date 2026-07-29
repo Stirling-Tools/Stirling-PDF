@@ -13,6 +13,34 @@ function toHex(buf: ArrayBuffer): string {
   return out;
 }
 
+async function readWithProgress(
+  res: Response,
+  onProgress?: (loadedBytes: number, totalBytes: number | null) => void,
+): Promise<ArrayBuffer> {
+  const lengthHeader = res.headers.get("content-length");
+  const total = lengthHeader ? Number(lengthHeader) || null : null;
+  if (!onProgress || !res.body) {
+    return res.arrayBuffer();
+  }
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let loaded = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    loaded += value.byteLength;
+    onProgress(loaded, total);
+  }
+  const out = new Uint8Array(loaded);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.byteLength;
+  }
+  return out.buffer;
+}
+
 async function verify(bytes: ArrayBuffer, expectedSha?: string): Promise<void> {
   if (!expectedSha) return;
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -30,6 +58,7 @@ async function verify(bytes: ArrayBuffer, expectedSha?: string): Promise<void> {
  */
 export async function loadModelBytes(
   expectedSha?: string,
+  onProgress?: (loadedBytes: number, totalBytes: number | null) => void,
 ): Promise<ArrayBuffer> {
   const cacheKey = `${MODEL_FILE_URL}#${expectedSha ?? "nosha"}`;
   // Cache API is unavailable in non-secure contexts; degrade to a plain download in that case.
@@ -52,7 +81,7 @@ export async function loadModelBytes(
   if (!res.ok) {
     throw new Error(`Model download failed: HTTP ${res.status}`);
   }
-  const buf = await res.arrayBuffer();
+  const buf = await readWithProgress(res, onProgress);
   await verify(buf, expectedSha);
 
   if (cache) {

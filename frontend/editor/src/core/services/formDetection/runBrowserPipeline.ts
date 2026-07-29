@@ -15,22 +15,30 @@ import {
 import { renderPages } from "@app/services/formDetection/pdfRender";
 import { preprocess } from "@app/services/formDetection/preprocess";
 import { DetectedField, resolveSpec } from "@app/services/formDetection/types";
+import { DetectionStage } from "@app/services/formDetection/progress";
 
 export interface BrowserDetectResult {
   fields: DetectedField[];
   appliedPdf: Uint8Array;
+  pageCount: number;
 }
 
 export async function runBrowserDetection(
   pdfBytes: ArrayBuffer,
   activeEntry: FormDetectionCatalogEntry,
   confThreshold?: number,
+  onStage?: (stage: DetectionStage) => void,
 ): Promise<BrowserDetectResult> {
   const spec = resolveSpec(activeEntry);
   const score =
     typeof confThreshold === "number" ? confThreshold : spec.scoreThreshold;
 
-  const modelBytes = await loadModelBytes(activeEntry.sha256);
+  const modelBytes = await loadModelBytes(
+    activeEntry.sha256,
+    (loadedBytes, totalBytes) =>
+      onStage?.({ kind: "model-download", loadedBytes, totalBytes }),
+  );
+  onStage?.({ kind: "model-init" });
   const session = await getSession(
     modelBytes,
     activeEntry.sha256 || activeEntry.id,
@@ -44,9 +52,16 @@ export async function runBrowserDetection(
   };
 
   // pdf.js may detach the input buffer, so give each consumer its own copy.
-  const pages = await renderPages(pdfBytes.slice(0), spec.inputSize);
+  const pages = await renderPages(pdfBytes.slice(0), spec.inputSize, (page, pageCount) =>
+    onStage?.({ kind: "rendering", page, pageCount }),
+  );
   const fields: DetectedField[] = [];
   for (const page of pages) {
+    onStage?.({
+      kind: "analyzing",
+      page: page.pageIndex + 1,
+      pageCount: pages.length,
+    });
     const pre = preprocess(page.rgba, page.widthPx, page.heightPx, spec);
     const out = await runInference(session, pre.chw, spec.inputSize);
     for (const d of decode(out, spec, pre, score)) {
@@ -59,6 +74,7 @@ export async function runBrowserDetection(
     }
   }
 
+  onStage?.({ kind: "applying" });
   const appliedPdf = await applyFields(pdfBytes.slice(0), fields);
-  return { fields, appliedPdf };
+  return { fields, appliedPdf, pageCount: pages.length };
 }

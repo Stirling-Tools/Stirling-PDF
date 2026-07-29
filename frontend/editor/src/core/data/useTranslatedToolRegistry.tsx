@@ -486,6 +486,10 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: 1,
         endpoints: ["form-detection"],
+        unavailableMessage: t(
+          "home.autoFormDetection.unavailable",
+          "Needs the AI detection model, which isn't installed on this server. An administrator can add it under Settings > Features > AI Form Detection.",
+        ),
         operationConfig: asRegistryConfig(autoFormDetectionOperationConfig),
         synonyms: [
           "form",
