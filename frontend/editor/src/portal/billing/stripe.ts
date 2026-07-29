@@ -117,7 +117,12 @@ export interface BundleQuoteInput {
   provisionedMonthlyVolume: number;
   /** Size-folded run-credits = the Stripe line quantity when this quote is paid. */
   poolCredits: number;
-  /** Discounted total in minor units; null when the per-run rate is unknown. */
+  /**
+   * Client-estimated discounted total in minor units, persisted for the pre-mint display only; null
+   * when the per-run rate is unknown. NOT authoritative: once the Stripe quote is minted,
+   * create-payg-bundle-quote overwrites the row's price_minor with the server-derived total
+   * (Price x qty - amount_off), and the Stripe quote/invoice amount is server-derived regardless.
+   */
   priceMinor: number | null;
   currency: string;
   /** Affirmative consent to the prepaid→metered auto-transition (ARL/EULA §7.2). */
