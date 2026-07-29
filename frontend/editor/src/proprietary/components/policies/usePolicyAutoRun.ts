@@ -102,17 +102,21 @@ const POLL_TIMEOUT_MS = 8000;
  *  run the server did finish is still rediscovered on the next load. */
 const MAX_UNREACHABLE = 3;
 
-/** Reject rather than hang forever; the abandoned request settles on its own. */
+/**
+ * Reject rather than hang forever; the abandoned request settles on its own.
+ * The timer is cleared once the race settles either way, so a poll that answers
+ * in time leaves nothing pending — otherwise every poll would hold a timer (and
+ * a rejection nobody is listening for) for the length of the timeout.
+ */
 function withPollTimeout<T>(promise: Promise<T>): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Policy status poll timed out")),
-        POLL_TIMEOUT_MS,
-      ),
-    ),
-  ]);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error("Policy status poll timed out")),
+      POLL_TIMEOUT_MS,
+    );
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
 /** A 404 (run status gone, or output file gone), across the web (axios) and
