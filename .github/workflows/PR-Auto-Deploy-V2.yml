@@ -378,17 +378,28 @@ jobs:
           # status (the API deliberately returns an opaque LINK_FAILED), and a probe from
           # the host separates "cannot reach SaaS" from "SaaS refused us".
           finish() {
-            echo "linked=$1" >> "$GITHUB_OUTPUT"
-            echo "detail=$2" >> "$GITHUB_OUTPUT"
-            echo "$2"
-            if [ "$1" = false ] && [ -f ../private.key ]; then
-              echo "--- instance account-link log + SaaS reachability from the host ---"
-              ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            linked=$1
+            detail=$2
+            if [ "$linked" = false ] && [ -f ../private.key ]; then
+              diag=$(ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                 -o ConnectTimeout=15 -T "$VPS_USER@$VPS_HOST" \
                 "docker logs --tail 300 stirling-pdf-v2-pr-$PR_NUMBER 2>&1 | grep -i 'account-link' | tail -15;
                  echo \"host -> SaaS: \$(curl -sS -m 15 -o /dev/null -w '%{http_code}' $SAAS_API_URL/api/v1/info/status 2>&1)\";
-                 echo \"container -> SaaS DNS: \$(docker exec stirling-pdf-v2-pr-$PR_NUMBER getent hosts ${SAAS_HOST} 2>&1 | head -1)\"" || true
+                 echo \"container -> SaaS DNS: \$(docker exec stirling-pdf-v2-pr-$PR_NUMBER getent hosts ${SAAS_HOST} 2>&1 | head -1)\"" 2>&1 || true)
+              echo "--- instance account-link log + SaaS reachability from the host ---"
+              echo "$diag"
+              # Fold the upstream status into the comment. Only the instance log knows it,
+              # and without it a reader just sees an opaque LINK_FAILED.
+              upstream=$(sed -n 's/.*rejected upstream: HTTP \([0-9][0-9]*\).*/\1/p' <<<"$diag" | tail -1)
+              case "$upstream" in
+                404) detail="$detail - SaaS has no account-link endpoint, so it is disabled or not deployed there" ;;
+                "")  : ;;
+                *)   detail="$detail - SaaS replied HTTP $upstream" ;;
+              esac
             fi
+            echo "linked=$linked" >> "$GITHUB_OUTPUT"
+            echo "detail=$detail" >> "$GITHUB_OUTPUT"
+            echo "$detail"
             exit 0
           }
 
