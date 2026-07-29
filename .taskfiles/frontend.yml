@@ -184,13 +184,13 @@ tasks:
 
   storybook:
     desc: "Start Storybook dev server"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx storybook dev -p 6006 {{.CLI_ARGS}}
 
   storybook:build:
     desc: "Build static Storybook"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx storybook build {{.CLI_ARGS}}
 
@@ -204,7 +204,7 @@ tasks:
 
   storybook:test:
     desc: "Scan every story in real Chromium: it must render and pass axe"
-    deps: [install, storybook:browser]
+    deps: [prepare, storybook:browser]
     cmds:
       # Runs each story as a browser test. Pass a filter through, e.g.
       #   task frontend:storybook:test -- Button
@@ -212,7 +212,7 @@ tasks:
 
   storybook:a11y:
     desc: "a11y regression gate over every story, light and dark: fail only on NEW axe violations"
-    deps: [install, storybook:browser]
+    deps: [prepare, storybook:browser]
     cmds:
       - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
@@ -233,14 +233,14 @@ tasks:
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
-    deps: [install, storybook:browser]
+    deps: [prepare, storybook:browser]
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
       CHANGED:
         sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
     cmds:
       - cmd: |
-          if [ -z "{{.CHANGED}}" ]; then
+          if [ -z '{{.CHANGED}}' ]; then
             echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
@@ -251,7 +251,7 @@ tasks:
 
   storybook:a11y:record:
     desc: "Re-record both a11y baselines (run after intentionally fixing/adding violations)"
-    deps: [install, storybook:browser]
+    deps: [prepare, storybook:browser]
     cmds:
       - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record
