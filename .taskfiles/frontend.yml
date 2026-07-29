@@ -214,7 +214,7 @@ tasks:
     desc: "a11y regression gate over every story: fail only on NEW axe violations"
     deps: [install, storybook:browser]
     cmds:
-      - bash .storybook/a11y-scan.sh
+      - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
 
   storybook:a11y:changed:
@@ -235,35 +235,21 @@ tasks:
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
       CHANGED:
-        sh: |
-          { git diff --name-only --diff-filter=d {{.CLI_ARGS | default "origin/main"}}...HEAD -- '*.stories.ts' '*.stories.tsx';
-            git diff --name-only --diff-filter=d -- '*.stories.ts' '*.stories.tsx';
-            git ls-files --others --exclude-standard -- '*.stories.ts' '*.stories.tsx';
-            { git diff --name-only --diff-filter=d {{.CLI_ARGS | default "origin/main"}}...HEAD -- '*.ts' '*.tsx' '*.css';
-              git diff --name-only --diff-filter=d -- '*.ts' '*.tsx' '*.css'; } \
-            | sed 's|^frontend/||' \
-            | grep -vE '\.stories\.tsx?$|\.test\.tsx?$' \
-            | sed -E 's/\.(ts|tsx|css)$//' | sort -u \
-            | while read -r b; do
-                for s in "$b.stories.tsx" "$b.stories.ts"; do
-                  [ -f "$s" ] && echo "$s"
-                done
-              done; } \
-          | sed 's|^frontend/||' | sort -u | tr '\n' ' '
+        sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
     cmds:
       - cmd: |
           if [ -z "{{.CHANGED}}" ]; then
-            echo "a11y: no story files changed vs {{.BASE}} — nothing to check"
+            echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
-          bash .storybook/a11y-scan.sh {{.CHANGED}}
+          node .storybook/a11y-scan.mjs {{.CHANGED}}
           node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
 
   storybook:a11y:record:
     desc: "Re-record the a11y baseline (run after intentionally fixing/adding violations)"
     deps: [install, storybook:browser]
     cmds:
-      - bash .storybook/a11y-scan.sh
+      - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record
 
   # ============================================================
