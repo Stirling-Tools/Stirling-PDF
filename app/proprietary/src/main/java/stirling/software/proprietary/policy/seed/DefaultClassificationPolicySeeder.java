@@ -47,10 +47,8 @@ public class DefaultClassificationPolicySeeder {
     }
 
     // Any team created at runtime (admin-created, SaaS sign-ups). Seeds inside the team's own
-    // transaction: a rolled-back team still leaves no policy behind, and the pessimistic lock the
-    // policy store takes needs a live transaction, which AFTER_COMMIT cannot offer (the completed
-    // transaction is still bound to the thread, so the store joins it instead of starting a fresh
-    // one). Staying in the one transaction also keeps this to a single pooled connection.
+    // transaction: rollback still leaves no policy behind, and the store's pessimistic lock needs a
+    // live transaction, which AFTER_COMMIT cannot offer.
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void onTeamCreated(TeamCreatedEvent event) {
         seedIfMissing(event.teamId(), event.teamName());

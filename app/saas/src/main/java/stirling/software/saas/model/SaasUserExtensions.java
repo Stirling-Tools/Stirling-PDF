@@ -88,13 +88,8 @@ public class SaasUserExtensions implements Serializable, Persistable<Long> {
         return userId;
     }
 
-    /**
-     * The constructor pre-sets the @MapsId id, so Spring Data's id-based check would call this row
-     * "existing" and route save() to merge() — which fails with "null identifier" while resolving
-     * the shared-PK association for a row that isn't in the DB yet. Decide on the creation
-     * timestamp instead: Hibernate sets it on insert, so only a row that has never been written
-     * looks new.
-     */
+    // Decided on the timestamp, not the id: the constructor pre-sets the @MapsId id, so an
+    // id-based check would route a new row to merge() and fail with "null identifier".
     @Override
     @Transient
     public boolean isNew() {

@@ -539,8 +539,7 @@ class SupabaseAuthenticationFilterMoreTest {
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            // The loser provisions nothing: the winner committed user and team together, so it
-            // simply adopts the winning row.
+            // The winner committed user and team together, so the loser just adopts its row.
             verify(saasTeamService, never()).ensurePersonalTeam(any());
             assertThat(SecurityContextHolder.getContext().getAuthentication())
                     .isInstanceOf(EnhancedJwtAuthenticationToken.class);
@@ -579,9 +578,8 @@ class SupabaseAuthenticationFilterMoreTest {
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            // An account with no team has no portal access and no path to acquiring one, so a
-            // failed provision must surface instead of admitting a half-built user; the shared
-            // transaction leaves nothing behind to retry around.
+            // A teamless account has no portal access, so a failed provision must surface
+            // rather than admit a half-built user.
             assertThat(response.getStatus()).isEqualTo(401);
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         }
@@ -613,8 +611,8 @@ class SupabaseAuthenticationFilterMoreTest {
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            // Provisioning belongs to signup alone. Healing here would run on every authenticated
-            // request with no mutual exclusion, so parallel requests would mint duplicate teams.
+            // Healing here would run per request with no mutual exclusion, so parallel
+            // requests would mint duplicate teams. Provisioning belongs to signup alone.
             verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
             verify(saasTeamService, never()).saveUserWithPersonalTeam(any(User.class));
             assertThat(local.getTeam()).isNull();

@@ -177,8 +177,7 @@ class SupabaseAuthenticationFilterTest {
         filter.doFilter(request, response, chain);
 
         verify(supabaseUserService).createSupabaseUser(supabaseId, "bob@example.com", false);
-        // New users get their own personal team, never the shared Default team, and the two are
-        // written together so an account is never committed teamless.
+        // Own personal team, never the shared Default team, written with the user.
         verify(saasTeamService, times(1)).saveUserWithPersonalTeam(any(User.class));
         verify(teamService, never()).getOrCreateDefaultTeam();
         assertThat(SecurityContextHolder.getContext().getAuthentication())

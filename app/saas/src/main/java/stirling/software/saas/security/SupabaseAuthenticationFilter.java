@@ -370,9 +370,8 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             throw new AuthenticationFailureException("Failed to create SupabaseUser", e);
         }
 
-        // Guests (anonymous sessions) get NO team: the editor is free and needs none, and
-        // automation requires a real account. Everyone else is provisioned atomically with their
-        // team, so any user visible to a parallel request already has one.
+        // Guests get NO team: the editor is free and needs none. Everyone else is provisioned
+        // atomically, so a user visible to a parallel request always already has one.
         try {
             return isAnonymous(jwt)
                     ? userService.saveUser(newUser)

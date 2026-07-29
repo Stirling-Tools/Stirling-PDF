@@ -54,10 +54,9 @@ public class SaasTeamService {
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
     /**
-     * Persist a user together with their personal team, atomically. An account with no team has no
-     * portal access and no path to acquiring one, so a user must never be committed without one: if
-     * the team cannot be created the user write rolls back too and the caller sees the failure.
-     * Constraint violations (the concurrent-signup race) propagate for the caller to resolve.
+     * Persist a user and their personal team atomically: an account with no team has no portal
+     * access and no way to acquire one, so a teamless user must never be committed. Constraint
+     * violations (the concurrent-signup race) propagate for the caller to resolve.
      */
     @Transactional
     public User saveUserWithPersonalTeam(User user) {
@@ -73,9 +72,8 @@ public class SaasTeamService {
         if (existing != null && saasTeamExtensionService.isPersonal(existing)) {
             return existing;
         }
-        // An empty users.team_id does not mean there is no personal team: four call sites provision
-        // one, so a parallel request may already have minted it. Adopt it instead of creating a
-        // second.
+        // An empty users.team_id does not prove there is no personal team; adopt one the user
+        // already owns rather than minting a second.
         Team owned = existingPersonalTeam(user);
         if (owned != null) {
             user.setTeam(owned);
