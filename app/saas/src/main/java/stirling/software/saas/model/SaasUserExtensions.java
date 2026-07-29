@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,7 +39,7 @@ import stirling.software.proprietary.security.model.User;
 @NoArgsConstructor
 @Getter
 @Setter
-public class SaasUserExtensions implements Serializable {
+public class SaasUserExtensions implements Serializable, Persistable<Long> {
 
     private static final long serialVersionUID = 1L;
 
@@ -79,5 +81,23 @@ public class SaasUserExtensions implements Serializable {
 
     public boolean isMeteredBillingEnabled() {
         return Boolean.TRUE.equals(hasMeteredBillingEnabled);
+    }
+
+    @Override
+    public Long getId() {
+        return userId;
+    }
+
+    /**
+     * The constructor pre-sets the @MapsId id, so Spring Data's id-based check would call this row
+     * "existing" and route save() to merge() — which fails with "null identifier" while resolving
+     * the shared-PK association for a row that isn't in the DB yet. Decide on the creation
+     * timestamp instead: Hibernate sets it on insert, so only a row that has never been written
+     * looks new.
+     */
+    @Override
+    @Transient
+    public boolean isNew() {
+        return createdAt == null;
     }
 }

@@ -239,7 +239,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                         && !supabaseUser.isAnonymous()) {
                     user = upgradeAnonymousUser(user, supabaseUser, jwt);
                 }
-                return recoverMissingTeam(user);
+                return user;
             }
 
             return createUser(jwt, supabaseId, email, appMetadata);
@@ -271,10 +271,8 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             user.setUsername(supabaseUser.getEmail());
         }
         try {
-            User saved = userService.saveUser(user);
             // Give the account its own team rather than the shared Default team.
-            saved.setTeam(saasTeamService.ensurePersonalTeam(saved));
-            return saved;
+            return saasTeamService.saveUserWithPersonalTeam(user);
         } catch (DataIntegrityViolationException e) {
             log.warn(
                     "Email collision upgrading anonymous user {} to {}: {}",
@@ -372,60 +370,23 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             throw new AuthenticationFailureException("Failed to create SupabaseUser", e);
         }
 
-        User savedUser;
-        boolean weCreatedThisUser = true;
+        // Guests (anonymous sessions) get NO team: the editor is free and needs none, and
+        // automation requires a real account. Everyone else is provisioned atomically with their
+        // team, so any user visible to a parallel request already has one.
         try {
-            savedUser = userService.saveUser(newUser);
+            return isAnonymous(jwt)
+                    ? userService.saveUser(newUser)
+                    : saasTeamService.saveUserWithPersonalTeam(newUser);
         } catch (DataIntegrityViolationException dup) {
             // Parallel filter won the race; fetch the winning row.
-            weCreatedThisUser = false;
-            savedUser =
-                    userService
-                            .findBySupabaseId(supabaseId)
-                            .orElseThrow(
-                                    () ->
-                                            new AuthenticationFailureException(
-                                                    "User creation conflict, but unable to find existing user",
-                                                    dup));
+            return userService
+                    .findBySupabaseId(supabaseId)
+                    .orElseThrow(
+                            () ->
+                                    new AuthenticationFailureException(
+                                            "User creation conflict, but unable to find existing user",
+                                            dup));
         }
-
-        // Only the DB-race winner runs first-time init; the losers skip it. Guests (anonymous
-        // sessions) get NO team: the editor is free and needs none, and automation requires a
-        // real account.
-        if (weCreatedThisUser && !isAnonymous(jwt)) {
-            try {
-                savedUser.setTeam(saasTeamService.ensurePersonalTeam(savedUser));
-            } catch (Exception e) {
-                log.warn(
-                        "Failed to create personal team for new user {} ({}): {}",
-                        LogRedactionUtils.redactSupabaseId(supabaseId),
-                        LogRedactionUtils.redactEmail(savedUser.getUsername()),
-                        e.getMessage());
-            }
-        }
-        return savedUser;
-    }
-
-    /**
-     * Recover an account stranded without a team: signup is the only other place one is assigned,
-     * so a null team_id is otherwise permanent — and portal access derives from leading a team.
-     * Guests get none by design.
-     */
-    private User recoverMissingTeam(User user) {
-        if (user.getTeam() != null
-                || ANONYMOUS.toString().equalsIgnoreCase(user.getAuthenticationType())) {
-            return user;
-        }
-        try {
-            user.setTeam(saasTeamService.ensurePersonalTeam(user));
-            log.info("Assigned a personal team to user {} which had none", user.getId());
-        } catch (Exception e) {
-            log.warn(
-                    "Could not assign a personal team to user {}: {}",
-                    user.getId(),
-                    e.getMessage());
-        }
-        return user;
     }
 
     private boolean apiKeyAuthenticated(HttpServletRequest request) throws AuthenticationException {

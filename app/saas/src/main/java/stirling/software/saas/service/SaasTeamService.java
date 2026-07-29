@@ -53,6 +53,19 @@ public class SaasTeamService {
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
+    /**
+     * Persist a user together with their personal team, atomically. An account with no team has no
+     * portal access and no path to acquiring one, so a user must never be committed without one: if
+     * the team cannot be created the user write rolls back too and the caller sees the failure.
+     * Constraint violations (the concurrent-signup race) propagate for the caller to resolve.
+     */
+    @Transactional
+    public User saveUserWithPersonalTeam(User user) {
+        User saved = userService.saveUser(user);
+        saved.setTeam(ensurePersonalTeam(saved));
+        return saved;
+    }
+
     /** Returns the user's personal team, creating one if they have none. Idempotent. */
     @Transactional
     public Team ensurePersonalTeam(User user) {
@@ -60,7 +73,36 @@ public class SaasTeamService {
         if (existing != null && saasTeamExtensionService.isPersonal(existing)) {
             return existing;
         }
+        // An empty users.team_id does not mean there is no personal team: four call sites provision
+        // one, so a parallel request may already have minted it. Adopt it instead of creating a
+        // second.
+        Team owned = existingPersonalTeam(user);
+        if (owned != null) {
+            user.setTeam(owned);
+            userService.saveUser(user);
+            return owned;
+        }
         return createPersonalTeam(user);
+    }
+
+    /**
+     * The personal team the user already owns — their recorded home, else a solo team they lead.
+     */
+    private Team existingPersonalTeam(User user) {
+        Long homeId = saasUserExtensionService.getHomeTeamId(user);
+        if (homeId != null) {
+            Team home = teamRepository.findById(homeId).orElse(null);
+            if (home != null) {
+                return home;
+            }
+        }
+        for (TeamMembership membership : membershipRepository.findByUserId(user.getId())) {
+            Team team = membership.getTeam();
+            if (membership.isLeader() && membershipRepository.countByTeamId(team.getId()) == 1) {
+                return team;
+            }
+        }
+        return null;
     }
 
     /**
