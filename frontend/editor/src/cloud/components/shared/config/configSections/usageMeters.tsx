@@ -196,7 +196,7 @@ export function PrepaidCapacityMeterPanel({ snap }: { snap: PrepaidSnapshot }) {
       figure={snap.remaining.toLocaleString()}
       capSuffix={t(
         "payg.prepaid.meter.capSuffix",
-        "of {{total}} prepaid PDFs",
+        "of {{total}} prepaid credits",
         {
           total: snap.total.toLocaleString(),
         },
