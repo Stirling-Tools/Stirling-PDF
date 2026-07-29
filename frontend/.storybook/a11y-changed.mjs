@@ -45,7 +45,12 @@ for (const f of changed) {
     if (existsSync(s)) stories.add(s);
 }
 
-// Space-separated on one line: the output is interpolated into a task command,
-// and a newline there would end the command — the shell then tries to execute
-// the second story path as a program.
-process.stdout.write([...stories].sort().join(" "));
+// One line, each path quoted: the output is interpolated into a task command,
+// where a newline would end the command after the first story and an unquoted
+// space would split a path into two arguments.
+process.stdout.write(
+  [...stories]
+    .sort()
+    .map((s) => `"${s}"`)
+    .join(" "),
+);
