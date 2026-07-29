@@ -46,6 +46,12 @@ ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 # portal or AI layers change; defaults false so normal builds skip the extra app.
 ARG BUILD_PORTAL=false
 
+# Hosted SaaS Java backend for the portal's ATTENDED reads (wallet, billing, plans)
+# once this instance is account-linked. Vite bakes it in at build time, so it has to
+# be an image arg; empty (the default) leaves those surfaces on the mock.
+ARG VITE_SAAS_API_URL=""
+ENV VITE_SAAS_API_URL=${VITE_SAAS_API_URL}
+
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
 RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \

@@ -112,6 +112,10 @@ jobs:
       # Single source of truth for whether this preview embeds the admin portal:
       # drives the image build-arg and the deployment comment.
       BUILD_PORTAL: "true"
+      # Hosted SaaS backend the preview links to. Drives both the image build-arg
+      # (portal -> SaaS attended reads) and the container's account-link base URL
+      # (instance -> SaaS register/entitlement).
+      SAAS_API_URL: "https://api.stirlingpdf.com"
 
     steps:
       - name: Harden Runner
@@ -212,15 +216,22 @@ jobs:
 
           # Short hash for tags
           if [ "$APP_HASH" = "no-changes" ]; then
-            echo "app_short=no-changes" >> $GITHUB_OUTPUT
+            APP_SHORT=no-changes
           else
-            echo "app_short=${APP_HASH:0:8}" >> $GITHUB_OUTPUT
+            APP_SHORT=${APP_HASH:0:8}
           fi
+          echo "app_short=$APP_SHORT" >> $GITHUB_OUTPUT
+
+          # The image is also a function of its build args (they are baked into the
+          # frontend bundle), so they belong in the tag - otherwise a build-arg-only
+          # change silently reuses a stale image via the existence check below.
+          ARGS_SHORT=$(printf '%s|%s' "${BUILD_PORTAL}" "${SAAS_API_URL}" | sha256sum | cut -c1-8)
+          echo "image_tag=v2-${APP_SHORT}-${ARGS_SHORT}" >> $GITHUB_OUTPUT
 
       - name: Check if image exists
         id: check-image
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:${{ steps.commit-hash.outputs.image_tag }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Image already exists, skipping build"
           else
@@ -237,10 +248,11 @@ jobs:
           push: true
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:${{ steps.commit-hash.outputs.image_tag }}
           build-args: |
             VERSION_TAG=v2-alpha
             BUILD_PORTAL=${{ env.BUILD_PORTAL }}
+            VITE_SAAS_API_URL=${{ env.SAAS_API_URL }}
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -261,7 +273,7 @@ jobs:
           services:
             stirling-pdf-v2:
               container_name: stirling-pdf-v2-pr-${{ needs.check-pr.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:${{ steps.commit-hash.outputs.image_tag }}
               ports:
                 - "${V2_PORT}:8080"
               volumes:
@@ -272,6 +284,9 @@ jobs:
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
+                STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL: "${{ env.SAAS_API_URL }}"
+                # Previews link linked-free: never meter, report, or cap-enforce.
+                STIRLING_BILLING_ACCOUNT_LINK_METERING_ENABLED: "false"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
@@ -314,6 +329,97 @@ jobs:
 
           # Set port for output
           echo "v2_port=${V2_PORT}" >> $GITHUB_OUTPUT
+
+      # ---- Account link (combined-billing "Mode A") ----
+      # Brings the preview up already linked to a Stirling SaaS team so reviewers land
+      # on linked-state UI instead of doing the sign-in + link dance by hand. Drives the
+      # real endpoints (no test-only seeding), so a broken link flow fails here loudly.
+      # Never fatal: a preview that failed to link is still a usable preview.
+      - name: Link preview to Stirling SaaS
+        id: account-link
+        continue-on-error: true
+        env:
+          BASE_URL: http://${{ secrets.NEW_VPS_HOST }}:${{ steps.deploy.outputs.v2_port }}
+          PR_NUMBER: ${{ needs.check-pr.outputs.pr_number }}
+          ADMIN_USER: ${{ secrets.TEST_LOGIN_USERNAME }}
+          ADMIN_PASS: ${{ secrets.TEST_LOGIN_PASSWORD }}
+          # Stirling account the preview links as. Must be a team LEADER (register is
+          # leader-only) with MFA off, since this sign-in is unattended.
+          SAAS_EMAIL: ${{ secrets.CI_SAAS_LINK_EMAIL }}
+          SAAS_PASSWORD: ${{ secrets.CI_SAAS_LINK_PASSWORD }}
+        run: |
+          set -uo pipefail
+
+          # Reports the outcome to the deployment comment and stops the step.
+          finish() {
+            echo "linked=$1" >> "$GITHUB_OUTPUT"
+            echo "detail=$2" >> "$GITHUB_OUTPUT"
+            echo "$2"
+            exit 0
+          }
+
+          if [ -z "$SAAS_EMAIL" ] || [ -z "$SAAS_PASSWORD" ]; then
+            finish false "CI Stirling account not configured (CI_SAAS_LINK_EMAIL/PASSWORD unset)"
+          fi
+
+          # Both values are public and committed. Read the URL and key as a PAIR from the
+          # PR's own env file - the same pair baked into this preview's bundle - so CI can
+          # never sign in to one project with another project's key.
+          committed() { grep -m1 "^$1=" frontend/editor/.env | cut -d= -f2- | tr -d '\r'; }
+          SUPABASE_URL=$(committed VITE_SUPABASE_URL)
+          SUPABASE_KEY=$(committed VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY)
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            finish false "Supabase project not resolvable from frontend/editor/.env"
+          fi
+
+          # The container was only just started; wait for it to serve before asking it
+          # to talk to SaaS.
+          ready=false
+          for _ in $(seq 1 60); do
+            if curl -fsS --max-time 5 "$BASE_URL/api/v1/info/status" 2>/dev/null | grep -q UP; then
+              ready=true
+              break
+            fi
+            sleep 3
+          done
+          [ "$ready" = true ] || finish false "instance did not become healthy within 3 minutes"
+
+          # Admin session on the preview itself (the link endpoints are ADMIN-only).
+          ADMIN_JWT=$(curl -fsS --max-time 20 -X POST "$BASE_URL/api/v1/auth/login" \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -nc --arg u "$ADMIN_USER" --arg p "$ADMIN_PASS" '{username:$u,password:$p}')" \
+            | jq -r '.session.access_token // empty')
+          [ -n "$ADMIN_JWT" ] || finish false "could not authenticate as the preview admin"
+
+          # /configs is a persistent bind mount, so a link survives redeploys of the
+          # same PR - re-registering would just orphan the previous device credential.
+          CODE=$(curl -sS --max-time 20 -o status.json -w '%{http_code}' \
+            "$BASE_URL/api/v1/account-link/status" -H "Authorization: Bearer $ADMIN_JWT")
+          if [ "$CODE" = "404" ]; then
+            finish false "account-link endpoints absent on the instance (feature flag off?)"
+          fi
+          if [ "$CODE" = "200" ] && [ "$(jq -r '.linked' status.json)" = "true" ]; then
+            finish true "already linked to team $(jq -r '.teamId // "?"' status.json) (carried over from an earlier deploy)"
+          fi
+
+          # Short-lived SaaS JWT for the CI account; relayed once to mint the device
+          # credential, never stored.
+          SAAS_JWT=$(curl -fsS --max-time 20 -X POST "$SUPABASE_URL/auth/v1/token?grant_type=password" \
+            -H "apikey: $SUPABASE_KEY" -H 'Content-Type: application/json' \
+            -d "$(jq -nc --arg e "$SAAS_EMAIL" --arg p "$SAAS_PASSWORD" '{email:$e,password:$p}')" \
+            | jq -r '.access_token // empty')
+          [ -n "$SAAS_JWT" ] || finish false "Stirling sign-in failed for the CI account"
+
+          # 502 here means the instance could not register with SaaS (unreachable, or
+          # account-link disabled on the SaaS side); 401/403 is the CI account's token.
+          CODE=$(curl -sS --max-time 30 -o link.json -w '%{http_code}' \
+            -X POST "$BASE_URL/api/v1/account-link/link" \
+            -H "Authorization: Bearer $ADMIN_JWT" -H 'Content-Type: application/json' \
+            -d "$(jq -nc --arg j "$SAAS_JWT" --arg n "PR #$PR_NUMBER preview" '{supabaseJwt:$j,name:$n}')")
+          if [ "$CODE" = "200" ] && [ "$(jq -r '.linked // false' link.json)" = "true" ]; then
+            finish true "linked to team $(jq -r '.teamId // "?"' link.json)"
+          fi
+          finish false "link failed (HTTP $CODE, $(jq -r '.error // "no error body"' link.json 2>/dev/null))"
 
       # ---- Storybook preview (only when this PR touches stories/.storybook) ----
       # Runs inside the same approved-contributor-gated deploy job, so it deploys
@@ -379,6 +485,8 @@ jobs:
         env:
           SB_URL: ${{ steps.storybook.outputs.url }}
           SB_FILES: ${{ steps.sb-changes.outputs.storybook_files }}
+          LINKED: ${{ steps.account-link.outputs.linked }}
+          LINK_DETAIL: ${{ steps.account-link.outputs.detail }}
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -432,9 +540,16 @@ jobs:
                 `</details>\n\n`;
             }
 
+            // Account link: the preview boots linked-free to a Stirling SaaS team.
+            // Say so either way - "is this linked?" changes what the reviewer is testing.
+            const linkNote = process.env.LINKED === "true"
+              ? `🪪 **Stirling account:** linked (${process.env.LINK_DETAIL}) - metering off.\n\n`
+              : `🪪 **Stirling account:** not linked (${process.env.LINK_DETAIL || "link step did not run"}).\n\n`;
+
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
                               portalNote +
+                              linkNote +
                               storybookNote +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** for approved V2 contributors.`;
@@ -500,6 +615,29 @@ jobs:
               });
               console.log(`Deleted V2 deployment comment (ID: ${comment.id})`);
             }
+
+      # Runs BEFORE teardown, while the container can still reach SaaS: unlink so the
+      # SaaS side gets revoked_at set instead of keeping a row for a dead preview.
+      # Best-effort - a leftover row can still be revoked from the portal.
+      - name: Unlink preview from Stirling SaaS
+        continue-on-error: true
+        env:
+          BASE_URL: http://${{ secrets.NEW_VPS_HOST }}:${{ github.event.pull_request.number }}
+          ADMIN_USER: ${{ secrets.TEST_LOGIN_USERNAME }}
+          ADMIN_PASS: ${{ secrets.TEST_LOGIN_PASSWORD }}
+        run: |
+          set -uo pipefail
+          ADMIN_JWT=$(curl -fsS --max-time 20 -X POST "$BASE_URL/api/v1/auth/login" \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -nc --arg u "$ADMIN_USER" --arg p "$ADMIN_PASS" '{username:$u,password:$p}')" \
+            | jq -r '.session.access_token // empty')
+          if [ -z "$ADMIN_JWT" ]; then
+            echo "Preview not reachable / not authenticated - skipping unlink."
+            exit 0
+          fi
+          curl -fsS --max-time 30 -X POST "$BASE_URL/api/v1/account-link/unlink" \
+            -H "Authorization: Bearer $ADMIN_JWT" >/dev/null \
+            && echo "Unlinked." || echo "Unlink call failed - revoke from the portal if a row remains."
 
       - name: Set up SSH
         run: |
