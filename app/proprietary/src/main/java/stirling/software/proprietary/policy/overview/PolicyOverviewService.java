@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -75,8 +76,23 @@ public class PolicyOverviewService {
                 triggerSummary(policy.trigger()),
                 sources,
                 steps,
-                outputSummary(policy.output()),
+                outputSummary(policy, sourceNames),
                 policy.owner());
+    }
+
+    /**
+     * A policy that delivers to sources shows those locations' display names, comma-joined (each
+     * falling back to its id if it's since been deleted or isn't visible); otherwise the inline
+     * output's type.
+     */
+    private static String outputSummary(Policy policy, Map<String, String> sourceNames) {
+        List<String> outputIds = policy.outputIds();
+        if (!outputIds.isEmpty()) {
+            return outputIds.stream()
+                    .map(id -> sourceNames.getOrDefault(id, id))
+                    .collect(Collectors.joining(", "));
+        }
+        return outputSummary(policy.output());
     }
 
     /** A null trigger is a manual-only policy; otherwise the trigger's type keys the summary. */
