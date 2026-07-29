@@ -99,6 +99,17 @@ jobs:
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
 
+  # Advisory: deliberately NOT in all-checks-passed. It reports on the stories a
+  # branch touches so a regression is visible in review, but a browser scan is
+  # too new here to block merges on. Promote it once its pass/fail proves stable.
+  frontend-a11y:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/frontend-a11y.yml
+    secrets: inherit
+
   playwright-e2e:
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
