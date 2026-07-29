@@ -5,6 +5,7 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -61,6 +62,7 @@ import { DestinationPicker } from "@portal/components/pipelines/DestinationPicke
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
+import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useQueryClient } from "@tanstack/react-query";
@@ -158,6 +160,11 @@ function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
   return { type: input.triggerType, options: {} };
 }
 
+/** Whether a source can be written to, i.e. offered as a pipeline destination. */
+function isWritableSource(source: SourceView): boolean {
+  return (availableOutputModes() as string[]).includes(source.type);
+}
+
 /**
  * Full-page pipeline builder (route: /pipelines/new and /pipelines/:id). Pipeline-level settings
  * (sources, trigger, output) sit above the operation list; the operation list and the selected
@@ -206,10 +213,7 @@ export function PipelineBuilder() {
   // A destination is a source used as a write target: only writable types (folder/S3, filtered per
   // deployment) can be picked, and the virtual editor is already excluded from availableSources.
   const writableSources = useMemo<SourceView[]>(
-    () =>
-      availableSources.filter((source) =>
-        (availableOutputModes() as string[]).includes(source.type),
-      ),
+    () => availableSources.filter(isWritableSource),
     [availableSources],
   );
   const triggers = useMemo(
@@ -235,6 +239,39 @@ export function PipelineBuilder() {
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [pendingNav, setPendingNav] = useState<string | null>(null);
+
+  // Create or edit a source in place, instead of leaving the builder (and its
+  // unsaved edits) for the Sources page.
+  const [sourceModal, setSourceModal] = useState<{
+    open: boolean;
+    sourceId: string | null;
+  }>({ open: false, sourceId: null });
+  // A source created from here is the one the pipeline was missing, so select it
+  // on arrival - as the input or the destination, whichever asked for it.
+  const autoSelectRef = useRef<"input" | "output" | null>(null);
+  const knownSourceIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const target = autoSelectRef.current;
+    const known = knownSourceIdsRef.current;
+    knownSourceIdsRef.current = new Set(availableSources.map((s) => s.id));
+    if (!target) return;
+    const fresh = availableSources.find((s) => !known.has(s.id));
+    if (!fresh) return;
+    // One arrival answers the request, whatever type it turned out to be.
+    autoSelectRef.current = null;
+    if (target === "input") {
+      changeInputSource(fresh.id);
+    } else if (isWritableSource(fresh)) {
+      // A source of an unwritable type is left alone rather than becoming a
+      // destination the picker has no option for.
+      setOutputIds([fresh.id]);
+    }
+  }, [availableSources]);
+
+  function createSourceFor(target: "input" | "output") {
+    autoSelectRef.current = target;
+    setSourceModal({ open: true, sourceId: null });
+  }
 
   const mounted = useRef(true);
   useEffect(() => {
@@ -505,7 +542,6 @@ export function PipelineBuilder() {
     !submitting;
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
-  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
 
   function close() {
     navigate(listPath);
@@ -515,12 +551,6 @@ export function PipelineBuilder() {
   function attemptLeave(destination: string) {
     if (dirty) setPendingNav(destination);
     else navigate(destination);
-  }
-
-  // Jump to the source builder, for when the source you want to read from or write to doesn't
-  // exist yet. Inputs and the output destination are both saved sources, so both create one here.
-  function goToSources() {
-    attemptLeave(sourcesPath);
   }
 
   async function save(destination: string) {
@@ -816,6 +846,17 @@ export function PipelineBuilder() {
                       options={sourceOptions}
                     />
                   </div>
+                  <ActionIcon
+                    variant="tertiary"
+                    className="portal-builder__source-edit"
+                    aria-label={t("portal.pipelines.composer.editSource")}
+                    disabled={input.sourceId === ""}
+                    onClick={() =>
+                      setSourceModal({ open: true, sourceId: input.sourceId })
+                    }
+                  >
+                    <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+                  </ActionIcon>
                   <div className="portal-builder__input-field">
                     <Select
                       inputSize="sm"
@@ -872,7 +913,7 @@ export function PipelineBuilder() {
                   <Button
                     variant="tertiary"
                     size="sm"
-                    onClick={goToSources}
+                    onClick={() => createSourceFor("input")}
                     leftSection={
                       <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
                     }
@@ -897,7 +938,8 @@ export function PipelineBuilder() {
               sources={writableSources}
               value={outputIds}
               onChange={setOutputIds}
-              onCreateNew={goToSources}
+              onCreateNew={() => createSourceFor("output")}
+              onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
             />
           </div>
         </div>
@@ -1130,6 +1172,12 @@ export function PipelineBuilder() {
       >
         <p>{t("portal.pipelines.builder.unsavedBody")}</p>
       </Modal>
+
+      <SourceModal
+        open={sourceModal.open}
+        sourceId={sourceModal.sourceId}
+        onClose={() => setSourceModal({ open: false, sourceId: null })}
+      />
     </div>
   );
 }

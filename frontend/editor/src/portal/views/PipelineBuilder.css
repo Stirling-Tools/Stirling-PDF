@@ -439,3 +439,12 @@
   min-width: 1.5rem;
   min-height: 1.5rem;
 }
+
+/* A quiet way into the chosen source's own settings, beside its dropdown. */
+.portal-builder__input-row .portal-builder__source-edit {
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__input-row .portal-builder__source-edit:hover:not(:disabled) {
+  color: var(--c-accent-fg, var(--c-primary));
+}

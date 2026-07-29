@@ -7,6 +7,8 @@ import {
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@portal/queries/keys";
 import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
 import type { SourceView } from "@portal/api/sources";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
@@ -61,20 +63,61 @@ vi.mock("@portal/api/integrations", () => ({
   createIntegration: (...args: unknown[]) => createIntegration(...args),
 }));
 
-// The destination picker just selects saved sources; stub it to a button that
-// picks a fixed source, keeping this suite focused on the builder.
+// The destination picker just selects saved sources; stub its three affordances
+// (pick, create, edit) to buttons, keeping this suite focused on the builder.
 vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
   DestinationPicker: ({
     value,
     onChange,
+    onCreateNew,
+    onEdit,
   }: {
     value: string[];
     onChange: (ids: string[]) => void;
+    onCreateNew: () => void;
+    onEdit: (sourceId: string) => void;
   }) => (
-    <button type="button" onClick={() => onChange(["src-1"])}>
-      {value.length > 0 ? `output:${value.join(",")}` : "pick output"}
-    </button>
+    <>
+      <button type="button" onClick={() => onChange(["src-1"])}>
+        {value.length > 0 ? `output:${value.join(",")}` : "pick output"}
+      </button>
+      <button type="button" onClick={onCreateNew}>
+        new destination
+      </button>
+      <button type="button" onClick={() => onEdit(value[0] ?? "")}>
+        edit destination
+      </button>
+    </>
   ),
+}));
+
+// The source modal has its own suite; stub it to the two things the builder
+// depends on - the record it was opened on, and the sources-cache invalidation
+// that follows a save (which is how a new source reaches the pickers).
+vi.mock("@portal/components/sources/SourceModal", () => ({
+  SourceModal: ({
+    open,
+    sourceId,
+  }: {
+    open: boolean;
+    sourceId?: string | null;
+  }) => {
+    const queryClient = useQueryClient();
+    if (!open) return null;
+    return (
+      <div>
+        <span>source-modal:{sourceId || "new"}</span>
+        <button
+          type="button"
+          onClick={() =>
+            void queryClient.invalidateQueries({ queryKey: qk.sources() })
+          }
+        >
+          source saved
+        </button>
+      </div>
+    );
+  },
 }));
 
 // One editable tool, Compress, so the picker and step settings have something to render.
@@ -361,6 +404,125 @@ describe("PipelineBuilder", () => {
         outputIds: ["src-1"],
       }),
     );
+  });
+
+  it("creates and edits sources in place through the modal", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await pickInputSource("Claims intake");
+
+    // Connect source opens the modal in create mode, without leaving the
+    // builder (and its unsaved edits) for the Sources page.
+    fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
+    expect(screen.getByText("source-modal:new")).toBeInTheDocument();
+    expect(screen.queryByText("pipelines list")).not.toBeInTheDocument();
+
+    // The pencil beside the input opens the same modal on the chosen source.
+    fireEvent.click(
+      screen.getByLabelText("portal.pipelines.composer.editSource"),
+    );
+    expect(screen.getByText("source-modal:src-in")).toBeInTheDocument();
+  });
+
+  it("cannot edit an input source before one is chosen", async () => {
+    renderBuilder("/processor/pipelines/new");
+
+    expect(
+      await screen.findByLabelText("portal.pipelines.composer.editSource"),
+    ).toBeDisabled();
+    await pickInputSource("Claims intake");
+    expect(
+      screen.getByLabelText("portal.pipelines.composer.editSource"),
+    ).not.toBeDisabled();
+  });
+
+  it("makes a source created from the input row the pipeline's input", async () => {
+    fetchSources
+      .mockResolvedValueOnce({ kpis: [], sources: [SOURCE] })
+      .mockResolvedValue({
+        kpis: [],
+        sources: [SOURCE, { ...SOURCE, id: "src-new", name: "Scanner drop" }],
+      });
+    renderBuilder("/processor/pipelines/new");
+    await screen.findByRole("textbox", {
+      name: "portal.pipelines.builder.inputSource",
+    });
+
+    fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
+    fireEvent.click(screen.getByText("source saved"));
+
+    // The new source is the one the pipeline was missing, so it becomes the input.
+    await waitFor(() =>
+      expect(
+        screen.getByRole("textbox", {
+          name: "portal.pipelines.builder.inputSource",
+        }),
+      ).toHaveValue("Scanner drop"),
+    );
+  });
+
+  it("makes a destination created from the picker the pipeline's output", async () => {
+    fetchSources
+      .mockResolvedValueOnce({ kpis: [], sources: [SOURCE] })
+      .mockResolvedValue({
+        kpis: [],
+        sources: [
+          SOURCE,
+          { ...SOURCE, id: "src-new", name: "Archive bucket", type: "s3" },
+        ],
+      });
+    renderBuilder("/processor/pipelines/new");
+    await screen.findByText("pick output");
+
+    fireEvent.click(screen.getByText("new destination"));
+    fireEvent.click(screen.getByText("source saved"));
+
+    // Created from the destination picker, so it lands in the output rather
+    // than the input.
+    await waitFor(() =>
+      expect(screen.getByText("output:src-new")).toBeInTheDocument(),
+    );
+    expect(
+      screen.getByRole("textbox", {
+        name: "portal.pipelines.builder.inputSource",
+      }),
+    ).toHaveValue("");
+  });
+
+  it("leaves a new source that cannot be written to out of the destination", async () => {
+    // A webhook can be read from but not written to, so it must not be picked
+    // as a destination the dropdown has no option for.
+    fetchSources
+      .mockResolvedValueOnce({ kpis: [], sources: [SOURCE] })
+      .mockResolvedValue({
+        kpis: [],
+        sources: [
+          SOURCE,
+          { ...SOURCE, id: "src-hook", name: "Partner hook", type: "webhook" },
+        ],
+      });
+    renderBuilder("/processor/pipelines/new");
+    await screen.findByText("pick output");
+
+    fireEvent.click(screen.getByText("new destination"));
+    fireEvent.click(screen.getByText("source saved"));
+
+    // It did arrive - it is offered as an input, where a webhook makes sense...
+    fireEvent.click(
+      screen.getByRole("textbox", {
+        name: "portal.pipelines.builder.inputSource",
+      }),
+    );
+    expect(await screen.findByText("Partner hook")).toBeInTheDocument();
+    // ...but it was not made the destination.
+    expect(screen.getByText("pick output")).toBeInTheDocument();
+  });
+
+  it("edits the chosen destination through the same modal", async () => {
+    renderBuilder("/processor/pipelines/new");
+    fireEvent.click(await screen.findByText("pick output"));
+
+    fireEvent.click(screen.getByText("edit destination"));
+    expect(screen.getByText("source-modal:src-1")).toBeInTheDocument();
   });
 
   it("runs an existing pipeline and reports success", async () => {

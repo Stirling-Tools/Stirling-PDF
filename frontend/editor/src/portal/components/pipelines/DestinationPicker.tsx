@@ -1,15 +1,16 @@
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button, Select } from "@app/ui";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { ActionIcon, Button, Select } from "@app/ui";
 
 /**
  * Picks the saved source a pipeline delivers its output to. A destination is just a
  * source used as a write target. The value stays a list ({@code outputIds}) because
  * the model supports several, but the product caps a pipeline at one destination
  * today, so this renders a single dropdown over the same locations the builder
- * loaded (filtered to writable types by the caller). Creating a new one is delegated
- * to {@code onCreateNew} (the builder navigates to the source builder, prompting
- * about unsaved edits first).
+ * loaded (filtered to writable types by the caller). Creating and editing one are
+ * delegated to {@code onCreateNew} / {@code onEdit}, which open the source modal
+ * over the builder - mirroring the input row.
  */
 interface DestinationOption {
   id: string;
@@ -20,8 +21,10 @@ interface DestinationPickerProps {
   sources: DestinationOption[];
   value: string[];
   onChange: (outputIds: string[]) => void;
-  /** Leave the builder to create a new source location (navigate-away, like inputs). */
+  /** Create a new source location to write to (opens the source modal). */
   onCreateNew: () => void;
+  /** Edit the chosen destination's own settings (opens the source modal on it). */
+  onEdit: (sourceId: string) => void;
 }
 
 export function DestinationPicker({
@@ -29,8 +32,10 @@ export function DestinationPicker({
   value,
   onChange,
   onCreateNew,
+  onEdit,
 }: DestinationPickerProps) {
   const { t } = useTranslation();
+  const chosen = value[0] ?? "";
 
   return (
     <div className="portal-builder__input-row">
@@ -48,6 +53,15 @@ export function DestinationPicker({
           }))}
         />
       </div>
+      <ActionIcon
+        variant="tertiary"
+        className="portal-builder__source-edit"
+        aria-label={t("portal.pipelines.composer.editSource")}
+        disabled={chosen === ""}
+        onClick={() => onEdit(chosen)}
+      >
+        <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+      </ActionIcon>
       <Button
         variant="tertiary"
         size="sm"
