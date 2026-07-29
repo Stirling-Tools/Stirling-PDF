@@ -32,6 +32,12 @@ export type ClearanceTarget =
 /** Supplied by the host, which can read the per-file policy badge map. */
 type NeedsReviewResolver = (fileIds: string[]) => string[];
 
+// The module-level state below is deliberate: this module is a browser-side
+// app singleton (one gate per tab), not request-scoped logic. The resolver's
+// lifetime is the host component's — registered on mount, cleared on unmount —
+// and `pending` is the one open prompt, cleared the moment it's answered.
+// Nothing here persists per-file or per-export state; tests reset via
+// resetReviewGate().
 let resolveNeedsReview: NeedsReviewResolver | null = null;
 // Ids the user has just cleared for an export that is still running, so the
 // chokepoints inside it don't ask again (a batch prompts once). Restored by

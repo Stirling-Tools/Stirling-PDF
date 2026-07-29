@@ -4,7 +4,7 @@ import { zipFileService } from "@app/services/zipFileService";
 import { downloadFile } from "@app/services/downloadService";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { enforceExportPolicies } from "@app/services/policyExport";
-import { withReviewClearance } from "@app/services/reviewGate";
+import { requestReviewClearance } from "@app/services/reviewGate";
 
 /**
  * Downloads a blob as a file using browser download API
@@ -79,25 +79,25 @@ export async function downloadFilesAsZip(
     throw new Error("No valid files found in storage for ZIP download");
   }
 
-  // The archive itself has no file id, so the gate is asked about the files
-  // going into it — once for the whole archive, and before any zipping or
-  // policy enforcement work is done.
-  await withReviewClearance(fileIds, "download", async () => {
-    // Enforce any export-triggered policy on each PDF before they're zipped.
-    const enforced = await enforceExportPolicies(filesToZip, fileIds);
+  // The archive itself has no file id the download gate could check, so the
+  // gate is asked here about the files going into it — once for the whole
+  // archive, before any zipping or policy enforcement work is done.
+  if (!(await requestReviewClearance(fileIds, "download"))) return;
 
-    // Generate default filename if not provided
-    const finalZipFilename =
-      zipFilename ||
-      `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.zip`;
+  // Enforce any export-triggered policy on each PDF before they're zipped.
+  const enforced = await enforceExportPolicies(filesToZip, fileIds);
 
-    // Create and download ZIP
-    const { zipFile } = await zipFileService.createZipFromFiles(
-      enforced,
-      finalZipFilename,
-    );
-    await downloadFile({ data: zipFile, filename: finalZipFilename });
-  });
+  // Generate default filename if not provided
+  const finalZipFilename =
+    zipFilename ||
+    `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.zip`;
+
+  // Create and download ZIP
+  const { zipFile } = await zipFileService.createZipFromFiles(
+    enforced,
+    finalZipFilename,
+  );
+  await downloadFile({ data: zipFile, filename: finalZipFilename });
 }
 
 /**

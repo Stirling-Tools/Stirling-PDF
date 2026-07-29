@@ -21,8 +21,7 @@ import type { FileId } from "@app/types/file";
 import { getDefaultWorkbench } from "@app/types/workbench";
 import { CONVERSION_ENDPOINTS } from "@app/constants/convertConstants";
 import apiClient from "@app/services/apiClient";
-import { downloadTextAsFile } from "@app/utils/downloadUtils";
-import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+import { downloadBlob, downloadTextAsFile } from "@app/utils/downloadUtils";
 import { getFilenameFromHeaders } from "@app/utils/fileResponseUtils";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { Util } from "pdfjs-dist/legacy/build/pdf.mjs";
@@ -1345,11 +1344,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             const detectedName = getFilenameFromHeaders(contentDisposition);
             const downloadName = detectedName || expectedName;
 
-            await downloadFileWithPolicy({
-              data: response.data,
-              filename: downloadName,
-              fileId: activeFileId ?? undefined,
-            });
+            downloadBlob(response.data, downloadName);
 
             if (onComplete && !skipComplete) {
               const pdfFile = new File([response.data], downloadName, {
@@ -1410,11 +1405,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         const baseName = sanitizeBaseName(filename).replace(/-edited$/u, "");
         const downloadName = detectedName || `${baseName || "document"}.pdf`;
 
-        await downloadFileWithPolicy({
-          data: response.data,
-          filename: downloadName,
-          fileId: activeFileId ?? undefined,
-        });
+        downloadBlob(response.data, downloadName);
 
         if (onComplete && !skipComplete) {
           const pdfFile = new File([response.data], downloadName, {

@@ -13,7 +13,6 @@ import { downloadFromUrl } from "@app/services/downloadService";
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
   selectedFileName?: string;
-  sourceFileIds: string[];
   disabled: boolean;
   files: File[];
   thumbnails: (string | undefined)[];
@@ -76,7 +75,6 @@ const EditTableOfContentsWorkbenchView = ({
   const {
     bookmarks,
     selectedFileName,
-    sourceFileIds,
     disabled,
     downloadUrl,
     downloadFilename,
@@ -205,13 +203,9 @@ const EditTableOfContentsWorkbenchView = ({
                   <Button
                     leftSection={<LocalIcon icon="download-rounded" />}
                     onClick={() =>
-                      // The result derives from the source document, so the
-                      // review gate checks the source file ids.
-                      void downloadFromUrl(
+                      downloadFromUrl(
                         downloadUrl,
                         downloadFilename ?? "download",
-                        undefined,
-                        sourceFileIds,
                       )
                     }
                   >

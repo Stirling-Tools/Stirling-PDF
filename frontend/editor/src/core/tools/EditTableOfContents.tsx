@@ -360,7 +360,6 @@ const EditTableOfContents = (props: BaseToolProps) => {
     const data: EditTableOfContentsWorkbenchViewData = {
       bookmarks: base.params.parameters.bookmarks,
       selectedFileName: selectedFile?.name,
-      sourceFileIds: selectedFile ? [selectedFile.fileId] : [],
       disabled: base.endpointLoading || base.operation.isLoading,
       files: base.operation.files ?? [],
       thumbnails: base.operation.thumbnails ?? [],
