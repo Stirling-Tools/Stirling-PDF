@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.FileStorage;
+import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
@@ -38,9 +39,9 @@ import stirling.software.proprietary.service.AiFeatureGate;
  * editor uploads are reviewed in the editor by the user who is right there.
  *
  * <p>A hold persists the outputs to {@code FileStorage} and writes a durable {@link ReviewItem}
- * carrying the original {@link stirling.software.proprietary.policy.model.OutputSpec}, so approval
- * can deliver later even after the in-memory run is gone. Every failure inside the gate fails open
- * (deliver normally / keep the run's own failure) — review must never break processing.
+ * carrying every {@link OutputSpec} the run was bound for, so approval can deliver to all of them
+ * later even after the in-memory run is gone. Every failure inside the gate fails open (deliver
+ * normally / keep the run's own failure) — review must never break processing.
  */
 @Slf4j
 @Service
@@ -64,7 +65,10 @@ public class ReviewGate {
      * to deliver normally.
      */
     public Optional<WaitState> holdIfNeeded(
-            PolicyRun run, RunOrigin origin, List<Resource> outputs) {
+            PolicyRun run,
+            RunOrigin origin,
+            List<Resource> outputs,
+            List<OutputSpec> destinations) {
         try {
             ReviewContext context = contextFor(run, origin);
             if (context == null || outputs.isEmpty()) {
@@ -93,7 +97,7 @@ public class ReviewGate {
                             held,
                             evaluation.reasons(),
                             evaluation.labels(),
-                            context.policy().output());
+                            destinations);
             reviewStore.saveItem(item);
             log.info(
                     "Run {} held for review ({} file(s), reasons: {})",
@@ -154,7 +158,7 @@ public class ReviewGate {
                             captured,
                             List.of(ReviewReason.runFailed(run.getError())),
                             List.of(),
-                            context.policy().output());
+                            destinationsFor(run));
             reviewStore.saveItem(item);
             log.info(
                     "Failed run {} recorded for review ({} input file(s) kept)",
@@ -163,6 +167,15 @@ public class ReviewGate {
         } catch (RuntimeException e) {
             log.error("Could not record failed run {} for review", run.getRunId(), e);
         }
+    }
+
+    /**
+     * The destinations a failed run was bound for, from its own definition (already resolved when
+     * the run was submitted). Inline when it named none, matching what delivery would have done.
+     */
+    private List<OutputSpec> destinationsFor(PolicyRun run) {
+        List<OutputSpec> destinations = run.getDefinition().outputs();
+        return destinations.isEmpty() ? List.of(OutputSpec.inline()) : destinations;
     }
 
     /**

@@ -81,8 +81,9 @@ export interface ReviewItem {
   /** Files are the run's unprocessed inputs (a failed run produced no
    *  outputs). Approving re-runs the pipeline on them instead of delivering. */
   filesAreInputs: boolean;
-  /** Where approval sends the file, e.g. "Amazon S3 · processed/". */
-  destination: string;
+  /** Every place approval sends the file, e.g. ["Amazon S3 · processed/"]. A policy
+   *  can fan out to several destinations, and approval releases to all of them. */
+  destinations: string[];
 }
 
 export interface ReviewItemsResponse {

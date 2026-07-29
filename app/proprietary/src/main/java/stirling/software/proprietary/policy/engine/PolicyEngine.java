@@ -39,6 +39,7 @@ import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.RunOrigin;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
+import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.review.ReviewGate;
@@ -75,6 +76,7 @@ public class PolicyEngine {
     private final FileStorage fileStorage;
     private final JobOwnershipService jobOwnershipService;
     private final List<PolicyOutputSink> outputSinks;
+    private final PolicyOutputResolver outputResolver;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
     private final ReviewGate reviewGate;
@@ -127,14 +129,14 @@ public class PolicyEngine {
         // the owner owns those outputs.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Resolve the referenced output destinations live (like sourceIds), so a stored policy
+        // delivers to each of its saved Source destinations. Unreferenced policies fall back to
+        // their inline output.
+        PipelineDefinition definition =
+                new PipelineDefinition(
+                        policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(),
-                fileOwner,
-                policy.id(),
-                policy.toDefinition(),
-                inputs,
-                listener,
-                origin);
+                policy.owner(), fileOwner, policy.id(), definition, inputs, listener, origin);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -228,21 +230,30 @@ public class PolicyEngine {
                 run.markRunning();
                 PolicyExecutionResult result =
                         stepExecutor.execute(run.getDefinition(), inputs, listener);
+                // Deliver the run's files to every destination; no destinations means inline
+                // delivery (results stored/returned to the caller), preserving ad-hoc/AI behaviour.
+                List<OutputSpec> destinations = run.getDefinition().outputs();
+                if (destinations.isEmpty()) {
+                    destinations = List.of(OutputSpec.inline());
+                }
                 // Review gate sits between execution and delivery: a held run parks in
-                // WAITING_FOR_INPUT with its outputs persisted, and the review endpoints
-                // deliver (or discard) them later.
-                Optional<WaitState> hold = reviewGate.holdIfNeeded(run, origin, result.files());
+                // WAITING_FOR_INPUT with its outputs persisted (along with every destination it
+                // was bound for), and the review endpoints deliver to them, or discard, later.
+                Optional<WaitState> hold =
+                        reviewGate.holdIfNeeded(run, origin, result.files(), destinations);
                 if (hold.isPresent()) {
                     run.waitForInput(hold.get());
                     taskManager.addNote(runId, "Held for review");
                 } else {
-                    OutputSpec output = run.getDefinition().output();
-                    List<ResultFile> outputs =
-                            sinkFor(output)
-                                    .deliver(
-                                            new OutputDelivery(runId, run.getPolicyId()),
-                                            result.files(),
-                                            output);
+                    List<ResultFile> outputs = new ArrayList<>();
+                    for (OutputSpec destination : destinations) {
+                        outputs.addAll(
+                                sinkFor(destination)
+                                        .deliver(
+                                                new OutputDelivery(runId, run.getPolicyId()),
+                                                result.files(),
+                                                destination));
+                    }
                     taskManager.setMultipleFileResults(runId, outputs);
                     taskManager.setComplete(runId);
                     run.complete(outputs);

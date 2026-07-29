@@ -129,13 +129,18 @@ public class ReviewService {
         if (!item.files().isEmpty()) {
             List<Resource> resources =
                     item.files().stream().map(this::toResource).map(Resource.class::cast).toList();
-            OutputSpec output = item.output() == null ? OutputSpec.inline() : item.output();
-            List<ResultFile> delivered =
-                    sinkFor(output)
-                            .deliver(
-                                    new OutputDelivery(item.runId(), item.policyId()),
-                                    resources,
-                                    output);
+            // A policy can fan out to several destinations, so release to every one the run was
+            // bound for — mirroring the engine's own delivery loop. Bytes are already in memory,
+            // so the held copies are deleted once, after the last destination.
+            List<ResultFile> delivered = new ArrayList<>();
+            for (OutputSpec output : destinationsOf(item)) {
+                delivered.addAll(
+                        sinkFor(output)
+                                .deliver(
+                                        new OutputDelivery(item.runId(), item.policyId()),
+                                        resources,
+                                        output));
+            }
             deleteHeldFiles(item);
             completeLiveRun(item, delivered);
         }
@@ -331,6 +336,11 @@ public class ReviewService {
         } catch (RuntimeException e) {
             log.warn("Could not update live run {}: {}", item.runId(), e.getMessage());
         }
+    }
+
+    /** The item's stored destinations, falling back to inline for items that recorded none. */
+    private List<OutputSpec> destinationsOf(ReviewItem item) {
+        return item.outputs().isEmpty() ? List.of(OutputSpec.inline()) : item.outputs();
     }
 
     private PolicyOutputSink sinkFor(OutputSpec spec) {

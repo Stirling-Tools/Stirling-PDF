@@ -20,7 +20,7 @@ const item = (over: Partial<ReviewItem> & { id: string }): ReviewItem => ({
   reasons: [],
   labels: [],
   filesAreInputs: false,
-  destination: "Amazon S3 · processed/",
+  destinations: ["Amazon S3 · processed/"],
   ...over,
 });
 
@@ -79,6 +79,8 @@ const ITEMS: ReviewItem[] = [
     id: "faint-scan",
     createdAt: BASE - 4 * HOUR,
     policyName: "Scan intake",
+    // A policy that fans out: approving releases to both destinations.
+    destinations: ["Amazon S3 · processed/", "Folder · /srv/out"],
     // Not a classifier confidence: any step that reports one can hold a file, and
     // the reason names the step instead of a label.
     reasons: [

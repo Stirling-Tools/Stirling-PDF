@@ -8,8 +8,8 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 /**
  * One entry in the review bucket: a run whose outputs were held back from delivery (or a failed run
  * flagged for human eyes). Carries everything approval needs to deliver later — the held {@code
- * FileStorage} ids and the original {@link OutputSpec} — so releasing a file works even after the
- * in-memory run is gone (worker thread ended, node restarted).
+ * FileStorage} ids and every {@link OutputSpec} the run was bound for — so releasing a file works
+ * even after the in-memory run is gone (worker thread ended, node restarted).
  */
 public record ReviewItem(
         String id,
@@ -24,12 +24,17 @@ public record ReviewItem(
         List<HeldFile> files,
         List<ReviewReason> reasons,
         List<LabelScore> labels,
-        OutputSpec output) {
+        /**
+         * Every destination the run would have delivered to, resolved at hold time. A policy can
+         * fan out to several, so approving has to release to all of them, not just the first.
+         */
+        List<OutputSpec> outputs) {
 
     public ReviewItem {
         files = files == null ? List.of() : List.copyOf(files);
         reasons = reasons == null ? List.of() : List.copyOf(reasons);
         labels = labels == null ? List.of() : List.copyOf(labels);
+        outputs = outputs == null ? List.of() : List.copyOf(outputs);
     }
 
     /**
@@ -57,6 +62,6 @@ public record ReviewItem(
                 files,
                 reasons,
                 labels,
-                output);
+                outputs);
     }
 }

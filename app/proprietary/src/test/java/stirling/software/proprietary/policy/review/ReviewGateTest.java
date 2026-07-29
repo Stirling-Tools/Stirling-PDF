@@ -53,6 +53,10 @@ class ReviewGateTest {
     private PolicyRun run;
     private Resource output;
 
+    /** What the run was bound for; the item must record all of them, not just the first. */
+    private static final List<OutputSpec> DESTINATIONS =
+            List.of(OutputSpec.folder("/srv/out"), OutputSpec.folder("/mnt/archive"));
+
     /** Stands in for any future tool that reports a confidence. */
     private StubSignalSource otherTool;
 
@@ -105,7 +109,8 @@ class ReviewGateTest {
                 new PolicyRun(
                         "run-1",
                         "p1",
-                        new PipelineDefinition("Classification Policy", policy.steps(), null));
+                        new PipelineDefinition(
+                                "Classification Policy", policy.steps(), DESTINATIONS));
         output = namedResource("scan.pdf");
         lenient().when(policyStore.get("p1")).thenReturn(Optional.of(policy));
         lenient()
@@ -140,7 +145,8 @@ class ReviewGateTest {
                                 new ClassificationOutcome(
                                         List.of(new LabelScore("medical-form", 0.95)), List.of())));
 
-        Optional<WaitState> hold = gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output));
+        Optional<WaitState> hold =
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS);
 
         assertTrue(hold.isPresent());
         assertEquals(List.of("stored-file-1"), hold.get().pendingFileIds());
@@ -149,6 +155,8 @@ class ReviewGateTest {
         assertEquals("medical-form", item.reasons().get(0).labelId());
         assertEquals(ReviewItemStatus.PENDING, item.status());
         assertEquals(7L, item.teamId());
+        // Both destinations are recorded, so approval can release to each of them.
+        assertEquals(DESTINATIONS, item.outputs());
     }
 
     @Test
@@ -160,7 +168,9 @@ class ReviewGateTest {
                                 new ClassificationOutcome(
                                         List.of(new LabelScore("invoice", 0.55)), List.of())));
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isPresent());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS)
+                        .isPresent());
         assertEquals(ReviewReasonKind.LOW_CONFIDENCE, savedItem().reasons().get(0).kind());
     }
 
@@ -173,7 +183,8 @@ class ReviewGateTest {
                                 new ClassificationOutcome(
                                         List.of(new LabelScore("invoice", 0.97)), List.of())));
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS).isEmpty());
         verify(reviewStore, never()).saveItem(any());
     }
 
@@ -191,7 +202,9 @@ class ReviewGateTest {
                                                         0.35,
                                                         "mentions a patient")))));
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isPresent());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS)
+                        .isPresent());
         ReviewReason reason = savedItem().reasons().get(0);
         assertEquals(ReviewReasonKind.SKIPPED_LABEL, reason.kind());
         assertEquals("mentions a patient", reason.detail());
@@ -202,10 +215,13 @@ class ReviewGateTest {
         configureTeam(enabledConfig(List.of(), false, false));
         when(metadataReader.read(output))
                 .thenReturn(Optional.of(new ClassificationOutcome(List.of(), List.of())));
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS).isEmpty());
 
         configureTeam(enabledConfig(List.of(), true, false));
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isPresent());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS)
+                        .isPresent());
         assertEquals(ReviewReasonKind.NO_LABEL, savedItem().reasons().get(0).kind());
     }
 
@@ -215,13 +231,16 @@ class ReviewGateTest {
         configureTeam(enabledConfig(List.of("medical-form"), true, true));
         when(metadataReader.read(output)).thenReturn(Optional.empty());
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS).isEmpty());
     }
 
     @Test
     void editorAndAdHocRunsAreNeverHeld() {
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.EDITOR, List.of(output)).isEmpty());
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.AD_HOC, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.EDITOR, List.of(output), DESTINATIONS).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.AD_HOC, List.of(output), DESTINATIONS).isEmpty());
         verify(reviewStore, never()).configForTeam(any());
     }
 
@@ -229,7 +248,8 @@ class ReviewGateTest {
     void disabledConfigHoldsNothing() {
         configureTeam(ReviewBucketConfig.defaults());
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS).isEmpty());
         verify(metadataReader, never()).read(any());
     }
 
@@ -244,7 +264,8 @@ class ReviewGateTest {
         when(fileStorage.storeFromResource(any(), anyString()))
                 .thenThrow(new IOException("disk full"));
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS).isEmpty());
         verify(reviewStore, never()).saveItem(any());
     }
 
@@ -290,7 +311,9 @@ class ReviewGateTest {
         when(metadataReader.read(output)).thenReturn(Optional.empty());
         otherTool.signals = List.of(new ConfidenceSignal("ocr", "page 3", 0.42, "faint scan"));
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isPresent());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS)
+                        .isPresent());
         ReviewReason reason = savedItem().reasons().get(0);
         assertEquals(ReviewReasonKind.LOW_CONFIDENCE, reason.kind());
         assertEquals("ocr", reason.producer());
@@ -304,7 +327,8 @@ class ReviewGateTest {
         when(metadataReader.read(output)).thenReturn(Optional.empty());
         otherTool.signals = List.of(new ConfidenceSignal("ocr", "page 3", 0.99));
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS).isEmpty());
         verify(reviewStore, never()).saveItem(any());
     }
 
@@ -314,7 +338,8 @@ class ReviewGateTest {
         when(metadataReader.read(output)).thenReturn(Optional.empty());
         otherTool.signals = List.of(new ConfidenceSignal("ocr", "page 3", 0.01));
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS).isEmpty());
     }
 
     @Test
@@ -323,7 +348,8 @@ class ReviewGateTest {
         when(metadataReader.read(output)).thenReturn(Optional.empty());
         otherTool.failure = new IllegalStateException("reader exploded");
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isEmpty());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS).isEmpty());
         verify(reviewStore, never()).saveItem(any());
     }
 
@@ -336,7 +362,9 @@ class ReviewGateTest {
                                 new ClassificationOutcome(
                                         List.of(new LabelScore("invoice", 0.55)), List.of())));
 
-        assertTrue(gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output)).isPresent());
+        assertTrue(
+                gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS)
+                        .isPresent());
         assertEquals("classification", savedItem().reasons().get(0).producer());
         // One read for the label rules; the classifier's signals come off that same outcome.
         verify(metadataReader).read(output);
@@ -387,7 +415,7 @@ class ReviewGateTest {
                                 new ClassificationOutcome(
                                         List.of(new LabelScore("medical-form", 0.95)), List.of())));
 
-        gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output));
+        gate.holdIfNeeded(run, RunOrigin.SOURCE, List.of(output), DESTINATIONS);
 
         assertFalse(savedItem().filesAreInputs());
     }

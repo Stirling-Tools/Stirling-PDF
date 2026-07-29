@@ -334,12 +334,12 @@ export function Review() {
             title={
               item.filesAreInputs
                 ? t("portal.review.actions.retryHint", {
-                    destination: item.destination,
+                    destination: item.destinations.join(", "),
                     defaultValue:
                       "Ignores the error and sends the file through the pipeline again (to {{destination}}). The copy kept for review is deleted.",
                   })
                 : t("portal.review.actions.approveHint", {
-                    destination: item.destination,
+                    destination: item.destinations.join(", "),
                     defaultValue: "Releases the file to {{destination}}.",
                   })
             }
@@ -640,7 +640,7 @@ export function Review() {
         <BulkReviewConfirmModal
           decision={bulk}
           count={rows.length}
-          destinations={[...new Set(rows.map((item) => item.destination))]}
+          destinations={[...new Set(rows.flatMap((item) => item.destinations))]}
           busy={bulkBusy}
           onCancel={() => setBulk(null)}
           onConfirm={() => void resolveVisible(bulk)}

@@ -40,7 +40,7 @@ export function buildReviewItems(now = Date.now()): ReviewItem[] {
       ],
       labels: [{ labelId: "medical-form", confidence: 0.93 }],
       filesAreInputs: false,
-      destination: "Amazon S3 · processed/",
+      destinations: ["Amazon S3 · processed/"],
     },
     {
       id: "ri-2",
@@ -68,7 +68,7 @@ export function buildReviewItems(now = Date.now()): ReviewItem[] {
       ],
       labels: [{ labelId: "invoice", confidence: 0.55 }],
       filesAreInputs: false,
-      destination: "Amazon S3 · processed/",
+      destinations: ["Amazon S3 · processed/"],
     },
     {
       id: "ri-3",
@@ -85,7 +85,7 @@ export function buildReviewItems(now = Date.now()): ReviewItem[] {
       ],
       labels: [],
       filesAreInputs: false,
-      destination: "Amazon S3 · processed/",
+      destinations: ["Amazon S3 · processed/"],
     },
     {
       id: "ri-4",
@@ -107,7 +107,7 @@ export function buildReviewItems(now = Date.now()): ReviewItem[] {
       ],
       labels: [],
       filesAreInputs: true,
-      destination: "Amazon S3 · processed/",
+      destinations: ["Amazon S3 · processed/"],
     },
     {
       id: "ri-5",
@@ -129,7 +129,7 @@ export function buildReviewItems(now = Date.now()): ReviewItem[] {
       ],
       labels: [{ labelId: "invoice", confidence: 0.71 }],
       filesAreInputs: false,
-      destination: "Amazon S3 · processed/",
+      destinations: ["Amazon S3 · processed/"],
     },
     {
       id: "ri-6",
@@ -151,7 +151,7 @@ export function buildReviewItems(now = Date.now()): ReviewItem[] {
       ],
       labels: [{ labelId: "medical-form", confidence: 0.97 }],
       filesAreInputs: false,
-      destination: "Amazon S3 · processed/",
+      destinations: ["Amazon S3 · processed/"],
     },
   ];
 }

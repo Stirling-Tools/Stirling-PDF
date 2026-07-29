@@ -5,9 +5,9 @@ import java.util.List;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
- * Wire projection of a {@link ReviewItem} for the portal. Omits the internal {@code OutputSpec}
- * (delivery detail, not the reviewer's business); timestamps are epoch millis to match {@code
- * PolicyRunView}.
+ * Wire projection of a {@link ReviewItem} for the portal. Reduces the internal {@code OutputSpec}s
+ * to display labels (the reviewer needs to know where a file goes, not how it gets there);
+ * timestamps are epoch millis to match {@code PolicyRunView}.
  */
 public record ReviewItemView(
         String id,
@@ -23,8 +23,11 @@ public record ReviewItemView(
         List<LabelScore> labels,
         /** Files are the run's unprocessed inputs (the run failed before producing outputs). */
         boolean filesAreInputs,
-        /** Where approval sends the file, e.g. "Amazon S3 · processed/". */
-        String destination) {
+        /**
+         * Every place approval sends the file, e.g. ["Amazon S3 · processed/"]. A policy can fan
+         * out, so this is a list; it is never empty (inline delivery reads as "Stirling").
+         */
+        List<String> destinations) {
 
     public static ReviewItemView of(ReviewItem item) {
         return new ReviewItemView(
@@ -40,10 +43,18 @@ public record ReviewItemView(
                 item.reasons(),
                 item.labels(),
                 item.filesAreInputs(),
-                destinationOf(item.output()));
+                destinationsOf(item));
     }
 
-    /** Short human label for the run's output target. */
+    /** Short human labels for the run's output targets, deduplicated, in order. */
+    private static List<String> destinationsOf(ReviewItem item) {
+        if (item.outputs().isEmpty()) {
+            return List.of(destinationOf(null));
+        }
+        return item.outputs().stream().map(ReviewItemView::destinationOf).distinct().toList();
+    }
+
+    /** Short human label for one output target. */
     private static String destinationOf(OutputSpec output) {
         if (output == null || output.type() == null || "inline".equals(output.type())) {
             return "Stirling";

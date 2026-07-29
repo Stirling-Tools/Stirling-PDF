@@ -260,7 +260,8 @@ export function ReviewItemModal({
             )}
             <p className="review-modal__meta">
               {t("portal.review.modal.destination", {
-                destination: item.destination,
+                count: item.destinations.length,
+                destination: item.destinations.join(", "),
                 defaultValue: "Destination: {{destination}}",
               })}
             </p>
@@ -289,12 +290,12 @@ export function ReviewItemModal({
                   title={
                     item.filesAreInputs
                       ? t("portal.review.actions.retryHint", {
-                          destination: item.destination,
+                          destination: item.destinations.join(", "),
                           defaultValue:
                             "Ignores the error and sends the file through the pipeline again (to {{destination}}). The copy kept for review is deleted.",
                         })
                       : t("portal.review.actions.approveHint", {
-                          destination: item.destination,
+                          destination: item.destinations.join(", "),
                           defaultValue: "Releases the file to {{destination}}.",
                         })
                   }
