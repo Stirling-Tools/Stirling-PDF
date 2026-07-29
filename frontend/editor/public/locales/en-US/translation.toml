@@ -4303,6 +4303,7 @@ type = "Type"
 [formFill.mode]
 create = "Create"
 fill = "Fill"
+label = "Form editor mode"
 modify = "Modify"
 
 [formFill.modify]
