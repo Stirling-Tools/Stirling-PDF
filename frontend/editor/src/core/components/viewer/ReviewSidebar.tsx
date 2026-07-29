@@ -87,11 +87,15 @@ export function ReviewSidebar({ visible, rightOffset }: ReviewSidebarProps) {
     setApproved(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!stub) return;
     setConfirmingDelete(false);
     const fileId = stub.id as FileId;
-    void removeFiles([fileId]);
+    // `true` is explicit: delete from storage as well as the workbench, so the
+    // file leaves the file list too. Deleting from storage bumps the IndexedDB
+    // revision, which is what makes the sidebar re-scan — awaiting it keeps the
+    // review-state cleanup below after the file is actually gone.
+    await removeFiles([fileId], true);
     // The file is gone from storage, so drop its review state too or it stays
     // flagged for a review it can never receive.
     forgetFileReview(fileId);
@@ -217,7 +221,7 @@ export function ReviewSidebar({ visible, rightOffset }: ReviewSidebarProps) {
                       leftSection={
                         <DeleteOutlineRoundedIcon fontSize="small" />
                       }
-                      onClick={handleDelete}
+                      onClick={() => void handleDelete()}
                       data-testid="review-confirm-delete"
                     >
                       {t("viewer.review.deleteConfirm", "Delete file")}
