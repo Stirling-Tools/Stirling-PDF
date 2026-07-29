@@ -585,4 +585,78 @@ class SupabaseAuthenticationFilterMoreTest {
             verify(userService, times(1)).saveUser(any(User.class));
         }
     }
+
+    @Nested
+    @DisplayName("Team recovery for existing accounts")
+    class TeamRecovery {
+
+        private User existingWebUser(UUID supabaseId) {
+            User local = newUser("real@example.com");
+            local.setSupabaseId(supabaseId);
+            local.setAuthenticationType(AuthenticationType.WEB);
+            return local;
+        }
+
+        @Test
+        @DisplayName("an existing account with no team is given a personal team")
+        void assignsTeamWhenMissing() throws Exception {
+            UUID supabaseId = UUID.randomUUID();
+            when(jwtDecoder.decode("tok"))
+                    .thenReturn(fullJwt(supabaseId, "real@example.com", false, "email"));
+            when(supabaseUserService.getUser(supabaseId))
+                    .thenReturn(supabaseUser(supabaseId, "real@example.com", false));
+
+            User local = existingWebUser(supabaseId);
+            Team recovered = new Team();
+            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+            when(saasTeamService.ensurePersonalTeam(local)).thenReturn(recovered);
+
+            bearer("tok");
+            filter.doFilter(request, response, chain);
+
+            verify(saasTeamService).ensurePersonalTeam(local);
+            assertThat(local.getTeam()).isSameAs(recovered);
+        }
+
+        @Test
+        @DisplayName("an account that already has a team is left alone")
+        void noOpWhenTeamPresent() throws Exception {
+            UUID supabaseId = UUID.randomUUID();
+            when(jwtDecoder.decode("tok"))
+                    .thenReturn(fullJwt(supabaseId, "real@example.com", false, "email"));
+            when(supabaseUserService.getUser(supabaseId))
+                    .thenReturn(supabaseUser(supabaseId, "real@example.com", false));
+
+            User local = existingWebUser(supabaseId);
+            Team existing = new Team();
+            local.setTeam(existing);
+            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+
+            bearer("tok");
+            filter.doFilter(request, response, chain);
+
+            verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
+            assertThat(local.getTeam()).isSameAs(existing);
+        }
+
+        @Test
+        @DisplayName("a guest session is never given a team")
+        void guestStaysTeamless() throws Exception {
+            UUID supabaseId = UUID.randomUUID();
+            when(jwtDecoder.decode("tok")).thenReturn(fullJwt(supabaseId, null, true, "email"));
+            when(supabaseUserService.getUser(supabaseId))
+                    .thenReturn(supabaseUser(supabaseId, null, true));
+
+            User local = newUser("anon_guest");
+            local.setSupabaseId(supabaseId);
+            local.setAuthenticationType(AuthenticationType.ANONYMOUS);
+            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+
+            bearer("tok");
+            filter.doFilter(request, response, chain);
+
+            verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
+            assertThat(local.getTeam()).isNull();
+        }
+    }
 }

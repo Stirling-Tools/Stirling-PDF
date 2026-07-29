@@ -8,6 +8,7 @@ import {
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
+import type { SourceView } from "@portal/api/sources";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
@@ -63,6 +64,22 @@ vi.mock("@portal/api/integrations", () => ({
   createIntegration: (...args: unknown[]) => createIntegration(...args),
 }));
 
+// The destination picker just selects saved sources; stub it to a button that
+// picks a fixed source, keeping this suite focused on the builder.
+vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
+  DestinationPicker: ({
+    value,
+    onChange,
+  }: {
+    value: string[];
+    onChange: (ids: string[]) => void;
+  }) => (
+    <button type="button" onClick={() => onChange(["src-1"])}>
+      {value.length > 0 ? `output:${value.join(",")}` : "pick output"}
+    </button>
+  ),
+}));
+
 // One editable tool, Compress, so the picker and step settings have something to render.
 vi.mock("@app/contexts/ToolRegistryContext", () => {
   const compress = {
@@ -116,6 +133,20 @@ const POLICY: Policy = {
   sourceIds: [],
   steps: [],
   output: { type: "inline", options: {} },
+  outputIds: [],
+};
+
+const SOURCE: SourceView = {
+  id: "src-in",
+  name: "Claims intake",
+  type: "folder",
+  status: "active",
+  referenceCount: 0,
+  referencingPolicies: [],
+  config: [],
+  docsTotal: 0,
+  docs24h: 0,
+  docs30d: 0,
 };
 
 function outcome(overrides: Partial<TriggerOutcome>): TriggerOutcome {
@@ -155,7 +186,7 @@ describe("PipelineBuilder", () => {
     fetchSources.mockReset();
     fetchPipeline.mockResolvedValue(POLICY);
     fetchTriggers.mockResolvedValue([]);
-    fetchSources.mockResolvedValue({ kpis: [], sources: [] });
+    fetchSources.mockResolvedValue({ kpis: [], sources: [SOURCE] });
     savePipeline.mockResolvedValue({});
     deletePipeline.mockResolvedValue(undefined);
     triggerPipeline.mockResolvedValue(outcome({ runIds: ["run-1"] }));
@@ -178,6 +209,12 @@ describe("PipelineBuilder", () => {
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
 
+    // A pipeline must have at least one input source and one output destination.
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    );
+    fireEvent.click(screen.getByText("pick output"));
+
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
@@ -185,6 +222,8 @@ describe("PipelineBuilder", () => {
       expect.objectContaining({
         name: "Nightly compress",
         trigger: null,
+        sourceIds: ["src-in"],
+        outputIds: ["src-1"],
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
         ],
@@ -193,76 +232,30 @@ describe("PipelineBuilder", () => {
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
-  it("saves an s3 output referencing an inline-created connection", async () => {
-    createIntegration.mockResolvedValue({ id: 12, name: "Claims bucket" });
+  it("requires at least one source and one destination before saving", async () => {
     renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Bucket to bucket" },
+      target: { value: "Needs both" },
     });
-    fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
+    const saveButton = () =>
+      screen.getByText("portal.pipelines.composer.create").closest("button");
 
-    // With s3 selected but no connection chosen, saving is blocked. The
-    // connection picker + prefix are inline (no modal), like the folder output.
-    expect(
-      screen.getByText("portal.pipelines.composer.create").closest("button"),
-    ).toBeDisabled();
+    // Name only: blocked (no source, no destination).
+    expect(saveButton()).toBeDisabled();
 
-    // No connections exist: create one inline from the picker. Target fields by
-    // label, not position - the picker's Mantine Select also carries an input
-    // role and would shift index-based queries.
+    // A source but still no destination: blocked.
     fireEvent.click(
-      await screen.findByText("portal.connections.picker.createNew"),
+      await screen.findByRole("checkbox", { name: "Claims intake" }),
     );
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
-      target: { value: "Claims bucket" },
-    });
-    fireEvent.change(
-      screen.getByLabelText(
-        /portal\.connections\.types\.s3\.fields\.bucket\.label/,
-      ),
-      { target: { value: "claims-processed" } },
-    );
-    fireEvent.change(
-      screen.getByLabelText(
-        /portal\.connections\.types\.s3\.fields\.accessKeyId\.label/,
-      ),
-      { target: { value: "AKIAEXAMPLE" } },
-    );
-    fireEvent.change(
-      screen.getByLabelText(
-        /portal\.connections\.types\.s3\.fields\.secretAccessKey\.label/,
-      ),
-      { target: { value: "shh-secret" } },
-    );
-    fireEvent.click(screen.getByText("portal.connections.picker.save"));
-    await waitFor(() => expect(createIntegration).toHaveBeenCalledTimes(1));
-    // The connection modal closes once saved and the connection is selected.
-    await waitFor(() =>
-      expect(
-        screen.queryByText("portal.connections.picker.save"),
-      ).not.toBeInTheDocument(),
-    );
+    expect(saveButton()).toBeDisabled();
 
-    fireEvent.change(
-      screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.prefix\.label/,
-      ),
-      { target: { value: "processed/" } },
-    );
+    // Both chosen: allowed, and both are sent.
+    fireEvent.click(screen.getByText("pick output"));
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
-
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({
-        output: {
-          type: "s3",
-          options: {
-            connectionId: "12",
-            prefix: "processed/",
-          },
-        },
-      }),
+      expect.objectContaining({ sourceIds: ["src-in"], outputIds: ["src-1"] }),
     );
   });
 
@@ -410,6 +403,12 @@ describe("PipelineBuilder", () => {
       ),
     );
     fireEvent.click(await screen.findByText("Ops alerts"));
+
+    // Saving needs at least one input source and one destination.
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    );
+    fireEvent.click(screen.getByText("pick output"));
 
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
