@@ -13,6 +13,7 @@ import { withThemeByDataAttribute } from "@storybook/addon-themes";
 // classic runtime needs it present even though it's not named in the JSX.
 void React;
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
@@ -85,6 +86,14 @@ if (!i18next.isInitialized) {
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
+
+// PortalApp wraps the app in a QueryClientProvider, so any component reaching a
+// shared query hook throws "No QueryClient set" without one here. `retry: false`
+// matches the portal test providers: a story showing an error state should show
+// it immediately rather than sitting through backoff retries.
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
 
 // Storybook-only: stub a SaaS session so apiClient.saas reads (invoices, payment
 // method, wallet) clear the session check and reach the MSW handlers instead of
@@ -194,24 +203,26 @@ const withProviders: Decorator = (Story, context) => {
   const colorScheme = context.globals.theme === "dark" ? "dark" : "light";
   return (
     <MemoryRouter initialEntries={["/"]}>
-      <ThemeProvider>
-        <SchemeSetup scheme={colorScheme} />
-        <ThemeBridge theme={colorScheme}>
-          <SuiProvider colorScheme={colorScheme}>
-            {/* LinkProvider must wrap TierProvider: TierContext derives its tier
-                from useLink() (matches App.tsx's nesting). */}
-            <LinkProvider key={linkState} initialState={linkState}>
-              <TierKey tier={tier}>
-                <UIProvider>
-                  <Suspense fallback={null}>
-                    <Story />
-                  </Suspense>
-                </UIProvider>
-              </TierKey>
-            </LinkProvider>
-          </SuiProvider>
-        </ThemeBridge>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <SchemeSetup scheme={colorScheme} />
+          <ThemeBridge theme={colorScheme}>
+            <SuiProvider colorScheme={colorScheme}>
+              {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+                  from useLink() (matches App.tsx's nesting). */}
+              <LinkProvider key={linkState} initialState={linkState}>
+                <TierKey tier={tier}>
+                  <UIProvider>
+                    <Suspense fallback={null}>
+                      <Story />
+                    </Suspense>
+                  </UIProvider>
+                </TierKey>
+              </LinkProvider>
+            </SuiProvider>
+          </ThemeBridge>
+        </ThemeProvider>
+      </QueryClientProvider>
     </MemoryRouter>
   );
 };
@@ -231,12 +242,10 @@ const preview: Preview = {
       ],
     },
     a11y: {
-      // Run axe automatically against the story root; violations show in the
-      // Accessibility panel. `context` replaced `element` in addon-a11y 9.x.
-      context: "#storybook-root",
-      config: {},
-      options: {},
-      test: "todo",
+      // Run axe against the rendered story; `test: "error"` fails the scan on
+      // any violation. Context is left at the addon default (the document root)
+      // so it resolves under both the Storybook UI and the Vitest browser mount.
+      test: "error",
     },
   },
   globalTypes: {

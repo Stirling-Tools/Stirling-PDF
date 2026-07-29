@@ -20,6 +20,7 @@ const wallet: Wallet = {
   freeAllowance: 500,
   freeRemaining: 0,
   pricePerDocMinor: 2,
+  bundleRatePerCreditMinor: 1,
   currency: "usd",
   estimatedBillMinor: 0,
   capUsd: null,
