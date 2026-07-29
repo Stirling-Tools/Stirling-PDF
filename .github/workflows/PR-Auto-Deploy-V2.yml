@@ -363,18 +363,32 @@ jobs:
           PR_NUMBER: ${{ needs.check-pr.outputs.pr_number }}
           ADMIN_USER: ${{ secrets.TEST_LOGIN_USERNAME }}
           ADMIN_PASS: ${{ secrets.TEST_LOGIN_PASSWORD }}
+          VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          VPS_USER: ${{ secrets.NEW_VPS_USERNAME }}
           # Stirling account the preview links as. Must be a team LEADER (register is
           # leader-only) with MFA off, since this sign-in is unattended.
           SAAS_EMAIL: ${{ secrets.CI_SAAS_LINK_EMAIL }}
           SAAS_PASSWORD: ${{ secrets.CI_SAAS_LINK_PASSWORD }}
         run: |
           set -uo pipefail
+          SAAS_HOST=${SAAS_API_URL#*://}
 
-          # Reports the outcome to the deployment comment and stops the step.
+          # Reports the outcome to the deployment comment and stops the step. On failure,
+          # dumps what only the box can tell us: the instance logs the real upstream
+          # status (the API deliberately returns an opaque LINK_FAILED), and a probe from
+          # the host separates "cannot reach SaaS" from "SaaS refused us".
           finish() {
             echo "linked=$1" >> "$GITHUB_OUTPUT"
             echo "detail=$2" >> "$GITHUB_OUTPUT"
             echo "$2"
+            if [ "$1" = false ] && [ -f ../private.key ]; then
+              echo "--- instance account-link log + SaaS reachability from the host ---"
+              ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                -o ConnectTimeout=15 -T "$VPS_USER@$VPS_HOST" \
+                "docker logs --tail 300 stirling-pdf-v2-pr-$PR_NUMBER 2>&1 | grep -i 'account-link' | tail -15;
+                 echo \"host -> SaaS: \$(curl -sS -m 15 -o /dev/null -w '%{http_code}' $SAAS_API_URL/api/v1/info/status 2>&1)\";
+                 echo \"container -> SaaS DNS: \$(docker exec stirling-pdf-v2-pr-$PR_NUMBER getent hosts ${SAAS_HOST} 2>&1 | head -1)\"" || true
+            fi
             exit 0
           }
 
