@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
   useCallback,
@@ -247,6 +248,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchProfilePictureMetadata();
   }, [fetchProfilePictureMetadata]);
 
+  // Refs rather than state: the auth effect below has an intentionally empty
+  // dependency array, so it must read values that are stable across renders.
+  const loadedForRef = useRef<string | null>(null);
+  const inFlightRef = useRef<Promise<void> | null>(null);
+
+  /**
+   * Sole owner of the per-user data fetching. Both mount-time initialisation
+   * and every auth event route through here, so a login that arrives before or
+   * after mount is handled the same way and neither path duplicates the other.
+   *
+   * Idempotent per identity: Supabase re-fires SIGNED_IN and TOKEN_REFRESHED on
+   * token refresh and tab-visibility wakeups, and those must not refetch.
+   * Callers wanting a genuine reload (the guest upgrade) pass `force`.
+   */
+  const loadUserData = useCallback(
+    (
+      sessionToLoad: Session | null,
+      opts?: { force?: boolean },
+    ): Promise<void> => {
+      const user = sessionToLoad?.user;
+      if (!user) {
+        loadedForRef.current = null;
+        return Promise.resolve();
+      }
+
+      // Keyed on the anonymous flag as well as the id: a guest upgrade keeps the
+      // same user id, and that is precisely when a refetch is required. Not
+      // keyed on the access token, which changes on every refresh and would
+      // defeat the guard entirely.
+      const key = `${user.id}:${Boolean(user.is_anonymous)}`;
+      if (!opts?.force && loadedForRef.current === key)
+        return Promise.resolve();
+      if (inFlightRef.current) return inFlightRef.current;
+
+      loadedForRef.current = key;
+      const run = (async () => {
+        // The signed-URL read waits on the avatar sync: reading before an
+        // upload lands returns 404 and silently falls back to the provider
+        // photo. Pro status and metadata do not care, so they run alongside.
+        const avatarSync = syncOAuthAvatar(user).catch((err) => {
+          console.debug("[Auth Debug] Failed to sync OAuth avatar:", err);
+          return false;
+        });
+        await Promise.all([
+          fetchProStatus(sessionToLoad),
+          fetchProfilePictureMetadata(sessionToLoad),
+        ]);
+        await avatarSync;
+        await fetchProfilePicture(sessionToLoad);
+      })()
+        .catch((err) => {
+          // Release the key so a later auth event can retry.
+          if (loadedForRef.current === key) loadedForRef.current = null;
+          console.debug("[Auth Debug] Failed to load user data:", err);
+        })
+        .finally(() => {
+          inFlightRef.current = null;
+        });
+
+      inFlightRef.current = run;
+      return run;
+    },
+    [fetchProStatus, fetchProfilePictureMetadata, fetchProfilePicture],
+  );
+
   const refreshSession = async () => {
     try {
       setLoading(true);
@@ -312,23 +378,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           setSession(data.session);
 
-          // Fetch pro status, profile picture metadata, and profile picture using the session from the response
-          if (data.session?.user) {
-            // Sync OAuth avatar in background; fetch the picture once the
-            // sync settles instead of guessing with a fixed delay.
-            syncOAuthAvatar(data.session.user)
-              .catch((err) => {
-                console.debug(
-                  "[Auth Debug] Failed to sync OAuth avatar on init:",
-                  err,
-                );
-                return false;
-              })
-              .then(() => fetchProfilePicture(data.session));
-
-            await fetchProStatus(data.session);
-            await fetchProfilePictureMetadata(data.session);
-          }
+          // Awaited so the initial spinner does not clear before pro status and
+          // the avatar are known. A SIGNED_IN for the same user is then a no-op.
+          await loadUserData(data.session);
         }
       } catch (err) {
         console.error(
@@ -374,58 +426,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsPro(null);
             setProfilePictureUrl(null);
             setProfilePictureMetadata(null);
-          } else if (event === "SIGNED_IN") {
-            console.debug("[Auth Debug] User signed in successfully");
-            if (newSession?.user) {
-              // Note: we deliberately do NOT toggle `loading` here. Supabase
-              // also fires SIGNED_IN on tab visibility / token-refresh wakeups
-              // (per its docs: "SIGNED_IN is fired when a user signs in OR
-              // when the access token is refreshed"), and gating the UI on
-              // `loading` would unmount Landing -> HomePage every time the
-              // user switches tabs back. Initial-mount loading is handled by
-              // `initializeAuth` above; downstream fetches expose their own
-              // null/loading states.
-
-              // Sync OAuth avatar in background (don't block other fetches)
-              const avatarSync = syncOAuthAvatar(newSession.user).catch(
-                (err) => {
-                  console.debug(
-                    "[Auth Debug] Failed to sync OAuth avatar:",
-                    err,
-                  );
-                  return false;
-                },
-              );
-
-              // Fetch user data in parallel
-              Promise.all([
-                fetchProStatus(newSession),
-                fetchProfilePictureMetadata(newSession),
-              ]).then(() => {
-                // Fetch the picture once the avatar sync settles.
-                avatarSync.then(() => {
-                  fetchProfilePicture(newSession).finally(() => {
-                    console.debug(
-                      "[Auth Debug] User data fully loaded after sign in",
-                    );
-                  });
-                });
-              });
-            }
-          } else if (event === "TOKEN_REFRESHED") {
-            console.debug("[Auth Debug] Token refreshed");
-            // Optionally refresh pro status, profile picture metadata, and profile picture on token refresh
-            if (newSession?.user) {
-              Promise.all([
-                fetchProStatus(newSession),
-                fetchProfilePictureMetadata(newSession),
-                fetchProfilePicture(newSession),
-              ]).then(() => {
-                console.debug(
-                  "[Auth Debug] User data refreshed after token refresh",
-                );
-              });
-            }
+            loadedForRef.current = null;
+          } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+            console.debug("[Auth Debug] Signed in or token refreshed");
+            // Note: we deliberately do NOT toggle `loading` here. Supabase
+            // also fires SIGNED_IN on tab visibility / token-refresh wakeups
+            // (per its docs: "SIGNED_IN is fired when a user signs in OR
+            // when the access token is refreshed"), and gating the UI on
+            // `loading` would unmount Landing -> HomePage every time the
+            // user switches tabs back. Initial-mount loading is handled by
+            // `initializeAuth` above; downstream fetches expose their own
+            // null/loading states.
+            //
+            // Those same wakeups are why this is a no-op unless the identity
+            // actually changed - see loadUserData.
+            void loadUserData(newSession);
           } else if (event === "USER_UPDATED") {
             console.debug("[Auth Debug] User updated");
 
@@ -454,14 +469,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     "[Auth Debug] User upgrade synchronized successfully",
                   );
 
-                  // Refresh pro status, profile picture metadata, and profile picture after upgrade
-                  if (newSession?.user) {
-                    return Promise.all([
-                      fetchProStatus(newSession),
-                      fetchProfilePictureMetadata(newSession),
-                      fetchProfilePicture(newSession),
-                    ]);
-                  }
+                  // Forced: the upgrade keeps the same user id, so the guest's
+                  // already-loaded data must be replaced rather than skipped.
+                  return loadUserData(newSession, { force: true });
                 })
                 .then(() => {
                   console.debug(
@@ -484,6 +494,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
+    // Intentionally empty, and load-bearing: this must subscribe once. The
+    // fetchers and loadUserData it closes over are recreated whenever `session`
+    // changes, so listing them here would tear down and re-subscribe
+    // onAuthStateChange on every auth event. Every call above passes its
+    // session explicitly rather than relying on the captured one, which is what
+    // makes the stale closure safe. There is no react-hooks lint rule in this
+    // repo to enforce that, so do not "fix" these deps.
   }, []);
 
   const { t } = useTranslation();
