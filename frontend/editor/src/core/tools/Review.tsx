@@ -109,6 +109,7 @@ const Review = (_props: BaseToolProps) => {
   // The active file as this panel last saw it, to tell a selection made outside
   // the panel from the panel's own cursor-driven activation.
   const seenActiveRef = useRef<string | null>(activeFileId as string | null);
+  const heldRef = useRef<Set<string>>(new Set());
 
   const currentId = queue[cursor] ?? null;
   const stub = currentId
@@ -142,11 +143,20 @@ const Review = (_props: BaseToolProps) => {
     }
     if (!currentId) return;
     if (stub) {
+      heldRef.current.add(currentId as string);
       if (currentId !== activeFileId) {
         setActiveFileId(currentId);
         // Our own push, so the next pass doesn't read it as an outside change.
         seenActiveRef.current = currentId;
       }
+      return;
+    }
+
+    if (heldRef.current.has(currentId as string)) {
+      heldRef.current.delete(currentId as string);
+      const remaining = queue.filter((id) => id !== currentId);
+      queueRef.current = remaining;
+      setCursor((c) => Math.min(c, Math.max(0, remaining.length - 1)));
       return;
     }
     if (unresolvableIds.has(currentId)) return;
@@ -175,7 +185,11 @@ const Review = (_props: BaseToolProps) => {
     unresolvableIds,
     queue,
   ]);
+
+  const openedViewerRef = useRef(false);
   useEffect(() => {
+    if (openedViewerRef.current) return;
+    openedViewerRef.current = true;
     if (workbench !== "viewer") setWorkbench("viewer");
   }, [workbench, setWorkbench]);
   useEffect(() => setConfirmingDelete(false), [currentId]);
