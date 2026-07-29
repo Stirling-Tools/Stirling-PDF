@@ -27,7 +27,7 @@ const STAGE_ORDER: OpKind[] = [
 const STAGE_COLOUR: Record<OpKind, string> = {
   ingest: "var(--color-green)",
   validate: "var(--c-primary)",
-  modify: "#F97316",
+  modify: "var(--color-orange)",
   secure: "var(--color-red)",
   store: "var(--color-purple)",
   alert: "var(--color-amber)",
