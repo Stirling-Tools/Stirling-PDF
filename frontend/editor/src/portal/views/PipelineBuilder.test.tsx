@@ -372,9 +372,14 @@ describe("PipelineBuilder", () => {
     // rejection; the builder must refuse to save it and say why, where the fix is one click away.
     renderBuilder("/processor/pipelines/new");
 
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Notify only" },
-    });
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      {
+        target: { value: "Notify only" },
+      },
+    );
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(
       await screen.findByText("portal.policies.operations.discordNotify.label"),
@@ -432,9 +437,14 @@ describe("PipelineBuilder", () => {
     ]);
     renderBuilder("/processor/pipelines/new");
 
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Notify on processed" },
-    });
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      {
+        target: { value: "Notify on processed" },
+      },
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(
@@ -448,10 +458,8 @@ describe("PipelineBuilder", () => {
     );
     fireEvent.click(await screen.findByText("Ops alerts"));
 
-    // Saving needs at least one input source and one destination.
-    fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Claims intake" }),
-    );
+    // Saving needs the input's source and a destination.
+    await pickInputSource("Claims intake");
     fireEvent.click(screen.getByText("pick output"));
 
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
