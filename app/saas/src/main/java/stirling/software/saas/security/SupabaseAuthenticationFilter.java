@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -43,6 +44,8 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.model.AmrMethod;
@@ -65,6 +68,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     private final SupabaseUserService supabaseUserService;
     private final SaasTeamService saasTeamService;
     private final JwtDecoder jwtDecoder;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final AuthenticationEntryPoint authenticationEntryPoint =
             new BearerTokenAuthenticationEntryPoint();
 
@@ -73,18 +77,23 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             UserService userService,
             SupabaseUserService supabaseUserService,
             SaasTeamService saasTeamService,
-            JwtDecoder jwtDecoder) {
+            JwtDecoder jwtDecoder,
+            ApiKeyAuthenticationService apiKeyAuthenticationService) {
         this.teamService = teamService;
         this.userService = userService;
         this.supabaseUserService = supabaseUserService;
         this.saasTeamService = saasTeamService;
         this.jwtDecoder = jwtDecoder;
+        this.apiKeyAuthenticationService = apiKeyAuthenticationService;
     }
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        // Start clean so a pooled thread can't inherit a prior request's API-key label.
+        MDC.remove(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
 
         if (isStaticResource(request.getContextPath(), request.getRequestURI())) {
             filterChain.doFilter(request, response);
@@ -230,7 +239,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                         && !supabaseUser.isAnonymous()) {
                     user = upgradeAnonymousUser(user, supabaseUser, jwt);
                 }
-                return user;
+                return recoverMissingTeam(user);
             }
 
             return createUser(jwt, supabaseId, email, appMetadata);
@@ -380,8 +389,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                                                     dup));
         }
 
-        // Only the DB-race winner runs first-time init; the losers skip it.
-        if (weCreatedThisUser) {
+        // Only the DB-race winner runs first-time init; the losers skip it. Guests (anonymous
+        // sessions) get NO team: the editor is free and needs none, and automation requires a
+        // real account.
+        if (weCreatedThisUser && !isAnonymous(jwt)) {
             try {
                 savedUser.setTeam(saasTeamService.ensurePersonalTeam(savedUser));
             } catch (Exception e) {
@@ -395,6 +406,28 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         return savedUser;
     }
 
+    /**
+     * Recover an account stranded without a team: signup is the only other place one is assigned,
+     * so a null team_id is otherwise permanent — and portal access derives from leading a team.
+     * Guests get none by design.
+     */
+    private User recoverMissingTeam(User user) {
+        if (user.getTeam() != null
+                || ANONYMOUS.toString().equalsIgnoreCase(user.getAuthenticationType())) {
+            return user;
+        }
+        try {
+            user.setTeam(saasTeamService.ensurePersonalTeam(user));
+            log.info("Assigned a personal team to user {} which had none", user.getId());
+        } catch (Exception e) {
+            log.warn(
+                    "Could not assign a personal team to user {}: {}",
+                    user.getId(),
+                    e.getMessage());
+        }
+        return user;
+    }
+
     private boolean apiKeyAuthenticated(HttpServletRequest request) throws AuthenticationException {
         Authentication existing = SecurityContextHolder.getContext().getAuthentication();
         if (existing != null && existing.isAuthenticated()) {
@@ -406,16 +439,22 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             return false;
         }
 
-        Optional<User> user = userService.getUserByApiKey(apiKey);
-        if (user.isEmpty()) {
+        // Resolves the multi-key table then the legacy key, records per-key usage, and yields a
+        // label for the processor's document-source attribution.
+        Optional<ApiKeyAuthentication> resolved = apiKeyAuthenticationService.authenticate(apiKey);
+        if (resolved.isEmpty()) {
             throw new InvalidBearerTokenException("Invalid API Key.");
         }
+        User user = resolved.get().user();
 
-        userService.trackApiKeyFirstUse(user.get());
+        userService.trackApiKeyFirstUse(user);
 
         ApiKeyAuthenticationToken authToken =
-                new ApiKeyAuthenticationToken(user.get(), apiKey, user.get().getAuthorities());
+                new ApiKeyAuthenticationToken(user, apiKey, resolved.get().authorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        if (resolved.get().auditLabel() != null) {
+            MDC.put(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY, resolved.get().auditLabel());
+        }
         return true;
     }
 

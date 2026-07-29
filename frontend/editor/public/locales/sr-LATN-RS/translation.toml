@@ -6521,63 +6521,6 @@ title_other = "Obradite {{allowance}} PDF dokumenata besplatno"
 titleWithRate_one = "Obradite {{allowance}} PDF dokumenata besplatno, zatim {{rate}}/PDF"
 titleWithRate_other = "Obradite {{allowance}} PDF dokumenata besplatno, zatim {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Zaključano"
-openAriaLabel = "Otvori komponentu {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Dodaj u projekat"
-ariaLabel = "Detalji komponente"
-tabsAriaLabel = "Odeljci detalja komponente"
-upgradeToUnlock = "Nadogradite za otključavanje"
-
-[portal.catalogue.detail.code]
-install = "Instalacija"
-usage = "Upotreba"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} je uključeno od {{tier}} plana. Nadogradite da biste ga ugradili."
-title = "Nije dostupno na vašem planu"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interaktivni sandbox se prikazuje ovde"
-
-[portal.catalogue.detail.pricing]
-note = "Mereno po {{unit}}. Korišćenje preko mesečne besplatne kvote naplaćuje se vašem nalogu i stavlja pod Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Naplaćuje se po"
-embeds30d = "Ugradnje (30d)"
-freeQuota = "Besplatna kvota"
-freeQuotaValue = "{{amount}} / mes"
-maturity = "Zrelost"
-none = "Nema"
-perAction = "Po radnji"
-price = "Cena"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Pregled"
-pricing = "Cene"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "opciono"
-required = "obavezno"
-
-[portal.catalogue.props.columns]
-description = "Opis"
-name = "Prop"
-required = "Obavezno"
-type = "Tip"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Potrošnja komponente (MTD)"
-embedsThisMonth = "Ugradnje ovog meseca"
-inBeta = "U beta verziji"
-
 [portal.components.billingUnit]
 approval = "odobrenje"
 check = "provera"
@@ -6590,18 +6533,6 @@ signature = "potpis"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Ugradivi SDK widget-i koje ubacujete u svoju aplikaciju — viewer, tok e-potpisa, AI panel za pregled. Svaki se meri po radnji. Kliknite karticu za instalaciju, upotrebu i props."
-title = "Komponente"
-
-[portal.componentsView.empty]
-description = "Katalog komponenti nije moguće učitati. Pokušajte ponovo uskoro."
-title = "Nema dostupnih komponenti"
-
-[portal.componentsView.lockedBanner]
-description = "GA komponente su dostupne na Pay-as-you-go; nekoliko Beta komponenti je samo za Enterprise. Zaključane kartice prikazuju podsticaj za nadogradnju."
-title = "Neke komponente zahtevaju plaćeni plan"
 
 [portal.docs.authentication]
 codeCaption = "svaki zahtev"

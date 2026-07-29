@@ -230,6 +230,18 @@ public class TaskManager {
         return false;
     }
 
+    /** Attach metadata to a job and write it through to the shared store for cluster peers. */
+    public boolean putMetadata(String jobId, String key, String value) {
+        JobResult jobResult = jobResults.get(jobId);
+        if (jobResult != null) {
+            jobResult.putMetadata(key, value);
+            writeThrough(jobId, jobResult);
+            return true;
+        }
+        log.warn("Attempted to set metadata on non-existent job ID: {}", jobId);
+        return false;
+    }
+
     /**
      * Get statistics about all jobs in the system
      *
@@ -378,7 +390,7 @@ public class TaskManager {
                 fileIds.add(rf.getFileId());
             }
         }
-        Map<String, String> meta = new HashMap<>();
+        Map<String, String> meta = new HashMap<>(result.getMetadata());
         if (result.getNotes() != null && !result.getNotes().isEmpty()) {
             meta.put("notesCount", Integer.toString(result.getNotes().size()));
         }

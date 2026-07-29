@@ -6521,63 +6521,6 @@ title_other = "Traitez {{allowance}} PDF gratuitement"
 titleWithRate_one = "Traitez {{allowance}} PDF gratuitement, puis {{rate}}/PDF"
 titleWithRate_other = "Traitez {{allowance}} PDF gratuitement, puis {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Verrouillé"
-openAriaLabel = "Ouvrir le composant {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Ajouter au projet"
-ariaLabel = "Détail du composant"
-tabsAriaLabel = "Sections de détail du composant"
-upgradeToUnlock = "Passer à un niveau supérieur pour déverrouiller"
-
-[portal.catalogue.detail.code]
-install = "Installer"
-usage = "Utilisation"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} est inclus à partir du plan {{tier}}. Passez à un niveau supérieur pour l’intégrer."
-title = "Non disponible avec votre plan"
-
-[portal.catalogue.detail.preview]
-badge = "Aperçu en direct"
-note = "Le bac à sable interactif s’affiche ici"
-
-[portal.catalogue.detail.pricing]
-note = "Mesuré par {{unit}}. L’utilisation au-delà du quota mensuel gratuit est facturée à votre compte et détaillée sous Utilisation et facturation."
-
-[portal.catalogue.detail.stats]
-billedOn = "Facturé sur"
-embeds30d = "Intégrations (30 j)"
-freeQuota = "Quota gratuit"
-freeQuotaValue = "{{amount}} / mois"
-maturity = "Maturité"
-none = "Aucun"
-perAction = "Par action"
-price = "Prix"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Vue d’ensemble"
-pricing = "Tarification"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "facultatif"
-required = "obligatoire"
-
-[portal.catalogue.props.columns]
-description = "Description"
-name = "Prop"
-required = "Obligatoire"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Composants GA"
-componentSpendMtd = "Dépenses des composants (MTD)"
-embedsThisMonth = "Intégrations ce mois-ci"
-inBeta = "En beta"
-
 [portal.components.billingUnit]
 approval = "approbation"
 check = "vérification"
@@ -6590,18 +6533,6 @@ signature = "signature"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Widgets SDK intégrables que vous ajoutez à votre propre application — une visionneuse, un flux de signature électronique, un panneau d’examen AI. Chacun est mesuré par action. Cliquez sur une carte pour l’installation, l’utilisation et les props."
-title = "Composants"
-
-[portal.componentsView.empty]
-description = "Le catalogue des composants n’a pas pu être chargé. Réessayez bientôt."
-title = "Aucun composant disponible"
-
-[portal.componentsView.lockedBanner]
-description = "Les composants GA sont disponibles en paiement à l’usage ; quelques composants Beta sont réservés à Enterprise. Les cartes verrouillées affichent une invitation à passer à un niveau supérieur."
-title = "Certains composants nécessitent un plan payant"
 
 [portal.docs.authentication]
 codeCaption = "chaque requête"

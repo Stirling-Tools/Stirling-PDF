@@ -78,8 +78,8 @@ export function WatchedFolderSection() {
   return (
     <Box
       style={{
-        borderTop: "1px solid var(--border-subtle)",
-        backgroundColor: "var(--bg-toolbar)",
+        borderTop: "1px solid var(--c-border-subtle)",
+        backgroundColor: "var(--c-bg-raised)",
         display: "flex",
         flexDirection: "column",
         height: "100%",

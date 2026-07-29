@@ -85,7 +85,8 @@ tasks:
       # full path, hostname, or user. Consumed at dev-serve time by vite.config
       # and dropped from production builds.
       STIRLING_DEV_LABEL:
-        sh: basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+        sh: >-
+          {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
@@ -193,6 +194,64 @@ tasks:
     cmds:
       - npx storybook build {{.CLI_ARGS}}
 
+  storybook:browser:
+    internal: true
+    desc: "Install the Chromium build the story scan runs in"
+    run: once
+    deps: [install]
+    cmds:
+      - npx playwright install chromium
+
+  storybook:test:
+    desc: "Scan every story in real Chromium: it must render and pass axe"
+    deps: [install, storybook:browser]
+    cmds:
+      # Runs each story as a browser test. Pass a filter through, e.g.
+      #   task frontend:storybook:test -- Button
+      - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
+
+  storybook:a11y:
+    desc: "a11y regression gate over every story: fail only on NEW axe violations"
+    deps: [install, storybook:browser]
+    cmds:
+      - bash .storybook/a11y-scan.sh
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+
+  storybook:a11y:changed:
+    desc: "a11y gate over stories changed vs a base ref (default origin/main)"
+    summary: |
+      Scans only the stories this branch touches, which is what pull requests
+      run — a full scan takes ~30 minutes, far too long to sit in front of every
+      merge. The nightly job covers the rest of the suite.
+
+      Pass a base ref through CLI_ARGS, e.g.
+        task frontend:storybook:a11y:changed -- origin/release
+    deps: [install, storybook:browser]
+    vars:
+      BASE: '{{.CLI_ARGS | default "origin/main"}}'
+      # Stories touched by this branch, plus any not yet committed.
+      CHANGED:
+        sh: |
+          { git diff --name-only --diff-filter=d {{.CLI_ARGS | default "origin/main"}}...HEAD -- '*.stories.ts' '*.stories.tsx';
+            git diff --name-only --diff-filter=d -- '*.stories.ts' '*.stories.tsx';
+            git ls-files --others --exclude-standard -- '*.stories.ts' '*.stories.tsx'; } \
+          | sed 's|^frontend/||' | sort -u | tr '\n' ' '
+    cmds:
+      - cmd: |
+          if [ -z "{{.CHANGED}}" ]; then
+            echo "a11y: no story files changed vs {{.BASE}} — nothing to check"
+            exit 0
+          fi
+          bash .storybook/a11y-scan.sh {{.CHANGED}}
+          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+
+  storybook:a11y:record:
+    desc: "Re-record the a11y baseline (run after intentionally fixing/adding violations)"
+    deps: [install, storybook:browser]
+    cmds:
+      - bash .storybook/a11y-scan.sh
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record
+
   # ============================================================
   # Code quality
   # ============================================================
@@ -203,6 +262,23 @@ tasks:
     cmds:
       - task: lint:eslint
       - task: lint:dpdm
+      - task: lint:colors
+
+  lint:colors:
+    desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
+    aliases: [lint:colours]
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs
+      - node editor/scripts/lint/theme-lint.mjs css-colors
+      - node editor/scripts/lint/theme-lint.mjs code-colors
+      - node editor/scripts/lint/theme-lint.mjs no-primitives
+
+  contrast:
+    desc: "Report low-contrast theme token pairs (warning only, never blocks)"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs contrast
 
   lint:eslint:
     desc: "Run ESLint linting"
@@ -249,10 +325,8 @@ tasks:
 
   typecheck:_run:
     internal: true
-    env:
-      CI: '{{ .CI | default "false" }}'
     cmds:
-      - '{{ if eq .CI "true" }}npx tsc{{ else }}npx tsgo{{ end }} --noEmit --project {{.PROJECT}}'
+      - 'npx tsc --noEmit --project {{.PROJECT}}'
 
   typecheck:core:
     desc: "Typecheck core build variant"

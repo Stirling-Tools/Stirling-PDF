@@ -383,7 +383,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
         visibility: positionReady ? "visible" : "hidden",
         opacity: positionReady ? 1 : 0,
-        color: "var(--text-primary)",
+        color: "var(--c-text)",
         ...containerStyle,
       }}
       className={`${styles["tooltip-container"]} ${isPinned ? styles.pinned : ""}`}

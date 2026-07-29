@@ -5,10 +5,12 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 /**
- * Connection settings shared by the S3 input source and output sink, parsed from a spec's options
- * map. Credentials are required: there is deliberately no fallback to the server's own AWS
- * credential chain, so user-supplied config can never borrow the host's identity. {@code snapshot}
- * is input-only and ignored by the sink.
+ * The fully resolved connection settings the S3 input source and output sink run with - normally
+ * produced by {@link S3ConnectionResolver} merging a stored connection (bucket, region, endpoint,
+ * credentials) with per-use options (prefix, mode), or parsed directly from legacy options that
+ * still embed credentials. Credentials are required: there is deliberately no fallback to the
+ * server's own AWS credential chain, so user-supplied config can never borrow the host's identity.
+ * {@code snapshot} is input-only and ignored by the sink.
  */
 public record S3Config(
         String bucket,

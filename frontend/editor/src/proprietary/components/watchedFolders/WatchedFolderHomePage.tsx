@@ -120,7 +120,7 @@ function FolderCard({
       ? "var(--mantine-color-blue-filled)"
       : isDone
         ? "var(--color-green-500)"
-        : "var(--text-muted)";
+        : "var(--c-text-subtle)";
   const statusDotPulse = isActive;
 
   const statusLabel = isPaused
@@ -197,7 +197,7 @@ function FolderCard({
       <div
         className="wf-card-thumb"
         style={{
-          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.accentColor} 18%, var(--bg-surface)), color-mix(in srgb, ${folder.accentColor} 6%, var(--bg-surface)))`,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.accentColor} 18%, var(--c-surface)), color-mix(in srgb, ${folder.accentColor} 6%, var(--c-surface)))`,
         }}
       >
         <FolderThumbnail
@@ -319,8 +319,8 @@ function HowItWorks() {
       style={{
         padding: "1rem 1.25rem",
         borderRadius: "var(--mantine-radius-md)",
-        border: "0.0625rem solid var(--border-subtle)",
-        backgroundColor: "var(--bg-toolbar)",
+        border: "0.0625rem solid var(--c-border-subtle)",
+        backgroundColor: "var(--c-bg-raised)",
       }}
     >
       <Group gap="xs" mb="sm" justify="space-between">

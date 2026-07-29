@@ -132,6 +132,16 @@ export function SearchIcon(props: IconProps) {
   );
 }
 
+export function MenuIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="17" x2="20" y2="17" />
+    </Svg>
+  );
+}
+
 export function SunIcon(props: IconProps) {
   return (
     <Svg {...props}>
@@ -221,29 +231,6 @@ export function PoliciesIcon(props: IconProps) {
   );
 }
 
-export function ComponentsIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </Svg>
-  );
-}
-
-export function AgentBuilderIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="11" width="18" height="10" rx="2" />
-      <circle cx="12" cy="5" r="2" />
-      <path d="M12 7v4" />
-      <line x1="8" y1="16" x2="8" y2="16" />
-      <line x1="16" y1="16" x2="16" y2="16" />
-    </Svg>
-  );
-}
-
 export function ProcurementIcon(props: IconProps) {
   return (
     <Svg {...props}>
@@ -299,6 +286,17 @@ export function ExternalLinkIcon(props: IconProps) {
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
+    </Svg>
+  );
+}
+
+export function IntegrationsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 7V2.5" />
+      <path d="M15 7V2.5" />
+      <path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z" />
+      <path d="M12 16v2a3 3 0 0 1-3 3H7" />
     </Svg>
   );
 }

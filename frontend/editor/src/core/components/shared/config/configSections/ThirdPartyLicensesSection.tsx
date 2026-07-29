@@ -32,6 +32,9 @@ interface LicensesSectionBodyProps {
   dependencies: Dependency[];
 }
 
+const getModuleUrl = (dependency: Dependency) =>
+  dependency.moduleUrl || dependency.moduleLicenseUrl;
+
 function LicensesSectionBody({
   title,
   description,
@@ -106,9 +109,9 @@ function LicensesSectionBody({
                 sortedDependencies.map((dependency) => (
                   <Table.Tr key={getDependencyKey(dependency)}>
                     <Table.Td>
-                      {dependency.moduleUrl ? (
+                      {getModuleUrl(dependency) ? (
                         <Anchor
-                          href={dependency.moduleUrl}
+                          href={getModuleUrl(dependency)}
                           target="_blank"
                           rel="noopener noreferrer"
                         >

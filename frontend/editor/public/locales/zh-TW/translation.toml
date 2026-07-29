@@ -6521,63 +6521,6 @@ title_other = "免費處理 {{allowance}} 個 PDFs"
 titleWithRate_one = "免費處理 {{allowance}} 個 PDFs，之後 {{rate}}/PDF"
 titleWithRate_other = "免費處理 {{allowance}} 個 PDFs，之後 {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "已鎖定"
-openAriaLabel = "開啟 {{name}} 元件"
-
-[portal.catalogue.detail]
-addToProject = "新增至專案"
-ariaLabel = "元件詳細資料"
-tabsAriaLabel = "元件詳細資料區段"
-upgradeToUnlock = "升級以解鎖"
-
-[portal.catalogue.detail.code]
-install = "安裝"
-usage = "使用方式"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} 自 {{tier}} 方案起包含。升級以嵌入它。"
-title = "您的方案不提供"
-
-[portal.catalogue.detail.preview]
-badge = "即時預覽"
-note = "互動式 sandbox 會在此呈現"
-
-[portal.catalogue.detail.pricing]
-note = "依每 {{unit}} 計量。超過每月免費額度的使用量會向您的帳戶收費，並列於 Usage & Billing 下。"
-
-[portal.catalogue.detail.stats]
-billedOn = "計費依據"
-embeds30d = "嵌入（30 天）"
-freeQuota = "免費額度"
-freeQuotaValue = "{{amount}} / 月"
-maturity = "成熟度"
-none = "無"
-perAction = "每次動作"
-price = "價格"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "概觀"
-pricing = "價格"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "選填"
-required = "必填"
-
-[portal.catalogue.props.columns]
-description = "描述"
-name = "Prop"
-required = "必填"
-type = "類型"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "元件支出（MTD）"
-embedsThisMonth = "本月嵌入"
-inBeta = "Beta 中"
-
 [portal.components.billingUnit]
 approval = "核准"
 check = "檢查"
@@ -6590,18 +6533,6 @@ signature = "簽章"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "可嵌入的 SDK 小工具，可放入您自己的應用程式 — 檢視器、電子簽流程、AI 審查面板。每個都依動作計量。點選卡片以查看安裝、使用方式和 props。"
-title = "元件"
-
-[portal.componentsView.empty]
-description = "無法載入元件目錄。請稍後再試。"
-title = "沒有可用元件"
-
-[portal.componentsView.lockedBanner]
-description = "GA 元件可在 Pay-as-you-go 使用；少數 Beta 元件僅限企業使用。鎖定的卡片會顯示升級提示。"
-title = "部分元件需要付費方案"
 
 [portal.docs.authentication]
 codeCaption = "每個請求"

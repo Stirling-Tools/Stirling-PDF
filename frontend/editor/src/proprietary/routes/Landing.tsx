@@ -142,11 +142,13 @@ export default function Landing() {
             padding: "1.5rem",
             marginTop: "1rem",
             borderRadius: "0.75rem",
-            backgroundColor: "rgba(37, 99, 235, 0.08)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
+            backgroundColor:
+              "color-mix(in srgb, var(--c-primary) 8%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--c-primary) 20%, transparent)",
           }}
         >
-          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
             {t(
               "backendStartup.unreachable",
               "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",

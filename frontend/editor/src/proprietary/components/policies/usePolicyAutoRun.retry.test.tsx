@@ -3,7 +3,6 @@ import { renderHook, act } from "@testing-library/react";
 
 // The auto-run hook reaches into several contexts + the network; stub those so we can drive just
 // the queue-rejection retry path against the REAL run store.
-vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: [] }),
   useFileManagement: () => ({ addFiles: vi.fn() }),

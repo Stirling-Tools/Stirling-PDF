@@ -32,10 +32,16 @@ interface ProviderCardProps {
   readOnly?: boolean;
 }
 
+// Shared default so an omitted `settings` prop keeps the same identity across
+// renders. An inline `settings = {}` would allocate a new object every render,
+// and the sync effect below lists `settings` as a dependency — so it would
+// re-run and setState on every render, looping until React bails out.
+const NO_SETTINGS: Record<string, any> = {};
+
 export default function ProviderCard({
   provider,
   isConfigured,
-  settings = {},
+  settings = NO_SETTINGS,
   onSave,
   onDisconnect,
   onChange,

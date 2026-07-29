@@ -6521,63 +6521,6 @@ title_other = "عالِج {{allowance}} ملفات PDF مجانًا"
 titleWithRate_one = "عالِج {{allowance}} ملف PDF مجانًا، ثم {{rate}}/PDF"
 titleWithRate_other = "عالِج {{allowance}} ملفات PDF مجانًا، ثم {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "مقفل"
-openAriaLabel = "فتح مكون {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "إضافة إلى المشروع"
-ariaLabel = "تفاصيل المكون"
-tabsAriaLabel = "أقسام تفاصيل المكون"
-upgradeToUnlock = "الترقية لإلغاء القفل"
-
-[portal.catalogue.detail.code]
-install = "تثبيت"
-usage = "الاستخدام"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} مضمن بدءًا من خطة {{tier}}. قم بالترقية لتضمينه."
-title = "غير متاح في خطتك"
-
-[portal.catalogue.detail.preview]
-badge = "معاينة مباشرة"
-note = "يتم عرض صندوق الرمل التفاعلي هنا"
-
-[portal.catalogue.detail.pricing]
-note = "مقاس لكل {{unit}}. تتم فوترة الاستخدام بعد الحصة الشهرية المجانية على حسابك ويُفصّل ضمن الاستخدام والفوترة."
-
-[portal.catalogue.detail.stats]
-billedOn = "تتم الفوترة على"
-embeds30d = "التضمينات (30 يومًا)"
-freeQuota = "الحصة المجانية"
-freeQuotaValue = "{{amount}} / شهر"
-maturity = "النضج"
-none = "لا شيء"
-perAction = "لكل إجراء"
-price = "السعر"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "نظرة عامة"
-pricing = "التسعير"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "اختياري"
-required = "مطلوب"
-
-[portal.catalogue.props.columns]
-description = "الوصف"
-name = "Prop"
-required = "مطلوب"
-type = "النوع"
-
-[portal.catalogue.summary]
-componentsGa = "مكونات GA"
-componentSpendMtd = "إنفاق المكونات (MTD)"
-embedsThisMonth = "التضمينات هذا الشهر"
-inBeta = "في Beta"
-
 [portal.components.billingUnit]
 approval = "موافقة"
 check = "فحص"
@@ -6590,18 +6533,6 @@ signature = "توقيع"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "ودجات SDK قابلة للتضمين تضعها في تطبيقك — عارض، وتدفق توقيع إلكتروني، ولوحة مراجعة AI. كل منها مقاس لكل إجراء. انقر على بطاقة للتثبيت والاستخدام وprops."
-title = "المكونات"
-
-[portal.componentsView.empty]
-description = "تعذر تحميل كتالوج المكونات. حاول مرة أخرى قريبًا."
-title = "لا توجد مكونات متاحة"
-
-[portal.componentsView.lockedBanner]
-description = "مكونات GA متاحة على Pay-as-you-go؛ وبعض مكونات Beta مخصصة للمؤسسات فقط. تعرض البطاقات المقفلة تلميحًا للترقية."
-title = "تحتاج بعض المكونات إلى خطة مدفوعة"
 
 [portal.docs.authentication]
 codeCaption = "كل طلب"

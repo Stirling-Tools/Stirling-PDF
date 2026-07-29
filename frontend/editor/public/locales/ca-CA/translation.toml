@@ -6521,63 +6521,6 @@ title_other = "Processa {{allowance}} PDF de franc"
 titleWithRate_one = "Processa {{allowance}} PDF de franc, després {{rate}}/PDF"
 titleWithRate_other = "Processa {{allowance}} PDF de franc, després {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Bloquejat"
-openAriaLabel = "Obre el component {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Afegeix al projecte"
-ariaLabel = "Detall del component"
-tabsAriaLabel = "Seccions de detall del component"
-upgradeToUnlock = "Actualitza per desbloquejar"
-
-[portal.catalogue.detail.code]
-install = "Instal·la"
-usage = "Ús"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} s'inclou a partir del pla {{tier}}. Actualitza per incrustar-lo."
-title = "No disponible al teu pla"
-
-[portal.catalogue.detail.preview]
-badge = "Previsualització en directe"
-note = "El sandbox interactiu es renderitza aquí"
-
-[portal.catalogue.detail.pricing]
-note = "Mesurat per {{unit}}. L'ús més enllà de la quota gratuïta mensual es factura al teu compte i es detalla a Ús i facturació."
-
-[portal.catalogue.detail.stats]
-billedOn = "Facturat per"
-embeds30d = "Incrustacions (30 d)"
-freeQuota = "Quota gratuïta"
-freeQuotaValue = "{{amount}} / mes"
-maturity = "Maduresa"
-none = "Cap"
-perAction = "Per acció"
-price = "Preu"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Resum"
-pricing = "Preus"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "opcional"
-required = "obligatori"
-
-[portal.catalogue.props.columns]
-description = "Descripció"
-name = "Prop"
-required = "Obligatori"
-type = "Tipus"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Despesa en components (MTD)"
-embedsThisMonth = "Incrustacions aquest mes"
-inBeta = "En beta"
-
 [portal.components.billingUnit]
 approval = "aprovació"
 check = "comprovació"
@@ -6590,18 +6533,6 @@ signature = "signatura"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Widgets SDK incrustables que deixes anar a la teva pròpia aplicació: un visor, un flux de signatura electrònica, un panell de revisió d'AI. Cadascun es mesura per acció. Fes clic en una targeta per veure instal·lació, ús i props."
-title = "Components"
-
-[portal.componentsView.empty]
-description = "No s'ha pogut carregar el catàleg de components. Torna-ho a provar d'aquí a poc."
-title = "No hi ha components disponibles"
-
-[portal.componentsView.lockedBanner]
-description = "Els components GA estan disponibles amb pagament per ús; alguns components Beta són només per a empreses. Les targetes bloquejades mostren una invitació a actualitzar."
-title = "Alguns components necessiten un pla de pagament"
 
 [portal.docs.authentication]
 codeCaption = "cada sol·licitud"
