@@ -128,6 +128,7 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
     prev.freeAllowance !== next.freeAllowance ||
     prev.freeRemaining !== next.freeRemaining ||
     prev.pricePerDocMinor !== next.pricePerDocMinor ||
+    prev.bundleRatePerCreditMinor !== next.bundleRatePerCreditMinor ||
     prev.currency !== next.currency ||
     prev.estimatedBillMinor !== next.estimatedBillMinor ||
     prev.capUsd !== next.capUsd ||
