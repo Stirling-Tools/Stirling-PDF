@@ -55,3 +55,6 @@ jobs:
           path: frontend/.a11y-scan/
           retention-days: 7
           if-no-files-found: ignore
+          # The reports live in a dot-directory, which upload-artifact treats as
+          # hidden and silently skips by default.
+          include-hidden-files: true

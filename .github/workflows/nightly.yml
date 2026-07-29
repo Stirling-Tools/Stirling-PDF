@@ -93,6 +93,9 @@ jobs:
           path: frontend/.a11y-scan/
           retention-days: 14
           if-no-files-found: ignore
+          # The reports live in a dot-directory, which upload-artifact treats as
+          # hidden and silently skips by default.
+          include-hidden-files: true
 
   # Builds all desktop platforms on a schedule so the Rust dependency cache is
   # written on main, where PR and merge-queue tauri builds can restore it.
