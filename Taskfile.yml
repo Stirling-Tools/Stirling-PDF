@@ -90,7 +90,6 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           SECURITY_ENABLELOGIN: "true"
-          POLICIES_ENABLED: "true"
       - task: frontend:dev:proprietary
         vars:
           PORT: '{{.EDITOR_PORT}}'

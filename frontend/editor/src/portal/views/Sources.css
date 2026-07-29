@@ -12,6 +12,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap; /* actions drop below the title on narrow screens */
   gap: 1rem;
 }
 
@@ -25,14 +26,14 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-sources__sub {
   margin: 0.25rem 0 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   max-width: 46rem;
 }
 
@@ -49,6 +50,7 @@
 .portal-sources__name-text {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.25rem;
   min-width: 0;
 }
@@ -56,9 +58,11 @@
 .portal-sources__name-text strong {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
+/* The connector's real mark, no tinted plate: the box only reserves space so
+   rows align; neutral (currentColor) marks read in the muted text tone. */
 .portal-sources__type-dot {
   display: inline-flex;
   align-items: center;
@@ -66,55 +70,29 @@
   width: 1.875rem;
   height: 1.875rem;
   flex-shrink: 0;
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-}
-
-.portal-sources__type-dot--neutral {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-3);
-}
-.portal-sources__type-dot--default {
-  background: var(--color-blue-light);
-  color: var(--color-blue);
-}
-.portal-sources__type-dot--premium {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
-}
-.portal-sources__type-dot--success {
-  background: var(--color-green-light);
-  color: var(--color-green-dark);
-}
-.portal-sources__type-dot--warning {
-  background: var(--color-amber-light);
-  color: var(--color-amber-dark);
-}
-.portal-sources__type-dot--danger {
-  background: var(--color-red-light);
-  color: var(--color-red);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__muted {
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__caret {
   display: inline-block;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   transition: transform var(--motion-fast);
 }
 
 .portal-sources__caret.is-open {
   transform: rotate(90deg);
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 /* Expanded detail panel */
 .portal-sources__expanded {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.25rem;
@@ -138,19 +116,19 @@
   gap: 0.75rem;
   padding-bottom: 0.875rem;
   margin-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-sources__expanded-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-sources__expanded-sub {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__expanded-close {
@@ -158,9 +136,9 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-4);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text-subtle);
   font-size: 1.125rem;
   line-height: 1;
   cursor: pointer;
@@ -170,8 +148,8 @@
 }
 
 .portal-sources__expanded-close:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 
 /* Detail body */
@@ -193,12 +171,18 @@
   }
 }
 
+@media (max-width: 30rem) {
+  .portal-sources__stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Stat tiles now use the shared <StatTile>. */
 
 .portal-sources__url {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   word-break: break-all;
 }
 
@@ -214,12 +198,12 @@
   align-items: baseline;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__bar-head strong {
   font-size: 0.8125rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-family: var(--font-mono);
 }
 
@@ -234,7 +218,7 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-weight: 600;
 }
 
@@ -242,7 +226,7 @@
   display: block;
   width: 100%;
   margin-top: 0.5rem;
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 .portal-sources__chips {
@@ -265,7 +249,7 @@
   gap: 0.625rem;
   padding: 0.4375rem 0.625rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
 }
 
@@ -276,7 +260,7 @@
 .portal-sources__endpoint-path {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -284,7 +268,7 @@
 
 .portal-sources__endpoint-calls {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   font-family: var(--font-mono);
 }
@@ -314,28 +298,36 @@
   padding: 0;
 }
 
+/* Phones: labelled step pills don't fit side by side — stack them */
+@media (max-width: 30rem) {
+  .portal-sources__steps {
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+}
+
 .portal-sources__step {
   display: flex;
   align-items: center;
   gap: 0.4375rem;
   flex: 1;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   padding: 0.5rem 0.625rem;
   border-radius: var(--radius-md);
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
 }
 
 .portal-sources__step.is-active {
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-weight: 600;
-  border-color: color-mix(in srgb, var(--color-blue) 40%, transparent);
-  background: var(--color-blue-light);
+  border-color: color-mix(in srgb, var(--c-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
 }
 
 .portal-sources__step.is-done {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__step-mark {
@@ -347,14 +339,14 @@
   border-radius: 50%;
   font-size: 0.6875rem;
   font-weight: 600;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__step.is-active .portal-sources__step-mark {
-  background: var(--color-blue);
-  border-color: var(--color-blue);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
   color: var(--color-text-on-accent);
 }
 
@@ -366,7 +358,7 @@
 
 .portal-sources__type-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   gap: 0.625rem;
 }
 
@@ -376,14 +368,24 @@
   }
 }
 
+/* Override the shared Button's flex-row label to a centred icon-over-label
+   column so the SVG sits above the name with real spacing. */
+.portal-sources__type-card .mantine-Button-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
 .portal-sources__type-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 0.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition:
@@ -392,25 +394,45 @@
 }
 
 .portal-sources__type-card:hover {
-  border-color: var(--color-border-strong, var(--color-border));
-  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong, var(--c-border));
+  background: var(--c-hover);
 }
 
 .portal-sources__type-card.is-selected {
-  border-color: var(--color-blue);
-  background: var(--color-blue-light);
-  box-shadow: 0 0 0 1px var(--color-blue) inset;
+  border-color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
+  box-shadow: 0 0 0 1px var(--c-primary) inset;
 }
 
+/* Icon inside the type picker: a plain stroke icon above the label (no badge
+   box — the tinted box read as an extra bordered chip floating on the tile). */
 .portal-sources__type-icon {
-  font-size: 1.25rem;
-  color: var(--color-text-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-subtle);
+}
+
+.portal-sources__type-card.is-selected .portal-sources__type-icon {
+  color: var(--c-primary);
+}
+
+.portal-sources__type-icon .portal-sources__type-svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* Sized to sit centred inside the 1.875rem table cell / picker dot. */
+.portal-sources__type-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
 }
 
 .portal-sources__type-name {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-sources__wizard-body {
@@ -423,13 +445,13 @@
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.55;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-sources__wizard-note {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__wizard-footer {
@@ -473,6 +495,71 @@
   gap: 0.75rem;
 }
 
+/* Back to the grid from the form. Sits above the fields, where the type dropdown used to be. */
+.portal-sources__connection-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+.portal-sources__connection-back:hover {
+  color: var(--text-default, inherit);
+}
+
+/* The "request an integration" / "advanced" affordances, set below the form so presets read as
+   the primary path and these as the way out of it. */
+.portal-sources__connection-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-sources__connection-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--c-conn-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.portal-sources__connection-link:hover {
+  opacity: 0.8;
+}
+
+/* Free-text fields (result-host list, body template) that outgrow a single-line input. */
+.portal-sources__connection-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--surface-input, transparent);
+  color: inherit;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.portal-sources__connection-textarea:focus-visible {
+  outline: 2px solid var(--c-conn-accent);
+  outline-offset: -1px;
+}
+
 .portal-sources__connections {
   margin-top: 1.5rem;
 }
@@ -480,7 +567,7 @@
 .portal-sources__connections-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   margin: 0 0 0.5rem;
 }
 
@@ -503,11 +590,11 @@
 
 .portal-sources__connections-name {
   font-weight: 500;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-sources__connections-bucket {
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-size: 0.8125rem;
 }
 
@@ -526,7 +613,7 @@
 }
 
 .portal-sources__connections-sub {
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-size: 0.875rem;
   margin: 0;
 }
@@ -535,4 +622,158 @@
   display: inline-flex;
   gap: 0.25rem;
   justify-content: flex-end;
+}
+
+/* ---- Integration picker ---------------------------------------------------------------------
+   A searchable grid of what we can connect to. Sized so a full category is visible without
+   scrolling on a laptop, and so the search box is the first thing focus lands on. */
+.portal-conn-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  /* Bounded rather than free-growing: the modal should not become the page. */
+  max-height: min(60vh, 32rem);
+  overflow-y: auto;
+}
+
+.portal-conn-picker__search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm, 0.375rem);
+  /* Real theme token with a transparent fallback so it never falls back to opaque white in dark;
+     the border alone is enough to read as an input. */
+  background: var(--color-bg-subtle, transparent);
+}
+
+.portal-conn-picker__search-icon {
+  flex: none;
+  font-size: 1.125rem;
+  color: var(--c-text-muted);
+}
+
+.portal-conn-picker__search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font: inherit;
+  color: inherit;
+}
+
+.portal-conn-picker__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.portal-conn-picker__section-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-muted);
+}
+
+.portal-conn-picker__section-desc {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+.portal-conn-picker__grid {
+  display: grid;
+  /* auto-fill so the grid reflows to the modal rather than to a fixed column count. */
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.portal-conn-picker__card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--surface-subtle, transparent);
+  font: inherit;
+  color: inherit;
+}
+
+.portal-conn-picker__card:hover {
+  border-color: var(--c-conn-accent);
+  background: color-mix(in srgb, var(--c-conn-neutral) 6%, transparent);
+}
+
+/* The custom-API card is an escape hatch, not a vendor: dashed, so it reads as "something else". */
+.portal-conn-picker__card--advanced {
+  border-style: dashed;
+}
+
+/* The vendor's real mark: full colour, no tinted plate behind it. Neutral
+   (currentColor) marks pick up the muted text tone instead. */
+.portal-conn-picker__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-conn-picker__mark svg {
+  display: block;
+}
+
+.portal-conn-picker__card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-conn-picker__card-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.portal-conn-picker__card-desc {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--c-text-muted);
+  /* Two lines keeps every card the same height without truncating most descriptions. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.portal-conn-picker__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.portal-conn-picker__empty-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.portal-conn-picker__empty-body {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
 }

@@ -6521,63 +6521,6 @@ title_other = "Przetwórz {{allowance}} PDF bezpłatnie"
 titleWithRate_one = "Przetwórz {{allowance}} PDF bezpłatnie, potem {{rate}}/PDF"
 titleWithRate_other = "Przetwórz {{allowance}} PDF bezpłatnie, potem {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Zablokowane"
-openAriaLabel = "Otwórz komponent {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Dodaj do projektu"
-ariaLabel = "Szczegóły komponentu"
-tabsAriaLabel = "Sekcje szczegółów komponentu"
-upgradeToUnlock = "Przejdź na wyższy plan, aby odblokować"
-
-[portal.catalogue.detail.code]
-install = "Instalacja"
-usage = "Użycie"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} jest dostępny od planu {{tier}}. Przejdź na wyższy plan, aby go osadzić."
-title = "Niedostępne w Twoim planie"
-
-[portal.catalogue.detail.preview]
-badge = "Podgląd na żywo"
-note = "Interaktywna piaskownica renderuje tutaj"
-
-[portal.catalogue.detail.pricing]
-note = "Rozliczane wg użycia za {{unit}}. Użycie ponad miesięczny bezpłatny limit jest rozliczane na Twoim koncie i wyszczególnione w sekcji Użycie i rozliczenia."
-
-[portal.catalogue.detail.stats]
-billedOn = "Rozliczane za"
-embeds30d = "Osadzenia (30 dni)"
-freeQuota = "Bezpłatny limit"
-freeQuotaValue = "{{amount}} / mies."
-maturity = "Dojrzałość"
-none = "Brak"
-perAction = "Za akcję"
-price = "Cena"
-
-[portal.catalogue.detail.tabs]
-code = "Kod"
-overview = "Przegląd"
-pricing = "Cennik"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "opcjonalne"
-required = "wymagane"
-
-[portal.catalogue.props.columns]
-description = "Opis"
-name = "Prop"
-required = "Wymagane"
-type = "Typ"
-
-[portal.catalogue.summary]
-componentsGa = "Komponenty GA"
-componentSpendMtd = "Wydatki na komponenty (MTD)"
-embedsThisMonth = "Osadzenia w tym miesiącu"
-inBeta = "W beta"
-
 [portal.components.billingUnit]
 approval = "zatwierdzenie"
 check = "sprawdzenie"
@@ -6590,18 +6533,6 @@ signature = "podpis"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Osadzalne widżety SDK, które dodajesz do własnej aplikacji — przeglądarka, przepływ e-podpisu, panel przeglądu AI. Każdy jest rozliczany wg użycia za akcję. Kliknij kartę, aby zobaczyć instalację, użycie i props."
-title = "Komponenty"
-
-[portal.componentsView.empty]
-description = "Nie udało się wczytać katalogu komponentów. Spróbuj ponownie za chwilę."
-title = "Brak dostępnych komponentów"
-
-[portal.componentsView.lockedBanner]
-description = "Komponenty GA są dostępne w modelu Pay-as-you-go; kilka komponentów Beta jest tylko dla Enterprise. Zablokowane karty pokazują zachętę do przejścia na wyższy plan."
-title = "Niektóre komponenty wymagają płatnego planu"
 
 [portal.docs.authentication]
 codeCaption = "każde żądanie"

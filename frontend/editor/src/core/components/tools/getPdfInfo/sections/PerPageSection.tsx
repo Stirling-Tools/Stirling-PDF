@@ -125,8 +125,8 @@ const PerPageSection: React.FC<PerPageSectionProps> = ({
                 <Accordion.Panel>
                   <div
                     style={{
-                      backgroundColor: "var(--bg-raised)",
-                      color: "var(--text-primary)",
+                      backgroundColor: "var(--c-surface-raised)",
+                      color: "var(--c-text)",
                       borderRadius: 8,
                       padding: 12,
                     }}

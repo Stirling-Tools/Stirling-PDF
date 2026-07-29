@@ -6521,63 +6521,6 @@ title_other = "Process {{allowance}} PDFs free"
 titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Locked"
-openAriaLabel = "Open {{name}} component"
-
-[portal.catalogue.detail]
-addToProject = "Add to project"
-ariaLabel = "Component detail"
-tabsAriaLabel = "Component detail sections"
-upgradeToUnlock = "Upgrade to unlock"
-
-[portal.catalogue.detail.code]
-install = "Install"
-usage = "Usage"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} is included from the {{tier}} plan. Upgrade to embed it."
-title = "Not available on your plan"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interactive sandbox renders here"
-
-[portal.catalogue.detail.pricing]
-note = "Metered per {{unit}}. Usage beyond the monthly free quota is billed to your account and itemised under Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Billed on"
-embeds30d = "Embeds (30d)"
-freeQuota = "Free quota"
-freeQuotaValue = "{{amount}} / mo"
-maturity = "Maturity"
-none = "None"
-perAction = "Per action"
-price = "Price"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Overview"
-pricing = "Pricing"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "optional"
-required = "required"
-
-[portal.catalogue.props.columns]
-description = "Description"
-name = "Prop"
-required = "Required"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Component spend (MTD)"
-embedsThisMonth = "Embeds this month"
-inBeta = "In beta"
-
 [portal.components.billingUnit]
 approval = "approval"
 check = "check"
@@ -6591,17 +6534,9 @@ signature = "signature"
 beta = "Beta"
 ga = "GA"
 
-[portal.componentsView]
-subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
-title = "Components"
-
-[portal.componentsView.empty]
-description = "The component catalogue could not be loaded. Try again shortly."
-title = "No components available"
-
-[portal.componentsView.lockedBanner]
-description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
-title = "Some components need a paid plan"
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "every request"
@@ -6688,10 +6623,18 @@ title = "Official SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
 title = "Agent skills"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6944,22 +6887,27 @@ title = "Infrastructure"
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
-subheading = "Scoped credentials with per-key rate limits, permissions, and IP allowlists."
+subheading = "Personal credentials, each with its own usage tracking."
 
 [portal.infrastructure.apiKeys.card]
-allowedIps = "Allowed IPs"
-anyIp = "Any IP (no allowlist)"
 created = "Created"
 lastUsed = "Last used"
-permissions = "Permissions"
-rateLimit = "Rate limit"
-rateLimitValue = "{{value}} req/min"
+revoke = "Revoke key"
 usageMonth = "Usage this month"
 usageToday = "Usage today"
 
 [portal.infrastructure.apiKeys.empty]
-description = "Create a scoped key to start calling the Stirling API."
+description = "Create a key to start calling the Stirling API."
 title = "No API keys yet"
+
+[portal.infrastructure.apiKeys.error]
+load = "Couldn't load your API keys. Please try again."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Revoke \"{{name}}\"? Any integration still using this key will immediately start receiving 401 errors. This can't be undone."
+cancel = "Cancel"
+confirm = "Revoke key"
+title = "Revoke API key"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filter audit events by category"
@@ -7021,14 +6969,11 @@ totalEvents = "Total events · 24h"
 cancel = "Cancel"
 createKey = "Create key"
 done = "Done"
-ipAllowlistHelper = "Comma-separated CIDR ranges. Leave blank to allow any IP."
-ipAllowlistLabel = "IP allowlist"
 keyNameLabel = "Key name"
-keyNamePlaceholder = "e.g. Production · ingest"
-permissionsLabel = "Permissions"
+keyNamePlaceholder = "e.g. Production ingest"
 secretKeyCaption = "Secret key"
-secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash — there is no way to recover it later."
-subtitle = "Scope the key to the minimum it needs. You can rotate or revoke at any time."
+secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash, so there is no way to recover it later."
+subtitle = "Give the key a name so you can recognise it later. You can revoke it at any time."
 subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
@@ -7246,7 +7191,7 @@ storage = "Storage"
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
-docs = "Developer Docs"
+docs = "Documentation"
 documents = "Documents"
 editor = "Editor"
 home = "Home"
@@ -7258,6 +7203,10 @@ settings = "Settings"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
+
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.notifications]
 markAllRead = "Mark all read"

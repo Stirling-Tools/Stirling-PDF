@@ -4,13 +4,23 @@ import {
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type { ReactNode } from "react";
 import type { SourcesResponse } from "@portal/api/sources";
 import { Sources } from "@portal/views/Sources";
+import { UIProvider } from "@portal/contexts/UIContext";
+
+// The view uses the shared query hooks and the embedded SourceModal reads
+// useUI(), so wrap the query client + Mantine + the UI context.
+const Providers = ({ children }: { children: ReactNode }) => (
+  <PortalTestProviders>
+    <UIProvider>{children}</UIProvider>
+  </PortalTestProviders>
+);
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, { wrapper: Providers });
 
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({
@@ -21,19 +31,22 @@ vi.mock("react-i18next", () => ({
 }));
 
 const fetchSources = vi.fn();
+const fetchSource = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
+  fetchSource: (id: string) => fetchSource(id),
+  createSource: vi.fn(),
+  deleteSource: vi.fn(),
+  isFolderAccessDeniedError: () => false,
 }));
 
 const fetchS3Connections = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
+  fetchIntegrations: () => fetchS3Connections(),
+  // Custom-API authoring is a server decision; these tests assert the default view.
+  fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => fetchS3Connections(),
   deleteIntegration: vi.fn(),
-}));
-
-// The Agent Builder header action is a flavor seam; stub it to keep the test focused.
-vi.mock("@portal/components/sources/AgentBuilderAction", () => ({
-  AgentBuilderAction: () => null,
 }));
 
 const RESPONSE: SourcesResponse = {
@@ -76,12 +89,8 @@ function renderView(initial = "/processor/sources") {
       <Routes>
         <Route path="/processor/sources" element={<Sources />} />
         <Route
-          path="/processor/sources/new"
-          element={<div>source builder: new</div>}
-        />
-        <Route
-          path="/processor/sources/:id"
-          element={<div>source builder: edit</div>}
+          path="/processor/integrations"
+          element={<div>integrations view</div>}
         />
       </Routes>
     </MemoryRouter>,
@@ -92,42 +101,61 @@ describe("Sources view", () => {
   beforeEach(() => {
     fetchSources.mockReset();
     fetchSources.mockResolvedValue(RESPONSE);
+    fetchSource.mockReset();
+    fetchSource.mockResolvedValue({
+      id: "src-1",
+      name: "Claims intake",
+      type: "folder",
+      options: { directory: "/in" },
+      enabled: true,
+    });
     fetchS3Connections.mockReset();
     fetchS3Connections.mockResolvedValue([]);
   });
 
-  it("opens a source's own page on row click", async () => {
+  it("opens the edit modal on row click", async () => {
     renderView();
     fireEvent.click(await screen.findByText("Claims intake"));
-    expect(await screen.findByText("source builder: edit")).toBeInTheDocument();
+    // The modal fetches the record and shows the configure form.
+    expect(
+      await screen.findByText("portal.sources.builder.save"),
+    ).toBeInTheDocument();
+    expect(fetchSource).toHaveBeenCalledWith("src-1");
   });
 
-  it("navigates to the create page from the connect button", async () => {
+  it("opens the create modal from the connect button", async () => {
     renderView();
     await screen.findByText("Claims intake");
-    fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
-    expect(await screen.findByText("source builder: new")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getAllByText("portal.sources.actions.connectSource")[0],
+    );
+    // Stage 1 of the modal: the connector catalogue with coming-soon entries.
+    expect(
+      await screen.findByText("portal.sources.types.sharepoint.label"),
+    ).toBeInTheDocument();
   });
 
-  it("does not navigate when the virtual editor row is clicked", async () => {
+  it("opens the create modal on arrival with ?new=1", async () => {
+    renderView("/processor/sources?new=1");
+    expect(
+      await screen.findByText("portal.sources.types.sharepoint.label"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not open the modal when the virtual editor row is clicked", async () => {
     renderView();
     fireEvent.click(
       await screen.findByText("portal.sources.types.editor.label"),
     );
-    // Still on the list: the builder stub never rendered.
-    expect(screen.queryByText("source builder: edit")).not.toBeInTheDocument();
-    expect(screen.getByText("Claims intake")).toBeInTheDocument();
+    expect(fetchSource).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText("portal.sources.builder.save"),
+    ).not.toBeInTheDocument();
   });
 
-  it("shows the connections surface on the Connections tab", async () => {
-    renderView();
-    await screen.findByText("Claims intake");
-    fireEvent.click(screen.getByText("portal.sources.tabs.connections"));
-    // Empty connections list -> the connections empty state.
-    expect(
-      await screen.findByText("portal.connections.empty.title"),
-    ).toBeInTheDocument();
-    expect(fetchS3Connections).toHaveBeenCalled();
+  it("redirects the old connections tab to the integrations view", async () => {
+    renderView("/processor/sources?tab=connections");
+    expect(await screen.findByText("integrations view")).toBeInTheDocument();
   });
 
   it("hides the KPI strip and shows the empty state when only the editor exists", async () => {
@@ -139,8 +167,6 @@ describe("Sources view", () => {
     expect(
       await screen.findByText("portal.sources.empty.title"),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText("portal.sources.kpi.total"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("portal.sources.kpi.total")).toBeNull();
   });
 });

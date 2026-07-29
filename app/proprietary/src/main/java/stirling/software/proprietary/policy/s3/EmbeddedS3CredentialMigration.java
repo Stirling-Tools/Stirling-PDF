@@ -4,7 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -32,8 +31,8 @@ import tools.jackson.databind.ObjectMapper;
  * One-time, idempotent extraction of legacy embedded S3 credentials into stored connections:
  * sources and policy outputs written before connections shipped carry bucket/credentials in their
  * own options; this rewrites each to reference a (deduplicated) S3 {@link IntegrationConfig} and
- * keeps only per-use options (prefix, mode). MUST be programmatic - the option JSON is encrypted at
- * the application layer, so no SQL migration can read it.
+ * keeps only per-use options (prefix, mode). MUST be programmatic - it parses and rewrites the
+ * option JSON (and decrypts any legacy ciphertext row on read), which no SQL migration can do.
  *
  * <p>Idempotent by construction: rewritten rows no longer embed credentials, so re-runs find
  * nothing to do. Connections are deduplicated against both this run's extractions and existing S3
@@ -44,7 +43,6 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class EmbeddedS3CredentialMigration {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

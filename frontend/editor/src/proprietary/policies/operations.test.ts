@@ -13,13 +13,18 @@ const ALL_TOOL_IDS = Object.keys(POLICY_OPERATIONS) as PolicyToolId[];
 
 describe("POLICY_OPERATIONS", () => {
   test("every category operation is a typed descriptor with a known endpoint", () => {
-    // The catalogue uses these six across all categories; each must be wired.
+    // The catalogue uses these across all categories; each must be wired.
     expect(ALL_TOOL_IDS.sort()).toEqual([
+      "classify",
       "compress",
+      "externalApiCall",
       "flatten",
       "ocr",
+      "purviewApplyLabel",
+      "purviewReadLabel",
       "redact",
       "sanitize",
+      "timestampPdf",
       "watermark",
     ]);
     for (const id of ALL_TOOL_IDS) {

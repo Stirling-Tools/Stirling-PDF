@@ -6553,63 +6553,6 @@ title_other = "{{allowance}} PDFs kostenlos verarbeiten"
 titleWithRate_one = "{{allowance}} PDFs kostenlos verarbeiten, danach {{rate}}/PDF"
 titleWithRate_other = "{{allowance}} PDFs kostenlos verarbeiten, danach {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Gesperrt"
-openAriaLabel = "Komponente {{name}} öffnen"
-
-[portal.catalogue.detail]
-addToProject = "Zum Projekt hinzufügen"
-ariaLabel = "Komponentendetail"
-tabsAriaLabel = "Komponentendetail-Abschnitte"
-upgradeToUnlock = "Upgrade zum Entsperren"
-
-[portal.catalogue.detail.code]
-install = "Installieren"
-usage = "Usage"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} ist ab dem {{tier}}-Tarif enthalten. Führen Sie ein Upgrade durch, um es einzubetten."
-title = "In Ihrem Tarif nicht verfügbar"
-
-[portal.catalogue.detail.preview]
-badge = "Live-Vorschau"
-note = "Interaktive Sandbox wird hier gerendert"
-
-[portal.catalogue.detail.pricing]
-note = "Nutzungsbasiert pro {{unit}}. Nutzung über das monatliche Freikontingent hinaus wird Ihrem Konto berechnet und unter Nutzung & Abrechnung einzeln aufgeführt."
-
-[portal.catalogue.detail.stats]
-billedOn = "Abgerechnet nach"
-embeds30d = "Einbettungen (30T)"
-freeQuota = "Freikontingent"
-freeQuotaValue = "{{amount}} / Mon."
-maturity = "Reifegrad"
-none = "Keine"
-perAction = "Pro Aktion"
-price = "Preis"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Übersicht"
-pricing = "Preise"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "optional"
-required = "erforderlich"
-
-[portal.catalogue.props.columns]
-description = "Beschreibung"
-name = "Prop"
-required = "Erforderlich"
-type = "Typ"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Komponentenausgaben (MTD)"
-embedsThisMonth = "Einbettungen diesen Monat"
-inBeta = "In Beta"
-
 [portal.components.billingUnit]
 approval = "Genehmigung"
 check = "Prüfung"
@@ -6622,18 +6565,6 @@ signature = "Signatur"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Einbettbare SDK-Widgets, die Sie in Ihre eigene App einfügen — ein Viewer, ein E-Sign-Flow, ein KI-Review-Panel. Jedes wird pro Aktion nutzungsbasiert abgerechnet. Klicken Sie auf eine Karte für Installation, Nutzung und Props."
-title = "Komponenten"
-
-[portal.componentsView.empty]
-description = "Der Komponentenkatalog konnte nicht geladen werden. Versuchen Sie es in Kürze erneut."
-title = "Keine Komponenten verfügbar"
-
-[portal.componentsView.lockedBanner]
-description = "GA-Komponenten sind mit Pay-as-you-go verfügbar; einige Beta-Komponenten sind nur für Enterprise. Gesperrte Karten zeigen einen Upgrade-Hinweis."
-title = "Einige Komponenten benötigen einen kostenpflichtigen Tarif"
 
 [portal.docs.authentication]
 codeCaption = "jede Anfrage"

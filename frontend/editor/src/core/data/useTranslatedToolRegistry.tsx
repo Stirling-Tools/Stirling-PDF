@@ -1211,7 +1211,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             icon="open-in-new-rounded"
             width="1.5rem"
             height="1.5rem"
-            style={{ color: "#2F7BF6" }}
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
         name: t("home.devApi.title", "API"),
@@ -1231,7 +1231,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             icon="open-in-new-rounded"
             width="1.5rem"
             height="1.5rem"
-            style={{ color: "#2F7BF6" }}
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
         name: t("home.devFolderScanning.title", "Automated Folder Scanning"),
@@ -1254,7 +1254,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             icon="open-in-new-rounded"
             width="1.5rem"
             height="1.5rem"
-            style={{ color: "#2F7BF6" }}
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
         name: t("home.devSsoGuide.title", "SSO Guide"),
@@ -1274,7 +1274,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             icon="open-in-new-rounded"
             width="1.5rem"
             height="1.5rem"
-            style={{ color: "#2F7BF6" }}
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
         name: t("home.devAirgapped.title", "Air-gapped Setup"),

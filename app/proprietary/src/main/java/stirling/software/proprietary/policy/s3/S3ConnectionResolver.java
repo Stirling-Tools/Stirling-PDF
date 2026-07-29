@@ -3,7 +3,6 @@ package stirling.software.proprietary.policy.s3;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,7 +38,6 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class S3ConnectionResolver {
 
     static final String CONNECTION_ID_OPTION = "connectionId";

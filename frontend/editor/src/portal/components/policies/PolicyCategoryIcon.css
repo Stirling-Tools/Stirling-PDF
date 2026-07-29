@@ -1,0 +1,15 @@
+/* Neutral gray rounded icon badge for a policy category. Lives with the
+   component so every consumer gets the styling without importing a view CSS. */
+.pcat-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
+  /* The shared MUI outline glyph inherits its size from here. */
+  font-size: 1.15rem;
+}

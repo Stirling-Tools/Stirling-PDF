@@ -4,8 +4,8 @@
  * The portal calls the real Stirling policy API (`/api/v1/policies`);
  * Storybook and tests intercept the same calls with MSW handlers.
  *
- * `fetchPolicies()` assembles the decorated catalogue client-side from the
- * backend's flat `WirePolicy[]` + `PolicyRunView[]`, mirroring the same
+ * The flat `WirePolicy[]` + `PolicyRunView[]` responses are assembled into the
+ * decorated catalogue client-side by `assemblePolicies()`, mirroring the same
  * approach the editor uses for its own catalogue view.
  */
 
@@ -56,11 +56,11 @@ export interface PolicyField {
 export interface PolicyCategory {
   id: string;
   label: string;
-  icon: string;
   tone: "neutral" | "blue" | "purple" | "green" | "amber" | "red";
   desc: string;
   providesClassification?: boolean;
   comingSoon?: boolean;
+  requiresAiEngine?: boolean;
 }
 
 export interface PolicyConfigDef {
@@ -133,14 +133,21 @@ export interface CatalogueEntry {
 /*  Endpoint display labels                                                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-/** i18n keys keyed by {@link ToolEndpoint}; labels stored steps in the detail view. */
-export const ENDPOINT_LABELS: Partial<Record<ToolEndpoint, string>> = {
+/**
+ * i18n keys keyed by endpoint; labels stored steps in the detail view. Mostly
+ * {@link ToolEndpoint}s, plus the AI classify endpoint, which isn't part of the generated union.
+ */
+export const ENDPOINT_LABELS: Partial<
+  Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
+> = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
   "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
   "/api/v1/security/add-watermark": "portal.policies.endpoints.addWatermark",
   "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
   "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
   "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
+  "/api/v1/ai/tools/classify-and-label":
+    "portal.policies.endpoints.classifyAndLabel",
 };
 
 export function humanizeEndpoint(
@@ -170,7 +177,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
     label: "portal.policies.categories.ingestion.label",
-    icon: "layers",
     tone: "blue",
     desc: "portal.policies.categories.ingestion.desc",
     providesClassification: true,
@@ -179,14 +185,19 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "security",
     label: "portal.policies.categories.security.label",
-    icon: "shield",
     tone: "purple",
     desc: "portal.policies.categories.security.desc",
   },
   {
+    id: "classification",
+    label: "portal.policies.categories.classification.label",
+    tone: "blue",
+    desc: "portal.policies.categories.classification.desc",
+    providesClassification: true,
+  },
+  {
     id: "compliance",
     label: "portal.policies.categories.compliance.label",
-    icon: "check",
     tone: "amber",
     desc: "portal.policies.categories.compliance.desc",
     comingSoon: true,
@@ -194,7 +205,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "routing",
     label: "portal.policies.categories.routing.label",
-    icon: "route",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
     comingSoon: true,
@@ -202,7 +212,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "retention",
     label: "portal.policies.categories.retention.label",
-    icon: "schedule",
     tone: "neutral",
     desc: "portal.policies.categories.retention.desc",
     comingSoon: true,
@@ -264,6 +273,16 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
     fields: [],
   },
+  classification: {
+    summary: "portal.policies.config.classification.summary",
+    rules: [
+      "portal.policies.config.classification.rules.0",
+      "portal.policies.config.classification.rules.1",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
+    defaultOperations: [policyStep("classify")],
+    fields: [],
+  },
   compliance: {
     summary: "portal.policies.config.compliance.summary",
     rules: [
@@ -272,7 +291,14 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("sanitize"), policyStep("flatten")],
+    // Apply writes our sensitivity label into the document after it is sanitised and flattened.
+    // Offered only once a Purview tenant is connected (it needs a tenant connection and a label
+    // GUID, which no default can guess), and hidden entirely until then.
+    defaultOperations: [
+      policyStep("sanitize"),
+      policyStep("flatten"),
+      policyStep("purviewApplyLabel"),
+    ],
     fields: [
       {
         label: "portal.policies.config.compliance.fields.frameworks",
@@ -429,15 +455,27 @@ function decoratePolicy(
   };
 }
 
-/** GET /api/v1/policies + GET /api/v1/policies/runs → assembled catalogue. */
-export async function fetchPolicies(): Promise<PoliciesResponse> {
-  const [wirePolicies, runs] = await Promise.all([
-    apiClient.local.json<WirePolicy[]>("/api/v1/policies"),
-    apiClient.local
-      .json<PolicyRunView[]>("/api/v1/policies/runs")
-      .catch(() => [] as PolicyRunView[]),
-  ]);
+/** GET /api/v1/policies — the flat stored-policy records. */
+export function fetchPoliciesList(): Promise<WirePolicy[]> {
+  return apiClient.local.json<WirePolicy[]>("/api/v1/policies");
+}
 
+/** GET /api/v1/policies/runs — best-effort (empty on a backend without runs). */
+export function fetchPolicyRuns(): Promise<PolicyRunView[]> {
+  return apiClient.local
+    .json<PolicyRunView[]>("/api/v1/policies/runs")
+    .catch(() => [] as PolicyRunView[]);
+}
+
+/**
+ * Pure assembly of the decorated catalogue from the two raw responses. Split
+ * out so the React Query layer can fetch the list + runs as separate shared
+ * cache entries (deduped across Home + Policies) and assemble client-side.
+ */
+export function assemblePolicies(
+  wirePolicies: WirePolicy[],
+  runs: PolicyRunView[],
+): PoliciesResponse {
   const decodedByCategory = new Map<
     string,
     { decoded: PolicyDecodedState; isDefault: boolean }

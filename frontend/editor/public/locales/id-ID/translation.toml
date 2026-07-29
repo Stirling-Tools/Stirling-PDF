@@ -6521,63 +6521,6 @@ title_other = "Proses {{allowance}} PDF gratis"
 titleWithRate_one = "Proses {{allowance}} PDF gratis, lalu {{rate}}/PDF"
 titleWithRate_other = "Proses {{allowance}} PDF gratis, lalu {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Terkunci"
-openAriaLabel = "Buka komponen {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Tambahkan ke proyek"
-ariaLabel = "Detail komponen"
-tabsAriaLabel = "Bagian detail komponen"
-upgradeToUnlock = "Upgrade untuk membuka akses"
-
-[portal.catalogue.detail.code]
-install = "Instal"
-usage = "Penggunaan"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} disertakan mulai paket {{tier}}. Upgrade untuk menyematkannya."
-title = "Tidak tersedia pada paket Anda"
-
-[portal.catalogue.detail.preview]
-badge = "Pratinjau langsung"
-note = "Sandbox interaktif dirender di sini"
-
-[portal.catalogue.detail.pricing]
-note = "Bermeter per {{unit}}. Penggunaan di luar kuota gratis bulanan ditagihkan ke akun Anda dan dirinci di Penggunaan & Penagihan."
-
-[portal.catalogue.detail.stats]
-billedOn = "Ditagih pada"
-embeds30d = "Embed (30h)"
-freeQuota = "Kuota gratis"
-freeQuotaValue = "{{amount}} / bln"
-maturity = "Kematangan"
-none = "Tidak ada"
-perAction = "Per tindakan"
-price = "Harga"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Ikhtisar"
-pricing = "Harga"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "opsional"
-required = "wajib"
-
-[portal.catalogue.props.columns]
-description = "Deskripsi"
-name = "Prop"
-required = "Wajib"
-type = "Tipe"
-
-[portal.catalogue.summary]
-componentsGa = "Komponen GA"
-componentSpendMtd = "Pengeluaran komponen (MTD)"
-embedsThisMonth = "Embed bulan ini"
-inBeta = "Dalam beta"
-
 [portal.components.billingUnit]
 approval = "persetujuan"
 check = "pemeriksaan"
@@ -6590,18 +6533,6 @@ signature = "tanda tangan"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Widget SDK yang dapat disematkan dan Anda letakkan di aplikasi sendiri — viewer, alur e-sign, panel tinjauan AI. Masing-masing bermeter per tindakan. Klik kartu untuk instalasi, penggunaan, dan props."
-title = "Komponen"
-
-[portal.componentsView.empty]
-description = "Katalog komponen tidak dapat dimuat. Coba lagi sebentar lagi."
-title = "Tidak ada komponen tersedia"
-
-[portal.componentsView.lockedBanner]
-description = "Komponen GA tersedia pada Bayar sesuai pemakaian; beberapa komponen Beta hanya untuk enterprise. Kartu terkunci menampilkan dorongan upgrade."
-title = "Beberapa komponen memerlukan paket berbayar"
 
 [portal.docs.authentication]
 codeCaption = "setiap permintaan"

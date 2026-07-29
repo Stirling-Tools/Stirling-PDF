@@ -6521,63 +6521,6 @@ title_other = "Bearbeta {{allowance}} PDF:er gratis"
 titleWithRate_one = "Bearbeta {{allowance}} PDF:er gratis, sedan {{rate}}/PDF"
 titleWithRate_other = "Bearbeta {{allowance}} PDF:er gratis, sedan {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Låst"
-openAriaLabel = "Öppna komponenten {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Lägg till i projekt"
-ariaLabel = "Komponentdetalj"
-tabsAriaLabel = "Sektioner för komponentdetalj"
-upgradeToUnlock = "Uppgradera för att låsa upp"
-
-[portal.catalogue.detail.code]
-install = "Installera"
-usage = "Användning"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} ingår från {{tier}}-planen. Uppgradera för att bädda in den."
-title = "Inte tillgängligt i din plan"
-
-[portal.catalogue.detail.preview]
-badge = "Liveförhandsvisning"
-note = "Interaktiv sandbox renderas här"
-
-[portal.catalogue.detail.pricing]
-note = "Mätt per {{unit}}. Användning utöver den månatliga gratiskvoten faktureras ditt konto och specificeras under Användning och fakturering."
-
-[portal.catalogue.detail.stats]
-billedOn = "Faktureras på"
-embeds30d = "Inbäddningar (30 d)"
-freeQuota = "Gratiskvot"
-freeQuotaValue = "{{amount}} / mån"
-maturity = "Mognad"
-none = "Ingen"
-perAction = "Per åtgärd"
-price = "Pris"
-
-[portal.catalogue.detail.tabs]
-code = "Kod"
-overview = "Översikt"
-pricing = "Prissättning"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "valfritt"
-required = "obligatoriskt"
-
-[portal.catalogue.props.columns]
-description = "Beskrivning"
-name = "Prop"
-required = "Obligatoriskt"
-type = "Typ"
-
-[portal.catalogue.summary]
-componentsGa = "Komponenter GA"
-componentSpendMtd = "Komponentutgifter (MTD)"
-embedsThisMonth = "Inbäddningar denna månad"
-inBeta = "I beta"
-
 [portal.components.billingUnit]
 approval = "godkännande"
 check = "kontroll"
@@ -6590,18 +6533,6 @@ signature = "signatur"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Inbäddningsbara SDK-widgets som du släpper in i din egen app — en visare, ett e-sign-flöde, en AI-granskningspanel. Varje mäts per åtgärd. Klicka på ett kort för installation, användning och props."
-title = "Komponenter"
-
-[portal.componentsView.empty]
-description = "Komponentkatalogen kunde inte läsas in. Försök igen snart."
-title = "Inga komponenter tillgängliga"
-
-[portal.componentsView.lockedBanner]
-description = "GA-komponenter är tillgängliga med Pay-as-you-go; några Beta-komponenter är endast för enterprise. Låsta kort visar en uppgraderingsuppmaning."
-title = "Vissa komponenter kräver en betald plan"
 
 [portal.docs.authentication]
 codeCaption = "varje förfrågan"

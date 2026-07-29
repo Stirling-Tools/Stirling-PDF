@@ -5,7 +5,6 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { Text, Stack, Alert } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
 import { markLoginLandingPending } from "@app/utils/loginLanding";
@@ -22,6 +21,8 @@ import {
   oauthProviderConfig,
 } from "@app/auth/ui/OAuthButtons";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
+import AuthSignupPrompt from "@app/auth/ui/AuthSignupPrompt";
+import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
@@ -439,11 +440,13 @@ export default function Login() {
             padding: "1.5rem",
             marginTop: "1rem",
             borderRadius: "0.75rem",
-            backgroundColor: "rgba(37, 99, 235, 0.08)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
+            backgroundColor:
+              "color-mix(in srgb, var(--c-primary) 8%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--c-primary) 20%, transparent)",
           }}
         >
-          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
             {t(
               "backendStartup.unreachable",
               "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
@@ -479,10 +482,12 @@ export default function Login() {
               style={{
                 padding: "1rem",
                 marginBottom: "1rem",
-                backgroundColor: "rgba(34, 197, 94, 0.1)",
-                border: "1px solid rgba(34, 197, 94, 0.3)",
+                backgroundColor:
+                  "color-mix(in srgb, var(--c-success) 10%, transparent)",
+                border:
+                  "1px solid color-mix(in srgb, var(--c-success) 30%, transparent)",
                 borderRadius: "0.5rem",
-                color: "#16a34a",
+                color: "var(--c-success)",
               }}
             >
               <p
@@ -514,59 +519,14 @@ export default function Login() {
           ) : undefined
         }
         footer={
-          isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed ? (
-            <Alert color="blue" variant="light" radius="md" mt="xl">
-              <Stack gap="xs" align="center">
-                <Text
-                  size="sm"
-                  fw={600}
-                  ta="center"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {t("login.defaultCredentials", "Default Login Credentials")}
-                </Text>
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  <Text
-                    component="span"
-                    fw={600}
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {t("login.username", "Username")}:
-                  </Text>{" "}
-                  admin
-                </Text>
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  <Text
-                    component="span"
-                    fw={600}
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {t("login.password", "Password")}:
-                  </Text>{" "}
-                  stirling
-                </Text>
-                <Text
-                  size="xs"
-                  ta="center"
-                  mt="xs"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {t(
-                    "login.changePasswordWarning",
-                    "Please change your password after logging in for the first time",
-                  )}
-                </Text>
-              </Stack>
-            </Alert>
-          ) : undefined
+          <>
+            {isFirstTimeSetup &&
+              showDefaultCredentials &&
+              isUserPassAllowed && <AuthDefaultCredentials />}
+            {isUserPassAllowed && (
+              <AuthSignupPrompt onSignUp={() => navigate("/signup")} />
+            )}
+          </>
         }
       />
     </AuthLayout>

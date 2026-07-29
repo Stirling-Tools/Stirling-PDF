@@ -156,8 +156,8 @@ final class FormPayloadParser {
                     names.add(single);
                 }
             }
-        } else if (root.isTextual()) {
-            final String single = trimToNull(root.asText(""));
+        } else if (root.isString()) {
+            final String single = trimToNull(root.asString(""));
             if (single != null) {
                 names.add(single);
             }
@@ -236,8 +236,8 @@ final class FormPayloadParser {
         if (node == null || node.isNull()) {
             return null;
         }
-        if (node.isTextual()) {
-            return trimToEmpty(node.asText(""));
+        if (node.isString()) {
+            return trimToEmpty(node.asString(""));
         }
         if (node.isNumber()) {
             return node.numberValue().toString();
@@ -246,7 +246,7 @@ final class FormPayloadParser {
             return Boolean.toString(node.booleanValue());
         }
         // Fallback for other scalar-like nodes
-        return trimToEmpty(node.asText(""));
+        return trimToEmpty(node.asString(""));
     }
 
     private static void collectNames(JsonNode arrayNode, Set<String> sink) {
@@ -266,8 +266,8 @@ final class FormPayloadParser {
             return null;
         }
 
-        if (node.isTextual()) {
-            return trimToNull(node.asText(""));
+        if (node.isString()) {
+            return trimToNull(node.asString(""));
         }
 
         if (node.isObject()) {
@@ -308,7 +308,7 @@ final class FormPayloadParser {
                             final JsonNode v = objectNode.get(key);
                             if (v == null || v.isNull()) {
                                 result.put(key, null);
-                            } else if (v.isTextual() || v.isNumber() || v.isBoolean()) {
+                            } else if (v.isString() || v.isNumber() || v.isBoolean()) {
                                 result.put(key, coerceScalarToString(v));
                             } else {
                                 result.put(key, v.toString());

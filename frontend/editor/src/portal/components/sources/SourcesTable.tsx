@@ -13,6 +13,7 @@ import {
   EDITOR_SOURCE_TYPE,
   sourceTypeMeta,
 } from "@portal/components/sources/sourceTypes";
+import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
 import "@portal/views/Sources.css";
 
 const STATUS_TONE: Record<SourceStatus, StatusTone> = {
@@ -41,11 +42,8 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
           const isEditor = s.type === EDITOR_SOURCE_TYPE;
           return (
             <div className="portal-sources__name-cell">
-              <span
-                className={`portal-sources__type-dot portal-sources__type-dot--${meta.accent}`}
-                aria-hidden
-              >
-                {meta.icon}
+              <span className="portal-sources__type-dot" aria-hidden>
+                <SourceTypeIcon type={s.type} />
               </span>
               <div className="portal-sources__name-text">
                 <strong>{isEditor ? t(meta.labelKey) : s.name}</strong>
