@@ -46,7 +46,6 @@ const Review = (_props: BaseToolProps) => {
   // Files signed off in this session — drives the "approved" confirmation.
   const [approvedIds, setApprovedIds] = useState<Set<FileId>>(new Set());
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [cursor, setCursor] = useState(0);
   // Queue entries whose file couldn't be loaded (deleted since it was flagged).
   const [unresolvableIds, setUnresolvableIds] = useState<Set<string>>(
     () => new Set(),
@@ -106,12 +105,14 @@ const Review = (_props: BaseToolProps) => {
     }
   }
   const queue = queueRef.current ?? [];
-  // The active file as this panel last saw it, to tell a selection made outside
-  // the panel from the panel's own cursor-driven activation.
-  const seenActiveRef = useRef<string | null>(activeFileId as string | null);
-  const heldRef = useRef<Set<string>>(new Set());
 
-  const currentId = queue[cursor] ?? null;
+  // The panel reviews whatever document is open — it never opens, closes or
+  // re-opens one behind the reviewer's back. Earlier versions drove the active
+  // file from the queue cursor, which fought every file-sidebar click: closing
+  // the reviewed file re-added it, and clicking another file was overridden a
+  // beat later. Opening is the reviewer's job (file sidebar, a needs-review
+  // badge, or this panel's pager below), so file state has exactly one driver.
+  const currentId = (activeFileId as FileId | null) ?? null;
   const stub = currentId
     ? fileStubs.find((s) => s.id === currentId)
     : undefined;
@@ -119,72 +120,31 @@ const Review = (_props: BaseToolProps) => {
   const { needsReview, markApproved, undoApproved } = useReviewApproval(stub);
   const approved = stub ? approvedIds.has(stub.id) : false;
 
-  // Show the queue's current file, opening it from storage when unloaded.
-  // Activating only when `stub` exists matters: a deleted file's id lingers in
-  // the frozen queue, and the viewer drops it — re-setting it loops forever.
-  //
-  // Usually the cursor leads and the viewer follows. But the active file can
-  // also change from outside the panel — clicking a failed badge in the file
-  // list while review is already open — and then the viewer leads: the cursor
-  // moves to that file rather than snapping the reviewer back to the old one.
-  useEffect(() => {
-    const seen = seenActiveRef.current;
-    seenActiveRef.current = activeFileId as string | null;
-    if (activeFileId && activeFileId !== seen && activeFileId !== currentId) {
-      const idx = queue.indexOf(activeFileId as FileId);
-      if (idx >= 0) {
-        setCursor(idx);
-      } else {
-        // Flagged after the queue froze, so append rather than drop the click.
-        queueRef.current = [...queue, activeFileId as FileId];
-        setCursor(queue.length);
-      }
-      return;
-    }
-    if (!currentId) return;
-    if (stub) {
-      heldRef.current.add(currentId as string);
-      if (currentId !== activeFileId) {
-        setActiveFileId(currentId);
-        // Our own push, so the next pass doesn't read it as an outside change.
-        seenActiveRef.current = currentId;
-      }
-      return;
-    }
+  // Where the open document sits in the flagged queue, for the pager. -1 when
+  // the reviewer opened something that wasn't flagged.
+  const cursor = currentId ? queue.indexOf(currentId) : -1;
 
-    if (heldRef.current.has(currentId as string)) {
-      heldRef.current.delete(currentId as string);
-      const remaining = queue.filter((id) => id !== currentId);
-      queueRef.current = remaining;
-      setCursor((c) => Math.min(c, Math.max(0, remaining.length - 1)));
-      return;
-    }
-    if (unresolvableIds.has(currentId)) return;
-    let cancelled = false;
-    void (async () => {
+  /** Open a queued file: load it from storage if it isn't in the workbench yet,
+   *  then make it active. Only ever called from an explicit pager click. */
+  const openQueued = useCallback(
+    async (fileId: FileId) => {
+      if (fileStubs.some((s) => s.id === fileId)) {
+        setActiveFileId(fileId as string);
+        return;
+      }
       // Re-add by stub to keep the file's id, so its policy runs still resolve.
       const loaded = await fileStorage
-        .getStirlingFileStub(currentId as FileId)
+        .getStirlingFileStub(fileId)
         .catch(() => null);
-      if (cancelled) return;
-      if (loaded) {
-        await fileActions.addStirlingFileStubs([loaded]);
-      } else {
-        setUnresolvableIds((prev) => new Set(prev).add(currentId));
+      if (!loaded) {
+        setUnresolvableIds((prev) => new Set(prev).add(fileId as string));
+        return;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    stub,
-    currentId,
-    activeFileId,
-    setActiveFileId,
-    fileActions,
-    unresolvableIds,
-    queue,
-  ]);
+      await fileActions.addStirlingFileStubs([loaded]);
+      setActiveFileId(fileId as string);
+    },
+    [fileStubs, fileActions, setActiveFileId],
+  );
 
   const openedViewerRef = useRef(false);
   useEffect(() => {
@@ -194,17 +154,21 @@ const Review = (_props: BaseToolProps) => {
   }, [workbench, setWorkbench]);
   useEffect(() => setConfirmingDelete(false), [currentId]);
 
-  // A queued file with no stub is either still opening from storage, or gone.
+  // The open document is gone from storage (deleted since it was flagged).
   const unavailable =
     !stub && currentId != null && unresolvableIds.has(currentId);
 
+  // Paging needs a known position in the queue; an unflagged document has none.
   const atStart = cursor <= 0;
-  const atEnd = cursor >= queue.length - 1;
-  const goPrev = useCallback(() => setCursor((c) => Math.max(0, c - 1)), []);
-  const goNext = useCallback(
-    () => setCursor((c) => Math.min(queue.length - 1, c + 1)),
-    [queue.length],
-  );
+  const atEnd = cursor < 0 || cursor >= queue.length - 1;
+  const goPrev = useCallback(() => {
+    if (cursor > 0) void openQueued(queue[cursor - 1]);
+  }, [cursor, queue, openQueued]);
+  const goNext = useCallback(() => {
+    if (cursor >= 0 && cursor < queue.length - 1) {
+      void openQueued(queue[cursor + 1]);
+    }
+  }, [cursor, queue, openQueued]);
 
   const setApproved = useCallback((fileId: FileId, value: boolean) => {
     setApprovedIds((prev) => {
@@ -246,11 +210,12 @@ const Review = (_props: BaseToolProps) => {
   // review" first would be wrong the moment it finishes with a queue.
   if (!swept) return null;
 
-  // An empty workbench is fine — queued files open from storage on demand.
-  // Once every entry is gone (all deleted), the queue is done rather than empty.
+  // No open document means nothing to review — the reviewer closed it, or came
+  // in with an empty workbench. Every flagged file already dealt with reads as
+  // done rather than empty.
   const queueDone =
     queue.length > 0 && queue.every((id) => unresolvableIds.has(id));
-  if (queue.length === 0 || queueDone) {
+  if (!currentId || queueDone) {
     return (
       <Stack p="sm">
         <EmptyState
@@ -273,7 +238,8 @@ const Review = (_props: BaseToolProps) => {
     );
   }
 
-  const queueNav = queue.length > 1 && (
+  // Only meaningful once the open document is one of the queued files.
+  const queueNav = queue.length > 1 && cursor >= 0 && (
     <div className="review-pager">
       <ActionIcon
         variant="tertiary"

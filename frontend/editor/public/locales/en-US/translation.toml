@@ -6179,6 +6179,7 @@ successMessage = "Your license has been successfully activated. You can now clos
 outputsUnavailable = "Policy outputs are no longer available to download."
 partialOutputsUnavailable = "Some policy outputs are no longer available to download."
 runNotFound = "The enforcement run could no longer be found."
+serverUnreachable = "Lost contact with the server while the run was in flight."
 timedOut = "Enforcement timed out before the run could finish."
 
 [policies.enforcement]
