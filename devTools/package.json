@@ -2,12 +2,12 @@
   "name": "stirling-pdf",
   "version": "1.0.0",
   "scripts": {
-    "lint:css:check": "stylelint \"../app/core/src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json",
-    "lint:css:fix": "stylelint \"../app/core/src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json --fix"
+    "lint:css:check": "stylelint \"../app/**/src/main/resources/static/css/*.css\" \"../frontend/editor/src/**/*.css\" --config .stylelintrc.json",
+    "lint:css:fix": "stylelint \"../app/**/src/main/resources/static/css/*.css\" \"../frontend/editor/src/**/*.css\" --config .stylelintrc.json --fix"
   },
   "devDependencies": {
-    "@stylistic/stylelint-plugin": "^5.1.0",
-    "stylelint": "^17.8.0",
+    "@stylistic/stylelint-plugin": "^5.2.1",
+    "stylelint": "^17.14.1",
     "stylelint-config-standard": "^40.0.0"
   }
 }
