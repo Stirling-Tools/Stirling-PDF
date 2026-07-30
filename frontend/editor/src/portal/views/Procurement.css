@@ -1334,18 +1334,35 @@
    as the act of signing, with the consent directly beneath them and no rule between. Fields shrink
    below the row's usual floor so all three plus the button hold one line at the takeover's width;
    they wrap rather than clip if a translation runs long. */
+/* No rule above it: the tray's grey ends where the signature block begins, which is boundary enough,
+   and a border there cut the document off from the page it sits on. */
 .portal-agreement__signbar {
   flex-direction: column;
   align-items: stretch;
   gap: 0.6rem;
+  border-top: none;
 }
-/* Bottom-aligned, not centred: the fields are a label above an input, so centring the button against
-   the whole block leaves it riding 11px above the inputs it belongs to. Sharing their baseline puts it
-   on the input row, where a button of the same height reads as centred on them. */
+/* Bottom-aligned: a field is a label above an input, so aligning to the block's centre or its top
+   leaves the button off the input row. Sharing the input's bottom edge puts its centre on theirs, both
+   being 37px. The gate note is deliberately NOT in this row — hanging it off the button would make the
+   column taller than the fields and drag the button back up off the row. */
 .portal-agreement__signrow {
   display: flex;
   align-items: flex-end;
   gap: 0.9rem;
+}
+/* Consent on the left, the gate's state on the right so it lands under the button it explains. */
+.portal-agreement__signfoot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.portal-agreement__gate {
+  flex: 0 0 auto;
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
 }
 .portal-agreement__signrow .portal-agreement__signfields {
   flex: 1;
@@ -1383,20 +1400,22 @@
   flex: 1 1 auto;
   min-height: 0;
 }
+/* The tray is the scroll container, so the paper inside it behaves like a page being scrolled past a
+   window: flush to the footer while there is more to read, and revealing the tray's bottom padding
+   only at the end. Scrolling the paper instead left a permanent grey band under it, which read as a
+   box with contents rather than a document. */
 .portal-agreement__tray {
   background: var(--c-surface-sunken);
   padding: 14px var(--flowmodal-inset);
   margin: 0 calc(-1 * var(--flowmodal-inset));
-  display: flex;
   flex: 1 1 auto;
   min-height: 0;
+  overflow-y: auto;
 }
 .portal-agreement__doc {
-  flex: 1 1 auto;
-  width: 100%;
-  /* A floor so a short document still reads as a page, and no ceiling so a long one fills. */
+  /* A floor so a short document still reads as a page; no ceiling, so a long one runs on and the tray
+     does the scrolling. */
   min-height: 16rem;
-  overflow-y: auto;
   padding: 1.35rem 1.6rem;
   border: 1px solid var(--c-border-subtle);
   border-radius: 12px;

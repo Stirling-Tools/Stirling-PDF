@@ -137,12 +137,15 @@ export function ProcurementAgreement({
         }
       />
 
-      <div className="portal-agreement__tray">
-        <div
-          className="portal-agreement__doc portal-agreement__scroll"
-          ref={docRef}
-          onScroll={onScroll}
-        >
+      {/* The tray scrolls, not the paper. The paper is its natural height inside it, so mid-document it
+          runs flush to the footer with no grey beneath, and the tray's bottom padding only comes into
+          view once the buyer reaches the end — the page ending is what shows they got there. */}
+      <div
+        className="portal-agreement__tray portal-agreement__scroll"
+        ref={docRef}
+        onScroll={onScroll}
+      >
+        <div className="portal-agreement__doc">
           {loading && <p>{t("portal.procurement.agreement.loading")}</p>}
           {!loading && !doc && (
             <p>{t("portal.procurement.agreement.loadError")}</p>
@@ -170,12 +173,6 @@ export function ProcurementAgreement({
           )}
         </div>
       </div>
-
-      {!scrolledToEnd && doc && (
-        <p className="portal-qb__hint">
-          {t("portal.procurement.agreement.scrollHint")}
-        </p>
-      )}
 
       {error && (
         <p className="portal-proc__error">
@@ -242,15 +239,24 @@ export function ProcurementAgreement({
           </Button>
         </div>
 
-        <label className="portal-agreement__accept">
-          <input
-            type="checkbox"
-            checked={confirmed}
-            disabled={!scrolledToEnd}
-            onChange={(e) => setConfirmed(e.target.checked)}
-          />
-          <span>{t("portal.procurement.agreement.confirm")}</span>
-        </label>
+        {/* Consent under the fields it qualifies; the gate's state under the button it gates, so the
+            reason signing is unavailable sits beside the unavailable thing. */}
+        <div className="portal-agreement__signfoot">
+          <label className="portal-agreement__accept">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              disabled={!scrolledToEnd}
+              onChange={(e) => setConfirmed(e.target.checked)}
+            />
+            <span>{t("portal.procurement.agreement.confirm")}</span>
+          </label>
+          {doc && !scrolledToEnd && (
+            <span className="portal-agreement__gate">
+              {t("portal.procurement.agreement.scrollHint")}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
