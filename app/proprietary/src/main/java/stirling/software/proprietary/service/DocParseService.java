@@ -126,10 +126,12 @@ public class DocParseService {
         List<AiPageText> pages;
         DocparseTier tier;
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
-            pages = extractPages(document);
             tier =
                     resolveTier(
                             mode, capabilityService.capabilities(), false, looksScanned(document));
+            // The advanced tier parses the raw file engine-side; extracting pages
+            // too would double both the PDFBox work and the payload.
+            pages = tier == DocparseTier.BASIC ? extractPages(document) : null;
         }
         String callerId = currentUserId();
         // Null expiresAt = persistent until explicit delete; ingest here is a deliberate

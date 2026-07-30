@@ -142,7 +142,8 @@ class DocParseServiceTest {
         JsonNode request = ingestAndCaptureRequest("doc-1", true, false, false);
         assertEquals("invoice.pdf", request.get("fileName").asText());
         assertEquals("doc-1", request.get("documentId").asText());
-        assertEquals("auto", request.get("mode").asText());
+        // AUTO resolves to a concrete tier before the wire; without the addon that is basic.
+        assertEquals("basic", request.get("mode").asText());
         assertEquals(2, request.get("pages").size());
         assertEquals("page one", request.get("pages").get(0).get("text").asText());
         assertEquals(512, request.get("chunkSize").asInt());

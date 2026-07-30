@@ -118,12 +118,20 @@ async def rag_ingest(
     documents: Annotated[DocumentService, Depends(get_document_service)],
     user_id: Annotated[UserId, Depends(require_user_id)],
 ) -> RagIngestResponse:
-    """Chunk like ``/chunk``, then embed and index into the document store.
-    Re-ingesting a documentId replaces its stored content (never duplicates)."""
+    """Chunk the document, then embed and index into the document store.
+    Re-ingesting a documentId replaces its stored content (never duplicates).
+    ``index=False`` skips the store; ``includeMarkdown``/``includeChunks``
+    echo the content back for corpus export."""
     settings = _settings()
     caps = _capabilities(settings)
     chunk_size = request.chunk_size if request.chunk_size is not None else settings.rag_chunk_size
     overlap = request.overlap if request.overlap is not None else settings.rag_chunk_overlap
+
+    if not request.index and not request.include_markdown and not request.include_chunks:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="nothing to do: enable index, includeMarkdown, or includeChunks",
+        )
 
     use_advanced = request.mode is DocparseMode.ADVANCED or (
         request.mode is DocparseMode.AUTO and caps.advanced_installed and request.content_base64 is not None
@@ -151,19 +159,23 @@ async def rag_ingest(
         if request.include_markdown:
             markdown = "\n\n".join(p.text for p in request.pages if p.text.strip())
 
-    # Owner/ACL semantics mirror IngestDocumentRequest; omitted values default
-    # to the authenticated caller (personal-doc behaviour).
-    owner_id = request.owner_id if request.owner_id is not None else OwnerId(user_id)
-    read_principals = request.read_principals or [PrincipalId(owner_id)]
-    chunks_indexed = await documents.ingest_prepared(
-        collection=request.document_id,
-        chunks=[(chunk.text, _chunk_metadata(chunk)) for chunk in chunked.chunks],
-        source=request.source,
-        owner_id=owner_id,
-        read_principals=read_principals,
-        expires_at=request.expires_at,
+    chunks_indexed = 0
+    if request.index:
+        # Owner/ACL semantics mirror IngestDocumentRequest; omitted values default
+        # to the authenticated caller (personal-doc behaviour).
+        owner_id = request.owner_id if request.owner_id is not None else OwnerId(user_id)
+        read_principals = request.read_principals or [PrincipalId(owner_id)]
+        chunks_indexed = await documents.ingest_prepared(
+            collection=request.document_id,
+            chunks=[(chunk.text, _chunk_metadata(chunk)) for chunk in chunked.chunks],
+            source=request.source,
+            owner_id=owner_id,
+            read_principals=read_principals,
+            expires_at=request.expires_at,
+        )
+    logger.info(
+        "docparse: rag-ingested %s: %d chunks indexed, %d pages", request.document_id, chunks_indexed, page_count
     )
-    logger.info("docparse: rag-ingested %s as %d chunks", request.document_id, chunks_indexed)
     return RagIngestResponse(
         mode=chunked.mode,
         document_id=request.document_id,
