@@ -206,6 +206,46 @@ class SuggestSchemaResponse(ApiModel):
     fields: list[SuggestedField] = Field(default_factory=list)
 
 
+class SplitPart(ApiModel):
+    start_page: int = Field(ge=1)
+    end_page: int = Field(ge=1)
+    label: str
+    confidence: float = Field(ge=0.0, le=1.0)
+
+
+class SmartSplitRequest(ApiModel):
+    file_name: str = Field(min_length=1)
+    rule: str = Field(
+        min_length=1, description="Natural-language boundary rule, e.g. 'split where a new invoice starts'."
+    )
+    pages: list[PageText]
+    max_parts: int = Field(default=50, ge=1, le=500)
+
+
+class SmartSplitResponse(ApiModel):
+    parts: list[SplitPart] = Field(default_factory=list)
+
+
+class ChunkDocumentRequest(ApiModel):
+    file_name: str = Field(min_length=1)
+    pages: list[PageText] | None = None
+    content_base64: str | None = None
+    chunk_size: int = Field(default=512, ge=64, le=32_768)
+    overlap: int = Field(default=64, ge=0, le=4_096)
+    mode: DocparseMode = DocparseMode.AUTO
+
+
+class FillDocxRequest(ApiModel):
+    template_base64: str = Field(min_length=1)
+    data: dict[str, JsonValue]
+
+
+class FillDocxResponse(ApiModel):
+    docx_base64: str
+    replaced: int = Field(ge=0)
+    missing: list[str] = Field(default_factory=list)
+
+
 class DocparseCapabilities(ApiModel):
     """What the engine can actually do right now; Java caches and republishes this."""
 

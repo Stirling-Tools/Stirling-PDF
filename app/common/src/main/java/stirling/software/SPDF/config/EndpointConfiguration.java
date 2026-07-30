@@ -433,11 +433,16 @@ public class EndpointConfiguration {
         addEndpointToGroup("Automation", "automate"); // Alias for handleData (user-friendly name)
         addEndpointToGroup("Automation", "pipeline");
 
-        // Adding endpoints to "DocParse" group (ingestion: chunk + index + export)
+        // Adding endpoints to "DocParse" group (parsing, splitting, chunking, extraction,
+        // templating)
+        addEndpointToGroup("DocParse", "parse-document");
+        addEndpointToGroup("DocParse", "extract-fields");
+        addEndpointToGroup("DocParse", "smart-split");
+        addEndpointToGroup("DocParse", "chunk-document");
         addEndpointToGroup("DocParse", "rag-ingest");
         addEndpointToGroup("DocParse", "extract-tables");
-        addEndpointToGroup("DocParse", "extract-fields");
         addEndpointToGroup("DocParse", "suggest-schema");
+        addEndpointToGroup("DocParse", "fill-template");
 
         // Adding endpoints to "DeveloperTools" group
         addEndpointToGroup("DeveloperTools", "show-javascript");

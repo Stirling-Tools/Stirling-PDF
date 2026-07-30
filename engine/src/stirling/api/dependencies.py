@@ -15,7 +15,7 @@ from stirling.agents import (
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.config import AppSettings, load_settings
-from stirling.docparse import ExtractFieldsAgent, SuggestSchemaAgent
+from stirling.docparse import ExtractFieldsAgent, SmartSplitAgent, SuggestSchemaAgent
 from stirling.documents import DocumentService
 from stirling.models import UserId
 from stirling.services import AppRuntime, current_user_id
@@ -67,6 +67,10 @@ def get_extract_fields_agent(request: Request) -> ExtractFieldsAgent:
 
 def get_suggest_schema_agent(request: Request) -> SuggestSchemaAgent:
     return request.app.state.suggest_schema_agent
+
+
+def get_smart_split_agent(request: Request) -> SmartSplitAgent:
+    return request.app.state.smart_split_agent
 
 
 def require_user_id() -> UserId:

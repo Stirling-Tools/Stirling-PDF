@@ -2986,6 +2986,38 @@ summary_one = "Ran 1 tool"
 summary_other = "Ran {{count}} tools"
 unknownTool = "Unknown tool"
 
+[chunkDocument]
+intro = "Turns a document into retrieval-ready chunks in three layers, so answers cite the right section instead of a random page."
+processorCallout = "To index automatically, add the 'Index into knowledge base' step to an ingestion policy in the"
+processorLink = "Processor"
+submit = "Prepare chunks"
+
+[chunkDocument.chunkSize]
+label = "Chunk size (characters)"
+
+[chunkDocument.error]
+failed = "Failed to chunk document"
+
+[chunkDocument.layers]
+chunk = "Structure-aware chunks: each carries its heading breadcrumb and page range"
+embed = "Ready to embed: exported as JSONL for any vector store"
+parse = "Layout-aware parse: headings, paragraphs, and tables are recognized as structure"
+
+[chunkDocument.mode]
+advanced = "Advanced"
+auto = "Auto"
+basic = "Basic"
+label = "Mode"
+
+[chunkDocument.overlap]
+label = "Overlap (characters)"
+
+[chunkDocument.results]
+title = "Chunks (JSONL)"
+
+[chunkDocument.settings]
+title = "Chunking settings"
+
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
@@ -4240,6 +4272,24 @@ upload = "Upload"
 uploadFile = "Upload File"
 uploadFiles = "Upload Files"
 
+[fillTemplate]
+hint = "The input file must be a .docx template (not a PDF). Each placeholder in the template is replaced with the matching JSON value."
+intro = "Replaces the placeholders in a Word (.docx) template with your JSON data and returns the filled document - deterministic, no AI involved."
+submit = "Fill template"
+
+[fillTemplate.data]
+invalid = "Enter a valid JSON object"
+label = "Data (JSON)"
+
+[fillTemplate.error]
+failed = "Failed to fill template"
+
+[fillTemplate.results]
+title = "Filled document"
+
+[fillTemplate.settings]
+title = "Template data"
+
 [firstLogin]
 allFieldsRequired = "All fields are required"
 changePassword = "Change Password"
@@ -4579,6 +4629,11 @@ desc = "Change document restrictions and permissions"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
 
+[home.chunkDocument]
+desc = "Layout-aware parse to structure-aware chunks with heading breadcrumbs and page ranges, ready to embed"
+tags = "chunk,RAG,prepare,split text,segments,embedding,vector,ingest,LLM,retrieval,JSONL,overlap,knowledge base,index"
+title = "Prepare for RAG"
+
 [home.compare]
 desc = "Compares and shows the differences between 2 PDF Documents"
 tags = "difference,compare,diff,compare PDFs,compare documents,find differences,show differences,changes,what changed,track changes,revisions,version compare,side by side,contrast,delta"
@@ -4639,6 +4694,11 @@ desc = "Extract specific pages from a PDF document"
 tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Extract Pages"
 
+[home.fillTemplate]
+desc = "Fill a DOCX template's placeholders from JSON data"
+tags = "template,DOCX,fill,merge fields,mail merge,generate document,placeholders,letters,contracts,Word"
+title = "Fill Template"
+
 [home.flatten]
 desc = "Remove all interactive elements and forms from a PDF"
 tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
@@ -4691,6 +4751,11 @@ title = "Overlay PDFs"
 desc = "Merge multiple pages of a PDF document into a single page"
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "Multi-Page Layout"
+
+[home.parseDocument]
+desc = "Layout-aware parsing to structured JSON or Markdown, with optional OCR"
+tags = "parse,layout,structure,blocks,markdown,JSON,docling,OCR,scan,document understanding,convert"
+title = "Parse Document"
 
 [home.pdfCommentAgent]
 desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
@@ -4804,6 +4869,11 @@ title = "Show Javascript"
 desc = "Adds signature to PDF by drawing, text or image"
 tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sign"
+
+[home.smartSplit]
+desc = "Split a PDF into sub-documents using a natural-language boundary rule"
+tags = "split,smart,boundaries,separate,invoices,batches,content split,divide,rules,auto split"
+title = "Smart Split"
 
 [home.split]
 desc = "Split PDFs into multiple documents"
@@ -5562,6 +5632,33 @@ title = "Page Ranges"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
+
+[parseDocument]
+intro = "Reads the document's layout - headings, paragraphs, tables - and turns it into clean structured JSON or Markdown you can feed to other systems."
+submit = "Parse document"
+
+[parseDocument.error]
+failed = "Failed to parse document"
+
+[parseDocument.mode]
+advanced = "Advanced"
+auto = "Auto"
+basic = "Basic"
+label = "Mode"
+
+[parseDocument.outputFormat]
+json = "JSON"
+label = "Output format"
+markdown = "Markdown"
+
+[parseDocument.results]
+title = "Parsed output"
+
+[parseDocument.settings]
+title = "Parse settings"
+
+[parseDocument.withOcr]
+label = "Apply OCR to scanned pages (recommended)"
 
 [payg.activity]
 docs = "docs"
@@ -10366,6 +10463,26 @@ large = "Large"
 medium = "Medium"
 small = "Small"
 x-large = "X-Large"
+
+[smartSplit]
+intro = "Describe where sub-documents start in plain language and AI reads the content to find those boundaries - no page numbers needed."
+submit = "Split document"
+
+[smartSplit.error]
+failed = "Failed to split document"
+
+[smartSplit.maxParts]
+label = "Maximum parts"
+
+[smartSplit.results]
+title = "Split documents"
+
+[smartSplit.rule]
+label = "Split rule"
+placeholder = "e.g. Start a new document at every invoice header"
+
+[smartSplit.settings]
+title = "Split settings"
 
 [split]
 resultsTitle = "Split Results"

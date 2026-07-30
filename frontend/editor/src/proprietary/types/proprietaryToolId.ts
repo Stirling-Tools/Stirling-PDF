@@ -5,7 +5,13 @@
  */
 
 // The DocParse tool family; visible only when the backend reports docparseEnabled.
-export const PROPRIETARY_REGULAR_TOOL_IDS = ["extractFields"] as const;
+export const PROPRIETARY_REGULAR_TOOL_IDS = [
+  "parseDocument",
+  "extractFields",
+  "smartSplit",
+  "chunkDocument",
+  "fillTemplate",
+] as const;
 
 // "ai-workflow" is a generic marker stamped onto files produced by the agents
 // chat orchestrator (which may invoke one or more underlying tools). Lives here

@@ -9,6 +9,7 @@ from stirling.docparse.extractor import (
     build_output_model,
     find_quote,
 )
+from stirling.docparse.splitter import _Boundary, _SplitOutput, validate_boundaries
 
 
 def _pages() -> list[PageText]:
@@ -41,6 +42,33 @@ def test_find_quote_is_case_insensitive_and_crosses_pages() -> None:
 def test_find_quote_missing_returns_none() -> None:
     assert find_quote("does not appear", _pages()) is None
     assert find_quote("   ", _pages()) is None
+
+
+def test_validate_boundaries_partitions_cleanly() -> None:
+    output = _SplitOutput(
+        boundaries=[
+            _Boundary(start_page=4, label="Invoice B", confidence=0.8),
+            _Boundary(start_page=1, label="Invoice A", confidence=0.9),
+            _Boundary(start_page=4, label="dup", confidence=0.1),
+            _Boundary(start_page=99, label="out of range", confidence=0.5),
+        ]
+    )
+    parts = validate_boundaries(output, page_count=6, max_parts=10)
+    assert [(p.start_page, p.end_page) for p in parts] == [(1, 3), (4, 6)]
+    assert parts[0].label == "Invoice A"
+
+
+def test_validate_boundaries_inserts_page_one() -> None:
+    output = _SplitOutput(boundaries=[_Boundary(start_page=3, label="Part", confidence=0.7)])
+    parts = validate_boundaries(output, page_count=5, max_parts=10)
+    assert parts[0].start_page == 1
+    assert parts[1].start_page == 3
+    assert parts[-1].end_page == 5
+
+
+def test_validate_boundaries_empty_output_spans_whole_file() -> None:
+    parts = validate_boundaries(_SplitOutput(), page_count=7, max_parts=10)
+    assert [(p.start_page, p.end_page) for p in parts] == [(1, 7)]
 
 
 def _answers(quote: str | None, confidence: float) -> BaseModel:

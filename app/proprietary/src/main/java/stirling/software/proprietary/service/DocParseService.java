@@ -20,6 +20,9 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.model.api.ai.AiPageText;
+import stirling.software.proprietary.model.docparse.ChunkDocumentRequest;
+import stirling.software.proprietary.model.docparse.ChunkDocumentResponse;
+import stirling.software.proprietary.model.docparse.DocBlock;
 import stirling.software.proprietary.model.docparse.DocparseCapabilities;
 import stirling.software.proprietary.model.docparse.DocparseCapabilitiesView;
 import stirling.software.proprietary.model.docparse.DocparseMode;
@@ -28,8 +31,14 @@ import stirling.software.proprietary.model.docparse.ExtractFieldsRequest;
 import stirling.software.proprietary.model.docparse.ExtractFieldsResponse;
 import stirling.software.proprietary.model.docparse.ExtractTablesRequest;
 import stirling.software.proprietary.model.docparse.ExtractTablesResponse;
+import stirling.software.proprietary.model.docparse.FillDocxRequest;
+import stirling.software.proprietary.model.docparse.FillDocxResponse;
+import stirling.software.proprietary.model.docparse.ParseDocumentRequest;
+import stirling.software.proprietary.model.docparse.ParseDocumentResponse;
 import stirling.software.proprietary.model.docparse.RagIngestRequest;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
+import stirling.software.proprietary.model.docparse.SmartSplitRequest;
+import stirling.software.proprietary.model.docparse.SmartSplitResponse;
 import stirling.software.proprietary.model.docparse.SuggestSchemaRequest;
 import stirling.software.proprietary.model.docparse.SuggestSchemaResponse;
 
@@ -46,10 +55,14 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class DocParseService {
 
-    private static final String RAG_INGEST_ENDPOINT = "/api/v1/docparse/rag-ingest";
-    private static final String TABLES_ENDPOINT = "/api/v1/docparse/tables";
+    private static final String PARSE_ENDPOINT = "/api/v1/docparse/parse";
     private static final String EXTRACT_ENDPOINT = "/api/v1/docparse/extract";
+    private static final String SPLIT_ENDPOINT = "/api/v1/docparse/split";
+    private static final String CHUNK_ENDPOINT = "/api/v1/docparse/chunk";
+    private static final String TABLES_ENDPOINT = "/api/v1/docparse/tables";
+    private static final String FILL_DOCX_ENDPOINT = "/api/v1/docparse/fill-docx";
     private static final String SUGGEST_SCHEMA_ENDPOINT = "/api/v1/docparse/suggest-schema";
+    private static final String RAG_INGEST_ENDPOINT = "/api/v1/docparse/rag-ingest";
 
     /** Below this average of extractable chars per page the document is treated as scanned. */
     static final int SCANNED_AVG_CHARS_PER_PAGE = 100;
@@ -102,6 +115,72 @@ public class DocParseService {
                 capabilities.advancedInstalled(),
                 capabilityService.isEngineReachable(),
                 capabilities.doclingVersion());
+    }
+
+    public ParseDocumentResponse parse(
+            MultipartFile file, DocparseMode requestedMode, boolean withOcr) throws IOException {
+        requireEnabled();
+        DocparseTier tier;
+        try (PDDocument document = pdfDocumentFactory.load(file, true)) {
+            tier =
+                    resolveTier(
+                            requestedMode,
+                            capabilityService.capabilities(),
+                            false,
+                            looksScanned(document));
+            if (tier == DocparseTier.BASIC) {
+                return basicParse(document);
+            }
+        }
+        ParseDocumentRequest request =
+                new ParseDocumentRequest(fileName(file), encodeBase64(file), withOcr);
+        String responseJson =
+                aiEngineClient.postLongRunning(
+                        PARSE_ENDPOINT, objectMapper.writeValueAsString(request), currentUserId());
+        return objectMapper.readValue(responseJson, ParseDocumentResponse.class);
+    }
+
+    public SmartSplitResponse split(MultipartFile file, String rule, int maxParts)
+            throws IOException {
+        requireEnabled();
+        if (rule == null || rule.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A split rule is required");
+        }
+        List<AiPageText> pages;
+        try (PDDocument document = pdfDocumentFactory.load(file, true)) {
+            pages = extractPages(document);
+        }
+        SmartSplitRequest request =
+                new SmartSplitRequest(fileName(file), rule, pages, Math.clamp(maxParts, 1, 500));
+        String responseJson =
+                aiEngineClient.post(
+                        SPLIT_ENDPOINT, objectMapper.writeValueAsString(request), currentUserId());
+        return objectMapper.readValue(responseJson, SmartSplitResponse.class);
+    }
+
+    public ChunkDocumentResponse chunk(
+            MultipartFile file, int chunkSize, int overlap, DocparseMode mode) throws IOException {
+        requireEnabled();
+        List<AiPageText> pages;
+        DocparseTier tier;
+        try (PDDocument document = pdfDocumentFactory.load(file, true)) {
+            pages = extractPages(document);
+            tier =
+                    resolveTier(
+                            mode, capabilityService.capabilities(), false, looksScanned(document));
+        }
+        ChunkDocumentRequest request =
+                new ChunkDocumentRequest(
+                        fileName(file),
+                        pages,
+                        tier == DocparseTier.ADVANCED ? encodeBase64(file) : null,
+                        Math.clamp(chunkSize, 64, 32_768),
+                        Math.clamp(overlap, 0, 4_096),
+                        toMode(tier));
+        String responseJson =
+                aiEngineClient.postLongRunning(
+                        CHUNK_ENDPOINT, objectMapper.writeValueAsString(request), currentUserId());
+        return objectMapper.readValue(responseJson, ChunkDocumentResponse.class);
     }
 
     /**
@@ -267,6 +346,13 @@ public class DocParseService {
         return node;
     }
 
+    private static void requireNonBlank(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "'" + fieldName + "' is required");
+        }
+    }
+
     /**
      * The settings mode wins when stricter: a settings {@code basic} always forces basic, a
      * settings {@code advanced} upgrades everything except an explicit basic request.
@@ -325,6 +411,41 @@ public class DocParseService {
                 aiEngineClient.postLongRunning(
                         TABLES_ENDPOINT, objectMapper.writeValueAsString(request), currentUserId());
         return objectMapper.readValue(responseJson, ExtractTablesResponse.class);
+    }
+
+    public FillDocxResponse fillDocx(MultipartFile templateFile, String dataJson)
+            throws IOException {
+        requireEnabled();
+        JsonNode data = parseJsonObject(dataJson, "data");
+        FillDocxRequest request =
+                new FillDocxRequest(
+                        Base64.getEncoder().encodeToString(templateFile.getBytes()), data);
+        String responseJson =
+                aiEngineClient.post(
+                        FILL_DOCX_ENDPOINT,
+                        objectMapper.writeValueAsString(request),
+                        currentUserId());
+        return objectMapper.readValue(responseJson, FillDocxResponse.class);
+    }
+
+    /** Basic tier parse: PDFBox text layer only, one paragraph block per non-blank page. */
+    ParseDocumentResponse basicParse(PDDocument document) throws IOException {
+        int pageCount = document.getNumberOfPages();
+        List<DocBlock> blocks = new ArrayList<>();
+        StringBuilder markdown = new StringBuilder();
+        for (int page = 1; page <= pageCount; page++) {
+            String text = pdfContentExtractor.extractPageTextRaw(document, page);
+            if (text == null || text.isBlank()) {
+                continue;
+            }
+            blocks.add(new DocBlock("paragraph", text, page, null, null));
+            if (!markdown.isEmpty()) {
+                markdown.append("\n\n");
+            }
+            markdown.append(text);
+        }
+        return new ParseDocumentResponse(
+                DocparseTier.BASIC, pageCount, blocks, List.of(), markdown.toString(), false);
     }
 
     /** Extract per-page text for the engine, capped by the shared aiEngine limits. */

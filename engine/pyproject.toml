@@ -14,6 +14,8 @@ dependencies = [
     "pydantic-ai-slim[voyageai]>=1.99.0,<2.0.0",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.2.1",
+    # Small (MIT) and always installed: DOCX template filling needs no addon.
+    "python-docx>=1.1.2",
     "sqlite-vec>=0.1.6",
     "uvicorn>=0.35.0",
     "opentelemetry-sdk>=1.39.0",

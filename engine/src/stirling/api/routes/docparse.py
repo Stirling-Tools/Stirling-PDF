@@ -1,9 +1,9 @@
-"""DocParse routes: parse, tables, rag-ingest, capabilities.
+"""DocParse routes: parse, extract, split, chunk, tables, fill, capabilities.
 
-Tier routing: requests carrying raw file bytes can use the advanced (Docling)
-path when the addon is installed; text-only requests run the basic path.
-Forcing ``advanced`` without the addon returns 501 with a machine-readable
-``addonRequired`` detail that Java maps onto its own error.
+Tier routing happens here: requests carrying raw file bytes can use the
+advanced (Docling) path when the addon is installed; text-only requests run
+the basic path. Forcing ``advanced`` without the addon returns 501 with a
+machine-readable ``addonRequired`` detail that Java maps onto its own error.
 """
 
 from __future__ import annotations
@@ -19,11 +19,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from stirling.api.dependencies import (
     get_document_service,
     get_extract_fields_agent,
+    get_smart_split_agent,
     get_suggest_schema_agent,
     require_user_id,
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts.docparse import (
+    ChunkDocumentRequest,
+    ChunkDocumentResponse,
     DocChunk,
     DocparseCapabilities,
     DocparseMode,
@@ -32,17 +35,22 @@ from stirling.contracts.docparse import (
     ExtractFieldsResponse,
     ExtractTablesRequest,
     ExtractTablesResponse,
+    FillDocxRequest,
+    FillDocxResponse,
     ParseDocumentRequest,
     ParseDocumentResponse,
     RagIngestRequest,
     RagIngestResponse,
+    SmartSplitRequest,
+    SmartSplitResponse,
     SuggestSchemaRequest,
     SuggestSchemaResponse,
 )
-from stirling.docparse import basic_chunks, probe_capabilities
+from stirling.docparse import basic_chunks, fill_docx, probe_capabilities
 from stirling.docparse.capability import models_dir
 from stirling.docparse.chunking import advanced_chunks
 from stirling.docparse.extractor import ExtractFieldsAgent, SchemaError, pages_from_parse
+from stirling.docparse.splitter import SmartSplitAgent
 from stirling.docparse.suggest_schema import SuggestSchemaAgent
 from stirling.documents import DocumentService
 from stirling.documents.service import CONTENT_TYPE_METADATA_KEY, DOCPARSE_CHUNK_CONTENT_TYPE
@@ -170,6 +178,39 @@ async def suggest_schema(
     return await agent.suggest(request, pages, tier)
 
 
+@router.post("/split", response_model=SmartSplitResponse)
+async def smart_split(
+    request: SmartSplitRequest,
+    agent: Annotated[SmartSplitAgent, Depends(get_smart_split_agent)],
+) -> SmartSplitResponse:
+    return await agent.split(request)
+
+
+@router.post("/chunk", response_model=ChunkDocumentResponse)
+async def chunk_document(request: ChunkDocumentRequest) -> ChunkDocumentResponse:
+    settings = _settings()
+    caps = _capabilities(settings)
+    use_advanced = request.mode is DocparseMode.ADVANCED or (
+        request.mode is DocparseMode.AUTO and caps.advanced_installed and request.content_base64 is not None
+    )
+    if use_advanced:
+        artifacts = _require_advanced(settings)
+        if request.content_base64 is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="advanced chunking needs contentBase64 (the raw file)",
+            )
+        parse = await _parse_advanced(request.content_base64, request.file_name, with_ocr=True, artifacts=artifacts)
+        return advanced_chunks(parse, request.chunk_size, request.overlap)
+
+    if not request.pages:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="send pages (extracted text) or contentBase64 with the addon installed",
+        )
+    return basic_chunks(request.pages, request.chunk_size, request.overlap)
+
+
 def _chunk_metadata(chunk: DocChunk) -> dict[str, str]:
     meta = {CONTENT_TYPE_METADATA_KEY: DOCPARSE_CHUNK_CONTENT_TYPE}
     if chunk.page_start is not None:
@@ -261,3 +302,13 @@ async def extract_tables(request: ExtractTablesRequest) -> ExtractTablesResponse
     artifacts = _require_advanced(settings)
     parse = await _parse_advanced(request.content_base64, request.file_name, with_ocr=True, artifacts=artifacts)
     return ExtractTablesResponse(mode=parse.mode, tables=parse.tables)
+
+
+@router.post("/fill-docx", response_model=FillDocxResponse)
+async def fill_docx_template(request: FillDocxRequest) -> FillDocxResponse:
+    try:
+        return await anyio.to_thread.run_sync(lambda: fill_docx(request))
+    except (KeyError, ValueError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"invalid docx template: {error}"
+        ) from error
