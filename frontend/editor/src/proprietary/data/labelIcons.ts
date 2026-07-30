@@ -1,22 +1,21 @@
 /**
- * Curated palette of icons a classification label can use, shown in the label
- * icon picker and rendered in the file sidebar's label groups. Keys are
- * Material Symbols names rendered via {@link LocalIcon}.
+ * Curated palette of icons the classification labels use, rendered in the file
+ * sidebar's label/category groups. Keys are Material Symbols names rendered via
+ * {@link LocalIcon}.
  *
- * IMPORTANT: each entry is written as an `icon: "…"` literal so the icon-bundler
- * (`scripts/generate-icons.js`, which regex-scans for icon literals) picks every
- * one up and bundles it — otherwise a picked icon would fall back to the CDN and
- * render blank offline. After adding/removing entries run `task frontend:prepare:icons`.
- *
- * Search is intentionally omitted for now (no synonyms to maintain); the palette
- * is small enough to eyeball.
+ * IMPORTANT — this list is also the icon BUNDLING MANIFEST for classification.
+ * The label/family icons live in `classificationLabels.json`, but the bundler
+ * (`scripts/generate-icons.js`) only regex-scans `.ts/.tsx` for `icon: "…"`
+ * literals, not JSON — so every icon those labels use must appear here as a
+ * literal or it falls back to the CDN and renders blank offline. Do NOT delete
+ * `LABEL_ICON_OPTIONS` as "unused": nothing imports it, but it's load-bearing
+ * for offline icons. After editing, run `task frontend:prepare:icons`.
  */
 
 export interface LabelIconOption {
   /** Material Symbols key (no `material-symbols:` prefix). */
   icon: string;
-  /** Short English name — the en-US default for the icon's tooltip/aria; the
-   *  picker translates it via `policies.labels.iconName.<icon>`. */
+  /** Short English name for the icon (documentation only). */
   label: string;
 }
 
@@ -188,8 +187,3 @@ export const LABEL_ICON_OPTIONS: LabelIconOption[] = [
   { icon: "recycling", label: "Recycling" },
   { icon: "agriculture", label: "Agriculture" },
 ];
-
-/** Set of valid palette keys, for validating a stored/imported icon. */
-export const LABEL_ICON_KEYS: ReadonlySet<string> = new Set(
-  LABEL_ICON_OPTIONS.map((option) => option.icon),
-);

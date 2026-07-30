@@ -13,7 +13,6 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
@@ -27,6 +26,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.s3.S3Config;
 import stirling.software.proprietary.policy.s3.S3ConnectionPool;
+import stirling.software.proprietary.policy.s3.S3ConnectionResolver;
 import stirling.software.proprietary.policy.s3.S3Identities;
 
 import software.amazon.awssdk.core.exception.SdkException;
@@ -53,12 +53,12 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class S3OutputSink implements PolicyOutputSink {
 
     private static final String TYPE = "s3";
 
     private final S3ConnectionPool connectionPool;
+    private final S3ConnectionResolver connectionResolver;
     private final ProcessedLedger processedLedger;
 
     @Override
@@ -72,19 +72,19 @@ public class S3OutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Config shape and endpoint guard only - no network probe, since write-only credentials
-     * (s3:PutObject without s3:ListBucket) are a legitimate setup for an output bucket and a
-     * listing probe would wrongly reject them.
+     * Connection resolution (including the saving user's right to use it) and endpoint guard only -
+     * no network probe, since write-only credentials (s3:PutObject without s3:ListBucket) are a
+     * legitimate setup for an output bucket and a listing probe would wrongly reject them.
      */
     @Override
     public void validate(OutputSpec spec) {
-        connectionPool.clientFor(S3Config.from(spec.options()));
+        connectionPool.clientFor(connectionResolver.resolve(spec.options()));
     }
 
     @Override
     public List<ResultFile> deliver(
             OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
-        S3Config config = S3Config.from(spec.options());
+        S3Config config = connectionResolver.resolve(spec.options());
         S3Client client = connectionPool.clientFor(config);
 
         List<ResultFile> results = new ArrayList<>();

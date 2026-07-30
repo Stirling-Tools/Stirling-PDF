@@ -2,18 +2,18 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-input);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
-  color: var(--color-text-1);
+  color: var(--c-text);
   transition:
     border-color var(--motion-fast),
     box-shadow var(--motion-fast);
 }
 
 .sui-select:focus-within {
-  border-color: var(--color-blue);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-primary) 16%, transparent);
 }
 
 .sui-select--sm {
@@ -53,8 +53,8 @@
  * select's color-scheme to the active SUI theme so the popup is always legible.
  */
 .sui-select__el option {
-  background-color: var(--color-surface);
-  color: var(--color-text-1);
+  background-color: var(--c-surface);
+  color: var(--c-text);
 }
 [data-theme="dark"] .sui-select__el {
   color-scheme: dark;
@@ -75,5 +75,5 @@
   display: inline-flex;
   align-items: center;
   pointer-events: none;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }

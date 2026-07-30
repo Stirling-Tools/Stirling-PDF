@@ -5,6 +5,8 @@ export interface OgEntry {
   title: string;
   description: string;
   noindex?: boolean;
+  /** Punchier social-card title; falls back to `title` for the <title> tag. */
+  ogTitle?: string;
 }
 
 export interface OgInjectOptions {

@@ -21,7 +21,6 @@ const mocks = vi.hoisted(() => ({
   createStirlingFilesAndStubs: vi.fn(),
 }));
 
-vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.fileStubs }),
   useFileManagement: () => ({

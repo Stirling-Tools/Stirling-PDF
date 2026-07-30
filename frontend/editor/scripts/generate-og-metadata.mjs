@@ -3,9 +3,10 @@
 // strings) plus the actual images in public/og_images.
 //
 // Outputs:
-//   src/core/data/ogImageMap.json     - { toolId: imageBasename }  (imported by the client)
+//   src/core/data/ogImageMap.json      - { toolId: imageBasename }  (imported by the client)
 //   src/core/data/urlSeoOverrides.json - { path: { title, description } } (client per-URL meta)
-//   public/og-metadata.json           - { default, byTool, byPath, navLinks } (read by the build-time OG prerender)
+//   public/og-metadata.json            - { default, byTool, byPath, navLinks } (prerender input, all flavors)
+//   public/og-metadata.saas.json       - same shape, SaaS marketing copy/art (prerender input, --mode saas)
 //
 // Run: `node scripts/generate-og-metadata.mjs`        (writes files)
 //      `node scripts/generate-og-metadata.mjs --check` (CI drift guard: fails if stale)
@@ -193,6 +194,35 @@ const TOOL_SEO_TITLES = {
   validateSignature: "Validate PDF Signature",
   timestampPdf: "Timestamp PDF",
   showJS: "Show JavaScript in PDF",
+};
+
+// SaaS (stirling.com) link-preview cards. Only the SaaS build (`--mode saas`)
+// uses og-metadata.saas.json; every other flavour keeps the tool-registry copy
+// above. `ogTitle` is the punchy social headline; `title` is the SEO <title>.
+// `home` overrides the site default (served at `/app`); the rest are extra
+// marketing landing routes prerendered so their links unfurl with bespoke art.
+const SAAS_DEFAULT = {
+  image: "/og_images/saas/app.png",
+  title: "Stirling - Edit any PDF. Govern every PDF.",
+  ogTitle: "Edit any PDF. Govern every PDF.",
+  description:
+    "The free, open-source PDF Editor, plus a Processor that governs every PDF your organization touches. 1¢ per PDF.",
+};
+const SAAS_ROUTE_OVERRIDES = {
+  "/processor": {
+    image: "/og_images/saas/app-processor.png",
+    title: "Stirling Processor - Govern every PDF your organization touches",
+    ogTitle: "Govern every PDF your organization touches",
+    description:
+      "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF.",
+  },
+  "/editor": {
+    image: "/og_images/saas/app-editor.png",
+    title: "Stirling - The world's most secure PDF editor",
+    ogTitle: "The world's most secure PDF editor",
+    description:
+      "Edit, sign, redact, and convert PDFs in your browser. Free forever, open source, and self-hostable.",
+  },
 };
 
 // Tools whose art exists under a legacy v1 filename that does not match the
@@ -422,16 +452,40 @@ const manifest = {
   navLinks,
 };
 
+// SaaS manifest: same tool pages as above, but the home default and two extra
+// marketing routes carry the stirling.com cards. Keeps all per-tool OG intact.
+const saasManifest = {
+  default: SAAS_DEFAULT,
+  byTool: { ...byTool },
+  byPath: { ...byPath },
+};
+for (const [routePath, entry] of Object.entries(SAAS_ROUTE_OVERRIDES)) {
+  saasManifest.byTool[routePath] = entry;
+  saasManifest.byPath[routePath] = routePath;
+}
+// SaaS card art lives in the saas/ subdir (outside the root images scan), so
+// check the files on disk directly.
+const missingSaasImages = [SAAS_DEFAULT, ...Object.values(SAAS_ROUTE_OVERRIDES)]
+  .map((e) => e.image)
+  .filter((img) => !fs.existsSync(path.join(ROOT, "public" + img)));
+if (missingSaasImages.length)
+  console.warn(
+    `\nWARNING: SaaS OG cards reference missing images: ${missingSaasImages.join(", ")}`,
+  );
+
 const mapJson = JSON.stringify(ogImageMap, null, 2) + "\n";
 const manifestJson = JSON.stringify(manifest, null, 2) + "\n";
+const saasManifestJson = JSON.stringify(saasManifest, null, 2) + "\n";
 const seoOverridesJson = JSON.stringify(urlSeoOverrides, null, 2) + "\n";
 const mapPath = "src/core/data/ogImageMap.json";
 const manifestPath = "public/og-metadata.json";
+const saasManifestPath = "public/og-metadata.saas.json";
 const seoOverridesPath = "src/core/data/urlSeoOverrides.json";
 
 const outputs = [
   [mapPath, mapJson],
   [manifestPath, manifestJson],
+  [saasManifestPath, saasManifestJson],
   [seoOverridesPath, seoOverridesJson],
 ];
 
@@ -456,6 +510,9 @@ if (check) {
     fs.writeFileSync(path.join(ROOT, p), content);
   console.log(
     `Wrote ${mapPath} (${Object.keys(ogImageMap).length} tools with art)`,
+  );
+  console.log(
+    `Wrote ${saasManifestPath} (${Object.keys(saasManifest.byPath).length} paths, SaaS)`,
   );
   console.log(`Wrote ${manifestPath} (${Object.keys(byPath).length} paths)`);
   console.log(

@@ -15,7 +15,7 @@ import { seedPolicies, seedPolicyRuns } from "@portal/mocks/policies";
 
 export { POLICY_CATEGORIES, POLICY_CONFIG };
 
-/** A decorated, active policy for a category, mirroring fetchPolicies() assembly. */
+/** A decorated, active policy for a category, mirroring assemblePolicies(). */
 export function decorateForStory(categoryId: string): DecoratedPolicy {
   const category = POLICY_CATEGORIES.find((c) => c.id === categoryId)!;
   const config = POLICY_CONFIG[categoryId];

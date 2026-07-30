@@ -1,0 +1,358 @@
+.portal-integrations {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+.portal-integrations__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.portal-integrations__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-integrations__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-integrations__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.portal-integrations__filters {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1 1 24rem;
+  min-width: 0;
+}
+
+.portal-integrations__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.625rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+
+.portal-integrations__filter:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.portal-integrations__filter.is-active {
+  background: var(--c-primary-tint);
+  color: var(--c-primary);
+}
+
+.portal-integrations__filter-count {
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: var(--c-surface-sunken);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.portal-integrations__toolbar-side {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.portal-integrations__search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.625rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  font-size: 1rem;
+}
+
+.portal-integrations__search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--c-text);
+  width: clamp(7rem, 14vw, 11rem);
+}
+
+.portal-integrations__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* One list, table-shaped: a shared 4-column grid so the connected, available
+   and coming-soon bands line up under the same headers. */
+.portal-integrations__table {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.portal-integrations__cols,
+.portal-integrations__row {
+  display: grid;
+  grid-template-columns: minmax(16rem, 2.5fr) minmax(10rem, 1fr) 11rem;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.625rem 1rem;
+}
+
+.portal-integrations__cols {
+  padding-top: 0.75rem;
+  padding-bottom: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-text-muted);
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.portal-integrations__section {
+  padding: 0.5rem 1rem 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-text-muted);
+  background: var(--c-surface-sunken);
+  border-top: 1px solid var(--c-border-subtle);
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.portal-integrations__group + .portal-integrations__group,
+.portal-integrations__group + .portal-integrations__row,
+.portal-integrations__row + .portal-integrations__row,
+.portal-integrations__row + .portal-integrations__group {
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-integrations__row {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+button.portal-integrations__row {
+  cursor: pointer;
+}
+
+button.portal-integrations__row:hover {
+  background: var(--c-hover);
+}
+
+/* An open group keeps a light wash so its sub-rows visibly belong to it. */
+button.portal-integrations__row[aria-expanded="true"] {
+  background: var(--c-hover);
+}
+
+.portal-integrations__row--soon {
+  opacity: 0.55;
+}
+
+.portal-integrations__name {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.portal-integrations__name svg {
+  flex: none;
+}
+
+.portal-integrations__name-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+
+.portal-integrations__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-integrations__detail {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-integrations__chips {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.portal-integrations__chip {
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  background: var(--c-surface-sunken);
+  white-space: nowrap;
+}
+
+.portal-integrations__status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--c-success);
+}
+
+.portal-integrations__status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--c-success);
+}
+
+.portal-integrations__chevron {
+  color: var(--c-text-muted);
+  transition: transform var(--motion-fast);
+}
+
+.portal-integrations__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Instance sub-rows: same surface as the table (the sunken grey belongs to the
+   section bands alone), tied to their group by an indented tree rail under the
+   brand mark rather than a full-width panel. */
+.portal-integrations__instances {
+  border-top: 1px solid var(--c-border-subtle);
+  background: var(--c-surface);
+}
+
+.portal-integrations__instance {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) minmax(10rem, 1.5fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.4375rem 1rem 0.4375rem 3.35rem;
+  position: relative;
+}
+
+.portal-integrations__instance::before {
+  content: "";
+  position: absolute;
+  left: 1.65rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--c-border);
+}
+
+.portal-integrations__instance + .portal-integrations__instance {
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-integrations__instance--add {
+  grid-template-columns: 1fr;
+  justify-items: start;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+/* The rail stops halfway on the closing row, like the last node of a tree. */
+.portal-integrations__instance--add::before {
+  bottom: 50%;
+}
+
+.portal-integrations__instance-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-integrations__instance-detail {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-integrations__instance-actions {
+  display: flex;
+  gap: 0.375rem;
+  justify-content: flex-end;
+}
+
+.portal-integrations__soon-badge {
+  padding: 0.0625rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+
+/* Narrow screens: drop the works-with column, keep name + action. */
+@media (max-width: 56rem) {
+  .portal-integrations__cols,
+  .portal-integrations__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .portal-integrations__chips {
+    display: none;
+  }
+
+  .portal-integrations__instance {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-left: 1rem;
+  }
+
+  .portal-integrations__instance-detail {
+    display: none;
+  }
+}

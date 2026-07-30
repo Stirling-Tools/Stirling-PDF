@@ -14,7 +14,6 @@ import {
   Button,
   Checkbox,
   EmptyState,
-  FormField,
   Input,
   Modal,
   RadioGroup,
@@ -40,48 +39,34 @@ import {
   fetchTriggers,
   savePipeline,
   triggerPipeline,
-  type OutputSpec,
   type Policy,
   type PolicyRunView,
-  type PipelineOutputMode,
   type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
 } from "@portal/api/pipelines";
 import { clearProcessedHistory } from "@portal/api/policies";
+import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
-import { fetchSources, type SourceView } from "@portal/api/sources";
+import { type SourceView } from "@portal/api/sources";
+import { useSources } from "@portal/queries/sources";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
+import {
+  integrationStepConfigured,
+  isIntegrationStep,
+  newIntegrationStep,
+  stepOperation,
+} from "@portal/components/pipelines/integrationStep";
 import "@portal/views/PipelineBuilder.css";
 
-type OutputMode = PipelineOutputMode;
-
-/** New pipelines (and specs of unoffered types) start on the first offered destination. */
-const DEFAULT_OUTPUT_MODE = availableOutputModes()[0];
-
-/** The s3 output's connection fields, mirrored from the OutputSpec options. */
-interface S3OutputOptions {
-  bucket: string;
-  region: string;
-  prefix: string;
-  endpoint: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-}
-
-const EMPTY_S3_OUTPUT: S3OutputOptions = {
-  bucket: "",
-  region: "us-east-1",
-  prefix: "",
-  endpoint: "",
-  accessKeyId: "",
-  secretAccessKey: "",
-};
 type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 
 const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
@@ -120,37 +105,6 @@ function parseTrigger(trigger: TriggerConfig | null): {
   return { triggerType: trigger.type, count: "1", unit: "HOURS" };
 }
 
-function parseOutput(output: OutputSpec | undefined): {
-  mode: OutputMode;
-  directory: string;
-  s3: S3OutputOptions;
-} {
-  if (output?.type === "folder") {
-    return {
-      mode: "folder",
-      directory: String(output.options?.directory ?? ""),
-      s3: EMPTY_S3_OUTPUT,
-    };
-  }
-  if (output?.type === "s3") {
-    const option = (key: keyof S3OutputOptions, fallback = "") =>
-      String(output.options?.[key] ?? fallback);
-    return {
-      mode: "s3",
-      directory: "",
-      s3: {
-        bucket: option("bucket"),
-        region: option("region", "us-east-1"),
-        prefix: option("prefix"),
-        endpoint: option("endpoint"),
-        accessKeyId: option("accessKeyId"),
-        secretAccessKey: option("secretAccessKey"),
-      },
-    };
-  }
-  return { mode: DEFAULT_OUTPUT_MODE, directory: "", s3: EMPTY_S3_OUTPUT };
-}
-
 /**
  * Full-page pipeline builder (route: /pipelines/new and /pipelines/:id). Pipeline-level settings
  * (sources, trigger, output) sit above the operation list; the operation list and the selected
@@ -160,6 +114,16 @@ function parseOutput(output: OutputSpec | undefined): {
 export function PipelineBuilder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  // Pipelines are stored as policies, so a save/delete must invalidate both the
+  // pipelines overview and the policies caches (Policies page + Home) before
+  // navigating back to the list.
+  const invalidatePipelines = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: qk.pipelines() }),
+      queryClient.invalidateQueries({ queryKey: qk.policiesList() }),
+      queryClient.invalidateQueries({ queryKey: qk.policyRuns() }),
+    ]);
   const { id } = useParams();
   const isEdit = Boolean(id);
   const { allTools } = useToolRegistry();
@@ -172,20 +136,29 @@ export function PipelineBuilder() {
     async () => (id ? await fetchPipeline(id) : null),
     [id],
   );
-  const sourcesState = useAsync<SourceView[]>(
-    // The editor is a built-in, client-driven source (it runs on editor upload, not as a pipeline
-    // input), so it's excluded from the sources a pipeline can pull from.
-    async () =>
-      (await fetchSources()).sources.filter(
-        (source) => source.type !== EDITOR_SOURCE_TYPE,
-      ),
-    [],
-  );
+  const sourcesState = useSources();
   const triggersState = useAsync<TriggerInfo[]>(
     async () => await fetchTriggers(),
     [],
   );
-  const availableSources = sourcesState.data ?? [];
+  // The editor is a built-in, client-driven source (it runs on editor upload,
+  // not as a pipeline input), so it's excluded from a pipeline's inputs.
+  const availableSources = useMemo<SourceView[]>(
+    () =>
+      (sourcesState.data?.sources ?? []).filter(
+        (source) => source.type !== EDITOR_SOURCE_TYPE,
+      ),
+    [sourcesState.data],
+  );
+  // A destination is a source used as a write target: only writable types (folder/S3, filtered per
+  // deployment) can be picked, and the virtual editor is already excluded from availableSources.
+  const writableSources = useMemo<SourceView[]>(
+    () =>
+      availableSources.filter((source) =>
+        (availableOutputModes() as string[]).includes(source.type),
+      ),
+    [availableSources],
+  );
   const triggers = useMemo(
     () => triggersState.data ?? [],
     [triggersState.data],
@@ -200,10 +173,7 @@ export function PipelineBuilder() {
   const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
-  const [outputMode, setOutputMode] = useState<OutputMode>(DEFAULT_OUTPUT_MODE);
-  const [outputDirectory, setOutputDirectory] = useState("");
-  const [outputS3, setOutputS3] = useState<S3OutputOptions>(EMPTY_S3_OUTPUT);
-  const [s3ConfigOpen, setS3ConfigOpen] = useState(false);
+  const [outputIds, setOutputIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -228,7 +198,6 @@ export function PipelineBuilder() {
     if (isEdit && !policyState.data) return;
     const policy = policyState.data ?? undefined;
     const trigger = parseTrigger(policy?.trigger ?? null);
-    const output = parseOutput(policy?.output);
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
     setSourceIds(policy?.sourceIds ?? []);
@@ -238,9 +207,7 @@ export function PipelineBuilder() {
     setTriggerType(trigger.triggerType);
     setScheduleCount(trigger.count);
     setScheduleUnit(trigger.unit);
-    setOutputMode(output.mode);
-    setOutputDirectory(output.directory);
-    setOutputS3(output.s3);
+    setOutputIds(policy?.outputIds ?? []);
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded]);
 
@@ -277,16 +244,21 @@ export function PipelineBuilder() {
     if (selected && !triggerAvailable(selected)) setTriggerType(MANUAL);
   }, [triggerType, triggers, triggerAvailable]);
 
-  function setS3Field(key: keyof S3OutputOptions, value: string) {
-    setOutputS3((current) => ({ ...current, [key]: value }));
-  }
-
   function toggleSource(sourceId: string, checked: boolean) {
     setSourceIds((ids) =>
       checked
         ? [...ids, sourceId]
         : ids.filter((existing) => existing !== sourceId),
     );
+  }
+
+  function addOperationStep(op: (typeof STEP_OPERATIONS)[number]) {
+    setSteps((current) => {
+      const next = [...current, newIntegrationStep(op)];
+      setSelectedIndex(next.length - 1);
+      return next;
+    });
+    setPickerOpen(false);
   }
 
   function addStep(tool: ExecutableTool) {
@@ -317,12 +289,22 @@ export function PipelineBuilder() {
   function updateStepParams(index: number, params: ErasedToolParams) {
     setSteps((current) =>
       current.map((step, i) =>
-        i === index && step.toolId !== null ? { ...step, params } : step,
+        // Integration steps are deliberately toolId-less, so they must be editable too; only a
+        // genuinely unrecognised step has no editor to send changes from.
+        i === index && (step.toolId !== null || isIntegrationStep(step))
+          ? { ...step, params }
+          : step,
       ),
     );
   }
 
   function stepLabel(step: WorkingToolStep): string {
+    // An integration step's endpoint is the same for every vendor, so the raw path would read
+    // "External api call" for all of them. Name it by the operation instead.
+    const op = stepOperation(step);
+    if (op) return t(op.labelKey);
+    if (isIntegrationStep(step))
+      return t("portal.pipelines.builder.sendToSystem");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -331,6 +313,13 @@ export function PipelineBuilder() {
   // policy, so a later run would send null for that field (see stepRequiresUpload).
   const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
   const hasUploadSteps = uploadStepLabels.length > 0;
+
+  // An integration step with no operation or no account chosen would fail at run time with a raw
+  // backend rejection, so block saving on it here where the fix is one click away.
+  const unconfiguredStepLabels = steps
+    .filter((step) => !integrationStepConfigured(step))
+    .map(stepLabel);
+  const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
   // Track unsaved edits: snapshot the form and compare against the state captured just after
   // seeding, so leaving the builder can prompt to save or discard.
@@ -343,9 +332,7 @@ export function PipelineBuilder() {
     triggerType,
     scheduleCount,
     scheduleUnit,
-    outputMode,
-    outputDirectory,
-    outputS3,
+    outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
   useEffect(() => {
@@ -355,18 +342,16 @@ export function PipelineBuilder() {
 
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
-  const s3OutputValid =
-    outputMode !== "s3" ||
-    (outputS3.bucket.trim() !== "" &&
-      outputS3.accessKeyId.trim() !== "" &&
-      outputS3.secretAccessKey.trim() !== "");
-  const outputValid =
-    (outputMode !== "folder" || outputDirectory.trim() !== "") && s3OutputValid;
+  // A pipeline must have at least one input source and at least one output destination.
+  const sourceValid = sourceIds.length > 0;
+  const outputValid = outputIds.length > 0;
   const canSave =
     name.trim() !== "" &&
+    sourceValid &&
     scheduleCountValid &&
     outputValid &&
     !hasUploadSteps &&
+    !hasUnconfiguredSteps &&
     !submitting;
 
   const triggerOptions = [
@@ -398,7 +383,7 @@ export function PipelineBuilder() {
   }
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
-  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}?new=1`;
+  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
 
   function close() {
     navigate(listPath);
@@ -410,8 +395,8 @@ export function PipelineBuilder() {
     else navigate(destination);
   }
 
-  // Jump to the Sources page with its create wizard open, for when the source you want to run
-  // this pipeline over doesn't exist yet.
+  // Jump to the source builder, for when the source you want to read from or write to doesn't
+  // exist yet. Inputs and the output destination are both saved sources, so both create one here.
   function goToSources() {
     attemptLeave(sourcesPath);
   }
@@ -420,12 +405,6 @@ export function PipelineBuilder() {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
-    const output: OutputSpec =
-      outputMode === "folder"
-        ? { type: "folder", options: { directory: outputDirectory.trim() } }
-        : outputMode === "s3"
-          ? { type: "s3", options: { ...outputS3 } }
-          : { type: "inline", options: {} };
     const policy: Policy = {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
@@ -433,10 +412,14 @@ export function PipelineBuilder() {
       trigger: buildTrigger(),
       sourceIds,
       steps: steps.map((step) => serializeToolStep(step, allTools)),
-      output,
+      // Destinations are the referenced saved sources; the inline output field is
+      // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
+      output: policyState.data?.output ?? { type: "inline", options: {} },
+      outputIds,
     };
     try {
       await savePipeline(policy);
+      await invalidatePipelines();
       navigate(destination);
     } catch (e) {
       setError(errorMessage(e));
@@ -547,6 +530,7 @@ export function PipelineBuilder() {
     setDeleting(true);
     try {
       await deletePipeline(id);
+      await invalidatePipelines();
       close();
     } catch (e) {
       setError(errorMessage(e));
@@ -665,6 +649,14 @@ export function PipelineBuilder() {
           })}
         />
       )}
+      {hasUnconfiguredSteps && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.builder.stepsNeedSetup", {
+            tools: unconfiguredStepLabels.join(", "),
+          })}
+        />
+      )}
 
       {/* Pipeline-level settings, above the operation list. */}
       <section className="portal-builder__settings">
@@ -679,10 +671,6 @@ export function PipelineBuilder() {
             {sourcesState.loading ? (
               <p className="portal-pipelines__muted">
                 {t("portal.pipelines.composer.sourcesLoading")}
-              </p>
-            ) : availableSources.length === 0 ? (
-              <p className="portal-pipelines__muted">
-                {t("portal.pipelines.composer.noSources")}
               </p>
             ) : (
               <div className="portal-pipelines__source-list">
@@ -751,49 +739,12 @@ export function PipelineBuilder() {
             <span className="portal-pipelines__detail-heading">
               {t("portal.pipelines.composer.output")}
             </span>
-            <RadioGroup<OutputMode>
-              name="pipeline-output"
-              value={outputMode}
-              onChange={setOutputMode}
-              options={availableOutputModes().map((mode) => ({
-                value: mode,
-                label: t(`portal.pipelines.output.${mode}`),
-              }))}
+            <DestinationPicker
+              sources={writableSources}
+              value={outputIds}
+              onChange={setOutputIds}
+              onCreateNew={goToSources}
             />
-            {outputMode === "folder" && (
-              <FormField
-                label={t("portal.pipelines.composer.directory")}
-                helperText={t("portal.pipelines.composer.directoryHelp")}
-                required
-              >
-                <Input
-                  value={outputDirectory}
-                  placeholder="/data/processed"
-                  onChange={(e) => setOutputDirectory(e.target.value)}
-                />
-              </FormField>
-            )}
-            {outputMode === "s3" && (
-              <div className="portal-builder__s3-output">
-                <span
-                  className={
-                    "portal-builder__s3-summary" +
-                    (outputS3.bucket ? "" : " is-unset")
-                  }
-                >
-                  {outputS3.bucket
-                    ? `s3://${outputS3.bucket}/${outputS3.prefix}`
-                    : t("portal.pipelines.composer.s3NotConfigured")}
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setS3ConfigOpen(true)}
-                >
-                  {t("portal.pipelines.composer.s3Configure")}
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </section>
@@ -834,7 +785,17 @@ export function PipelineBuilder() {
                       <span className="portal-builder__step-name">
                         {stepLabel(step)}
                       </span>
-                      {stepRequiresUpload(step) ? (
+                      {isIntegrationStep(step) ? (
+                        !stepOperation(step) ? (
+                          <span className="portal-builder__step-note">
+                            {t("portal.pipelines.builder.chooseOperation")}
+                          </span>
+                        ) : !integrationStepConfigured(step) ? (
+                          <span className="portal-builder__step-note">
+                            {t("portal.pipelines.builder.chooseAccount")}
+                          </span>
+                        ) : null
+                      ) : stepRequiresUpload(step) ? (
                         <span className="portal-builder__step-note">
                           {t("portal.pipelines.builder.needsUpload")}
                         </span>
@@ -889,6 +850,8 @@ export function PipelineBuilder() {
             <ToolPicker
               tools={executableTools}
               onPick={addStep}
+              operations={STEP_OPERATIONS}
+              onPickOperation={addOperationStep}
               onClose={() => setPickerOpen(false)}
             />
           ) : (
@@ -1005,78 +968,6 @@ export function PipelineBuilder() {
         }
       >
         <p>{t("portal.pipelines.builder.unsavedBody")}</p>
-      </Modal>
-
-      <Modal
-        open={s3ConfigOpen}
-        onClose={() => setS3ConfigOpen(false)}
-        title={t("portal.pipelines.composer.s3ModalTitle")}
-        footer={
-          <div className="portal-pipelines__composer-footer">
-            <Button size="sm" onClick={() => setS3ConfigOpen(false)}>
-              {t("portal.pipelines.composer.s3Done")}
-            </Button>
-          </div>
-        }
-      >
-        <div className="portal-builder__s3-fields">
-          <FormField
-            label={t("portal.sources.types.s3.fields.bucket.label")}
-            required
-          >
-            <Input
-              value={outputS3.bucket}
-              placeholder="my-company-inbox"
-              onChange={(e) => setS3Field("bucket", e.target.value)}
-            />
-          </FormField>
-          <FormField label={t("portal.sources.types.s3.fields.region.label")}>
-            <Input
-              value={outputS3.region}
-              placeholder="us-east-1"
-              onChange={(e) => setS3Field("region", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.prefix.label")}
-            helperText={t("portal.pipelines.composer.s3PrefixHelp")}
-          >
-            <Input
-              value={outputS3.prefix}
-              placeholder="processed/"
-              onChange={(e) => setS3Field("prefix", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.accessKeyId.label")}
-            required
-          >
-            <Input
-              value={outputS3.accessKeyId}
-              onChange={(e) => setS3Field("accessKeyId", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.secretAccessKey.label")}
-            required
-          >
-            <Input
-              type="password"
-              value={outputS3.secretAccessKey}
-              onChange={(e) => setS3Field("secretAccessKey", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.endpoint.label")}
-            helperText={t("portal.sources.types.s3.fields.endpoint.helperText")}
-          >
-            <Input
-              value={outputS3.endpoint}
-              placeholder="https://s3.example.com"
-              onChange={(e) => setS3Field("endpoint", e.target.value)}
-            />
-          </FormField>
-        </div>
       </Modal>
     </div>
   );

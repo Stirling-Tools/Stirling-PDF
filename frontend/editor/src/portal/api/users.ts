@@ -1,3 +1,7 @@
+// The bare i18next singleton (the same instance @app/i18n initializes at
+// startup), imported directly so this data module doesn't pull i18n's
+// init side effects into unit tests that mock react-i18next.
+import i18n from "i18next";
 import { apiClient } from "@portal/api/http";
 import type { Tier } from "@portal/contexts/TierContext";
 
@@ -269,22 +273,23 @@ function roleIdFor(u: AdminUserSummaryDto): RoleId {
 
 /** A member's last-seen time as plain language; "Never" when no session is tracked. */
 function relativeTime(value: number | string | undefined): string {
-  if (value === undefined || value === null) return "Never";
+  if (value === undefined || value === null)
+    return i18n.t("users.activity.never");
   const ts = typeof value === "string" ? Date.parse(value) : value;
-  if (!Number.isFinite(ts) || ts <= 0) return "Never";
+  if (!Number.isFinite(ts) || ts <= 0) return i18n.t("users.activity.never");
   const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return i18n.t("users.activity.justNow");
+  if (mins < 60) return i18n.t("users.activity.minutesAgo", { count: mins });
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return i18n.t("users.activity.hoursAgo", { count: hours });
   const days = Math.round(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return i18n.t("users.activity.daysAgo", { count: days });
   const weeks = Math.round(days / 7);
-  if (weeks < 5) return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+  if (weeks < 5) return i18n.t("users.activity.weeksAgo", { count: weeks });
   const months = Math.round(days / 30);
-  if (months < 12) return months <= 1 ? "1 month ago" : `${months} months ago`;
+  if (months < 12) return i18n.t("users.activity.monthsAgo", { count: months });
   const years = Math.round(days / 365);
-  return years <= 1 ? "1 year ago" : `${years} years ago`;
+  return i18n.t("users.activity.yearsAgo", { count: years });
 }
 
 /** 0 / huge sentinel license values mean "no seat limit". */

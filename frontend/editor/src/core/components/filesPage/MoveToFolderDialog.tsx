@@ -127,7 +127,7 @@ export function MoveToFolderDialog({
         </Text>
         <div
           style={{
-            border: "1px solid var(--border-subtle)",
+            border: "1px solid var(--c-border-subtle)",
             borderRadius: "0.5rem",
             maxHeight: "20rem",
             overflowY: "auto",
@@ -343,8 +343,8 @@ function FolderPick({
         opacity: disabled ? 0.45 : 1,
         gap: "0.5rem",
         padding: `0.4rem 0.75rem 0.4rem ${0.75 + depth * 0.85}rem`,
-        background: isActive ? "var(--hover-bg)" : "transparent",
-        borderBottom: "1px solid var(--border-subtle)",
+        background: isActive ? "var(--c-hover)" : "transparent",
+        borderBottom: "1px solid var(--c-border-subtle)",
         boxSizing: "border-box",
         fontWeight: isActive ? 600 : 400,
       }}

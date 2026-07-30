@@ -119,14 +119,13 @@ export interface EditorDeploymentResponse {
 /* ──────────────────────────────────────────────────────────────────────── */
 
 export interface TargetMeta {
-  icon: string;
   tone: "neutral" | "blue" | "purple";
 }
 
 export const TARGET_META: Record<TargetKind, TargetMeta> = {
-  cloud: { icon: "☁", tone: "blue" },
-  docker: { icon: "▣", tone: "neutral" },
-  kubernetes: { icon: "⎈", tone: "purple" },
+  cloud: { tone: "blue" },
+  docker: { tone: "neutral" },
+  kubernetes: { tone: "purple" },
 };
 
 export const INSTANCE_STATUS_TONE: Record<

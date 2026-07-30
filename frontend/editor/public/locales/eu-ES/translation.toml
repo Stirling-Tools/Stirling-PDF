@@ -6521,63 +6521,6 @@ title_other = "Prozesatu {{allowance}} PDF doan"
 titleWithRate_one = "Prozesatu {{allowance}} PDF doan, gero {{rate}}/PDF"
 titleWithRate_other = "Prozesatu {{allowance}} PDF doan, gero {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Blokeatuta"
-openAriaLabel = "Ireki {{name}} osagaia"
-
-[portal.catalogue.detail]
-addToProject = "Gehitu proiektuari"
-ariaLabel = "Osagaiaren xehetasuna"
-tabsAriaLabel = "Osagaiaren xehetasun-atalak"
-upgradeToUnlock = "Eguneratu desblokeatzeko"
-
-[portal.catalogue.detail.code]
-install = "Instalatu"
-usage = "Erabilera"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} {{tier}} planetik aurrera dago barne. Eguneratu plana txertatzeko."
-title = "Ez dago erabilgarri zure planean"
-
-[portal.catalogue.detail.preview]
-badge = "Zuzeneko aurrebista"
-note = "Sandbox interaktiboa hemen errendatuko da"
-
-[portal.catalogue.detail.pricing]
-note = "{{unit}} bakoitzeko neurtua. Hileko doako kuotatik gorako erabilera zure kontuan fakturatzen da eta Erabilera eta fakturazioa atalean xehatzen da."
-
-[portal.catalogue.detail.stats]
-billedOn = "Honetan fakturatua"
-embeds30d = "Txertaketak (30 egun)"
-freeQuota = "Doako kuota"
-freeQuotaValue = "{{amount}} / hil"
-maturity = "Heldutasuna"
-none = "Bat ere ez"
-perAction = "Ekintza bakoitzeko"
-price = "Prezioa"
-
-[portal.catalogue.detail.tabs]
-code = "Kodea"
-overview = "Ikuspegi orokorra"
-pricing = "Prezioak"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "aukerakoa"
-required = "beharrezkoa"
-
-[portal.catalogue.props.columns]
-description = "Deskribapena"
-name = "Prop"
-required = "Beharrezkoa"
-type = "Mota"
-
-[portal.catalogue.summary]
-componentsGa = "GA osagaiak"
-componentSpendMtd = "Osagaien gastua (MTD)"
-embedsThisMonth = "Txertaketak hilabete honetan"
-inBeta = "Beta-n"
-
 [portal.components.billingUnit]
 approval = "onarpena"
 check = "egiaztapena"
@@ -6590,18 +6533,6 @@ signature = "sinadura"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Zure aplikazioan txertatzeko SDK widgetak — bistaratzailea, sinadura elektronikoaren fluxua, AI berrikuspen-panela. Bakoitza ekintza bakoitzeko neurtzen da. Egin klik txartel batean instalazioa, erabilera eta props ikusteko."
-title = "Osagaiak"
-
-[portal.componentsView.empty]
-description = "Ezin izan da osagaien katalogoa kargatu. Saiatu berriro laster."
-title = "Ez dago osagairik erabilgarri"
-
-[portal.componentsView.lockedBanner]
-description = "GA osagaiak Pay-as-you-go planean daude erabilgarri; Beta osagai batzuk Enterprise-rako soilik dira. Blokeatutako txartelek eguneratzeko iradokizuna erakusten dute."
-title = "Osagai batzuek ordainpeko plana behar dute"
 
 [portal.docs.authentication]
 codeCaption = "eskaera bakoitza"

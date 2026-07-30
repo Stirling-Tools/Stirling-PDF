@@ -2,20 +2,26 @@
  * accents derive from --color-* tokens (auto dark), neutral/brand/ai are explicit. */
 
 .sui-acc-default {
-  --_solid: var(--color-blue);
-  --_solid-hover: var(--color-blue-dark);
+  --_solid: var(--c-primary);
+  --_solid-hover: var(--c-primary-hover);
   --_on: #ffffff;
-  --_text: var(--color-blue-dark);
-  --_bd: var(--color-blue-border);
-  --_tint: color-mix(in srgb, var(--color-blue) 12%, transparent);
+  --_text: var(--c-primary-hover);
+  --_bd: color-mix(in srgb, var(--c-primary) 38%, var(--c-surface));
+  --_tint: color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
+
+html[data-app-theme="custom"] .sui-acc-default {
+  --_on: var(--c-text-on-primary);
+}
+/* Danger is pinned to a fixed deep red (not the theme-lightened coral), so the
+   fill and the outline/text are the SAME red in both light and dark. */
 .sui-acc-danger {
-  --_solid: var(--color-red);
-  --_solid-hover: var(--color-red-dark);
+  --_solid: var(--p-red-500);
+  --_solid-hover: var(--p-red-600);
   --_on: #ffffff;
-  --_text: var(--color-red-dark);
-  --_bd: var(--color-red-border);
-  --_tint: color-mix(in srgb, var(--color-red) 12%, transparent);
+  --_text: var(--p-red-500);
+  --_bd: color-mix(in srgb, var(--p-red-500) 45%, transparent);
+  --_tint: color-mix(in srgb, var(--p-red-500) 12%, transparent);
 }
 .sui-acc-success {
   --_solid: var(--color-green);
@@ -45,57 +51,57 @@
 
 /* neutral: low-emphasis grey — no palette token, so explicit. */
 .sui-acc-neutral {
-  --_solid: #475569;
-  --_solid-hover: #334155;
+  --_solid: var(--p-c-475569);
+  --_solid-hover: var(--p-c-334155);
   --_on: #ffffff;
-  --_text: #475569;
-  --_bd: #cbd5e1;
-  --_tint: rgba(71, 85, 105, 0.1);
+  --_text: var(--p-c-475569);
+  --_bd: var(--p-c-cbd5e1);
+  --_tint: color-mix(in srgb, var(--p-c-475569) 10%, transparent);
 }
 [data-theme="dark"] .sui-acc-neutral {
-  --_solid: #64748b;
-  --_solid-hover: #475569;
-  --_text: #cbd5e1;
-  --_bd: #334155;
-  --_tint: rgba(148, 163, 184, 0.16);
+  --_solid: var(--p-c-64748b);
+  --_solid-hover: var(--p-c-475569);
+  --_text: var(--p-c-cbd5e1);
+  --_bd: var(--p-c-334155);
+  --_tint: color-mix(in srgb, var(--p-c-94a3b8) 16%, transparent);
 }
 /* brand: Stirling red — a bespoke brand colour, not part of the token palette. */
 .sui-acc-brand {
-  --_solid: #8e3131;
-  --_solid-hover: #7a2929;
+  --_solid: var(--p-brand-red-650);
+  --_solid-hover: var(--p-brand-red-700);
   --_on: #ffffff;
-  --_text: #8e3131;
-  --_bd: #d9a8a8;
-  --_tint: rgba(142, 49, 49, 0.09);
+  --_text: var(--p-brand-red-650);
+  --_bd: var(--p-brand-red-200);
+  --_tint: color-mix(in srgb, var(--p-brand-red-650) 9%, transparent);
 }
 [data-theme="dark"] .sui-acc-brand {
-  --_text: #d98a8a;
-  --_bd: #5a2424;
-  --_tint: rgba(217, 138, 138, 0.16);
+  --_text: var(--p-brand-red-300);
+  --_bd: var(--p-brand-red-900);
+  --_tint: color-mix(in srgb, var(--p-brand-red-300) 16%, transparent);
 }
 /* ai: multi-hue gradient for AI features — no single-colour token. */
 .sui-acc-ai {
   --_solid: linear-gradient(
     135deg,
-    #8b5cf6 0%,
-    #6366f1 38%,
-    #3b82f6 72%,
-    #22d3ee 100%
+    var(--p-violet-500) 0%,
+    var(--p-indigo-500) 38%,
+    var(--p-blue-500) 72%,
+    var(--p-cyan-400) 100%
   );
   --_solid-hover: linear-gradient(
     135deg,
-    #8b5cf6 0%,
-    #6366f1 38%,
-    #3b82f6 72%,
-    #22d3ee 100%
+    var(--p-violet-500) 0%,
+    var(--p-indigo-500) 38%,
+    var(--p-blue-500) 72%,
+    var(--p-cyan-400) 100%
   );
   --_on: #ffffff;
-  --_text: #6366f1;
-  --_bd: #c7d2fe;
-  --_tint: rgba(99, 102, 241, 0.1);
+  --_text: var(--p-indigo-500);
+  --_bd: var(--p-indigo-200);
+  --_tint: color-mix(in srgb, var(--p-indigo-500) 10%, transparent);
 }
 [data-theme="dark"] .sui-acc-ai {
-  --_text: #a5b4fc;
-  --_bd: #3730a3;
-  --_tint: rgba(129, 140, 248, 0.18);
+  --_text: var(--p-indigo-300);
+  --_bd: var(--p-indigo-800);
+  --_tint: color-mix(in srgb, var(--p-indigo-400) 18%, transparent);
 }

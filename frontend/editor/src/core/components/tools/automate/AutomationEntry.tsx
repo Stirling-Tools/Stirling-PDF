@@ -191,11 +191,9 @@ export default function AutomationEntry({
         className="tool-button"
         style={{
           borderRadius: 0,
-          color: "var(--tools-text-and-icon-color)",
+          color: "var(--c-text)",
           overflow: "visible",
-          backgroundColor: shouldShowMenu
-            ? "var(--automation-entry-hover-bg)"
-            : undefined,
+          backgroundColor: shouldShowMenu ? "var(--c-hover)" : undefined,
         }}
       >
         {buttonContent}
