@@ -7880,6 +7880,16 @@ connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
 
+[portal.pipelines.graph]
+emptyHint = "Add a tool on the line to start building your pipeline."
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
 [portal.pipelines.kpi]
 active = "Active"
 paused = "Paused"

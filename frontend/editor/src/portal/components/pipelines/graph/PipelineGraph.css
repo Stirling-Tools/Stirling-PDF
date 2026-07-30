@@ -1,0 +1,43 @@
+/**
+ * The graph surface. The canvas is sized by the derived layout and centred in the scroll area, so
+ * the chain stays put as steps are added or removed.
+ */
+
+.portal-graph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  overflow: auto;
+  /* The canvas must sit below the node cards on the surface ladder so they read as raised off it in
+     both themes. --c-surface-sunken is the only rung darker than --c-surface in light *and* dark;
+     the legacy --color-bg-subtle collapsed into the page in dark, and --c-bg-raised is lighter than
+     the cards in light. */
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.portal-graph__canvas {
+  position: relative;
+  flex: none;
+}
+
+/* Nodes are placed by the layout; the slot carries the position, the card fills it. */
+.portal-graph__slot {
+  position: absolute;
+  display: flex;
+}
+
+.portal-graph__slot > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-graph__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  text-align: center;
+}

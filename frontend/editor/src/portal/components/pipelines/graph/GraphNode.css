@@ -1,0 +1,201 @@
+/**
+ * One graph node card. The graph positions it absolutely; everything here is the card's own look.
+ */
+
+.portal-graph-node {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    opacity var(--motion-fast);
+}
+
+/* The whole card selects; delete sits over it as a sibling. The select target and the two circular
+   controls are the shared Button/ActionIcon carrying bespoke styling, so re-assert the card look
+   over the design-system base (which otherwise imposes a fixed height, its own padding and an
+   accent text colour). */
+.portal-graph-node__select.sui-btn {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  border: none;
+  background: none;
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  font-weight: 400;
+  color: var(--c-text);
+  border-radius: inherit;
+}
+
+/* Mantine wraps a button's children in its label element, so the glyph and the text are laid out
+   there - a gap on the button root would only space the wrapper, not what is inside it. */
+.portal-graph-node__select.sui-btn .mantine-Button-label {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  min-width: 0;
+  overflow: visible;
+}
+
+.portal-graph-node__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.0625rem;
+}
+
+.portal-graph-node__title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-graph-node__detail {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-graph-node__warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--c-warning);
+}
+
+/* Selected: the node whose settings the inspector is showing. */
+.portal-graph-node.is-selected {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 1px var(--c-primary);
+}
+
+.portal-graph-node:hover:not(.is-selected) {
+  border-color: var(--c-border-strong);
+}
+
+.portal-graph-node.has-warning:not(.is-selected) {
+  border-color: var(--c-warning);
+}
+
+/* Lifted out of the chain: the origin dims so the drop target reads as the real position. */
+.portal-graph-node.is-dragging {
+  opacity: 0.4;
+}
+
+/* Steps can be picked up and moved; the input and output are fixed ends. */
+.portal-graph-node--step .portal-graph-node__select.sui-btn {
+  cursor: grab;
+}
+
+.portal-graph-node--step.is-dragging .portal-graph-node__select.sui-btn {
+  cursor: grabbing;
+}
+
+/* Remove: quiet until the node is hovered or focused, so the chain stays calm. */
+.portal-graph-node__remove.sui-ai {
+  position: absolute;
+  top: -0.4375rem;
+  right: -0.4375rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text-subtle);
+  opacity: 0;
+  transition:
+    opacity var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.portal-graph-node:hover .portal-graph-node__remove.sui-ai,
+.portal-graph-node.is-selected .portal-graph-node__remove.sui-ai,
+.portal-graph-node__remove.sui-ai:focus-visible {
+  opacity: 1;
+}
+
+.portal-graph-node__remove.sui-ai:hover {
+  color: var(--c-danger);
+  border-color: var(--c-danger);
+}
+
+/* Run state: a status glyph on the card's trailing edge, inside the node. The state is carried by
+   the icon's shape as well as its colour, with the wording kept for assistive tech. */
+.portal-graph-node__run {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.625rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-graph-node__run-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.portal-graph-node.is-done .portal-graph-node__run {
+  color: var(--c-success);
+}
+
+.portal-graph-node.is-failed .portal-graph-node__run {
+  color: var(--c-danger);
+}
+
+/* Running is carried by the pulsing glyph alone: a primary border here would be the selected
+   treatment, and "the step I am editing" must stay distinguishable from "the step running now". */
+.portal-graph-node.is-running .portal-graph-node__run {
+  color: var(--c-primary);
+}
+
+.portal-graph-node__pulse {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+  animation: portal-graph-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes portal-graph-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-graph-node__pulse {
+    animation: none;
+  }
+}

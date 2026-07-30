@@ -1,0 +1,90 @@
+/**
+ * One wire between two nodes, plus its insert affordance. The graph positions it; the wire is a
+ * 1px rule centred on the column with a chevron at the arriving end.
+ */
+
+.portal-graph-edge {
+  position: absolute;
+  /* Centred on the column: `left` is the column centre, so pull back by half the hit area. */
+  width: 2.5rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-graph-edge__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--c-border-strong);
+}
+
+/* Arrowhead at the arriving end, so the chain reads as directed. */
+.portal-graph-edge__line::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0.3125rem;
+  height: 0.3125rem;
+  transform: translate(-50%, 0.0625rem) rotate(45deg);
+  border-right: 1px solid var(--c-border-strong);
+  border-bottom: 1px solid var(--c-border-strong);
+}
+
+/* Insert: the shared ActionIcon restyled to a small dot on the wire - quiet enough not to shout on
+   every wire, present enough to be found. */
+.portal-graph-edge__insert.sui-ai {
+  position: relative;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text-subtle);
+  opacity: 0.45;
+  transition:
+    opacity var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.portal-graph-edge:hover .portal-graph-edge__insert.sui-ai,
+.portal-graph-edge__insert.sui-ai:focus-visible {
+  opacity: 1;
+  color: var(--c-accent-fg, var(--c-primary));
+  border-color: var(--c-primary);
+}
+
+/* A wire that refuses inserts (the step above must stay last): a fainter line, no plus. */
+.portal-graph-edge.is-closed .portal-graph-edge__line {
+  background: var(--c-border-subtle);
+}
+
+/* A step is in flight and this wire would accept it. */
+.portal-graph-edge.is-available .portal-graph-edge__line {
+  background: var(--c-primary);
+}
+
+.portal-graph-edge.is-available .portal-graph-edge__insert.sui-ai {
+  opacity: 1;
+  border-color: var(--c-primary);
+  border-style: dashed;
+}
+
+/* The step would land here on release. */
+.portal-graph-edge.is-over .portal-graph-edge__line {
+  width: 2px;
+}
+
+.portal-graph-edge.is-over .portal-graph-edge__insert.sui-ai {
+  background: var(--c-primary);
+  border-style: solid;
+  color: var(--c-text-on-primary);
+  transform: scale(1.15);
+}
