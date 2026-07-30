@@ -35,11 +35,22 @@
 }
 
 /* Flow title, for modals that head with their own name rather than the wordmark. */
+.portal-stepmodal__ident {
+  min-width: 0;
+}
 .portal-stepmodal__flow-title {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--c-text);
+}
+/* Qualifies the title — for a step whose heading names a document that needs saying what it covers. */
+.portal-stepmodal__flow-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--c-text-subtle);
+  line-height: 1.45;
 }
 
 .portal-stepmodal__head-right {

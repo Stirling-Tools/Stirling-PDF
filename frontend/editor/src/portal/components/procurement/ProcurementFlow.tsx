@@ -69,6 +69,11 @@ export function ProcurementFlow({
   // issued paper rather than handing off to a separate card.
   const builderShowing =
     isLinked && started && (editing || stage === "trial" || stage === "quote");
+  const agreementShowing =
+    isLinked && started && !editing && stage === "security" && latest != null;
+  // Both of these name their own document in the header and carry its download there, so the shell
+  // must not stack a second header (nor a second close) above them.
+  const ownsHeader = builderShowing || agreementShowing;
 
   return (
     <>
@@ -77,9 +82,9 @@ export function ProcurementFlow({
         onClose={() => setOpen(false)}
         title={t("portal.procurement.title")}
         subtitle={t("portal.procurement.subtitle")}
-        // Only the builder renders its own heading + step badge + close; the agreement, payment and
-        // live steps have none, so they keep the shell's header.
-        headerless={builderShowing}
+        // The builder and the agreement render their own heading and close; the payment and live
+        // steps have none, so they keep the shell's header.
+        headerless={ownsHeader}
       >
         {error && (
           <Banner
@@ -135,7 +140,7 @@ export function ProcurementFlow({
 
             {/* Agreement step: review and sign the enterprise agreement. Signing accepts the quote
                 into a committed subscription (Stripe). */}
-            {!editing && stage === "security" && latest && (
+            {agreementShowing && latest && (
               <ProcurementAgreement
                 quote={latest}
                 busy={busy}
@@ -143,6 +148,7 @@ export function ProcurementFlow({
                 onAgree={onAgree}
                 onDownload={onDownloadPdf}
                 onEdit={() => setEditing(true)}
+                onClose={() => setOpen(false)}
               />
             )}
 

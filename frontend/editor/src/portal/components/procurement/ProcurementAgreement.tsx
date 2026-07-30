@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button, Card } from "@app/ui";
+import { Button } from "@app/ui";
 import {
   fetchAgreementDocument,
   fetchAgreementPdf,
@@ -10,6 +10,7 @@ import {
   type QuoteResult,
 } from "@portal/api/procurement";
 import { DownloadIcon } from "@portal/components/icons";
+import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { useAsync } from "@portal/hooks/useAsync";
 import "@portal/views/Procurement.css";
 
@@ -20,6 +21,10 @@ import "@portal/views/Procurement.css";
  * legal copy, English only); this component renders it, gates signing behind a scroll-through, and
  * captures the typed legal name, signatory, title, and authority. On sign it records the signature
  * (pinned to the exact document version + a hash) and then accepts the quote into a subscription.
+ *
+ * Presented as the document itself rather than a card about it: this step names the agreement in the
+ * dialog's own header and carries its download there, so the terms are read on paper-like stock
+ * instead of in app chrome. That is why it draws its own header — see ProcurementFlow.
  */
 export function ProcurementAgreement({
   quote,
@@ -28,6 +33,7 @@ export function ProcurementAgreement({
   onAgree,
   onDownload,
   onEdit,
+  onClose,
 }: {
   quote: QuoteResult;
   busy: boolean;
@@ -36,6 +42,8 @@ export function ProcurementAgreement({
   onAgree: () => void;
   onDownload: () => void;
   onEdit: () => void;
+  /** This step draws the dialog's header, so it carries the close too. */
+  onClose?: () => void;
 }) {
   const { t } = useTranslation();
   const { data: doc, loading } = useAsync(fetchAgreementDocument, []);
@@ -105,47 +113,65 @@ export function ProcurementAgreement({
   };
 
   return (
-    <Card padding="loose">
-      <span className="portal-proc__eyebrow">
-        {t("portal.procurement.agreement.eyebrow")}
-        {doc && doc.status !== "final" && (
-          <span className="portal-agreement__draft">
-            {t("portal.procurement.agreement.draftBadge")}
-          </span>
-        )}
-      </span>
-      <h3 className="portal-proc__builder-title">
-        {t("portal.procurement.agreement.title")}
-      </h3>
-      <p className="portal-proc__subtitle">
-        {doc
-          ? t("portal.procurement.agreement.version", {
-              label: doc.versionLabel,
-            })
-          : t("portal.procurement.agreement.intro")}
-      </p>
+    <div className="portal-agreement">
+      <StepModalHeader
+        title={t("portal.procurement.agreement.docName")}
+        subtitle={t("portal.procurement.agreement.docSub")}
+        onClose={onClose}
+        aside={
+          <>
+            {doc && doc.status !== "final" && (
+              <span className="portal-agreement__draft">
+                {t("portal.procurement.agreement.draftBadge")}
+              </span>
+            )}
+            {/* On the document, like the quote's: it downloads what is on screen. */}
+            <Button
+              variant="tertiary"
+              size="sm"
+              leftSection={<DownloadIcon size={14} />}
+              loading={downloadingMsa}
+              onClick={downloadMsa}
+            >
+              {t("portal.procurement.agreement.downloadAgreement")}
+            </Button>
+          </>
+        }
+      />
 
-      <div
-        className="portal-agreement__doc portal-agreement__scroll"
-        ref={docRef}
-        onScroll={onScroll}
-      >
-        {loading && <p>{t("portal.procurement.agreement.loading")}</p>}
-        {!loading && !doc && (
-          <p>{t("portal.procurement.agreement.loadError")}</p>
-        )}
-        {doc && (
-          <div className="portal-agreement__md">
-            <Markdown remarkPlugins={[remarkGfm]}>{doc.markdown}</Markdown>
-          </div>
-        )}
+      <div className="portal-agreement__tray">
+        <div
+          className="portal-agreement__doc portal-agreement__scroll"
+          ref={docRef}
+          onScroll={onScroll}
+        >
+          {loading && <p>{t("portal.procurement.agreement.loading")}</p>}
+          {!loading && !doc && (
+            <p>{t("portal.procurement.agreement.loadError")}</p>
+          )}
+          {doc && (
+            <>
+              {/* Letterhead: the reference ties the terms to the quote they price, and the version
+                  label pins what was signed. The document's own heading follows, so this adds a
+                  masthead rather than repeating the title. */}
+              <div className="portal-agreement__letterhead">
+                <span className="portal-agreement__confidential">
+                  {t("portal.procurement.agreement.confidential")}
+                </span>
+                <span>
+                  {t("portal.procurement.agreement.ref", {
+                    ref: quote.quoteNumber,
+                    version: doc.versionLabel,
+                  })}
+                </span>
+              </div>
+              <div className="portal-agreement__md">
+                <Markdown remarkPlugins={[remarkGfm]}>{doc.markdown}</Markdown>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-
-      {!scrolledToEnd && doc && (
-        <p className="portal-qb__hint">
-          {t("portal.procurement.agreement.scrollHint")}
-        </p>
-      )}
 
       <div className="portal-qb__row portal-agreement__signfields">
         <label className="portal-qb__field">
@@ -203,35 +229,36 @@ export function ProcurementAgreement({
         </p>
       )}
 
-      <div className="portal-proc__payment-actions">
-        <Button
-          variant="primary"
-          loading={busy || signing}
-          disabled={!ready}
-          onClick={sign}
-        >
-          {t("portal.procurement.agreement.agreeCta")}
-        </Button>
-        <Button
-          variant="secondary"
-          leftSection={<DownloadIcon size={15} />}
-          loading={downloadingMsa}
-          onClick={downloadMsa}
-        >
-          {t("portal.procurement.agreement.downloadAgreement")}
-        </Button>
-        <Button
-          variant="secondary"
-          leftSection={<DownloadIcon size={15} />}
-          loading={downloading}
-          onClick={onDownload}
-        >
-          {t("portal.procurement.agreement.downloadQuote")}
-        </Button>
-        <Button variant="tertiary" onClick={onEdit}>
-          {t("portal.procurement.milestone.edit")}
-        </Button>
+      {/* The flow's own bar, the same one the builder wears: what is left of the review sits on the
+          left, the two ways on from here sit on the right. */}
+      <div className="portal-qb__foot">
+        <span className="portal-qb__running">
+          {scrolledToEnd
+            ? t("portal.procurement.agreement.readyHint")
+            : t("portal.procurement.agreement.scrollHint")}
+        </span>
+        <div className="portal-qb__foot-btns">
+          <Button
+            variant="secondary"
+            leftSection={<DownloadIcon size={15} />}
+            loading={downloading}
+            onClick={onDownload}
+          >
+            {t("portal.procurement.agreement.downloadQuote")}
+          </Button>
+          <Button variant="tertiary" onClick={onEdit}>
+            {t("portal.procurement.milestone.edit")}
+          </Button>
+          <Button
+            variant="primary"
+            loading={busy || signing}
+            disabled={!ready}
+            onClick={sign}
+          >
+            {t("portal.procurement.agreement.agreeCta")}
+          </Button>
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }

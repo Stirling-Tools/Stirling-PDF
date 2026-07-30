@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 // The trademarked Stirling wordmark — the font is baked into the SVG (no brand webfont is loaded),
@@ -16,9 +17,11 @@ import "@portal/components/shared/StepModalHeader.css";
  */
 export function StepModalHeader({
   title,
+  subtitle,
   step,
   total,
   stepLabel,
+  aside,
   brand = false,
   className,
   closeLabel,
@@ -26,6 +29,10 @@ export function StepModalHeader({
 }: {
   /** The current step's heading. Omit when the host modal already renders one. */
   title?: string;
+  /** A line under the title, for a step whose heading needs qualifying (what the document covers). */
+  subtitle?: ReactNode;
+  /** Actions belonging to what is on screen (e.g. download this document), seated before the close. */
+  aside?: ReactNode;
   /** 1-based current step. Omit to hide the badge and the progress bar (e.g. a terminal receipt). */
   step?: number;
   /** Segments to draw. Any length — a flow is not limited to three steps. */
@@ -61,11 +68,17 @@ export function StepModalHeader({
             />
           </div>
         ) : title ? (
-          <h3 className="portal-stepmodal__flow-title">{title}</h3>
+          <div className="portal-stepmodal__ident">
+            <h3 className="portal-stepmodal__flow-title">{title}</h3>
+            {subtitle && (
+              <p className="portal-stepmodal__flow-sub">{subtitle}</p>
+            )}
+          </div>
         ) : (
           <span />
         )}
         <div className="portal-stepmodal__head-right">
+          {aside}
           {stepLabel && (
             <span className="portal-stepmodal__step">{stepLabel}</span>
           )}
