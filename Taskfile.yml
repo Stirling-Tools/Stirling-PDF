@@ -57,6 +57,12 @@ tasks:
       - task: frontend:install
       - task: engine:install
 
+  sdk:generate:
+    desc: "Generate Python/Node/Go client SDKs from the OpenAPI spec"
+    cmds:
+      - task: backend:swagger
+      - bash devTools/generate-sdks.sh
+
   # ============================================================
   # Development
   # ============================================================

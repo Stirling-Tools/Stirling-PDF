@@ -1,0 +1,34 @@
+[project]
+name = "stirling-pdf"
+version = "0.1.0"
+description = "Installer and launcher for Stirling PDF: runs the Docker images when Docker is available, or the release jar with a local Java 21+."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Stirling PDF", email = "hello@stirlingpdf.com" }]
+keywords = ["pdf", "stirling", "stirling-pdf", "document"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business",
+]
+# Deliberately zero dependencies: stdlib only, so `pip install stirling-pdf`
+# never conflicts with anything.
+dependencies = []
+
+[project.urls]
+Homepage = "https://stirlingpdf.com"
+Source = "https://github.com/Stirling-Tools/Stirling-PDF"
+
+[project.scripts]
+stirling-pdf = "stirling_pdf.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stirling_pdf"]
