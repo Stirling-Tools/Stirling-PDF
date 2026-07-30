@@ -1,10 +1,10 @@
 # Stirling-PDF backend-only image — JAR built with -PbuildWithFrontend=false, UI ships separately.
 
-ARG BASE_VERSION=1.0.2
+ARG BASE_VERSION=1.0.2@sha256:c7698687f486707ddef9e0298587ca8b44c4e96185e1bdb0c3d119eb2bf9a82e
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application (backend only, no frontend)
-FROM gradle:9.3.1-jdk25@sha256:85aec999629f4774a383cb792da4b598bdf5a7e69c4b9570bb70c0f919179183 AS app-build
+FROM gradle:9.6.1-jdk25@sha256:d25357611c559203299f3c6673101154156bdd28985858ff6f465fc69bd27ca4 AS app-build
 
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
 ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \

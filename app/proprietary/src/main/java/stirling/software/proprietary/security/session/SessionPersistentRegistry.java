@@ -146,6 +146,16 @@ public class SessionPersistentRegistry implements SessionRegistry {
         return sessionRepository.findAll();
     }
 
+    // Flag every session idle past the timeout.
+    public int expireStaleSessions() {
+        return sessionRepository.expireOlderThan(Instant.now().minus(defaultMaxInactiveInterval));
+    }
+
+    // Purge sessions expired longer than the retention window.
+    public int purgeExpiredSessions(Duration retention) {
+        return sessionRepository.deleteExpiredOlderThan(Instant.now().minus(retention));
+    }
+
     // Mark a session as expired
     public void expireSession(String sessionId) {
         Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);

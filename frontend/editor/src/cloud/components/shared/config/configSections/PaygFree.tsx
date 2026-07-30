@@ -25,6 +25,7 @@
  */
 import React, { useState } from "react";
 import { Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
 import CheckIcon from "@mui/icons-material/CheckRounded";
@@ -171,14 +172,14 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
           <FreeMeterPanel snap={snap} />
           {isLeader ? (
             <>
-              <button
-                type="button"
-                className="paygf-cta__button paygf-proc__cta"
+              <Button
+                fullWidth
+                className="paygf-proc__cta"
                 onClick={onTurnOn}
                 data-testid="turn-on-processor"
               >
                 {t("payg.free.cta.button", "Turn on Processor →")}
-              </button>
+              </Button>
               <span className="paygf-cta__reassurance paygf-proc__reassure">
                 {t(
                   "payg.free.cta.reassurance",

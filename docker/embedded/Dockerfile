@@ -1,17 +1,17 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=1.0.2
+ARG BASE_VERSION=1.0.2@sha256:c7698687f486707ddef9e0298587ca8b44c4e96185e1bdb0c3d119eb2bf9a82e
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
-FROM gradle:9.5.1-jdk25@sha256:8de3543f1772bb66be3b275893e5977b6d8bd2b0d25551faa5846a821d1f0600 AS app-build
+FROM gradle:9.6.1-jdk25@sha256:d25357611c559203299f3c6673101154156bdd28985858ff6f465fc69bd27ca4 AS app-build
 
 ARG TASK_VERSION=3.49.1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && ARCH=$(dpkg --print-architecture) \
     && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
@@ -42,6 +42,9 @@ COPY . .
 ARG PROTOTYPES_BUILD=false
 ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
+# Embed the admin portal app at /portal. Set true by the deploy workflow when the
+# portal or AI layers change; defaults false so normal builds skip the extra app.
+ARG BUILD_PORTAL=false
 
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
@@ -49,6 +52,7 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
     STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
+      -PbuildWithPortal=${BUILD_PORTAL} \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -PprototypesMode=${PROTOTYPES_BUILD} \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \

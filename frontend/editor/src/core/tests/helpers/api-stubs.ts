@@ -208,6 +208,12 @@ export async function mockAppApis(
     route.fulfill({ json: true }),
   );
 
+  // Login agreement / disclaimer — disabled by default so the blocking modal
+  // never shows; specs exercising it register a narrower route afterwards.
+  await page.route("**/api/v1/config/login-disclaimer*", (route: Route) =>
+    route.fulfill({ json: { enabled: false } }),
+  );
+
   // Footer / branding — non-critical but proxied, so stub to avoid noise
   await page.route("**/api/v1/ui-data/footer-info", (route: Route) =>
     route.fulfill({ json: {} }),

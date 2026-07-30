@@ -1,5 +1,7 @@
 package stirling.software.proprietary.policy.trigger;
 
+import java.util.Set;
+
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
@@ -12,6 +14,24 @@ public interface PolicyTrigger {
     String type();
 
     /**
+     * Whether this trigger needs at least one compatible input source to function. A schedule fires
+     * on the clock regardless of sources, so it is false; folder-watch derives the directories it
+     * watches from the policy's sources, so it is true. Drives whether the UI offers the trigger.
+     */
+    default boolean requiresSource() {
+        return false;
+    }
+
+    /**
+     * The source {@code type()}s this trigger is compatible with (e.g. {@code "folder"}). Empty
+     * means source-agnostic (no constraint). Lets the UI offer a trigger only when a compatible
+     * source is selected, without hard-coding the relationship.
+     */
+    default Set<String> supportedSourceTypes() {
+        return Set.of();
+    }
+
+    /**
      * Validate at save time so misconfiguration fails fast, not at fire time. Receives the whole
      * {@link Policy} so triggers that depend on the policy's sources (folder-watch) can check that.
      */
@@ -20,4 +40,12 @@ public interface PolicyTrigger {
     default void start() {}
 
     default void stop() {}
+
+    /**
+     * React to a policy being created, updated, or deleted. A trigger that caches per-policy state
+     * (folder-watch tracks which directories to watch) re-syncs it now, so a new policy is acted on
+     * immediately and a deleted one stops at once, rather than waiting for the next periodic sweep.
+     * Default no-op for triggers that read the store fresh on every fire.
+     */
+    default void onPoliciesChanged() {}
 }

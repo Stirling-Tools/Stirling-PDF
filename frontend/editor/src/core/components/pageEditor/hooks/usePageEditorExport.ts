@@ -306,6 +306,7 @@ export const usePageEditorExport = ({
 
       const newStirlingFiles = await actions.addFiles(renamedFiles, {
         selectFiles: true,
+        skipUploadTracking: true,
       });
       if (newStirlingFiles.length > 0) {
         actions.setSelectedFiles(newStirlingFiles.map((file) => file.fileId));

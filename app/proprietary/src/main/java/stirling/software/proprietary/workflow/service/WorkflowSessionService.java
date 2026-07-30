@@ -1,6 +1,13 @@
 package stirling.software.proprietary.workflow.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +15,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
+import org.bouncycastle.operator.InputDecryptorProvider;
+import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -705,21 +722,67 @@ public class WorkflowSessionService {
             }
         }
 
-        // 2. Store certificate submission data
-        Map<String, Object> certSubmission = new HashMap<>();
-        certSubmission.put("certType", request.getCertType());
-        certSubmission.put("password", metadataEncryptionService.encrypt(request.getPassword()));
-
-        // Store keystore files as base64 if provided
-        if (request.getP12File() != null && !request.getP12File().isEmpty()) {
+        // Validate an uploaded JKS keystore too (same early rejection as P12/PFX).
+        if ("JKS".equalsIgnoreCase(request.getCertType())
+                && request.getJksFile() != null
+                && !request.getJksFile().isEmpty()) {
             try {
-                byte[] keystoreBytes = request.getP12File().getBytes();
-                String base64Keystore = java.util.Base64.getEncoder().encodeToString(keystoreBytes);
-                certSubmission.put("p12Keystore", base64Keystore);
+                certificateSubmissionValidator.validateAndExtractInfo(
+                        request.getJksFile().getBytes(), "JKS", request.getPassword());
+            } catch (ResponseStatusException e) {
+                throw e;
             } catch (IOException e) {
-                log.error("Failed to read P12 keystore file", e);
+                log.error("Failed to read JKS keystore file for validation", e);
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+            }
+        }
+
+        // 2. Store certificate submission data
+        Map<String, Object> certSubmission = new HashMap<>();
+        certSubmission.put("password", metadataEncryptionService.encrypt(request.getPassword()));
+
+        if ("PEM".equalsIgnoreCase(request.getCertType())) {
+            // PEM uploads are a separate private key + certificate, not a keystore. Convert them to
+            // a PKCS12 keystore here so finalization signs via the standard PKCS12 path.
+            byte[] p12 =
+                    buildPkcs12FromPem(
+                            request.getPrivateKeyFile(),
+                            request.getCertFile(),
+                            request.getPassword());
+            // Give PEM the same early validation (expiry, key recovery, test-sign) as uploaded
+            // PKCS12/JKS keystores, so an expired or unusable cert is rejected now rather than at
+            // finalization.
+            certificateSubmissionValidator.validateAndExtractInfo(
+                    p12, "PKCS12", request.getPassword());
+            certSubmission.put("certType", "PKCS12");
+            // Store the keystore encrypted at rest.
+            certSubmission.put("p12Keystore", metadataEncryptionService.encryptBytes(p12));
+        } else {
+            certSubmission.put("certType", request.getCertType());
+            // Encrypt the uploaded keystore at rest: PKCS12/PFX → p12Keystore, JKS → jksKeystore.
+            if (request.getP12File() != null && !request.getP12File().isEmpty()) {
+                try {
+                    certSubmission.put(
+                            "p12Keystore",
+                            metadataEncryptionService.encryptBytes(
+                                    request.getP12File().getBytes()));
+                } catch (IOException e) {
+                    log.error("Failed to read P12 keystore file", e);
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+                }
+            } else if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
+                try {
+                    certSubmission.put(
+                            "jksKeystore",
+                            metadataEncryptionService.encryptBytes(
+                                    request.getJksFile().getBytes()));
+                } catch (IOException e) {
+                    log.error("Failed to read JKS keystore file", e);
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+                }
             }
         }
 
@@ -835,6 +898,69 @@ public class WorkflowSessionService {
                                 new ResponseStatusException(
                                         HttpStatus.FORBIDDEN,
                                         "User is not a participant in this session"));
+    }
+
+    /**
+     * Converts an uploaded PEM private key + certificate into a PKCS12 keystore (protected with the
+     * supplied password) so finalization can sign via the standard PKCS12 path.
+     */
+    private byte[] buildPkcs12FromPem(
+            MultipartFile privateKeyFile, MultipartFile certFile, String password) {
+        if (privateKeyFile == null
+                || privateKeyFile.isEmpty()
+                || certFile == null
+                || certFile.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "PEM signing requires both a private key file and a certificate file");
+        }
+        char[] pw = password != null ? password.toCharArray() : new char[0];
+        try {
+            PrivateKey privateKey = readPemPrivateKey(privateKeyFile.getBytes(), pw);
+            Certificate cert =
+                    CertificateFactory.getInstance("X.509")
+                            .generateCertificate(new ByteArrayInputStream(certFile.getBytes()));
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            keyStore.load(null, null);
+            keyStore.setKeyEntry("alias", privateKey, pw, new Certificate[] {cert});
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            keyStore.store(out, pw);
+            return out.toByteArray();
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to build keystore from PEM certificate", e);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Failed to read PEM certificate — check the key/certificate files and password");
+        }
+    }
+
+    /** Reads a PEM private key (PKCS8/PKCS1, optionally password-encrypted). */
+    private PrivateKey readPemPrivateKey(byte[] pemBytes, char[] password) throws Exception {
+        try (PEMParser pemParser =
+                new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
+            Object pemObject = pemParser.readObject();
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+            PrivateKeyInfo keyInfo;
+            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo encrypted) {
+                InputDecryptorProvider decryptor =
+                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password);
+                keyInfo = encrypted.decryptPrivateKeyInfo(decryptor);
+            } else if (pemObject instanceof PEMEncryptedKeyPair encryptedKeyPair) {
+                PEMDecryptorProvider decryptor =
+                        new JcePEMDecryptorProviderBuilder().build(password);
+                keyInfo = encryptedKeyPair.decryptKeyPair(decryptor).getPrivateKeyInfo();
+            } else if (pemObject instanceof PEMKeyPair keyPair) {
+                keyInfo = keyPair.getPrivateKeyInfo();
+            } else if (pemObject instanceof PrivateKeyInfo info) {
+                keyInfo = info;
+            } else {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Unsupported PEM private key format");
+            }
+            return converter.getPrivateKey(keyInfo);
+        }
     }
 
     /** Helper class to wrap byte array as MultipartFile. */

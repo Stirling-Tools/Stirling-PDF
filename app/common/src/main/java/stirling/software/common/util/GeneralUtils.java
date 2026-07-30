@@ -1185,23 +1185,181 @@ public class GeneralUtils {
     }
 
     public String getLocalNetworkIp() {
+        String routed = detectLocalIpViaDefaultRoute();
+        if (routed != null) {
+            return routed;
+        }
         try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            if (interfaces == null) return null;
-            while (interfaces.hasMoreElements()) {
-                NetworkInterface iface = interfaces.nextElement();
-                if (!iface.isUp() || iface.isLoopback() || iface.isVirtual()) continue;
-                Enumeration<InetAddress> addresses = iface.getInetAddresses();
-                while (addresses.hasMoreElements()) {
-                    InetAddress addr = addresses.nextElement();
-                    if (addr instanceof Inet4Address && addr.isSiteLocalAddress()) {
-                        return addr.getHostAddress();
-                    }
-                }
-            }
+            return selectBestSiteLocalIp(collectInterfaceInfo());
         } catch (Exception e) {
             log.warn("Failed to detect local network IP", e);
+            return null;
+        }
+    }
+
+    private String detectLocalIpViaDefaultRoute() {
+        try (DatagramSocket socket = new DatagramSocket()) {
+            socket.connect(InetAddress.getByName("8.8.8.8"), 53);
+            InetAddress local = socket.getLocalAddress();
+            if (local instanceof Inet4Address
+                    && !local.isAnyLocalAddress()
+                    && !local.isLoopbackAddress()
+                    && !local.isLinkLocalAddress()) {
+                return local.getHostAddress();
+            }
+        } catch (Exception e) {
+            log.debug("Default-route IP detection failed; will scan interfaces", e);
         }
         return null;
     }
+
+    private List<NetworkInterfaceInfo> collectInterfaceInfo() throws SocketException {
+        List<NetworkInterfaceInfo> infos = new ArrayList<>();
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+        if (interfaces == null) {
+            return infos;
+        }
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface iface = interfaces.nextElement();
+
+            List<String> siteLocalIpv4s = new ArrayList<>();
+            Enumeration<InetAddress> addresses = iface.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                InetAddress addr = addresses.nextElement();
+                if (addr instanceof Inet4Address && addr.isSiteLocalAddress()) {
+                    siteLocalIpv4s.add(addr.getHostAddress());
+                }
+            }
+            if (siteLocalIpv4s.isEmpty()) {
+                continue;
+            }
+
+            try {
+                byte[] mac = iface.getHardwareAddress();
+                infos.add(
+                        new NetworkInterfaceInfo(
+                                iface.getName(),
+                                iface.getDisplayName(),
+                                iface.getIndex(),
+                                iface.isUp(),
+                                iface.isLoopback(),
+                                iface.isPointToPoint(),
+                                iface.isVirtual(),
+                                mac != null && mac.length > 0,
+                                siteLocalIpv4s));
+            } catch (SocketException e) {
+                log.debug("Skipping interface {} while scanning for local IP", iface.getName(), e);
+            }
+        }
+        return infos;
+    }
+
+    static String selectBestSiteLocalIp(List<NetworkInterfaceInfo> interfaces) {
+        return interfaces.stream()
+                .filter(i -> i.up() && !i.loopback() && !i.pointToPoint() && !i.virtual())
+                .filter(i -> !isLikelyVirtualInterface(i.name(), i.displayName()))
+                .flatMap(
+                        i ->
+                                i.siteLocalIpv4s().stream()
+                                        .map(
+                                                ip ->
+                                                        new ScoredAddress(
+                                                                ip,
+                                                                scoreInterface(i, ip),
+                                                                i.index())))
+                .max(
+                        Comparator.comparingInt(ScoredAddress::score)
+                                .thenComparing(
+                                        Comparator.comparingInt(ScoredAddress::interfaceIndex)
+                                                .reversed()))
+                .map(ScoredAddress::ip)
+                .orElse(null);
+    }
+
+    private static int scoreInterface(NetworkInterfaceInfo iface, String ip) {
+        int score = 0;
+        if (isLikelyPhysicalInterface(iface.name(), iface.displayName())) {
+            score += 100;
+        }
+        if (iface.hasHardwareAddress()) {
+            score += 20;
+        }
+        if (ip.startsWith("192.168.")) {
+            score += 30;
+        } else if (ip.startsWith("10.")) {
+            score += 20;
+        } else {
+            score += 5;
+        }
+        return score;
+    }
+
+    static boolean isLikelyVirtualInterface(String name, String displayName) {
+        String n = name == null ? "" : name.toLowerCase(Locale.ROOT);
+        String d = displayName == null ? "" : displayName.toLowerCase(Locale.ROOT);
+        String[] namePrefixes = {
+            "tun", "tap", "utun", "veth", "virbr", "vmnet", "docker", "br-", "wg", "ppp", "awdl",
+            "llw"
+        };
+        for (String prefix : namePrefixes) {
+            if (n.startsWith(prefix)) {
+                return true;
+            }
+        }
+        String[] displayMarkers = {
+            "vmware",
+            "virtualbox",
+            "virtual box",
+            "vbox",
+            "hyper-v",
+            "hyperv",
+            "vethernet",
+            "windows subsystem for linux",
+            "wsl",
+            "docker",
+            "tap-windows",
+            "tunnel",
+            "vpn",
+            "zerotier",
+            "tailscale",
+            "bluetooth",
+            "teredo",
+            "isatap",
+            "loopback",
+            "pseudo",
+            "virtual"
+        };
+        for (String marker : displayMarkers) {
+            if (d.contains(marker)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isLikelyPhysicalInterface(String name, String displayName) {
+        String n = name == null ? "" : name.toLowerCase(Locale.ROOT);
+        String d = displayName == null ? "" : displayName.toLowerCase(Locale.ROOT);
+        return n.startsWith("eth")
+                || n.startsWith("en")
+                || n.startsWith("wl")
+                || n.startsWith("em")
+                || d.contains("ethernet")
+                || d.contains("wi-fi")
+                || d.contains("wifi")
+                || d.contains("wireless");
+    }
+
+    record NetworkInterfaceInfo(
+            String name,
+            String displayName,
+            int index,
+            boolean up,
+            boolean loopback,
+            boolean pointToPoint,
+            boolean virtual,
+            boolean hasHardwareAddress,
+            List<String> siteLocalIpv4s) {}
+
+    private record ScoredAddress(String ip, int score, int interfaceIndex) {}
 }

@@ -33,14 +33,14 @@ export function useAutomationForm({
 
   const getToolName = useCallback(
     (operation: string) => {
-      const tool = toolRegistry?.[operation as ToolId] as any;
+      const tool = toolRegistry?.[operation as ToolId];
       return tool?.name || t(`tools.${operation}.name`, operation);
     },
     [toolRegistry, t],
   );
 
   const getToolDefaultParameters = useCallback(
-    (operation: string): Record<string, any> => {
+    (operation: string): Record<string, unknown> => {
       const config = toolRegistry[operation as ToolId]?.operationConfig;
       if (config?.defaultParameters) {
         return { ...config.defaultParameters };

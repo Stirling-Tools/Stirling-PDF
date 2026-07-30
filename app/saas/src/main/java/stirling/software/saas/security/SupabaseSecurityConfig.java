@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,8 +48,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
@@ -67,6 +70,7 @@ public class SupabaseSecurityConfig {
     private final SupabaseUserService supabaseUserService;
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Value("${app.supabase.issuer:}")
     private String issuer;
@@ -80,7 +84,10 @@ public class SupabaseSecurityConfig {
     private long clockSkewSeconds;
 
     @Bean
-    SecurityFilterChain saasSecurityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder)
+    SecurityFilterChain saasSecurityFilterChain(
+            HttpSecurity http,
+            JwtDecoder jwtDecoder,
+            ObjectProvider<DeviceCredentialAuthenticationFilter> deviceCredentialFilterProvider)
             throws Exception {
         // CSRF protection intentionally disabled: this chain is bearer-token only (Supabase JWT in
         // Authorization header / X-API-KEY) with SessionCreationPolicy.STATELESS, so there is no
@@ -120,7 +127,8 @@ public class SupabaseSecurityConfig {
                                 userService,
                                 supabaseUserService,
                                 saasTeamService,
-                                jwtDecoder),
+                                jwtDecoder,
+                                apiKeyAuthenticationService),
                         BearerTokenAuthenticationFilter.class)
                 .exceptionHandling(
                         ex ->
@@ -135,6 +143,16 @@ public class SupabaseSecurityConfig {
                                                         .jwtAuthenticationConverter(
                                                                 SupabaseSecurityConfig
                                                                         ::toAuthentication)));
+
+        // Device-credential auth for linked self-hosted instances (combined-billing Mode A).
+        // The filter bean exists only when stirling.billing.account-link.enabled=true; when off it
+        // is absent here, so the instance surface cannot authenticate at all until release.
+        DeviceCredentialAuthenticationFilter deviceFilter =
+                deviceCredentialFilterProvider.getIfAvailable();
+        if (deviceFilter != null) {
+            http.addFilterBefore(deviceFilter, BearerTokenAuthenticationFilter.class);
+        }
+
         return http.build();
     }
 
@@ -296,7 +314,8 @@ public class SupabaseSecurityConfig {
                         "X-Requested-With",
                         "Accept",
                         "Origin",
-                        "X-API-KEY"));
+                        "X-API-KEY",
+                        "X-Browser-Id"));
         cfg.setExposedHeaders(List.of("WWW-Authenticate"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);

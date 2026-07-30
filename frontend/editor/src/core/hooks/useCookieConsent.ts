@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { BASE_PATH } from "@app/constants/app";
+import { getSystemTheme } from "@app/constants/theme";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   Z_INDEX_COOKIE_CONSENT_BANNER,
@@ -26,7 +27,6 @@ declare global {
 
 interface CookieConsentConfig {
   analyticsEnabled?: boolean;
-  forceLightMode?: boolean;
 }
 
 // Shard so Mantine's scroll-lock doesn't swallow events on the consent dialog;
@@ -41,7 +41,6 @@ export const COOKIE_CONSENT_SCROLL_SHARD = {
 
 export const useCookieConsent = ({
   analyticsEnabled = false,
-  forceLightMode = false,
 }: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -75,9 +74,6 @@ export const useCookieConsent = ({
     }
 
     if (window.CookieConsent) {
-      if (forceLightMode) {
-        document.documentElement.classList.remove("cc--darkmode");
-      }
       setIsInitialized(true);
       return;
     }
@@ -87,11 +83,6 @@ export const useCookieConsent = ({
     script.onload = () => {
       setTimeout(() => {
         const detectTheme = () => {
-          if (forceLightMode) {
-            document.documentElement.classList.remove("cc--darkmode");
-            return false;
-          }
-
           const mantineScheme = document.documentElement.getAttribute(
             "data-mantine-color-scheme",
           );
@@ -99,9 +90,7 @@ export const useCookieConsent = ({
             document.documentElement.classList.contains("light");
           const hasDarkClass =
             document.documentElement.classList.contains("dark");
-          const systemPrefersDark = window.matchMedia(
-            "(prefers-color-scheme: dark)",
-          ).matches;
+          const systemPrefersDark = getSystemTheme() === "dark";
 
           let isDarkMode: boolean;
           if (mantineScheme) {
@@ -125,24 +114,22 @@ export const useCookieConsent = ({
           return;
         }
 
-        if (!forceLightMode) {
-          const themeObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-              if (
-                mutation.type === "attributes" &&
-                (mutation.attributeName === "data-mantine-color-scheme" ||
-                  mutation.attributeName === "class")
-              ) {
-                detectTheme();
-              }
-            });
+        const themeObserver = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (
+              mutation.type === "attributes" &&
+              (mutation.attributeName === "data-mantine-color-scheme" ||
+                mutation.attributeName === "class")
+            ) {
+              detectTheme();
+            }
           });
+        });
 
-          themeObserver.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ["data-mantine-color-scheme", "class"],
-          });
-        }
+        themeObserver.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ["data-mantine-color-scheme", "class"],
+        });
 
         try {
           const overrides = getCookieConsentOverrides();
@@ -319,32 +306,19 @@ export const useCookieConsent = ({
         document.head.removeChild(customCSS);
       }
     };
-  }, [
-    analyticsEnabled,
-    config?.enablePosthog,
-    config?.enableScarf,
-    t,
-    forceLightMode,
-  ]);
+  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
 
   useEffect(() => {
     if (!isInitialized) return;
 
     const detectTheme = () => {
-      if (forceLightMode) {
-        document.documentElement.classList.remove("cc--darkmode");
-        return false;
-      }
-
       const mantineScheme = document.documentElement.getAttribute(
         "data-mantine-color-scheme",
       );
       const hasLightClass =
         document.documentElement.classList.contains("light");
       const hasDarkClass = document.documentElement.classList.contains("dark");
-      const systemPrefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-      ).matches;
+      const systemPrefersDark = getSystemTheme() === "dark";
 
       let isDarkMode: boolean;
       if (mantineScheme) {
@@ -363,32 +337,25 @@ export const useCookieConsent = ({
 
     detectTheme();
 
-    let themeObserver: MutationObserver | null = null;
-    if (!forceLightMode) {
-      themeObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (
-            mutation.type === "attributes" &&
-            (mutation.attributeName === "data-mantine-color-scheme" ||
-              mutation.attributeName === "class")
-          ) {
-            detectTheme();
-          }
-        });
+    const themeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === "attributes" &&
+          (mutation.attributeName === "data-mantine-color-scheme" ||
+            mutation.attributeName === "class")
+        ) {
+          detectTheme();
+        }
       });
+    });
 
-      themeObserver.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["data-mantine-color-scheme", "class"],
-      });
-    }
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-mantine-color-scheme", "class"],
+    });
 
-    return () => {
-      if (themeObserver) {
-        themeObserver.disconnect();
-      }
-    };
-  }, [forceLightMode, isInitialized]);
+    return () => themeObserver.disconnect();
+  }, [isInitialized]);
 
   useEffect(() => {
     if (!isInitialized || !window.CookieConsent) return;

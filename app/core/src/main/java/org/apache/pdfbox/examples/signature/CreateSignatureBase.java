@@ -24,12 +24,14 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
@@ -49,6 +51,13 @@ public abstract class CreateSignatureBase implements SignatureInterface {
     private PrivateKey privateKey;
     @Getter private Certificate[] certificateChain;
     @Setter private String tsaUrl;
+
+    /**
+     * Provider that must service the signing operation. Set for hardware-held keys (SunPKCS11 for
+     * USB tokens, SunMSCAPI for the Windows store) so the {@link java.security.Signature} runs on
+     * the token. Left {@code null} for software keystores, which use the default provider.
+     */
+    @Setter private Provider signingProvider;
 
     /**
      * Specifies whether the external signing scenario should be used. If set to {@code true},
@@ -80,30 +89,74 @@ public abstract class CreateSignatureBase implements SignatureInterface {
                     NoSuchAlgorithmException,
                     IOException,
                     CertificateException {
-        // grabs the first alias from the keystore and get the private key. An
-        // alternative method or constructor could be used for setting a specific
-        // alias that should be used.
+        this(keystore, pin, null);
+    }
+
+    /**
+     * Initialize the signature creator, optionally selecting a specific certificate by alias. A
+     * hardware token / the Windows store can hold several certificates, so the caller picks one;
+     * when {@code requestedAlias} is null the first usable entry is used (software keystore
+     * behaviour).
+     *
+     * @param keystore the keystore (software, PKCS#11 or Windows-MY)
+     * @param pin the keystore / token PIN, may be null for the Windows store
+     * @param requestedAlias the alias to sign with, or null to pick the first usable entry
+     */
+    public CreateSignatureBase(KeyStore keystore, char[] pin, String requestedAlias)
+            throws KeyStoreException,
+                    UnrecoverableKeyException,
+                    NoSuchAlgorithmException,
+                    IOException,
+                    CertificateException {
+        if (requestedAlias != null
+                && !requestedAlias.isBlank()
+                && keystore.containsAlias(requestedAlias)) {
+            privateKey = (PrivateKey) keystore.getKey(requestedAlias, pin);
+            certificateChain = resolveChain(keystore, requestedAlias);
+            if (certificateChain == null) {
+                throw new IOException("Could not find certificate for alias " + requestedAlias);
+            }
+            checkValidity(certificateChain[0]);
+            return;
+        }
+
+        // grabs the first alias from the keystore and gets the private key.
         Enumeration<String> aliases = keystore.aliases();
-        String alias;
         Certificate cert = null;
         while (cert == null && aliases.hasMoreElements()) {
-            alias = aliases.nextElement();
+            String alias = aliases.nextElement();
             privateKey = (PrivateKey) keystore.getKey(alias, pin);
-            Certificate[] certChain = keystore.getCertificateChain(alias);
+            Certificate[] certChain = resolveChain(keystore, alias);
             if (certChain != null) {
                 certificateChain = certChain;
                 cert = certChain[0];
-                if (cert instanceof X509Certificate) {
-                    // avoid expired certificate
-                    ((X509Certificate) cert).checkValidity();
-
-                    //// SigUtils.checkCertificateUsage((X509Certificate) cert);
-                }
+                checkValidity(cert);
             }
         }
 
         if (cert == null) {
             throw new IOException("Could not find certificate");
+        }
+    }
+
+    /**
+     * Resolve the certificate chain for an alias. PKCS#11 tokens and the Windows store frequently
+     * expose only the leaf certificate (a null chain), so fall back to the single certificate.
+     */
+    private static Certificate[] resolveChain(KeyStore keystore, String alias)
+            throws KeyStoreException {
+        Certificate[] chain = keystore.getCertificateChain(alias);
+        if (chain != null && chain.length > 0) {
+            return chain;
+        }
+        Certificate single = keystore.getCertificate(alias);
+        return single != null ? new Certificate[] {single} : null;
+    }
+
+    private static void checkValidity(Certificate cert) throws CertificateException {
+        if (cert instanceof X509Certificate x509Cert) {
+            // avoid expired certificate
+            x509Cert.checkValidity();
         }
     }
 
@@ -136,12 +189,18 @@ public abstract class CreateSignatureBase implements SignatureInterface {
         try {
             CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
             X509Certificate cert = (X509Certificate) certificateChain[0];
-            ContentSigner sha1Signer =
-                    new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
+            JcaContentSignerBuilder signerBuilder =
+                    new JcaContentSignerBuilder(resolveSignatureAlgorithm(privateKey, cert));
+            // Hardware keys (PKCS#11 / Windows store) must sign on their own provider so the
+            // operation runs on the token; software keys use the default provider.
+            if (signingProvider != null) {
+                signerBuilder.setProvider(signingProvider);
+            }
+            ContentSigner signer = signerBuilder.build(privateKey);
             gen.addSignerInfoGenerator(
                     new JcaSignerInfoGeneratorBuilder(
                                     new JcaDigestCalculatorProviderBuilder().build())
-                            .build(sha1Signer, cert));
+                            .build(signer, cert));
             gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));
             CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
             CMSSignedData signedData = gen.generate(msg, false);
@@ -156,5 +215,27 @@ public abstract class CreateSignatureBase implements SignatureInterface {
                 | URISyntaxException e) {
             throw new IOException(e);
         }
+    }
+
+    /**
+     * Pick a SHA-256 signature algorithm that matches the key type. RSA keeps the historical
+     * default; EC / EdDSA tokens are common, so they are handled too.
+     */
+    private static String resolveSignatureAlgorithm(PrivateKey key, X509Certificate cert) {
+        String alg = key.getAlgorithm();
+        if (alg == null || alg.isBlank()) {
+            alg = cert.getPublicKey().getAlgorithm();
+        }
+        alg = alg == null ? "" : alg.toUpperCase(Locale.ROOT);
+        if (alg.contains("ED25519") || alg.contains("EDDSA")) {
+            return "Ed25519";
+        }
+        if (alg.contains("EC")) { // EC, ECDSA
+            return "SHA256withECDSA";
+        }
+        if (alg.contains("DSA")) {
+            return "SHA256withDSA";
+        }
+        return "SHA256withRSA";
     }
 }

@@ -3,22 +3,14 @@ import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { ROW_ACCENT } from "@app/components/policies/policyStatus";
-import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
+import { policyAccentVar } from "@app/components/policies/policyStatus";
+import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 /** How long after a run a badge counts as "recent" (drives the one-off glow).
- *  Covers the run + import delay; old/reloaded runs fall outside it, so the glow
- *  fires only just after a policy is applied, not on every page reload. */
-const RECENT_MS = 60_000;
-
-/** Policy accent name (ROW_ACCENT) → the CSS colour var the badge uses. */
-const ACCENT_VAR: Record<string, string> = {
-  blue: "var(--color-blue)",
-  purple: "var(--color-purple)",
-  green: "var(--color-green)",
-  amber: "var(--color-amber)",
-  red: "var(--color-red)",
-};
+ *  Measured from run start — must exceed the longest realistic policy wall-clock
+ *  time so the glow still fires after a slow run completes and imports. Old or
+ *  reloaded runs fall outside this window, suppressing the glow on page reload. */
+const RECENT_MS = 5 * 60 * 1000;
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
 type LineageStub = {
@@ -71,7 +63,7 @@ export function buildPolicyBadgeMap(
         list.push({
           id: run.categoryId,
           name,
-          accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
+          accentColor: policyAccentVar(run.categoryId),
           recent,
         });
         directByFile.set(fileId, list);
@@ -104,6 +96,35 @@ export function buildPolicyBadgeMap(
       const list = result.get(stub.id) ?? [];
       for (const ref of srcBadges) mergeRef(list, { ...ref, recent: false });
       result.set(stub.id, list);
+    }
+  }
+
+  // In-flight pass: add (or upgrade) a badge on the input file for any run that
+  // is currently being processed, so the sidebar shows a spinning indicator
+  // while the policy is actively enforcing — not just after it completes.
+  // Keep the spinner until `imported` is true: the status reaches COMPLETED
+  // before the output files are imported into the workspace, so gating on
+  // status alone would drop the badge during that async gap.
+  for (const run of runs) {
+    if (!run.fileId) continue;
+    const settled =
+      run.imported || run.status === "FAILED" || run.status === "CANCELLED";
+    if (settled && !run.retrying) continue;
+    const name = labelById.get(run.categoryId);
+    if (!name) continue;
+    const list = result.get(run.fileId) ?? [];
+    const existing = list.find((p) => p.id === run.categoryId);
+    if (existing) {
+      existing.enforcing = true;
+    } else {
+      list.push({
+        id: run.categoryId,
+        name,
+        accentColor: policyAccentVar(run.categoryId),
+        recent: false,
+        enforcing: true,
+      });
+      result.set(run.fileId, list);
     }
   }
 

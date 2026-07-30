@@ -1,9 +1,10 @@
 import React, {
+  useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useState,
   useRef,
-  useCallback,
 } from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
@@ -407,7 +408,10 @@ import type {
   SignatureAPI,
   AnnotationAPI,
   HistoryAPI,
+  SignaturePreview,
+  SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
+import { SignaturePreviewLayer } from "@app/components/viewer/SignaturePreviewLayer";
 import { ExportAPIBridge } from "@app/components/viewer/ExportAPIBridge";
 import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
 import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
@@ -418,6 +422,7 @@ import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
   RedactionPendingTracker,
   RedactionPendingTrackerAPI,
@@ -456,6 +461,21 @@ interface LocalEmbedPDFProps {
   isSignMode?: boolean;
   /** Controls CSS filter applied only to rendered PDF canvas tiles */
   pdfRenderMode?: "normal" | "dark" | "sepia";
+  // ── Signature overlay (opt-in; all default off) ──────────────────────────
+  /** Read-only / interactive signature preview overlays to render per page. */
+  signaturePreviews?: SignaturePreview[];
+  /** If true, previews are display-only (cannot be moved, resized, or deleted). */
+  signaturePreviewsReadOnly?: boolean;
+  /** When true (and not read-only), clicking a page places a new preview. */
+  signaturePlacementMode?: boolean;
+  /** Base64 PNG used for placement and the cursor ghost preview. */
+  signaturePlacementData?: string;
+  /** Signature type assigned to newly placed previews. */
+  signaturePlacementType?: "canvas" | "image" | "text";
+  /** Emits the full updated preview array whenever overlays change. */
+  onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
+  /** Imperative handle for reading/clearing/deleting signature previews. */
+  signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
 }
 
 interface TiledPageBackgroundProps {
@@ -749,6 +769,13 @@ export function LocalEmbedPDF({
   commentsSidebarRightOffset = "0rem",
   isSignMode = false,
   pdfRenderMode = "normal",
+  signaturePreviews,
+  signaturePreviewsReadOnly = false,
+  signaturePlacementMode = false,
+  signaturePlacementData,
+  signaturePlacementType,
+  onSignaturePreviewsChange,
+  signatureOverlayApiRef,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -757,6 +784,58 @@ export function LocalEmbedPDF({
     Array<{ id: string; pageIndex: number; rect: Rect }>
   >([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>("Guest");
+
+  const [localSignaturePreviews, setLocalSignaturePreviews] = useState<
+    SignaturePreview[]
+  >(signaturePreviews ?? []);
+
+  // Mount the overlay for controlled previews, placement mode, or once any
+  // signature is placed — so leaving placement mode doesn't hide placements.
+  const signatureOverlayEnabled =
+    signaturePreviews !== undefined ||
+    signaturePlacementMode ||
+    localSignaturePreviews.length > 0;
+  const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(
+    null,
+  );
+
+  // Keep internal state in sync when the caller supplies controlled previews.
+  useEffect(() => {
+    if (signaturePreviews !== undefined) {
+      setLocalSignaturePreviews(signaturePreviews);
+    }
+  }, [signaturePreviews]);
+
+  const handleSignaturePreviewsChange = useCallback(
+    (next: SignaturePreview[]) => {
+      setLocalSignaturePreviews(next);
+      onSignaturePreviewsChange?.(next);
+    },
+    [onSignaturePreviewsChange],
+  );
+
+  useImperativeHandle(
+    signatureOverlayApiRef,
+    () => ({
+      getSignaturePreviews: () => localSignaturePreviews,
+      clearPreviews: () => {
+        setLocalSignaturePreviews([]);
+        setSelectedSignatureId(null);
+        onSignaturePreviewsChange?.([]);
+      },
+      deleteSelected: () => {
+        if (!selectedSignatureId) return;
+        const next = localSignaturePreviews.filter(
+          (p) => p.id !== selectedSignatureId,
+        );
+        setSelectedSignatureId(null);
+        setLocalSignaturePreviews(next);
+        onSignaturePreviewsChange?.(next);
+      },
+      hasSelected: () => selectedSignatureId !== null,
+    }),
+    [localSignaturePreviews, selectedSignatureId, onSignaturePreviewsChange],
+  );
 
   useEffect(() => {
     if (!config?.enableLogin) return;
@@ -1170,7 +1249,7 @@ export function LocalEmbedPDF({
                     <Viewport
                       documentId={documentId}
                       style={{
-                        backgroundColor: "var(--bg-background)",
+                        backgroundColor: "var(--c-bg)",
                         height: "100%",
                         width: "100%",
                         maxHeight: "100%",
@@ -1185,7 +1264,172 @@ export function LocalEmbedPDF({
                     >
                       <DocumentScroller
                         documentId={documentId}
-                        renderPageFactory={renderPageFactory}
+                        renderPage={({ width, height, pageIndex }) => {
+                          return (
+                            <Rotate
+                              key={`${documentId}-${pageIndex}`}
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                            >
+                              <PagePointerProvider
+                                documentId={documentId}
+                                pageIndex={pageIndex}
+                              >
+                                <div
+                                  data-page-index={pageIndex}
+                                  data-page-width={width}
+                                  data-page-height={height}
+                                  style={{
+                                    width,
+                                    height,
+                                    position: "relative",
+                                    overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
+                                    userSelect: "none",
+                                    WebkitUserSelect: "none",
+                                    MozUserSelect: "none",
+                                    msUserSelect: "none",
+                                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                                  }}
+                                  draggable={false}
+                                  onDragStart={(e) => e.preventDefault()}
+                                  onDrop={(e) => e.preventDefault()}
+                                  onDragOver={(e) => e.preventDefault()}
+                                >
+                                  <div
+                                    style={{
+                                      position: "absolute",
+                                      inset: 0,
+                                      transition: "filter 0.25s ease",
+                                      filter:
+                                        pdfRenderMode === "dark"
+                                          ? "invert(1) hue-rotate(180deg)"
+                                          : pdfRenderMode === "sepia"
+                                            ? "sepia(0.7) brightness(0.85)"
+                                            : undefined,
+                                    }}
+                                  >
+                                    <TilingLayer
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                    />
+                                  </div>
+
+                                  <CustomSearchLayer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                  />
+
+                                  <div
+                                    className="pdf-selection-layer"
+                                    style={{
+                                      position: "absolute",
+                                      inset: 0,
+                                      pointerEvents: "none",
+                                    }}
+                                  >
+                                    <SelectionLayer
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                      background="var(--pdf-selection-bg)"
+                                      selectionMenu={(props) => (
+                                        <TextSelectionMenu {...props} />
+                                      )}
+                                    />
+                                  </div>
+                                  <TextSelectionHandler
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                  />
+
+                                  {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
+                                  {enableFormFill && file && (
+                                    <ButtonAppearanceOverlay
+                                      pageIndex={pageIndex}
+                                      pdfSource={file}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                    />
+                                  )}
+
+                                  {/* FormFieldOverlay for interactive form filling */}
+                                  {enableFormFill && (
+                                    <FormFieldOverlay
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                      fileId={fileId}
+                                    />
+                                  )}
+
+                                  {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
+                                  {file && (
+                                    <SignatureFieldOverlay
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                      pdfSource={file}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                    />
+                                  )}
+
+                                  {/* AnnotationLayer for annotation editing and annotation-based redactions */}
+                                  {(enableAnnotations || enableRedaction) && (
+                                    <AnnotationLayer
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                      selectionOutline={{ color: "#007ACC" }}
+                                      selectionMenu={(props) => (
+                                        <AnnotationSelectionMenu {...props} />
+                                      )}
+                                      style={
+                                        !showBakedAnnotations
+                                          ? {
+                                              opacity: 0,
+                                              pointerEvents: "none",
+                                            }
+                                          : undefined
+                                      }
+                                    />
+                                  )}
+
+                                  {enableRedaction && (
+                                    <RedactionLayer
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                      selectionMenu={(props) => (
+                                        <RedactionSelectionMenu {...props} />
+                                      )}
+                                    />
+                                  )}
+
+                                  {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
+                                  <LinkLayer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                  />
+
+                                  {/* Signature preview overlay (opt-in; off by default) */}
+                                  {signatureOverlayEnabled && (
+                                    <SignaturePreviewLayer
+                                      pageIndex={pageIndex}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                      previews={localSignaturePreviews}
+                                      readOnly={signaturePreviewsReadOnly}
+                                      placementMode={signaturePlacementMode}
+                                      placementData={signaturePlacementData}
+                                      placementType={signaturePlacementType}
+                                      onChange={handleSignaturePreviewsChange}
+                                      selectedId={selectedSignatureId}
+                                      onSelect={setSelectedSignatureId}
+                                    />
+                                  )}
+                                </div>
+                              </PagePointerProvider>
+                            </Rotate>
+                          );
+                        }}
                       />
                     </Viewport>
                   </GlobalPointerProvider>

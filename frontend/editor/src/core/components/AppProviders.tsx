@@ -1,6 +1,6 @@
 import { ReactNode, useEffect } from "react";
 import "@app/debug/memoryTelemetry";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
@@ -21,12 +21,14 @@ import {
 import { WorkbenchBarProvider } from "@app/contexts/WorkbenchBarContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
+import { SigningOverlayProvider } from "@app/contexts/SigningOverlayContext";
 import { AnnotationProvider } from "@app/contexts/AnnotationContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
+import { usePosthogTracking } from "@app/hooks/usePosthogTracking";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
@@ -46,6 +48,10 @@ function ScarfTrackingInitializer() {
 import { PdfEngineProvider, usePdfiumEngine } from "@embedpdf/engines/react";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 
+function PosthogTrackingInitializer() {
+  usePosthogTracking();
+  return null;
+}
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
   useAppInitialization();
@@ -128,13 +134,14 @@ export function AppProviders({
 
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>
+      <ThemeProvider>
         <ErrorBoundary>
           <BannerProvider>
             <AppConfigProvider
               retryOptions={appConfigRetryOptions}
               {...appConfigProviderProps}
             >
+              <PosthogTrackingInitializer />
               <ScarfTrackingInitializer />
               <AppConfigLoader />
               <ServerDefaultsSync />
@@ -162,6 +169,7 @@ export function AppProviders({
                                 <ViewerProvider>
                                   <PageEditorProvider>
                                     <SignatureProvider>
+                                      <SigningOverlayProvider>
                                       <RedactionProvider>
                                         <FormFillProvider>
                                           <AnnotationProvider>
@@ -177,6 +185,7 @@ export function AppProviders({
                                           </AnnotationProvider>
                                         </FormFillProvider>
                                       </RedactionProvider>
+                                    </SigningOverlayProvider>
                                     </SignatureProvider>
                                   </PageEditorProvider>
                                 </ViewerProvider>
@@ -192,7 +201,7 @@ export function AppProviders({
             </AppConfigProvider>
           </BannerProvider>
         </ErrorBoundary>
-      </RainbowThemeProvider>
+      </ThemeProvider>
     </PreferencesProvider>
   );
 }

@@ -79,7 +79,11 @@ code {
 }
 
 .viewer-file-tab[data-active] {
-  background-color: rgba(147, 197, 253, 0.5);
+  background-color: color-mix(
+    in srgb,
+    var(--c-tab-active-tint) 50%,
+    transparent
+  );
 }
 
 /* Page skeleton loader with CSS shimmer */

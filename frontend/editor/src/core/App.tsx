@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
@@ -22,7 +22,7 @@ import "@app/utils/fileIdSafety";
 function PublicRouteProviders({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>{children}</RainbowThemeProvider>
+      <ThemeProvider>{children}</ThemeProvider>
     </PreferencesProvider>
   );
 }

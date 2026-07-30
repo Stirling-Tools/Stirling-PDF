@@ -1,44 +1,75 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   ReplaceColorParameters,
   defaultParameters,
 } from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
 
+const ENDPOINT = "/api/v1/misc/replace-invert-pdf" satisfies ToolEndpoint;
+type ReplaceColorApiParams = ToolApiParams[typeof ENDPOINT];
+
+export const replaceColorToApiParams = (
+  parameters: ReplaceColorParameters,
+): ReplaceColorApiParams => {
+  const apiParams: ReplaceColorApiParams = {
+    replaceAndInvertOption: parameters.replaceAndInvertOption,
+  };
+
+  if (parameters.replaceAndInvertOption === "HIGH_CONTRAST_COLOR") {
+    apiParams.highContrastColorCombination =
+      parameters.highContrastColorCombination;
+  } else if (parameters.replaceAndInvertOption === "CUSTOM_COLOR") {
+    apiParams.textColor = parameters.textColor;
+    apiParams.backGroundColor = parameters.backGroundColor;
+  }
+
+  return apiParams;
+};
+
+export const replaceColorFromApiParams = (
+  apiParams: ReplaceColorApiParams,
+): Partial<ReplaceColorParameters> => {
+  const result: Partial<ReplaceColorParameters> = {
+    replaceAndInvertOption: apiParams.replaceAndInvertOption,
+  };
+
+  if (apiParams.highContrastColorCombination !== undefined) {
+    result.highContrastColorCombination =
+      apiParams.highContrastColorCombination;
+  }
+  if (apiParams.textColor !== undefined) {
+    result.textColor = apiParams.textColor;
+  }
+  if (apiParams.backGroundColor !== undefined) {
+    result.backGroundColor = apiParams.backGroundColor;
+  }
+
+  return result;
+};
+
 export const buildReplaceColorFormData = (
   parameters: ReplaceColorParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
+): FormData =>
+  objectToFormData(replaceColorToApiParams(parameters), { fileInput: file });
 
-  formData.append("replaceAndInvertOption", parameters.replaceAndInvertOption);
-
-  if (parameters.replaceAndInvertOption === "HIGH_CONTRAST_COLOR") {
-    formData.append(
-      "highContrastColorCombination",
-      parameters.highContrastColorCombination,
-    );
-  } else if (parameters.replaceAndInvertOption === "CUSTOM_COLOR") {
-    formData.append("textColor", parameters.textColor);
-    formData.append("backGroundColor", parameters.backGroundColor);
-  }
-
-  return formData;
-};
-
-export const replaceColorOperationConfig = {
-  toolType: ToolType.singleFile,
+export const replaceColorOperationConfig = defineSingleFileTool({
   buildFormData: buildReplaceColorFormData,
+  toApiParams: replaceColorToApiParams,
+  fromApiParams: replaceColorFromApiParams,
   operationType: "replaceColor",
-  endpoint: "/api/v1/misc/replace-invert-pdf",
-  multiFileEndpoint: false,
+  endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useReplaceColorOperation = () => {
   const { t } = useTranslation();

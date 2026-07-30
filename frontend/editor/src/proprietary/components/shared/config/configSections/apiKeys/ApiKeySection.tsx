@@ -1,5 +1,6 @@
 import React from "react";
-import { Box, Button, Group, Paper } from "@mantine/core";
+import { Box, Group, Paper } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import FitText from "@app/components/shared/FitText";
 import { useTranslation } from "react-i18next";
@@ -26,8 +27,8 @@ export default function ApiKeySection({
         radius="md"
         p={18}
         style={{
-          background: "var(--api-keys-card-bg)",
-          border: "1px solid var(--api-keys-card-border)",
+          background: "var(--c-surface)",
+          border: "1px solid var(--c-border)",
           boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
         }}
       >
@@ -35,8 +36,8 @@ export default function ApiKeySection({
           <Box style={{ flex: 1 }}>
             <Box
               style={{
-                background: "var(--api-keys-input-bg)",
-                border: "1px solid var(--api-keys-input-border)",
+                background: "var(--c-input-bg)",
+                border: "1px solid var(--c-border)",
                 borderRadius: 8,
                 padding: "8px 12px",
                 fontFamily:
@@ -56,18 +57,14 @@ export default function ApiKeySection({
           </Box>
           <Button
             size="sm"
-            variant="light"
+            variant="secondary"
+            accent="neutral"
             onClick={() => onCopy(publicKey, "public")}
             leftSection={
               <LocalIcon icon="content-copy-rounded" width={14} height={14} />
             }
-            styles={{
-              root: {
-                background: "var(--api-keys-button-bg)",
-                color: "var(--api-keys-button-color)",
-                border: "none",
-                marginLeft: 12,
-              },
+            style={{
+              marginLeft: 12,
             }}
             aria-label={t("config.apiKeys.copyKeyAriaLabel", "Copy API key")}
           >
@@ -77,18 +74,14 @@ export default function ApiKeySection({
           </Button>
           <Button
             size="sm"
-            variant="light"
+            variant="secondary"
+            accent="neutral"
             onClick={onRefresh}
             leftSection={
               <LocalIcon icon="refresh-rounded" width={14} height={14} />
             }
-            styles={{
-              root: {
-                background: "var(--api-keys-button-bg)",
-                color: "var(--api-keys-button-color)",
-                border: "none",
-                marginLeft: 8,
-              },
+            style={{
+              marginLeft: 8,
             }}
             disabled={disabled}
             aria-label={t("config.apiKeys.refreshAriaLabel", "Refresh API key")}

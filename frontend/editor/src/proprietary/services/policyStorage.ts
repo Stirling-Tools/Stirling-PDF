@@ -53,14 +53,17 @@ export function loadPolicies(): PoliciesByCategory {
   // Always reconcile against the current category list so a newly-added
   // category gets a default rather than being undefined.
   const out: PoliciesByCategory = {};
-  for (const cat of loadPolicyCatalog().categories) {
+  loadPolicyCatalog().categories.forEach((cat, index) => {
     const merged = { ...defaultState(), ...(parsed[cat.id] ?? {}) };
     // Migration: clear the obsolete persisted reviewer email so it re-defaults
     // to the real signed-in user.
     if (merged.reviewerEmail === STALE_REVIEWER_EMAIL)
       merged.reviewerEmail = "";
+    // Default execution order to the catalog position until an admin reorders,
+    // so ordered dispatch is deterministic before any explicit order is set.
+    if (merged.order == null) merged.order = index;
     out[cat.id] = merged;
-  }
+  });
   return out;
 }
 
@@ -93,6 +96,24 @@ export function updatePolicy(
       ...patch,
     },
   };
+  persist(next);
+  return next;
+}
+
+/**
+ * Persist a new execution order. Assigns `order` 0..n-1 to the given categories in
+ * the sequence provided, so after any reorder every listed policy has an explicit,
+ * contiguous order (no reliance on the catalog-index default). Categories omitted
+ * from the list keep their current order.
+ */
+export function reorderPolicies(
+  orderedCategoryIds: string[],
+): PoliciesByCategory {
+  const current = loadPolicies();
+  const next: PoliciesByCategory = { ...current };
+  orderedCategoryIds.forEach((id, index) => {
+    if (next[id]) next[id] = { ...next[id], order: index };
+  });
   persist(next);
   return next;
 }
