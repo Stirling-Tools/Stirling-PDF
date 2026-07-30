@@ -1,6 +1,8 @@
 interface SidebarToggleIconProps {
   /** Square size in px. */
   size?: number;
+  /** Put the divided-off rail on the right, for a right-hand panel. */
+  mirrored?: boolean;
   className?: string;
 }
 
@@ -11,8 +13,12 @@ interface SidebarToggleIconProps {
  */
 export function SidebarToggleIcon({
   size = 18,
+  mirrored = false,
   className,
 }: SidebarToggleIconProps) {
+  // Mirror by moving the divider, not by flipping the whole glyph, so the
+  // rounded corners and stroke widths stay identical between the two.
+  const dividerX = mirrored ? 14.5 : 9.5;
   return (
     <svg
       width={size}
@@ -27,7 +33,7 @@ export function SidebarToggleIcon({
       aria-hidden="true"
     >
       <rect x="3" y="4" width="18" height="16" rx="2.5" />
-      <line x1="9.5" y1="4" x2="9.5" y2="20" />
+      <line x1={dividerX} y1="4" x2={dividerX} y2="20" />
     </svg>
   );
 }

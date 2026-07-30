@@ -16,7 +16,7 @@ import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import { ToolId } from "@app/types/toolId";
@@ -317,7 +317,7 @@ export default function RightSidebar() {
                       aria-label={t("toolPanel.collapse", "Collapse panel")}
                       className="tool-panel__expand-btn tool-panel__toggle-vt"
                     >
-                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                      <SidebarToggleIcon size={18} mirrored />
                     </ActionIcon>
                   )}
                 </div>
