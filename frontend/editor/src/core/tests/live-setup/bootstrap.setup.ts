@@ -59,7 +59,6 @@ test.describe("Live-suite bootstrap", () => {
     }
 
     await ensureCookieConsent(page);
-    await skipOnboarding(page);
 
     await page.goto("/login", { waitUntil: "domcontentloaded" });
     await page.locator("#email").waitFor({ state: "visible", timeout: 15_000 });
