@@ -61,7 +61,7 @@ export function FlowModal({
   header,
   footer,
   size = "md",
-  bodyClassName,
+  hideClose = false,
   children,
 }: {
   open: boolean;
@@ -72,7 +72,11 @@ export function FlowModal({
   footer?: ReactNode;
   /** `md` for the task dialogs, `lg` for the procurement takeover. */
   size?: "md" | "lg";
-  bodyClassName?: string;
+  /**
+   * Let the content own the close, for a step whose own header already carries it beside a step
+   * badge. Escape and the backdrop still close, so the dialog is never inescapable.
+   */
+  hideClose?: boolean;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -101,42 +105,44 @@ export function FlowModal({
         aria-label={label}
         tabIndex={-1}
       >
-        {/* The band always renders: it carries the close, which sits on the title row beside the
-            step badge rather than floating over the panel. `data-bare` drops the rule beneath it
-            when a flow supplies no heading of its own. */}
-        <div
-          className="portal-flowmodal__header"
-          data-bare={!header || undefined}
-        >
-          <div className="portal-flowmodal__header-slot">{header}</div>
-          <Button
-            variant="tertiary"
-            accent="neutral"
-            size="sm"
-            shape="circle"
-            onClick={onClose}
-            aria-label={t("portal.procurement.modal.close")}
-            leftSection={
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.75}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            }
-          />
-        </div>
-        <div className={`portal-flowmodal__body ${bodyClassName ?? ""}`.trim()}>
-          {children}
-        </div>
+        {/* The band carries the heading and the close together on one row. It is skipped entirely
+            when the content owns both — a step with its own stepped header puts the close beside its
+            step badge — rather than leaving a band that holds nothing but a stray close. */}
+        {(header || !hideClose) && (
+          <div
+            className="portal-flowmodal__header"
+            data-bare={!header || undefined}
+          >
+            <div className="portal-flowmodal__header-slot">{header}</div>
+            {!hideClose && (
+              <Button
+                variant="tertiary"
+                accent="neutral"
+                size="sm"
+                shape="circle"
+                onClick={onClose}
+                aria-label={t("portal.procurement.modal.close")}
+                leftSection={
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                }
+              />
+            )}
+          </div>
+        )}
+        <div className="portal-flowmodal__body">{children}</div>
         {footer && <div className="portal-flowmodal__footer">{footer}</div>}
       </div>
     </div>,

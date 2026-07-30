@@ -67,6 +67,12 @@ export function ProcurementFlow({
     onDownloadSignedAgreement,
   } = controller;
 
+  // The builder owns the dialog's chrome while it is the visible step.
+  const builderShowing =
+    isLinked &&
+    started &&
+    (editing || (isDraft && (stage === "trial" || stage === "quote")));
+
   return (
     <>
       <ProcurementModal
@@ -74,9 +80,9 @@ export function ProcurementFlow({
         onClose={() => setOpen(false)}
         title={t("portal.procurement.title")}
         subtitle={t("portal.procurement.subtitle")}
-        // Every step from here renders its own heading + step badge, so the generic
-        // "Procurement" block would be a second header above it.
-        headerless={isLinked && started}
+        // Only the builder renders its own heading + step badge + close; the review, agreement,
+        // payment and live steps have none, so they keep the shell's header.
+        headerless={builderShowing}
       >
         {error && (
           <Banner
@@ -105,8 +111,7 @@ export function ProcurementFlow({
 
         {isLinked && started && (
           <>
-            {(editing ||
-              (isDraft && (stage === "trial" || stage === "quote"))) && (
+            {builderShowing && (
               <QuoteBuilder
                 deployment={data?.deployment ?? "cloud"}
                 seats={data?.seats ?? 0}
@@ -122,6 +127,7 @@ export function ProcurementFlow({
                 }
                 initial={latest?.config}
                 eulaAlreadyAgreed={data?.trialStartedAt != null}
+                onClose={() => setOpen(false)}
                 onGenerate={onGenerate}
               />
             )}

@@ -42,6 +42,7 @@ export function QuoteBuilder({
   deployment,
   seats = 0,
   email,
+  onClose,
   dealDetails,
   initial,
   eulaAlreadyAgreed = false,
@@ -52,6 +53,8 @@ export function QuoteBuilder({
   seats?: number;
   /** Linked-account email; prefills the contact email on a fresh quote's details step. */
   email?: string | null;
+  /** Dismiss the dialog. The builder draws its own header, so it carries the close too. */
+  onClose?: () => void;
   /**
    * The buying entity captured at trial setup. Seeds a fresh quote's details step so it confirms
    * what is already known rather than asking twice; the buyer can still correct it here, since a
@@ -168,6 +171,7 @@ export function QuoteBuilder({
           n: step + 1,
           total: STEPS.length,
         })}
+        onClose={onClose}
       />
 
       <div className="portal-qb__body">

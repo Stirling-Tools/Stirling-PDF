@@ -24,8 +24,9 @@ export function ProcurementModal({
   title: string;
   subtitle?: string;
   /**
-   * Skip the title block: the step inside supplies the heading, step badge and progress (see
-   * StepModalHeader), so rendering ours too would stack two headers.
+   * Skip the title block AND the close: the step inside supplies the heading, step badge and its
+   * own close (see StepModalHeader), so the shell would otherwise stack a second header and leave a
+   * stray close above it. Escape and the backdrop still dismiss.
    */
   headerless?: boolean;
   children: ReactNode;
@@ -36,6 +37,7 @@ export function ProcurementModal({
       onClose={onClose}
       label={title}
       size="lg"
+      hideClose={headerless}
       header={
         headerless ? undefined : (
           <>
