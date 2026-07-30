@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +18,7 @@ import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.model.IntegrationType;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.policy.migration.CompletedMigrations;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.Source;
@@ -45,6 +46,9 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class EmbeddedS3CredentialMigration {
 
+    /** Completion-marker id: once recorded, later boots skip the scan entirely. */
+    private static final String MIGRATION_ID = "embedded-s3-credentials";
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final List<String> CONNECTION_OPTIONS =
             List.of("bucket", "region", "endpoint", "accessKeyId", "secretAccessKey");
@@ -56,10 +60,19 @@ public class EmbeddedS3CredentialMigration {
     private final PolicyStore policyStore;
     private final IntegrationConfigRepository connections;
     private final TeamRepository teamRepository;
+    private final CompletedMigrations completedMigrations;
 
+    // Must run before PolicyInlineOutputMigration: that migration copies a policy's inline output
+    // options into a Source, so embedded S3 credentials have to be extracted into a connection here
+    // first, or they would be copied verbatim (plaintext) into the new source row. Each rewrite is
+    // its own idempotent commit (dedup by credential key), so a crash mid-run just re-runs next
+    // boot; the completion marker below is written only once the whole pass succeeds.
+    @Order(1)
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
     public void migrate() {
+        if (completedMigrations.isDone(MIGRATION_ID)) {
+            return;
+        }
         Map<String, IntegrationConfig> byCredentialKey = indexExistingConnections();
         int migrated = 0;
         for (Source source : sourceStore.all()) {
@@ -89,6 +102,7 @@ public class EmbeddedS3CredentialMigration {
         if (migrated > 0) {
             log.info("Extracted embedded S3 credentials from {} row(s) into connections", migrated);
         }
+        completedMigrations.markDone(MIGRATION_ID);
     }
 
     private static boolean embedsCredentials(Map<String, Object> options) {
@@ -196,15 +210,6 @@ public class EmbeddedS3CredentialMigration {
     }
 
     private static Policy withOutput(Policy policy, OutputSpec output) {
-        return new Policy(
-                policy.id(),
-                policy.name(),
-                policy.owner(),
-                policy.enabled(),
-                policy.trigger(),
-                policy.sourceIds(),
-                policy.steps(),
-                output,
-                policy.teamId());
+        return policy.withOutput(output);
     }
 }

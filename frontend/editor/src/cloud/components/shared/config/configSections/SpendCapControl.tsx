@@ -43,11 +43,11 @@ const SpendCapControl: React.FC<SpendCapControlProps> = ({
         noCap: t("payg.cap.noCapLabel", "No cap"),
         save: saveLabel ?? t("payg.cap.save", "Update cap"),
         docsEstimate: (docs) =>
-          t("payg.cap.docsEstimate", "≈ {{docs}} processed PDFs / month", {
+          t("payg.cap.docsEstimate", "≈ {{docs}} credits / month", {
             docs,
           }),
         docsRate: (rate) =>
-          t("payg.cap.docsRate", "at {{rate}} / PDF", { rate }),
+          t("payg.cap.docsRate", "at {{rate}} / credit", { rate }),
         noCapDesc: t(
           "payg.cap.noCapDesc",
           "Usage is billed without an upper limit. You can re-enable a cap at any time.",

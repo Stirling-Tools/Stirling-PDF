@@ -9,13 +9,9 @@ import {
   TableToolbar,
   type TabItem,
 } from "@app/ui";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import {
-  fetchPipelines,
-  type PipelinesOverviewResponse,
-  type PipelineStatus,
-  type PipelineView,
-} from "@portal/api/pipelines";
+import { useSectionFlags } from "@portal/hooks/useAsync";
+import { usePipelines } from "@portal/queries/pipelines";
+import { type PipelineStatus, type PipelineView } from "@portal/api/pipelines";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { PipelinesIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
@@ -29,7 +25,7 @@ const FILTER_STATUSES: PipelineStatus[] = ["active", "paused"];
 export function Pipelines() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const state = useAsync<PipelinesOverviewResponse>(() => fetchPipelines(), []);
+  const state = usePipelines();
   const { data, loading } = state;
   const { isLoading } = useSectionFlags(state);
   const [filter, setFilter] = useState<PipelineFilter>("all");

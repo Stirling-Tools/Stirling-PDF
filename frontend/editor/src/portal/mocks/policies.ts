@@ -1,8 +1,5 @@
-/**
- * Policies fixtures. The canonical TS model and the static catalogue
- * definitions live in api/policies.ts (the backend contract); this module
- * only builds seed data for the MSW handlers and tests.
- */
+/** Policies seed data for the MSW handlers and tests. The canonical model and
+ *  catalogue live in api/policies.ts (the backend contract). */
 
 import type {
   PolicyRunView,
@@ -92,13 +89,11 @@ const NOW = Date.now();
 const M = 60000;
 const D = 86400000;
 
-/** Seed `PolicyRunView` records that drive the activity feed + stats.
- * 40 delivered + 3 failed within the trailing 24h so the home visualiser shows
- * a lively flow; a tail of older completed runs keeps the lifetime stats real.
- * Runs are split across the two active policies so the Sankey waist divides. */
+/** Seed runs: 40 delivered + 3 failed in the last 24h (split across the two
+ *  active policies), plus a tail of older completed runs for lifetime stats. */
 export function seedPolicyRuns(): PolicyRunView[] {
-  // Split the throughput across the two active policies (security / classification)
-  // so both show a 24h count and the Sankey waist splits into two segments.
+  // Split throughput across security / classification so both show a 24h count
+  // and the Sankey waist splits into two segments.
   const policyFor = (i: number, total: number) =>
     i < Math.round(total * 0.6)
       ? "pol_security_default"
