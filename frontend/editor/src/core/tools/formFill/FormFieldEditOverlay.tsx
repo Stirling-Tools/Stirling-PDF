@@ -319,6 +319,8 @@ export function FormFieldEditOverlay({
   // Escape clears the selection; arrow keys nudge the selected field.
   // (Each visible page mounts this overlay, but only the page whose widget
   // matches selectedField resolves a rect, so a nudge applies exactly once.)
+  // Don't gate this on selectedField: Escape must still clear a selection
+  // whose page has scrolled out of view and unmounted.
   useEffect(() => {
     if (mode !== "modify") return;
     const onKey = (e: KeyboardEvent) => {
