@@ -17,7 +17,9 @@ const SECURITY_STEPS: WirePipelineStep[] = [
   {
     operation: "/api/v1/security/auto-redact",
     parameters: {
-      listOfText: "",
+      // A configured policy's terms are never empty (save-time validation
+      // refuses that), so the seed carries a real pattern (US SSNs).
+      listOfText: "\\b\\d{3}-\\d{2}-\\d{4}\\b",
       useRegex: true,
       convertPDFToImage: true,
     },

@@ -36,6 +36,7 @@ export function PolicyWatermarkConfig({
       disabled={disabled}
       showFlatten={false}
       textOnly
+      requireText
     />
   );
 }

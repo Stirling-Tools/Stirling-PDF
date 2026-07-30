@@ -8223,6 +8223,9 @@ enforces = "Enforces"
 policy = "Policy"
 status = "Status"
 
+[portal.policies.wizard]
+finishConfiguring = "Finish configuring \"{{capability}}\""
+
 [portal.policies.wizard.actions]
 back = "Back"
 cancel = "Cancel"
@@ -11425,6 +11428,7 @@ vertical = "Vertical Spacing"
 width = "Width Spacing"
 
 [watermark.settings.text]
+label = "Watermark text"
 placeholder = "Enter watermark text"
 
 [watermark.steps]

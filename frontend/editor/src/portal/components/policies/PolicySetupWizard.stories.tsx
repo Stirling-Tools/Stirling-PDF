@@ -61,3 +61,35 @@ export const Classification: Story = {
     },
   },
 };
+
+/**
+ * Editing a policy saved before step validation existed: the watermark
+ * capability arrives enabled with empty text, so its field shows the required
+ * marker and Continue/save stay disabled (hover them for what to finish) until
+ * the text is filled in.
+ */
+export const EditSaveGated: Story = {
+  args: {
+    entry: {
+      category: security,
+      config: POLICY_CONFIG.security,
+      policy: (() => {
+        const policy = decorateForStory("security");
+        return {
+          ...policy,
+          steps: [
+            ...policy.steps,
+            {
+              operation: "/api/v1/security/add-watermark",
+              parameters: {
+                watermarkType: "text",
+                watermarkText: "",
+                convertPDFToImage: true,
+              },
+            },
+          ],
+        };
+      })(),
+    },
+  },
+};

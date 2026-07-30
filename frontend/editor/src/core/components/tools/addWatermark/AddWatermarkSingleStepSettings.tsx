@@ -25,6 +25,8 @@ interface AddWatermarkSingleStepSettingsProps {
   showFlatten?: boolean;
   /** When true, lock to text watermarks: hide the type selector and image option (e.g. in policies). */
   textOnly?: boolean;
+  /** Mark the watermark text as required (policies refuse empty text at save). */
+  requireText?: boolean;
 }
 
 const AddWatermarkSingleStepSettings = ({
@@ -33,6 +35,7 @@ const AddWatermarkSingleStepSettings = ({
   disabled = false,
   showFlatten = true,
   textOnly = false,
+  requireText = false,
 }: AddWatermarkSingleStepSettingsProps) => {
   const isText = textOnly || parameters.watermarkType === "text";
   const isImage = !textOnly && parameters.watermarkType === "image";
@@ -55,6 +58,7 @@ const AddWatermarkSingleStepSettings = ({
             parameters={parameters}
             onParameterChange={onParameterChange}
             disabled={disabled}
+            requireText={requireText}
           />
           <WatermarkTextStyle
             parameters={parameters}
