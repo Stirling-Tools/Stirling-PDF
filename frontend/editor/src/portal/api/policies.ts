@@ -141,7 +141,8 @@ export const ENDPOINT_LABELS: Partial<
   Record<
     | ToolEndpoint
     | "/api/v1/ai/tools/classify-and-label"
-    | "/api/v1/docparse/rag-ingest",
+    | "/api/v1/docparse/rag-ingest"
+    | "/api/v1/docparse/extract-fields",
     string
   >
 > = {
@@ -154,6 +155,7 @@ export const ENDPOINT_LABELS: Partial<
   "/api/v1/ai/tools/classify-and-label":
     "portal.policies.endpoints.classifyAndLabel",
   "/api/v1/docparse/rag-ingest": "portal.policies.endpoints.ragIngest",
+  "/api/v1/docparse/extract-fields": "portal.policies.endpoints.extractFields",
 };
 
 export function humanizeEndpoint(
@@ -180,6 +182,13 @@ const DEFAULT_PII_PATTERNS: string[] = [
 
 /** `label`/`desc` values are i18n keys — render with t(). */
 export const POLICY_CATEGORIES: PolicyCategory[] = [
+  // First on purpose: document intelligence is the processor's flagship flow.
+  {
+    id: "docIntelligence",
+    label: "portal.policies.categories.docIntelligence.label",
+    tone: "blue",
+    desc: "portal.policies.categories.docIntelligence.desc",
+  },
   {
     id: "ingestion",
     label: "portal.policies.categories.ingestion.label",
@@ -228,6 +237,13 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
  * stay as stable values (translating them would corrupt saved configs).
  */
 export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
+  docIntelligence: {
+    summary: "portal.policies.config.docIntelligence.summary",
+    rules: ["portal.policies.config.docIntelligence.rules.0"],
+    scopeLabel: "portal.policies.config.scopeAll",
+    defaultOperations: [policyStep("extractFields")],
+    fields: [],
+  },
   ingestion: {
     summary: "portal.policies.config.ingestion.summary",
     rules: [

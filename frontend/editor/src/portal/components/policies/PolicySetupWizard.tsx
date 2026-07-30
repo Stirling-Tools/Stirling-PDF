@@ -40,6 +40,7 @@ import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryI
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
+import { PolicyExtractFieldsConfig } from "@portal/components/policies/PolicyExtractFieldsConfig";
 import { PolicyRagIngestConfig } from "@portal/components/policies/PolicyRagIngestConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
@@ -98,6 +99,8 @@ const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
   "purviewApplyLabel",
   "purviewReadLabel",
   "externalApiCall",
+  // Needs a fields schema before a run can succeed.
+  "extractFields",
 ]);
 
 // Steps that cannot work without a Purview tenant connection, so they are hidden entirely until one
@@ -192,6 +195,13 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.externalApiCall.desc",
     descEn:
       "Hands the document to a system you have connected, and records what it answered.",
+  },
+  extractFields: {
+    labelKey: "portal.policies.wizard.capability.extractFields.label",
+    labelEn: "Extract structured fields",
+    descKey: "portal.policies.wizard.capability.extractFields.desc",
+    descEn:
+      "Pulls the values you describe - like invoice numbers or dates - out of every document, each with a confidence score and a citation back to the page.",
   },
   ragIngest: {
     labelKey: "portal.policies.wizard.capability.ragIngest.label",
@@ -559,6 +569,14 @@ function PolicySetupWizardBody({
                             parameters={tl.params}
                             onChange={(params) =>
                               setToolParams("purviewApplyLabel", params)
+                            }
+                          />
+                        )}
+                        {tl.toolId === "extractFields" && (
+                          <PolicyExtractFieldsConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("extractFields", params)
                             }
                           />
                         )}

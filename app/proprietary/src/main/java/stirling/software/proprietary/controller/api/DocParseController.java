@@ -31,14 +31,18 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.model.api.docparse.ExtractFieldsApiRequest;
 import stirling.software.proprietary.model.api.docparse.ExtractTablesApiRequest;
 import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
+import stirling.software.proprietary.model.api.docparse.SuggestSchemaApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
 import stirling.software.proprietary.model.docparse.DocTable;
 import stirling.software.proprietary.model.docparse.DocparseCapabilitiesView;
 import stirling.software.proprietary.model.docparse.DocparseMode;
+import stirling.software.proprietary.model.docparse.ExtractFieldsResponse;
 import stirling.software.proprietary.model.docparse.ExtractTablesResponse;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
+import stirling.software.proprietary.model.docparse.SuggestSchemaResponse;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.DocParseService;
 
@@ -120,6 +124,72 @@ public class DocParseController {
         headers.setContentDispositionFormData("attachment", baseName(fileName) + "-ingested.zip");
         headers.setContentLength(zip.length);
         return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(zip));
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/extract-fields",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @Operation(
+            summary = "Extract typed fields from a document (pipeline shape)",
+            description =
+                    "Extracts the fields described by the JSON Schema and returns the ORIGINAL PDF"
+                            + " unchanged as the body, with the extraction JSON in the"
+                            + " X-Stirling-Tool-Report header so policy pipelines pick it up as the"
+                            + " step report. Use /extract-fields/json for the raw JSON."
+                            + " Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<Resource> extractFields(@ModelAttribute ExtractFieldsApiRequest request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
+        ExtractFieldsResponse result =
+                docParseService.extractFields(
+                        file,
+                        request.getFieldsSchema(),
+                        DocparseMode.fromWire(request.getMode()),
+                        request.getInstructions());
+        byte[] original = file.getBytes();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", DocParseService.fileName(file));
+        headers.setContentLength(original.length);
+        headers.set(AiToolResponseHeaders.TOOL_REPORT, objectMapper.writeValueAsString(result));
+        return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(original));
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/extract-fields/json",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @Operation(
+            summary = "Extract typed fields from a document (JSON)",
+            description =
+                    "Extracts the fields described by the JSON Schema and returns the extraction"
+                            + " result (fields, confidence, citations) as JSON."
+                            + " Input:PDF Output:JSON Type:SISO")
+    public ResponseEntity<ExtractFieldsResponse> extractFieldsJson(
+            @ModelAttribute ExtractFieldsApiRequest request) throws IOException {
+        return ResponseEntity.ok(
+                docParseService.extractFields(
+                        request.getFileInput(),
+                        request.getFieldsSchema(),
+                        DocparseMode.fromWire(request.getMode()),
+                        request.getInstructions()));
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/suggest-schema",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @Operation(
+            summary = "Suggest an extraction schema for a document",
+            description =
+                    "Reads the document and proposes the fields worth extracting (name, type,"
+                            + " description), ready to feed into /extract-fields as a JSON Schema."
+                            + " Input:PDF Output:JSON Type:SISO")
+    public ResponseEntity<SuggestSchemaResponse> suggestSchema(
+            @ModelAttribute SuggestSchemaApiRequest request) throws IOException {
+        return ResponseEntity.ok(
+                docParseService.suggestSchema(request.getFileInput(), request.getMaxFields()));
     }
 
     @GetMapping("/capabilities")

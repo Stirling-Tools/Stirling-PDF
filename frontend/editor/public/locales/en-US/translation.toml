@@ -3573,6 +3573,13 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 [devSsoGuide]
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
+[docparse.intro]
+advancedOff = "Advanced parsing: off"
+advancedOn = "Advanced parsing: on"
+aiLayoutModel = "AI layout model"
+basicFallback = "Scanned documents fall back to basic text extraction - install the DocParse addon for layout AI"
+usesAi = "Uses AI"
+
 [dropdownList]
 searchPlaceholder = "Search..."
 
@@ -3699,6 +3706,56 @@ title = "Endpoint Statistics"
 _value = "Error"
 dismissAllErrors = "Dismiss All Errors"
 generic = "An error occurred"
+
+[extractFields]
+intro = "Describe the fields you need and AI reads the document and returns each value with a confidence score and a citation you can verify."
+submit = "Extract fields"
+
+[extractFields.error]
+failed = "Failed to extract fields"
+
+[extractFields.fields]
+add = "Add field"
+description = "Description"
+descriptionPlaceholder = "What to look for"
+label = "Fields to extract"
+name = "Name"
+namePlaceholder = "invoice_number"
+remove = "Remove field"
+type = "Type"
+
+[extractFields.instructions]
+label = "Instructions"
+placeholder = "e.g. Amounts are in EUR unless stated otherwise"
+
+[extractFields.mode]
+advanced = "Advanced"
+auto = "Auto"
+basic = "Basic"
+label = "Mode"
+
+[extractFields.presets]
+contract = "Contract"
+custom = "Custom"
+invoice = "Invoice"
+label = "Preset template"
+purchaseOrder = "Purchase order"
+receipt = "Receipt"
+
+[extractFields.results]
+title = "Extraction report"
+
+[extractFields.resultsPanel]
+title = "Extracted fields"
+
+[extractFields.settings]
+title = "Extraction schema"
+
+[extractFields.suggest]
+button = "Suggest fields (AI)"
+failed = "Could not suggest fields"
+failedBody = "The document could not be analyzed. Add fields manually or try again."
+needsFile = "Select a file first to suggest fields"
 
 [extractImages]
 allowDuplicates = "Save duplicate images"
@@ -4566,6 +4623,11 @@ title = "SSO Guide"
 desc = "Add or edit bookmarks and table of contents in PDF documents"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 title = "Edit Table of Contents"
+
+[home.extractFields]
+desc = "Pull typed fields out of a document with confidence scores and citations"
+tags = "extract,fields,schema,structured data,invoice,form data,key value,confidence,citations,capture,parse"
+title = "Extract Fields"
 
 [home.extractImages]
 desc = "Extracts all images from a PDF and saves them to zip"
@@ -7877,6 +7939,10 @@ label = "Classification"
 desc = "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document."
 label = "Compliance"
 
+[portal.policies.categories.docIntelligence]
+desc = "Extract the structured fields you describe from every document, with confidence scores and citations."
+label = "Document intelligence"
+
 [portal.policies.categories.ingestion]
 desc = "Normalize incoming documents - OCR scans, flatten forms - and index them into the searchable knowledge base, or export them as a clean corpus for your own systems."
 label = "Ingestion"
@@ -7916,6 +7982,18 @@ onViolation = "When non-compliant"
 0 = "Framework scan"
 1 = "Enforce action"
 2 = "Audit trail"
+
+[portal.policies.config.docIntelligence]
+summary = "Extracts the fields you describe from every document, with confidence and citations."
+
+[portal.policies.config.docIntelligence.rules]
+0 = "Extract the fields you describe, with confidence and citations"
+
+[portal.policies.config.extractFields.fields]
+instructions = "Extraction guidance (optional)"
+instructionsHelp = "Plain-language hints for tricky fields, e.g. \"the invoice number is top right\"."
+schema = "Fields to extract (JSON Schema)"
+schemaHelp = "A JSON Schema object describing the fields. Each extracted value carries a confidence score and a citation."
 
 [portal.policies.config.ingestion]
 summary = "Normalizes incoming documents and indexes them into the searchable knowledge base, with optional markdown/JSONL export."
@@ -8036,6 +8114,7 @@ addWatermark = "Watermark"
 autoRedact = "Redact PII"
 classifyAndLabel = "Classify"
 compressPdf = "Compress"
+extractFields = "Extract fields"
 flatten = "Flatten"
 ocrPdf = "OCR"
 ragIngest = "Ingest into knowledge base"
@@ -8269,6 +8348,10 @@ label = "Classify the document"
 [portal.policies.wizard.capability.compress]
 desc = "Compresses the document to a smaller file size."
 label = "Reduce file size"
+
+[portal.policies.wizard.capability.extractFields]
+desc = "Pulls the values you describe - like invoice numbers or dates - out of every document, each with a confidence score and a citation back to the page."
+label = "Extract structured fields"
 
 [portal.policies.wizard.capability.flatten]
 desc = "Merges form fields and annotations into the page so they can't be edited."
@@ -10750,6 +10833,7 @@ standardTools = "Standard Tools"
 advancedFormatting = "Advanced Formatting"
 automation = "Automation"
 developerTools = "Developer Tools"
+documentIntelligence = "Document intelligence"
 documentReview = "Document Review"
 documentSecurity = "Document Security"
 extraction = "Extraction"

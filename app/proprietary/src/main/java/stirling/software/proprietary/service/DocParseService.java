@@ -24,11 +24,16 @@ import stirling.software.proprietary.model.docparse.DocparseCapabilities;
 import stirling.software.proprietary.model.docparse.DocparseCapabilitiesView;
 import stirling.software.proprietary.model.docparse.DocparseMode;
 import stirling.software.proprietary.model.docparse.DocparseTier;
+import stirling.software.proprietary.model.docparse.ExtractFieldsRequest;
+import stirling.software.proprietary.model.docparse.ExtractFieldsResponse;
 import stirling.software.proprietary.model.docparse.ExtractTablesRequest;
 import stirling.software.proprietary.model.docparse.ExtractTablesResponse;
 import stirling.software.proprietary.model.docparse.RagIngestRequest;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
+import stirling.software.proprietary.model.docparse.SuggestSchemaRequest;
+import stirling.software.proprietary.model.docparse.SuggestSchemaResponse;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -43,6 +48,8 @@ public class DocParseService {
 
     private static final String RAG_INGEST_ENDPOINT = "/api/v1/docparse/rag-ingest";
     private static final String TABLES_ENDPOINT = "/api/v1/docparse/tables";
+    private static final String EXTRACT_ENDPOINT = "/api/v1/docparse/extract";
+    private static final String SUGGEST_SCHEMA_ENDPOINT = "/api/v1/docparse/suggest-schema";
 
     /** Below this average of extractable chars per page the document is treated as scanned. */
     static final int SCANNED_AVG_CHARS_PER_PAGE = 100;
@@ -180,6 +187,84 @@ public class DocParseService {
                             ? DocparseTier.ADVANCED
                             : DocparseTier.BASIC;
         };
+    }
+
+    /** Extract the fields described by a JSON Schema, with confidence and citations. */
+    public ExtractFieldsResponse extractFields(
+            MultipartFile file, String fieldsSchemaJson, DocparseMode mode, String instructions)
+            throws IOException {
+        requireEnabled();
+        JsonNode schema = parseJsonObject(fieldsSchemaJson, "fieldsSchema");
+        List<AiPageText> pages;
+        DocparseTier tier;
+        try (PDDocument document = pdfDocumentFactory.load(file, true)) {
+            pages = extractPages(document);
+            tier =
+                    resolveTier(
+                            mode, capabilityService.capabilities(), false, looksScanned(document));
+        }
+        ExtractFieldsRequest request =
+                new ExtractFieldsRequest(
+                        fileName(file),
+                        schema,
+                        pages,
+                        tier == DocparseTier.ADVANCED ? encodeBase64(file) : null,
+                        toMode(tier),
+                        instructions);
+        String responseJson =
+                aiEngineClient.postLongRunning(
+                        EXTRACT_ENDPOINT,
+                        objectMapper.writeValueAsString(request),
+                        currentUserId());
+        return objectMapper.readValue(responseJson, ExtractFieldsResponse.class);
+    }
+
+    /** Propose an extraction schema from the document's first pages. */
+    public SuggestSchemaResponse suggestSchema(MultipartFile file, int maxFields)
+            throws IOException {
+        requireEnabled();
+        List<AiPageText> pages;
+        DocparseTier tier;
+        try (PDDocument document = pdfDocumentFactory.load(file, true)) {
+            pages = extractPages(document);
+            tier =
+                    resolveTier(
+                            DocparseMode.AUTO,
+                            capabilityService.capabilities(),
+                            false,
+                            looksScanned(document));
+        }
+        SuggestSchemaRequest request =
+                new SuggestSchemaRequest(
+                        fileName(file),
+                        pages,
+                        tier == DocparseTier.ADVANCED ? encodeBase64(file) : null,
+                        Math.clamp(maxFields, 1, 20));
+        String responseJson =
+                aiEngineClient.postLongRunning(
+                        SUGGEST_SCHEMA_ENDPOINT,
+                        objectMapper.writeValueAsString(request),
+                        currentUserId());
+        return objectMapper.readValue(responseJson, SuggestSchemaResponse.class);
+    }
+
+    private JsonNode parseJsonObject(String json, String fieldName) {
+        if (json == null || json.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "'" + fieldName + "' is required");
+        }
+        JsonNode node;
+        try {
+            node = objectMapper.readTree(json);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "'" + fieldName + "' is not valid JSON");
+        }
+        if (!node.isObject()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "'" + fieldName + "' must be a JSON object");
+        }
+        return node;
     }
 
     /**

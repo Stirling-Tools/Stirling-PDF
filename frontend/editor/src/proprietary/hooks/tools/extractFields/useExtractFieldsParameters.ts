@@ -3,7 +3,7 @@ import {
   useBaseParameters,
   BaseParametersHook,
 } from "@app/hooks/tools/shared/useBaseParameters";
-import type { DocparseMode } from "@app/hooks/tools/parseDocument/useParseDocumentParameters";
+import type { DocparseMode } from "@app/hooks/tools/shared/docparseTypes";
 import {
   emptyFieldRow,
   namedRows,

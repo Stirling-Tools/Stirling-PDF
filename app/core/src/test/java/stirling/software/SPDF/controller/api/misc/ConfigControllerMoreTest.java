@@ -74,7 +74,8 @@ class ConfigControllerMoreTest {
                 userService,
                 showAdmin,
                 licenseService,
-                externalAppDepConfig);
+                externalAppDepConfig,
+                null);
     }
 
     @SuppressWarnings("unchecked")

@@ -24,6 +24,7 @@ import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.DocparseCapabilityServiceInterface;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.GeneralUtils;
@@ -41,6 +42,7 @@ public class ConfigController {
     private final ShowAdminInterface showAdmin;
     private final stirling.software.common.service.LicenseServiceInterface licenseService;
     private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
+    private final DocparseCapabilityServiceInterface docparseCapabilityService;
 
     public ConfigController(
             ApplicationProperties applicationProperties,
@@ -54,7 +56,9 @@ public class ConfigController {
                     ShowAdminInterface showAdmin,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     stirling.software.common.service.LicenseServiceInterface licenseService,
-            stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
+            stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+                    DocparseCapabilityServiceInterface docparseCapabilityService) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
@@ -63,6 +67,7 @@ public class ConfigController {
         this.showAdmin = showAdmin;
         this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
+        this.docparseCapabilityService = docparseCapabilityService;
     }
 
     /**
@@ -349,6 +354,16 @@ public class ConfigController {
                             Map.entry("mathAuditor", aiFeatures.isMathAuditor()),
                             Map.entry("pdfComment", aiFeatures.isPdfComment()),
                             Map.entry("classify", aiFeatures.isClassify())));
+
+            // DocParse settings; "advanced" reflects the cached engine capability probe and is
+            // false when the engine is disabled, unreachable, or the proprietary module is absent.
+            boolean docparseEnabled = applicationProperties.getDocparse().isEnabled();
+            configData.put("docparseEnabled", docparseEnabled);
+            configData.put(
+                    "docparseAdvanced",
+                    docparseEnabled
+                            && docparseCapabilityService != null
+                            && docparseCapabilityService.isAdvancedInstalled());
 
             // Timestamp TSA settings — single source of truth for presets + admin URLs
             ApplicationProperties.Security.Timestamp tsConfig =

@@ -15,6 +15,7 @@ from stirling.agents import (
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.config import AppSettings, load_settings
+from stirling.docparse import ExtractFieldsAgent, SuggestSchemaAgent
 from stirling.documents import DocumentService
 from stirling.models import UserId
 from stirling.services import AppRuntime, current_user_id
@@ -58,6 +59,14 @@ def get_pdf_comment_agent(request: Request) -> PdfCommentAgent:
 
 def get_document_classifier_agent(request: Request) -> DocumentClassifierAgent:
     return request.app.state.document_classifier_agent
+
+
+def get_extract_fields_agent(request: Request) -> ExtractFieldsAgent:
+    return request.app.state.extract_fields_agent
+
+
+def get_suggest_schema_agent(request: Request) -> SuggestSchemaAgent:
+    return request.app.state.suggest_schema_agent
 
 
 def require_user_id() -> UserId:

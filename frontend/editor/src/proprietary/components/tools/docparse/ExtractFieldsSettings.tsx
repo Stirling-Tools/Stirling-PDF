@@ -8,7 +8,7 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import { alert } from "@app/components/toast";
 import type { ToolAutomationSettingsProps } from "@app/hooks/tools/shared/toolOperationTypes";
 import type { ExtractFieldsParameters } from "@app/hooks/tools/extractFields/useExtractFieldsParameters";
-import type { DocparseMode } from "@app/hooks/tools/parseDocument/useParseDocumentParameters";
+import type { DocparseMode } from "@app/hooks/tools/shared/docparseTypes";
 import {
   FIELD_TYPES,
   emptyFieldRow,

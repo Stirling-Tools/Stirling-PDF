@@ -18,6 +18,7 @@ from stirling.agents import (
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.config import AppSettings
+from stirling.docparse import ExtractFieldsAgent, SuggestSchemaAgent
 from stirling.documents import DocumentService, EmbeddingService
 from stirling.services import AppRuntime, build_runtime
 
@@ -35,6 +36,8 @@ class AppState:
     math_auditor_agent: MathAuditorAgent
     pdf_comment_agent: PdfCommentAgent
     document_classifier_agent: DocumentClassifierAgent
+    extract_fields_agent: ExtractFieldsAgent
+    suggest_schema_agent: SuggestSchemaAgent
 
 
 def build_app_state(
@@ -63,6 +66,8 @@ def build_app_state(
         math_auditor_agent=MathAuditorAgent(runtime),
         pdf_comment_agent=PdfCommentAgent(runtime),
         document_classifier_agent=DocumentClassifierAgent(runtime),
+        extract_fields_agent=ExtractFieldsAgent(runtime),
+        suggest_schema_agent=SuggestSchemaAgent(runtime),
     )
 
 

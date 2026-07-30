@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import Field
+from pydantic import Field, JsonValue
 
 from stirling.contracts.documents import PageText
 from stirling.models import ApiModel, FileId, OwnerId, PrincipalId
@@ -138,6 +138,72 @@ class RagIngestResponse(ApiModel):
     pages: int = Field(ge=0)
     markdown: str | None = None
     chunks: list[DocChunk] | None = None
+
+
+class FieldCitation(ApiModel):
+    """Where a value came from. ``quote`` is always set; ``bbox`` only when a
+    layout parse ran (advanced tier); offsets index into the cited page's text."""
+
+    page: int | None = Field(default=None, ge=1)
+    bbox: list[float] | None = None
+    quote: str
+    start_offset: int | None = Field(default=None, ge=0)
+    end_offset: int | None = Field(default=None, ge=0)
+
+
+class ExtractedField(ApiModel):
+    name: str
+    value: JsonValue = None
+    confidence: float = Field(ge=0.0, le=1.0)
+    citations: list[FieldCitation] = Field(default_factory=list)
+
+
+class ExtractFieldsRequest(ApiModel):
+    """``pages`` drives the basic tier (caller-extracted text); ``content_base64``
+    lets the advanced tier parse the raw file itself. Send either or both."""
+
+    file_name: str = Field(min_length=1)
+    fields_schema: dict[str, JsonValue]
+    pages: list[PageText] | None = None
+    content_base64: str | None = None
+    mode: DocparseMode = DocparseMode.AUTO
+    instructions: str | None = None
+
+
+class ExtractFieldsResponse(ApiModel):
+    mode: DocparseTier
+    fields: list[ExtractedField] = Field(default_factory=list)
+    overall_confidence: float = Field(ge=0.0, le=1.0)
+
+
+class SuggestedFieldType(StrEnum):
+    """Scalar types the schema suggester may propose; the extractor's leaf subset."""
+
+    STRING = "string"
+    NUMBER = "number"
+    INTEGER = "integer"
+    BOOLEAN = "boolean"
+
+
+class SuggestedField(ApiModel):
+    name: str = Field(description="snake_case field identifier, e.g. 'invoice_number'.")
+    type: SuggestedFieldType
+    description: str = ""
+
+
+class SuggestSchemaRequest(ApiModel):
+    """``pages`` drives the basic tier (caller-extracted text); ``content_base64``
+    lets the advanced tier parse the raw file itself. Send either."""
+
+    file_name: str = Field(min_length=1)
+    pages: list[PageText] | None = None
+    content_base64: str | None = None
+    max_fields: int = Field(default=8, ge=1, le=20)
+
+
+class SuggestSchemaResponse(ApiModel):
+    mode: DocparseTier
+    fields: list[SuggestedField] = Field(default_factory=list)
 
 
 class DocparseCapabilities(ApiModel):

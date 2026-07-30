@@ -436,6 +436,8 @@ public class EndpointConfiguration {
         // Adding endpoints to "DocParse" group (ingestion: chunk + index + export)
         addEndpointToGroup("DocParse", "rag-ingest");
         addEndpointToGroup("DocParse", "extract-tables");
+        addEndpointToGroup("DocParse", "extract-fields");
+        addEndpointToGroup("DocParse", "suggest-schema");
 
         // Adding endpoints to "DeveloperTools" group
         addEndpointToGroup("DeveloperTools", "show-javascript");

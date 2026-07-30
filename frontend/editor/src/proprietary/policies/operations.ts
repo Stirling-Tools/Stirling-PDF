@@ -37,7 +37,9 @@ export type IntegrationPolicyEndpoint =
  * {@link ToolEndpoint} union: the DocParse controllers live in the proprietary
  * module, outside the tool namespaces the generator reads.
  */
-export type DocparsePolicyEndpoint = "/api/v1/docparse/rag-ingest";
+export type DocparsePolicyEndpoint =
+  | "/api/v1/docparse/rag-ingest"
+  | "/api/v1/docparse/extract-fields";
 
 /** An endpoint typed here rather than by the generator. */
 export type UntypedPolicyEndpoint =
@@ -94,6 +96,34 @@ function describeIntegrationOperation<TParams extends Record<string, string>>(
       }
       return out as TParams;
     },
+  };
+}
+
+/**
+ * Extract Fields as a policy step (the pipeline shape of the DocParse tool).
+ * The schema is authored in the wizard and crosses the wire verbatim; a blank
+ * `instructions` is dropped so the backend sees "absent", not "empty".
+ */
+function describeExtractFieldsOperation(): AiToolDescriptor<{
+  fieldsSchema: string;
+  mode: string;
+  instructions: string;
+}> {
+  return {
+    endpoint: "/api/v1/docparse/extract-fields",
+    defaultParameters: { fieldsSchema: "", mode: "auto", instructions: "" },
+    toApi: (params) => ({
+      fieldsSchema: params.fieldsSchema,
+      mode: params.mode || "auto",
+      ...(params.instructions.trim()
+        ? { instructions: params.instructions.trim() }
+        : {}),
+    }),
+    fromApi: (api) => ({
+      fieldsSchema: api.fieldsSchema == null ? "" : String(api.fieldsSchema),
+      mode: api.mode == null ? "auto" : String(api.mode),
+      instructions: api.instructions == null ? "" : String(api.instructions),
+    }),
   };
 }
 
@@ -178,6 +208,7 @@ export const POLICY_OPERATIONS = {
     compressOperationConfig,
   ),
   classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
+  extractFields: describeExtractFieldsOperation(),
   ragIngest: describeRagIngestOperation(),
   purviewApplyLabel: describeIntegrationOperation(
     "/api/v1/integration/purview-apply-label",

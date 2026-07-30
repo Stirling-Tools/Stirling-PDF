@@ -16,22 +16,34 @@ from typing import Annotated
 import anyio.to_thread
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from stirling.api.dependencies import get_document_service, require_user_id
+from stirling.api.dependencies import (
+    get_document_service,
+    get_extract_fields_agent,
+    get_suggest_schema_agent,
+    require_user_id,
+)
 from stirling.config import AppSettings, load_settings
 from stirling.contracts.docparse import (
     DocChunk,
     DocparseCapabilities,
     DocparseMode,
+    DocparseTier,
+    ExtractFieldsRequest,
+    ExtractFieldsResponse,
     ExtractTablesRequest,
     ExtractTablesResponse,
     ParseDocumentRequest,
     ParseDocumentResponse,
     RagIngestRequest,
     RagIngestResponse,
+    SuggestSchemaRequest,
+    SuggestSchemaResponse,
 )
 from stirling.docparse import basic_chunks, probe_capabilities
 from stirling.docparse.capability import models_dir
 from stirling.docparse.chunking import advanced_chunks
+from stirling.docparse.extractor import ExtractFieldsAgent, SchemaError, pages_from_parse
+from stirling.docparse.suggest_schema import SuggestSchemaAgent
 from stirling.documents import DocumentService
 from stirling.documents.service import CONTENT_TYPE_METADATA_KEY, DOCPARSE_CHUNK_CONTENT_TYPE
 from stirling.models import OwnerId, PrincipalId, UserId
@@ -99,6 +111,63 @@ async def parse_document(request: ParseDocumentRequest) -> ParseDocumentResponse
     return await _parse_advanced(
         request.content_base64, request.file_name, with_ocr=request.with_ocr, artifacts=artifacts
     )
+
+
+@router.post("/extract", response_model=ExtractFieldsResponse)
+async def extract_fields(
+    request: ExtractFieldsRequest,
+    agent: Annotated[ExtractFieldsAgent, Depends(get_extract_fields_agent)],
+) -> ExtractFieldsResponse:
+    settings = _settings()
+    caps = _capabilities(settings)
+
+    use_advanced = request.mode is DocparseMode.ADVANCED or (
+        request.mode is DocparseMode.AUTO and caps.advanced_installed and request.content_base64 is not None
+    )
+    parse = None
+    if use_advanced:
+        artifacts = _require_advanced(settings)
+        if request.content_base64 is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="advanced extraction needs contentBase64 (the raw file)",
+            )
+        parse = await _parse_advanced(request.content_base64, request.file_name, with_ocr=True, artifacts=artifacts)
+
+    pages = request.pages or (pages_from_parse(parse) if parse is not None else None)
+    if not pages:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="send pages (extracted text) or contentBase64 with the addon installed",
+        )
+    try:
+        return await agent.extract(request, pages, parse)
+    except SchemaError as error:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(error)) from error
+
+
+@router.post("/suggest-schema", response_model=SuggestSchemaResponse)
+async def suggest_schema(
+    request: SuggestSchemaRequest,
+    agent: Annotated[SuggestSchemaAgent, Depends(get_suggest_schema_agent)],
+) -> SuggestSchemaResponse:
+    """Propose an extraction schema from the document's first pages.
+    Tier routing: pages -> basic; contentBase64 + addon -> advanced parse."""
+    settings = _settings()
+    caps = _capabilities(settings)
+    pages = request.pages
+    tier = DocparseTier.BASIC
+    if not pages and request.content_base64 is not None and caps.advanced_installed:
+        artifacts = _require_advanced(settings)
+        parse = await _parse_advanced(request.content_base64, request.file_name, with_ocr=True, artifacts=artifacts)
+        pages = pages_from_parse(parse)
+        tier = DocparseTier.ADVANCED
+    if not pages:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="send pages (extracted text) or contentBase64 with the addon installed",
+        )
+    return await agent.suggest(request, pages, tier)
 
 
 def _chunk_metadata(chunk: DocChunk) -> dict[str, str]:

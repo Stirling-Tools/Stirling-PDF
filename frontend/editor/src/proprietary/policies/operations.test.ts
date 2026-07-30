@@ -18,6 +18,7 @@ describe("POLICY_OPERATIONS", () => {
       "classify",
       "compress",
       "externalApiCall",
+      "extractFields",
       "flatten",
       "ocr",
       "purviewApplyLabel",

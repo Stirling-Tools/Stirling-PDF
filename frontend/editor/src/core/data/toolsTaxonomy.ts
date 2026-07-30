@@ -22,6 +22,7 @@ import ViewAgendaRoundedIcon from "@mui/icons-material/ViewAgendaRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import DeleteSweepRoundedIcon from "@mui/icons-material/DeleteSweepRounded";
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import BuildRoundedIcon from "@mui/icons-material/BuildRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
@@ -34,6 +35,7 @@ export enum SubcategoryId {
   VERIFICATION = "verification",
   DOCUMENT_REVIEW = "documentReview",
   PAGE_FORMATTING = "pageFormatting",
+  DOCUMENT_INTELLIGENCE = "documentIntelligence",
   EXTRACTION = "extraction",
   REMOVAL = "removal",
   AUTOMATION = "automation",
@@ -95,6 +97,7 @@ export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.VERIFICATION,
   SubcategoryId.DOCUMENT_REVIEW,
   SubcategoryId.PAGE_FORMATTING,
+  SubcategoryId.DOCUMENT_INTELLIGENCE,
   SubcategoryId.EXTRACTION,
   SubcategoryId.REMOVAL,
   SubcategoryId.AUTOMATION,
@@ -109,6 +112,7 @@ export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
   [SubcategoryId.VERIFICATION]: "var(--category-color-verification)", // Orange
   [SubcategoryId.DOCUMENT_REVIEW]: "var(--category-color-general)", // Blue
   [SubcategoryId.PAGE_FORMATTING]: "var(--category-color-formatting)", // Purple
+  [SubcategoryId.DOCUMENT_INTELLIGENCE]: "var(--category-color-automation)", // Pink
   [SubcategoryId.EXTRACTION]: "var(--category-color-extraction)", // Cyan
   [SubcategoryId.REMOVAL]: "var(--category-color-removal)", // Red
   [SubcategoryId.AUTOMATION]: "var(--category-color-automation)", // Pink
@@ -131,6 +135,8 @@ export const getSubcategoryIcon = (
       return React.createElement(RateReviewRoundedIcon);
     case SubcategoryId.PAGE_FORMATTING:
       return React.createElement(ViewAgendaRoundedIcon);
+    case SubcategoryId.DOCUMENT_INTELLIGENCE:
+      return React.createElement(AutoAwesomeRoundedIcon);
     case SubcategoryId.EXTRACTION:
       return React.createElement(FileDownloadRoundedIcon);
     case SubcategoryId.REMOVAL:
