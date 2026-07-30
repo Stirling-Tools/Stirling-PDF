@@ -524,7 +524,7 @@ public class UserLicenseSettingsService {
 
     private void appendIfPresent(StringBuilder builder, String value) {
         if (value != null && !value.isBlank()) {
-            if (builder.isEmpty()) {
+            if (!builder.isEmpty()) {
                 builder.append(SIGNATURE_SEPARATOR);
             }
             builder.append(value);
