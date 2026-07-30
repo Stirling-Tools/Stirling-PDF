@@ -107,15 +107,15 @@ public class PasswordController {
             StandardProtectionPolicy spp =
                     new StandardProtectionPolicy(ownerPassword, password, ap);
 
-            if ((ownerPassword != null && ownerPassword.length() > 0)
-                    || (password != null && password.length() > 0)) {
+            if ((ownerPassword != null && !ownerPassword.isEmpty())
+                    || (password != null && !password.isEmpty())) {
                 spp.setEncryptionKeyLength(keyLength);
             }
             spp.setPermissions(ap);
             document.protect(spp);
 
-            if ((ownerPassword == null || ownerPassword.length() == 0)
-                    && (password == null || password.length() == 0))
+            if ((ownerPassword == null || ownerPassword.isEmpty())
+                    && (password == null || password.isEmpty()))
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         GeneralUtils.generateFilename(
