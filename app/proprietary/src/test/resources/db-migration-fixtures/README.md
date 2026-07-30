@@ -14,6 +14,27 @@ All three were generated against H2 `2.3.232`. On startup, the application
 exports the legacy file with the bundled 2.3.232 driver and imports it into a
 new H2 `2.4.240` database. The original file is retained as a fallback.
 
+## Updating H2
+
+An H2 upgrade is a database-format migration, not a dependency-only update.
+Update and review the following files together:
+
+| File | Required update |
+|---|---|
+| `app/proprietary/build.gradle` | Set the new runtime H2 version, retain or replace the bundled migration driver, and keep the `h2Migration` resource packaging intact. |
+| `gradle/h2-versions.lock` | Record the reviewed runtime and migration-driver versions. `:proprietary:check` fails when either resolved H2 artifact differs from this lock. |
+| `app/proprietary/src/main/java/stirling/software/proprietary/security/migration/H2DatabaseMigration.java` | Update database file names, the bundled driver resource name, and migration validation for the new target format. |
+| `app/proprietary/src/main/java/stirling/software/proprietary/security/configuration/DatabaseConfig.java` | Change the default H2 database file name to the new target version. |
+| `app/core/src/main/resources/application.properties` | Change the standard datasource URL to the new target database file name. |
+| `scripts/db-migration/run-migration-test.sh` | Keep the source fixture name on the legacy version and point the launched application at the new target file name. |
+| `app/proprietary/src/test/java/stirling/software/proprietary/security/migration/H2DatabaseMigrationTest.java` | Update the expected driver resource and target-version assertions. |
+| `app/proprietary/src/test/java/stirling/software/proprietary/security/migration/H2VersionCompatibilityTest.java` | Update the embedded migration-driver resource name when that driver changes. |
+
+Before merging an H2 upgrade, run the H2 migration tests, the restore-safety
+tests, and `:proprietary:check`. Do not remove old database files or existing
+SQL backups from `configs/backup`; migration and restore code must preserve
+them as recoverable fallbacks.
+
 ## What's in each fixture
 
 * `admin` user with the default password `stirling` (BCrypt `$2a$10$...`).
