@@ -143,6 +143,8 @@ function SpendLimitPicker({
   const onInput = (raw: string) => {
     const cleaned = raw.replace(/[^0-9]/g, "");
     setText(cleaned);
+    // Empty maps to 0 — the "nothing entered yet" sentinel (distinct from the explicit null "No limit").
+    // The parent treats 0 as incomplete and blocks Continue, so a cleared field can't become a $0 cap.
     onChange(cleaned === "" ? 0 : parseInt(cleaned, 10));
   };
 
@@ -326,6 +328,10 @@ export function StripeCheckoutModal({
   // Apply the chosen ceiling, then advance to payment. Applying it up front keeps
   // "you're never billed past it" true from the first processed PDF.
   async function handleContinue() {
+    // Guard the empty-field sentinel: clearing the input maps to 0, which is neither a real cap nor the
+    // explicit "No limit" (null). Proceeding would set a $0 ceiling (processing immediately paused), so
+    // treat it as incomplete and stay put — the Continue button is disabled in this state too.
+    if (capUsd !== null && capUsd <= 0) return;
     setCapBusy(true);
     setCapError(null);
     try {
@@ -356,6 +362,10 @@ export function StripeCheckoutModal({
   const handleClose = () => {
     if (dismissable) onClose();
   };
+
+  // Valid to continue when a positive cap is set OR "No limit" (null) was explicitly picked. A cleared
+  // field maps to 0 (incomplete) — block Continue rather than let it become an accidental $0 ceiling.
+  const capValid = capUsd === null || capUsd > 0;
 
   // The chosen cap, formatted for the payment-step recap (null = "No cap" was picked on step 1).
   const capLabel =
@@ -443,6 +453,7 @@ export function StripeCheckoutModal({
               <Button
                 accent="premium"
                 loading={capBusy}
+                disabled={!capValid}
                 onClick={handleContinue}
                 rightSection={<span aria-hidden>›</span>}
               >

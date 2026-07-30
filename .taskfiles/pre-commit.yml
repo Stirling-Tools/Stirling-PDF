@@ -73,7 +73,7 @@ tasks:
       - task: gitleaks
 
   install:
-    desc: "Install the pinned pre-commit Python tools (ruff, codespell, toml-sort)"
+    desc: "Install the pinned pre-commit Python tools"
     run: once
     cmds:
       - uv sync --project scripts/pre-commit --locked
@@ -112,7 +112,7 @@ tasks:
   toml-sort:
     deps: [install]
     cmds:
-      - uv run --project scripts/pre-commit --no-sync toml-sort --all --ignore-case {{if .FIX}}--in-place{{else}}--check{{end}} {{.LOCALE_TOML}}
+      - uv run --project scripts/pre-commit --no-sync python scripts/pre-commit/sort_locale_toml.py {{if .FIX}}--fix {{end}}{{.LOCALE_TOML}}
 
   whitespace:
     cmds:

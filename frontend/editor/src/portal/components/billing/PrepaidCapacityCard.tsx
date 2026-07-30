@@ -75,7 +75,7 @@ export function PrepaidCapacityCard({
         figure={remaining.toLocaleString()}
         capSuffix={t(
           "portal.billing.prepaid.capSuffix",
-          "of {{total}} prepaid PDFs",
+          "of {{total}} prepaid credits",
           {
             total: total.toLocaleString(),
           },
