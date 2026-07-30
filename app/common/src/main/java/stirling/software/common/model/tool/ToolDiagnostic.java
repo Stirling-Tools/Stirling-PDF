@@ -1,26 +1,21 @@
 package stirling.software.common.model.tool;
 
 /**
- * One problem found while checking a chain of tool steps, reported against the step that cannot
- * run.
- *
- * @param stepIndex zero-based index of the offending step
- * @param severity how much it matters; only {@link Severity#ERROR} should block a save
- * @param code stable machine-readable identifier, so the frontend can pick its own wording
- * @param message English fallback describing the problem
+ * One problem found while checking a chain, against the step that cannot run. {@code code} is
+ * stable so the frontend can pick its own wording; {@code message} is an English fallback.
  */
 public record ToolDiagnostic(int stepIndex, Severity severity, String code, String message) {
 
     public enum Severity {
-        /** The chain cannot run as configured. */
+        /** The chain cannot run as configured. Only this should block a save. */
         ERROR,
-        /** The chain may not run, depending on configuration or file content. */
+        /** May not run, depending on configuration or file content. */
         WARN,
         /** Worth knowing but not a problem, such as a step running once per file. */
         INFO
     }
 
-    /** The step's endpoint declares no {@link ToolIO}, so nothing can be checked past it. */
+    /** The step declares no {@link ToolIO}, so nothing past it can be checked. */
     public static final String UNDECLARED = "undeclared-operation";
 
     /** The previous step's output is not a format this step accepts. */

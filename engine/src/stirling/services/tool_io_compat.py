@@ -28,7 +28,7 @@ class DiagnosticSeverity(StrEnum):
 
 
 class DiagnosticCode(StrEnum):
-    """Stable identifiers, matching the backend and frontend implementations."""
+    """Matching the backend and frontend implementations."""
 
     UNDECLARED = "undeclared-operation"
     FORMAT_MISMATCH = "format-mismatch"
@@ -39,7 +39,7 @@ class DiagnosticCode(StrEnum):
 
 
 class ToolDiagnostic(ApiModel):
-    """One problem found while checking a chain, reported against the step that cannot run."""
+    """One problem, against the step that cannot run."""
 
     step_index: int
     severity: DiagnosticSeverity
@@ -48,14 +48,14 @@ class ToolDiagnostic(ApiModel):
 
 
 class ToolChainStep(ApiModel):
-    """A step to check. ``parameters`` is only used to resolve a conditional output."""
+    """``parameters`` is only used to resolve an output that depends on one."""
 
     operation: ToolEndpoint
     parameters: dict[str, object] = Field(default_factory=dict)
 
 
 class ResolvedOutput(ApiModel):
-    """A step's output. ``certain`` is false when a case reads a parameter we cannot see."""
+    """``certain`` is false when a case reads a parameter we cannot see."""
 
     format: ToolFormat
     arity: ToolArity
@@ -75,11 +75,10 @@ def _accepts_format(spec: ToolIOSpec, candidate: ToolFormat) -> bool:
 
 
 def resolve_output(spec: ToolIOSpec, parameters: dict[str, object] | None) -> ResolvedOutput:
-    """The output of a step configured with ``parameters``.
+    """First case whose conditions all hold wins.
 
-    The first case whose conditions all hold wins. If none match but one reads a parameter we
-    cannot see, the declared output is returned as uncertain, since a value we never saw might
-    have selected a different branch.
+    If none match but one reads a parameter we cannot see, the declared output comes back
+    uncertain: an unseen value might have picked another branch.
     """
     saw_unknown_param = False
     for rule in spec.cases:
@@ -103,7 +102,7 @@ def validate_tool_chain(
     source_format: ToolFormat | None = None,
     tool_io: dict[ToolEndpoint, ToolIOSpec] | None = None,
 ) -> list[ToolDiagnostic]:
-    """Check a chain, reporting every problem against the step that cannot run."""
+    """Every problem with the chain, against the step that cannot run."""
     table = TOOL_IO if tool_io is None else tool_io
     diagnostics: list[ToolDiagnostic] = []
     carried: ResolvedOutput | None = None
@@ -122,7 +121,7 @@ def validate_tool_chain(
                     ),
                 )
             )
-            # Nothing is known past an undeclared step, so stop carrying a stale output.
+            # Nothing is known past an undeclared step.
             carried = None
             continue
 
@@ -160,8 +159,7 @@ def _check_transition(
 
     if not _accepts_format(spec, previous.format):
         message = f"{step.operation} accepts {_describe(spec)} but the previous step produces {previous.format}."
-        # The previous step's output turns on a parameter we cannot see, so this may yet be fine
-        # once it is configured.
+        # Unresolved output: may yet be fine once the step is configured.
         return [
             ToolDiagnostic(
                 step_index=index,

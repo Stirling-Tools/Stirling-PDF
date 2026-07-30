@@ -20,14 +20,11 @@ import stirling.software.common.model.tool.ToolIOCase;
 import stirling.software.common.model.tool.ToolIOWhen;
 
 /**
- * Publishes each endpoint's {@link ToolIO} declaration into the OpenAPI spec as the {@code
- * x-stirling-io} extension, which is how the frontend and the AI engine get it: both generate their
- * copies from the same spec that already gives them request models, so all three stay in step
- * without anyone maintaining a second list.
+ * Publishes each {@link ToolIO} into the spec as {@code x-stirling-io}, which is how the frontend
+ * and the AI engine get it.
  *
- * <p>A human-readable {@code Input:/Output:/Type:} line is also appended to the description. That
- * string used to be hand-written and parsed back out; deriving it here keeps the published docs
- * looking the same without anyone having to keep the two in agreement.
+ * <p>Also appends the {@code Input:/Output:/Type:} line the docs used to carry by hand, so the
+ * published text is unchanged without anyone maintaining it.
  */
 @Component
 public class ToolIOOperationCustomizer
@@ -36,11 +33,8 @@ public class ToolIOOperationCustomizer
     public static final String EXTENSION_NAME = "x-stirling-io";
     public static final String VOCABULARY_EXTENSION_NAME = "x-stirling-io-vocabulary";
 
-    /**
-     * Publish the full set of formats and arities alongside the declarations. Generators need the
-     * complete vocabulary to emit their own enums, and deriving it from the declarations present
-     * would silently shrink it whenever an endpoint is disabled in a build.
-     */
+    // Published separately from the declarations: generators need the full vocabulary for their
+    // enums, and deriving it from what is present would shrink it when an endpoint is disabled.
     @Override
     public void customise(OpenAPI openApi) {
         Map<String, Object> vocabulary = new LinkedHashMap<>();

@@ -24,12 +24,8 @@ import stirling.software.common.model.tool.ToolIOSpec;
 
 /**
  * Reads every {@link ToolIO} declaration off its handler method at startup and serves it by
- * endpoint path.
- *
- * <p>This replaces parsing the same information back out of prose in the OpenAPI description, which
- * meant the application had to fetch its own {@code /v1/api-docs} over HTTP before it could answer
- * "what does this endpoint accept". Reading the annotations directly removes that round trip and
- * turns a silently unresolvable type name into a compile error.
+ * endpoint path. Replaces parsing the same information out of the description prose, which meant
+ * fetching our own {@code /v1/api-docs} over HTTP first.
  */
 @Slf4j
 @Service
@@ -37,20 +33,16 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
 
     private final ApplicationContext applicationContext;
 
-    // Written once on the Spring startup thread during ContextRefreshedEvent, read on HTTP request
-    // threads. Spring's lifecycle establishes happens-before, so no volatile is needed (same
-    // reasoning as AiEngineEndpointResolver).
+    // Written on the startup thread, read on request threads. Spring's lifecycle establishes
+    // happens-before, so no volatile (same as AiEngineEndpointResolver).
     private Map<String, ToolIOSpec> specsByPath = Map.of();
 
-    // Deliberately the only constructor: a second one leaves Spring unable to choose, and it
-    // falls back to looking for a no-arg constructor that does not exist.
+    // Keep this the only constructor: with two, Spring falls back to a no-arg one that isn't here.
     public ToolIORegistry(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
-    /**
-     * A registry over a known set of declarations, rather than ones discovered from the context.
-     */
+    /** A registry over known declarations rather than ones discovered from the context. */
     static ToolIORegistry forSpecs(Map<String, ToolIOSpec> specs) {
         ToolIORegistry registry = new ToolIORegistry(null);
         registry.specsByPath = Map.copyOf(specs);
@@ -86,11 +78,6 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
         return Optional.ofNullable(specsByPath.get(operationPath));
     }
 
-    /** Every declaration, keyed by endpoint path. */
-    public Map<String, ToolIOSpec> all() {
-        return specsByPath;
-    }
-
     @Override
     public boolean isMultiInput(String operationPath) {
         return find(operationPath).map(spec -> spec.arity().isMultiInput()).orElse(false);
@@ -106,15 +93,14 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
                 output
                         ? spec.get().resolveOutput().format().getExtensions()
                         : spec.get().acceptedExtensions();
-        // An empty list means the endpoint places no restriction, which callers express as null.
+        // Callers express "no restriction" as null.
         return extensions.isEmpty() ? null : extensions;
     }
 
     @Override
     public boolean shouldUnpackZipResponse(String operationPath) {
-        // A multi-output endpoint zips its results purely as transport, so the caller unpacks them.
-        // A single-output endpoint declaring ToolFormat.ZIP means the archive is the deliverable
-        // (get-attachments), and stays packed.
+        // Multi-output zips purely as transport. A single-output ZIP is the deliverable
+        // (extract-attachments) and stays packed.
         return find(operationPath)
                 .map(spec -> spec.resolveOutput().arity().isMultiOutput())
                 .orElse(false);

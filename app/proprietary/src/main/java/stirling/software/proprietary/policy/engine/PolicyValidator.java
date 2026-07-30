@@ -74,12 +74,10 @@ public class PolicyValidator {
     }
 
     /**
-     * Reject a chain whose steps cannot run on each other - extracting images and then rotating
-     * them, say. Such a policy saves fine today and only fails part-way through its first run,
-     * which for a scheduled policy may be a long time after the mistake was made.
+     * Reject a chain whose steps cannot run on each other. Such a policy saves fine today and only
+     * fails part-way through its first run, which for a scheduled one may be much later.
      *
-     * <p>Only errors block. Warnings cover chains that depend on how a step is configured or on
-     * what the files actually contain, which is not ours to decide here.
+     * <p>Only errors block; warnings depend on configuration or file content.
      *
      * @throws IllegalArgumentException if any step cannot accept what the one before it produces
      */
@@ -98,10 +96,10 @@ public class PolicyValidator {
     }
 
     /**
-     * Everything wrong with a chain, without rejecting it. Lets a caller show warnings and fan-out
-     * notes alongside the errors, which {@link #validateChain} can only throw on.
+     * Everything wrong with a chain, without rejecting it, so a caller can show warnings and
+     * fan-out notes too.
      *
-     * @param sourceFormat the format of the files entering the first step, or null when unknown
+     * @param sourceFormat the format entering the first step, or null when unknown
      */
     public List<ToolDiagnostic> diagnoseChain(List<PipelineStep> steps, ToolFormat sourceFormat) {
         List<ToolChainValidator.Step> chain =

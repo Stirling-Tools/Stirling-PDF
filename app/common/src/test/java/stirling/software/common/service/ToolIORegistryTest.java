@@ -15,10 +15,7 @@ import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSpec;
 
-/**
- * Covers the {@link ToolMetadataService} behaviour the pipeline executors depend on, now that it is
- * answered from {@code @ToolIO} declarations rather than parsed out of description prose.
- */
+/** The {@link ToolMetadataService} behaviour the pipeline executors depend on. */
 class ToolIORegistryTest {
 
     private static final String SPLIT = "/api/v1/general/split-pages";
@@ -64,7 +61,7 @@ class ToolIORegistryTest {
 
     @Test
     void noRestrictionIsReportedAsNull() {
-        // Callers treat null as "any type accepted", so ANY and an unknown endpoint agree.
+        // Callers treat null as "any type accepted".
         assertNull(registry.getExtensionTypes(false, CONVERT_ANY));
         assertNull(registry.getExtensionTypes(false, UNKNOWN));
     }
@@ -77,7 +74,7 @@ class ToolIORegistryTest {
 
     @Test
     void anArchiveDeliverableStaysPacked() {
-        // get-attachments returns the archive itself, so unpacking it would lose the deliverable.
+        // The archive is the deliverable; unpacking would lose it.
         assertFalse(registry.shouldUnpackZipResponse(ATTACHMENTS));
     }
 

@@ -1,18 +1,10 @@
 {
   "$comment": [
     "Shared conformance cases for the tool I/O compatibility check.",
-    "",
-    "Java (ToolChainValidatorConformanceTest), the frontend (toolIoCompat.test.ts) and the AI",
-    "engine (test_tool_io_compat.py) each build a registry from the inline specs below, run their",
-    "own implementation, and must produce exactly the diagnostics listed in 'expected'. The three",
-    "implementations exist so a chain can be checked without a round trip; this file is what stops",
-    "them drifting apart.",
-    "",
-    "Specs are synthetic on purpose. Real endpoint declarations live in @ToolIo and are covered",
-    "separately, so adding or retyping an endpoint never invalidates these cases.",
-    "",
-    "'expected' lists every diagnostic in order. Match on stepIndex, severity and code; the",
-    "message is free text and deliberately not compared."
+    "Run by Java (ToolChainValidatorConformanceTest), the frontend (toolIOCompat.test.ts) and the",
+    "engine (test_tool_io_compat.py) against their own implementations, which must agree.",
+    "Specs are synthetic, so retyping a real endpoint never invalidates a case.",
+    "'expected' is matched on stepIndex/severity/code; messages are free text."
   ],
   "specs": {
     "pdfToPdf": { "accepts": ["PDF"], "produces": "PDF", "arity": "SISO", "cases": [] },

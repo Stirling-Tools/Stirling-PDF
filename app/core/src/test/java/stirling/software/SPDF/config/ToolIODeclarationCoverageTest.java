@@ -28,13 +28,11 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOSpec;
 
 /**
- * Every endpoint that transforms a document must declare what it accepts and produces, so a chain
- * of steps can be checked before it runs. Without this, a new tool silently becomes a hole in the
- * compatibility graph: the chain validator treats an undeclared step as "cannot tell", and the
- * Pipeline builder stops warning past it.
+ * Every document-transforming endpoint must declare its I/O, or it becomes a hole in the
+ * compatibility graph: an undeclared step reads as "cannot tell" and nothing past it is checked.
  *
- * <p>The second half pins the declarations that were corrected when they were moved out of the
- * description prose, where several disagreed with what the endpoint actually does.
+ * <p>The rest pins the declarations that were corrected on the way out of the description prose,
+ * where several disagreed with what the endpoint actually does.
  */
 class ToolIODeclarationCoverageTest {
 
@@ -48,22 +46,18 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/filter/");
 
     /**
-     * Endpoints under those namespaces that are not document transforms, so they have nothing
-     * meaningful to declare. A path listed here exempts itself and everything nested under it.
-     *
-     * <p>Keep this list short and justified. If you are adding a real tool, annotate it instead.
+     * Not document transforms, so nothing to declare. A path exempts everything nested under it.
+     * Keep it short: if you are adding a real tool, annotate it instead.
      */
     private static final List<String> EXEMPT =
             List.of(
-                    // Interactive editing sessions, not one-shot operations: these exchange page
-                    // fragments and cache handles rather than whole documents.
+                    // Interactive editing sessions: page fragments and cache handles, not
+                    // documents.
                     "/api/v1/convert/pdf/text-editor",
                     "/api/v1/convert/text-editor/pdf",
-                    // Certificate signing: session, hardware-token and certificate management
-                    // rather than a document pipeline step.
+                    // Certificate signing: session and token management, not a pipeline step.
                     "/api/v1/security/cert-sign");
 
-    /** Every endpoint needing a declaration, and the declarations actually found. */
     private record Scan(Set<String> required, Map<String, ToolIOSpec> declared) {}
 
     private static final Scan SCAN = scan();
@@ -248,15 +242,13 @@ class ToolIODeclarationCoverageTest {
         if (TOOL_NAMESPACES.stream().noneMatch(path::startsWith)) {
             return false;
         }
-        // A path variable means the endpoint addresses an existing resource rather than taking a
-        // document to transform.
+        // A path variable means it addresses a resource, not a document to transform.
         if (path.contains("{")) {
             return false;
         }
         return EXEMPT.stream().noneMatch(e -> path.equals(e) || path.startsWith(e + "/"));
     }
 
-    /** The paths a method is mapped to, for the request methods that carry a document. */
     private static List<String> mappedPaths(Method method) {
         RequestMapping mapping =
                 AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
@@ -285,8 +277,7 @@ class ToolIODeclarationCoverageTest {
         try {
             return name == null ? null : Class.forName(name);
         } catch (Throwable e) {
-            // A controller whose optional dependencies are absent in this flavor cannot be loaded,
-            // and is not this test's concern.
+            // Absent optional dependencies in this flavor; not this test's concern.
             return null;
         }
     }

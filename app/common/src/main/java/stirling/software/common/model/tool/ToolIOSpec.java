@@ -7,15 +7,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * The runtime form of a {@link ToolIO} declaration, read off a handler method once at startup and
- * shared by everything that needs it: the chain validator, the pipeline executors, and the OpenAPI
- * emission that carries it to the frontend and the AI engine.
- */
+/** The runtime form of a {@link ToolIO} declaration, read off a handler method once at startup. */
 public record ToolIOSpec(
         Set<ToolFormat> accepts, ToolFormat produces, ToolArity arity, List<Case> cases) {
 
-    /** One condition on a parameter, with its match values normalised for comparison. */
     public record When(String param, List<String> matches) {
 
         boolean holdsFor(Object value) {
@@ -25,7 +20,6 @@ public record ToolIOSpec(
         }
     }
 
-    /** One {@link ToolIOCase}: an output that applies when every condition holds. */
     public record Case(List<When> when, ToolFormat produces, ToolArity arity) {
 
         public Case {
@@ -33,11 +27,7 @@ public record ToolIOSpec(
         }
     }
 
-    /**
-     * A step's output. {@code certain} is false when a {@link Case} keys on a parameter whose value
-     * is not known yet, which happens while a pipeline is being edited; callers downgrade to a
-     * warning rather than guessing.
-     */
+    /** {@code certain} is false when a {@link Case} keys on a parameter whose value is unknown. */
     public record Output(ToolFormat format, ToolArity arity, boolean certain) {}
 
     public ToolIOSpec {
@@ -67,12 +57,10 @@ public record ToolIOSpec(
     }
 
     /**
-     * The output for a step configured with {@code parameters}. The first matching {@link Case}
-     * wins. If no rule matches but one keys on a parameter we cannot see, the declaration's own
-     * output is returned as uncertain, since a value we never saw might have selected a different
-     * branch.
+     * First matching {@link Case} wins. If none match but one reads a parameter we cannot see, the
+     * declared output comes back uncertain: a value we never saw might have picked another branch.
      *
-     * @param parameters the step's configured parameters, or null when they are not known
+     * @param parameters the step's configured parameters, or null when not known
      */
     public Output resolveOutput(Map<String, Object> parameters) {
         boolean sawUnknownParam = false;
@@ -93,19 +81,17 @@ public record ToolIOSpec(
         return new Output(produces, arity, !sawUnknownParam);
     }
 
-    /** The output when nothing is known about the step's parameters. */
     public Output resolveOutput() {
         return resolveOutput(null);
     }
 
-    /** True if this endpoint can be handed a file of {@code format}. */
     public boolean acceptsFormat(ToolFormat format) {
         return format == ToolFormat.ANY
                 || accepts.contains(ToolFormat.ANY)
                 || accepts.contains(format);
     }
 
-    /** The input extensions for run-time file checking, or empty when anything is accepted. */
+    /** For run-time file checks. Empty means anything is accepted. */
     public List<String> acceptedExtensions() {
         if (accepts.contains(ToolFormat.ANY)) {
             return List.of();

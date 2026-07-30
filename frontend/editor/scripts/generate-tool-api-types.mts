@@ -1,12 +1,9 @@
 /**
- * Generates the committed frontend files derived from the Java backend's OpenAPI
- * spec, so the frontend's view of the tools stays in step with the backend:
+ * Generates the committed frontend files derived from the Java OpenAPI spec:
+ * toolApiTypes.ts (each tool's request shape) and toolIO.ts (what it accepts and
+ * produces, from `@ToolIO` via the `x-stirling-io` extension).
  *
- *  - toolApiTypes.ts - each tool's request shape.
- *  - toolIO.ts - what each tool accepts and produces, declared in Java with
- *    `@ToolIO` and published into the spec as the `x-stirling-io` extension.
- *
- * Both are written from one pass over the same spec, so they cannot drift apart.
+ * One pass over one spec, so the two cannot drift apart.
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -48,7 +45,6 @@ const FILE_WRAPPER_COMPONENTS = new Set([
 
 const COMPONENT_REF_PREFIX = "#/components/schemas/";
 
-/** Per-operation I/O declaration, and the extension carrying the full format/arity vocabulary. */
 const IO_EXTENSION = "x-stirling-io";
 const IO_VOCABULARY_EXTENSION = "x-stirling-io-vocabulary";
 
@@ -205,7 +201,6 @@ function collectToolIO(paths: Json): Record<string, unknown> {
   return table;
 }
 
-/** The tool I/O table: what each endpoint accepts and produces. */
 async function renderToolIO(spec: Json, outputPath: string): Promise<string> {
   const paths = isObject(spec.paths) ? spec.paths : {};
   const table = collectToolIO(paths);
@@ -214,8 +209,8 @@ async function renderToolIO(spec: Json, outputPath: string): Promise<string> {
       `No ${IO_EXTENSION} declarations in the spec. The backend publishes these from @ToolIO; regenerate with 'task backend:swagger'.`,
     );
   }
-  // The vocabulary is published separately from the declarations: deriving the unions from the
-  // declarations present would silently shrink them whenever an endpoint is disabled in a build.
+  // Published separately: deriving the unions from the declarations present would shrink them
+  // whenever an endpoint is disabled in a build.
   const vocabulary = spec[IO_VOCABULARY_EXTENSION];
   if (!isObject(vocabulary)) {
     throw new Error(
@@ -291,7 +286,7 @@ export function toolIOFor(
   return prettier.format(body, { ...prettierConfig, parser: "typescript" });
 }
 
-/** Write, or in check mode fail when the committed file is out of date. */
+/** In check mode, fail when the committed file is out of date. */
 function writeOrCheck(
   outputPath: string,
   formatted: string,

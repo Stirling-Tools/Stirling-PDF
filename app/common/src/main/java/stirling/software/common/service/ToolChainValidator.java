@@ -15,43 +15,27 @@ import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
 
 /**
- * Checks whether a chain of tool steps can actually run, by comparing what each step produces
- * against what the next one accepts.
+ * Whether a chain of steps can run: what each produces against what the next accepts.
  *
- * <p>The same rules are implemented in the frontend and in the AI engine, against the generated
- * copies of the same declarations, so a pipeline can be checked while it is being edited without a
- * round trip. {@code testing/tool-io-cases.json} pins all three implementations to the same
- * answers.
+ * <p>The frontend and the AI engine implement the same rules against their generated copies, so a
+ * chain can be checked without a round trip. {@code testing/tool-io-cases.json} pins all three to
+ * the same answers.
  */
 @Service
 @RequiredArgsConstructor
 public class ToolChainValidator {
 
-    /**
-     * A step to check.
-     *
-     * @param operation the endpoint path
-     * @param parameters the step's configured parameters, or null when they are not known; only
-     *     used to resolve endpoints whose output depends on a parameter
-     */
-    public record Step(String operation, Map<String, Object> parameters) {
-
-        public static Step of(String operation) {
-            return new Step(operation, null);
-        }
-    }
+    /** {@code parameters} may be null; only used to resolve an output that depends on one. */
+    public record Step(String operation, Map<String, Object> parameters) {}
 
     private final ToolIOSource toolIO;
 
-    /** Check a chain fed by files of unknown type. */
     public List<ToolDiagnostic> validate(List<Step> steps) {
         return validate(steps, null);
     }
 
     /**
-     * Check a chain, optionally knowing what the pipeline's input files are.
-     *
-     * @param sourceFormat the format of the files entering step one, or null when unknown
+     * @param sourceFormat the format entering step one, or null when unknown
      */
     public List<ToolDiagnostic> validate(List<Step> steps, ToolFormat sourceFormat) {
         List<ToolDiagnostic> diagnostics = new ArrayList<>();
@@ -69,7 +53,7 @@ public class ToolChainValidator {
                                         + step.operation()
                                         + " does not declare what it accepts or produces, so the"
                                         + " rest of the chain cannot be checked."));
-                // Nothing is known past an undeclared step, so stop carrying a stale output.
+                // Nothing is known past an undeclared step.
                 carried = null;
                 continue;
             }
@@ -85,7 +69,6 @@ public class ToolChainValidator {
         return diagnostics;
     }
 
-    /** True if any diagnostic would stop the chain running. */
     public static boolean hasErrors(List<ToolDiagnostic> diagnostics) {
         return diagnostics.stream().anyMatch(d -> d.severity() == ToolDiagnostic.Severity.ERROR);
     }
@@ -142,8 +125,7 @@ public class ToolChainValidator {
             diagnostics.add(
                     previous.certain()
                             ? ToolDiagnostic.error(index, ToolDiagnostic.FORMAT_MISMATCH, message)
-                            // The previous step's output turns on a parameter we cannot see, so
-                            // this may yet be fine once it is configured.
+                            // Unresolved output: may yet be fine once the step is configured.
                             : ToolDiagnostic.warn(index, ToolDiagnostic.OUTPUT_UNCERTAIN, message));
             return;
         }

@@ -210,9 +210,8 @@ class PdfEditAgent:
         supported_operations, unavailable_operations = self._classify_operations(request)
         if not supported_operations:
             return EditCannotDoResponse(reason="No PDF edit operations are available on this server.")
-        # A plan whose steps cannot run on each other is worth one retry: the model is told
-        # exactly which transition fails, which is cheaper and more likely to help than
-        # carrying the whole compatibility matrix in the prompt.
+        # One retry, told exactly which transition fails. Cheaper than carrying the whole
+        # compatibility matrix in the prompt.
         repair_note = ""
         for attempt in range(2):
             selection = await self._select_plan(
@@ -388,9 +387,8 @@ class PdfEditAgent:
     def _chain_problems(operations: Iterable[ToolEndpoint]) -> str:
         """Why this ordering cannot run, or empty if it can.
 
-        Parameters are not chosen yet, so an operation whose output depends on one resolves as
-        unresolved and only warns. Acting on warnings here would reject plans that are fine once
-        configured, so only errors count.
+        Only errors count: parameters are not chosen yet, so a conditional output merely warns and
+        acting on that would reject plans that are fine once configured.
         """
         diagnostics = validate_tool_chain([ToolChainStep(operation=op) for op in operations])
         errors = blocking(diagnostics)
@@ -401,9 +399,8 @@ class PdfEditAgent:
 
     @staticmethod
     def _output_note(operation: ToolEndpoint) -> str:
-        """A short note on what an operation emits, for operations that do not simply return one
-        PDF. Cheap next to the operation list itself, and it heads off most bad orderings before
-        a repair attempt is needed."""
+        """What an operation emits, when it is not simply one PDF. Cheap next to the operation
+        list, and heads off most bad orderings before a retry is needed."""
         spec = TOOL_IO[operation]
         if spec.produces == ToolFormat.PDF and spec.arity == ToolArity.SISO:
             return ""

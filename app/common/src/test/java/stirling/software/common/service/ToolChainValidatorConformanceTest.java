@@ -25,11 +25,7 @@ import stirling.software.common.model.tool.ToolIOSpec;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Runs the shared cases in {@code testing/tool-io-cases.json}. The frontend and the AI engine run
- * the same file against their own implementations, so a rule that changes in one place and not the
- * others fails here.
- */
+/** The shared cases in {@code testing/tool-io-cases.json}, which all three implementations run. */
 class ToolChainValidatorConformanceTest {
 
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
@@ -120,7 +116,7 @@ class ToolChainValidatorConformanceTest {
                 cases);
     }
 
-    /** Compare on the parts that are contractual; messages are free text. */
+    /** Messages are free text, so compare only the contractual parts. */
     private static List<String> summarise(List<ToolDiagnostic> diagnostics) {
         return diagnostics.stream()
                 .map(d -> d.stepIndex() + ":" + d.severity() + ":" + d.code())
@@ -147,7 +143,7 @@ class ToolChainValidatorConformanceTest {
                 .orElse("no diagnostics");
     }
 
-    /** The fixture is shared with the frontend and engine, so it lives at the repo root. */
+    /** Shared with the frontend and engine, so it lives at the repo root. */
     private static Path casesFile() {
         Path current = Path.of("").toAbsolutePath();
         while (current != null) {

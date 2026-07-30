@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the Python files derived from the Java backend's OpenAPI spec (SwaggerDoc.json).
+"""Generate the Python files derived from the Java OpenAPI spec (SwaggerDoc.json).
 
-  - tool_models.py: each tool's request model, via datamodel-code-generator.
-  - tool_io.py: what each tool accepts and produces, declared in Java with ``@ToolIO``
-    and published into the spec as the ``x-stirling-io`` extension.
-
-Both are written from one pass over the same spec, so they cannot drift apart. Run via:
+tool_models.py holds each tool's request model; tool_io.py holds what it accepts and produces,
+from ``@ToolIO`` via the ``x-stirling-io`` extension. One pass over one spec, so the two cannot
+drift apart. Run via:
     task engine:tool-models
 """
 
@@ -28,7 +26,6 @@ from referencing.jsonschema import DRAFT202012
 # Fields inherited from PDFFile base class - not tool parameters.
 BASE_CLASS_FIELDS = frozenset({"fileInput", "fileId"})
 
-# Per-operation I/O declaration, and the extension carrying the full format/arity vocabulary.
 IO_EXTENSION = "x-stirling-io"
 IO_VOCABULARY_EXTENSION = "x-stirling-io-vocabulary"
 
@@ -390,12 +387,8 @@ def _render_case(case: dict[str, Any]) -> str:
 
 
 def _render_spec(declaration: dict[str, Any]) -> str:
-    """One declaration as a ToolIOSpec constructor call.
-
-    Emitting constructors rather than a dict for ``model_validate`` means a spec the generator
-    got wrong is a type error at import, not a validation failure at first use, and the table
-    reads as models rather than as anonymous mappings.
-    """
+    """One declaration as a constructor call, so a bad spec is a type error at import rather
+    than a validation failure at first use."""
     accepts = ", ".join(f"ToolFormat.{f}" for f in declaration["accepts"])
     parts = [
         f"accepts=[{accepts}]",
@@ -413,11 +406,10 @@ def _members(values: list[str]) -> str:
 
 
 def render_tool_io(spec: dict[str, Any], tools: list[ToolSpec]) -> str:
-    """The tool I/O table: what each endpoint accepts and produces.
+    """Keyed by ``ToolEndpoint`` so the endpoint strings live in one place and lookups are checked.
 
-    Keyed by ``ToolEndpoint`` rather than by path, so the endpoint strings live in exactly one
-    place and a lookup is checked. Declarations for endpoints outside the enum - the filters, and
-    the introspection endpoints the agent never plans - are dropped here.
+    Declarations outside the enum - the filters, and the introspection endpoints the agent never
+    plans - are dropped.
     """
     by_path = {tool.path: tool.enum_name for tool in tools}
     table = {path: d for path, d in collect_tool_io(spec).items() if path in by_path}
@@ -426,8 +418,8 @@ def render_tool_io(spec: dict[str, Any], tools: list[ToolSpec]) -> str:
             f"No {IO_EXTENSION} declarations in the spec. The backend publishes these from @ToolIO; "
             "regenerate the spec with 'task backend:swagger'."
         )
-    # The vocabulary is published separately from the declarations: deriving the enums from the
-    # declarations present would silently shrink them whenever an endpoint is disabled in a build.
+    # Published separately: deriving the enums from the declarations present would shrink them
+    # whenever an endpoint is disabled in a build.
     vocabulary = spec.get(IO_VOCABULARY_EXTENSION)
     if not vocabulary:
         raise SystemExit(f"No {IO_VOCABULARY_EXTENSION} in the spec; regenerate it from a current backend.")
@@ -440,7 +432,7 @@ def render_tool_io(spec: dict[str, Any], tools: list[ToolSpec]) -> str:
             for path, declaration in sorted(table.items())
         ),
     )
-    # Formatted here rather than after writing, so --check compares like for like.
+    # Formatted before writing so --check compares like for like.
     return subprocess.run(
         ["ruff", "format", "--stdin-filename", "tool_io.py", "-"],
         input=rendered,
@@ -452,7 +444,7 @@ def render_tool_io(spec: dict[str, Any], tools: list[ToolSpec]) -> str:
 
 
 def write_or_check(out_path: Path, rendered: str, check: bool) -> None:
-    """Write, or in check mode fail when the committed file is out of date."""
+    """In check mode, fail when the committed file is out of date."""
     if check:
         current = out_path.read_text(encoding="utf-8") if out_path.exists() else ""
         if current != rendered:

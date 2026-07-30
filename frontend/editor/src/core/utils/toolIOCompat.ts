@@ -1,12 +1,9 @@
 /**
- * Whether a chain of tool steps can actually run, decided from the generated tool I/O table
- * rather than by running it.
+ * Whether a chain of steps can run, from the generated I/O table rather than by running it.
  *
- * The same rules exist in the backend (`ToolChainValidator`) and the AI engine
- * (`tool_io_compat.py`). They are duplicated on purpose: a pipeline is checked on every
- * keystroke while it is being edited, and the desktop build has no cloud backend to ask.
- * `testing/tool-io-cases.json` runs against all three, so a rule that changes in one place and
- * not the others fails there.
+ * Duplicated in the backend (`ToolChainValidator`) and the AI engine (`tool_io_compat.py`) on
+ * purpose: this runs on every keystroke, and the desktop build has no cloud backend to ask.
+ * `testing/tool-io-cases.json` pins all three to the same answers.
  */
 
 import {
@@ -40,11 +37,10 @@ export type ToolDiagnosticCode =
   (typeof ToolDiagnosticCode)[keyof typeof ToolDiagnosticCode];
 
 export interface ToolDiagnostic {
-  /** Zero-based index of the step that cannot run. */
   stepIndex: number;
   severity: ToolDiagnosticSeverity;
   code: ToolDiagnosticCode;
-  /** Values for the translated message; the wording itself lives in the locale files. */
+  /** Interpolation values; the wording lives in the locale files. */
   detail: {
     operation: string;
     accepts?: ToolFormat[];
@@ -53,15 +49,15 @@ export interface ToolDiagnostic {
 }
 
 export interface ToolChainStep {
+  /** A plain string: a stored pipeline may name an endpoint this build does not model. */
   operation: string;
-  /** The step's configured parameters, if known. Only used to resolve a conditional output. */
+  /** Only used to resolve an output that depends on one. */
   parameters?: Record<string, unknown>;
 }
 
 export interface ToolChainOptions {
-  /** The format of the files entering step one, when known. */
+  /** The format entering step one, when known. */
   sourceFormat?: ToolFormat;
-  /** Declarations to check against. Defaults to the generated table. */
   toolIO?: ToolIOTable;
 }
 
@@ -95,9 +91,8 @@ function acceptsFormat(spec: ToolIOSpec, format: ToolFormat): boolean {
 }
 
 /**
- * The output of a step configured with `parameters`. The first case whose conditions all hold
- * wins; if none match but one reads a parameter we cannot see, the declared output is returned
- * as uncertain, since a value we never saw might have selected a different branch.
+ * First case whose conditions all hold wins. If none match but one reads a parameter we cannot
+ * see, the declared output comes back uncertain: an unseen value might have picked another branch.
  */
 export function resolveOutput(
   spec: ToolIOSpec,
@@ -127,7 +122,6 @@ export function resolveOutput(
   };
 }
 
-/** Check a chain, reporting every problem against the step that cannot run. */
 export function validateToolChain(
   steps: ToolChainStep[],
   options: ToolChainOptions = {},
@@ -145,7 +139,7 @@ export function validateToolChain(
         code: ToolDiagnosticCode.Undeclared,
         detail: { operation: step.operation },
       });
-      // Nothing is known past an undeclared step, so stop carrying a stale output.
+      // Nothing is known past an undeclared step.
       carried = null;
       return;
     }
@@ -199,8 +193,7 @@ function checkTransition(
     return [
       {
         stepIndex: index,
-        // The previous step's output turns on a parameter we cannot see, so this may yet be
-        // fine once it is configured.
+        // Unresolved output: may yet be fine once the step is configured.
         severity: previous.certain ? "ERROR" : "WARN",
         code: previous.certain
           ? ToolDiagnosticCode.FormatMismatch
@@ -237,10 +230,7 @@ function checkTransition(
   return [];
 }
 
-/**
- * The format a chain ends up producing, or undefined when the last step declares nothing. Used to
- * tell a picker what the next step would have to accept.
- */
+/** What a newly appended step would be handed, or undefined when the last step declares nothing. */
 export function chainOutputFormat(
   steps: ToolChainStep[],
   toolIO: ToolIOTable = TOOL_IO,
@@ -251,7 +241,7 @@ export function chainOutputFormat(
   return spec ? resolveOutput(spec, last.parameters).format : undefined;
 }
 
-/** True if a tool could run on `format`. Unknown operations are not claimed to be a problem. */
+/** Unknown operations are not claimed to be a problem. */
 export function toolAcceptsFormat(
   operation: string,
   format: ToolFormat,
@@ -261,12 +251,10 @@ export function toolAcceptsFormat(
   return spec ? acceptsFormat(spec, format) : true;
 }
 
-/** True if any diagnostic would stop the chain running. */
 export function hasBlockingDiagnostics(diagnostics: ToolDiagnostic[]): boolean {
   return diagnostics.some((d) => d.severity === "ERROR");
 }
 
-/** The diagnostics for one step, for rendering a note beside it. */
 export function diagnosticsForStep(
   diagnostics: ToolDiagnostic[],
   stepIndex: number,

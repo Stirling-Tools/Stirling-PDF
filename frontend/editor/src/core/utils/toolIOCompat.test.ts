@@ -1,9 +1,4 @@
-/**
- * Runs the shared cases in `testing/tool-io-cases.json`.
- *
- * The backend and the AI engine run the same file against their own implementations, so a rule
- * that changes in one place and not the others fails here.
- */
+/** The shared cases in `testing/tool-io-cases.json`, which all three implementations run. */
 
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -27,7 +22,7 @@ interface SharedCase {
   expected: { stepIndex: number; severity: string; code: string }[];
 }
 
-/** The fixture is shared with the backend and engine, so it lives at the repo root. */
+/** Shared with the backend and engine, so it lives at the repo root. */
 function casesFile(): string {
   let current = dirname(new URL(import.meta.url).pathname);
   for (let i = 0; i < 12; i++) {
@@ -49,7 +44,7 @@ const data = JSON.parse(readFileSync(casesFile(), "utf-8")) as {
   cases: SharedCase[];
 };
 
-/** Compare on the parts that are contractual; the detail payload is free. */
+/** The detail payload is free, so compare only the contractual parts. */
 function summarise(diagnostics: ToolDiagnostic[]): string[] {
   return diagnostics.map((d) => `${d.stepIndex}:${d.severity}:${d.code}`);
 }

@@ -1,8 +1,4 @@
-"""Runs the shared cases in ``testing/tool-io-cases.json``.
-
-The backend and the frontend run the same file against their own implementations, so a rule
-that changes in one place and not the others fails here.
-"""
+"""The shared cases in ``testing/tool-io-cases.json``, which all three implementations run."""
 
 from __future__ import annotations
 
@@ -22,7 +18,7 @@ from stirling.services.tool_io_compat import (
 
 
 def _cases_file() -> Path:
-    """The fixture is shared with the backend and frontend, so it lives at the repo root."""
+    """Shared with the backend and frontend, so it lives at the repo root."""
     for parent in Path(__file__).resolve().parents:
         candidate = parent / "testing" / "tool-io-cases.json"
         if candidate.exists():
@@ -36,7 +32,7 @@ _ENDPOINTS: list[ToolEndpoint] = list(ToolEndpoint)
 
 
 def _summarise(diagnostics: list[ToolDiagnostic]) -> list[str]:
-    """Compare on the parts that are contractual; messages are free text."""
+    """Messages are free text, so compare only the contractual parts."""
     return [f"{d.step_index}:{d.severity}:{d.code}" for d in diagnostics]
 
 
