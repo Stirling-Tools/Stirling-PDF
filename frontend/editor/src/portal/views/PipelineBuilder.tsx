@@ -14,7 +14,6 @@ import {
   Banner,
   Button,
   Checkbox,
-  FormField,
   Input,
   Modal,
   RadioGroup,
@@ -46,14 +45,13 @@ import {
   type RunOutputFile,
   type Policy,
   type PolicyRunView,
-  type PipelineOutputMode,
   type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
 } from "@portal/api/pipelines";
 import { clearProcessedHistory } from "@portal/api/policies";
+import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
-import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
@@ -81,21 +79,6 @@ import {
 } from "@portal/components/pipelines/integrationStep";
 import "@portal/views/PipelineBuilder.css";
 
-type OutputMode = PipelineOutputMode;
-
-/** New pipelines (and specs of unoffered types) start on the first offered destination. */
-const DEFAULT_OUTPUT_MODE = availableOutputModes()[0];
-
-/** The s3 output's options: a stored connection reference plus the per-use prefix. */
-interface S3OutputOptions {
-  connectionId: string;
-  prefix: string;
-}
-
-const EMPTY_S3_OUTPUT: S3OutputOptions = {
-  connectionId: "",
-  prefix: "",
-};
 type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 
 const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
@@ -139,31 +122,6 @@ function parseTrigger(trigger: TriggerConfig | null): {
     return { triggerType: "schedule", count: "1", unit: "HOURS" };
   }
   return { triggerType: trigger.type, count: "1", unit: "HOURS" };
-}
-
-function parseOutput(output: OutputSpec | undefined): {
-  mode: OutputMode;
-  directory: string;
-  s3: S3OutputOptions;
-} {
-  if (output?.type === "folder") {
-    return {
-      mode: "folder",
-      directory: String(output.options?.directory ?? ""),
-      s3: EMPTY_S3_OUTPUT,
-    };
-  }
-  if (output?.type === "s3") {
-    return {
-      mode: "s3",
-      directory: "",
-      s3: {
-        connectionId: String(output.options?.connectionId ?? ""),
-        prefix: String(output.options?.prefix ?? ""),
-      },
-    };
-  }
-  return { mode: DEFAULT_OUTPUT_MODE, directory: "", s3: EMPTY_S3_OUTPUT };
 }
 
 /**
@@ -211,6 +169,15 @@ export function PipelineBuilder() {
       ),
     [sourcesState.data],
   );
+  // A destination is a source used as a write target: only writable types (folder/S3, filtered per
+  // deployment) can be picked, and the virtual editor is already excluded from availableSources.
+  const writableSources = useMemo<SourceView[]>(
+    () =>
+      availableSources.filter((source) =>
+        (availableOutputModes() as string[]).includes(source.type),
+      ),
+    [availableSources],
+  );
   const triggers = useMemo(
     () => triggersState.data ?? [],
     [triggersState.data],
@@ -224,9 +191,7 @@ export function PipelineBuilder() {
   const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
-  const [outputMode, setOutputMode] = useState<OutputMode>(DEFAULT_OUTPUT_MODE);
-  const [outputDirectory, setOutputDirectory] = useState("");
-  const [outputS3, setOutputS3] = useState<S3OutputOptions>(EMPTY_S3_OUTPUT);
+  const [outputIds, setOutputIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -249,17 +214,22 @@ export function PipelineBuilder() {
   const [sourceModal, setSourceModal] = useState<{
     open: boolean;
     sourceId: string | null;
-  }>({ open: false, sourceId: null });
-  // A source created from here is what the pipeline wants: tick it on arrival.
-  const autoSelectSourceRef = useRef(false);
+    /** Which side of the pipeline opened it, so a newly created source lands there. */
+    target: "input" | "output";
+  }>({ open: false, sourceId: null, target: "input" });
+  // A source created from here is what the pipeline wants: tick it on arrival, on whichever
+  // side (input or destination) it was created from.
+  const autoSelectTargetRef = useRef<"input" | "output" | null>(null);
   const knownSourceIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     const ids = availableSources.map((source) => source.id);
-    if (autoSelectSourceRef.current) {
+    const target = autoSelectTargetRef.current;
+    if (target) {
       const fresh = ids.filter((sid) => !knownSourceIdsRef.current.has(sid));
       if (fresh.length > 0) {
-        autoSelectSourceRef.current = false;
-        setSourceIds((current) => [...new Set([...current, ...fresh])]);
+        autoSelectTargetRef.current = null;
+        const add = target === "input" ? setSourceIds : setOutputIds;
+        add((current) => [...new Set([...current, ...fresh])]);
       }
     }
     knownSourceIdsRef.current = new Set(ids);
@@ -279,7 +249,6 @@ export function PipelineBuilder() {
     if (isEdit && !policyState.data) return;
     const policy = policyState.data ?? undefined;
     const trigger = parseTrigger(policy?.trigger ?? null);
-    const output = parseOutput(policy?.output);
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
     setSourceIds(policy?.sourceIds ?? []);
@@ -289,9 +258,7 @@ export function PipelineBuilder() {
     setTriggerType(trigger.triggerType);
     setScheduleCount(trigger.count);
     setScheduleUnit(trigger.unit);
-    setOutputMode(output.mode);
-    setOutputDirectory(output.directory);
-    setOutputS3(output.s3);
+    setOutputIds(policy?.outputIds ?? []);
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded]);
 
@@ -476,15 +443,22 @@ export function PipelineBuilder() {
             defaultValue: triggerType,
           });
 
-  const overviewOutputLabel = t(`portal.pipelines.output.${outputMode}`);
+  // Destinations are saved sources, so the overview names them the way it names inputs.
+  const overviewDestinations = writableSources.filter((source) =>
+    outputIds.includes(source.id),
+  );
+  const overviewOutputLabel = overviewDestinations
+    .map((source) => source.name)
+    .join(", ");
+  const soleDestination =
+    overviewDestinations.length === 1 ? overviewDestinations[0] : undefined;
   const overviewOutputKind =
-    outputMode === "folder" ? "dir" : outputMode === "s3" ? "s3" : "api";
-  const overviewOutputDetail =
-    outputMode === "folder"
-      ? outputDirectory.trim() || undefined
-      : outputMode === "s3"
-        ? outputS3.prefix.trim() || undefined
-        : t("portal.pipelines.overview.inlineDetail");
+    soleDestination === undefined
+      ? undefined
+      : soleDestination.type === "folder"
+        ? "dir"
+        : soleDestination.type;
+  const overviewOutputDetail = soleDestination?.config[0]?.value;
 
   // One-line parameter read-back for a step node (mirrors the tool's defaults).
   function stepSummary(step: WorkingToolStep): string | undefined {
@@ -577,6 +551,7 @@ export function PipelineBuilder() {
       sourceIds,
       steps: steps.map((step) => serializeToolStep(step, allTools)),
       output: buildOutput(),
+      outputIds,
     },
     null,
     2,
@@ -682,9 +657,7 @@ export function PipelineBuilder() {
     triggerType,
     scheduleCount,
     scheduleUnit,
-    outputMode,
-    outputDirectory,
-    outputS3,
+    outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
   useEffect(() => {
@@ -694,13 +667,13 @@ export function PipelineBuilder() {
 
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
-  const s3OutputValid =
-    outputMode !== "s3" || outputS3.connectionId.trim() !== "";
-  const outputValid =
-    (outputMode !== "folder" || outputDirectory.trim() !== "") && s3OutputValid;
+  // A pipeline must have at least one input source and at least one output destination.
+  const sourceValid = sourceIds.length > 0;
+  const outputValid = outputIds.length > 0;
 
   const canSave =
     name.trim() !== "" &&
+    sourceValid &&
     scheduleCountValid &&
     outputValid &&
     !hasUploadSteps &&
@@ -772,10 +745,6 @@ export function PipelineBuilder() {
         <p className="portal-pipelines__muted">
           {t("portal.pipelines.composer.sourcesLoading")}
         </p>
-      ) : availableSources.length === 0 ? (
-        <p className="portal-pipelines__muted">
-          {t("portal.pipelines.composer.noSources")}
-        </p>
       ) : (
         <div className="portal-pipelines__source-list">
           {availableSources.map((source) => (
@@ -791,7 +760,11 @@ export function PipelineBuilder() {
                 className="portal-builder__source-edit"
                 aria-label={t("portal.pipelines.composer.editSource")}
                 onClick={() =>
-                  setSourceModal({ open: true, sourceId: source.id })
+                  setSourceModal({
+                    open: true,
+                    sourceId: source.id,
+                    target: "input",
+                  })
                 }
               >
                 <EditOutlinedIcon style={{ fontSize: "1rem" }} />
@@ -804,7 +777,9 @@ export function PipelineBuilder() {
         <Button
           variant="tertiary"
           size="sm"
-          onClick={() => setSourceModal({ open: true, sourceId: null })}
+          onClick={() =>
+            setSourceModal({ open: true, sourceId: null, target: "input" })
+          }
           leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
         >
           {t("portal.sources.actions.connectSource")}
@@ -860,63 +835,20 @@ export function PipelineBuilder() {
 
   const outputEditor = (
     <>
-      <RadioGroup<OutputMode>
-        name="pipeline-output"
-        value={outputMode}
-        onChange={setOutputMode}
-        options={availableOutputModes().map((mode) => ({
-          value: mode,
-          label: t(`portal.pipelines.output.${mode}`),
-        }))}
+      <DestinationPicker
+        sources={writableSources}
+        value={outputIds}
+        onChange={setOutputIds}
+        onCreateNew={() =>
+          setSourceModal({ open: true, sourceId: null, target: "output" })
+        }
       />
-      {outputMode === "folder" && (
-        <FormField
-          label={t("portal.pipelines.composer.directory")}
-          helperText={t("portal.pipelines.composer.directoryHelp")}
-          required
-        >
-          <Input
-            value={outputDirectory}
-            placeholder="/data/processed"
-            onChange={(e) => setOutputDirectory(e.target.value)}
-          />
-        </FormField>
-      )}
-      {outputMode === "s3" && (
-        <>
-          <FormField
-            label={t("portal.sources.types.s3.fields.connection.label")}
-            required
-          >
-            <S3ConnectionPicker
-              value={outputS3.connectionId}
-              onChange={(connectionId) =>
-                setOutputS3((s) => ({ ...s, connectionId }))
-              }
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.prefix.label")}
-            helperText={t("portal.pipelines.composer.s3PrefixHelp")}
-          >
-            <Input
-              value={outputS3.prefix}
-              placeholder="processed/"
-              onChange={(e) =>
-                setOutputS3((s) => ({ ...s, prefix: e.target.value }))
-              }
-            />
-          </FormField>
-        </>
-      )}
       <div className="portal-builder__ghost">
         <div className="portal-builder__ghost-label">
           {t("portal.pipelines.composer.designOnly")}
         </div>
         {ghostOption("radio", "sharepointDest")}
-        {ghostOption("radio", "secondDest")}
       </div>
-      {currentNote("outputCurrentNote")}
     </>
   );
 
@@ -932,12 +864,10 @@ export function PipelineBuilder() {
     else navigate(destination);
   }
 
+  // Destinations are the referenced saved sources; the inline output field is preserved as-is
+  // (e.g. an editor policy's membership metadata) or defaults to inline.
   function buildOutput(): OutputSpec {
-    return outputMode === "folder"
-      ? { type: "folder", options: { directory: outputDirectory.trim() } }
-      : outputMode === "s3"
-        ? { type: "s3", options: { ...outputS3 } }
-        : { type: "inline", options: {} };
+    return policyState.data?.output ?? { type: "inline", options: {} };
   }
 
   async function save(destination: string) {
@@ -953,6 +883,7 @@ export function PipelineBuilder() {
       sourceIds,
       steps: steps.map((step) => serializeToolStep(step, allTools)),
       output,
+      outputIds,
     };
     try {
       await savePipeline(policy);
@@ -1524,9 +1455,12 @@ export function PipelineBuilder() {
       <SourceModal
         open={sourceModal.open}
         sourceId={sourceModal.sourceId}
-        onClose={() => setSourceModal({ open: false, sourceId: null })}
+        onClose={() =>
+          setSourceModal({ open: false, sourceId: null, target: "input" })
+        }
         onSaved={() => {
-          if (sourceModal.sourceId === null) autoSelectSourceRef.current = true;
+          if (sourceModal.sourceId === null)
+            autoSelectTargetRef.current = sourceModal.target;
         }}
       />
 
