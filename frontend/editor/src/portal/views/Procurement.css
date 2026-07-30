@@ -1323,6 +1323,22 @@
 }
 
 /* ── Agreement (security) step ────────────────────────────────────────────── */
+/* The signature block: the three fields that name the bound party and its signatory, on the same line
+   as the act of signing. Fields shrink below the row's usual floor so all three plus the button hold
+   one line at the takeover's width; they wrap rather than clip if a translation runs long. */
+.portal-agreement__signbar {
+  gap: 0.9rem;
+  align-items: flex-end;
+}
+.portal-agreement__signbar .portal-agreement__signfields {
+  flex: 1;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.portal-agreement__signbar .portal-qb__field {
+  min-width: 8.5rem;
+}
+
 /* The agreement is presented as paper, not as app copy in a box: a sunken tray running to the panel's
    edges, with the terms on white stock in a serif face. Signing is the most consequential thing a
    buyer does here, so the document should read like the document it is. */

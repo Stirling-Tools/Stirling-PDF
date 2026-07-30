@@ -144,10 +144,11 @@ export function ProcurementFlow({
               <ProcurementAgreement
                 quote={latest}
                 busy={busy}
-                downloading={downloading}
                 onAgree={onAgree}
-                onDownload={onDownloadPdf}
-                onEdit={() => setEditing(true)}
+                onRequestChanges={() => {
+                  setOpen(false);
+                  setExtra("schedule");
+                }}
                 onClose={() => setOpen(false)}
               />
             )}
