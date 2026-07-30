@@ -593,16 +593,19 @@
 }
 /* No padding or scroll of its own: FlowModal's panel supplies both, and nesting a second scroll
    container inside a scrolling panel gave the builder two scrollbars. */
+/* This gap is the builder's only vertical rhythm: the blocks inside carry no bottom margins of their
+   own, so spacing cannot double up the way a margin plus a gap did. The top margin is the breathing
+   room under the stepped header, which deliberately has no bottom margin so its host sets this. */
 .portal-qb__body {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
+  margin-top: 1.05rem;
 }
 .portal-qb__intro {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 18px;
 }
 .portal-qb__intro-icon {
   width: 38px;
@@ -625,9 +628,10 @@
   color: var(--c-text-subtle);
   margin-top: 1px;
 }
+/* No bottom margin: inside .portal-qb__body the gap spaces these, and inside .portal-qb__row a
+   margin only reserved dead space under the inputs. */
 .portal-qb__field {
   display: block;
-  margin-bottom: 18px;
 }
 .portal-qb__field-label {
   display: block;
@@ -671,7 +675,7 @@
   min-width: 190px;
 }
 .portal-qb__hint {
-  margin: 7px 0 0;
+  margin: 0;
   font-size: 11.5px;
   color: var(--c-text-subtle);
   line-height: 1.4;
@@ -817,7 +821,7 @@
   gap: 12px;
   /* Bleeds to the panel's edges by reading the shell's own inset, so changing FlowModal's padding
      can no longer leave this footer stopping short of them. */
-  margin: 0.2rem calc(-1 * var(--flowmodal-inset))
+  margin: 0.85rem calc(-1 * var(--flowmodal-inset))
     calc(-1 * var(--flowmodal-body-end));
   padding: 0.8rem var(--flowmodal-inset) 0.9rem;
   border-top: 1px solid var(--c-border-subtle);
@@ -1500,10 +1504,4 @@
 .portal-sidemodal__foot-hint {
   font-size: 0.75rem;
   color: var(--c-text-subtle);
-}
-
-/* The volume hint used to end its step, so it needed no space beneath it. Governance and Sizing now
-   follow it, and it was butting straight up against the next label. */
-.portal-qb__hint:not(:last-child) {
-  margin-bottom: 0.55rem;
 }
