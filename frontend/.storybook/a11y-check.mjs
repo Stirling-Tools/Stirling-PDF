@@ -52,6 +52,7 @@ const RULE_URL = /dequeuniversity\.com\/rules\/axe\/[\d.]+\/([a-z0-9-]+)/g;
 function collect(dir) {
   const rules = {}; // storyKey -> Set(ruleId)
   const crashed = []; // storyKey[] — failed for a non-a11y reason
+  const unloadable = []; // storyFile[] — the file itself never ran
   const seenFiles = new Set();
   let scanned = 0;
 
@@ -68,6 +69,14 @@ function collect(dir) {
       const idx = norm.search(/editor\/src\//);
       const file = idx >= 0 ? norm.slice(idx) : norm;
       seenFiles.add(file);
+      // A story file that fails to import produces a failed suite with no
+      // assertions at all. Every other check here reads assertions, so such a
+      // file satisfies the manifest and contributes nothing — its stories go
+      // unscanned while the run still reports clean.
+      if ((tf.assertionResults || []).length === 0 && tf.status !== "passed") {
+        unloadable.push(file);
+        continue;
+      }
       for (const a of tf.assertionResults || []) {
         scanned++;
         if (a.status === "passed") continue;
@@ -88,14 +97,14 @@ function collect(dir) {
       }
     }
   }
-  return { rules, crashed, seenFiles, scanned };
+  return { rules, crashed, unloadable, seenFiles, scanned };
 }
 
 if (!existsSync(inDir)) {
   console.error(`a11y-check: scan dir not found: ${inDir}`);
   process.exit(2);
 }
-const { rules, crashed, seenFiles, scanned } = collect(inDir);
+const { rules, crashed, unloadable, seenFiles, scanned } = collect(inDir);
 const observed = {};
 for (const [k, set] of Object.entries(rules)) observed[k] = [...set].sort();
 
@@ -129,6 +138,14 @@ if (record || merge) {
     merge && existsSync(baselineFile)
       ? JSON.parse(readFileSync(baselineFile, "utf8"))
       : {};
+  if (unloadable.length) {
+    console.error(
+      `a11y-check: refusing to record — ${unloadable.length} story file(s) failed to load:`,
+    );
+    unloadable.slice(0, 20).forEach((f) => console.error(`  ${f}`));
+    console.error("Their stories never ran, so the baseline would lose them.");
+    process.exit(2);
+  }
   if (crashed.length) {
     console.error(
       `a11y-check: refusing to record — ${crashed.length} story(ies) failed for a non-a11y reason:`,
@@ -176,6 +193,19 @@ console.log(
     `${pairs} story-rule pairs (baselined).`,
 );
 
+if (unloadable.length) {
+  console.error(
+    `\n✖ ${unloadable.length} story file(s) failed to load, so their stories never ran:`,
+  );
+  unloadable.slice(0, 50).forEach((f) => console.error(`  ${f}`));
+  if (unloadable.length > 50)
+    console.error(`  … and ${unloadable.length - 50} more`);
+  console.error(
+    "\nA file that cannot be imported reports no violations at all. The resolve " +
+      "or transform error is in the scan log (.a11y-scan/scan.log, uploaded as a " +
+      "run artifact); a missing generated asset is the usual cause.",
+  );
+}
 if (crashed.length) {
   console.error(`\n✖ ${crashed.length} story(ies) failed to render:`);
   crashed.slice(0, 50).forEach((k) => console.error(`  ${k}`));
@@ -191,7 +221,7 @@ if (regressions.length) {
       "baseline key no longer matches — re-record: task frontend:storybook:a11y:record",
   );
 }
-if (crashed.length || regressions.length) process.exit(1);
+if (unloadable.length || crashed.length || regressions.length) process.exit(1);
 
 if (fixed.length)
   console.log(
