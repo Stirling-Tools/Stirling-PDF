@@ -63,9 +63,28 @@ test.describe("PDF Viewer Hot Paths Performance Benchmark", () => {
         throw new Error("No active document found");
       }
 
-      const renderPlugin = registry.getPlugin("render").provides();
+      const renderPlugin = registry.getPlugin("render").provides() as {
+        forDocument: (docId: string) => {
+          renderPageRect: (args: {
+            pageIndex: number;
+            rect: {
+              origin: { x: number; y: number };
+              size: { width: number; height: number };
+            };
+            options: { scaleFactor: number; dpr: number; imageType: string };
+          }) => {
+            wait: (
+              resolve: (val?: any) => void,
+              reject: (err?: any) => void,
+            ) => void;
+          };
+        };
+      };
       const renderScope = renderPlugin.forDocument(activeDoc.id);
-      const searchPlugin = registry.getPlugin("search").provides();
+      const searchPlugin = registry.getPlugin("search").provides() as {
+        startSearch: () => void;
+        searchAllPages: (query: string) => Promise<unknown>;
+      };
 
       const formats = [
         "image/bmp",
