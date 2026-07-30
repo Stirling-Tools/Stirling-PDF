@@ -1602,3 +1602,9 @@
   box-shadow: none;
   background: transparent;
 }
+
+/* The volume hint used to end its step, so it needed no space beneath it. Governance and Sizing now
+   follow it, and it was butting straight up against the next label. */
+.portal-qb__hint:not(:last-child) {
+  margin-bottom: 1.1rem;
+}
