@@ -33,20 +33,20 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  --auth-bg-color: var(--bg-muted);
-  --auth-card-bg: var(--bg-surface);
-  --auth-label-text: var(--text-secondary);
-  --auth-input-border: var(--border-default);
-  --auth-input-bg: var(--bg-raised);
-  --auth-input-text: var(--text-primary);
+  --auth-bg-color: var(--c-surface-sunken);
+  --auth-card-bg: var(--c-surface);
+  --auth-label-text: var(--c-text-muted);
+  --auth-input-border: var(--c-border);
+  --auth-input-bg: var(--c-surface-raised);
+  --auth-input-text: var(--c-text);
   --auth-border-focus: var(--p-blue-500);
   --auth-focus-ring: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
   --auth-button-bg: var(--p-red-600);
   --auth-button-text: #ffffff;
-  --auth-magic-button-bg: var(--bg-raised);
-  --auth-magic-button-text: var(--text-primary);
-  --auth-text-primary: var(--text-primary);
-  --auth-text-secondary: var(--text-secondary);
+  --auth-magic-button-bg: var(--c-surface-raised);
+  --auth-magic-button-text: var(--c-text);
+  --auth-text-primary: var(--c-text);
+  --auth-text-secondary: var(--c-text-muted);
   --auth-error-bg: color-mix(in srgb, var(--p-red-500) 12%, transparent);
   --auth-error-border: color-mix(in srgb, var(--p-red-500) 35%, transparent);
   --auth-error-text: var(--p-red-400);
@@ -59,6 +59,6 @@
   --auth-success-text: var(--p-green-500);
   --text-divider-rule-rgb-light: 28, 35, 64;
   --text-divider-label-rgb-light: 91, 98, 128;
-  --tool-subcategory-rule-color-light: var(--border-default);
-  --tool-subcategory-text-color-light: var(--text-secondary);
+  --tool-subcategory-rule-color-light: var(--c-border);
+  --tool-subcategory-text-color-light: var(--c-text-muted);
 }
