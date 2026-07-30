@@ -22,7 +22,11 @@
   border-radius: 14px;
   box-shadow: var(--shadow-lg, 0 24px 64px rgb(0 0 0 / 28%));
   /* No padding here: each band supplies its own, which is what lets the header and footer rules
-     run to the panel's edges instead of stopping short of a shared inset. */
+     run to the panel's edges instead of stopping short of a shared inset. The inset is published as
+     a custom property so content that has to bleed out to those edges (see the quote builder's
+     footer) can read it rather than hard-coding a copy that silently drifts. */
+  --flowmodal-inset: 1.15rem;
+  --flowmodal-body-end: 1rem;
   padding: 0;
   max-height: 86vh;
   overflow: hidden;
@@ -44,7 +48,7 @@
   align-items: flex-start;
   gap: 0.75rem;
   flex: 0 0 auto;
-  padding: 0.95rem 1.15rem 0.7rem;
+  padding: 0.95rem var(--flowmodal-inset) 0.7rem;
   border-bottom: 1px solid var(--c-border-subtle);
 }
 .portal-flowmodal__header[data-bare] {
@@ -63,7 +67,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  padding: 0.9rem 1.15rem 1rem;
+  padding: 0.9rem var(--flowmodal-inset) var(--flowmodal-body-end);
 }
 
 /* One space-between row: pass the two ends as siblings, not a wrapper. */
@@ -73,6 +77,6 @@
   justify-content: space-between;
   gap: 0.75rem;
   flex: 0 0 auto;
-  padding: 0.8rem 1.15rem 0.9rem;
+  padding: 0.8rem var(--flowmodal-inset) 0.9rem;
   border-top: 1px solid var(--c-border-subtle);
 }

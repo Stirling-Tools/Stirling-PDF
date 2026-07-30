@@ -815,8 +815,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0.2rem -1.15rem -1rem;
-  padding: 0.8rem 1.15rem 0.9rem;
+  /* Bleeds to the panel's edges by reading the shell's own inset, so changing FlowModal's padding
+     can no longer leave this footer stopping short of them. */
+  margin: 0.2rem calc(-1 * var(--flowmodal-inset))
+    calc(-1 * var(--flowmodal-body-end));
+  padding: 0.8rem var(--flowmodal-inset) 0.9rem;
   border-top: 1px solid var(--c-border-subtle);
   flex-wrap: wrap;
 }
