@@ -1,0 +1,36 @@
+.schema {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Two-line card per field: the side panel is too narrow for three columns. */
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.75rem auto;
+  grid-template-areas:
+    "name type remove"
+    "desc desc desc";
+  column-gap: 0.5rem;
+  row-gap: 0.375rem;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.5rem;
+}
+
+.nameInput {
+  grid-area: name;
+}
+
+.typeSelect {
+  grid-area: type;
+}
+
+.removeButton {
+  grid-area: remove;
+}
+
+.descriptionInput {
+  grid-area: desc;
+}
