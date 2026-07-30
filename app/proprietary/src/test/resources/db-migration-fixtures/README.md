@@ -10,8 +10,9 @@ authenticate against a database created by an older version.
 | `stirling-pdf-v2.5.0.mv.db` | [v2.5.0](https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v2.5.0) | same as v2.0.0 | Schema unchanged from v2.0.0; intentionally kept as a separate fixture to exercise the "skip every other minor" upgrade path. |
 | `stirling-pdf-v2.10.0.mv.db` | [v2.10.0](https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v2.10.0) | v2.5.0 tables + file_shares, file_share_accesses, stored_files, stored_file_blobs, storage_cleanup_entries, user_server_certificates, workflow_sessions, workflow_participants, participant_notifications | Adds the file-sharing and workflow signing schema. |
 
-All three were generated against H2 `2.3.232` and use the same on-disk file
-format, so the runtime driver can open any of them without conversion.
+All three were generated against H2 `2.3.232`. On startup, the application
+exports the legacy file with the bundled 2.3.232 driver and imports it into a
+new H2 `2.4.240` database. The original file is retained as a fallback.
 
 ## What's in each fixture
 

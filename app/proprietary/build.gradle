@@ -3,6 +3,10 @@ repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
+configurations {
+    h2Migration
+}
+
 bootRun {
     enabled = false
 }
@@ -58,7 +62,8 @@ dependencies {
     api "io.jsonwebtoken:jjwt-api:${jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
-    runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
+    runtimeOnly 'com.h2database:h2:2.4.240' // Don't upgrade h2database
+    h2Migration 'com.h2database:h2:2.3.232'
     runtimeOnly 'org.postgresql:postgresql:42.7.11'
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
@@ -78,6 +83,12 @@ dependencies {
     testImplementation "org.testcontainers:localstack:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
+}
+
+tasks.named('processResources') {
+    from(configurations.h2Migration) {
+        into 'h2-migration'
+    }
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}
