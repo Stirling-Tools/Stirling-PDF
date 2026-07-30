@@ -7810,6 +7810,7 @@ inputSource = "Input source"
 inputTrigger = "Trigger"
 keepEditing = "Keep editing"
 needsConfiguring = "Needs setting up"
+moreActions = "More actions"
 needsUpload = "Needs an uploaded file"
 noSources = "No sources connected yet. Create one to use it as an input."
 noToolMatches = "No tools match your search."
@@ -7827,6 +7828,7 @@ unsavedBody = "You have unsaved changes. Save them before leaving, or discard th
 unsavedTitle = "Unsaved changes"
 uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
+viewDefinition = "View definition"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Combines every file from the previous step"
@@ -7864,6 +7866,11 @@ days = "days"
 hours = "hours"
 minutes = "minutes"
 
+[portal.pipelines.definition]
+jsonCaption = "Pipeline definition"
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
+
 [portal.pipelines.delete]
 body = "Delete \"{{name}}\"? This can't be undone."
 cancel = "Cancel"
@@ -7886,11 +7893,24 @@ addFirstTool = "Add your first tool"
 addFirstToolHint = "Pick an operation to run on every document that arrives"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
 
 [portal.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
+
+[portal.pipelines.inspector]
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
 
 [portal.pipelines.kpi]
 active = "Active"

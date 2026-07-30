@@ -96,3 +96,30 @@
 .portal-pipeline-header__delete.sui-btn {
   margin-left: auto;
 }
+
+/* The last test run's outcome, beside the button that started it. Whole-pipeline, because the
+   backend reports one flat file list plus the step it stopped at - nothing per node to attach. */
+.portal-pipeline-header__result {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-pipeline-header__result-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--c-text);
+}
+
+.portal-pipeline-header__result-icon.is-ok {
+  color: var(--c-success);
+}
+
+.portal-pipeline-header__result-icon.is-bad {
+  color: var(--c-danger);
+}

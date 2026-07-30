@@ -28,6 +28,8 @@ function renderHeader(overrides: Partial<PipelineHeaderProps> = {}) {
     onRun: vi.fn(),
     onClearHistory: vi.fn(),
     onDelete: vi.fn(),
+    onViewDefinition: vi.fn(),
+    onDownloadOutput: vi.fn(),
   };
   render(
     <PipelineHeader
@@ -39,6 +41,7 @@ function renderHeader(overrides: Partial<PipelineHeaderProps> = {}) {
       testing={false}
       running={false}
       clearingHistory={false}
+      runResult={null}
       {...handlers}
       {...overrides}
     />,
@@ -63,9 +66,6 @@ describe("PipelineHeader", () => {
     renderHeader({ isEdit: false });
     expect(
       screen.queryByText("portal.pipelines.detail.run"),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("portal.pipelines.detail.clearHistory"),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText("portal.pipelines.detail.delete"),
@@ -103,14 +103,18 @@ describe("PipelineHeader", () => {
     expect(handlers.onTest).toHaveBeenCalledWith(file);
   });
 
-  it("runs, clears and deletes from the actions row", () => {
+  it("runs and deletes from the row, clears history from the tray", () => {
     const handlers = renderHeader();
     fireEvent.click(screen.getByText("portal.pipelines.detail.run"));
     expect(handlers.onRun).toHaveBeenCalled();
-    fireEvent.click(screen.getByText("portal.pipelines.detail.clearHistory"));
-    expect(handlers.onClearHistory).toHaveBeenCalled();
     fireEvent.click(screen.getByText("portal.pipelines.detail.delete"));
     expect(handlers.onDelete).toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByLabelText("portal.pipelines.builder.moreActions"),
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.detail.clearHistory"));
+    expect(handlers.onClearHistory).toHaveBeenCalled();
   });
 
   it("leaves the page through cancel and back", () => {
@@ -119,5 +123,58 @@ describe("PipelineHeader", () => {
     expect(handlers.onCancel).toHaveBeenCalled();
     fireEvent.click(screen.getByText("portal.pipelines.builder.back"));
     expect(handlers.onBack).toHaveBeenCalled();
+  });
+
+  it("keeps the occasional actions out of the row, behind a tray", () => {
+    renderHeader();
+    // Running and testing earn a button each; reading the definition and wiping history do not.
+    expect(
+      screen.queryByText("portal.pipelines.builder.viewDefinition"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.pipelines.detail.clearHistory"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText("portal.pipelines.builder.moreActions"),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the definition from the tray", () => {
+    const handlers = renderHeader();
+    fireEvent.click(
+      screen.getByLabelText("portal.pipelines.builder.moreActions"),
+    );
+    fireEvent.click(
+      screen.getByText("portal.pipelines.builder.viewDefinition"),
+    );
+    expect(handlers.onViewDefinition).toHaveBeenCalled();
+  });
+
+  it("shows no run strip until a test has been run", () => {
+    renderHeader();
+    expect(
+      screen.queryByText(/portal.pipelines.inspector.status/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reports a finished run and downloads the file clicked", () => {
+    const handlers = renderHeader({
+      runResult: {
+        status: "completed",
+        completedSteps: 2,
+        stepCount: 2,
+        outputs: [
+          { fileId: "f1", fileName: "claim.pdf" },
+          { fileId: "f2", fileName: null },
+        ],
+      },
+    });
+    fireEvent.click(screen.getByText("claim.pdf"));
+    expect(handlers.onDownloadOutput).toHaveBeenCalledWith({
+      fileId: "f1",
+      fileName: "claim.pdf",
+    });
+    // A file the backend did not name still has to be reachable.
+    expect(screen.getByText("f2")).toBeInTheDocument();
   });
 });

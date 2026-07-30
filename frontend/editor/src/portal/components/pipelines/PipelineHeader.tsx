@@ -4,8 +4,39 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
-import { Button, Checkbox, FilePicker, Input } from "@app/ui";
+import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
+import {
+  ActionIcon,
+  Button,
+  Checkbox,
+  Dropdown,
+  FilePicker,
+  Input,
+  Spinner,
+} from "@app/ui";
 import "@portal/components/pipelines/PipelineHeader.css";
+
+/** One file a test run produced, downloadable from the result strip. */
+export interface RunOutputFile {
+  fileId: string;
+  fileName: string | null;
+}
+
+/**
+ * A test run's outcome. Whole-pipeline, not per-node: the backend reports one flat list of files
+ * plus the step it stopped at, so there is no per-node output to attach to a node.
+ */
+export interface RunResultSummary {
+  status: "running" | "completed" | "failed";
+  completedSteps: number;
+  stepCount: number;
+  error?: string | null;
+  outputs?: RunOutputFile[];
+}
 
 export interface PipelineHeaderProps {
   name: string;
@@ -30,6 +61,12 @@ export interface PipelineHeaderProps {
   onClearHistory: () => void;
   clearingHistory: boolean;
   onDelete: () => void;
+
+  /** Opens the definition (JSON + cURL), which is pipeline-scoped like the rest of this row. */
+  onViewDefinition: () => void;
+  /** The last test run in this session, or null if there has not been one. */
+  runResult: RunResultSummary | null;
+  onDownloadOutput: (output: RunOutputFile) => void;
 }
 
 /**
@@ -58,6 +95,9 @@ export function PipelineHeader({
   onClearHistory,
   clearingHistory,
   onDelete,
+  onViewDefinition,
+  runResult,
+  onDownloadOutput,
 }: PipelineHeaderProps) {
   const { t } = useTranslation();
 
@@ -129,44 +169,121 @@ export function PipelineHeader({
         </FilePicker>
 
         {isEdit && (
-          <>
-            <Button
+          <Button
+            variant="secondary"
+            size="sm"
+            loading={running}
+            onClick={onRun}
+            leftSection={
+              <PlayArrowRoundedIcon style={{ fontSize: "1.125rem" }} />
+            }
+          >
+            {t("portal.pipelines.detail.run")}
+          </Button>
+        )}
+
+        {/* Occasional things - reading the definition, wiping the processed history - kept behind a
+            tray so they do not compete with running and testing, which is what this row is for. */}
+        <Dropdown.Root align="start">
+          <Dropdown.Trigger>
+            <ActionIcon
               variant="secondary"
               size="sm"
-              loading={running}
-              onClick={onRun}
-              leftSection={
-                <PlayArrowRoundedIcon style={{ fontSize: "1.125rem" }} />
-              }
+              aria-label={t("portal.pipelines.builder.moreActions")}
             >
-              {t("portal.pipelines.detail.run")}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={clearingHistory}
-              onClick={onClearHistory}
-              leftSection={
-                <HistoryRoundedIcon style={{ fontSize: "1.125rem" }} />
-              }
+              <MoreHorizRoundedIcon style={{ fontSize: "1.125rem" }} />
+            </ActionIcon>
+          </Dropdown.Trigger>
+          <Dropdown.Menu>
+            <Dropdown.Item
+              onSelect={onViewDefinition}
+              leading={<CodeRoundedIcon style={{ fontSize: "1.125rem" }} />}
             >
-              {t("portal.pipelines.detail.clearHistory")}
-            </Button>
-            <Button
-              variant="tertiary"
-              size="sm"
-              accent="danger"
-              className="portal-pipeline-header__delete"
-              onClick={onDelete}
-              leftSection={
-                <DeleteOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
-              }
-            >
-              {t("portal.pipelines.detail.delete")}
-            </Button>
-          </>
+              {t("portal.pipelines.builder.viewDefinition")}
+            </Dropdown.Item>
+            {isEdit && (
+              <Dropdown.Item
+                onSelect={onClearHistory}
+                disabled={clearingHistory}
+                leading={
+                  <HistoryRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.pipelines.detail.clearHistory")}
+              </Dropdown.Item>
+            )}
+          </Dropdown.Menu>
+        </Dropdown.Root>
+
+        {isEdit && (
+          <Button
+            variant="tertiary"
+            size="sm"
+            accent="danger"
+            className="portal-pipeline-header__delete"
+            onClick={onDelete}
+            leftSection={
+              <DeleteOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
+            }
+          >
+            {t("portal.pipelines.detail.delete")}
+          </Button>
         )}
       </div>
+
+      {runResult && (
+        <RunResultStrip result={runResult} onDownload={onDownloadOutput} />
+      )}
     </section>
+  );
+}
+
+interface RunResultStripProps {
+  result: RunResultSummary;
+  onDownload: (output: RunOutputFile) => void;
+}
+
+/** What the last test run did, beside the button that started it. */
+function RunResultStrip({ result, onDownload }: RunResultStripProps) {
+  const { t } = useTranslation();
+  const outputs = result.outputs ?? [];
+
+  return (
+    <div className="portal-pipeline-header__result">
+      <div className="portal-pipeline-header__result-status">
+        {result.status === "running" && <Spinner size="sm" />}
+        {result.status === "completed" && (
+          <CheckCircleOutlineRoundedIcon
+            className="portal-pipeline-header__result-icon is-ok"
+            style={{ fontSize: "1.25rem" }}
+          />
+        )}
+        {result.status === "failed" && (
+          <ErrorOutlineRoundedIcon
+            className="portal-pipeline-header__result-icon is-bad"
+            style={{ fontSize: "1.25rem" }}
+          />
+        )}
+        <span>
+          {t(`portal.pipelines.inspector.status.${result.status}`, {
+            done: result.completedSteps,
+            count: result.stepCount,
+          })}
+        </span>
+      </div>
+
+      {/* The failing step's own message is shown on its node; this is the run-level summary. */}
+      {outputs.map((output) => (
+        <Button
+          key={output.fileId}
+          variant="tertiary"
+          size="sm"
+          onClick={() => onDownload(output)}
+          leftSection={<DownloadRoundedIcon style={{ fontSize: "1.125rem" }} />}
+        >
+          {output.fileName ?? output.fileId}
+        </Button>
+      ))}
+    </div>
   );
 }

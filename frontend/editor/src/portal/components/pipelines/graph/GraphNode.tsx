@@ -44,6 +44,7 @@ export interface GraphNodeProps {
   icon?: ReactNode;
   selected: boolean;
   runState?: NodeRunState;
+  onOpenRunState?: () => void;
   onSelect: () => void;
   /** Steps only - the input and output nodes are part of every pipeline and cannot be removed. */
   onRemove?: () => void;
@@ -68,6 +69,7 @@ export function GraphNode({
   icon,
   selected,
   runState,
+  onOpenRunState,
   onSelect,
   onRemove,
   dragging,
@@ -111,21 +113,34 @@ export function GraphNode({
         </span>
       </Button>
 
-      {runState && (
-        <span className="portal-graph-node__run" role="status">
-          {runState === "running" && (
-            <span className="portal-graph-node__pulse" aria-hidden />
-          )}
-          {runState === "done" && (
-            <CheckRoundedIcon style={{ fontSize: "1.125rem" }} />
-          )}
-          {runState === "failed" && (
-            <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
-          )}
-          <span className="portal-graph-node__run-label">
-            {t(`portal.pipelines.graph.run.${runState}`)}
+      {runState && onOpenRunState ? (
+        <ActionIcon
+          variant="tertiary"
+          size="sm"
+          shape="circle"
+          className="portal-graph-node__run portal-graph-node__run--open"
+          aria-label={t("portal.pipelines.graph.showError", { name: title })}
+          onClick={onOpenRunState}
+        >
+          <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
+        </ActionIcon>
+      ) : (
+        runState && (
+          <span className="portal-graph-node__run" role="status">
+            {runState === "running" && (
+              <span className="portal-graph-node__pulse" aria-hidden />
+            )}
+            {runState === "done" && (
+              <CheckRoundedIcon style={{ fontSize: "1.125rem" }} />
+            )}
+            {runState === "failed" && (
+              <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
+            )}
+            <span className="portal-graph-node__run-label">
+              {t(`portal.pipelines.graph.run.${runState}`)}
+            </span>
           </span>
-        </span>
+        )
       )}
 
       {onRemove && (

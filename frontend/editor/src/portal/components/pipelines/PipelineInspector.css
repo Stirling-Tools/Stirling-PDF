@@ -1,0 +1,23 @@
+/**
+ * The builder's right-hand panel: the selected node's settings.
+ */
+
+.portal-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.125rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+/* Names the node being edited, so the panel is not just a nameless form. */
+.portal-inspector__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-text);
+}

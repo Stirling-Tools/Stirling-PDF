@@ -1968,6 +1968,13 @@
   "editor/src/portal/components/infrastructure/StorageTab.stories.tsx :: Default": [
     "color-contrast"
   ],
+  "editor/src/portal/components/pipelines/PipelineDefinitionModal.stories.tsx :: Default": [
+    "color-contrast",
+    "scrollable-region-focusable"
+  ],
+  "editor/src/portal/components/pipelines/PipelineDefinitionModal.stories.tsx :: From Trigger": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Editing": [
     "color-contrast"
   ],
@@ -1975,6 +1982,18 @@
     "color-contrast"
   ],
   "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Testing": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: With Failed Run": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: With Run Result": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Failed Step": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Settings": [
     "color-contrast"
   ],
   "editor/src/portal/components/pipelines/PipelineStepSettings.stories.tsx :: No Settings": [

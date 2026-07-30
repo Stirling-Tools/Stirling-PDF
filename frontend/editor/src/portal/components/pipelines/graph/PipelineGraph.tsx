@@ -43,6 +43,7 @@ export interface PipelineGraphProps {
   onInsertStep: (index: number) => void;
   onRemoveStep: (index: number) => void;
   onReorderStep: (fromIndex: number, toIndex: number) => void;
+  onOpenStepError?: (index: number) => void;
 }
 
 /**
@@ -62,6 +63,7 @@ export function PipelineGraph({
   onInsertStep,
   onRemoveStep,
   onReorderStep,
+  onOpenStepError,
 }: PipelineGraphProps) {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const { nodes, edges, width, height } = layoutChain({
@@ -144,6 +146,11 @@ export function PipelineGraph({
                 onDragChange={(dragging) =>
                   setDraggingIndex(dragging ? index : null)
                 }
+                onOpenRunState={
+                  steps[index].runState === "failed" && onOpenStepError
+                    ? () => onOpenStepError(index)
+                    : undefined
+                }
               />
             </div>
           );
@@ -161,6 +168,7 @@ interface ChainStepNodeProps {
   onSelect: () => void;
   onRemove: () => void;
   onDragChange: (dragging: boolean) => void;
+  onOpenRunState?: () => void;
 }
 
 /** A step node plus its drag wiring, which needs a hook per node and so a component per node. */
@@ -172,6 +180,7 @@ function ChainStepNode({
   onSelect,
   onRemove,
   onDragChange,
+  onOpenRunState,
 }: ChainStepNodeProps) {
   const { ref, guardClick } = useStepDraggable({ index, onDragChange });
   return (
@@ -187,6 +196,7 @@ function ChainStepNode({
       dragging={dragging}
       onSelect={guardClick(onSelect)}
       onRemove={onRemove}
+      onOpenRunState={onOpenRunState}
     />
   );
 }

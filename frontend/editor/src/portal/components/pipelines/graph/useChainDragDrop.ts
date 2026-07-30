@@ -87,7 +87,7 @@ export function useStepDraggable({
 }
 
 export interface UseEdgeDropOptions {
-  /** The slot this wire opens; null means the wire refuses drops (the step above must stay last). */
+  /** The slot this wire opens; null for the wires either side of the empty-chain placeholder. */
   insertIndex: number | null;
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
@@ -116,7 +116,7 @@ export function useEdgeDrop({
     if (!element) return;
     return dropTargetForElements({
       element,
-      // A closed wire is not a target at all, so a step dragged over it shows no landing spot.
+      // A wire with no slot is not a target at all, so a step dragged over it shows no landing spot.
       canDrop: ({ source }) =>
         insertIndexRef.current !== null && isStepDrag(source.data),
       onDragEnter: () => setOver(true),

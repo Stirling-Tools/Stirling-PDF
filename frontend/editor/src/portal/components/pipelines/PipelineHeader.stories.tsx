@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PipelineHeader } from "@portal/components/pipelines/PipelineHeader";
+import {
+  PipelineHeader,
+  type RunResultSummary,
+} from "@portal/components/pipelines/PipelineHeader";
 
 const meta: Meta<typeof PipelineHeader> = {
   title: "Portal/Pipelines/PipelineHeader",
@@ -17,11 +20,13 @@ function Playground({
   initialName,
   isEdit,
   initialEnabled = true,
+  runResult = null,
   ...rest
 }: {
   initialName: string;
   isEdit: boolean;
   initialEnabled?: boolean;
+  runResult?: RunResultSummary | null;
   saving?: boolean;
   testing?: boolean;
   running?: boolean;
@@ -48,6 +53,9 @@ function Playground({
       onClearHistory={noop}
       clearingHistory={false}
       onDelete={noop}
+      onViewDefinition={noop}
+      runResult={runResult}
+      onDownloadOutput={noop}
     />
   );
 }
@@ -75,4 +83,34 @@ export const Paused: Story = {
 /** Mid test-run: the picker shows its own progress while the graph shows the steps. */
 export const Testing: Story = {
   render: () => <Playground initialName="Claims redaction" isEdit testing />,
+};
+
+/** After a test run: the outcome and its files sit beside the button that started them. */
+export const WithRunResult: Story = {
+  render: () => (
+    <Playground
+      initialName="Claims redaction"
+      isEdit
+      runResult={{
+        status: "completed",
+        completedSteps: 3,
+        stepCount: 3,
+        outputs: [
+          { fileId: "f1", fileName: "claim-redacted.pdf" },
+          { fileId: "f2", fileName: null },
+        ],
+      }}
+    />
+  ),
+};
+
+/** A failed run: the summary is here, the failing step's own message is on its node. */
+export const WithFailedRun: Story = {
+  render: () => (
+    <Playground
+      initialName="Claims redaction"
+      isEdit
+      runResult={{ status: "failed", completedSteps: 1, stepCount: 3 }}
+    />
+  ),
 };

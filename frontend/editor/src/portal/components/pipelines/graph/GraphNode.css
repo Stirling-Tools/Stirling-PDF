@@ -160,6 +160,18 @@
   color: var(--c-text-subtle);
 }
 
+/* A failed step's glyph is a button (it opens the error), so re-assert the plain glyph look over
+   the shared ActionIcon base. */
+.portal-graph-node__run--open.sui-ai {
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  border: none;
+  background: none;
+  color: var(--c-danger);
+}
+
 .portal-graph-node__run-label {
   position: absolute;
   width: 1px;
