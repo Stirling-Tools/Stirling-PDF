@@ -15,8 +15,8 @@
 .folder-tree-panel {
   width: 0;
   flex-shrink: 0;
-  background: var(--bg-toolbar);
-  border-right: 0 solid var(--border-subtle);
+  background: var(--c-bg-raised);
+  border-right: 0 solid var(--c-border-subtle);
   overflow: hidden;
   height: 100%;
   pointer-events: none;
@@ -65,11 +65,7 @@
 
 .folder-tree-panel-resizer:hover,
 .folder-tree-panel-resizer:focus-visible {
-  background: color-mix(
-    in srgb,
-    var(--accent-interactive, #6366f1) 35%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--c-primary) 35%, transparent);
   outline: none;
 }
 
@@ -87,7 +83,7 @@
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   text-transform: uppercase;
 }
 
@@ -112,7 +108,7 @@
   margin: 0 8px;
   cursor: pointer;
   user-select: none;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   font-size: 14px;
   position: relative;
   transition: background-color 0.15s ease;
@@ -120,23 +116,19 @@
 }
 
 .files-page-tree-node:hover {
-  background: var(--hover-bg);
+  background: var(--c-hover);
 }
 
 .files-page-tree-node.is-active {
-  background: var(--hover-bg);
-  color: var(--text-primary);
+  background: var(--c-hover);
+  color: var(--c-text);
   font-weight: 500;
 }
 
 .files-page-tree-node.is-drop-target {
-  background: color-mix(
-    in srgb,
-    var(--accent-interactive, #6366f1) 12%,
-    transparent
-  );
-  box-shadow: inset 0 0 0 1px var(--accent-interactive, #6366f1);
-  color: var(--text-primary);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+  color: var(--c-text);
 }
 
 .files-page-tree-toggle {
@@ -145,7 +137,7 @@
   justify-content: center;
   width: 16px;
   height: 16px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   flex-shrink: 0;
 }
 
@@ -165,7 +157,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-left: 8px;
   font-size: 18px;
 }
@@ -183,7 +175,7 @@
 }
 
 .files-page-tree-count {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-size: 12px;
   flex-shrink: 0;
   margin-left: 8px;

@@ -20,6 +20,7 @@ import apiClient from "@app/services/apiClient";
 import {
   parseContentDispositionFilename,
   extractLatestFilesFromBundle,
+  readResponseHeader,
 } from "@app/services/shareBundleUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
@@ -270,14 +271,8 @@ export function FileSelectorPicker({
               skipAuthRedirect: true,
             } as any,
           );
-          const ct =
-            res.headers?.["content-type"] ||
-            res.headers?.["Content-Type"] ||
-            "";
-          const disp =
-            res.headers?.["content-disposition"] ||
-            res.headers?.["Content-Disposition"] ||
-            "";
+          const ct = readResponseHeader(res.headers, "content-type");
+          const disp = readResponseHeader(res.headers, "content-disposition");
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
             parseContentDispositionFilename(disp) || "shared-file",
@@ -294,14 +289,8 @@ export function FileSelectorPicker({
               skipAuthRedirect: true,
             } as any,
           );
-          const ct =
-            res.headers?.["content-type"] ||
-            res.headers?.["Content-Type"] ||
-            "";
-          const disp =
-            res.headers?.["content-disposition"] ||
-            res.headers?.["Content-Disposition"] ||
-            "";
+          const ct = readResponseHeader(res.headers, "content-type");
+          const disp = readResponseHeader(res.headers, "content-disposition");
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
             parseContentDispositionFilename(disp) || stub.name,

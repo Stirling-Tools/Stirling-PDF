@@ -12,7 +12,7 @@ on:
   workflow_call:
     inputs:
       platform:
-        description: "Platform to build (windows, macos, linux, or all)."
+        description: "Platform to build (windows, macos, linux, windows-macos, or all)."
         required: false
         type: string
         default: "all"
@@ -29,7 +29,7 @@ on:
   workflow_dispatch:
     inputs:
       platform:
-        description: "Platform to build (windows, macos, linux, or all)"
+        description: "Platform to build (windows, macos, linux, windows-macos, or all)"
         required: true
         default: "all"
         type: choice
@@ -38,6 +38,7 @@ on:
           - windows
           - macos
           - linux
+          - windows-macos
       sign:
         description: "Sign and notarize the bundles."
         required: false
@@ -76,10 +77,11 @@ jobs:
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
 
           case "$PLATFORM" in
-            windows) ENTRIES=("$WINDOWS") ;;
-            macos)   ENTRIES=("$MACOS") ;;
-            linux)   ENTRIES=("$LINUX") ;;
-            *)       ENTRIES=("$WINDOWS" "$MACOS" "$LINUX") ;;
+            windows)       ENTRIES=("$WINDOWS") ;;
+            macos)         ENTRIES=("$MACOS") ;;
+            linux)         ENTRIES=("$LINUX") ;;
+            windows-macos) ENTRIES=("$WINDOWS" "$MACOS") ;;
+            *)             ENTRIES=("$WINDOWS" "$MACOS" "$LINUX") ;;
           esac
 
           # Drop macOS entries when Apple certificate secret is unavailable
@@ -106,7 +108,6 @@ jobs:
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -168,7 +169,7 @@ jobs:
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
           gradle-version: 9.6.1
 

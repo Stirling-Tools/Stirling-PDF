@@ -20,7 +20,7 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-builder__back {
@@ -31,13 +31,13 @@
   background: none;
   padding: 0;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .portal-builder__back:hover {
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-builder__head-main {
@@ -75,13 +75,13 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-weight: 600;
 }
 
 .portal-builder__empty {
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   margin: 0;
   padding: 0.5rem 0;
 }
@@ -100,8 +100,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-light);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   padding: 0.5rem 0.625rem;
   transition:
@@ -110,8 +110,8 @@
 }
 
 .portal-builder__step--active {
-  border-color: var(--color-blue);
-  background: var(--color-blue-light);
+  border-color: var(--c-primary);
+  background: var(--c-primary-tint);
 }
 
 .portal-builder__step-main {
@@ -138,12 +138,12 @@
   border-radius: 50%;
   font-size: 0.6875rem;
   font-weight: 600;
-  background: var(--color-blue-light);
-  color: var(--color-blue);
+  background: var(--c-primary-tint);
+  color: var(--c-primary);
 }
 
 .portal-builder__step--active .portal-builder__step-index {
-  background: var(--color-blue);
+  background: var(--c-primary);
   color: #fff;
 }
 
@@ -156,12 +156,12 @@
 .portal-builder__step-name {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-builder__step-note {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__step-actions {
@@ -177,9 +177,9 @@
   height: 1.5rem;
   padding: 0;
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-3);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text-subtle);
   cursor: pointer;
   transition:
     background var(--motion-fast),
@@ -187,8 +187,8 @@
 }
 
 .portal-builder__step-actions button:hover:not(:disabled) {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 
 .portal-builder__step-actions button:disabled {
@@ -203,10 +203,10 @@
   gap: 0.375rem;
   width: 100%;
   padding: 0.625rem;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--c-border);
   border-radius: var(--radius-lg);
   background: none;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   font-size: 0.8125rem;
   cursor: pointer;
   transition:
@@ -215,8 +215,8 @@
 }
 
 .portal-builder__add-step:hover {
-  border-color: var(--color-blue);
-  color: var(--color-blue);
+  border-color: var(--c-primary);
+  color: var(--c-primary);
 }
 
 /* Pipeline settings (above the operation list) */
@@ -225,7 +225,7 @@
   flex-direction: column;
   gap: 0.75rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   padding: 1.125rem;
 }
@@ -251,9 +251,16 @@
   gap: 0.625rem;
 }
 
+/* Once the grid stacks (60rem), a sticky inspector would ride over content */
+@media (max-width: 60rem) {
+  .portal-builder__inspector-col {
+    position: static;
+  }
+}
+
 .portal-builder__inspector {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.125rem;
@@ -261,9 +268,9 @@
 
 /* Tool picker */
 .portal-pipelines__picker {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  background: var(--c-surface);
   overflow: hidden;
 }
 
@@ -271,7 +278,7 @@
   display: flex;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-pipelines__picker-search input {
@@ -280,7 +287,7 @@
   background: none;
   padding: 0;
   font-size: 0.875rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   outline: none;
 }
 
@@ -293,7 +300,7 @@
 .portal-pipelines__picker-group-label {
   padding: 0.5rem 0.75rem 0.25rem;
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-pipelines__picker-item {
@@ -306,19 +313,23 @@
   padding: 0.4375rem 0.75rem;
   text-align: left;
   cursor: pointer;
-  color: var(--color-text-1);
+  color: var(--c-text);
   transition: background var(--motion-fast);
 }
 
 .portal-pipelines__picker-item:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 .portal-pipelines__picker-icon {
   display: inline-flex;
   align-items: center;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   font-size: 1.125rem;
+}
+
+.portal-pipelines__picker-icon svg {
+  display: block;
 }
 
 .portal-pipelines__picker-name {
@@ -328,7 +339,7 @@
 .portal-pipelines__picker-empty {
   padding: 1rem 0.75rem;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   margin: 0;
 }
 
@@ -342,11 +353,11 @@
   padding: 0;
   font-weight: 400;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__back.sui-btn:hover {
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-builder__step-main.sui-btn {
@@ -362,16 +373,16 @@
   height: auto;
   min-height: 0;
   padding: 0.625rem;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--c-border);
   background: none;
   font-weight: 400;
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__add-step.sui-btn:hover {
-  border-color: var(--color-blue);
-  color: var(--color-blue);
+  border-color: var(--c-primary);
+  color: var(--c-primary);
 }
 
 .portal-pipelines__picker-item.sui-btn {
@@ -379,11 +390,11 @@
   min-height: 0;
   padding: 0.4375rem 0.75rem;
   font-weight: 400;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-pipelines__picker-item.sui-btn:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 .portal-builder__step-actions .sui-ai {
