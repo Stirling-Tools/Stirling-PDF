@@ -51,12 +51,19 @@ export function ProcurementModal({
   onClose,
   title,
   subtitle,
+  headerless = false,
   children,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Dialog label. Omit `subtitle` (and pass `headerless`) when the step renders its own heading. */
   title: string;
   subtitle?: string;
+  /**
+   * Skip the modal's own title block: the step inside supplies the heading, step badge and progress
+   * (see StepModalHeader), so rendering ours too would stack two headers.
+   */
+  headerless?: boolean;
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
@@ -92,10 +99,12 @@ export function ProcurementModal({
         >
           ✕
         </button>
-        <div className="portal-procmodal__header">
-          <h2 className="portal-procmodal__title">{title}</h2>
-          {subtitle && <p className="portal-procmodal__sub">{subtitle}</p>}
-        </div>
+        {!headerless && (
+          <div className="portal-procmodal__header">
+            <h2 className="portal-procmodal__title">{title}</h2>
+            {subtitle && <p className="portal-procmodal__sub">{subtitle}</p>}
+          </div>
+        )}
         <div className="portal-procmodal__body">{children}</div>
       </div>
     </div>,

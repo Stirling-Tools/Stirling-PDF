@@ -1593,3 +1593,12 @@
   font-size: 0.75rem;
   color: var(--c-text-subtle);
 }
+
+/* Inside the takeover the builder IS the dialog body: its own card frame read as a box drawn
+   around the header. The modal supplies the surface and the padding. */
+.portal-procmodal__body .portal-qb {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}

@@ -74,6 +74,9 @@ export function ProcurementFlow({
         onClose={() => setOpen(false)}
         title={t("portal.procurement.title")}
         subtitle={t("portal.procurement.subtitle")}
+        // Every step from here renders its own heading + step badge, so the generic
+        // "Procurement" block would be a second header above it.
+        headerless={isLinked && started}
       >
         {error && (
           <Banner
