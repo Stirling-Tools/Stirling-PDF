@@ -50,7 +50,7 @@ async function fetchAppConfig(): Promise<AppConfig> {
   try {
     const response = await apiClient.get<AppConfig>(
       "/api/v1/config/app-config",
-      { suppressErrorToast: true, skipAuthRedirect: true } as any,
+      { suppressErrorToast: true, skipAuthRedirect: true },
     );
     return response.data;
   } catch (err: unknown) {
@@ -75,7 +75,7 @@ function extractErrorMessage(err: unknown): string | null {
 }
 
 export interface AppConfigProviderProps {
-  children: ReactNode;
+  children?: ReactNode;
   retryOptions?: AppConfigRetryOptions;
   initialConfig?: AppConfig | null;
   bootstrapMode?: AppConfigBootstrapMode;

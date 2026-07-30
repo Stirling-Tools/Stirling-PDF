@@ -28,7 +28,10 @@ function TestProviders({
   appConfigProps,
 }: {
   children: ReactNode;
-  appConfigProps?: React.ComponentProps<typeof AppConfigProvider>;
+  appConfigProps?: Omit<
+    React.ComponentProps<typeof AppConfigProvider>,
+    "children"
+  >;
 }) {
   const [client] = useState(createTestQueryClient);
   return (

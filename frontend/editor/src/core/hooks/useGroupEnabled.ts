@@ -12,6 +12,7 @@ export function useGroupEnabled(group: string): GroupEnabledResult {
     enabled: !!group,
   });
 
+  if (!group) return { enabled: null, unavailableReason: null };
   if (query.isPending) return { enabled: null, unavailableReason: null };
   if (query.isError) return { enabled: false, unavailableReason: null };
   return { enabled: query.data ?? false, unavailableReason: null };

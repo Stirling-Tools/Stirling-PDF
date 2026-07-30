@@ -22,6 +22,8 @@ export function useGroupEnabled(group: string): GroupEnabledResult {
     enabled: !!group && !isOffline,
   });
 
+  if (!group) return { enabled: null, unavailableReason: null };
+
   if (isOffline) {
     return {
       enabled: false,

@@ -50,14 +50,8 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   refetch: () => Promise<void>;
 } {
   const refetch = useInvalidateEndpoints();
-  const endpointsKey = useMemo(
-    () => [...endpoints].sort().join(","),
-    [endpoints],
-  );
-  const sortedEndpoints = useMemo(
-    () => (endpointsKey ? endpointsKey.split(",") : []),
-    [endpointsKey],
-  );
+  const endpointsKey = endpoints.join("\0");
+  const sortedEndpoints = useMemo(() => [...endpoints].sort(), [endpointsKey]);
 
   const query = useQuery({
     queryKey: editorQk.endpointsAvailability(),
