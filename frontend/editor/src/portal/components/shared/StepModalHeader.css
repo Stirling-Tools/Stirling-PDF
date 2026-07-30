@@ -6,7 +6,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
-  margin-bottom: 1.25rem;
+  /* No bottom margin: the host band owns the space beneath it (FlowModal's header padding, or
+     billing's own .portal-billing__bundle-head). Keeping one here doubled the header's inset. */
 }
 
 .portal-stepmodal__head-top {

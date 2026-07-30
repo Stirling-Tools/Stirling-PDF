@@ -101,9 +101,14 @@ export function FlowModal({
         aria-label={label}
         tabIndex={-1}
       >
-        {/* One close treatment for every flow dialog — the same circular control the stepped
-            header uses, so a dialog with its own header and one without still match. */}
-        <div className="portal-flowmodal__close">
+        {/* The band always renders: it carries the close, which sits on the title row beside the
+            step badge rather than floating over the panel. `data-bare` drops the rule beneath it
+            when a flow supplies no heading of its own. */}
+        <div
+          className="portal-flowmodal__header"
+          data-bare={!header || undefined}
+        >
+          <div className="portal-flowmodal__header-slot">{header}</div>
           <Button
             variant="tertiary"
             accent="neutral"
@@ -129,7 +134,6 @@ export function FlowModal({
             }
           />
         </div>
-        {header && <div className="portal-flowmodal__header">{header}</div>}
         <div className={`portal-flowmodal__body ${bodyClassName ?? ""}`.trim()}>
           {children}
         </div>

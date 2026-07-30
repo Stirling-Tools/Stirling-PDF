@@ -21,9 +21,13 @@
   border: 1px solid var(--c-border);
   border-radius: 14px;
   box-shadow: var(--shadow-lg, 0 24px 64px rgb(0 0 0 / 28%));
-  padding: 1.35rem 1.4rem 1.4rem;
+  /* No padding here: each band supplies its own, which is what lets the header and footer rules
+     run to the panel's edges instead of stopping short of a shared inset. */
+  padding: 0;
   max-height: 86vh;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Task dialogs sit narrow; the procurement takeover needs the room for its quote tables. */
@@ -32,21 +36,34 @@
 }
 .portal-flowmodal__panel[data-size="lg"] {
   max-width: 62rem;
-  padding: 1.5rem 1.5rem 1.75rem;
 }
 
-/* Positioning only — the shared Button owns the control's own appearance. */
-.portal-flowmodal__close {
-  position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
-  z-index: 1;
+/* Title row: heading (and its step badge) on the left, close on the right. */
+.portal-flowmodal__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+  padding: 0.95rem 1.15rem 0.7rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+.portal-flowmodal__header[data-bare] {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.portal-flowmodal__header-slot {
+  flex: 1;
+  min-width: 0;
 }
 
 .portal-flowmodal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.9rem;
+  padding: 0.9rem 1.15rem 1rem;
 }
 
 /* One space-between row: pass the two ends as siblings, not a wrapper. */
@@ -55,7 +72,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-top: 1.1rem;
-  padding-top: 0.9rem;
+  flex: 0 0 auto;
+  padding: 0.8rem 1.15rem 0.9rem;
   border-top: 1px solid var(--c-border-subtle);
 }
