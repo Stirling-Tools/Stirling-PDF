@@ -1096,60 +1096,7 @@
   margin-top: 1px;
 }
 
-/* ── Full-screen takeover modal (procurement flow) ────────────────────────── */
-.portal-procmodal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: clamp(0.5rem, 4vh, 3rem) 1rem;
-  overflow-y: auto;
-  background: var(--c-overlay);
-  backdrop-filter: blur(6px) saturate(160%);
-  -webkit-backdrop-filter: blur(6px) saturate(160%);
-  animation: portal-procmodal-fade 0.15s ease-out;
-}
-@keyframes portal-procmodal-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.portal-procmodal__panel {
-  position: relative;
-  width: 100%;
-  max-width: 62rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: 14px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
-  padding: 1.5rem 1.5rem 1.75rem;
-}
-.portal-procmodal__close {
-  position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
-  border: none;
-  background: var(--c-border-subtle);
-  color: var(--c-text-subtle);
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-.portal-procmodal__close:hover {
-  background: var(--c-border);
-  color: var(--c-text);
-}
-.portal-procmodal__header {
-  margin-bottom: 1.25rem;
-  padding-right: 2.5rem;
-}
+/* ── Procurement takeover: heading type only, the shell is the shared Modal ── */
 .portal-procmodal__title {
   margin: 0;
   font-size: 1.35rem;
@@ -1161,12 +1108,6 @@
   font-size: 0.875rem;
   color: var(--c-text-subtle);
 }
-.portal-procmodal__body {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
 .portal-proc__payment-actions {
   display: flex;
   gap: 0.6rem;
@@ -1252,43 +1193,7 @@
 }
 
 /* ── Side dialogs (Key documents / Schedule a call / Trial) ───────────────── */
-.portal-sidemodal {
-  position: fixed;
-  inset: 0;
-  z-index: 1100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  overflow-y: auto;
-  background: var(--c-overlay);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  animation: portal-procmodal-fade 0.15s ease-out;
-  /* Portaled to <body>, outside .portal-scope, so set the portal UI font explicitly. */
-  font-family: var(--font-sans);
-}
-.portal-sidemodal__panel {
-  position: relative;
-  width: 100%;
-  max-width: 33rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: 14px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
-  padding: 1.35rem 1.4rem 1.4rem;
-  max-height: 86vh;
-  overflow-y: auto;
-}
-/* Wide enough for Calendly's two-pane layout (its single-column layout below ~680px inner width is
-   tall and scrolls); paired with the embed's taller fixed height so the time view needs no scroll. */
-.portal-sidemodal__panel--wide {
-  max-width: 52rem;
-}
-.portal-sidemodal__header {
-  margin-bottom: 1rem;
-  padding-right: 2rem;
-}
+/* Chrome and width come from the shared Modal via FlowModal; only type and content live here. */
 .portal-sidemodal__title {
   margin: 0;
   font-size: 1.05rem;

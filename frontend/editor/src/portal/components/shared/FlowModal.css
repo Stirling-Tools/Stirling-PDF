@@ -1,82 +1,46 @@
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  FlowModal — the one dialog shell for the portal's flows                  */
+/*  FlowModal — the flows' deltas on top of the shared Modal (sui-modal)     */
 /* ──────────────────────────────────────────────────────────────────────── */
 
+/* The shared Modal owns the backdrop, panel, header band and dismissal chrome. Only the flows'
+   own density and width live here, so a procurement dialog cannot drift from a billing one.
+   Every rule below pairs .portal-flowmodal with a sui-modal class so it outranks the base rule
+   regardless of which stylesheet the bundler emits first. */
+
 .portal-flowmodal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: clamp(0.5rem, 4vh, 3rem) 1rem;
-  overflow-y: auto;
-  background: var(--c-overlay);
+  /* The shell's horizontal inset, published so content that has to bleed out to the panel's edges
+     (see the quote builder's footer) reads it rather than hard-coding a copy that silently drifts.
+     Mirrors .sui-modal__body's padding. */
+  --flowmodal-inset: 1.125rem;
+  --flowmodal-body-end: 1.125rem;
 }
 
-.portal-flowmodal__panel {
-  position: relative;
-  width: 100%;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-lg, 0 24px 64px rgb(0 0 0 / 28%));
-  /* No padding here: each band supplies its own, which is what lets the header and footer rules
-     run to the panel's edges instead of stopping short of a shared inset. The inset is published as
-     a custom property so content that has to bleed out to those edges (see the quote builder's
-     footer) can read it rather than hard-coding a copy that silently drifts. */
-  --flowmodal-inset: 1.15rem;
-  --flowmodal-body-end: 1rem;
-  padding: 0;
-  max-height: 86vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Task dialogs sit narrow; the procurement takeover needs the room for its quote tables. */
-.portal-flowmodal__panel[data-size="md"] {
-  max-width: 33rem;
-}
-.portal-flowmodal__panel[data-size="lg"] {
+/* The takeover needs the room for its quote tables, and Calendly's two-pane layout collapses into a
+   tall scrolling single column below roughly 680px of inner width. Sits between the shared lg
+   (48rem) and xl (64rem), so it is set here rather than bent into a shared token. */
+.sui-modal.portal-flowmodal--lg {
   max-width: 52rem;
 }
 
-/* Title row: heading (and its step badge) on the left, close on the right. */
-.portal-flowmodal__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  flex: 0 0 auto;
-  padding: 0.95rem var(--flowmodal-inset) 0.7rem;
-  border-bottom: 1px solid var(--c-border-subtle);
-}
-.portal-flowmodal__header[data-bare] {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-.portal-flowmodal__header-slot {
-  flex: 1;
-  min-width: 0;
+/* A flow's header is a slot, not a string: it carries its own heading, step badge and subtitle, each
+   with its own type. Neutralise the base title wrapper's type so those children inherit nothing from
+   it — it is 600, which would otherwise render every flow subtitle semibold. */
+.portal-flowmodal .sui-modal__title {
+  font: inherit;
+  color: inherit;
 }
 
-.portal-flowmodal__body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+/* The flows stack blocks down the body and space them evenly; the base modal leaves spacing to its
+   content. Text stays at full contrast rather than the base body's muted grey. */
+.portal-flowmodal .sui-modal__body {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  padding: 0.9rem var(--flowmodal-inset) var(--flowmodal-body-end);
+  color: var(--c-text);
 }
 
-/* One space-between row: pass the two ends as siblings, not a wrapper. */
-.portal-flowmodal__footer {
-  display: flex;
-  align-items: center;
+/* One space-between row, so a step passes its two ends as siblings (Back on the left, Continue on
+   the right) instead of the base modal's right-aligned button cluster. */
+.portal-flowmodal .sui-modal__footer {
   justify-content: space-between;
-  gap: 0.75rem;
-  flex: 0 0 auto;
-  padding: 0.8rem var(--flowmodal-inset) 0.9rem;
-  border-top: 1px solid var(--c-border-subtle);
 }

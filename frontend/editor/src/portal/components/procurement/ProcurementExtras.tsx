@@ -54,7 +54,7 @@ function SideModal({
       header={
         <>
           <div className="portal-sidemodal__title-row">
-            <h3 className="portal-sidemodal__title">{title}</h3>
+            <h2 className="portal-sidemodal__title">{title}</h2>
             {headerAside}
           </div>
           {subtitle && <p className="portal-sidemodal__sub">{subtitle}</p>}

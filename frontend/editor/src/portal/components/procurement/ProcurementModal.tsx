@@ -2,9 +2,6 @@ import type { ReactNode } from "react";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import "@portal/views/Procurement.css";
 
-// Re-exported for the extras dialogs that trap focus themselves.
-export { useFocusTrap } from "@portal/components/shared/FlowModal";
-
 /**
  * The procurement takeover: the shared {@link FlowModal} at takeover width. Chrome and copy only —
  * the shell (portal, focus trap, Escape, close, header/body bands) is shared, so this dialog cannot
@@ -24,9 +21,9 @@ export function ProcurementModal({
   title: string;
   subtitle?: string;
   /**
-   * Skip the title block AND the close: the step inside supplies the heading, step badge and its
-   * own close (see StepModalHeader), so the shell would otherwise stack a second header and leave a
-   * stray close above it. Escape and the backdrop still dismiss.
+   * Skip the title block, which takes the shell's close with it: the step inside supplies the
+   * heading, step badge and its own close (see StepModalHeader), so the shell would otherwise stack
+   * a second header and leave a stray close above it. Escape and the backdrop still dismiss.
    */
   headerless?: boolean;
   children: ReactNode;
@@ -37,7 +34,6 @@ export function ProcurementModal({
       onClose={onClose}
       label={title}
       size="lg"
-      hideClose={headerless}
       header={
         headerless ? undefined : (
           <>
