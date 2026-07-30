@@ -29,7 +29,9 @@ public class Team implements Serializable {
     @Column(name = "team_id")
     private Long id;
 
-    @Column(name = "name", unique = true, nullable = false)
+    // Not unique: SaaS personal teams all share the name "My Team". TeamController enforces
+    // uniqueness for admin-created teams.
+    @Column(name = "name", nullable = false)
     private String name;
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
