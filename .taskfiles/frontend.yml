@@ -221,6 +221,14 @@ tasks:
       - task: lint:eslint
       - task: lint:dpdm
       - task: lint:colors
+      - task: lint:css
+
+  lint:css:
+    desc: "Lint stylesheets for duplicate selectors"
+    deps: [install]
+    cmds:
+      # Source stylesheets only — editor/public/css holds vendored third-party CSS.
+      - npx stylelint "editor/src/**/*.css"
 
   lint:colors:
     desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
