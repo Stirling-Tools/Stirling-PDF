@@ -38,6 +38,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
+import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
@@ -73,6 +74,7 @@ public class PolicyEngine {
     private final FileStorage fileStorage;
     private final JobOwnershipService jobOwnershipService;
     private final List<PolicyOutputSink> outputSinks;
+    private final PolicyOutputResolver outputResolver;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
     private final PolicyAssetResolver assetResolver;
@@ -124,8 +126,14 @@ public class PolicyEngine {
         // Stored supporting files (certificates, watermark images, ...) load here, before the
         // async hop: worker threads have no principal, so assets bind by the policy's own team.
         PolicyInputs resolved = assetResolver.resolve(policy, inputs);
+        // Resolve the referenced output destinations live (like sourceIds), so a stored policy
+        // delivers to each of its saved Source destinations. Unreferenced policies fall back to
+        // their inline output.
+        PipelineDefinition definition =
+                new PipelineDefinition(
+                        policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), policy.toDefinition(), resolved, listener);
+                policy.owner(), fileOwner, policy.id(), definition, resolved, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -217,13 +225,21 @@ public class PolicyEngine {
                 run.markRunning();
                 PolicyExecutionResult result =
                         stepExecutor.execute(run.getDefinition(), inputs, listener);
-                OutputSpec output = run.getDefinition().output();
-                List<ResultFile> outputs =
-                        sinkFor(output)
-                                .deliver(
-                                        new OutputDelivery(runId, run.getPolicyId()),
-                                        result.files(),
-                                        output);
+                // Deliver the run's files to every destination; no destinations means inline
+                // delivery (results stored/returned to the caller), preserving ad-hoc/AI behaviour.
+                List<OutputSpec> destinations = run.getDefinition().outputs();
+                if (destinations.isEmpty()) {
+                    destinations = List.of(OutputSpec.inline());
+                }
+                List<ResultFile> outputs = new ArrayList<>();
+                for (OutputSpec destination : destinations) {
+                    outputs.addAll(
+                            sinkFor(destination)
+                                    .deliver(
+                                            new OutputDelivery(runId, run.getPolicyId()),
+                                            result.files(),
+                                            destination));
+                }
                 taskManager.setMultipleFileResults(runId, outputs);
                 taskManager.setComplete(runId);
                 run.complete(outputs);

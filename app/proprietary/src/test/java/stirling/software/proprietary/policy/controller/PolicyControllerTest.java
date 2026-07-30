@@ -138,7 +138,7 @@ class PolicyControllerTest {
 
     private static PipelineDefinition definitionWithStep() {
         return new PipelineDefinition(
-                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), null);
+                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), List.of());
     }
 
     private static Policy policy(String id, Long teamId) {
@@ -193,7 +193,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmptyPipeline() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), null);
+            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.run(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
@@ -244,7 +244,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmpty() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), null);
+            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.runStream(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class);
