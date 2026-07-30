@@ -1968,6 +1968,15 @@
   "editor/src/portal/components/infrastructure/StorageTab.stories.tsx :: Default": [
     "color-contrast"
   ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Editing": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Paused": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Testing": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/pipelines/PipelineStepSettings.stories.tsx :: No Settings": [
     "color-contrast"
   ],
