@@ -6521,63 +6521,6 @@ title_other = "{{allowance}} 件のPDFを無料で処理"
 titleWithRate_one = "{{allowance}} 件のPDFを無料で処理、その後 {{rate}}/PDF"
 titleWithRate_other = "{{allowance}} 件のPDFを無料で処理、その後 {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "ロック中"
-openAriaLabel = "{{name}} コンポーネントを開く"
-
-[portal.catalogue.detail]
-addToProject = "プロジェクトに追加"
-ariaLabel = "コンポーネント詳細"
-tabsAriaLabel = "コンポーネント詳細セクション"
-upgradeToUnlock = "アップグレードしてロック解除"
-
-[portal.catalogue.detail.code]
-install = "インストール"
-usage = "使用方法"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} は {{tier}} プランから含まれます。埋め込むにはアップグレードしてください。"
-title = "ご利用のプランでは利用できません"
-
-[portal.catalogue.detail.preview]
-badge = "ライブプレビュー"
-note = "インタラクティブなサンドボックスがここにレンダリングされます"
-
-[portal.catalogue.detail.pricing]
-note = "{{unit}} ごとに従量課金されます。月間無料枠を超えた使用量はアカウントに請求され、Usage & Billing に明細表示されます。"
-
-[portal.catalogue.detail.stats]
-billedOn = "請求単位"
-embeds30d = "埋め込み（30日）"
-freeQuota = "無料枠"
-freeQuotaValue = "{{amount}} / 月"
-maturity = "成熟度"
-none = "なし"
-perAction = "アクションごと"
-price = "価格"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "概要"
-pricing = "料金"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "任意"
-required = "必須"
-
-[portal.catalogue.props.columns]
-description = "説明"
-name = "Prop"
-required = "必須"
-type = "タイプ"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "コンポーネント利用額（MTD）"
-embedsThisMonth = "今月の埋め込み数"
-inBeta = "Beta 中"
-
 [portal.components.billingUnit]
 approval = "承認"
 check = "チェック"
@@ -6590,18 +6533,6 @@ signature = "署名"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "自分のアプリに組み込める SDK ウィジェット — ビューア、電子署名フロー、AI レビューパネル。各項目はアクションごとの従量課金です。カードをクリックすると、インストール、使用方法、props を確認できます。"
-title = "コンポーネント"
-
-[portal.componentsView.empty]
-description = "コンポーネントカタログを読み込めませんでした。しばらくしてからもう一度お試しください。"
-title = "利用可能なコンポーネントはありません"
-
-[portal.componentsView.lockedBanner]
-description = "GA コンポーネントは従量課金で利用できます。一部の Beta コンポーネントは Enterprise 専用です。ロックされたカードにはアップグレード案内が表示されます。"
-title = "一部のコンポーネントには有料プランが必要です"
 
 [portal.docs.authentication]
 codeCaption = "すべてのリクエスト"

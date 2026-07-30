@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
@@ -32,7 +31,6 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * users rather than the operator.
  */
 @Service
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class S3ConnectionPool {
 
     private final ApplicationProperties applicationProperties;

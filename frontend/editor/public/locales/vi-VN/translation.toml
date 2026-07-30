@@ -6521,63 +6521,6 @@ title_other = "Xử lý {{allowance}} PDF miễn phí"
 titleWithRate_one = "Xử lý {{allowance}} PDF miễn phí, sau đó {{rate}}/PDF"
 titleWithRate_other = "Xử lý {{allowance}} PDF miễn phí, sau đó {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Đã khóa"
-openAriaLabel = "Mở thành phần {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Thêm vào dự án"
-ariaLabel = "Chi tiết thành phần"
-tabsAriaLabel = "Các phần chi tiết thành phần"
-upgradeToUnlock = "Nâng cấp để mở khóa"
-
-[portal.catalogue.detail.code]
-install = "Cài đặt"
-usage = "Cách dùng"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} được bao gồm từ gói {{tier}}. Nâng cấp để nhúng nó."
-title = "Không khả dụng trên gói của bạn"
-
-[portal.catalogue.detail.preview]
-badge = "Xem trước trực tiếp"
-note = "Sandbox tương tác hiển thị tại đây"
-
-[portal.catalogue.detail.pricing]
-note = "Tính theo mức sử dụng mỗi {{unit}}. Mức sử dụng vượt quá hạn mức miễn phí hàng tháng sẽ được tính phí vào tài khoản của bạn và liệt kê chi tiết trong Sử dụng & Thanh toán."
-
-[portal.catalogue.detail.stats]
-billedOn = "Tính phí theo"
-embeds30d = "Lượt nhúng (30 ngày)"
-freeQuota = "Hạn mức miễn phí"
-freeQuotaValue = "{{amount}} / tháng"
-maturity = "Mức độ trưởng thành"
-none = "Không có"
-perAction = "Mỗi hành động"
-price = "Giá"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Tổng quan"
-pricing = "Giá"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "tùy chọn"
-required = "bắt buộc"
-
-[portal.catalogue.props.columns]
-description = "Mô tả"
-name = "Prop"
-required = "Bắt buộc"
-type = "Loại"
-
-[portal.catalogue.summary]
-componentsGa = "Thành phần GA"
-componentSpendMtd = "Chi tiêu thành phần (MTD)"
-embedsThisMonth = "Lượt nhúng tháng này"
-inBeta = "Đang beta"
-
 [portal.components.billingUnit]
 approval = "phê duyệt"
 check = "kiểm tra"
@@ -6590,18 +6533,6 @@ signature = "chữ ký"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Các widget SDK có thể nhúng mà bạn thả vào ứng dụng của mình — trình xem, luồng e-sign, bảng xem xét AI. Mỗi widget được tính theo mức sử dụng mỗi hành động. Nhấp vào thẻ để xem cài đặt, cách dùng và props."
-title = "Thành phần"
-
-[portal.componentsView.empty]
-description = "Không thể tải catalogue thành phần. Hãy thử lại sau ít phút."
-title = "Không có thành phần nào khả dụng"
-
-[portal.componentsView.lockedBanner]
-description = "Các thành phần GA có sẵn trên Pay-as-you-go; một số thành phần Beta chỉ dành cho doanh nghiệp. Thẻ bị khóa hiển thị lời nhắc nâng cấp."
-title = "Một số thành phần cần gói trả phí"
 
 [portal.docs.authentication]
 codeCaption = "mọi yêu cầu"

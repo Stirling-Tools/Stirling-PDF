@@ -6521,63 +6521,6 @@ title_other = "Obdelajte {{allowance}} PDF-jev brezplačno"
 titleWithRate_one = "Obdelajte {{allowance}} PDF-jev brezplačno, nato {{rate}}/PDF"
 titleWithRate_other = "Obdelajte {{allowance}} PDF-jev brezplačno, nato {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Zaklenjeno"
-openAriaLabel = "Odpri komponento {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Dodaj v projekt"
-ariaLabel = "Podrobnosti komponente"
-tabsAriaLabel = "Razdelki podrobnosti komponente"
-upgradeToUnlock = "Nadgradite za odklepanje"
-
-[portal.catalogue.detail.code]
-install = "Namesti"
-usage = "Uporaba"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} je vključeno od paketa {{tier}} naprej. Nadgradite za vdelavo."
-title = "Ni na voljo v vašem paketu"
-
-[portal.catalogue.detail.preview]
-badge = "Predogled v živo"
-note = "Interaktivni sandbox se prikaže tukaj"
-
-[portal.catalogue.detail.pricing]
-note = "Merjeno na {{unit}}. Uporaba nad mesečno brezplačno kvoto se zaračuna vašemu računu in je razčlenjena pod Uporaba in obračun."
-
-[portal.catalogue.detail.stats]
-billedOn = "Obračunano po"
-embeds30d = "Vdelave (30 d)"
-freeQuota = "Brezplačna kvota"
-freeQuotaValue = "{{amount}} / mesec"
-maturity = "Zrelost"
-none = "Brez"
-perAction = "Na dejanje"
-price = "Cena"
-
-[portal.catalogue.detail.tabs]
-code = "Koda"
-overview = "Pregled"
-pricing = "Cene"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "neobvezno"
-required = "obvezno"
-
-[portal.catalogue.props.columns]
-description = "Opis"
-name = "Prop"
-required = "Obvezno"
-type = "Vrsta"
-
-[portal.catalogue.summary]
-componentsGa = "Komponente GA"
-componentSpendMtd = "Poraba komponent (MTD)"
-embedsThisMonth = "Vdelave ta mesec"
-inBeta = "V Beta"
-
 [portal.components.billingUnit]
 approval = "odobritev"
 check = "preverjanje"
@@ -6590,18 +6533,6 @@ signature = "podpis"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Vdeljivi SDK gradniki, ki jih spustite v svojo aplikacijo — pregledovalnik, tok e-podpisa, plošča za AI pregled. Vsak je merjen na dejanje. Kliknite kartico za namestitev, uporabo in props."
-title = "Komponente"
-
-[portal.componentsView.empty]
-description = "Kataloga komponent ni bilo mogoče naložiti. Poskusite znova kmalu."
-title = "Ni razpoložljivih komponent"
-
-[portal.componentsView.lockedBanner]
-description = "Komponente GA so na voljo pri plačilu po porabi; nekaj komponent Beta je samo za Enterprise. Zaklenjene kartice prikazujejo poziv za nadgradnjo."
-title = "Nekatere komponente zahtevajo plačljiv paket"
 
 [portal.docs.authentication]
 codeCaption = "vsaka zahteva"

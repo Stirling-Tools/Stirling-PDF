@@ -6521,63 +6521,6 @@ title_other = "Dolgozzon fel {{allowance}} PDF-et ingyen"
 titleWithRate_one = "Dolgozzon fel {{allowance}} PDF-et ingyen, utána {{rate}}/PDF"
 titleWithRate_other = "Dolgozzon fel {{allowance}} PDF-et ingyen, utána {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Zárolva"
-openAriaLabel = "{{name}} komponens megnyitása"
-
-[portal.catalogue.detail]
-addToProject = "Hozzáadás a projekthez"
-ariaLabel = "Komponens részletei"
-tabsAriaLabel = "Komponens részleteinek szakaszai"
-upgradeToUnlock = "Váltson magasabb csomagra a feloldáshoz"
-
-[portal.catalogue.detail.code]
-install = "Telepítés"
-usage = "Használat"
-
-[portal.catalogue.detail.locked]
-description = "A(z) {{name}} a(z) {{tier}} csomagtól érhető el. Váltson magasabb csomagra a beágyazásához."
-title = "Nem érhető el az Ön csomagjában"
-
-[portal.catalogue.detail.preview]
-badge = "Élő előnézet"
-note = "Az interaktív sandbox itt jelenik meg"
-
-[portal.catalogue.detail.pricing]
-note = "Mérés {{unit}} alapján. A havi ingyenes kvótán túli használatot a fiókjára számlázzuk, és a Használat és számlázás alatt tételesen megjelenik."
-
-[portal.catalogue.detail.stats]
-billedOn = "Számlázás alapja"
-embeds30d = "Beágyazások (30 nap)"
-freeQuota = "Ingyenes kvóta"
-freeQuotaValue = "{{amount}} / hó"
-maturity = "Érettség"
-none = "Nincs"
-perAction = "Műveletenként"
-price = "Ár"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Áttekintés"
-pricing = "Árazás"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "opcionális"
-required = "kötelező"
-
-[portal.catalogue.props.columns]
-description = "Leírás"
-name = "Prop"
-required = "Kötelező"
-type = "Típus"
-
-[portal.catalogue.summary]
-componentsGa = "GA komponensek"
-componentSpendMtd = "Komponensköltés (MTD)"
-embedsThisMonth = "Beágyazások ebben a hónapban"
-inBeta = "Beta állapotban"
-
 [portal.components.billingUnit]
 approval = "jóváhagyás"
 check = "ellenőrzés"
@@ -6590,18 +6533,6 @@ signature = "aláírás"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Beágyazható SDK widgetek, amelyeket a saját alkalmazásába illeszthet — megjelenítő, e-aláírási folyamat, AI felülvizsgálati panel. Mindegyik műveletenként mért. Kattintson egy kártyára a telepítéshez, használathoz és props megtekintéséhez."
-title = "Komponensek"
-
-[portal.componentsView.empty]
-description = "A komponenskatalógust nem sikerült betölteni. Próbálja újra rövidesen."
-title = "Nincsenek elérhető komponensek"
-
-[portal.componentsView.lockedBanner]
-description = "A GA komponensek Pay-as-you-go csomagban érhetők el; néhány Beta komponens csak vállalati csomagban. A zárolt kártyák frissítési javaslatot mutatnak."
-title = "Egyes komponensekhez fizetős csomag szükséges"
 
 [portal.docs.authentication]
 codeCaption = "minden kérés"

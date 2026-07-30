@@ -27,19 +27,17 @@ const styles = {
     lineHeight: 1.2,
   },
   local: {
-    background:
-      "color-mix(in srgb, var(--text-muted, #6b7280) 16%, transparent)",
-    color: "var(--text-secondary)",
+    background: "color-mix(in srgb, var(--c-text-subtle) 16%, transparent)",
+    color: "var(--c-text-muted)",
   },
   cloud: {
-    background:
-      "color-mix(in srgb, var(--accent-interactive, #6366f1) 16%, transparent)",
-    color: "var(--accent-interactive, #6366f1)",
+    background: "color-mix(in srgb, var(--c-primary) 16%, transparent)",
+    color: "var(--c-primary)",
   },
   shared: {
     background:
-      "color-mix(in srgb, var(--mantine-color-orange-6, #f97316) 16%, transparent)",
-    color: "var(--mantine-color-orange-6, #f97316)",
+      "color-mix(in srgb, var(--mantine-color-orange-6) 16%, transparent)",
+    color: "var(--mantine-color-orange-6)",
   },
 };
 

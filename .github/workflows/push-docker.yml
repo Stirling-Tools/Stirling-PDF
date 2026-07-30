@@ -76,9 +76,9 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
 
       - name: Set up Docker Buildx
         id: buildx
@@ -139,7 +139,6 @@ jobs:
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
-            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testMain' }}
 
       - name: Build and push Unified Dockerfile (latest variant)
         id: build-push-latest

@@ -78,7 +78,7 @@ export function WelcomeBanner({ footer }: WelcomeBannerProps) {
             className="portal-welcome__cta"
             leftSection={<ExternalLinkIcon size={15} />}
             onClick={() => {
-              window.location.href = EDITOR_URL;
+              window.open(EDITOR_URL, "_blank", "noopener,noreferrer");
             }}
           >
             {t("portal.welcome.openInBrowser")}

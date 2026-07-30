@@ -6521,63 +6521,6 @@ title_other = "{{allowance}} PDFs സൗജന്യമായി പ്രോസ
 titleWithRate_one = "{{allowance}} PDFs സൗജന്യമായി പ്രോസസ് ചെയ്യുക, തുടർന്ന് {{rate}}/PDF"
 titleWithRate_other = "{{allowance}} PDFs സൗജന്യമായി പ്രോസസ് ചെയ്യുക, തുടർന്ന് {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "ലോക്ക് ചെയ്തിരിക്കുന്നു"
-openAriaLabel = "{{name}} component തുറക്കുക"
-
-[portal.catalogue.detail]
-addToProject = "Project-ിലേക്ക് ചേർക്കുക"
-ariaLabel = "Component detail"
-tabsAriaLabel = "Component detail വിഭാഗങ്ങൾ"
-upgradeToUnlock = "അൺലോക്ക് ചെയ്യാൻ upgrade ചെയ്യുക"
-
-[portal.catalogue.detail.code]
-install = "Install"
-usage = "Usage"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} {{tier}} plan മുതൽ ഉൾപ്പെടുത്തിയിരിക്കുന്നു. Embed ചെയ്യാൻ upgrade ചെയ്യുക."
-title = "നിങ്ങളുടെ plan-ൽ ലഭ്യമല്ല"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interactive sandbox ഇവിടെ render ചെയ്യും"
-
-[portal.catalogue.detail.pricing]
-note = "{{unit}} ഓരോന്നിനും metered. Monthly free quota-യെ കടക്കുന്ന usage നിങ്ങളുടെ അക്കൗണ്ടിൽ ബിൽ ചെയ്ത് Usage & Billing-ൽ itemise ചെയ്യും."
-
-[portal.catalogue.detail.stats]
-billedOn = "ബിൽ ചെയ്യുന്നത്"
-embeds30d = "Embeds (30d)"
-freeQuota = "Free quota"
-freeQuotaValue = "{{amount}} / mo"
-maturity = "Maturity"
-none = "ഒന്നുമില്ല"
-perAction = "ഓരോ action-നും"
-price = "വില"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Overview"
-pricing = "Pricing"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "ഐച്ഛികം"
-required = "ആവശ്യമാണ്"
-
-[portal.catalogue.props.columns]
-description = "വിവരണം"
-name = "Prop"
-required = "ആവശ്യമാണ്"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Component spend (MTD)"
-embedsThisMonth = "ഈ മാസത്തെ embeds"
-inBeta = "Beta-യിൽ"
-
 [portal.components.billingUnit]
 approval = "approval"
 check = "check"
@@ -6590,18 +6533,6 @@ signature = "signature"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "നിങ്ങളുടെ സ്വന്തം app-ിലേക്ക് drop ചെയ്യാവുന്ന embeddable SDK widgets — viewer, e-sign flow, AI review panel. ഓരോന്നും action അനുസരിച്ച് metered ആണ്. Install, usage, props കാണാൻ card click ചെയ്യുക."
-title = "Components"
-
-[portal.componentsView.empty]
-description = "Component catalogue ലോഡ് ചെയ്യാനായില്ല. കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക."
-title = "ലഭ്യമായ components ഇല്ല"
-
-[portal.componentsView.lockedBanner]
-description = "GA components Pay-as-you-go-യിൽ ലഭ്യമാണ്; ചില Beta components enterprise-only ആണ്. Locked cards upgrade nudge കാണിക്കും."
-title = "ചില components-ന് paid plan വേണം"
 
 [portal.docs.authentication]
 codeCaption = "ഓരോ request-വും"

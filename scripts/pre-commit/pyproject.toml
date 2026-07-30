@@ -9,7 +9,7 @@ requires-python = ">=3.11"
 dependencies = [
     "ruff==0.15.14",
     "codespell==2.4.2",
-    "toml-sort==0.24.4",
+    "tomli-w==1.2.0",
 ]
 
 [tool.uv]

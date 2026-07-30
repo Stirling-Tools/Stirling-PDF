@@ -102,6 +102,28 @@ describe("injectOg (build-time prerender)", () => {
     );
     expect(tags).toContain("A &quot;B&quot; &amp; &lt;C&gt;");
   });
+
+  it("uses ogTitle for the social card but title for the <title> tag", () => {
+    const out = injectOg(
+      TEMPLATE,
+      {
+        image: "/og_images/saas/app.png",
+        title: "Stirling - Edit any PDF. Govern every PDF.",
+        ogTitle: "Edit any PDF. Govern every PDF.",
+        description: "d",
+      },
+      {},
+    );
+    expect(out).toContain(
+      "<title>Stirling - Edit any PDF. Govern every PDF.</title>",
+    );
+    expect(out).toContain(
+      '<meta property="og:title" content="Edit any PDF. Govern every PDF." />',
+    );
+    expect(out).toContain(
+      '<meta name="twitter:title" content="Edit any PDF. Govern every PDF." />',
+    );
+  });
 });
 
 describe("prerenderOg (flat + nested route files)", () => {

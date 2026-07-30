@@ -36,13 +36,9 @@ permissions:
   contents: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   determine-matrix:
     if: ${{ vars.CI_PROFILE != 'lite' }}
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       version: ${{ steps.versionNumber.outputs.versionNumber }}
@@ -71,9 +67,9 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -112,10 +108,8 @@ jobs:
           fi
 
   build-jars:
-    needs: [pick, determine-matrix]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
-    env:
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+    needs: determine-matrix
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         variant:
@@ -146,9 +140,9 @@ jobs:
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
 
       - name: Setup Node.js
         if: matrix.variant.build_frontend == true
@@ -195,7 +189,6 @@ jobs:
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -250,9 +243,9 @@ jobs:
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -510,6 +503,7 @@ jobs:
       # cargo output unsigned, so checking it produces false negatives.
       - name: Verify Windows Code Signature
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        timeout-minutes: 15
         shell: pwsh
         run: |
           $allSigned = $true
@@ -531,11 +525,26 @@ jobs:
 
           # Extract MSI and verify the inner exe (the file that actually gets installed).
           # This is the critical check - AV flags the installed exe at runtime.
+          # Use lessmsi, not `msiexec /a`: msiexec serializes on the global
+          # _MSIExecute mutex and hangs forever on hosted runners when another
+          # installer is busy. lessmsi reads MSI tables directly - no mutex, no service.
           $msi = $msiFiles[0].FullName
           $extractDir = Join-Path $env:RUNNER_TEMP "msi-verify"
           if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
-          $proc = Start-Process msiexec.exe -ArgumentList '/a', $msi, '/qn', "TARGETDIR=$extractDir" -Wait -PassThru -NoNewWindow
-          if ($proc.ExitCode -eq 0) {
+          New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
+
+          choco install lessmsi -y --no-progress --limit-output | Out-Null
+
+          # Bound the extraction and kill on hang (defence in depth over timeout-minutes).
+          $proc = Start-Process lessmsi -ArgumentList 'x', "`"$msi`"", "`"$extractDir\`"" -PassThru -NoNewWindow
+          if (-not $proc.WaitForExit(120000)) {
+            try { $proc.Kill() } catch {}
+            Write-Host "[ERROR] MSI extraction timed out after 120s"
+            $allSigned = $false
+          } elseif ($proc.ExitCode -ne 0) {
+            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
+            $allSigned = $false
+          } else {
             $innerExe = Get-ChildItem -Path $extractDir -Filter "stirling-pdf.exe" -Recurse -File | Select-Object -First 1
             if ($innerExe) {
               $sig = Get-AuthenticodeSignature -FilePath $innerExe.FullName
@@ -548,9 +557,6 @@ jobs:
               Write-Host "[ERROR] Could not find stirling-pdf.exe inside MSI"
               $allSigned = $false
             }
-          } else {
-            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
-            $allSigned = $false
           }
 
           if (-not $allSigned) {
@@ -625,8 +631,8 @@ jobs:
           retention-days: 1
 
   collect-and-release:
-    needs: [pick, determine-matrix, build, build-jars]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    needs: [determine-matrix, build, build-jars]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
@@ -800,7 +806,11 @@ jobs:
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
-          generate_release_notes: true
+          # Don't regenerate/append notes on re-runs, and don't force this into the
+          # "Latest" slot - leave the release body and latest marker as they are.
+          generate_release_notes: false
+          append_body: false
+          make_latest: false
           fail_on_unmatched_files: true
           # Installers + updater payloads + manifest. .sig contents are embedded
           # in latest.json so the .sig files themselves are not uploaded.

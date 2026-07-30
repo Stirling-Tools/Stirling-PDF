@@ -166,8 +166,8 @@ class PolicyExecutorTest {
                                 new PipelineStep(
                                         createPdf,
                                         Map.of(
-                                                "htmlContent",
-                                                "<p>hi</p>",
+                                                "document",
+                                                "{\"title\":\"PO\",\"sections\":[]}",
                                                 "filename",
                                                 "purchase-order.pdf"))),
                         PolicyInputs.of(List.of()),
