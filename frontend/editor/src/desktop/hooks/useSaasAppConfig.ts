@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { saasAppConfigService } from "@app/services/saasAppConfigService";
 import { connectionModeService } from "@app/services/connectionModeService";
 import type { AppConfig } from "@app/types/appConfig";
+import { editorQk } from "@app/queries/keys";
 
 /**
  * The SaaS backend's app-config while in desktop SaaS mode, or null otherwise.
@@ -12,25 +14,22 @@ import type { AppConfig } from "@app/types/appConfig";
  * (and a server-side flag flip is picked up on the next load).
  */
 export function useSaasAppConfig(): AppConfig | null {
-  const [config, setConfig] = useState<AppConfig | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    let alive = true;
-    const load = () => {
-      void saasAppConfigService.getConfig().then((c) => {
-        if (alive) setConfig(c);
-      });
-    };
-    load();
-    const unsubscribe = connectionModeService.subscribeToModeChanges(() => {
+    return connectionModeService.subscribeToModeChanges(() => {
       saasAppConfigService.clearCache();
-      load();
+      void queryClient.invalidateQueries({
+        queryKey: editorQk.saasAppConfig(),
+      });
     });
-    return () => {
-      alive = false;
-      unsubscribe?.();
-    };
-  }, []);
+  }, [queryClient]);
 
-  return config;
+  const query = useQuery({
+    queryKey: editorQk.saasAppConfig(),
+    queryFn: () => saasAppConfigService.getConfig(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return query.data ?? null;
 }

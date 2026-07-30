@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
+import { useQuery } from "@tanstack/react-query";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import type { GroupEnabledResult } from "@app/types/groupEnabled";
+import { editorQk } from "@app/queries/keys";
+import { fetchGroupEnabled } from "@app/queries/endpoints";
 
 const OFFLINE_REASON_FALLBACK =
   "Requires your Stirling-PDF server (currently offline)";
@@ -13,38 +14,25 @@ const OFFLINE_REASON_FALLBACK =
  */
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { t } = useTranslation();
-  // Initialise synchronously so the first render already reflects offline state —
-  // avoids a flash where the option appears enabled before the effect runs.
-  // Use OFFLINE_REASON_FALLBACK directly so unavailableReason is non-null from
-  // the very first render when offline (t() is not available in useState initialiser).
-  const [result, setResult] = useState<GroupEnabledResult>(() => {
-    const { status } = selfHostedServerMonitor.getSnapshot();
-    if (status === "offline") {
-      return { enabled: false, unavailableReason: OFFLINE_REASON_FALLBACK };
-    }
-    return { enabled: null, unavailableReason: null };
+  const isOffline = selfHostedServerMonitor.getSnapshot().status === "offline";
+
+  const query = useQuery({
+    queryKey: editorQk.groupEnabled(group),
+    queryFn: () => fetchGroupEnabled(group),
+    enabled: !!group && !isOffline,
   });
 
-  useEffect(() => {
-    const { status } = selfHostedServerMonitor.getSnapshot();
-    if (status === "offline") {
-      setResult({
-        enabled: false,
-        unavailableReason: t(
-          "toolPanel.fullscreen.selfHostedOffline",
-          OFFLINE_REASON_FALLBACK,
-        ),
-      });
-      return;
-    }
+  if (isOffline) {
+    return {
+      enabled: false,
+      unavailableReason: t(
+        "toolPanel.fullscreen.selfHostedOffline",
+        OFFLINE_REASON_FALLBACK,
+      ),
+    };
+  }
 
-    apiClient
-      .get<boolean>(
-        `/api/v1/config/group-enabled?group=${encodeURIComponent(group)}`,
-      )
-      .then((res) => setResult({ enabled: res.data, unavailableReason: null }))
-      .catch(() => setResult({ enabled: false, unavailableReason: null }));
-  }, [group, t]);
-
-  return result;
+  if (query.isPending) return { enabled: null, unavailableReason: null };
+  if (query.isError) return { enabled: false, unavailableReason: null };
+  return { enabled: query.data ?? false, unavailableReason: null };
 }

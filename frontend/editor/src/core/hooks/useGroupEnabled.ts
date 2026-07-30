@@ -1,41 +1,18 @@
-import { useState, useEffect, useRef } from "react";
-import apiClient from "@app/services/apiClient";
+import { useQuery } from "@tanstack/react-query";
 import type { GroupEnabledResult } from "@app/types/groupEnabled";
+import { editorQk } from "@app/queries/keys";
+import { fetchGroupEnabled } from "@app/queries/endpoints";
 
 export type { GroupEnabledResult };
 
-/**
- * Checks whether a named feature group is enabled on the backend.
- * Returns { enabled: null } while loading, then true/false with an optional reason.
- */
 export function useGroupEnabled(group: string): GroupEnabledResult {
-  const [result, setResult] = useState<GroupEnabledResult>({
-    enabled: null,
-    unavailableReason: null,
+  const query = useQuery({
+    queryKey: editorQk.groupEnabled(group),
+    queryFn: () => fetchGroupEnabled(group),
+    enabled: !!group,
   });
-  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    apiClient
-      .get<boolean>(
-        `/api/v1/config/group-enabled?group=${encodeURIComponent(group)}`,
-      )
-      .then((res) => {
-        if (isMountedRef.current)
-          setResult({ enabled: res.data, unavailableReason: null });
-      })
-      .catch(() => {
-        if (isMountedRef.current)
-          setResult({ enabled: false, unavailableReason: null });
-      });
-  }, [group]);
-
-  return result;
+  if (query.isPending) return { enabled: null, unavailableReason: null };
+  if (query.isError) return { enabled: false, unavailableReason: null };
+  return { enabled: query.data ?? false, unavailableReason: null };
 }

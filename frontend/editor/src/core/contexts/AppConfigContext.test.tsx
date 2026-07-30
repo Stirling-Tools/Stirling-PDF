@@ -1,15 +1,42 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { waitFor, renderHook, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   AppConfigProvider,
   useAppConfig,
 } from "@app/contexts/AppConfigContext";
 import apiClient from "@app/services/apiClient";
 import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+    },
+  });
+}
+
+function TestProviders({
+  children,
+  appConfigProps,
+}: {
+  children: ReactNode;
+  appConfigProps?: React.ComponentProps<typeof AppConfigProvider>;
+}) {
+  const [client] = useState(createTestQueryClient);
+  return (
+    <QueryClientProvider client={client}>
+      <AppConfigProvider {...appConfigProps}>{children}</AppConfigProvider>
+    </QueryClientProvider>
+  );
+}
 
 describe("AppConfigContext", () => {
   beforeEach(() => {
@@ -26,7 +53,7 @@ describe("AppConfigContext", () => {
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <AppConfigProvider>{children}</AppConfigProvider>
+    <TestProviders>{children}</TestProviders>
   );
 
   it("should fetch and provide app config on non-auth pages", async () => {
@@ -261,9 +288,9 @@ describe("AppConfigContext", () => {
     };
 
     const customWrapper = ({ children }: { children: ReactNode }) => (
-      <AppConfigProvider initialConfig={initialConfig}>
+      <TestProviders appConfigProps={{ initialConfig }}>
         {children}
-      </AppConfigProvider>
+      </TestProviders>
     );
 
     const { result } = renderHook(() => useAppConfig(), {

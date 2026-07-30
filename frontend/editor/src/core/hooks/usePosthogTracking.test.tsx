@@ -1,6 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 
 const posthogState = vi.hoisted(() => ({ loaded: false }));
@@ -23,6 +24,28 @@ vi.mock("posthog-js", () => ({
 
 import { usePosthogTracking } from "@app/hooks/usePosthogTracking";
 
+function createWrapper(enableAnalytics: boolean) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    const [client] = useState(
+      () =>
+        new QueryClient({
+          defaultOptions: { queries: { retry: false } },
+        }),
+    );
+    return (
+      <QueryClientProvider client={client}>
+        <AppConfigProvider
+          initialConfig={{ enableAnalytics }}
+          bootstrapMode="non-blocking"
+          autoFetch={false}
+        >
+          {children}
+        </AppConfigProvider>
+      </QueryClientProvider>
+    );
+  };
+}
+
 describe("usePosthogTracking", () => {
   beforeEach(() => {
     posthogState.loaded = false;
@@ -39,17 +62,9 @@ describe("usePosthogTracking", () => {
   });
 
   it("does not initialize PostHog when analytics is disabled", async () => {
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <AppConfigProvider
-        initialConfig={{ enableAnalytics: false }}
-        bootstrapMode="non-blocking"
-        autoFetch={false}
-      >
-        {children}
-      </AppConfigProvider>
-    );
-
-    renderHook(() => usePosthogTracking(), { wrapper });
+    renderHook(() => usePosthogTracking(), {
+      wrapper: createWrapper(false),
+    });
 
     await waitFor(() => {
       expect(posthogMock.init).not.toHaveBeenCalled();
@@ -57,17 +72,9 @@ describe("usePosthogTracking", () => {
   });
 
   it("initializes PostHog when analytics is enabled", async () => {
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <AppConfigProvider
-        initialConfig={{ enableAnalytics: true }}
-        bootstrapMode="non-blocking"
-        autoFetch={false}
-      >
-        {children}
-      </AppConfigProvider>
-    );
-
-    renderHook(() => usePosthogTracking(), { wrapper });
+    renderHook(() => usePosthogTracking(), {
+      wrapper: createWrapper(true),
+    });
 
     await waitFor(() => {
       expect(posthogMock.init).toHaveBeenCalledTimes(1);
