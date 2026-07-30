@@ -1,6 +1,7 @@
 import { MultiSelect } from "@app/ui/MultiSelect";
 import { useTranslation } from "react-i18next";
 import { PII_PRESETS } from "@app/data/policyDefinitions";
+import type { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
 
 /** The set of preset regexes — used to separate preset words from custom ones. */
 export const PRESET_PATTERNS = new Set(PII_PRESETS.map((p) => p.pattern));
@@ -8,8 +9,8 @@ const PATTERN_BY_VALUE = new Map(PII_PRESETS.map((p) => [p.value, p.pattern]));
 const VALUE_BY_PATTERN = new Map(PII_PRESETS.map((p) => [p.pattern, p.value]));
 
 interface PolicyPiiFieldProps {
-  parameters: Record<string, unknown>;
-  onChange: (parameters: Record<string, unknown>) => void;
+  parameters: RedactParameters;
+  onChange: (parameters: RedactParameters) => void;
   disabled?: boolean;
 }
 
@@ -26,9 +27,7 @@ export function PolicyPiiField({
   disabled,
 }: PolicyPiiFieldProps) {
   const { t } = useTranslation();
-  const words = Array.isArray(parameters.wordsToRedact)
-    ? (parameters.wordsToRedact as string[])
-    : [];
+  const words = parameters.wordsToRedact;
   const selected = words
     .map((w) => VALUE_BY_PATTERN.get(w))
     .filter((v): v is string => Boolean(v));

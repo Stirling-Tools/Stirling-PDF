@@ -12,6 +12,12 @@ interface UIContextValue {
   closeSearch: () => void;
   toggleSearch: () => void;
 
+  /** Off-canvas sidebar drawer on small screens (no-op chrome on desktop). */
+  mobileNavOpen: boolean;
+  openMobileNav: () => void;
+  closeMobileNav: () => void;
+  toggleMobileNav: () => void;
+
   assistantOpen: boolean;
   openAssistant: () => void;
   closeAssistant: () => void;
@@ -48,6 +54,7 @@ const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
@@ -63,10 +70,20 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<UIContextValue>(
     () => ({
+      // Opening any overlay (search, settings, link modal) dismisses the mobile
+      // nav drawer so overlays never stack on top of it.
       searchOpen,
-      openSearch: () => setSearchOpen(true),
+      openSearch: () => {
+        setMobileNavOpen(false);
+        setSearchOpen(true);
+      },
       closeSearch: () => setSearchOpen(false),
       toggleSearch: () => setSearchOpen((o) => !o),
+
+      mobileNavOpen,
+      openMobileNav: () => setMobileNavOpen(true),
+      closeMobileNav: () => setMobileNavOpen(false),
+      toggleMobileNav: () => setMobileNavOpen((o) => !o),
 
       assistantOpen,
       openAssistant: () => setAssistantOpen(true),
@@ -76,6 +93,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       settingsOpen,
       settingsInitialSection,
       openSettings: (section?: string) => {
+        setMobileNavOpen(false);
         setSettingsInitialSection(section ?? null);
         setSettingsOpen(true);
       },
@@ -87,6 +105,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       linkModalOpen,
       linkModalMode,
       openLinkModal: (mode: "link" | "reauth" = "link") => {
+        setMobileNavOpen(false);
         setLinkModalMode(mode);
         // Never stack on Settings: close it first, and remember to reopen it on
         // the account-link section once the login modal closes.
@@ -109,6 +128,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     }),
     [
       searchOpen,
+      mobileNavOpen,
       assistantOpen,
       settingsOpen,
       settingsInitialSection,

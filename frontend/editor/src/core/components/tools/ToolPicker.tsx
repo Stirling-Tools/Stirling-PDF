@@ -37,7 +37,7 @@ const HEADER_TEXT_STYLE: React.CSSProperties = {
   padding: "0.25rem 0 0.35rem 0.5rem",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  color: "var(--text-muted)",
+  color: "var(--c-text-subtle)",
 };
 const SCROLLABLE_STYLE: React.CSSProperties = {
   flex: 1,
@@ -50,7 +50,7 @@ const SCROLLABLE_STYLE: React.CSSProperties = {
 const CONTAINER_STYLE: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  background: "var(--bg-toolbar)",
+  background: "var(--c-bg-raised)",
 };
 const toTitleCase = (s: string) =>
   s.replace(

@@ -255,7 +255,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
             variant="secondary"
             leftSection={<OpenInNewRounded sx={{ fontSize: 15 }} />}
             onClick={() => {
-              window.location.href = EDITOR_URL;
+              window.open(EDITOR_URL, "_blank", "noopener,noreferrer");
             }}
           >
             {t("portal.home.download.openInBrowser")}

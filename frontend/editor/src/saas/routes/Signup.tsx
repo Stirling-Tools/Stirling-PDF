@@ -108,7 +108,7 @@ export default function Signup() {
       "app.description",
       "The Free Adobe Acrobat alternative (10M+ Downloads)",
     ),
-    ogImage: `${baseUrl}/og_images/home.png`,
+    ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
@@ -182,7 +182,7 @@ export default function Signup() {
   };
 
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm}>
+    <AuthLayout>
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
@@ -260,7 +260,7 @@ export default function Signup() {
             cursor: "pointer",
             fontSize: "1rem",
             fontWeight: 700,
-            color: "var(--text-primary)",
+            color: "var(--c-text)",
           }}
         >
           {isSigningUp
@@ -285,7 +285,7 @@ export default function Signup() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "#9ca3af",
+            color: "var(--c-text-subtle)",
           }}
         >
           {t("signup.alreadyHaveAccount", "I already have an account")}

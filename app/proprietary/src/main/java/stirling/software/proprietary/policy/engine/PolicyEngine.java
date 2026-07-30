@@ -9,7 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import org.slf4j.MDC;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -38,6 +37,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
+import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
@@ -57,7 +57,6 @@ import stirling.software.proprietary.service.DownstreamEntitlementError;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyEngine {
 
     // Admission weight for one run. Weighted heavy: a run chains many tools and holds intermediate
@@ -74,6 +73,7 @@ public class PolicyEngine {
     private final FileStorage fileStorage;
     private final JobOwnershipService jobOwnershipService;
     private final List<PolicyOutputSink> outputSinks;
+    private final PolicyOutputResolver outputResolver;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
 
@@ -121,8 +121,14 @@ public class PolicyEngine {
         // the owner owns those outputs.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Resolve the referenced output destinations live (like sourceIds), so a stored policy
+        // delivers to each of its saved Source destinations. Unreferenced policies fall back to
+        // their inline output.
+        PipelineDefinition definition =
+                new PipelineDefinition(
+                        policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), policy.toDefinition(), inputs, listener);
+                policy.owner(), fileOwner, policy.id(), definition, inputs, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -136,6 +142,10 @@ public class PolicyEngine {
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
         taskManager.createTask(runId);
+        // Tag the shared job entry with the policy id so peers can list it as a policy run.
+        if (policyId != null) {
+            taskManager.putMetadata(runId, "policyId", policyId);
+        }
         PolicyRun run = new PolicyRun(runId, policyId, definition);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
@@ -210,13 +220,21 @@ public class PolicyEngine {
                 run.markRunning();
                 PolicyExecutionResult result =
                         stepExecutor.execute(run.getDefinition(), inputs, listener);
-                OutputSpec output = run.getDefinition().output();
-                List<ResultFile> outputs =
-                        sinkFor(output)
-                                .deliver(
-                                        new OutputDelivery(runId, run.getPolicyId()),
-                                        result.files(),
-                                        output);
+                // Deliver the run's files to every destination; no destinations means inline
+                // delivery (results stored/returned to the caller), preserving ad-hoc/AI behaviour.
+                List<OutputSpec> destinations = run.getDefinition().outputs();
+                if (destinations.isEmpty()) {
+                    destinations = List.of(OutputSpec.inline());
+                }
+                List<ResultFile> outputs = new ArrayList<>();
+                for (OutputSpec destination : destinations) {
+                    outputs.addAll(
+                            sinkFor(destination)
+                                    .deliver(
+                                            new OutputDelivery(runId, run.getPolicyId()),
+                                            result.files(),
+                                            destination));
+                }
                 taskManager.setMultipleFileResults(runId, outputs);
                 taskManager.setComplete(runId);
                 run.complete(outputs);

@@ -10,7 +10,10 @@
   display: flex;
   align-items: center;
   gap: 0.75rem; /* 12px */
-  margin: 0.375rem 0 0.5rem; /* 6px 0 8px */
+  /* Center "or" between the last OAuth button and the input box: the larger top
+     margin balances the field label + input that sit below the smaller bottom
+     margin, so the gap to the button ≈ the gap to the input. */
+  margin: 2.25rem 0 0.75rem; /* 36px top, 12px bottom */
 }
 
 .auth-or-divider__rule {
@@ -33,24 +36,33 @@
 
 .auth-label {
   font-size: 0.875rem; /* 14px */
-  color: var(--auth-label-text-light-only);
+  color: var(--auth-label-text);
   font-weight: 500;
+}
+
+/* Normalize the Mantine inputs used by the login/signup forms so they match the
+   OAuth buttons and submit CTA: same height, radius, and font size. */
+.auth-fields .mantine-Input-input {
+  min-height: 2.625rem; /* 42px */
+  height: 2.625rem;
+  border-radius: 0.625rem; /* 10px */
+  font-size: 0.9375rem; /* 15px */
 }
 
 .auth-input {
   width: 100%;
   padding: 0.625rem 0.75rem; /* 10px 12px */
-  border: 1px solid var(--auth-input-border-light-only);
+  border: 1px solid var(--auth-input-border);
   border-radius: 0.625rem; /* 10px */
   font-size: 0.875rem; /* 14px */
-  background-color: var(--auth-input-bg-light-only);
-  color: var(--auth-input-text-light-only);
+  background-color: var(--auth-input-bg);
+  color: var(--auth-input-text);
   outline: none;
 }
 
 .auth-input:focus {
-  border-color: var(--auth-border-focus-light-only);
-  box-shadow: 0 0 0 3px var(--auth-focus-ring-light-only);
+  border-color: var(--auth-border-focus);
+  box-shadow: 0 0 0 3px var(--auth-focus-ring);
 }
 
 .auth-button {
@@ -58,8 +70,8 @@
   padding: 0.625rem 0.75rem; /* 10px 12px */
   border: none;
   border-radius: 0.625rem; /* 10px */
-  background-color: var(--auth-button-bg-light-only);
-  color: var(--auth-button-text-light-only);
+  background-color: var(--auth-button-bg);
+  color: var(--auth-button-text);
   font-size: 0.875rem; /* 14px */
   font-weight: 600;
   margin-bottom: 0.75rem; /* 12px */
@@ -79,7 +91,7 @@
 .auth-toggle-link {
   background: transparent;
   border: 0;
-  color: var(--auth-label-text-light-only);
+  color: var(--auth-label-text);
   font-size: 0.875rem; /* 14px */
   text-decoration: underline;
   cursor: pointer;
@@ -104,8 +116,8 @@
   padding: 0.875rem 1rem; /* 14px 16px */
   border: none;
   border-radius: 0.625rem; /* 10px */
-  background-color: var(--auth-magic-button-bg-light-only);
-  color: var(--auth-magic-button-text-light-only);
+  background-color: var(--auth-magic-button-bg);
+  color: var(--auth-magic-button-text);
   font-size: 0.875rem; /* 14px */
   font-weight: 600;
   white-space: nowrap;
@@ -127,12 +139,12 @@
 .auth-checkbox {
   width: 1rem; /* 16px */
   height: 1rem; /* 16px */
-  accent-color: #af3434;
+  accent-color: var(--c-brand);
 }
 
 .auth-terms-label {
   font-size: 0.75rem; /* 12px */
-  color: var(--auth-label-text-light-only);
+  color: var(--auth-label-text);
 }
 
 .auth-terms-label a {
@@ -182,15 +194,21 @@
   min-height: 3.5rem; /* 56px */
 }
 .oauth-button-fullwidth.sui-btn.mantine-Button-root {
-  border-radius: 100px;
+  border-radius: 0.625rem; /* 10px */
+  min-height: 0;
+}
+
+/* Match the submit CTA's corners to the OAuth buttons and inputs (10px). */
+.auth-submit.sui-btn.mantine-Button-root {
+  border-radius: 0.625rem; /* 10px */
 }
 
 .oauth-button-icon {
   width: 3.75rem; /* 60px */
   height: 3.75rem; /* 60px */
   border-radius: 0.875rem; /* 14px */
-  border: 1px solid var(--auth-input-border-light-only);
-  background: var(--auth-card-bg-light-only);
+  border: 1px solid var(--auth-input-border);
+  background: var(--auth-card-bg);
   cursor: pointer;
   box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.04); /* 0 2px 6px */
   display: flex;
@@ -207,8 +225,8 @@
   width: 100%;
   padding: 1rem; /* 16px */
   border-radius: 0.875rem; /* 14px */
-  border: 1px solid var(--auth-input-border-light-only);
-  background: var(--auth-card-bg-light-only);
+  border: 1px solid var(--auth-input-border);
+  background: var(--auth-card-bg);
   cursor: pointer;
   box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.04); /* 0 2px 6px */
   display: flex;
@@ -231,12 +249,12 @@
      the Button's own padding-block; horizontal stays in the shorthand. */
   --sui-btn-py: 1rem; /* 16px (md) */
   padding: 1rem 1.5rem; /* 16px 24px */
-  border: 1px solid var(--auth-input-border-light-only);
+  border: 1px solid var(--auth-input-border);
   border-radius: 999px;
-  background-color: var(--auth-card-bg-light-only);
+  background-color: var(--auth-card-bg);
   font-size: 1rem; /* 16px */
   font-weight: 600;
-  color: var(--auth-text-primary-light-only);
+  color: var(--auth-text-primary);
   cursor: pointer;
   gap: 1rem; /* 16px */
   font-family: inherit;
@@ -249,25 +267,25 @@
 }
 
 .oauth-button-vertical:hover:not(:disabled) {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
-  border-color: var(--border-default);
+  border-color: var(--c-border);
 }
 
 .oauth-button-vertical-tinted {
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--oauth-accent) 65%, #0f172a) 0 6px,
-    #0f172a 6px 100%
+    color-mix(in srgb, var(--oauth-accent) 65%, var(--c-text)) 0 6px,
+    var(--c-text) 6px 100%
   );
 }
 
 .oauth-button-vertical-tinted:hover:not(:disabled) {
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--oauth-accent) 75%, #111827) 0 6px,
-    #111827 6px 100%
+    color-mix(in srgb, var(--oauth-accent) 75%, var(--c-text)) 0 6px,
+    var(--c-text) 6px 100%
   );
 }
 
@@ -275,17 +293,17 @@
   min-height: 0;
   justify-content: flex-start;
   padding: 0.75rem 1rem; /* 12px 16px */
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--c-border);
   border-radius: 0.75rem; /* 12px */
-  background-color: var(--auth-card-bg-light-only);
+  background-color: var(--auth-card-bg);
   font-weight: 500;
-  color: var(--auth-text-primary-light-only);
+  color: var(--auth-text-primary);
   box-shadow: none;
 }
 
 .oauth-button-vertical-legacy:hover:not(:disabled) {
-  background-color: #f3f4f6;
-  color: var(--auth-text-primary-light-only);
+  background-color: var(--c-hover);
+  color: var(--auth-text-primary);
   box-shadow: none;
 }
 
@@ -313,28 +331,28 @@
 
 .oauth-button-vertical-outline {
   background: transparent;
-  border: 2px solid #0f172a;
-  color: #0f172a;
+  border: 2px solid var(--c-text);
+  color: var(--c-text);
   box-shadow: none;
 }
 
 .oauth-button-vertical-outline:hover:not(:disabled) {
-  background: #0f172a;
-  color: #f8fafc;
-  box-shadow: 0 0.35rem 0.9rem rgba(15, 23, 42, 0.2);
+  background: var(--c-text);
+  color: var(--c-surface);
+  box-shadow: 0 0.35rem 0.9rem rgba(0, 0, 0, 0.2);
 }
 
 .oauth-button-vertical-light {
-  background: #f8fafc;
-  color: #0f172a;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  box-shadow: 0 0.25rem 0.75rem rgba(15, 23, 42, 0.12);
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
 }
 
 .oauth-button-vertical-light:hover:not(:disabled) {
-  background: #eef2f7;
-  color: #0f172a;
-  box-shadow: 0 0.35rem 0.9rem rgba(15, 23, 42, 0.16);
+  background: var(--c-hover);
+  color: var(--c-text);
+  box-shadow: 0 0.35rem 0.9rem rgba(0, 0, 0, 0.16);
 }
 
 .oauth-button-vertical:disabled {
@@ -345,7 +363,7 @@
 }
 
 .oauth-button-vertical:focus-visible {
-  outline: 3px solid rgba(59, 130, 246, 0.5);
+  outline: 3px solid color-mix(in srgb, var(--c-primary) 50%, transparent);
   outline-offset: 2px;
 }
 
@@ -376,6 +394,12 @@
   width: 1.75rem; /* 28px */
   height: 1.75rem; /* 28px */
   display: block;
+}
+
+/* Fullwidth OAuth rows use a smaller icon so button height matches the inputs. */
+.oauth-button-fullwidth .oauth-icon-medium {
+  width: 1.25rem; /* 20px */
+  height: 1.25rem; /* 20px */
 }
 
 .oauth-icon-tiny {
@@ -417,8 +441,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-muted);
-  border: 1px solid var(--auth-input-border-light-only);
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--auth-input-border);
 }
 
 .oauth-button-vertical-tinted .oauth-icon-wrapper {
@@ -436,8 +460,8 @@
 
 .oauth-button-vertical-outline .oauth-icon-wrapper,
 .oauth-button-vertical-light .oauth-icon-wrapper {
-  background: rgba(15, 23, 42, 0.06);
-  border-color: rgba(15, 23, 42, 0.14);
+  background: var(--c-surface-sunken);
+  border-color: var(--c-border);
 }
 .oauth-button-right {
   display: flex;
@@ -465,17 +489,17 @@
 }
 
 .sso-demo-card {
-  border: 1px solid var(--auth-input-border-light-only);
+  border: 1px solid var(--auth-input-border);
   border-radius: 1rem;
   padding: 1rem;
-  background: var(--auth-card-bg-light-only);
+  background: var(--auth-card-bg);
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.06);
 }
 
 .sso-demo-title {
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--auth-text-primary-light-only);
+  color: var(--auth-text-primary);
   margin-bottom: 0.75rem;
   letter-spacing: 0.01em;
   text-transform: uppercase;
@@ -520,12 +544,12 @@
 .login-title {
   font-size: 2rem; /* 32px */
   font-weight: 800;
-  color: var(--auth-text-primary-light-only);
+  color: var(--auth-text-primary);
   margin: 0 0 0.375rem; /* 0 0 6px */
 }
 
 .login-subtitle {
-  color: var(--auth-text-secondary-light-only);
+  color: var(--auth-text-secondary);
   font-size: 0.875rem; /* 14px */
   margin: 0;
 }
@@ -538,7 +562,7 @@
 .navigation-link-button {
   background: none;
   border: none;
-  color: var(--auth-label-text-light-only);
+  color: var(--auth-label-text);
   font-size: 0.875rem; /* 14px */
   cursor: pointer;
   text-decoration: underline;
@@ -552,47 +576,47 @@
 /* Message Styles */
 .error-message {
   padding: 1rem; /* 16px */
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
+  background-color: var(--auth-error-bg);
+  border: 1px solid var(--auth-error-border);
   border-radius: 0.5rem; /* 8px */
   margin-bottom: 1.5rem; /* 24px */
 }
 
 .error-message-text {
-  color: #dc2626;
+  color: var(--auth-error-text);
   font-size: 0.875rem; /* 14px */
   margin: 0;
 }
 
 .success-message {
   padding: 1rem; /* 16px */
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background-color: var(--auth-success-bg);
+  border: 1px solid var(--auth-success-border);
   border-radius: 0.5rem; /* 8px */
   margin-bottom: 1.5rem; /* 24px */
 }
 
 .success-message-text {
-  color: #059669;
+  color: var(--auth-success-text);
   font-size: 0.875rem; /* 14px */
   margin: 0;
 }
 
 /* Field-level error styles */
 .auth-field-error {
-  color: #dc2626;
+  color: var(--auth-error-text);
   font-size: 0.6875rem; /* 11px */
   margin-top: 0.125rem; /* 2px */
   line-height: 1.1;
 }
 
 .auth-input-error {
-  border-color: #dc2626 !important;
+  border-color: var(--auth-error-text) !important;
 }
 
 .auth-input-error:focus {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+  border-color: var(--auth-error-text) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-danger) 10%, transparent) !important;
 }
 
 /* Shared auth styles extracted from inline */
@@ -626,29 +650,48 @@
   text-decoration: underline;
   cursor: pointer;
   font-size: 0.875rem; /* 14px */
-  color: var(--auth-text-primary-light-only);
+  color: var(--auth-text-primary);
 }
 
 .auth-dot-black {
   opacity: 0.5;
   padding: 0 0.5rem;
-  color: var(--auth-text-primary-light-only);
+  color: var(--auth-text-primary);
+}
+
+/* "Don't have an account? Sign up" row beneath the login form. */
+.auth-signup-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem; /* 6px */
+  margin-top: 1.5rem; /* 24px */
+  font-size: 0.875rem; /* 14px */
+  color: var(--auth-label-text);
+}
+
+.auth-signup-link.sui-btn.mantine-Button-root {
+  padding: 0;
+  min-height: 0;
+  height: auto;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 700;
 }
 
 /* Email login button - red CTA style matching SaaS version */
 .auth-cta-button {
-  background-color: #af3434 !important;
+  background-color: var(--c-brand) !important;
   color: white !important;
   border: none !important;
   font-weight: 600 !important;
 }
 
 .auth-cta-button:hover:not(:disabled) {
-  background-color: #9a2e2e !important;
+  background-color: var(--c-brand-hover) !important;
 }
 
 .auth-cta-button:disabled {
-  background-color: #af3434 !important;
+  background-color: var(--c-brand) !important;
   opacity: 0.6 !important;
 }
 
@@ -663,7 +706,7 @@
 }
 
 .auth-logo-header {
-  height: 8rem;
+  height: 6.5rem; /* 104px */
   width: auto;
 }
 
@@ -699,8 +742,8 @@
 }
 
 .auth-expandable-trigger--active {
-  border-color: #af3434 !important;
-  box-shadow: 0 0 0 3px rgba(175, 52, 52, 0.12);
+  border-color: var(--c-brand) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-brand) 12%, transparent);
 }
 
 /* ── Animated expand/collapse via grid-template-rows ───────────────── */
@@ -736,14 +779,14 @@
   justify-content: center;
   /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
      own padding-block); horizontal stays in the shorthand. */
-  --sui-btn-py: 1rem; /* 16px (md) */
-  padding: 1rem 1rem; /* 16px */
-  border: 1px solid #d1d5db;
-  border-radius: 100px;
-  background-color: #ffffff;
-  font-size: 1rem;
+  --sui-btn-py: 0.625rem; /* 10px */
+  padding: 0.625rem 1rem; /* 10px 16px */
+  border: 1px solid var(--c-border);
+  border-radius: 0.625rem; /* 10px */
+  background-color: var(--c-surface);
+  font-size: 0.9375rem; /* 15px */
   font-weight: 600;
-  color: #000000;
+  color: var(--c-text);
   cursor: pointer;
   gap: 0.5rem;
   box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.04);
@@ -759,20 +802,20 @@
 }
 
 .oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: #fafafa;
+  background-color: var(--c-hover);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 [data-mantine-color-scheme="dark"] .oauth-button-fullwidth {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border-color: var(--border-default);
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border-color: var(--c-border);
   box-shadow: none;
 }
 
 [data-mantine-color-scheme="dark"]
   .oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: var(--bg-raised);
+  background-color: var(--c-surface-raised);
   box-shadow: none;
 }
 
@@ -810,51 +853,4 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.oauth-button-fullwidth {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
-     own padding-block); horizontal stays in the shorthand. */
-  --sui-btn-py: 1rem; /* 16px (md) */
-  padding: 1rem 1rem; /* 16px */
-  border: 1px solid #d1d5db;
-  border-radius: 100px;
-  background-color: #ffffff;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #000000;
-  cursor: pointer;
-  gap: 0.5rem;
-  box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.04);
-  transition:
-    background-color 150ms ease,
-    box-shadow 150ms ease,
-    border-color 150ms ease;
-}
-
-.oauth-button-fullwidth:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: #fafafa;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-[data-mantine-color-scheme="dark"] .oauth-button-fullwidth {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border-color: var(--border-default);
-  box-shadow: none;
-}
-
-[data-mantine-color-scheme="dark"]
-  .oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: var(--bg-raised);
-  box-shadow: none;
 }

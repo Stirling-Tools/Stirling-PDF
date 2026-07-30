@@ -20,6 +20,7 @@ const wallet: Wallet = {
   freeAllowance: 500,
   freeRemaining: 0,
   pricePerDocMinor: 2,
+  bundleRatePerCreditMinor: 1,
   currency: "usd",
   estimatedBillMinor: 0,
   capUsd: null,
@@ -31,6 +32,10 @@ const wallet: Wallet = {
   docsProcessedThisPeriod: 0,
   uniquePdfsThisPeriod: 0,
   sizeMultiplierPdfsThisPeriod: 0,
+  billingMode: "payg",
+  prepaidUnitsRemaining: 0,
+  prepaidUnitsTotal: 0,
+  prepaidExpiresAt: null,
   members: [],
   recent: [],
 };

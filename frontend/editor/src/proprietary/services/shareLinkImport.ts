@@ -8,6 +8,7 @@ import {
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
+  readResponseHeader,
 } from "@app/services/shareBundleUtils";
 
 export interface ShareLinkMetadata {
@@ -44,13 +45,11 @@ export async function downloadShareLink(token: string): Promise<{
     suppressErrorToast: true,
     skipAuthRedirect: true,
   });
-  const contentType = ((response.headers &&
-    (response.headers["content-type"] || response.headers["Content-Type"])) ||
-    "") as string;
-  const disposition = ((response.headers &&
-    (response.headers["content-disposition"] ||
-      response.headers["Content-Disposition"])) ||
-    "") as string;
+  const contentType = readResponseHeader(response.headers, "content-type");
+  const disposition = readResponseHeader(
+    response.headers,
+    "content-disposition",
+  );
   const filename =
     parseContentDispositionFilename(disposition) || "shared-file";
   const blob = response.data as Blob;

@@ -5,9 +5,10 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
+import type { SourceView } from "@portal/api/sources";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
@@ -15,7 +16,7 @@ import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 const render = (
   ui: Parameters<typeof baseRender>[0],
   options?: Parameters<typeof baseRender>[1],
-) => baseRender(ui, { wrapper: MantineProvider, ...options });
+) => baseRender(ui, { wrapper: PortalTestProviders, ...options });
 
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({
@@ -48,6 +49,32 @@ vi.mock("@portal/api/sources", () => ({
 const clearProcessedHistory = vi.fn();
 vi.mock("@portal/api/policies", () => ({
   clearProcessedHistory: (id: string) => clearProcessedHistory(id),
+}));
+
+const fetchS3Connections = vi.fn();
+const createIntegration = vi.fn();
+vi.mock("@portal/api/integrations", () => ({
+  fetchIntegrations: () => fetchS3Connections(),
+  // Custom-API authoring is a server decision; these tests assert the default view.
+  fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
+  fetchS3Connections: () => fetchS3Connections(),
+  createIntegration: (...args: unknown[]) => createIntegration(...args),
+}));
+
+// The destination picker just selects saved sources; stub it to a button that
+// picks a fixed source, keeping this suite focused on the builder.
+vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
+  DestinationPicker: ({
+    value,
+    onChange,
+  }: {
+    value: string[];
+    onChange: (ids: string[]) => void;
+  }) => (
+    <button type="button" onClick={() => onChange(["src-1"])}>
+      {value.length > 0 ? `output:${value.join(",")}` : "pick output"}
+    </button>
+  ),
 }));
 
 // One editable tool, Compress, so the picker and step settings have something to render.
@@ -103,6 +130,20 @@ const POLICY: Policy = {
   sourceIds: [],
   steps: [],
   output: { type: "inline", options: {} },
+  outputIds: [],
+};
+
+const SOURCE: SourceView = {
+  id: "src-in",
+  name: "Claims intake",
+  type: "folder",
+  status: "active",
+  referenceCount: 0,
+  referencingPolicies: [],
+  config: [],
+  docsTotal: 0,
+  docs24h: 0,
+  docs30d: 0,
 };
 
 function outcome(overrides: Partial<TriggerOutcome>): TriggerOutcome {
@@ -142,13 +183,16 @@ describe("PipelineBuilder", () => {
     fetchSources.mockReset();
     fetchPipeline.mockResolvedValue(POLICY);
     fetchTriggers.mockResolvedValue([]);
-    fetchSources.mockResolvedValue({ kpis: [], sources: [] });
+    fetchSources.mockResolvedValue({ kpis: [], sources: [SOURCE] });
     savePipeline.mockResolvedValue({});
     deletePipeline.mockResolvedValue(undefined);
     triggerPipeline.mockResolvedValue(outcome({ runIds: ["run-1"] }));
     fetchRun.mockResolvedValue({ status: "COMPLETED" });
     clearProcessedHistory.mockReset();
     clearProcessedHistory.mockResolvedValue(undefined);
+    fetchS3Connections.mockReset();
+    fetchS3Connections.mockResolvedValue([]);
+    createIntegration.mockReset();
   });
 
   it("builds a new pipeline: name it, add a tool, and save", async () => {
@@ -162,6 +206,12 @@ describe("PipelineBuilder", () => {
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
 
+    // A pipeline must have at least one input source and one output destination.
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    );
+    fireEvent.click(screen.getByText("pick output"));
+
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
@@ -169,6 +219,8 @@ describe("PipelineBuilder", () => {
       expect.objectContaining({
         name: "Nightly compress",
         trigger: null,
+        sourceIds: ["src-in"],
+        outputIds: ["src-1"],
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
         ],
@@ -177,57 +229,30 @@ describe("PipelineBuilder", () => {
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
-  it("saves an s3 output with its connection options", async () => {
+  it("requires at least one source and one destination before saving", async () => {
     renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Bucket to bucket" },
+      target: { value: "Needs both" },
     });
-    fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
+    const saveButton = () =>
+      screen.getByText("portal.pipelines.composer.create").closest("button");
 
-    // With s3 selected but no bucket, saving is blocked and the summary reads
-    // unconfigured; the connection fields live behind the Configure modal.
-    expect(
-      screen.getByText("portal.pipelines.composer.create").closest("button"),
-    ).toBeDisabled();
-    expect(
-      screen.getByText("portal.pipelines.composer.s3NotConfigured"),
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByText("portal.pipelines.composer.s3Configure"));
+    // Name only: blocked (no source, no destination).
+    expect(saveButton()).toBeDisabled();
 
-    // Textboxes: name, then the modal's bucket, region, prefix, access key id,
-    // endpoint; the secret renders as a password input outside the textbox role.
-    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    fireEvent.change(inputs[1], { target: { value: "claims-processed" } });
-    fireEvent.change(inputs[3], { target: { value: "processed/" } });
-    fireEvent.change(inputs[4], { target: { value: "AKIAEXAMPLE" } });
-    const secret = document.querySelector(
-      'input[type="password"]',
-    ) as HTMLInputElement;
-    fireEvent.change(secret, { target: { value: "shh-secret" } });
-    fireEvent.click(screen.getByText("portal.pipelines.composer.s3Done"));
+    // A source but still no destination: blocked.
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    );
+    expect(saveButton()).toBeDisabled();
 
-    // The summary now shows the configured destination.
-    expect(
-      screen.getByText("s3://claims-processed/processed/"),
-    ).toBeInTheDocument();
+    // Both chosen: allowed, and both are sent.
+    fireEvent.click(screen.getByText("pick output"));
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
-
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({
-        output: {
-          type: "s3",
-          options: {
-            bucket: "claims-processed",
-            region: "us-east-1",
-            prefix: "processed/",
-            endpoint: "",
-            accessKeyId: "AKIAEXAMPLE",
-            secretAccessKey: "shh-secret",
-          },
-        },
-      }),
+      expect.objectContaining({ sourceIds: ["src-in"], outputIds: ["src-1"] }),
     );
   });
 
@@ -300,6 +325,28 @@ describe("PipelineBuilder", () => {
     ).toBeDisabled();
   });
 
+  it("blocks saving an integration step with no account chosen", async () => {
+    // A Discord step added but left without an account would fail at run time with a raw backend
+    // rejection; the builder must refuse to save it and say why, where the fix is one click away.
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(await screen.findByRole("textbox"), {
+      target: { value: "Notify only" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(
+      await screen.findByText("portal.policies.operations.discordNotify.label"),
+    );
+
+    // Operation chosen, account not: still not saveable.
+    expect(
+      await screen.findByText("portal.pipelines.builder.stepsNeedSetup"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).toBeDisabled();
+  });
+
   it("deletes an existing pipeline after confirmation", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
@@ -323,6 +370,55 @@ describe("PipelineBuilder", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByText("portal.pipelines.builder.discard"));
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
+  });
+
+  it("keeps the account chosen for an integration step", async () => {
+    // The regression: integration steps are deliberately toolId-less, and the builder's param
+    // update used to skip exactly those, so picking an account looked like it did nothing.
+    fetchS3Connections.mockResolvedValue([
+      {
+        id: 9,
+        name: "Ops alerts",
+        integrationType: "API",
+        config: { presetId: "discord" },
+      },
+    ]);
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(await screen.findByRole("textbox"), {
+      target: { value: "Notify on processed" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(
+      await screen.findByText("portal.policies.operations.discordNotify.label"),
+    );
+
+    fireEvent.click(
+      await screen.findByPlaceholderText(
+        "portal.connections.picker.placeholder",
+      ),
+    );
+    fireEvent.click(await screen.findByText("Ops alerts"));
+
+    // Saving needs at least one input source and one destination.
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    );
+    fireEvent.click(screen.getByText("pick output"));
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    const saved = savePipeline.mock.calls[0][0] as Policy;
+    const step = saved.steps[0] as unknown as {
+      operation: string;
+      parameters: Record<string, string>;
+    };
+    expect(step.operation).toBe("/api/v1/integration/external-api-call");
+    // The selection survived all the way to the wire, not just to the dropdown.
+    expect(step.parameters.connectionId).toBe("9");
+    expect(step.parameters.operationId).toBe("discordNotify");
   });
 
   it("leaves immediately when there are no unsaved edits", async () => {

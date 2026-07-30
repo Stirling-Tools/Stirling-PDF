@@ -6521,63 +6521,6 @@ title_other = "{{allowance}} PDF-i pulsuz emal edin"
 titleWithRate_one = "{{allowance}} PDF-i pulsuz emal edin, sonra {{rate}}/PDF"
 titleWithRate_other = "{{allowance}} PDF-i pulsuz emal edin, sonra {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Kilidli"
-openAriaLabel = "{{name}} komponentini aç"
-
-[portal.catalogue.detail]
-addToProject = "Layihəyə əlavə et"
-ariaLabel = "Komponent təfərrüatı"
-tabsAriaLabel = "Komponent təfərrüatı bölmələri"
-upgradeToUnlock = "Kilidi açmaq üçün yüksəldin"
-
-[portal.catalogue.detail.code]
-install = "Quraşdır"
-usage = "İstifadə"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} {{tier}} planından başlayaraq daxildir. Onu daxil etmək üçün yüksəldin."
-title = "Planınızda mövcud deyil"
-
-[portal.catalogue.detail.preview]
-badge = "Canlı önizləmə"
-note = "İnteraktiv sandbox burada render olunur"
-
-[portal.catalogue.detail.pricing]
-note = "{{unit}} başına ölçülür. Aylıq pulsuz kvotadan artıq istifadə hesabınıza yazılır və Usage & Billing altında maddələnir."
-
-[portal.catalogue.detail.stats]
-billedOn = "Hesablanma üzrə"
-embeds30d = "Daxiletmələr (30g)"
-freeQuota = "Pulsuz kvota"
-freeQuotaValue = "{{amount}} / ay"
-maturity = "Yetkinlik"
-none = "Yoxdur"
-perAction = "Hər hərəkət üçün"
-price = "Qiymət"
-
-[portal.catalogue.detail.tabs]
-code = "Kod"
-overview = "İcmal"
-pricing = "Qiymətləndirmə"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "istəyə bağlı"
-required = "tələb olunur"
-
-[portal.catalogue.props.columns]
-description = "Təsvir"
-name = "Prop"
-required = "Tələb olunur"
-type = "Tip"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Komponent xərci (MTD)"
-embedsThisMonth = "Bu ay daxiletmələr"
-inBeta = "Beta-da"
-
 [portal.components.billingUnit]
 approval = "təsdiq"
 check = "yoxlama"
@@ -6590,18 +6533,6 @@ signature = "imza"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Öz tətbiqinizə yerləşdirə biləcəyiniz daxil edilə bilən SDK vidcetləri — görüntüləyici, e-imza axını, AI baxış paneli. Hər biri hərəkət üzrə ölçülür. Quraşdırma, istifadə və props üçün karta klikləyin."
-title = "Komponentlər"
-
-[portal.componentsView.empty]
-description = "Komponent kataloqu yüklənə bilmədi. Bir az sonra yenidən cəhd edin."
-title = "Mövcud komponent yoxdur"
-
-[portal.componentsView.lockedBanner]
-description = "GA komponentləri Pay-as-you-go planında mövcuddur; bəzi Beta komponentləri yalnız enterprise üçündür. Kilidli kartlar yüksəltmə təklifi göstərir."
-title = "Bəzi komponentlər üçün ödənişli plan lazımdır"
 
 [portal.docs.authentication]
 codeCaption = "hər sorğu"

@@ -163,7 +163,7 @@ labels:
       - '.github/workflows/scorecards.yml'
       - 'exampleYmlFiles/test_cicd.yml'
 
-  - label: 'Github'
+  - label: 'GitHub'
     files:
       - '.github/.*'
 

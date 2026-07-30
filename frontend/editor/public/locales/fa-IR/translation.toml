@@ -6521,63 +6521,6 @@ title_other = "{{allowance}} PDF را رایگان پردازش کنید"
 titleWithRate_one = "{{allowance}} PDF را رایگان پردازش کنید، سپس {{rate}}/PDF"
 titleWithRate_other = "{{allowance}} PDF را رایگان پردازش کنید، سپس {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "قفل‌شده"
-openAriaLabel = "باز کردن مؤلفه {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "افزودن به پروژه"
-ariaLabel = "جزئیات مؤلفه"
-tabsAriaLabel = "بخش‌های جزئیات مؤلفه"
-upgradeToUnlock = "برای باز کردن قفل ارتقا دهید"
-
-[portal.catalogue.detail.code]
-install = "نصب"
-usage = "استفاده"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} از طرح {{tier}} شامل می‌شود. برای جاسازی آن ارتقا دهید."
-title = "در طرح شما در دسترس نیست"
-
-[portal.catalogue.detail.preview]
-badge = "پیش‌نمایش زنده"
-note = "sandbox تعاملی اینجا رندر می‌شود"
-
-[portal.catalogue.detail.pricing]
-note = "بر اساس {{unit}} اندازه‌گیری می‌شود. استفاده فراتر از سهمیه رایگان ماهانه به حساب شما صورت‌حساب می‌شود و زیر Usage & Billing به‌صورت موردی نمایش داده می‌شود."
-
-[portal.catalogue.detail.stats]
-billedOn = "صورت‌حساب بر اساس"
-embeds30d = "جاسازی‌ها (30 روز)"
-freeQuota = "سهمیه رایگان"
-freeQuotaValue = "{{amount}} / ماه"
-maturity = "بلوغ"
-none = "هیچ‌کدام"
-perAction = "به‌ازای هر اقدام"
-price = "قیمت"
-
-[portal.catalogue.detail.tabs]
-code = "کد"
-overview = "نمای کلی"
-pricing = "قیمت‌گذاری"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "اختیاری"
-required = "الزامی"
-
-[portal.catalogue.props.columns]
-description = "توضیحات"
-name = "Prop"
-required = "الزامی"
-type = "نوع"
-
-[portal.catalogue.summary]
-componentsGa = "مؤلفه‌های GA"
-componentSpendMtd = "هزینه مؤلفه (MTD)"
-embedsThisMonth = "جاسازی‌ها در این ماه"
-inBeta = "در Beta"
-
 [portal.components.billingUnit]
 approval = "تأیید"
 check = "بررسی"
@@ -6590,18 +6533,6 @@ signature = "امضا"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "ویجت‌های SDK قابل جاسازی که در برنامه خودتان قرار می‌دهید — یک نمایشگر، جریان e-sign، پنل بازبینی AI. هرکدام به‌ازای هر اقدام اندازه‌گیری می‌شود. برای نصب، استفاده و props روی کارت کلیک کنید."
-title = "مؤلفه‌ها"
-
-[portal.componentsView.empty]
-description = "کاتالوگ مؤلفه‌ها بارگیری نشد. کمی بعد دوباره تلاش کنید."
-title = "هیچ مؤلفه‌ای در دسترس نیست"
-
-[portal.componentsView.lockedBanner]
-description = "مؤلفه‌های GA در Pay-as-you-go در دسترس هستند؛ چند مؤلفه Beta فقط برای enterprise هستند. کارت‌های قفل‌شده یک پیشنهاد ارتقا نشان می‌دهند."
-title = "برخی مؤلفه‌ها به طرح پولی نیاز دارند"
 
 [portal.docs.authentication]
 codeCaption = "هر درخواست"

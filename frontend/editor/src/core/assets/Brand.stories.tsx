@@ -61,7 +61,9 @@ function Swatch({ label, src, onDark, h }: Asset & { h: number }) {
       >
         <img src={src} alt={label} style={{ height: h, maxWidth: 200 }} />
       </div>
-      <figcaption style={{ fontSize: 12, color: "var(--text-muted, #71717a)" }}>
+      <figcaption
+        style={{ fontSize: 12, color: "var(--c-text-subtle, #71717a)" }}
+      >
         {label}
       </figcaption>
     </figure>
