@@ -8,6 +8,7 @@ import pytest
 
 from stirling.agents.document_classifier import (
     MAX_ASSIGNED_LABELS,
+    MAX_CONSIDERED_LABELS,
     DocumentClassifierAgent,
     _AssignedLabel,
     _ClassifierOutput,
@@ -103,6 +104,17 @@ def test_result_is_capped_at_max_assigned_labels() -> None:
     result = validate_labels(output, allowed)
     assert result.labels == [label.id for label in allowed[:MAX_ASSIGNED_LABELS]]
     assert [a.label_id for a in result.assignments] == result.labels
+
+
+def test_considered_is_capped_too() -> None:
+    # Each watched near-miss becomes a reason on a stored review item, so the tail
+    # past the cap is dropped in the model's order rather than persisted.
+    allowed = _opts(*[f"Label {n}" for n in range(10)])
+    output = _ClassifierOutput(
+        considered=[_ConsideredLabel(label=label.name, confidence=0.2, reason="unsure") for label in allowed]
+    )
+    result = validate_labels(output, allowed)
+    assert [c.label_id for c in result.considered] == [label.id for label in allowed[:MAX_CONSIDERED_LABELS]]
 
 
 def test_empty_answer_is_valid() -> None:

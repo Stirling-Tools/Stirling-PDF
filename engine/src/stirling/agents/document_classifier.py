@@ -23,6 +23,10 @@ logger = logging.getLogger(__name__)
 # A document carries at most this many labels; anything past the cap is dropped
 # in the model's order.
 MAX_ASSIGNED_LABELS = 5
+# Near-misses are capped too. Each one the caller watches becomes a reason on a
+# durable review item, so an unbounded list would let one answer bloat a stored
+# record (and the reviewer's screen) with the long tail of things it almost said.
+MAX_CONSIDERED_LABELS = 5
 # Pages read from each end of the document. A document's type is evident from
 # its opening (and closing) pages, so a fixed window keeps cost and latency flat
 # regardless of length. Promote to AppSettings if it ever needs tuning.
@@ -124,11 +128,11 @@ def validate_labels(output: _ClassifierOutput, allowed: list[LabelOption]) -> Do
     The model answers with names; they are matched case-insensitively to the
     allowed vocabulary and returned as that label's id. Anything off-list is
     dropped, duplicates collapse to the first occurrence, and assignments are
-    capped at ``MAX_ASSIGNED_LABELS`` in the model's order. The same rules
-    apply to ``considered``, which additionally may not repeat an assigned
-    label. ``labels`` is derived from the surviving assignments, so the two can
-    never disagree. The model identifies; these rules decide what is allowed to
-    stand.
+    capped at ``MAX_ASSIGNED_LABELS`` in the model's order. ``considered``
+    follows the same matching and dedup rules, is capped at
+    ``MAX_CONSIDERED_LABELS``, and may not repeat an assigned label. ``labels``
+    is derived from the surviving assignments, so the two can never disagree.
+    The model identifies; these rules decide what is allowed to stand.
     """
     id_by_lower_name = {label.name.lower(): label.id for label in allowed}
 
@@ -150,6 +154,8 @@ def validate_labels(output: _ClassifierOutput, allowed: list[LabelOption]) -> Do
             continue
         considered_ids.append(label_id)
         considered.append(ConsideredLabel(label_id=label_id, confidence=candidate.confidence, reason=candidate.reason))
+        if len(considered) == MAX_CONSIDERED_LABELS:
+            break
 
     return DocumentClassificationResponse(labels=assigned_ids, assignments=assignments, considered=considered)
 
