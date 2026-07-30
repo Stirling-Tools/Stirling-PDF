@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -13,7 +12,7 @@ import {
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
 import { LicensePanel } from "@portal/components/procurement/ProcurementStages";
-import { useFocusTrap } from "@portal/components/procurement/ProcurementModal";
+import { FlowModal } from "@portal/components/shared/FlowModal";
 import { useAsync } from "@portal/hooks/useAsync";
 import "@portal/views/Procurement.css";
 
@@ -45,49 +44,25 @@ function SideModal({
   footer?: React.ReactNode;
   wide?: boolean;
 }) {
-  const { t } = useTranslation();
-  const trapRef = useFocusTrap(open);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  if (!open) return null;
-  return createPortal(
-    <div
-      className="portal-sidemodal"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        ref={trapRef}
-        className={`portal-sidemodal__panel${wide ? " portal-sidemodal__panel--wide" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        tabIndex={-1}
-      >
-        <button
-          type="button"
-          className="portal-procmodal__close"
-          onClick={onClose}
-          aria-label={t("portal.procurement.modal.close")}
-        >
-          ✕
-        </button>
-        <div className="portal-sidemodal__header">
+  return (
+    <FlowModal
+      open={open}
+      onClose={onClose}
+      label={title}
+      size={wide ? "lg" : "md"}
+      footer={footer}
+      header={
+        <>
           <div className="portal-sidemodal__title-row">
             <h3 className="portal-sidemodal__title">{title}</h3>
             {headerAside}
           </div>
           {subtitle && <p className="portal-sidemodal__sub">{subtitle}</p>}
-        </div>
-        <div className="portal-sidemodal__body">{children}</div>
-        {footer && <div className="portal-sidemodal__footer">{footer}</div>}
-      </div>
-    </div>,
-    document.body,
+        </>
+      }
+    >
+      {children}
+    </FlowModal>
   );
 }
 

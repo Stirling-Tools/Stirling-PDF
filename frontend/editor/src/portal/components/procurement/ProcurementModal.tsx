@@ -1,50 +1,14 @@
-import { useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
-import { useTranslation } from "react-i18next";
+import type { ReactNode } from "react";
+import { FlowModal } from "@portal/components/shared/FlowModal";
 import "@portal/views/Procurement.css";
 
-/** Keep keyboard focus inside an open dialog: focus it on open and wrap Tab at the edges. */
-export function useFocusTrap(open: boolean) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const panel = ref.current;
-    if (!panel) return;
-    const prev = document.activeElement as HTMLElement | null;
-    const focusables = () =>
-      Array.from(
-        panel.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        ),
-      ).filter((el) => !el.hasAttribute("disabled"));
-    (focusables()[0] ?? panel).focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      const items = focusables();
-      if (items.length === 0) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    panel.addEventListener("keydown", onKey);
-    return () => {
-      panel.removeEventListener("keydown", onKey);
-      prev?.focus?.();
-    };
-  }, [open]);
-  return ref;
-}
+// Re-exported for the extras dialogs that trap focus themselves.
+export { useFocusTrap } from "@portal/components/shared/FlowModal";
 
 /**
- * Full-screen takeover modal for the procurement flow, copying the prototype's modal design
- * (portaled to body, dimmed + blurred backdrop, rounded panel, close button). The Home deal-status
- * hero expands into this.
+ * The procurement takeover: the shared {@link FlowModal} at takeover width. Chrome and copy only —
+ * the shell (portal, focus trap, Escape, close, header/body bands) is shared, so this dialog cannot
+ * drift from the trial and licence dialogs the way two hand-rolled shells did.
  */
 export function ProcurementModal({
   open,
@@ -60,54 +24,28 @@ export function ProcurementModal({
   title: string;
   subtitle?: string;
   /**
-   * Skip the modal's own title block: the step inside supplies the heading, step badge and progress
-   * (see StepModalHeader), so rendering ours too would stack two headers.
+   * Skip the title block: the step inside supplies the heading, step badge and progress (see
+   * StepModalHeader), so rendering ours too would stack two headers.
    */
   headerless?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  const { t } = useTranslation();
-  const trapRef = useFocusTrap(open);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      className="portal-procmodal"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        ref={trapRef}
-        className="portal-procmodal__panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        tabIndex={-1}
-      >
-        <button
-          type="button"
-          className="portal-procmodal__close"
-          onClick={onClose}
-          aria-label={t("portal.procurement.modal.close")}
-        >
-          ✕
-        </button>
-        {!headerless && (
-          <div className="portal-procmodal__header">
+  return (
+    <FlowModal
+      open={open}
+      onClose={onClose}
+      label={title}
+      size="lg"
+      header={
+        headerless ? undefined : (
+          <>
             <h2 className="portal-procmodal__title">{title}</h2>
             {subtitle && <p className="portal-procmodal__sub">{subtitle}</p>}
-          </div>
-        )}
-        <div className="portal-procmodal__body">{children}</div>
-      </div>
-    </div>,
-    document.body,
+          </>
+        )
+      }
+    >
+      {children}
+    </FlowModal>
   );
 }

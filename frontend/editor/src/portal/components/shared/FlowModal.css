@@ -1,0 +1,61 @@
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  FlowModal — the one dialog shell for the portal's flows                  */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-flowmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(0.5rem, 4vh, 3rem) 1rem;
+  overflow-y: auto;
+  background: var(--c-overlay);
+}
+
+.portal-flowmodal__panel {
+  position: relative;
+  width: 100%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg, 0 24px 64px rgb(0 0 0 / 28%));
+  padding: 1.35rem 1.4rem 1.4rem;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+/* Task dialogs sit narrow; the procurement takeover needs the room for its quote tables. */
+.portal-flowmodal__panel[data-size="md"] {
+  max-width: 33rem;
+}
+.portal-flowmodal__panel[data-size="lg"] {
+  max-width: 62rem;
+  padding: 1.5rem 1.5rem 1.75rem;
+}
+
+/* Positioning only — the shared Button owns the control's own appearance. */
+.portal-flowmodal__close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 1;
+}
+
+.portal-flowmodal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* One space-between row: pass the two ends as siblings, not a wrapper. */
+.portal-flowmodal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
