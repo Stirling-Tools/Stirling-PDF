@@ -215,15 +215,6 @@ export function QuoteBuilder({
                   ? t("portal.procurement.builder.volManual")
                   : t("portal.procurement.builder.volNoUsers")}
             </p>
-          </Step>
-        )}
-
-        {step === 1 && (
-          <Step
-            icon={<PoliciesIcon size={22} />}
-            title={t("portal.procurement.builder.s2Title")}
-            sub={t("portal.procurement.builder.s2Sub")}
-          >
             <Field label={t("portal.procurement.builder.posture")}>
               <div className="portal-qb__opts">
                 {POSTURES.map((p) => (
@@ -253,7 +244,15 @@ export function QuoteBuilder({
                 ))}
               </div>
             </Field>
+          </Step>
+        )}
 
+        {step === 1 && (
+          <Step
+            icon={<PoliciesIcon size={22} />}
+            title={t("portal.procurement.builder.s2Title")}
+            sub={t("portal.procurement.builder.s2Sub")}
+          >
             <Field label={t("portal.procurement.builder.term")}>
               <div className="portal-qb__pills">
                 {[1, 2, 3, 4, 5].map((y) => (
