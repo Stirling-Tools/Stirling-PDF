@@ -588,16 +588,15 @@
 
 /* ══ Quote builder — copied from the marketing prototype (tight density) ═════ */
 .portal-qb {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: 14px;
-  box-shadow: inset 0 0 0 1px var(--c-border-subtle);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
+/* No padding or scroll of its own: FlowModal's panel supplies both, and nesting a second scroll
+   container inside a scrolling panel gave the builder two scrollbars. */
 .portal-qb__body {
-  padding: 20px 24px;
-  max-height: 56vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
 }
 .portal-qb__intro {
   display: flex;
@@ -816,7 +815,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 24px;
+  margin-top: 0.35rem;
+  padding-top: 0.9rem;
   border-top: 1px solid var(--c-border-subtle);
   flex-wrap: wrap;
 }
@@ -1592,15 +1592,6 @@
 .portal-sidemodal__foot-hint {
   font-size: 0.75rem;
   color: var(--c-text-subtle);
-}
-
-/* Inside the takeover the builder IS the dialog body: its own card frame read as a box drawn
-   around the header. The modal supplies the surface and the padding. */
-.portal-procmodal__body .portal-qb {
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
 }
 
 /* The volume hint used to end its step, so it needed no space beneath it. Governance and Sizing now
