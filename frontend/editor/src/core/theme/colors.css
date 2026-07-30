@@ -17,7 +17,7 @@ html[data-app-theme="light"] {
 
   --c-text: var(--p-ink);
   --c-text-muted: var(--p-gray-600);
-  --c-text-subtle: var(--p-gray-500);
+  --c-text-subtle: var(--p-gray-550);
   --c-text-on-primary: var(--p-white);
 
   --c-btn-solid: var(--c-text);
