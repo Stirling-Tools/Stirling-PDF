@@ -411,7 +411,6 @@ import type {
   SignaturePreview,
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
-import { SignaturePreviewLayer } from "@app/components/viewer/SignaturePreviewLayer";
 import { ExportAPIBridge } from "@app/components/viewer/ExportAPIBridge";
 import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
 import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
@@ -422,7 +421,6 @@ import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
-import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
   RedactionPendingTracker,
   RedactionPendingTrackerAPI,
@@ -770,10 +768,10 @@ export function LocalEmbedPDF({
   isSignMode = false,
   pdfRenderMode = "normal",
   signaturePreviews,
-  signaturePreviewsReadOnly = false,
+  signaturePreviewsReadOnly: _signaturePreviewsReadOnly = false,
   signaturePlacementMode = false,
-  signaturePlacementData,
-  signaturePlacementType,
+  signaturePlacementData: _signaturePlacementData,
+  signaturePlacementType: _signaturePlacementType,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
 }: LocalEmbedPDFProps) {
@@ -791,7 +789,7 @@ export function LocalEmbedPDF({
 
   // Mount the overlay for controlled previews, placement mode, or once any
   // signature is placed — so leaving placement mode doesn't hide placements.
-  const signatureOverlayEnabled =
+  const _signatureOverlayEnabled =
     signaturePreviews !== undefined ||
     signaturePlacementMode ||
     localSignaturePreviews.length > 0;
@@ -806,7 +804,7 @@ export function LocalEmbedPDF({
     }
   }, [signaturePreviews]);
 
-  const handleSignaturePreviewsChange = useCallback(
+  const _handleSignaturePreviewsChange = useCallback(
     (next: SignaturePreview[]) => {
       setLocalSignaturePreviews(next);
       onSignaturePreviewsChange?.(next);
@@ -1264,172 +1262,7 @@ export function LocalEmbedPDF({
                     >
                       <DocumentScroller
                         documentId={documentId}
-                        renderPage={({ width, height, pageIndex }) => {
-                          return (
-                            <Rotate
-                              key={`${documentId}-${pageIndex}`}
-                              documentId={documentId}
-                              pageIndex={pageIndex}
-                            >
-                              <PagePointerProvider
-                                documentId={documentId}
-                                pageIndex={pageIndex}
-                              >
-                                <div
-                                  data-page-index={pageIndex}
-                                  data-page-width={width}
-                                  data-page-height={height}
-                                  style={{
-                                    width,
-                                    height,
-                                    position: "relative",
-                                    overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
-                                    userSelect: "none",
-                                    WebkitUserSelect: "none",
-                                    MozUserSelect: "none",
-                                    msUserSelect: "none",
-                                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                                  }}
-                                  draggable={false}
-                                  onDragStart={(e) => e.preventDefault()}
-                                  onDrop={(e) => e.preventDefault()}
-                                  onDragOver={(e) => e.preventDefault()}
-                                >
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      inset: 0,
-                                      transition: "filter 0.25s ease",
-                                      filter:
-                                        pdfRenderMode === "dark"
-                                          ? "invert(1) hue-rotate(180deg)"
-                                          : pdfRenderMode === "sepia"
-                                            ? "sepia(0.7) brightness(0.85)"
-                                            : undefined,
-                                    }}
-                                  >
-                                    <TilingLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                    />
-                                  </div>
-
-                                  <CustomSearchLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
-
-                                  <div
-                                    className="pdf-selection-layer"
-                                    style={{
-                                      position: "absolute",
-                                      inset: 0,
-                                      pointerEvents: "none",
-                                    }}
-                                  >
-                                    <SelectionLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      background="var(--pdf-selection-bg)"
-                                      selectionMenu={(props) => (
-                                        <TextSelectionMenu {...props} />
-                                      )}
-                                    />
-                                  </div>
-                                  <TextSelectionHandler
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
-
-                                  {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
-                                  {enableFormFill && file && (
-                                    <ButtonAppearanceOverlay
-                                      pageIndex={pageIndex}
-                                      pdfSource={file}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                    />
-                                  )}
-
-                                  {/* FormFieldOverlay for interactive form filling */}
-                                  {enableFormFill && (
-                                    <FormFieldOverlay
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                      fileId={fileId}
-                                    />
-                                  )}
-
-                                  {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
-                                  {file && (
-                                    <SignatureFieldOverlay
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      pdfSource={file}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                    />
-                                  )}
-
-                                  {/* AnnotationLayer for annotation editing and annotation-based redactions */}
-                                  {(enableAnnotations || enableRedaction) && (
-                                    <AnnotationLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      selectionOutline={{ color: "#007ACC" }}
-                                      selectionMenu={(props) => (
-                                        <AnnotationSelectionMenu {...props} />
-                                      )}
-                                      style={
-                                        !showBakedAnnotations
-                                          ? {
-                                              opacity: 0,
-                                              pointerEvents: "none",
-                                            }
-                                          : undefined
-                                      }
-                                    />
-                                  )}
-
-                                  {enableRedaction && (
-                                    <RedactionLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      selectionMenu={(props) => (
-                                        <RedactionSelectionMenu {...props} />
-                                      )}
-                                    />
-                                  )}
-
-                                  {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
-                                  <LinkLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
-
-                                  {/* Signature preview overlay (opt-in; off by default) */}
-                                  {signatureOverlayEnabled && (
-                                    <SignaturePreviewLayer
-                                      pageIndex={pageIndex}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                      previews={localSignaturePreviews}
-                                      readOnly={signaturePreviewsReadOnly}
-                                      placementMode={signaturePlacementMode}
-                                      placementData={signaturePlacementData}
-                                      placementType={signaturePlacementType}
-                                      onChange={handleSignaturePreviewsChange}
-                                      selectedId={selectedSignatureId}
-                                      onSelect={setSelectedSignatureId}
-                                    />
-                                  )}
-                                </div>
-                              </PagePointerProvider>
-                            </Rotate>
-                          );
-                        }}
+                        renderPageFactory={renderPageFactory}
                       />
                     </Viewport>
                   </GlobalPointerProvider>

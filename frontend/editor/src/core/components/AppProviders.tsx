@@ -170,22 +170,22 @@ export function AppProviders({
                                   <PageEditorProvider>
                                     <SignatureProvider>
                                       <SigningOverlayProvider>
-                                      <RedactionProvider>
-                                        <FormFillProvider>
-                                          <AnnotationProvider>
-                                            <WorkbenchBarProvider>
-                                              <TourOrchestrationProvider>
-                                                <AdminTourOrchestrationProvider>
-                                                  <FolderFileContextProvider>
-                                                    {children}
-                                                  </FolderFileContextProvider>
-                                                </AdminTourOrchestrationProvider>
-                                              </TourOrchestrationProvider>
-                                            </WorkbenchBarProvider>
-                                          </AnnotationProvider>
-                                        </FormFillProvider>
-                                      </RedactionProvider>
-                                    </SigningOverlayProvider>
+                                        <RedactionProvider>
+                                          <FormFillProvider>
+                                            <AnnotationProvider>
+                                              <WorkbenchBarProvider>
+                                                <TourOrchestrationProvider>
+                                                  <AdminTourOrchestrationProvider>
+                                                    <FolderFileContextProvider>
+                                                      {children}
+                                                    </FolderFileContextProvider>
+                                                  </AdminTourOrchestrationProvider>
+                                                </TourOrchestrationProvider>
+                                              </WorkbenchBarProvider>
+                                            </AnnotationProvider>
+                                          </FormFillProvider>
+                                        </RedactionProvider>
+                                      </SigningOverlayProvider>
                                     </SignatureProvider>
                                   </PageEditorProvider>
                                 </ViewerProvider>

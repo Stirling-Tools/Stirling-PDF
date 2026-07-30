@@ -36,7 +36,9 @@ test.describe("PDF Viewer Hot Paths Performance Benchmark", () => {
 
     // Wait until EmbedPDF registry is fully initialized
     await page.waitForFunction(
-      () => (window as any).__embedPdfRegistry !== undefined,
+      () =>
+        (window as unknown as { __embedPdfRegistry?: unknown })
+          .__embedPdfRegistry !== undefined,
       null,
       { timeout: 30_000 },
     );
@@ -44,8 +46,18 @@ test.describe("PDF Viewer Hot Paths Performance Benchmark", () => {
 
     // Run the remaining benchmarks inside the browser context
     const results = await page.evaluate(async () => {
-      const registry = (window as any).__embedPdfRegistry;
-      const docManager = registry.getPlugin("document-manager").provides();
+      const registry = (
+        window as unknown as {
+          __embedPdfRegistry: {
+            getPlugin: (name: string) => {
+              provides: () => Record<string, unknown>;
+            };
+          };
+        }
+      ).__embedPdfRegistry;
+      const docManager = registry.getPlugin("document-manager").provides() as {
+        getActiveDocument: () => { id: string } | null;
+      };
       const activeDoc = docManager.getActiveDocument();
       if (!activeDoc) {
         throw new Error("No active document found");

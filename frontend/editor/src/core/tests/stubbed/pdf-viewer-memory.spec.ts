@@ -30,7 +30,9 @@ test.describe("PDF Viewer E2E Memory Leak and DOM Stability Tests", () => {
 
     // Wait for the PDF engine & document ready wrapper to initialize
     await page.waitForFunction(
-      () => (window as any).__embedPdfRegistry !== undefined,
+      () =>
+        (window as unknown as { __embedPdfRegistry?: unknown })
+          .__embedPdfRegistry !== undefined,
       null,
       { timeout: 30_000 },
     );
@@ -42,7 +44,9 @@ test.describe("PDF Viewer E2E Memory Leak and DOM Stability Tests", () => {
     console.log(`[MEMORY TEST] Baseline DOM Node Count: ${baselineDomNodes}`);
 
     const baselineHeap = await page.evaluate(() => {
-      const mem = (performance as any).memory;
+      const mem = (
+        performance as unknown as { memory?: { usedJSHeapSize: number } }
+      ).memory;
       return mem ? mem.usedJSHeapSize : null;
     });
     if (baselineHeap) {
@@ -82,7 +86,9 @@ test.describe("PDF Viewer E2E Memory Leak and DOM Stability Tests", () => {
     console.log(`[MEMORY TEST] Final DOM Node Count: ${finalDomNodes}`);
 
     const finalHeap = await page.evaluate(() => {
-      const mem = (performance as any).memory;
+      const mem = (
+        performance as unknown as { memory?: { usedJSHeapSize: number } }
+      ).memory;
       return mem ? mem.usedJSHeapSize : null;
     });
     if (finalHeap) {
