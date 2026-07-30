@@ -243,10 +243,9 @@ const preview: Preview = {
     },
     a11y: {
       // Run axe against the rendered story; `test: "error"` fails the scan on
-      // any violation. Limit the context to the story root so Storybook/Vite's
-      // own error overlay cannot become part of the component's a11y result.
+      // any violation. Context is left at the addon default (the document root)
+      // so it resolves under both the Storybook UI and the Vitest browser mount.
       test: "error",
-      element: "#storybook-root",
     },
   },
   globalTypes: {
