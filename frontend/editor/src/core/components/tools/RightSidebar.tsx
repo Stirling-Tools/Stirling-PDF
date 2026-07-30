@@ -15,7 +15,6 @@ import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
@@ -190,7 +189,7 @@ export default function RightSidebar() {
               className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
             >
-              <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
+              <SidebarToggleIcon size={18} mirrored />
             </ActionIcon>
           </div>
           <div className="tool-panel__collapsed-divider" />
