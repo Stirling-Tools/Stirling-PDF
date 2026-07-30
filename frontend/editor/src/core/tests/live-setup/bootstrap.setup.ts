@@ -1,7 +1,6 @@
 import { test, expect } from "@app/tests/helpers/test-base";
 import {
   ensureCookieConsent,
-  skipOnboarding,
   DEFAULT_TEST_USERNAME,
   DEFAULT_TEST_PASSWORD,
 } from "@app/tests/helpers/login";
