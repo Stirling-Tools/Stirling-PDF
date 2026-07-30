@@ -692,7 +692,6 @@ manualLinks = "Manual downloads: click the links and place the files into the te
 noLanguages = "No tessdata languages found in the configured directory."
 permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
 
-# AI engine admin settings (AI nav group)
 [admin.settings.ai.documents]
 description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
 title = "Documents & RAG"
@@ -7322,7 +7321,6 @@ sectionsAriaLabel = "Infrastructure sections"
 subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
-# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
@@ -8510,13 +8508,10 @@ region = "State / region"
 regionPlaceholder = "California"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
 s1Sub = "Your team, and the PDFs you expect to run each year."
-# Step 1 — volume
 s1Title = "How much will you process?"
 s2Sub = "Longer terms discount the rate; your service level sets support."
-# Step 2 — commitment & service
 s2Title = "Commitment and service"
 s3Sub = "For the quote and the agreement it generates."
-# Step 3 — details
 s3Title = "Your details"
 serviceLevel = "Service level"
 size_compact = "Compact"

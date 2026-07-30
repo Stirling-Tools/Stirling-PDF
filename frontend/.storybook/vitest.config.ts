@@ -18,18 +18,32 @@ export default defineConfig({
     // Pre-scan every story + the preview so Vite discovers the story set's large
     // dep surface (embedpdf plugins, @mui icons, …) in one pass up front.
     entries: ["editor/src/**/*.stories.@(ts|tsx)", ".storybook/preview.tsx"],
-    // `entries` alone does not catch deps reached only through a transformed
-    // JSX runtime import, so Vite optimizes them lazily mid-run and emits
-    // "optimized dependencies changed, reloading". That reload tears down the
-    // browser worker and whichever stories were mid-load fail with a bogus
-    // "Failed to fetch dynamically imported module" — a scan that then looks
-    // like a real result. Naming them here keeps a run deterministic.
+    // `entries` alone does not catch deps reached through a transformed JSX
+    // runtime import, nor the preview's own dependency graph (the test plugin
+    // injects the preview in a way the entry scanner doesn't crawl). Vite then
+    // optimizes them lazily mid-run and emits "optimized dependencies changed,
+    // reloading" — the reload tears down the browser worker and whichever
+    // stories were mid-load fail with a bogus "Failed to fetch dynamically
+    // imported module" that reads like a real crash. Only a cold dep cache
+    // hits this, which is every CI run. Naming them keeps a run deterministic.
     include: [
       "react",
       "react/jsx-runtime",
       "react/jsx-dev-runtime",
       "react-dom",
       "react-dom/client",
+      "@storybook/react-vite",
+      "@storybook/addon-a11y/preview",
+      "@storybook/addon-themes",
+      "msw-storybook-addon",
+      "react-router-dom",
+      "@tanstack/react-query",
+      "i18next",
+      "react-i18next",
+      "smol-toml",
+      "@mantine/core",
+      "@supabase/supabase-js",
+      "axios",
     ],
   },
   test: {
