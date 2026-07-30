@@ -138,7 +138,12 @@ export interface CatalogueEntry {
  * {@link ToolEndpoint}s, plus the AI classify endpoint, which isn't part of the generated union.
  */
 export const ENDPOINT_LABELS: Partial<
-  Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
+  Record<
+    | ToolEndpoint
+    | "/api/v1/ai/tools/classify-and-label"
+    | "/api/v1/docparse/rag-ingest",
+    string
+  >
 > = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
   "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
@@ -148,6 +153,7 @@ export const ENDPOINT_LABELS: Partial<
   "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
   "/api/v1/ai/tools/classify-and-label":
     "portal.policies.endpoints.classifyAndLabel",
+  "/api/v1/docparse/rag-ingest": "portal.policies.endpoints.ragIngest",
 };
 
 export function humanizeEndpoint(
@@ -179,8 +185,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.ingestion.label",
     tone: "blue",
     desc: "portal.policies.categories.ingestion.desc",
-    providesClassification: true,
-    comingSoon: true,
   },
   {
     id: "security",
@@ -230,26 +234,14 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.ingestion.rules.0",
       "portal.policies.config.ingestion.rules.1",
       "portal.policies.config.ingestion.rules.2",
-      "portal.policies.config.ingestion.rules.3",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("ocr"), policyStep("flatten")],
-    fields: [
-      {
-        label: "portal.policies.config.ingestion.fields.minConfidence",
-        key: "minConfidence",
-        type: "select",
-        value: "p80",
-        options: ["p60", "p70", "p80", "p90", "p95"],
-      },
-      {
-        label: "portal.policies.config.ingestion.fields.belowThreshold",
-        key: "belowThreshold",
-        type: "select",
-        value: "flagForReview",
-        options: ["flagForReview", "routeToBucket", "hold"],
-      },
+    defaultOperations: [
+      policyStep("ocr"),
+      policyStep("flatten"),
+      policyStep("ragIngest"),
     ],
+    fields: [],
   },
   security: {
     summary: "portal.policies.config.security.summary",

@@ -17,6 +17,7 @@ from stirling.api.routes import (
     agent_capabilities_router,
     agent_draft_router,
     config_router,
+    docparse_router,
     document_classifier_router,
     document_router,
     execution_router,
@@ -217,6 +218,7 @@ app.include_router(ledger_router, dependencies=_user_gate)
 app.include_router(pdf_comments_router, dependencies=_user_gate)
 app.include_router(agent_capabilities_router, dependencies=_user_gate)
 app.include_router(document_classifier_router, dependencies=_user_gate)
+app.include_router(docparse_router, dependencies=_user_gate)
 # Config push is a system sync with no X-User-Id, so it is guarded by the shared secret
 # and allow_config_push flag only, deliberately NOT the per-user identity gate.
 app.include_router(config_router)

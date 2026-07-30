@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 PAGE_NUMBER_METADATA_KEY = "page_number"
 CONTENT_TYPE_METADATA_KEY = "content_type"
 PAGE_TEXT_CONTENT_TYPE = "page_text"
+DOCPARSE_CHUNK_CONTENT_TYPE = "docparse_chunk"
 
 
 class DocumentService:
@@ -108,6 +109,42 @@ class DocumentService:
         embeddings = await self._embedder.embed_documents([doc.text for doc in chunks])
         await self._store.add_documents(collection, chunks, embeddings, owner_id)
         return len(chunks)
+
+    async def ingest_prepared(
+        self,
+        collection: FileId,
+        chunks: list[tuple[str, dict[str, str]]],
+        source: str,
+        owner_id: OwnerId,
+        read_principals: list[PrincipalId],
+        expires_at: datetime | None,
+    ) -> int:
+        """Replace-ingest pre-chunked content (e.g. docparse structure-aware chunks).
+
+        Same lifecycle as :meth:`ingest` - wipe the ``(collection, owner_id)``
+        pair, recreate it, grant reads, embed in batches, upsert - but chunk
+        ``(text, metadata)`` pairs arrive pre-built and no page representation
+        is written. Returns the number of vector chunks indexed.
+        """
+        if not read_principals:
+            raise ValueError("read_principals must not be empty - every doc needs at least one reader")
+
+        await self._store.delete_collection(collection, owner_id)
+        await self._store.ensure_collection(collection, source, owner_id, expires_at)
+        await self._store.grant_read(collection, owner_id, read_principals)
+
+        documents: list[Document] = []
+        for i, (text, metadata) in enumerate(chunks):
+            if not text.strip():
+                continue
+            meta = {**metadata, "source": source, "chunk_index": str(i)}
+            documents.append(Document(id=f"{source}:docparse:{i}", text=text, metadata=meta))
+
+        if not documents:
+            return 0
+        embeddings = await self._embedder.embed_documents([doc.text for doc in documents])
+        await self._store.add_documents(collection, documents, embeddings, owner_id)
+        return len(documents)
 
     async def search(
         self,

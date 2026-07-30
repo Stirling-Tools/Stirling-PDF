@@ -10,6 +10,11 @@ import { type WorkingToolStep } from "@app/hooks/tools/shared/toolAutomation";
 import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
 import { isIntegrationStep } from "@portal/components/pipelines/integrationStep";
 import type { ExternalApiStepParams } from "@portal/components/policies/stepOperations";
+import { RAG_INGEST_OPERATION } from "@portal/components/pipelines/docIntelligenceSteps";
+import {
+  RagIngestStepConfig,
+  type RagIngestParams,
+} from "@portal/components/pipelines/RagIngestStepConfig";
 
 interface PipelineStepSettingsProps {
   step: WorkingToolStep;
@@ -30,6 +35,16 @@ export function PipelineStepSettings({
   // Hooks first: selecting a different step re-renders this same instance, so an early return
   // above useTranslation would change the hook count between renders and crash.
   const { t } = useTranslation();
+
+  // Document-intelligence steps carry their own small forms; they have no registry entry.
+  if (step.operation === RAG_INGEST_OPERATION) {
+    return (
+      <RagIngestStepConfig
+        parameters={step.params as unknown as RagIngestParams}
+        onChange={(params) => onChange(params as never)}
+      />
+    );
+  }
 
   // An integration step is configured by the operations catalogue, not by a tool's settings UI:
   // it has no registry entry to look one up from.

@@ -101,6 +101,11 @@ class AppSettings(BaseSettings):
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
 
+    # DocParse addon home: <home>/site holds a dynamically installed docling
+    # stack (prepended to sys.path at startup), <home>/models holds prefetched
+    # model weights. Empty = addon only usable when baked into the image.
+    docparse_home: str = Field(default="", validation_alias="STIRLING_DOCPARSE_HOME")
+
     # When true, API routes reject requests that lack an X-User-Id header at
     # the boundary. Self-hosted deployments with security disabled have no
     # user identity and leave this off; multi-tenant deployments turn it on so

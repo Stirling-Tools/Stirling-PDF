@@ -254,6 +254,13 @@ public class AiEngineClient {
 
     private void checkResponseStatus(HttpResponse<String> response) {
         int status = response.statusCode();
+        // 501 = capability not implemented (e.g. docparse addon missing); keep the status and
+        // body so callers can surface the machine-readable addonRequired detail.
+        if (status == 501) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_IMPLEMENTED,
+                    "AI engine capability not implemented: " + response.body());
+        }
         if (status >= 500) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY, "AI engine returned error: " + status);

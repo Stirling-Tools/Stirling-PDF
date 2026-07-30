@@ -22,6 +22,7 @@ describe("POLICY_OPERATIONS", () => {
       "ocr",
       "purviewApplyLabel",
       "purviewReadLabel",
+      "ragIngest",
       "redact",
       "sanitize",
       "timestampPdf",
@@ -49,6 +50,41 @@ describe("POLICY_OPERATIONS", () => {
     }
     expect(policyToolIdForEndpoint("/api/v1/misc/repair")).toBeNull();
     expect(policyToolIdForEndpoint("not-an-endpoint")).toBeNull();
+  });
+});
+
+describe("rag ingest wire round-trip", () => {
+  test("sends positive integer sizes and real booleans, and round-trips them", () => {
+    const wire = policyStepToWire(
+      policyStep("ragIngest", {
+        chunkSize: "1024",
+        overlap: "32",
+        exportMarkdown: "true",
+      }),
+    );
+    expect(wire.operation).toBe("/api/v1/docparse/rag-ingest");
+    expect(wire.parameters).toEqual({
+      chunkSize: 1024,
+      overlap: 32,
+      mode: "auto",
+      index: true,
+      exportMarkdown: true,
+      exportChunksJsonl: false,
+    });
+
+    const back = policyStepFromWire(wire);
+    expect(back?.toolId).toBe("ragIngest");
+    if (back?.toolId === "ragIngest") {
+      expect(back.params.chunkSize).toBe("1024");
+      expect(back.params.exportMarkdown).toBe("true");
+      expect(back.params.index).toBe("true");
+    }
+
+    // Junk sizes fall back to defaults instead of sending garbage to the engine.
+    expect(
+      policyStepToWire(policyStep("ragIngest", { chunkSize: "junk" }))
+        .parameters.chunkSize,
+    ).toBe(512);
   });
 });
 

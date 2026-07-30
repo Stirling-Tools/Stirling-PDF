@@ -77,6 +77,7 @@ public class ApplicationProperties {
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
+    private Docparse docparse = new Docparse();
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
@@ -423,6 +424,21 @@ public class ApplicationProperties {
             private boolean pdfComment = true;
             private boolean classify = true;
         }
+    }
+
+    /**
+     * DocParse settings (top-level {@code docparse.*}): document understanding for ingestion
+     * pipelines. The basic tier (text layer) always works; the advanced tier lives in the engine's
+     * docparse addon.
+     */
+    @Data
+    public static class Docparse {
+
+        /** Master switch; hides the DocParse endpoints when false. */
+        private boolean enabled = true;
+
+        /** Requested tier: 'auto', 'basic', or 'advanced'. 'auto' resolves per document. */
+        private String mode = "auto";
     }
 
     /**

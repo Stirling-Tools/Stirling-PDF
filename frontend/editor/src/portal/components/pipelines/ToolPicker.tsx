@@ -11,7 +11,12 @@ import {
   searchOperations,
   type StepOperation,
 } from "@portal/components/policies/stepOperations";
+import {
+  DOC_INTELLIGENCE_STEPS,
+  type DocIntelligenceStep,
+} from "@portal/components/pipelines/docIntelligenceSteps";
 import { BrandMark } from "@portal/components/BrandMarks";
+import { KnowledgeIcon } from "@portal/components/icons";
 
 interface ToolPickerProps {
   tools: ExecutableTool[];
@@ -24,6 +29,8 @@ interface ToolPickerProps {
    */
   operations?: StepOperation[];
   onPickOperation?: (operation: StepOperation) => void;
+  /** Document-intelligence policy steps (knowledge indexing). */
+  onPickDocStep?: (step: DocIntelligenceStep) => void;
 }
 
 /**
@@ -36,6 +43,7 @@ export function ToolPicker({
   onClose,
   operations = [],
   onPickOperation,
+  onPickDocStep,
 }: ToolPickerProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -47,6 +55,14 @@ export function ToolPicker({
         : [],
     [operations, onPickOperation, query, t],
   );
+
+  const matchedDocSteps = useMemo(() => {
+    if (!onPickDocStep) return [];
+    const q = query.trim().toLowerCase();
+    return DOC_INTELLIGENCE_STEPS.filter(
+      (step) => !q || t(step.labelKey).toLowerCase().includes(q),
+    );
+  }, [onPickDocStep, query, t]);
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -84,7 +100,38 @@ export function ToolPicker({
         />
       </div>
       <div className="portal-pipelines__picker-list">
-        {groups.length === 0 && matchedOperations.length === 0 ? (
+        {matchedDocSteps.length > 0 && onPickDocStep ? (
+          <div className="portal-pipelines__picker-group">
+            <div className="portal-pipelines__picker-group-label">
+              {t("portal.pipelines.builder.docIntelligence.section")}
+            </div>
+            {matchedDocSteps.map((step) => (
+              <Button
+                key={step.operation}
+                variant="quiet"
+                justify="start"
+                fullWidth
+                className="portal-pipelines__picker-item"
+                onClick={() => onPickDocStep(step)}
+                leftSection={
+                  <span
+                    className="portal-pipelines__picker-icon"
+                    aria-hidden="true"
+                  >
+                    <KnowledgeIcon size={17} />
+                  </span>
+                }
+              >
+                <span className="portal-pipelines__picker-name">
+                  {t(step.labelKey)}
+                </span>
+              </Button>
+            ))}
+          </div>
+        ) : null}
+        {groups.length === 0 &&
+        matchedOperations.length === 0 &&
+        matchedDocSteps.length === 0 ? (
           <p className="portal-pipelines__picker-empty">
             {t("portal.pipelines.builder.noToolMatches")}
           </p>

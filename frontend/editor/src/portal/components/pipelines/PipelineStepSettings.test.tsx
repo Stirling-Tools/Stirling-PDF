@@ -49,4 +49,30 @@ describe("PipelineStepSettings", () => {
     ).not.toThrow();
     expect(screen.getByText("field")).toBeInTheDocument();
   });
+
+  it("renders the rag-ingest form for the knowledge indexing operation", () => {
+    const ragStep = {
+      support: "unknown",
+      toolId: null,
+      operation: "/api/v1/docparse/rag-ingest",
+      params: { chunkSize: 512, overlap: 64, mode: "auto" },
+    } as unknown as WorkingToolStep;
+    render(
+      <MantineProvider>
+        <PipelineStepSettings
+          step={ragStep}
+          registry={{}}
+          onChange={() => {}}
+        />
+      </MantineProvider>,
+    );
+    expect(
+      screen.getByText("portal.pipelines.builder.docIntelligence.chunkSize"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "portal.pipelines.builder.docIntelligence.ragIngestHint",
+      ),
+    ).toBeInTheDocument();
+  });
 });

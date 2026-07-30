@@ -32,10 +32,18 @@ export type IntegrationPolicyEndpoint =
   | "/api/v1/integration/purview-apply-label"
   | "/api/v1/integration/purview-read-label";
 
+/**
+ * Endpoints for DocParse pipeline steps. Excluded from the generated
+ * {@link ToolEndpoint} union: the DocParse controllers live in the proprietary
+ * module, outside the tool namespaces the generator reads.
+ */
+export type DocparsePolicyEndpoint = "/api/v1/docparse/rag-ingest";
+
 /** An endpoint typed here rather than by the generator. */
 export type UntypedPolicyEndpoint =
   | AiPolicyEndpoint
-  | IntegrationPolicyEndpoint;
+  | IntegrationPolicyEndpoint
+  | DocparsePolicyEndpoint;
 
 /** A tool usable in a policy whose endpoint isn't in the generated union. */
 export interface AiToolDescriptor<TParams> {
@@ -89,6 +97,58 @@ function describeIntegrationOperation<TParams extends Record<string, string>>(
   };
 }
 
+/**
+ * RAG ingest as a policy step: chunk + embed + index in one step, with optional
+ * corpus export (markdown, chunks JSONL) for external systems. Sizes and flags
+ * are flat strings in the params (like every step parameter); sizes cross the
+ * wire as positive integers and flags as booleans, falling back on junk input.
+ */
+function describeRagIngestOperation(): AiToolDescriptor<{
+  chunkSize: string;
+  overlap: string;
+  mode: string;
+  index: string;
+  exportMarkdown: string;
+  exportChunksJsonl: string;
+}> {
+  const defaults = { chunkSize: 512, overlap: 64 };
+  const toInt = (raw: string, fallback: number): number => {
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed > 0
+      ? Math.round(parsed)
+      : fallback;
+  };
+  const toBool = (raw: unknown, fallback: boolean): boolean =>
+    raw === undefined || raw === null ? fallback : String(raw) === "true";
+  return {
+    endpoint: "/api/v1/docparse/rag-ingest",
+    defaultParameters: {
+      chunkSize: String(defaults.chunkSize),
+      overlap: String(defaults.overlap),
+      mode: "auto",
+      index: "true",
+      exportMarkdown: "false",
+      exportChunksJsonl: "false",
+    },
+    toApi: (params) => ({
+      chunkSize: toInt(params.chunkSize, defaults.chunkSize),
+      overlap: toInt(params.overlap, defaults.overlap),
+      mode: params.mode || "auto",
+      index: toBool(params.index, true),
+      exportMarkdown: toBool(params.exportMarkdown, false),
+      exportChunksJsonl: toBool(params.exportChunksJsonl, false),
+    }),
+    fromApi: (api) => ({
+      chunkSize: String(toInt(String(api.chunkSize ?? ""), defaults.chunkSize)),
+      overlap: String(toInt(String(api.overlap ?? ""), defaults.overlap)),
+      mode: api.mode == null ? "auto" : String(api.mode),
+      index: String(toBool(api.index, true)),
+      exportMarkdown: String(toBool(api.exportMarkdown, false)),
+      exportChunksJsonl: String(toBool(api.exportChunksJsonl, false)),
+    }),
+  };
+}
+
 export const POLICY_OPERATIONS = {
   redact: describeToolOperation(
     "/api/v1/security/auto-redact",
@@ -118,6 +178,7 @@ export const POLICY_OPERATIONS = {
     compressOperationConfig,
   ),
   classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
+  ragIngest: describeRagIngestOperation(),
   purviewApplyLabel: describeIntegrationOperation(
     "/api/v1/integration/purview-apply-label",
     { connectionId: "", labelId: "", labelName: "", method: "STANDARD" },

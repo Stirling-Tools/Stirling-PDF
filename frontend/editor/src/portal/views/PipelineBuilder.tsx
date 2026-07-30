@@ -58,6 +58,10 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import {
+  newDocIntelligenceStep,
+  type DocIntelligenceStep,
+} from "@portal/components/pipelines/docIntelligenceSteps";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import {
   integrationStepConfigured,
@@ -255,6 +259,15 @@ export function PipelineBuilder() {
   function addOperationStep(op: (typeof STEP_OPERATIONS)[number]) {
     setSteps((current) => {
       const next = [...current, newIntegrationStep(op)];
+      setSelectedIndex(next.length - 1);
+      return next;
+    });
+    setPickerOpen(false);
+  }
+
+  function addDocIntelligenceStep(step: DocIntelligenceStep) {
+    setSteps((current) => {
+      const next = [...current, newDocIntelligenceStep(step)];
       setSelectedIndex(next.length - 1);
       return next;
     });
@@ -852,6 +865,7 @@ export function PipelineBuilder() {
               onPick={addStep}
               operations={STEP_OPERATIONS}
               onPickOperation={addOperationStep}
+              onPickDocStep={addDocIntelligenceStep}
               onClose={() => setPickerOpen(false)}
             />
           ) : (

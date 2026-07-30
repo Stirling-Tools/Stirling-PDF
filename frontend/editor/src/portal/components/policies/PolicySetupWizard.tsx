@@ -40,6 +40,7 @@ import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryI
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
+import { PolicyRagIngestConfig } from "@portal/components/policies/PolicyRagIngestConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
@@ -191,6 +192,14 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.externalApiCall.desc",
     descEn:
       "Hands the document to a system you have connected, and records what it answered.",
+  },
+  ragIngest: {
+    labelKey: "portal.policies.wizard.capability.ragIngest.label",
+    labelEn: "Index into the knowledge base",
+    descKey: "portal.policies.wizard.capability.ragIngest.desc",
+    descEn:
+      "Parses, chunks, and embeds the document so it becomes searchable knowledge, or exports the" +
+      " parsed content (markdown, chunks JSONL) for your own systems.",
   },
 };
 
@@ -550,6 +559,14 @@ function PolicySetupWizardBody({
                             parameters={tl.params}
                             onChange={(params) =>
                               setToolParams("purviewApplyLabel", params)
+                            }
+                          />
+                        )}
+                        {tl.toolId === "ragIngest" && (
+                          <PolicyRagIngestConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("ragIngest", params)
                             }
                           />
                         )}

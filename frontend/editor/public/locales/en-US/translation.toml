@@ -7764,6 +7764,23 @@ unsavedTitle = "Unsaved changes"
 uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
 
+[portal.pipelines.builder.docIntelligence]
+chunkSize = "Chunk size (characters)"
+exportChunks = "Export chunks (JSONL)"
+exportChunksHint = "Adds a .chunks.jsonl file to the step output, ready for external embedding or indexing."
+exportMarkdown = "Export markdown"
+exportMarkdownHint = "Adds a .md rendering of the parsed document to the step output."
+index = "Index into the knowledge base"
+indexHint = "Embed and store the chunks in the built-in knowledge base. Turn off for export-only ingestion."
+mode = "Parsing mode"
+modeAdvanced = "Advanced"
+modeAuto = "Auto"
+modeBasic = "Basic"
+overlap = "Overlap (characters)"
+ragIngest = "Ingest into knowledge base"
+ragIngestHint = "Parses, chunks, embeds, and indexes each document in one step. Export toggles add corpus files (markdown, chunks JSONL) to the step output for delivery to external systems."
+section = "Document intelligence"
+
 [portal.pipelines.composer]
 addTool = "Add tool"
 cancel = "Cancel"
@@ -7861,7 +7878,7 @@ desc = "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document."
 label = "Compliance"
 
 [portal.policies.categories.ingestion]
-desc = "Classify documents, extract structured data, enforce naming conventions, and normalize pages."
+desc = "Normalize incoming documents - OCR scans, flatten forms - and index them into the searchable knowledge base, or export them as a clean corpus for your own systems."
 label = "Ingestion"
 
 [portal.policies.categories.retention]
@@ -7901,17 +7918,12 @@ onViolation = "When non-compliant"
 2 = "Audit trail"
 
 [portal.policies.config.ingestion]
-summary = "Classifies documents, extracts structured data, enforces naming, and normalizes pages."
-
-[portal.policies.config.ingestion.fields]
-belowThreshold = "Below threshold"
-minConfidence = "Min confidence"
+summary = "Normalizes incoming documents and indexes them into the searchable knowledge base, with optional markdown/JSONL export."
 
 [portal.policies.config.ingestion.rules]
-0 = "Classify"
-1 = "Extract"
-2 = "Name"
-3 = "Normalize"
+0 = "OCR scans and flatten forms so every page is readable"
+1 = "Parse, chunk, embed, and index into the knowledge base"
+2 = "Optionally export markdown and chunks JSONL for external systems"
 
 [portal.policies.config.purview]
 label = "Apply a Microsoft Purview sensitivity label"
@@ -7935,6 +7947,25 @@ label = "Read a Microsoft Purview label"
 [portal.policies.config.purviewRead.fields]
 connection = "Purview tenant"
 connectionHelp = "Reads the label the document already carries, so later steps can act on it."
+
+[portal.policies.config.ragIngest.fields]
+chunkSize = "Chunk size (characters)"
+chunkSizeHelp = "How much text each searchable passage holds. Larger chunks carry more context; smaller ones match more precisely."
+exportChunks = "Export chunks (JSONL)"
+exportChunksHelp = "Adds a .chunks.jsonl file to the step output - one chunk per line with page span - ready for external embedding or indexing."
+exportMarkdown = "Export markdown"
+exportMarkdownHelp = "Adds a .md rendering of the parsed document to the step output, for delivery to external systems."
+index = "Index into the knowledge base"
+indexHelp = "Embed and store the chunks in the built-in knowledge base. Turn off for export-only ingestion."
+overlap = "Chunk overlap (characters)"
+overlapHelp = "How much neighbouring chunks share, so answers spanning a boundary aren't cut in half."
+
+[portal.policies.config.ragIngest.fields.mode]
+advanced = "Advanced (layout parsing addon)"
+auto = "Auto (best available)"
+basic = "Basic (text layer)"
+help = "Auto uses the best parser available. The advanced layout tier requires the engine's docparse addon."
+label = "Parse tier"
 
 [portal.policies.config.retention]
 summary = "Enforces how long documents are kept, when to archive, and when to delete."
@@ -8007,6 +8038,7 @@ classifyAndLabel = "Classify"
 compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
+ragIngest = "Ingest into knowledge base"
 sanitizePdf = "Remove JavaScript"
 
 [portal.policies.offline]
@@ -8245,6 +8277,10 @@ label = "Flatten the document"
 [portal.policies.wizard.capability.ocr]
 desc = "Runs OCR so scanned pages become selectable, searchable text."
 label = "Make text searchable"
+
+[portal.policies.wizard.capability.ragIngest]
+desc = "Parses, chunks, and embeds the document so it becomes searchable knowledge, or exports the parsed content (markdown, chunks JSONL) for your own systems."
+label = "Index into the knowledge base"
 
 [portal.policies.wizard.capability.redact]
 desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."
