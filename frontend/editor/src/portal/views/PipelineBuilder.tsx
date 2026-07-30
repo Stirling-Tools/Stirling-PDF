@@ -30,6 +30,13 @@ import {
   type ExecutableTool,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
+import {
+  chainOutputFormat,
+  diagnosticsForStep,
+  hasBlockingDiagnostics,
+  validateToolChain,
+  type ToolDiagnostic,
+} from "@app/utils/toolIOCompat";
 import { errorMessage } from "@portal/api/http";
 import {
   deletePipeline,
@@ -396,6 +403,65 @@ export function PipelineBuilder() {
     .map(stepLabel);
   const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
+  // Whether each step can actually accept what the one before it produces. Checked here from the
+  // generated tool I/O table rather than by running the pipeline, so an impossible chain (say,
+  // Extract Images then Rotate) is caught while it is being built.
+  const chainDiagnostics = useMemo(
+    () =>
+      validateToolChain(
+        steps.map((step) => ({
+          operation: step.operation,
+          parameters: step.params,
+        })),
+      ),
+    [steps],
+  );
+  const blockingSteps = chainDiagnostics
+    .filter((d) => d.severity === "ERROR")
+    .map((d) => stepLabel(steps[d.stepIndex]));
+  const hasIncompatibleSteps = hasBlockingDiagnostics(chainDiagnostics);
+
+  // What a newly added step would be handed, so the picker can flag tools that cannot take it.
+  const chainOutput = useMemo(
+    () =>
+      chainOutputFormat(
+        steps.map((step) => ({
+          operation: step.operation,
+          parameters: step.params,
+        })),
+      ),
+    [steps],
+  );
+
+  function diagnosticNote(diagnostic: ToolDiagnostic): string {
+    return t(`portal.pipelines.builder.diagnostic.${diagnostic.code}`, {
+      accepts: (diagnostic.detail.accepts ?? []).join(", "),
+      produced: diagnostic.detail.produced ?? "",
+    });
+  }
+
+  /** The most severe diagnostic for a step, rendered as its note. */
+  function renderStepDiagnostic(index: number) {
+    const forStep = diagnosticsForStep(chainDiagnostics, index);
+    const diagnostic =
+      forStep.find((d) => d.severity === "ERROR") ??
+      forStep.find((d) => d.severity === "WARN") ??
+      forStep[0];
+    if (!diagnostic) return null;
+    return (
+      <span
+        className={
+          "portal-builder__step-note" +
+          (diagnostic.severity === "ERROR"
+            ? " portal-builder__step-note--danger"
+            : "")
+        }
+      >
+        {diagnosticNote(diagnostic)}
+      </span>
+    );
+  }
+
   // Track unsaved edits: snapshot the form and compare against the state captured just after
   // seeding, so leaving the builder can prompt to save or discard.
   const snapshot = JSON.stringify({
@@ -424,6 +490,7 @@ export function PipelineBuilder() {
     outputValid &&
     !hasUploadSteps &&
     !hasUnconfiguredSteps &&
+    !hasIncompatibleSteps &&
     !submitting;
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
@@ -701,6 +768,14 @@ export function PipelineBuilder() {
           })}
         />
       )}
+      {hasIncompatibleSteps && (
+        <Banner
+          tone="danger"
+          description={t("portal.pipelines.builder.stepsIncompatible", {
+            tools: blockingSteps.join(", "),
+          })}
+        />
+      )}
 
       {/* Pipeline-level settings, above the operation list. */}
       <section className="portal-builder__settings">
@@ -875,7 +950,9 @@ export function PipelineBuilder() {
                         <span className="portal-builder__step-note">
                           {t("portal.pipelines.builder.unknownStep")}
                         </span>
-                      ) : null}
+                      ) : (
+                        renderStepDiagnostic(i)
+                      )}
                     </span>
                   </Button>
                   <div className="portal-builder__step-actions">
@@ -920,6 +997,7 @@ export function PipelineBuilder() {
               onPick={addStep}
               operations={STEP_OPERATIONS}
               onPickOperation={addOperationStep}
+              precedingOutput={chainOutput}
               onClose={() => setPickerOpen(false)}
             />
           ) : (

@@ -64,8 +64,7 @@ public class PurviewLabelController {
             description =
                     "Writes the Purview label metadata (MSIP_Label_<GUID>_*) onto the PDF, so"
                             + " Purview-aware tools recognise the label. Applies the label only;"
-                            + " it cannot encrypt, which requires the Microsoft client."
-                            + " Input:PDF Output:PDF Type:SISO")
+                            + " it cannot encrypt, which requires the Microsoft client.")
     public ResponseEntity<Resource> applyLabel(
             @RequestParam("fileInput") MultipartFile fileInput,
             @RequestParam("connectionId") String connectionId,
@@ -99,8 +98,7 @@ public class PurviewLabelController {
             summary = "Read the Microsoft Purview sensitivity label on a PDF",
             description =
                     "Reports the Purview labels a PDF already carries so a policy can act on"
-                            + " them. The document passes through unchanged."
-                            + " Input:PDF Output:PDF Type:SISO")
+                            + " them. The document passes through unchanged.")
     public ResponseEntity<Resource> readLabel(
             @RequestParam("fileInput") MultipartFile fileInput,
             @RequestParam("connectionId") String connectionId)

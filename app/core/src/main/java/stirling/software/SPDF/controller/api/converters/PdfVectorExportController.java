@@ -27,6 +27,8 @@ import stirling.software.SPDF.model.api.converters.PdfVectorExportRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -50,11 +52,11 @@ public class PdfVectorExportController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/vector/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(accepts = ToolFormat.POSTSCRIPT, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert PostScript formats to PDF",
             description =
-                    "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript."
-                            + " Input:PS/EPS Output:PDF Type:SISO")
+                    "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript.")
     public ResponseEntity<Resource> convertGhostscriptInputsToPdf(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 
@@ -100,11 +102,10 @@ public class PdfVectorExportController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/vector",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.IMAGE)
     @Operation(
             summary = "Convert PDF to vector format",
-            description =
-                    "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS)."
-                            + " Input:PDF Output:VECTOR Type:SISO")
+            description = "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS).")
     public ResponseEntity<Resource> convertPdfToVector(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 

@@ -97,7 +97,7 @@ public class ExternalApiCallController {
                             + " either records the response as a step report or replaces the"
                             + " document with it. Fields, path and headers may reference"
                             + " {{document.*}}, {{classification.*}}, {{sensitivityLabel.*}} and"
-                            + " {{run.*}}. Type:SISO")
+                            + "{{run.*}}.")
     public ResponseEntity<Resource> call(
             @RequestParam("fileInput") MultipartFile fileInput,
             @RequestParam("connectionId") String connectionId,

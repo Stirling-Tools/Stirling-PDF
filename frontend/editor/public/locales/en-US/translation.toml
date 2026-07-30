@@ -7816,6 +7816,7 @@ newPipeline = "New pipeline"
 [portal.pipelines.builder]
 addStep = "Add tool"
 back = "Back to pipelines"
+cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
 chooseDestination = "Choose a destination"
 chooseOperation = "Choose what this step does"
@@ -7834,6 +7835,7 @@ searchTools = "Search tools"
 selectToolBody = "Add a tool to build your pipeline."
 selectToolTitle = "No tools yet"
 sendToSystem = "Send to another system"
+stepsIncompatible = "These steps can't run on what the step before them produces: {{tools}}."
 stepsNeedSetup = "These steps still need an operation and an account chosen before saving: {{tools}}."
 toolSettings = "Tool settings"
 unknownStep = "Unrecognized operation, kept as-is."
@@ -7841,6 +7843,14 @@ unsavedBody = "You have unsaved changes. Save them before leaving, or discard th
 unsavedTitle = "Unsaved changes"
 uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
+
+[portal.pipelines.builder.diagnostic]
+fan-in = "Combines every file from the previous step"
+fan-out = "Runs once per file from the previous step"
+format-mismatch = "Needs {{accepts}}, but the previous step produces {{produced}}"
+output-uncertain = "May not run: the previous step's output depends on how it's set up"
+source-mismatch = "Needs {{accepts}}, but this pipeline's files are {{produced}}"
+undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.composer]
 addTool = "Add tool"

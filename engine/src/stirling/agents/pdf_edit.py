@@ -27,7 +27,8 @@ from stirling.contracts import (
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
-from stirling.services import AppRuntime
+from stirling.models.tool_io import TOOL_IO, ToolArity, ToolFormat
+from stirling.services import AppRuntime, ToolChainStep, blocking, validate_tool_chain
 
 logger = logging.getLogger(__name__)
 
@@ -209,25 +210,43 @@ class PdfEditAgent:
         supported_operations, unavailable_operations = self._classify_operations(request)
         if not supported_operations:
             return EditCannotDoResponse(reason="No PDF edit operations are available on this server.")
-        selection = await self._select_plan(
-            request, supported_operations, unavailable_operations, allow_need_content=allow_need_content
-        )
-        if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
-            logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, Pretty(selection))
-            return selection
-        if isinstance(selection, PdfEditNeedContentSelection):
-            logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
-            return self._build_need_content_response(selection, request)
-        enabled = set(supported_operations)
-        unsupported = [op for op in selection.operations if op not in enabled]
-        if unsupported:
-            logger.warning("[pdf-edit] plan referenced unavailable operations: %s", [op.name for op in unsupported])
-            return EditCannotDoResponse(
-                reason=(
-                    "The following operations are not available on this server "
-                    "(either disabled by the administrator or not installed): "
-                    + ", ".join(op.name for op in unsupported)
+        # A plan whose steps cannot run on each other is worth one retry: the model is told
+        # exactly which transition fails, which is cheaper and more likely to help than
+        # carrying the whole compatibility matrix in the prompt.
+        repair_note = ""
+        for attempt in range(2):
+            selection = await self._select_plan(
+                request,
+                supported_operations,
+                unavailable_operations,
+                allow_need_content=allow_need_content,
+                repair_note=repair_note,
+            )
+            if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
+                logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, Pretty(selection))
+                return selection
+            if isinstance(selection, PdfEditNeedContentSelection):
+                logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
+                return self._build_need_content_response(selection, request)
+            enabled = set(supported_operations)
+            unsupported = [op for op in selection.operations if op not in enabled]
+            if unsupported:
+                logger.warning("[pdf-edit] plan referenced unavailable operations: %s", [op.name for op in unsupported])
+                return EditCannotDoResponse(
+                    reason=(
+                        "The following operations are not available on this server "
+                        "(either disabled by the administrator or not installed): "
+                        + ", ".join(op.name for op in unsupported)
+                    )
                 )
+            problems = self._chain_problems(selection.operations)
+            if not problems:
+                break
+            logger.warning("[pdf-edit] plan rejected on attempt %d: %s", attempt + 1, problems)
+            repair_note = problems
+        else:
+            return EditCannotDoResponse(
+                reason=("No workable order of the available operations achieves this: " + repair_note)
             )
         logger.info("[pdf-edit] plan: %s", [op.name for op in selection.operations])
         steps: list[ToolOperationStep] = []
@@ -257,6 +276,7 @@ class PdfEditAgent:
         unavailable_operations: Iterable[ToolEndpoint],
         *,
         allow_need_content: bool = True,
+        repair_note: str = "",
     ) -> PdfEditPlanOutput:
         can_request_content = allow_need_content and not has_page_text(request.page_text)
         agent = self._build_selection_agent(
@@ -264,7 +284,9 @@ class PdfEditAgent:
             unavailable_operations,
             allow_need_content=can_request_content,
         )
-        return await agent.select(self._build_selection_prompt(request, supported_operations, unavailable_operations))
+        return await agent.select(
+            self._build_selection_prompt(request, supported_operations, unavailable_operations, repair_note)
+        )
 
     def _build_selection_agent(
         self,
@@ -311,7 +333,15 @@ class PdfEditAgent:
         request: PdfEditRequest,
         supported_operations: Iterable[ToolEndpoint],
         unavailable_operations: Iterable[ToolEndpoint],
+        repair_note: str = "",
     ) -> str:
+        repair_line = (
+            f"A previous attempt produced a plan that cannot run: {repair_note}\n"
+            "Produce a different plan that avoids this, inserting a conversion step or "
+            "reordering as needed.\n"
+            if repair_note
+            else ""
+        )
         unavailable_line = (
             "Unavailable operations (exist but not currently usable): "
             f"{self._get_operations_prompt(unavailable_operations)}\n"
@@ -324,6 +354,7 @@ class PdfEditAgent:
             f"Files: {format_file_names(request.files)}\n"
             f"Supported operations:\n{self._get_supported_operations_prompt(supported_operations)}\n"
             f"{unavailable_line}"
+            f"{repair_line}"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
@@ -354,6 +385,32 @@ class PdfEditAgent:
         return supported, unavailable
 
     @staticmethod
+    def _chain_problems(operations: Iterable[ToolEndpoint]) -> str:
+        """Why this ordering cannot run, or empty if it can.
+
+        Parameters are not chosen yet, so an operation whose output depends on one resolves as
+        unresolved and only warns. Acting on warnings here would reject plans that are fine once
+        configured, so only errors count.
+        """
+        diagnostics = validate_tool_chain([ToolChainStep(operation=op) for op in operations])
+        errors = blocking(diagnostics)
+        if not errors:
+            return ""
+        steps = list(operations)
+        return "; ".join(f"step {d.step_index + 1} ({steps[d.step_index].name}) {d.message}" for d in errors)
+
+    @staticmethod
+    def _output_note(operation: ToolEndpoint) -> str:
+        """A short note on what an operation emits, for operations that do not simply return one
+        PDF. Cheap next to the operation list itself, and it heads off most bad orderings before
+        a repair attempt is needed."""
+        spec = TOOL_IO[operation]
+        if spec.produces == ToolFormat.PDF and spec.arity == ToolArity.SISO:
+            return ""
+        many = " (several files)" if spec.arity in (ToolArity.SIMO, ToolArity.MIMO) else ""
+        return f" [outputs: {spec.produces.value}{many}]"
+
+    @staticmethod
     def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
         return ", ".join(f"{op.name} ({op.value})" for op in operations)
 
@@ -367,7 +424,7 @@ class PdfEditAgent:
         lines: list[str] = []
         for op in operations:
             schema = OPERATIONS[op].model_json_schema()
-            head = f"- {op.name} ({op.value})"
+            head = f"- {op.name} ({op.value}){PdfEditAgent._output_note(op)}"
             description = (schema.get("description") or "").strip()
             if description:
                 head += f": {description}"

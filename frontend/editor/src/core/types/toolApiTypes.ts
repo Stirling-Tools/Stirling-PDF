@@ -276,6 +276,16 @@ export interface BookletImpositionRequest {
    */
   spineLocation?: "LEFT" | "RIGHT";
 }
+export interface ContainsTextRequest {
+  /**
+   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   */
+  pageNumbers?: string;
+  /**
+   * The text to check for
+   */
+  text?: string;
+}
 export interface ConvertCbrToPdfRequest {
   /**
    * Optimize the output PDF for ebook reading using Ghostscript
@@ -494,6 +504,16 @@ export interface ExtractImageScansRequest {
    * The tolerance for the image scan extraction
    */
   tolerance?: number;
+}
+export interface FileSizeRequest {
+  /**
+   * The comparison type, accepts Greater, Equal, Less than
+   */
+  comparator: "Greater" | "Equal" | "Less";
+  /**
+   * Size of the file in bytes
+   */
+  fileSize?: number;
 }
 export interface FlattenRequest {
   /**
@@ -772,6 +792,16 @@ export interface OverlayPdfsRequest {
    */
   overlayPosition: 0 | 1;
 }
+export interface PDFComparisonAndCount {
+  /**
+   * The comparison type, accepts Greater, Equal, Less than
+   */
+  comparator: "Greater" | "Equal" | "Less";
+  /**
+   * Count
+   */
+  pageCount?: number;
+}
 export interface PDFExtractImagesRequest {
   /**
    * The output image format e.g., 'png', 'jpeg', or 'gif'
@@ -790,6 +820,35 @@ export interface PDFWithPageNums {
    * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
    */
   pageNumbers?: string;
+}
+export interface PageRotationRequest {
+  /**
+   * The comparison type, accepts Greater, Equal, Less than
+   */
+  comparator: "Greater" | "Equal" | "Less";
+  /**
+   * Rotation in degrees
+   */
+  rotation?: number;
+}
+export interface PageSizeRequest {
+  /**
+   * The comparison type, accepts Greater, Equal, Less than
+   */
+  comparator: "Greater" | "Equal" | "Less";
+  /**
+   * Standard Page Size
+   */
+  standardPageSize?:
+    | "A0"
+    | "A1"
+    | "A2"
+    | "A3"
+    | "A4"
+    | "A5"
+    | "A6"
+    | "LETTER"
+    | "LEGAL";
 }
 export interface PdfToPdfARequest {
   /**
@@ -1383,6 +1442,12 @@ export type ToolEndpoint =
   | "/api/v1/convert/text-editor/pdf"
   | "/api/v1/convert/url/pdf"
   | "/api/v1/convert/vector/pdf"
+  | "/api/v1/filter/filter-contains-image"
+  | "/api/v1/filter/filter-contains-text"
+  | "/api/v1/filter/filter-file-size"
+  | "/api/v1/filter/filter-page-count"
+  | "/api/v1/filter/filter-page-rotation"
+  | "/api/v1/filter/filter-page-size"
   | "/api/v1/general/booklet-imposition"
   | "/api/v1/general/crop"
   | "/api/v1/general/edit-table-of-contents"
@@ -1474,6 +1539,12 @@ export interface ToolApiParams {
   "/api/v1/convert/text-editor/pdf": GeneralFile;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
   "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
+  "/api/v1/filter/filter-contains-image": PDFWithPageNums;
+  "/api/v1/filter/filter-contains-text": ContainsTextRequest;
+  "/api/v1/filter/filter-file-size": FileSizeRequest;
+  "/api/v1/filter/filter-page-count": PDFComparisonAndCount;
+  "/api/v1/filter/filter-page-rotation": PageRotationRequest;
+  "/api/v1/filter/filter-page-size": PageSizeRequest;
   "/api/v1/general/booklet-imposition": BookletImpositionRequest;
   "/api/v1/general/crop": CropPdfForm;
   "/api/v1/general/edit-table-of-contents": EditTableOfContentsRequest;
@@ -1566,6 +1637,12 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/text-editor/pdf",
   "/api/v1/convert/url/pdf",
   "/api/v1/convert/vector/pdf",
+  "/api/v1/filter/filter-contains-image",
+  "/api/v1/filter/filter-contains-text",
+  "/api/v1/filter/filter-file-size",
+  "/api/v1/filter/filter-page-count",
+  "/api/v1/filter/filter-page-rotation",
+  "/api/v1/filter/filter-page-size",
   "/api/v1/general/booklet-imposition",
   "/api/v1/general/crop",
   "/api/v1/general/edit-table-of-contents",

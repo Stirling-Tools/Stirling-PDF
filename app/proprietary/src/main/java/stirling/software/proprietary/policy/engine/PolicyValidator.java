@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.tool.ToolDiagnostic;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.service.ToolChainValidator;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -34,6 +37,7 @@ public class PolicyValidator {
     private final List<PolicyOutputSink> outputSinks;
     private final List<PipelineStepValidator> stepValidators;
     private final SourceStore sourceStore;
+    private final ToolChainValidator toolChainValidator;
 
     /**
      * @throws IllegalArgumentException if the policy has more than one input or output, any facet's
@@ -65,7 +69,49 @@ public class PolicyValidator {
             inputSourceFor(spec).validate(spec);
         }
         validateSteps(policy.steps());
+        validateChain(policy.steps());
         validateOutput(policy.output());
+    }
+
+    /**
+     * Reject a chain whose steps cannot run on each other - extracting images and then rotating
+     * them, say. Such a policy saves fine today and only fails part-way through its first run,
+     * which for a scheduled policy may be a long time after the mistake was made.
+     *
+     * <p>Only errors block. Warnings cover chains that depend on how a step is configured or on
+     * what the files actually contain, which is not ours to decide here.
+     *
+     * @throws IllegalArgumentException if any step cannot accept what the one before it produces
+     */
+    public void validateChain(List<PipelineStep> steps) {
+        List<ToolDiagnostic> diagnostics = diagnoseChain(steps, null);
+        if (!ToolChainValidator.hasErrors(diagnostics)) {
+            return;
+        }
+        String reasons =
+                diagnostics.stream()
+                        .filter(d -> d.severity() == ToolDiagnostic.Severity.ERROR)
+                        .map(d -> "step " + (d.stepIndex() + 1) + ": " + d.message())
+                        .reduce((a, b) -> a + "; " + b)
+                        .orElse("");
+        throw new IllegalArgumentException("pipeline steps cannot run in this order - " + reasons);
+    }
+
+    /**
+     * Everything wrong with a chain, without rejecting it. Lets a caller show warnings and fan-out
+     * notes alongside the errors, which {@link #validateChain} can only throw on.
+     *
+     * @param sourceFormat the format of the files entering the first step, or null when unknown
+     */
+    public List<ToolDiagnostic> diagnoseChain(List<PipelineStep> steps, ToolFormat sourceFormat) {
+        List<ToolChainValidator.Step> chain =
+                steps.stream()
+                        .map(
+                                step ->
+                                        new ToolChainValidator.Step(
+                                                step.operation(), step.parameters()))
+                        .toList();
+        return toolChainValidator.validate(chain, sourceFormat);
     }
 
     /**
