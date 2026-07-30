@@ -13,6 +13,11 @@ on:
         required: false
         type: boolean
         default: true
+      build_engine:
+        description: "Build & push the stirling-pdf-engine image (plus the -docparse addon variant)."
+        required: false
+        type: boolean
+        default: false
       force_unoserver_rebuild:
         description: "Rebuild stirling-unoserver even if its source hash is unchanged."
         required: false
@@ -51,6 +56,8 @@ jobs:
     env:
       RUN_MAIN_APP: ${{ github.event_name != 'workflow_dispatch' || inputs.build_main_app }}
       RUN_UNOSERVER: ${{ github.event_name != 'workflow_dispatch' || inputs.build_unoserver }}
+      # Engine images are dispatch-only for now; flip the default once the addon stabilises.
+      RUN_ENGINE: ${{ github.event_name == 'workflow_dispatch' && inputs.build_engine }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -218,6 +225,62 @@ jobs:
           echo "$TAGS" | tr ',' '\n' | while read -r tag; do
             cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
           done
+
+      - name: Generate tags for engine
+        id: meta-engine
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
+        if: env.RUN_ENGINE == 'true'
+        with:
+          images: |
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-engine
+            ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf-engine
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}
+            type=raw,value=latest
+
+      - name: Build and push engine image
+        id: build-push-engine
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        if: env.RUN_ENGINE == 'true' && steps.meta-engine.outputs.tags != ''
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: ./engine
+          push: true
+          cache-from: type=gha,scope=stirling-pdf-engine
+          cache-to: type=gha,mode=max,scope=stirling-pdf-engine
+          tags: ${{ steps.meta-engine.outputs.tags }}
+          labels: ${{ steps.meta-engine.outputs.labels }}
+          platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Generate tags for engine docparse addon
+        id: meta-engine-docparse
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
+        if: env.RUN_ENGINE == 'true'
+        with:
+          images: |
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-engine
+            ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf-engine
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-docparse
+            type=raw,value=latest-docparse
+
+      - name: Build and push engine docparse addon image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        if: env.RUN_ENGINE == 'true' && steps.meta-engine-docparse.outputs.tags != ''
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: ./engine
+          push: true
+          cache-from: type=gha,scope=stirling-pdf-engine-docparse
+          cache-to: type=gha,mode=max,scope=stirling-pdf-engine-docparse
+          tags: ${{ steps.meta-engine-docparse.outputs.tags }}
+          labels: ${{ steps.meta-engine-docparse.outputs.labels }}
+          build-args: DOCPARSE=true
+          platforms: linux/amd64
+          provenance: true
+          sbom: true
 
       - name: Generate tags for ultra-lite
         id: meta-lite

@@ -402,6 +402,7 @@ aiEngine:
 docparse:
   enabled: true # Master switch; hides the DocParse endpoints when false
   mode: auto # Tier selection: 'auto' (best available), 'basic', or 'advanced'
+  autoInstall: false # Mirrors DOCPARSE_AUTO_INSTALL for the engine's boot-time addon install script
 
 policies:
   # Folder automations can read from and write to the directories you allow here, so treat this as a

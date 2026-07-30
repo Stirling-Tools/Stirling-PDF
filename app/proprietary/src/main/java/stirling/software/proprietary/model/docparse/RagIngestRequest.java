@@ -20,6 +20,7 @@ public record RagIngestRequest(
         List<String> readPrincipals,
         Instant expiresAt,
         List<AiPageText> pages,
+        String contentBase64,
         int chunkSize,
         int overlap,
         DocparseMode mode,

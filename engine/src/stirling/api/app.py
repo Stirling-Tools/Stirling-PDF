@@ -31,6 +31,7 @@ from stirling.api.routes.config import CONFIG_APPLY_ERRORS, apply_to_app, resolv
 from stirling.config import AppSettings, load_settings
 from stirling.config.config_cache import cache_stamp, load_config
 from stirling.contracts import HealthResponse
+from stirling.docparse import activate_site
 from stirling.documents import DocumentService, EmbeddingService
 from stirling.services import setup_posthog_tracking
 
@@ -146,6 +147,8 @@ def _restore_cached_config(
 async def lifespan(fast_api: FastAPI):
     # Load env vars on startup so we can immediately crash if required env vars aren't set
     settings = _load_startup_settings(fast_api)
+    # Initialize docparse addon if available (engine boot-time setup).
+    activate_site(settings.docparse_home)
     # Precedence: env < persisted cache < live push. Stamp first so a push landing mid-boot
     # is re-adopted by the watcher rather than mistaken for the config we just restored.
     fast_api.state.config_cache_stamp = cache_stamp()

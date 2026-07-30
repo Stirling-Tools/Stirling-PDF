@@ -33,6 +33,7 @@ class DocparseWireContractTest {
                         List.of("user:alice"),
                         null,
                         List.of(new AiPageText(1, "hello")),
+                        null,
                         512,
                         64,
                         DocparseMode.AUTO,

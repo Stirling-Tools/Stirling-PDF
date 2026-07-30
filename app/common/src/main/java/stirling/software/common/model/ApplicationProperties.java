@@ -439,6 +439,9 @@ public class ApplicationProperties {
 
         /** Requested tier: 'auto', 'basic', or 'advanced'. 'auto' resolves per document. */
         private String mode = "auto";
+
+        /** Mirrors DOCPARSE_AUTO_INSTALL for the engine's boot-time addon install script. */
+        private boolean autoInstall = false;
     }
 
     /**

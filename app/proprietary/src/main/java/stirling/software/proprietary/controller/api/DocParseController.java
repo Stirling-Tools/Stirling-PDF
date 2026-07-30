@@ -2,10 +2,14 @@ package stirling.software.proprietary.controller.api;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -25,10 +29,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.model.api.docparse.ExtractTablesApiRequest;
 import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
+import stirling.software.proprietary.model.docparse.DocTable;
 import stirling.software.proprietary.model.docparse.DocparseCapabilitiesView;
 import stirling.software.proprietary.model.docparse.DocparseMode;
+import stirling.software.proprietary.model.docparse.ExtractTablesResponse;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.DocParseService;
@@ -51,6 +60,8 @@ import tools.jackson.databind.node.ObjectNode;
                         + " knowledge base, or export the parsed content (markdown, chunks JSONL)"
                         + " for external systems.")
 public class DocParseController {
+
+    private static final MediaType CSV = MediaType.parseMediaType("text/csv");
 
     private final DocParseService docParseService;
     private final ObjectMapper objectMapper;
@@ -121,6 +132,28 @@ public class DocParseController {
         return ResponseEntity.ok(docParseService.capabilitiesView());
     }
 
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/extract-tables",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @Operation(
+            summary = "Extract tables from a document",
+            description =
+                    "Extracts table structure and returns CSV (all tables concatenated, blank line"
+                            + " between them) or the structured JSON table list."
+                            + " Input:PDF Output:CSV/JSON Type:SISO")
+    public ResponseEntity<?> extractTables(@ModelAttribute ExtractTablesApiRequest request)
+            throws IOException {
+        ExtractTablesResponse result = docParseService.tables(request.getFileInput());
+        if ("json".equalsIgnoreCase(request.getOutputFormat())) {
+            return ResponseEntity.ok(result);
+        }
+        return WebResponseUtils.bytesToWebResponse(
+                tablesToCsv(result.tables()).getBytes(StandardCharsets.UTF_8),
+                outputName(request.getFileInput(), "_tables.csv"),
+                CSV);
+    }
+
     /** Original + requested corpus files in one ZIP, so destinations receive them together. */
     private byte[] exportZip(
             String fileName, byte[] original, RagIngestResponse result, RagIngestApiRequest request)
@@ -174,5 +207,27 @@ public class DocParseController {
     private static String baseName(String fileName) {
         int dot = fileName.lastIndexOf('.');
         return dot > 0 ? fileName.substring(0, dot) : fileName;
+    }
+
+    private static String tablesToCsv(List<DocTable> tables) throws IOException {
+        CSVFormat format = CSVFormat.EXCEL.builder().setEscape('"').build();
+        StringWriter writer = new StringWriter();
+        try (CSVPrinter printer = format.print(writer)) {
+            boolean first = true;
+            for (DocTable table : tables) {
+                if (!first) {
+                    printer.println();
+                }
+                first = false;
+                for (List<String> row : table.cells()) {
+                    printer.printRecord(row);
+                }
+            }
+        }
+        return writer.toString();
+    }
+
+    private static String outputName(MultipartFile file, String suffix) {
+        return GeneralUtils.removeExtension(DocParseService.fileName(file)) + suffix;
     }
 }

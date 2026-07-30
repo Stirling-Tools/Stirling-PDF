@@ -6,12 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -28,7 +30,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.proprietary.model.docparse.DocparseCapabilities;
 import stirling.software.proprietary.model.docparse.DocparseMode;
+import stirling.software.proprietary.model.docparse.DocparseTier;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
 
 import tools.jackson.databind.JsonNode;
@@ -112,6 +116,7 @@ class DocParseServiceTest {
                     .thenReturn(document);
             when(pdfContentExtractor.extractPageTextRaw(any(), eq(1))).thenReturn("page one");
             when(pdfContentExtractor.extractPageTextRaw(any(), eq(2))).thenReturn("page two");
+            when(capabilityService.capabilities()).thenReturn(absent());
             ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
             when(aiEngineClient.postLongRunning(
                             eq("/api/v1/docparse/rag-ingest"), body.capture(), isNull()))
@@ -206,6 +211,142 @@ class DocParseServiceTest {
                                         false));
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, error.getStatusCode());
         verifyNoInteractions(aiEngineClient);
+    }
+
+    // --- tier resolution: auto and explicit requests ---
+
+    private DocparseCapabilities installed() {
+        return new DocparseCapabilities(true, "2.55.0", "2.6.0", true, "/models", List.of());
+    }
+
+    private DocparseCapabilities absent() {
+        return new DocparseCapabilities(false, null, null, false, null, List.of());
+    }
+
+    private void settingsMode(String mode) {
+        properties.getDocparse().setMode(mode);
+    }
+
+    @Test
+    void autoPicksAdvancedWhenScannedAndInstalled() {
+        settingsMode("auto");
+        assertEquals(
+                DocparseTier.ADVANCED,
+                service.resolveTier(DocparseMode.AUTO, installed(), false, true));
+    }
+
+    @Test
+    void autoPicksAdvancedWhenLayoutNeededAndInstalled() {
+        settingsMode("auto");
+        assertEquals(
+                DocparseTier.ADVANCED,
+                service.resolveTier(DocparseMode.AUTO, installed(), true, false));
+    }
+
+    @Test
+    void autoPicksBasicForBornDigitalDocument() {
+        settingsMode("auto");
+        assertEquals(
+                DocparseTier.BASIC,
+                service.resolveTier(DocparseMode.AUTO, installed(), false, false));
+    }
+
+    @Test
+    void autoPicksBasicWhenAddonMissingEvenIfScanned() {
+        settingsMode("auto");
+        assertEquals(
+                DocparseTier.BASIC, service.resolveTier(DocparseMode.AUTO, absent(), false, true));
+    }
+
+    @Test
+    void explicitBasicRequestAlwaysBasic() {
+        settingsMode("auto");
+        assertEquals(
+                DocparseTier.BASIC,
+                service.resolveTier(DocparseMode.BASIC, installed(), true, true));
+    }
+
+    @Test
+    void explicitAdvancedRequestUsesAdvancedWhenInstalled() {
+        settingsMode("auto");
+        assertEquals(
+                DocparseTier.ADVANCED,
+                service.resolveTier(DocparseMode.ADVANCED, installed(), false, false));
+    }
+
+    @Test
+    void explicitAdvancedRequestWithoutAddonReturns501() {
+        settingsMode("auto");
+        ResponseStatusException e =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> service.resolveTier(DocparseMode.ADVANCED, absent(), false, false));
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, e.getStatusCode());
+    }
+
+    @Test
+    void settingsBasicOverridesAdvancedRequest() {
+        settingsMode("basic");
+        assertEquals(
+                DocparseTier.BASIC,
+                service.resolveTier(DocparseMode.ADVANCED, installed(), true, true));
+    }
+
+    @Test
+    void settingsAdvancedUpgradesAutoRequest() {
+        settingsMode("advanced");
+        assertEquals(
+                DocparseTier.ADVANCED,
+                service.resolveTier(DocparseMode.AUTO, installed(), false, false));
+    }
+
+    @Test
+    void settingsAdvancedHonoursStricterBasicRequest() {
+        settingsMode("advanced");
+        assertEquals(
+                DocparseTier.BASIC,
+                service.resolveTier(DocparseMode.BASIC, installed(), false, false));
+    }
+
+    @Test
+    void settingsAdvancedWithoutAddonReturns501() {
+        settingsMode("advanced");
+        ResponseStatusException e =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> service.resolveTier(DocparseMode.AUTO, absent(), false, false));
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, e.getStatusCode());
+    }
+
+    @Test
+    void nullRequestBehavesAsAuto() {
+        settingsMode("auto");
+        assertEquals(DocparseTier.BASIC, service.resolveTier(null, installed(), false, false));
+        assertEquals(DocparseTier.ADVANCED, service.resolveTier(null, installed(), false, true));
+    }
+
+    // --- scanned heuristic ---
+
+    @Test
+    void looksScannedWhenAveragePageTextBelowThreshold() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+            document.addPage(new PDPage());
+            when(pdfContentExtractor.extractPageTextRaw(eq(document), anyInt()))
+                    .thenReturn("short");
+            assertTrue(service.looksScanned(document));
+        }
+    }
+
+    @Test
+    void doesNotLookScannedWithRealTextLayer() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+            document.addPage(new PDPage());
+            when(pdfContentExtractor.extractPageTextRaw(eq(document), anyInt()))
+                    .thenReturn("x".repeat(500));
+            assertFalse(service.looksScanned(document));
+        }
     }
 
     @Test

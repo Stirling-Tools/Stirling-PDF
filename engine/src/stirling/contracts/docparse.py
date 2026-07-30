@@ -31,6 +31,67 @@ class DocparseMode(StrEnum):
     ADVANCED = "advanced"
 
 
+class BlockType(StrEnum):
+    """Normalized layout block labels; Docling labels map onto these."""
+
+    HEADING = "heading"
+    PARAGRAPH = "paragraph"
+    LIST_ITEM = "list_item"
+    TABLE = "table"
+    FIGURE = "figure"
+    CAPTION = "caption"
+    CODE = "code"
+    FORMULA = "formula"
+    PAGE_HEADER = "page_header"
+    PAGE_FOOTER = "page_footer"
+    FOOTNOTE = "footnote"
+    OTHER = "other"
+
+
+class DocBlock(ApiModel):
+    """One layout block. ``bbox`` is [x0, y0, x1, y1] normalized to 0..1 with a
+    top-left origin; ``None`` in basic tier (no layout model ran)."""
+
+    type: BlockType
+    text: str
+    page: int = Field(ge=1)
+    bbox: list[float] | None = None
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+
+
+class DocTable(ApiModel):
+    page: int = Field(ge=1)
+    bbox: list[float] | None = None
+    cells: list[list[str]]
+    markdown: str
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+
+
+class ParseDocumentRequest(ApiModel):
+    file_name: str = Field(min_length=1)
+    content_base64: str = Field(min_length=1)
+    with_ocr: bool = True
+
+
+class ParseDocumentResponse(ApiModel):
+    mode: DocparseTier
+    pages: int = Field(ge=0)
+    blocks: list[DocBlock] = Field(default_factory=list)
+    tables: list[DocTable] = Field(default_factory=list)
+    markdown: str = ""
+    ocr_applied: bool = False
+
+
+class ExtractTablesRequest(ApiModel):
+    file_name: str = Field(min_length=1)
+    content_base64: str = Field(min_length=1)
+
+
+class ExtractTablesResponse(ApiModel):
+    mode: DocparseTier
+    tables: list[DocTable] = Field(default_factory=list)
+
+
 class DocChunk(ApiModel):
     index: int = Field(ge=0)
     text: str
@@ -61,6 +122,7 @@ class RagIngestRequest(ApiModel):
     read_principals: list[PrincipalId] | None = Field(default=None, min_length=1)
     expires_at: datetime | None = None
     pages: list[PageText] | None = None
+    content_base64: str | None = None
     chunk_size: int | None = Field(default=None, ge=64, le=32_768)
     overlap: int | None = Field(default=None, ge=0, le=4_096)
     mode: DocparseMode = DocparseMode.AUTO

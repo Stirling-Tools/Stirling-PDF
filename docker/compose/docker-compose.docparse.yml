@@ -1,0 +1,59 @@
+# Stirling-PDF + AI engine with the DocParse addon.
+# Two ways to get the addon; pick ONE per deployment:
+#   1. Dynamic install (default here): standard engine image downloads the addon
+#      (~1.6 GB, one-time) into the docparse-data volume at first boot.
+#   2. Baked image (air-gapped): build the engine with `--build-arg DOCPARSE=true`
+#      (uncomment DOCPARSE below) and drop DOCPARSE_AUTO_INSTALL.
+services:
+  stirling-pdf:
+    build:
+      context: ../..
+      dockerfile: docker/embedded/Dockerfile.fat
+    container_name: stirling-pdf-docparse
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../stirling/latest/data:/usr/share/tessdata:rw
+      - ../../stirling/latest/config:/configs:rw
+      - ../../stirling/latest/logs:/logs:rw
+    environment:
+      SECURITY_ENABLELOGIN: "false"
+      SYSTEM_DEFAULTLOCALE: en-US
+      AIENGINE_ENABLED: "true"
+      AIENGINE_URL: http://stirling-pdf-engine:5001
+      DOCPARSE_ENABLED: "true"
+      DOCPARSE_MODE: auto
+      STIRLING_ENGINE_SHARED_SECRET: change-me
+    depends_on:
+      - stirling-pdf-engine
+    networks:
+      - stirling-network
+
+  stirling-pdf-engine:
+    build:
+      context: ../../engine
+      # args:
+      #   DOCPARSE: "true"   # bake the addon + models into the image instead
+    container_name: stirling-pdf-engine
+    restart: unless-stopped
+    volumes:
+      - docparse-data:/configs/docparse:rw
+    environment:
+      DOCPARSE_AUTO_INSTALL: "true"
+      STIRLING_ENGINE_REQUIRE_AUTH: "true"
+      STIRLING_ENGINE_SHARED_SECRET: change-me
+    networks:
+      - stirling-network
+
+networks:
+  stirling-network:
+    driver: bridge
+
+volumes:
+  docparse-data:

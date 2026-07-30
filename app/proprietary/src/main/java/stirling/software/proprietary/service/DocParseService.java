@@ -2,6 +2,7 @@ package stirling.software.proprietary.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -22,6 +23,9 @@ import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.model.docparse.DocparseCapabilities;
 import stirling.software.proprietary.model.docparse.DocparseCapabilitiesView;
 import stirling.software.proprietary.model.docparse.DocparseMode;
+import stirling.software.proprietary.model.docparse.DocparseTier;
+import stirling.software.proprietary.model.docparse.ExtractTablesRequest;
+import stirling.software.proprietary.model.docparse.ExtractTablesResponse;
 import stirling.software.proprietary.model.docparse.RagIngestRequest;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
 
@@ -38,6 +42,13 @@ import tools.jackson.databind.ObjectMapper;
 public class DocParseService {
 
     private static final String RAG_INGEST_ENDPOINT = "/api/v1/docparse/rag-ingest";
+    private static final String TABLES_ENDPOINT = "/api/v1/docparse/tables";
+
+    /** Below this average of extractable chars per page the document is treated as scanned. */
+    static final int SCANNED_AVG_CHARS_PER_PAGE = 100;
+
+    /** Pages sampled for the scanned heuristic; keeps the probe cheap on huge documents. */
+    private static final int SCANNED_SAMPLE_PAGES = 20;
 
     private final AiEngineClient aiEngineClient;
     private final DocparseCapabilityService capabilityService;
@@ -88,9 +99,8 @@ public class DocParseService {
 
     /**
      * Chunk, embed, and index the document into the engine's RAG store, and/or echo the parsed
-     * content back for corpus export. Text extraction happens here (the engine's basic tier is
-     * text-only); the settings mode caps the requested mode, and {@code advanced} without the addon
-     * surfaces the engine's 501 addonRequired.
+     * content back for corpus export. Text extraction and tier routing happen here; the engine
+     * handles both basic (text-only) and advanced (layout) tiers.
      */
     public RagIngestResponse ragIngest(
             MultipartFile file,
@@ -114,8 +124,12 @@ public class DocParseService {
                         ? fileIdStrategy.idFor(file)
                         : documentId.trim();
         List<AiPageText> pages;
+        DocparseTier tier;
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
             pages = extractPages(document);
+            tier =
+                    resolveTier(
+                            mode, capabilityService.capabilities(), false, looksScanned(document));
         }
         String callerId = currentUserId();
         // Null expiresAt = persistent until explicit delete; ingest here is a deliberate
@@ -131,9 +145,10 @@ public class DocParseService {
                         callerId == null ? null : List.of(callerId),
                         null,
                         pages,
+                        tier == DocparseTier.ADVANCED ? encodeBase64(file) : null,
                         Math.clamp(chunkSize, 64, 32_768),
                         Math.clamp(overlap, 0, 4_096),
-                        effectiveMode(settingsMode(), mode),
+                        toMode(tier),
                         index,
                         includeMarkdown,
                         includeChunks);
@@ -141,6 +156,28 @@ public class DocParseService {
                 aiEngineClient.postLongRunning(
                         RAG_INGEST_ENDPOINT, objectMapper.writeValueAsString(request), callerId);
         return objectMapper.readValue(responseJson, RagIngestResponse.class);
+    }
+
+    /**
+     * Resolve the tier that will serve a request. The settings mode wins when stricter: a settings
+     * {@code basic} always forces basic, a settings {@code advanced} upgrades everything except an
+     * explicit basic request. {@code auto} picks advanced only when the addon is installed and the
+     * document actually needs it (scanned, or the operation needs layout).
+     */
+    DocparseTier resolveTier(
+            DocparseMode requested,
+            DocparseCapabilities capability,
+            boolean needsLayout,
+            boolean looksScanned) {
+        DocparseMode effective = effectiveMode(settingsMode(), requested);
+        return switch (effective) {
+            case BASIC -> DocparseTier.BASIC;
+            case ADVANCED -> requireAdvanced(capability);
+            case AUTO ->
+                    capability.advancedInstalled() && (looksScanned || needsLayout)
+                            ? DocparseTier.ADVANCED
+                            : DocparseTier.BASIC;
+        };
     }
 
     /**
@@ -156,6 +193,51 @@ public class DocParseService {
             return request == DocparseMode.BASIC ? DocparseMode.BASIC : DocparseMode.ADVANCED;
         }
         return request;
+    }
+
+    /** True when the sampled average of extractable chars per page falls below the threshold. */
+    boolean looksScanned(PDDocument document) throws IOException {
+        int pageCount = document.getNumberOfPages();
+        if (pageCount == 0) {
+            return false;
+        }
+        int sampled = Math.min(pageCount, SCANNED_SAMPLE_PAGES);
+        long totalChars = 0;
+        for (int page = 1; page <= sampled; page++) {
+            String text = pdfContentExtractor.extractPageTextRaw(document, page);
+            totalChars += text == null ? 0 : text.length();
+        }
+        return (totalChars / sampled) < SCANNED_AVG_CHARS_PER_PAGE;
+    }
+
+    private DocparseTier requireAdvanced(DocparseCapabilities capability) {
+        if (!capability.advancedInstalled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_IMPLEMENTED,
+                    "The advanced DocParse tier requires the docparse addon"
+                            + " (addonRequired=docparse); install it or use mode=basic");
+        }
+        return DocparseTier.ADVANCED;
+    }
+
+    private static DocparseMode toMode(DocparseTier tier) {
+        return tier == DocparseTier.ADVANCED ? DocparseMode.ADVANCED : DocparseMode.BASIC;
+    }
+
+    private static String encodeBase64(MultipartFile file) throws IOException {
+        return Base64.getEncoder().encodeToString(file.getBytes());
+    }
+
+    public ExtractTablesResponse tables(MultipartFile file) throws IOException {
+        requireEnabled();
+        // Tables need layout, so a forced-advanced setting without the addon must 501 here
+        // rather than let the engine silently fall back; the engine picks the tier otherwise.
+        resolveTier(DocparseMode.AUTO, capabilityService.capabilities(), true, false);
+        ExtractTablesRequest request = new ExtractTablesRequest(fileName(file), encodeBase64(file));
+        String responseJson =
+                aiEngineClient.postLongRunning(
+                        TABLES_ENDPOINT, objectMapper.writeValueAsString(request), currentUserId());
+        return objectMapper.readValue(responseJson, ExtractTablesResponse.class);
     }
 
     /** Extract per-page text for the engine, capped by the shared aiEngine limits. */

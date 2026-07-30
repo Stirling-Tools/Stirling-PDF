@@ -15,10 +15,18 @@ WORKDIR /app/engine
 
 COPY pyproject.toml uv.lock .env ./
 COPY scripts/ ./scripts/
+# DOCPARSE=true bakes the docparse addon (Docling + CPU torch, ~1.6 GB) and its
+# model weights into the image for air-gapped deployments; default stays lean.
+ARG DOCPARSE=false
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    if [ "$DOCPARSE" = "true" ]; then uv sync --frozen --no-dev --extra docparse; else uv sync --frozen --no-dev; fi
 
 COPY src/ ./src/
+
+RUN if [ "$DOCPARSE" = "true" ]; then \
+        mkdir -p /opt/docparse/models \
+        && .venv/bin/python scripts/prefetch_docparse_models.py --output /opt/docparse/models; \
+    fi
 
 WORKDIR /app
 COPY Taskfile.yml ./
@@ -34,4 +42,6 @@ ENV STIRLING_ENGINE_PORT=5001
 
 EXPOSE 5001
 
+RUN chmod +x /app/engine/scripts/docker-entrypoint.sh /app/engine/scripts/init_docparse.sh
+ENTRYPOINT ["/app/engine/scripts/docker-entrypoint.sh"]
 CMD ["task", "engine:run"]

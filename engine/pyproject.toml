@@ -20,6 +20,16 @@ dependencies = [
     "posthog>=3.0.0",
 ]
 
+[project.optional-dependencies]
+# DocParse advanced tier (layout parsing, tables, OCR, bbox citations).
+# ~1.6 GB installed with CPU torch; never in the default image. Delivered via
+# the addon engine image or the runtime dynamic install.
+docparse = [
+    "docling>=2.55.0",
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
+]
+
 [dependency-groups]
 dev = [
     "anyio>=4.0.0",
@@ -33,6 +43,17 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# Linux installs of the docparse extra must never pull CUDA wheels (~7 GB);
+# pin torch to the CPU index there. Windows/macOS PyPI wheels are already CPU.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
