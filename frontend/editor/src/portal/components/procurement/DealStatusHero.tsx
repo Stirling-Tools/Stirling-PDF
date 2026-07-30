@@ -47,6 +47,7 @@ export function DealStatusHero({
   busy = false,
   canSchedule,
   onExpand,
+  onAcceptQuote,
   onLicense,
   onInvite,
   onSchedule,
@@ -59,6 +60,11 @@ export function DealStatusHero({
    * "Schedule a call" action only appears when the org has linked its account. */
   canSchedule: boolean;
   onExpand: () => void;
+  /**
+   * Accept the issued quote, which advances the deal to the agreement. Offered here rather than
+   * inside the quote review so the buyer can circulate the quote and come back to decide.
+   */
+  onAcceptQuote: () => void;
   onLicense: () => void;
   onInvite: () => void;
   onSchedule: () => void;
@@ -77,6 +83,12 @@ export function DealStatusHero({
   const stage = snapshot.stage ?? "trial";
   const inTrial = stage === "trial";
   const isLive = stage === "active";
+  // A live quote is sitting with the buyer. A draft (or an expired/cancelled one) is not something to
+  // accept — that stage still means "finish building it".
+  const quoteAwaitingDecision =
+    stage === "quote" &&
+    (snapshot.latestQuote?.status === "sent" ||
+      snapshot.latestQuote?.status === "open");
   // Known from trial setup onward. The quote's own copy wins when present, since the buyer may have
   // corrected it there; before either exists the eyebrow stands alone rather than inventing a name.
   const company =
@@ -160,9 +172,22 @@ export function DealStatusHero({
       )}
 
       <div className="portal-hero__cta">
-        <Button variant="primary" loading={busy} onClick={onExpand}>
-          {t(STAGE_CTA[stage])}
-        </Button>
+        {/* An issued quote is a decision point, so the card carries both halves of it: accept it, or
+            open it again to read and circulate first. Every other stage has one next step. */}
+        {quoteAwaitingDecision ? (
+          <>
+            <Button variant="primary" loading={busy} onClick={onAcceptQuote}>
+              {t("portal.procurement.review.acceptCta")}
+            </Button>
+            <Button variant="secondary" onClick={onExpand}>
+              {t("portal.procurement.hero.ctaReviewQuote")}
+            </Button>
+          </>
+        ) : (
+          <Button variant="primary" loading={busy} onClick={onExpand}>
+            {t(STAGE_CTA[stage])}
+          </Button>
+        )}
         <div className="portal-hero__icons">
           {snapshot.licenseKey && (
             <IconAction

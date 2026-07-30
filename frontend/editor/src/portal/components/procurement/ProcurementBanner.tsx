@@ -24,6 +24,7 @@ export function ControlledDealStatusHero({
           ? controller.onStartTrial()
           : controller.setOpen(true)
       }
+      onAcceptQuote={() => void controller.onAcceptQuote()}
       onLicense={() => controller.setExtra("license")}
       onInvite={() => setActiveView("users")}
       onSchedule={() => controller.setExtra("schedule")}

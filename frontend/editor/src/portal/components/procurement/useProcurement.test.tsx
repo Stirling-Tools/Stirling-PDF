@@ -3,20 +3,29 @@ import { act, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 /**
- * Each deal stage is its own visit: a buyer can sit in one for days, so finishing a step must hand
- * them back to the deal card rather than glide on to the next. The failure case is the one that
- * matters most — closing on a failed action would tear down the error banner with the modal and
- * leave the buyer with no idea why nothing happened.
+ * Most deal stages are their own visit: a buyer can sit in one for days, so finishing a step hands
+ * them back to the deal card rather than gliding on to the next.
+ *
+ * Two steps are deliberately not like that, and both are easy to regress into the old behaviour.
+ * Generating a quote stays open, because the issued quote becomes the builder's review step.
+ * Accepting one opens the agreement, because the buyer just took that decision from the card and
+ * being returned to it to press a second button reads as a dead end.
+ *
+ * The failure cases matter most: closing on a failure would tear down the error banner with the
+ * modal, and *opening* on a failure would show the buyer an agreement for a deal that never left the
+ * quote stage.
  */
-const { fetchSnapshot, startAgreement } = vi.hoisted(() => ({
+const { fetchSnapshot, startAgreement, issueQuote } = vi.hoisted(() => ({
   fetchSnapshot: vi.fn(),
   startAgreement: vi.fn(),
+  issueQuote: vi.fn(),
 }));
 
 vi.mock("@portal/api/procurement", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@portal/api/procurement")>()),
   fetchSnapshot,
   startAgreement,
+  issueQuote,
 }));
 vi.mock("@portal/contexts/usePortalLinked", () => ({
   usePortalLinked: () => true,
@@ -26,6 +35,7 @@ import {
   useProcurement,
   type ProcurementController,
 } from "@portal/components/procurement/useProcurement";
+import type { QuoteResult } from "@portal/api/procurement";
 
 const SNAPSHOT = {
   dealId: 1,
@@ -61,26 +71,40 @@ function mount() {
 beforeEach(() => {
   fetchSnapshot.mockReset().mockResolvedValue(SNAPSHOT);
   startAgreement.mockReset().mockResolvedValue(SNAPSHOT);
+  issueQuote.mockReset().mockResolvedValue(SNAPSHOT);
 });
 
-describe("useProcurement — a completed step ends on the card", () => {
-  it("closes the modal once accepting the quote succeeds", async () => {
+describe("useProcurement", () => {
+  it("opens the agreement once accepting the quote succeeds", async () => {
     mount();
     await waitFor(() => expect(ctl.started).toBe(true));
-
-    act(() => ctl.setOpen(true));
-    expect(ctl.open).toBe(true);
 
     await act(async () => {
       await ctl.onAcceptQuote();
     });
 
     expect(startAgreement).toHaveBeenCalledTimes(1);
-    expect(ctl.open).toBe(false);
+    expect(ctl.open).toBe(true);
     expect(ctl.error).toBeNull();
   });
 
-  it("keeps the modal open and surfaces the error when the action fails", async () => {
+  it("does not open the agreement when accepting fails, and says why", async () => {
+    startAgreement.mockRejectedValue(new Error("stripe refused"));
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    mount();
+    await waitFor(() => expect(ctl.started).toBe(true));
+
+    await act(async () => {
+      await ctl.onAcceptQuote();
+    });
+
+    // The deal never left the quote stage, so there is no agreement to show.
+    expect(ctl.open).toBe(false);
+    expect(ctl.error).toBe("stripe refused");
+    quiet.mockRestore();
+  });
+
+  it("keeps an open modal open when accepting fails, so the banner survives", async () => {
     startAgreement.mockRejectedValue(new Error("stripe refused"));
     const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
     mount();
@@ -94,5 +118,20 @@ describe("useProcurement — a completed step ends on the card", () => {
     expect(ctl.open).toBe(true);
     expect(ctl.error).toBe("stripe refused");
     quiet.mockRestore();
+  });
+
+  it("stays open after generating, so the review step can show the issued quote", async () => {
+    mount();
+    await waitFor(() => expect(ctl.started).toBe(true));
+
+    act(() => ctl.setOpen(true));
+    await act(async () => {
+      // Only the id is read on the way out; the priced quote comes back via the snapshot.
+      await ctl.onGenerate({ quoteId: "q_1" } as unknown as QuoteResult);
+    });
+
+    expect(issueQuote).toHaveBeenCalledWith("q_1");
+    expect(ctl.open).toBe(true);
+    expect(ctl.error).toBeNull();
   });
 });

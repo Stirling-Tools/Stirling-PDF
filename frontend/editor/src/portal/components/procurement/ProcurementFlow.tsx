@@ -16,7 +16,6 @@ import {
   PaymentStageCard,
 } from "@portal/components/procurement/ProcurementStages";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
-import { QuoteReview } from "@portal/components/procurement/QuoteReview";
 import type { ProcurementController } from "@portal/components/procurement/useProcurement";
 
 /**
@@ -42,7 +41,6 @@ export function ProcurementFlow({
     stage,
     latest,
     isIssued,
-    isDraft,
     busy,
     downloading,
     downloadingLicense,
@@ -59,7 +57,6 @@ export function ProcurementFlow({
     onExtendTrial,
     onReset,
     onGenerate,
-    onAcceptQuote,
     onAgree,
     onDownloadPdf,
     onDownloadOfflineLicense,
@@ -67,11 +64,11 @@ export function ProcurementFlow({
     onDownloadSignedAgreement,
   } = controller;
 
-  // The builder owns the dialog's chrome while it is the visible step.
+  // The builder owns the dialog's chrome while it is the visible step. It spans the whole quote
+  // stage now, not just the draft part of it: issuing turns its last step into the review of the
+  // issued paper rather than handing off to a separate card.
   const builderShowing =
-    isLinked &&
-    started &&
-    (editing || (isDraft && (stage === "trial" || stage === "quote")));
+    isLinked && started && (editing || stage === "trial" || stage === "quote");
 
   return (
     <>
@@ -80,8 +77,8 @@ export function ProcurementFlow({
         onClose={() => setOpen(false)}
         title={t("portal.procurement.title")}
         subtitle={t("portal.procurement.subtitle")}
-        // Only the builder renders its own heading + step badge + close; the review, agreement,
-        // payment and live steps have none, so they keep the shell's header.
+        // Only the builder renders its own heading + step badge + close; the agreement, payment and
+        // live steps have none, so they keep the shell's header.
         headerless={builderShowing}
       >
         {error && (
@@ -129,19 +126,10 @@ export function ProcurementFlow({
                 eulaAlreadyAgreed={data?.trialStartedAt != null}
                 onClose={() => setOpen(false)}
                 onGenerate={onGenerate}
-              />
-            )}
-
-            {/* Quote step: review and accept the plain quote. Accepting advances to the agreement
-                step only — no Stripe charge yet. */}
-            {!editing && isIssued && stage === "quote" && latest && (
-              <QuoteReview
-                quote={latest}
-                busy={busy}
+                // Null while re-editing: the buyer asked for the form, not the paper they just left.
+                issued={!editing && isIssued ? latest : null}
                 downloading={downloading}
-                onAccept={onAcceptQuote}
                 onDownload={onDownloadPdf}
-                onEdit={() => setEditing(true)}
               />
             )}
 

@@ -73,9 +73,13 @@ export interface ProcurementController {
   ) => void;
   onExtendTrial: () => void;
   onReset: () => void;
-  onGenerate: (draft: QuoteResult) => void;
-  /** Accept the reviewed quote and advance to the agreement step — does NOT charge Stripe. */
-  onAcceptQuote: () => void;
+  /** Issue the priced draft. Leaves the modal open: the issued quote becomes the review step. */
+  onGenerate: (draft: QuoteResult) => Promise<void>;
+  /**
+   * Accept the reviewed quote and advance to the agreement step — does NOT charge Stripe. Taken from
+   * the deal card, and opens the agreement on success.
+   */
+  onAcceptQuote: () => Promise<void>;
   onAgree: () => void;
   onDownloadPdf: () => Promise<void>;
   onDownloadOfflineLicense: () => Promise<void>;
@@ -127,20 +131,25 @@ export function useProcurement(autoOpen = false): ProcurementController {
    * so finishing one returns them to the deal card instead of gliding into the next. Deliberately
    * not in a `finally`: a failure has to leave the modal open, or the error banner this sets would
    * be torn down with it and the buyer would be left with no idea what went wrong.
+   *
+   * Returns whether the action succeeded, since failures are reported through the banner rather than
+   * thrown — a caller that follows up with navigation has no other way to tell.
    */
   async function run(
     fn: () => Promise<unknown>,
     opts?: { closeOnSuccess?: boolean },
-  ) {
+  ): Promise<boolean> {
     setBusy(true);
     setError(null);
     try {
       await fn();
       queryClient.setQueryData(snapshotKey, await fetchSnapshot());
       if (opts?.closeOnSuccess) setOpen(false);
+      return true;
     } catch (e) {
       console.error("[procurement] action failed", e);
       setError(e instanceof Error ? e.message : String(e));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -173,17 +182,27 @@ export function useProcurement(autoOpen = false): ProcurementController {
       setEditing(false);
       setInvoicePdf(null);
     });
-  const onGenerate = (draft: QuoteResult) =>
-    run(
-      async () => {
-        await issueQuote(draft.quoteId);
-        setEditing(false);
-      },
-      { closeOnSuccess: true },
-    );
-  // Accept the reviewed quote: advance to the agreement step only. No Stripe — the buyer can read
-  // and download the plain quote before taking on the legal documents.
-  const onAcceptQuote = () => run(startAgreement, { closeOnSuccess: true });
+  // Deliberately does not close: the issued quote returns through the snapshot and becomes the
+  // builder's review step, so the buyer reads the paper they just generated instead of being dropped
+  // back on the card to find it again.
+  const onGenerate = async (draft: QuoteResult) => {
+    await run(async () => {
+      await issueQuote(draft.quoteId);
+      setEditing(false);
+    });
+  };
+
+  /**
+   * Accept the reviewed quote: advance to the agreement step only. No Stripe — the buyer can read and
+   * download the plain quote before taking on the legal documents.
+   *
+   * This is the one transition that carries straight on into the next stage rather than ending on the
+   * card. Accepting is an explicit decision the buyer has just taken from the card itself, so putting
+   * them back there to press a second button to see what they accepted reads as a dead end.
+   */
+  const onAcceptQuote = async () => {
+    if (await run(startAgreement)) setOpen(true);
+  };
 
   // Signing the agreement is the commitment point: it accepts the issued quote into a committed
   // subscription (Stripe), and provisioning upgrades the licence server-side. Payment itself is

@@ -835,13 +835,13 @@
   display: flex;
   gap: 10px;
 }
-/* Step 4 — the itemised quote paper */
+/* Step 4 — the itemised quote paper, on a sunken tray that runs to the panel's edges. No scroll of
+   its own: the dialog body already scrolls, and nesting a second scroller gave the builder two
+   scrollbars. The bleed reads the shell's inset rather than hard-coding a copy of it. */
 .portal-qb__papertray {
   background: var(--c-surface-sunken);
-  padding: 18px;
-  max-height: 56vh;
-  overflow-y: auto;
-  margin: -20px -24px;
+  padding: 14px var(--flowmodal-inset);
+  margin: 0 calc(-1 * var(--flowmodal-inset));
 }
 .portal-qb__paper {
   background: var(--c-surface);
@@ -868,6 +868,11 @@
 }
 .portal-qb__paper-meta {
   text-align: right;
+}
+/* Reads as a link on the document rather than a button in a toolbar: right-aligned under the quote's
+   own metadata, with the row's padding trimmed so it sits tight to the date above it. */
+.portal-qb__paper-download {
+  margin: 0.2rem -0.5rem -0.25rem 0;
 }
 .portal-qb__quote-number {
   font-size: 12.5px;
