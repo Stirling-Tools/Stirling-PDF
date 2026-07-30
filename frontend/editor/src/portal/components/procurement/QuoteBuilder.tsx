@@ -14,6 +14,7 @@ import {
   type QuoteResult,
 } from "@portal/api/procurement";
 import { LegalDocumentModal } from "@portal/components/procurement/ProcurementExtras";
+import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import "@portal/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details"] as const;
@@ -41,6 +42,7 @@ export function QuoteBuilder({
   deployment,
   seats = 0,
   email,
+  dealDetails,
   initial,
   eulaAlreadyAgreed = false,
   onGenerate,
@@ -50,6 +52,16 @@ export function QuoteBuilder({
   seats?: number;
   /** Linked-account email; prefills the contact email on a fresh quote's details step. */
   email?: string | null;
+  /**
+   * The buying entity captured at trial setup. Seeds a fresh quote's details step so it confirms
+   * what is already known rather than asking twice; the buyer can still correct it here, since a
+   * deal can change hands between trial and quote.
+   */
+  dealDetails?: {
+    businessName?: string | null;
+    contactName?: string | null;
+    contactEmail?: string | null;
+  };
   /** Seed the builder from an existing quote's config (re-editing a quote). */
   initial?: QuoteConfigInput;
   /**
@@ -76,9 +88,9 @@ export function QuoteBuilder({
       indemnification: false,
       training: false,
       qbr: false,
-      businessName: "",
-      contactName: "",
-      contactEmail: email ?? "",
+      businessName: dealDetails?.businessName ?? "",
+      contactName: dealDetails?.contactName ?? "",
+      contactEmail: dealDetails?.contactEmail ?? email ?? "",
       addressLine1: "",
       addressLine2: "",
       city: "",
@@ -148,22 +160,15 @@ export function QuoteBuilder({
 
   return (
     <div className="portal-qb">
-      <div className="portal-qb__head">
-        <h3 className="portal-qb__title">
-          {t("portal.procurement.builder.title")}
-        </h3>
-        <span className="portal-qb__stepchip">
-          {t("portal.procurement.builder.stepOf", {
-            n: step + 1,
-            total: STEPS.length,
-          })}
-        </span>
-      </div>
-      <div className="portal-qb__progress">
-        {STEPS.map((s, i) => (
-          <span key={s} data-on={i <= step || undefined} />
-        ))}
-      </div>
+      <StepModalHeader
+        title={t("portal.procurement.builder.title")}
+        step={step + 1}
+        total={STEPS.length}
+        stepLabel={t("portal.procurement.builder.stepOf", {
+          n: step + 1,
+          total: STEPS.length,
+        })}
+      />
 
       <div className="portal-qb__body">
         {step === 0 && (
@@ -491,7 +496,6 @@ export function QuoteBuilder({
           {step === 0 && (
             <Button
               variant="primary"
-              accent="premium"
               disabled={cfg.volume <= 0}
               onClick={() => setStep(1)}
             >
@@ -499,21 +503,12 @@ export function QuoteBuilder({
             </Button>
           )}
           {step === 1 && (
-            <Button
-              variant="primary"
-              accent="premium"
-              onClick={() => setStep(2)}
-            >
+            <Button variant="primary" onClick={() => setStep(2)}>
               {t("portal.procurement.builder.continue")}
             </Button>
           )}
           {step === 2 && (
-            <Button
-              variant="primary"
-              accent="premium"
-              loading={busy}
-              onClick={generate}
-            >
+            <Button variant="primary" loading={busy} onClick={generate}>
               {t("portal.procurement.builder.generate")}
             </Button>
           )}

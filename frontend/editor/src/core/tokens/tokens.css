@@ -270,7 +270,7 @@
 :root {
   /* Home hero strip navy. Theme-stable by design — the white hero CTA keeps
      this deep navy text in both light and dark (branded surface). The hero
-     background itself is accent-responsive (see EditorStatusCard/WelcomeBanner). */
+     background itself is accent-responsive (see EditorStatusCard). */
   --color-hero-navy: var(--p-navy-700);
 
   /* 4-px grid spacing scale (rem so it tracks font-size changes). Use these

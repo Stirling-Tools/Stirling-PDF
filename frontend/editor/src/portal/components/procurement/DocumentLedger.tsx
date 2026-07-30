@@ -83,9 +83,7 @@ export function DocumentLedger({
                     </span>
                   )}
                   {cur && (
-                    <Chip accent="premium" size="sm">
-                      {t("portal.procurement.docs.here")}
-                    </Chip>
+                    <Chip size="sm">{t("portal.procurement.docs.here")}</Chip>
                   )}
                   {done && (
                     <Chip accent="success" size="sm">

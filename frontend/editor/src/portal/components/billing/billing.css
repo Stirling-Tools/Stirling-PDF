@@ -1482,59 +1482,6 @@
   gap: 0.875rem;
   margin-bottom: 1.25rem;
 }
-.portal-billing__bundle-head-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.portal-billing__bundle-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 0.9375rem;
-  color: var(--c-text);
-}
-/* Trademarked wordmark SVG (theme-switched via .wordmark-light-only/.wordmark-dark-only). Height
-   matches the portal nav's 22px wordmark so the modal and app read as one brand. No `display` here —
-   the theme-switch utilities own visibility. */
-.portal-billing__bundle-wordmark {
-  height: 1.375rem;
-  width: auto;
-}
-.portal-billing__bundle-head-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.portal-billing__bundle-step {
-  padding: 0.1875rem 0.625rem;
-  border: 1px solid var(--c-border-subtle);
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--c-text-subtle);
-  white-space: nowrap;
-}
-.portal-billing__bundle-progress {
-  display: flex;
-  gap: 0.375rem;
-}
-.portal-billing__bundle-progress > span {
-  flex: 1;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--c-border-subtle);
-}
-.portal-billing__bundle-progress > span.is-filled {
-  background: var(--c-primary);
-}
-.portal-billing__bundle-head-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--c-text);
-}
-
 /* Payment step: quote receipt + recipient fields + consent. */
 .portal-billing__bundle-pay {
   display: flex;

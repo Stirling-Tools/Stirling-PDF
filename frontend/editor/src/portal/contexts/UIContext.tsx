@@ -48,6 +48,14 @@ interface UIContextValue {
   linkModalMode: "link" | "reauth";
   openLinkModal: (mode?: "link" | "reauth") => void;
   closeLinkModal: () => void;
+  /**
+   * A request to begin the enterprise trial, raised from wherever the buyer said yes (the billing
+   * upsell, a sales link). The deal controller lives on Home, so this is a one-shot signal rather
+   * than a direct call: Home consumes it, opens trial setup, and clears it.
+   */
+  trialSetupRequested: boolean;
+  requestTrialSetup: () => void;
+  clearTrialSetupRequest: () => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
@@ -61,6 +69,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     string | null
   >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
   // When the link modal is opened from inside Settings, remember the section to
   // restore so closing the modal returns the admin to where they were.
@@ -116,6 +125,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
         }
         setLinkModalOpen(true);
       },
+      trialSetupRequested,
+      requestTrialSetup: () => {
+        setMobileNavOpen(false);
+        setTrialSetupRequested(true);
+      },
+      clearTrialSetupRequest: () => setTrialSetupRequested(false),
       closeLinkModal: () => {
         setLinkModalOpen(false);
         setLinkModalMode("link");
@@ -135,6 +150,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       linkModalOpen,
       linkModalMode,
       reopenSettingsAfterLink,
+      trialSetupRequested,
     ],
   );
 

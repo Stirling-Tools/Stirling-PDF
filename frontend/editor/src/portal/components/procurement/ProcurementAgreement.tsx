@@ -206,7 +206,6 @@ export function ProcurementAgreement({
       <div className="portal-proc__payment-actions">
         <Button
           variant="primary"
-          accent="premium"
           loading={busy || signing}
           disabled={!ready}
           onClick={sign}

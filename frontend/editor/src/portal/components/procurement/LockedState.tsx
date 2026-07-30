@@ -23,7 +23,7 @@ export function LockedState({
         title={t("portal.procurement.locked.title")}
         description={t("portal.procurement.locked.description")}
         actions={
-          <Button variant="primary" accent="premium" onClick={onTalkToSales}>
+          <Button variant="primary" onClick={onTalkToSales}>
             {t("portal.procurement.locked.talkToSales")}
           </Button>
         }

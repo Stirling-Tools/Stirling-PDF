@@ -38,7 +38,6 @@ export function PaymentStageCard({
           {invoiceUrl && (
             <Button
               variant="primary"
-              accent="premium"
               onClick={() => window.open(invoiceUrl, "_blank", "noopener")}
             >
               {t("portal.procurement.payment.viewInvoice")}

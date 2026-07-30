@@ -182,7 +182,17 @@ public class ProcurementController {
             String taxId) {}
 
     /** Trial setup captured before the trial starts: deployment target + seat count. */
-    public record StartTrialRequest(String deployment, int users) {}
+    /**
+     * Setup step 2 collects the buying entity; all of it is optional so an older client still
+     * starts.
+     */
+    public record StartTrialRequest(
+            String deployment,
+            int users,
+            String businessName,
+            String contactName,
+            String contactEmail,
+            String inviteEmails) {}
 
     public record SnapshotResponse(
             Long dealId,
@@ -196,6 +206,10 @@ public class ProcurementController {
             String licenseKey,
             // Version label of the signed agreement PDF available for download, else null.
             String agreementSignedVersion,
+            // Buying entity captured at trial setup; null on deals started before that step.
+            String businessName,
+            String contactName,
+            String contactEmail,
             QuoteResponse latestQuote) {}
 
     /** The filled agreement for review: registry metadata + the rendered markdown body. */
@@ -238,7 +252,8 @@ public class ProcurementController {
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null, null);
+            new SnapshotResponse(
+                    null, null, null, 0, null, null, 0, false, null, null, null, null, null, null);
 
     /**
      * Download the offline / air-gapped licence file (.lic) for the team — available for an
@@ -264,6 +279,15 @@ public class ProcurementController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /** Mark the account as looking at enterprise. Idempotent; never disturbs an existing deal. */
+    @PostMapping("/interest")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> recordInterest(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.ok(toSnapshot(procurement.recordInterest(teamId), true));
+    }
+
     @PostMapping("/trial/start")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> startTrial(
@@ -273,8 +297,23 @@ public class ProcurementController {
         // Body is optional so an older client (no setup step) still starts a cloud trial.
         String deployment = request != null ? request.deployment() : null;
         int seats = request != null ? request.users() : 0;
-        return ResponseEntity.ok(
-                toSnapshot(procurement.startTrial(teamId, deployment, seats), true));
+        var deal =
+                procurement.startTrial(
+                        teamId,
+                        deployment,
+                        seats,
+                        request != null ? request.businessName() : null,
+                        request != null ? request.contactName() : null,
+                        request != null ? request.contactEmail() : null,
+                        request != null ? request.inviteEmails() : null);
+        // After the trial exists, so a rejected invite can never stop it starting.
+        if (request != null) {
+            procurement.sendTrialInvites(
+                    teamId,
+                    primaryMembership(auth).map(TeamMembership::getUser).orElse(null),
+                    request.inviteEmails());
+        }
+        return ResponseEntity.ok(toSnapshot(deal, true));
     }
 
     @PostMapping("/trial/extend")
@@ -521,6 +560,9 @@ public class ProcurementController {
                 deal.getLicenseRef() != null,
                 includeLicenseKey ? deal.getLicenseRef() : null,
                 procurement.signedAgreementLabel(deal.getDealId()).orElse(null),
+                deal.getBusinessName(),
+                deal.getContactName(),
+                deal.getContactEmail(),
                 latest);
     }
 

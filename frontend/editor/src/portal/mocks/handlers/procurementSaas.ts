@@ -206,10 +206,21 @@ export function resetProcurementSaasStore() {
 
 export const procurementSaasHandlers = [
   http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(deal)),
+  // Interest: creates the deal at `exploring` when there is none, and never disturbs one that
+  // already exists — so the enterprise surface only appears for accounts that asked for it.
+  http.post(`${SAAS}/api/v1/procurement/interest`, () => {
+    if (deal.dealId == null) {
+      deal = { ...deal, dealId: 1, stage: "exploring" };
+    }
+    return HttpResponse.json(deal);
+  }),
   http.post(`${SAAS}/api/v1/procurement/trial/start`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as Partial<{
       deployment: string;
       users: number;
+      businessName: string;
+      contactName: string;
+      contactEmail: string;
     }>;
     const allowed = ["cloud", "selfhost", "airgap"];
     const now = Date.now();
@@ -225,6 +236,9 @@ export const procurementSaasHandlers = [
       trialExtensionsUsed: 0,
       licensed: true,
       licenseKey: "MOCK-TRIAL-KEY-0001",
+      businessName: body.businessName ?? null,
+      contactName: body.contactName ?? null,
+      contactEmail: body.contactEmail ?? null,
       latestQuote: null,
     };
     return HttpResponse.json(deal);

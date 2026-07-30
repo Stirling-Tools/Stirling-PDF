@@ -86,7 +86,6 @@ export function DealJourney({
         {!isTerminal && currentStep && (
           <Button
             variant="primary"
-            accent="premium"
             loading={advancing}
             onClick={() => onAdvance(currentStage)}
           >

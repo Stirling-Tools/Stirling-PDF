@@ -129,7 +129,6 @@ export function ActionModal({
           </Button>
           <Button
             variant="primary"
-            accent="premium"
             loading={submitting}
             disabled={needsFile && !file}
             onClick={submit}

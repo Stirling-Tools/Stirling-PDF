@@ -1,7 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
-import type { ViewId } from "@portal/contexts/ViewContext";
 import {
   FLOW_JOURNEY,
   type DealStage,
@@ -18,6 +17,8 @@ import "@portal/views/Procurement.css";
 
 /** What each stage asks of the buyer, read out in the stage sentence. */
 const STAGE_SENTENCE: Record<DealStage, string> = {
+  // Exploring sits on the Trial rung: same sentence, since the ask is what differs.
+  exploring: "portal.procurement.hero.sentenceTrial",
   trial: "portal.procurement.hero.sentenceTrial",
   quote: "portal.procurement.hero.sentenceQuote",
   security: "portal.procurement.hero.sentenceAgreement",
@@ -27,6 +28,7 @@ const STAGE_SENTENCE: Record<DealStage, string> = {
 
 /** The primary action for each stage; expanding the flow runs it. */
 const STAGE_CTA: Record<DealStage, string> = {
+  exploring: "portal.procurement.hero.ctaExploring",
   trial: "portal.procurement.hero.ctaTrial",
   quote: "portal.procurement.hero.ctaQuote",
   security: "portal.procurement.hero.ctaAgreement",
@@ -37,8 +39,8 @@ const STAGE_CTA: Record<DealStage, string> = {
 /**
  * The enterprise deal-status hero on Home (procurement lives here, not as a nav tab) — this card IS
  * the procurement surface. It carries the journey as a segmented progress band plus a stage
- * sentence, the trial rollout checklist, and one primary action with quiet icon buttons beside it;
- * the flow itself opens in the takeover modal. Matches the marketing prototype.
+ * sentence, and one primary action with quiet icon buttons beside it; the flow itself opens in the
+ * takeover modal. Rollout setup lives in the non-procurement setup checklist, not here.
  */
 export function DealStatusHero({
   snapshot,
@@ -50,7 +52,6 @@ export function DealStatusHero({
   onSchedule,
   onManageTrial,
   onDocuments,
-  onNavigate,
 }: {
   snapshot: ProcurementSnapshot;
   busy?: boolean;
@@ -64,7 +65,6 @@ export function DealStatusHero({
   onManageTrial: () => void;
   /** Open the Documents reference (agreement, quote, invoice, EULA, SLA, subprocessors). */
   onDocuments: () => void;
-  onNavigate: (view: ViewId) => void;
 }) {
   const { t } = useTranslation();
 
@@ -77,33 +77,20 @@ export function DealStatusHero({
   const stage = snapshot.stage ?? "trial";
   const inTrial = stage === "trial";
   const isLive = stage === "active";
-  // The legal entity is only known once the buyer completes the quote's details step; until then the
-  // eyebrow stands alone rather than showing a placeholder company.
-  const company = snapshot.latestQuote?.config.businessName?.trim();
+  // Known from trial setup onward. The quote's own copy wins when present, since the buyer may have
+  // corrected it there; before either exists the eyebrow stands alone rather than inventing a name.
+  const company =
+    snapshot.latestQuote?.config.businessName?.trim() ||
+    snapshot.businessName?.trim();
 
+  // Exploring is presented as the Trial rung — same position, sentence and next step — because the
+  // buyer has entered the journey; only the ask differs, since no trial has actually started.
+  const journeyStage = stage === "exploring" ? "trial" : stage;
   const currentIdx = Math.max(
     0,
-    FLOW_JOURNEY.findIndex((s) => s.stage === stage),
+    FLOW_JOURNEY.findIndex((s) => s.stage === journeyStage),
   );
   const nextStage = FLOW_JOURNEY[currentIdx + 1];
-
-  const setupSteps: { title: string; sub: string; view: ViewId }[] = [
-    {
-      title: t("portal.procurement.hero.setup1Title"),
-      sub: t("portal.procurement.hero.setup1Sub"),
-      view: "users",
-    },
-    {
-      title: t("portal.procurement.hero.setup2Title"),
-      sub: t("portal.procurement.hero.setup2Sub"),
-      view: "sources",
-    },
-    {
-      title: t("portal.procurement.hero.setup3Title"),
-      sub: t("portal.procurement.hero.setup3Sub"),
-      view: "policies",
-    },
-  ];
 
   return (
     <div className="portal-hero">
@@ -156,25 +143,6 @@ export function DealStatusHero({
         </div>
       </div>
 
-      {inTrial && (
-        <ul className="portal-hero__checklist">
-          {setupSteps.map((s) => (
-            <li key={s.title}>
-              <button type="button" onClick={() => onNavigate(s.view)}>
-                <span className="portal-hero__check-dot" aria-hidden />
-                <span className="portal-hero__check-text">
-                  <span className="portal-hero__check-title">{s.title}</span>
-                  <span className="portal-hero__check-sub">{s.sub}</span>
-                </span>
-                <span className="portal-hero__check-pill">
-                  {t("portal.procurement.hero.notStarted")}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
       {isLive && (
         <div className="portal-hero__live">
           <span className="portal-hero__live-tile" aria-hidden>
@@ -192,12 +160,7 @@ export function DealStatusHero({
       )}
 
       <div className="portal-hero__cta">
-        <Button
-          variant="primary"
-          accent="premium"
-          loading={busy}
-          onClick={onExpand}
-        >
+        <Button variant="primary" loading={busy} onClick={onExpand}>
           {t(STAGE_CTA[stage])}
         </Button>
         <div className="portal-hero__icons">

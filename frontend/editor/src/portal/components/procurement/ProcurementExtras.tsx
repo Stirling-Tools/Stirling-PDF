@@ -8,7 +8,9 @@ import {
   fetchLegalDocument,
   recordLegalConsent,
   type ProcurementSnapshot,
+  type TrialSetupDetails,
 } from "@portal/api/procurement";
+import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
 import { LicensePanel } from "@portal/components/procurement/ProcurementStages";
 import { useFocusTrap } from "@portal/components/procurement/ProcurementModal";
@@ -21,6 +23,8 @@ import "@portal/views/Procurement.css";
  * scheduler. The shells and wiring are real so the hero behaves like the marketing prototype.
  */
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function SideModal({
   open,
   onClose,
@@ -28,12 +32,15 @@ function SideModal({
   subtitle,
   children,
   footer,
+  headerAside,
   wide = false,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   subtitle?: string;
+  /** Sits on the title row, before the close button (e.g. a "Step 1 of 2" badge). */
+  headerAside?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   wide?: boolean;
@@ -70,7 +77,10 @@ function SideModal({
           ✕
         </button>
         <div className="portal-sidemodal__header">
-          <h3 className="portal-sidemodal__title">{title}</h3>
+          <div className="portal-sidemodal__title-row">
+            <h3 className="portal-sidemodal__title">{title}</h3>
+            {headerAside}
+          </div>
           {subtitle && <p className="portal-sidemodal__sub">{subtitle}</p>}
         </div>
         <div className="portal-sidemodal__body">{children}</div>
@@ -366,31 +376,63 @@ export function TrialSetupModal({
   open,
   onClose,
   busy,
+  email,
+  onScheduleCall,
   onConfirm,
 }: {
   open: boolean;
   onClose: () => void;
   busy: boolean;
-  onConfirm: (deployment: string, seats: number) => void;
+  /** Linked-account email, prefilled as the work email on the details step. */
+  email?: string;
+  /** Open the scheduler — the step-1 escape hatch for buyers who want to talk first. */
+  onScheduleCall: () => void;
+  onConfirm: (
+    deployment: string,
+    seats: number,
+    details: TrialSetupDetails,
+  ) => void;
 }) {
   const { t } = useTranslation();
+  const [step, setStep] = useState(0);
   const [deployment, setDeployment] = useState<string>("cloud");
   const [seats, setSeats] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [inviteEmails, setInviteEmails] = useState("");
   const [eula, setEula] = useState(false);
   const [legalDoc, setLegalDoc] = useState<string | null>(null);
 
   // Reset to defaults each time the dialog opens, so a cancelled setup doesn't linger.
   useEffect(() => {
     if (open) {
+      setStep(0);
       setDeployment("cloud");
       setSeats("");
+      setContactName("");
+      setBusinessName("");
+      setContactEmail(email ?? "");
+      setInviteEmails("");
       setEula(false);
     }
-  }, [open]);
+  }, [open, email]);
+
+  // The buying entity is what the quote and agreement are drawn against, so it is required here
+  // rather than deferred to the quote; invites are genuinely optional.
+  const detailsValid =
+    contactName.trim().length > 0 &&
+    businessName.trim().length > 0 &&
+    EMAIL_RE.test(contactEmail.trim());
 
   const confirm = () => {
     void recordLegalConsent("eula", "trial"); // clickwrap consent, best-effort
-    onConfirm(deployment, Math.max(0, Number(seats) || 0));
+    onConfirm(deployment, Math.max(0, Number(seats) || 0), {
+      businessName: businessName.trim(),
+      contactName: contactName.trim(),
+      contactEmail: contactEmail.trim(),
+      inviteEmails: inviteEmails.trim(),
+    });
   };
 
   return (
@@ -399,76 +441,165 @@ export function TrialSetupModal({
         open={open}
         onClose={onClose}
         title={t("portal.procurement.setup.title")}
-        subtitle={t("portal.procurement.setup.subtitle")}
+        subtitle={t(
+          step === 0
+            ? "portal.procurement.setup.subtitle"
+            : "portal.procurement.setup.subtitleDetails",
+        )}
+        headerAside={
+          <span className="portal-stepmodal__step">
+            {t("portal.procurement.setup.stepOf", { n: step + 1, total: 2 })}
+          </span>
+        }
         footer={
-          <Button
-            variant="primary"
-            accent="premium"
-            loading={busy}
-            disabled={!eula}
-            onClick={confirm}
-          >
-            {t("portal.procurement.setup.start")}
-          </Button>
+          step === 0 ? (
+            <>
+              <span className="portal-sidemodal__foot-hint">
+                {t("portal.procurement.setup.talkFirst")}{" "}
+                <button
+                  type="button"
+                  className="portal-legal__link"
+                  onClick={onScheduleCall}
+                >
+                  {t("portal.procurement.setup.scheduleCall")}
+                </button>
+              </span>
+              <Button
+                variant="primary"
+                disabled={Number(seats) <= 0}
+                onClick={() => setStep(1)}
+              >
+                {t("portal.procurement.setup.continue")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={() => setStep(0)}>
+                {t("portal.procurement.setup.back")}
+              </Button>
+              <Button
+                variant="primary"
+                loading={busy}
+                disabled={!eula || !detailsValid}
+                onClick={confirm}
+              >
+                {t("portal.procurement.setup.start")}
+              </Button>
+            </>
+          )
         }
       >
-        <label className="portal-qb__field">
-          <span className="portal-qb__field-label">
-            {t("portal.procurement.setup.deployment")}
-          </span>
-          <div className="portal-qb__opts">
-            {DEPLOYMENTS.map((d) => (
-              <button
-                key={d}
-                type="button"
-                className="portal-qb__opt"
-                data-on={deployment === d || undefined}
-                onClick={() => setDeployment(d)}
-              >
-                <span className="portal-qb__opt-title">
-                  {t(`portal.procurement.setup.${d}`)}
-                </span>
-                <span className="portal-qb__opt-sub">
-                  {t(`portal.procurement.setup.${d}Sub`)}
-                </span>
-              </button>
-            ))}
-          </div>
-        </label>
+        <StepModalHeader step={step + 1} total={2} />
 
-        <label className="portal-qb__field">
-          <span className="portal-qb__field-label">
-            {t("portal.procurement.setup.seats")}
-          </span>
-          <input
-            type="number"
-            min={0}
-            placeholder={t("portal.procurement.setup.seatsPlaceholder")}
-            value={seats}
-            onChange={(e) => setSeats(e.target.value)}
-          />
-        </label>
-        <p className="portal-sidemodal__text">
-          {t("portal.procurement.setup.seatsHint")}
-        </p>
+        {step === 0 && (
+          <>
+            <label className="portal-qb__field">
+              <span className="portal-qb__field-label">
+                {t("portal.procurement.setup.seats")}
+              </span>
+              <input
+                type="number"
+                min={0}
+                placeholder={t("portal.procurement.setup.seatsPlaceholder")}
+                value={seats}
+                onChange={(e) => setSeats(e.target.value)}
+              />
+            </label>
+            <label className="portal-qb__field">
+              <span className="portal-qb__field-label">
+                {t("portal.procurement.setup.deployment")}
+              </span>
+              <div className="portal-qb__opts portal-qb__opts--across">
+                {DEPLOYMENTS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    className="portal-qb__opt"
+                    data-on={deployment === d || undefined}
+                    onClick={() => setDeployment(d)}
+                  >
+                    <span className="portal-qb__opt-title">
+                      {t(`portal.procurement.setup.${d}`)}
+                    </span>
+                    <span className="portal-qb__opt-sub">
+                      {t(`portal.procurement.setup.${d}Sub`)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </label>
+          </>
+        )}
 
-        <label className="portal-qb__eula">
-          <input
-            type="checkbox"
-            checked={eula}
-            onChange={(e) => setEula(e.target.checked)}
-          />
-          <span>
-            {t("portal.procurement.setup.eula")}{" "}
-            <button
-              type="button"
-              className="portal-legal__link"
-              onClick={() => setLegalDoc("eula")}
-            >
-              {t("portal.procurement.setup.viewEula")}
-            </button>
-          </span>
-        </label>
+        {step === 1 && (
+          <>
+            <div className="portal-qb__row">
+              <label className="portal-qb__field">
+                <span className="portal-qb__field-label">
+                  {t("portal.procurement.setup.fullName")}
+                </span>
+                <input
+                  value={contactName}
+                  placeholder={t(
+                    "portal.procurement.setup.fullNamePlaceholder",
+                  )}
+                  onChange={(e) => setContactName(e.target.value)}
+                />
+              </label>
+              <label className="portal-qb__field">
+                <span className="portal-qb__field-label">
+                  {t("portal.procurement.setup.businessName")}
+                </span>
+                <input
+                  value={businessName}
+                  placeholder={t(
+                    "portal.procurement.setup.businessNamePlaceholder",
+                  )}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                />
+              </label>
+            </div>
+            <label className="portal-qb__field">
+              <span className="portal-qb__field-label">
+                {t("portal.procurement.setup.workEmail")}
+              </span>
+              <input
+                type="email"
+                value={contactEmail}
+                placeholder={t("portal.procurement.setup.workEmailPlaceholder")}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
+            </label>
+            <label className="portal-qb__field">
+              <span className="portal-qb__field-label">
+                {t("portal.procurement.setup.invites")}
+              </span>
+              <input
+                value={inviteEmails}
+                placeholder={t("portal.procurement.setup.invitesPlaceholder")}
+                onChange={(e) => setInviteEmails(e.target.value)}
+              />
+            </label>
+
+            <label className="portal-qb__eula">
+              <input
+                type="checkbox"
+                checked={eula}
+                onChange={(e) => setEula(e.target.checked)}
+              />
+              <span>
+                {t("portal.procurement.setup.eula")}{" "}
+                <button
+                  type="button"
+                  className="portal-legal__link"
+                  onClick={() => setLegalDoc("eula")}
+                >
+                  {t("portal.procurement.setup.viewEula")}
+                </button>
+              </span>
+            </label>
+          </>
+        )}
       </SideModal>
       <LegalDocumentModal docId={legalDoc} onClose={() => setLegalDoc(null)} />
     </>
@@ -522,7 +653,6 @@ export function TrialManageModal({
           </button>
           <Button
             variant="primary"
-            accent="premium"
             loading={busy}
             disabled={maxed}
             onClick={onExtend}

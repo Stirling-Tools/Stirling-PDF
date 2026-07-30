@@ -7278,12 +7278,15 @@ tagline = "Native app for Microsoft Windows"
 title = "Windows"
 
 [portal.home.editor]
-activeUsers = "{{n}} active"
-install = "Install the editor"
-invite = "Invite teammates"
-name = "Stirling PDF Editor"
+activeOfDeployed = "{{active}} of {{total}} active this month"
+name = "PDF Editor"
 open = "Open in browser"
 updated = "updated {{time}}"
+
+[portal.home.editor.deploy]
+finish = "Finish deployment"
+options = "View deployment options"
+start = "Deploy the Editor"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
@@ -7294,25 +7297,6 @@ kubernetes = "Self-hosted · Kubernetes"
 afternoon = "Good afternoon"
 evening = "Good evening"
 morning = "Good morning"
-
-[portal.home.onboarding.enterprise]
-body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
-cta = "Start Trial"
-ctaQuote = "Get Quote"
-lead = "For 250+ employees."
-tag = "Enterprise"
-
-[portal.home.onboarding.steps.editor]
-blurb = "Install the desktop app or self-host"
-title = "Download the editor"
-
-[portal.home.onboarding.steps.invite]
-blurb = "Bring your team into the secure workspace"
-title = "Invite teammates"
-
-[portal.home.onboarding.steps.policies]
-blurb = "{{active}} active · {{recommended}} recommended"
-title = "Confirm your policies"
 
 [portal.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
@@ -8527,6 +8511,7 @@ title = "Something went wrong"
 [portal.procurement.hero]
 barAria = "Stage {{current}} of {{total}}"
 ctaAgreement = "Review & sign agreement"
+ctaExploring = "Set up your trial"
 ctaPayment = "Add payment"
 ctaQuote = "Review your quote"
 ctaTrial = "Build your quote"
@@ -8538,7 +8523,6 @@ licenseKey = "Licence key"
 liveSub = "Your organization is provisioned and your licence is active."
 liveTitle = "You are live on Stirling Enterprise"
 next = "Next: {{stage}}"
-notStarted = "Not started"
 open = "Open procurement"
 scheduleCall = "Schedule a call"
 sentenceAgreement = "review and sign the agreement"
@@ -8546,12 +8530,7 @@ sentenceLive = "provisioning and rollout"
 sentencePayment = "purchase order and payment"
 sentenceQuote = "review and accept your quote"
 sentenceTrial = "set up your trial workspace"
-setup1Sub = "Invite your teammates"
-setup1Title = "Deploy the PDF Editor"
-setup2Sub = "Turn on processing across editors and other sources"
-setup2Title = "Connect the PDF Processor"
-setup3Sub = "Turn on Security, Compliance, Routing, or Retention when you need them"
-setup3Title = "Add recommended policies"
+
 [portal.procurement.journey]
 daysLeft_one = "{{count}} day left"
 daysLeft_other = "{{count}} days left"
@@ -8670,20 +8649,33 @@ title = "Schedule a call"
 
 [portal.procurement.setup]
 airgap = "Air-gapped"
-airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
-cloud = "Cloud"
-cloudSub = "Fully managed by Stirling. Nothing for you to run."
-deployment = "Where will you run Stirling?"
+airgapSub = "Sealed, no outbound"
+back = "Back"
+businessName = "Business name"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "Managed, fastest start"
+continue = "Continue"
+deployment = "Where should it deploy?"
 eula = "I agree to the Stirling EULA & Commercial Terms."
-seats = "Team size"
-seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
-seatsPlaceholder = "e.g. 250"
+fullName = "Full name"
+fullNamePlaceholder = "Your name"
+invites = "Invite teammates · optional"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Schedule a call"
+seats = "People testing"
+seatsPlaceholder = "e.g. 15"
 selfhost = "Self-hosted"
-selfhostSub = "Run it in your own cloud or data centre."
+selfhostSub = "Docker or Kubernetes"
 start = "Start trial"
-subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+stepOf = "Step {{n}} of {{total}}"
+subtitle = "Free for 14 days, no card required."
+subtitleDetails = "A few details for your quote and agreement."
+talkFirst = "Prefer to talk first?"
 title = "Set up your trial"
 viewEula = "Read it"
+workEmail = "Work email"
+workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.status]
 action = "Action needed"
@@ -8700,12 +8692,6 @@ extend = "Extend 7 days"
 maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."
 title = "Enterprise trial"
-
-[portal.procurement.upsell]
-homeBadge = "Enterprise"
-homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutable audit, and a dedicated SE."
-homeCta = "Start Trial →"
-homeHeadline = "Process millions of PDFs."
 
 [portal.search]
 ariaLabel = "Search"
@@ -8904,6 +8890,9 @@ name = "Name"
 namePlaceholder = "e.g. Claims intake"
 type = "Type"
 
+[portal.stepModal]
+close = "Close"
+
 [portal.tier]
 enterprise = "Enterprise plan"
 free = "Editor plan"
@@ -8970,14 +8959,6 @@ summary = "Owns a team — manages its members' resources and shared configs."
 [portal.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Unlimited"
-
-[portal.welcome]
-ariaLabel = "Welcome to Stirling PDF"
-install = "Install the editor"
-invite = "Invite teammates"
-openInBrowser = "Open in browser"
-productName = "PDF Editor"
-stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Print File"

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePortalLinked } from "@portal/contexts/usePortalLinked";
-import { useAsync } from "@portal/hooks/useAsync";
+import { qk } from "@portal/queries/keys";
+import { toAsyncState } from "@portal/queries/adapters";
 import {
   acceptQuote,
   extendTrial,
@@ -10,11 +12,13 @@ import {
   fetchSignedAgreementPdf,
   fetchSnapshot,
   issueQuote,
+  recordInterest,
   resetProcurement,
   startAgreement,
   startTrial,
   type ProcurementSnapshot,
   type QuoteResult,
+  type TrialSetupDetails,
 } from "@portal/api/procurement";
 
 export type ProcurementExtra =
@@ -55,8 +59,18 @@ export interface ProcurementController {
   invoicePdf: string | null;
   /** Open the trial-setup dialog (deployment + seats) — the trial only starts once it's confirmed. */
   onStartTrial: () => void;
+  /**
+   * Record enterprise interest and open trial setup. Persisting the intent is what keeps the
+   * enterprise surface off accounts that never asked for it, and makes drop-off at this step
+   * visible; the dialog opens either way, so a failed write never blocks the buyer.
+   */
+  onExploreEnterprise: () => void;
   /** Confirm the setup dialog: start the trial with the chosen deployment/seats, then open the flow. */
-  onConfirmSetup: (deployment: string, seats: number) => void;
+  onConfirmSetup: (
+    deployment: string,
+    seats: number,
+    details: TrialSetupDetails,
+  ) => void;
   onExtendTrial: () => void;
   onReset: () => void;
   onGenerate: (draft: QuoteResult) => void;
@@ -73,11 +87,19 @@ export function useProcurement(autoOpen = false): ProcurementController {
   const { t } = useTranslation();
   const isLinked = usePortalLinked();
 
-  const state = useAsync<ProcurementSnapshot | null>(
-    () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
-    [isLinked],
+  // Through the shared query cache, not a per-mount fetch: the snapshot survives navigation, so
+  // returning to Home renders the deal from cache instead of flashing the loading state again.
+  // No retry — a failing snapshot must not hold `loading` true through backoff, since the hero
+  // gates its whole card on it.
+  const queryClient = useQueryClient();
+  const snapshotKey = qk.procurement(isLinked);
+  const state = toAsyncState(
+    useQuery<ProcurementSnapshot | null>({
+      queryKey: snapshotKey,
+      queryFn: () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
+      retry: false,
+    }),
   );
-  const [snap, setSnap] = useState<ProcurementSnapshot | null>(null);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -88,7 +110,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
   const [error, setError] = useState<string | null>(null);
   const [extra, setExtra] = useState<ProcurementExtra>(null);
 
-  const data = snap ?? (state.loading ? null : state.data);
+  const data = state.data;
   const started = data?.dealId != null;
   const stage = data?.stage;
   const latest = data?.latestQuote ?? null;
@@ -98,12 +120,24 @@ export function useProcurement(autoOpen = false): ProcurementController {
     !latest ||
     ["draft", "expired", "canceled", "cancelled"].includes(latest.status);
 
-  async function run(fn: () => Promise<unknown>) {
+  /**
+   * Run a deal action, then refresh the snapshot so every reader sees the new stage.
+   *
+   * `closeOnSuccess` ends the step. Each stage is its own visit — a buyer can sit in one for days —
+   * so finishing one returns them to the deal card instead of gliding into the next. Deliberately
+   * not in a `finally`: a failure has to leave the modal open, or the error banner this sets would
+   * be torn down with it and the buyer would be left with no idea what went wrong.
+   */
+  async function run(
+    fn: () => Promise<unknown>,
+    opts?: { closeOnSuccess?: boolean },
+  ) {
     setBusy(true);
     setError(null);
     try {
       await fn();
-      setSnap(await fetchSnapshot());
+      queryClient.setQueryData(snapshotKey, await fetchSnapshot());
+      if (opts?.closeOnSuccess) setOpen(false);
     } catch (e) {
       console.error("[procurement] action failed", e);
       setError(e instanceof Error ? e.message : String(e));
@@ -112,13 +146,25 @@ export function useProcurement(autoOpen = false): ProcurementController {
     }
   }
 
-  // The setup dialog collects deployment + seats first; the trial starts on confirm.
+  // The setup dialog collects deployment + seats first; the trial starts on confirm. Starting the
+  // trial is a step in its own right, so it ends on the card — the buyer builds a quote when ready.
   const onStartTrial = () => setExtra("setup");
-  const onConfirmSetup = (deployment: string, seats: number) =>
+  const onExploreEnterprise = () => {
+    setExtra("setup");
+    void recordInterest()
+      .then((snap) => queryClient.setQueryData(snapshotKey, snap))
+      .catch((e) =>
+        console.error("[procurement] recording interest failed", e),
+      );
+  };
+  const onConfirmSetup = (
+    deployment: string,
+    seats: number,
+    details: TrialSetupDetails,
+  ) =>
     run(async () => {
-      await startTrial(deployment, seats);
+      await startTrial(deployment, seats, details);
       setExtra(null);
-      setOpen(true);
     });
   const onExtendTrial = () => run(extendTrial);
   const onReset = () =>
@@ -128,22 +174,29 @@ export function useProcurement(autoOpen = false): ProcurementController {
       setInvoicePdf(null);
     });
   const onGenerate = (draft: QuoteResult) =>
-    run(async () => {
-      await issueQuote(draft.quoteId);
-      setEditing(false);
-    });
+    run(
+      async () => {
+        await issueQuote(draft.quoteId);
+        setEditing(false);
+      },
+      { closeOnSuccess: true },
+    );
   // Accept the reviewed quote: advance to the agreement step only. No Stripe — the buyer can read
   // and download the plain quote before taking on the legal documents.
-  const onAcceptQuote = () => run(startAgreement);
+  const onAcceptQuote = () => run(startAgreement, { closeOnSuccess: true });
 
   // Signing the agreement is the commitment point: it accepts the issued quote into a committed
-  // subscription (Stripe), and provisioning upgrades the licence server-side.
+  // subscription (Stripe), and provisioning upgrades the licence server-side. Payment itself is
+  // invoice + bank transfer, so it settles out of band — there is no in-app step to close.
   const onAgree = () =>
-    run(async () => {
-      if (!latest) return;
-      const res = await acceptQuote(latest.quoteId);
-      setInvoicePdf(res.invoicePdf);
-    });
+    run(
+      async () => {
+        if (!latest) return;
+        const res = await acceptQuote(latest.quoteId);
+        setInvoicePdf(res.invoicePdf);
+      },
+      { closeOnSuccess: true },
+    );
 
   async function onDownloadPdf() {
     if (!latest) return;
@@ -238,6 +291,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
     setExtra,
     invoicePdf,
     onStartTrial,
+    onExploreEnterprise,
     onConfirmSetup,
     onExtendTrial,
     onReset,

@@ -61,6 +61,9 @@ public class ProcurementService {
     private final AgreementAssembler agreementAssembler;
     private final AgreementPdfRenderer agreementPdfRenderer;
     private final ProcurementAgreementSignatureRepository signatureRepo;
+    // Trial-setup invitations run through the team-invite path, with its seat, role and
+    // rate-limit rules rather than a second implementation here.
+    private final stirling.software.saas.service.SaasTeamService teams;
 
     public ProcurementService(
             ProcurementDealRepository dealRepo,
@@ -71,7 +74,8 @@ public class ProcurementService {
             TeamMembershipRepository memberRepo,
             AgreementAssembler agreementAssembler,
             AgreementPdfRenderer agreementPdfRenderer,
-            ProcurementAgreementSignatureRepository signatureRepo) {
+            ProcurementAgreementSignatureRepository signatureRepo,
+            stirling.software.saas.service.SaasTeamService teams) {
         this.dealRepo = dealRepo;
         this.quoteRepo = quoteRepo;
         this.pricing = pricing;
@@ -81,6 +85,7 @@ public class ProcurementService {
         this.agreementAssembler = agreementAssembler;
         this.agreementPdfRenderer = agreementPdfRenderer;
         this.signatureRepo = signatureRepo;
+        this.teams = teams;
     }
 
     /**
@@ -110,6 +115,27 @@ public class ProcurementService {
     }
 
     /**
+     * Record that the account is looking at enterprise. Creates the deal at {@code exploring} when
+     * there is none; an existing deal is returned untouched, so this can never walk a live deal
+     * backwards or restart a trial.
+     */
+    @Transactional
+    public ProcurementDeal recordInterest(Long teamId) {
+        return dealRepo.findByTeamId(teamId)
+                .orElseGet(
+                        () -> {
+                            ProcurementDeal deal = new ProcurementDeal(teamId);
+                            deal.setStage(ProcurementDeal.STAGE_EXPLORING);
+                            ProcurementDeal saved = dealRepo.save(deal);
+                            log.info(
+                                    "[procurement] interest recorded team={} deal={}",
+                                    teamId,
+                                    saved.getDealId());
+                            return saved;
+                        });
+    }
+
+    /**
      * Start (or restart) the free trial for a team: issue a mock trial licence and stamp the trial
      * window on the deal. No Stripe: a no-card trial has no subscription; the entitlement is the
      * Keygen licence, and the deal row is the journey state. The buyer's chosen deployment target
@@ -118,6 +144,21 @@ public class ProcurementService {
      */
     @Transactional
     public ProcurementDeal startTrial(Long teamId, String deployment, int seats) {
+        return startTrial(teamId, deployment, seats, null, null, null, null);
+    }
+
+    /**
+     * Start (or restart) the trial, capturing the buying entity if the setup step collected it.
+     * Blank details are ignored rather than written, so a re-run without them keeps what is there.
+     */
+    public ProcurementDeal startTrial(
+            Long teamId,
+            String deployment,
+            int seats,
+            String businessName,
+            String contactName,
+            String contactEmail,
+            String inviteEmails) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId).orElseGet(() -> new ProcurementDeal(teamId));
         LocalDateTime now = LocalDateTime.now();
@@ -128,6 +169,10 @@ public class ProcurementService {
         deal.setTrialStartedAt(now);
         deal.setTrialEndsAt(ends);
         deal.setTrialExtensionsUsed(0);
+        if (isNotBlank(businessName)) deal.setBusinessName(businessName.trim());
+        if (isNotBlank(contactName)) deal.setContactName(contactName.trim());
+        if (isNotBlank(contactEmail)) deal.setContactEmail(contactEmail.trim());
+        if (isNotBlank(inviteEmails)) deal.setInviteEmails(inviteEmails.trim());
         deal.setLicenseRef(licenses.issueTrialLicense(teamId, leaderEmail(teamId), ends));
         deal = dealRepo.save(deal);
         log.info(
@@ -143,6 +188,38 @@ public class ProcurementService {
     /**
      * Constrain a caller-supplied deployment to the known set; anything else falls back to cloud.
      */
+    /**
+     * Send the invitations named at trial setup. Best-effort per address: a rejection (already a
+     * member, an invitee with their own paid plan, the hourly rate limit) must not fail the trial,
+     * so each is logged and skipped rather than propagated.
+     *
+     * <p>Note the first accepted invitation converts a personal team into a shared one with
+     * unlimited seats — that is {@code inviteUserToTeam}'s own rule, and naming teammates here is
+     * the buyer asking for exactly that.
+     */
+    public void sendTrialInvites(
+            Long teamId, stirling.software.proprietary.security.model.User inviter, String emails) {
+        if (inviter == null || !isNotBlank(emails)) return;
+        for (String raw : emails.split("[,;\s]+")) {
+            String email = raw.trim();
+            if (email.isEmpty()) continue;
+            try {
+                teams.inviteUserToTeam(teamId, email, inviter);
+                log.info("[procurement] trial invite sent team={} to={}", teamId, email);
+            } catch (Exception e) {
+                log.warn(
+                        "[procurement] trial invite skipped team={} to={}: {}",
+                        teamId,
+                        email,
+                        e.getMessage());
+            }
+        }
+    }
+
+    private static boolean isNotBlank(String value) {
+        return value != null && !value.isBlank();
+    }
+
     private static String normalizeDeployment(String deployment) {
         if (deployment == null) return "cloud";
         String d = deployment.trim().toLowerCase(Locale.ROOT);

@@ -19,11 +19,8 @@ import type { Tier } from "@portal/contexts/TierContext";
  * Payment read more plainly than the internal `security` / `procurement`).
  */
 export type DealStage =
-  | "trial"
-  | "quote"
-  | "security"
-  | "procurement"
-  | "active";
+  /** Asked about enterprise, nothing committed yet. Precedes the journey rather than joining it. */
+  "exploring" | "trial" | "quote" | "security" | "procurement" | "active";
 
 export interface JourneyStep {
   stage: DealStage;
@@ -331,6 +328,10 @@ export interface ProcurementSnapshot {
   licenseKey: string | null;
   /** Version label of the signed agreement PDF available to download (e.g. "SEA v0.9.1"), else null. */
   agreementSignedVersion: string | null;
+  /** Buying entity captured at trial setup; null on deals started before that step existed. */
+  businessName: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
   latestQuote: QuoteResult | null;
 }
 
@@ -384,13 +385,37 @@ export function fetchLicenseFile(): Promise<string> {
  * Start the trial with the buyer's chosen deployment target and seat count (captured in the setup
  * step). These seed the quote builder; both remain editable when the quote is built.
  */
+/** Details collected by trial setup's second step; every field optional server-side. */
+export interface TrialSetupDetails {
+  businessName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  /**
+   * Raw comma/space/semicolon separated addresses. Recorded on the deal AND sent through the
+   * team-invite path once the trial starts; a rejected address is skipped, never fatal.
+   */
+  inviteEmails?: string;
+}
+
 export function startTrial(
   deployment: string,
   seats: number,
+  details?: TrialSetupDetails,
 ): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>(
     "/api/v1/procurement/trial/start",
-    { method: "POST", body: { deployment, users: seats } },
+    { method: "POST", body: { deployment, users: seats, ...details } },
+  );
+}
+
+/**
+ * Record that this account is looking at enterprise. Idempotent, and never disturbs an existing
+ * deal — so it is safe to call on every entry into the flow.
+ */
+export function recordInterest(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/interest",
+    { method: "POST" },
   );
 }
 

@@ -2,7 +2,6 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
 import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
-import { FLOW_JOURNEY } from "@portal/api/procurement";
 import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
 import {
   DocumentsModal,
@@ -18,7 +17,6 @@ import {
 } from "@portal/components/procurement/ProcurementStages";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
 import { QuoteReview } from "@portal/components/procurement/QuoteReview";
-import { StageStepper } from "@portal/components/procurement/StageStepper";
 import type { ProcurementController } from "@portal/components/procurement/useProcurement";
 
 /**
@@ -93,11 +91,7 @@ export function ProcurementFlow({
             title={t("portal.procurement.link.title")}
             description={t("portal.procurement.link.description")}
             actions={
-              <Button
-                variant="primary"
-                accent="premium"
-                onClick={() => openLinkModal()}
-              >
+              <Button variant="primary" onClick={() => openLinkModal()}>
                 {t("portal.procurement.link.cta")}
               </Button>
             }
@@ -108,16 +102,21 @@ export function ProcurementFlow({
 
         {isLinked && started && (
           <>
-            <div className="portal-proc__modal-stepper">
-              <StageStepper journey={FLOW_JOURNEY} currentStage={stage!} />
-            </div>
-
             {(editing ||
               (isDraft && (stage === "trial" || stage === "quote"))) && (
               <QuoteBuilder
                 deployment={data?.deployment ?? "cloud"}
                 seats={data?.seats ?? 0}
                 email={scheduleEmail}
+                dealDetails={
+                  data
+                    ? {
+                        businessName: data.businessName,
+                        contactName: data.contactName,
+                        contactEmail: data.contactEmail,
+                      }
+                    : undefined
+                }
                 initial={latest?.config}
                 eulaAlreadyAgreed={data?.trialStartedAt != null}
                 onGenerate={onGenerate}
@@ -175,6 +174,8 @@ export function ProcurementFlow({
         open={extra === "setup"}
         onClose={() => setExtra(null)}
         busy={busy}
+        email={scheduleEmail ?? undefined}
+        onScheduleCall={() => setExtra("schedule")}
         onConfirm={onConfirmSetup}
       />
       {data?.licenseKey && (

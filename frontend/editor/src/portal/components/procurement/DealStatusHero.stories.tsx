@@ -12,6 +12,9 @@ const base: ProcurementSnapshot = {
   trialExtensionsUsed: 0,
   licensed: false,
   licenseKey: null,
+  businessName: null,
+  contactName: null,
+  contactEmail: null,
   agreementSignedVersion: null,
   latestQuote: null,
 };
@@ -28,7 +31,6 @@ const meta: Meta<typeof DealStatusHero> = {
     onInvite: () => {},
     onSchedule: () => {},
     onManageTrial: () => {},
-    onNavigate: () => {},
   },
 };
 export default meta;

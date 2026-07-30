@@ -85,12 +85,7 @@ export function QuoteReview({
       )}
 
       <div className="portal-proc__payment-actions">
-        <Button
-          variant="primary"
-          accent="premium"
-          loading={busy}
-          onClick={onAccept}
-        >
+        <Button variant="primary" loading={busy} onClick={onAccept}>
           {t("portal.procurement.review.acceptCta")}
         </Button>
         <Button
