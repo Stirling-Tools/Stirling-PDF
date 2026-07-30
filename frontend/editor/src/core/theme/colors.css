@@ -130,6 +130,7 @@ html[data-app-theme="midnight"] {
   --c-text-muted: var(--p-zinc-200);
   --c-text-subtle: var(--p-zinc-300);
   --c-text-on-primary: var(--p-white);
+  --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);
   --c-btn-secondary-border: var(--p-c-343439);
@@ -282,6 +283,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);
   --c-text-subtle: var(--p-zinc-300);
+  --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);
   --c-btn-secondary-border: var(--p-c-343439);

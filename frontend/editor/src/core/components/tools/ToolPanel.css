@@ -127,11 +127,11 @@
 }
 
 .tool-panel--floating {
-  margin: 0.5rem 0.5rem 0.5rem 0;
-  height: calc(100vh - 1rem);
+  margin: var(--nav-gutter) var(--nav-gutter) var(--nav-gutter) 0;
+  height: calc(100vh - (var(--nav-gutter) * 2));
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
-  border-radius: 0.625rem;
+  border-radius: var(--radius-nav);
 }
 
 .tool-panel__collapsed-strip {

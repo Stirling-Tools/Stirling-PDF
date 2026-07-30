@@ -10,7 +10,7 @@
   top: 0;
   /* Slide between the full rail and the collapsed icon rail. Overridden by the
      drawer's transform transition under the mobile breakpoint below. */
-  transition: width 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: width var(--motion-spring);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -78,7 +78,7 @@
 
 /* ---- Collapsed icon rail (desktop only) ---- */
 .portal-sidebar[data-collapsed] {
-  width: 3.5rem;
+  width: var(--nav-rail-w);
 }
 .portal-sidebar[data-collapsed] .portal-sidebar__logo {
   flex-direction: column;

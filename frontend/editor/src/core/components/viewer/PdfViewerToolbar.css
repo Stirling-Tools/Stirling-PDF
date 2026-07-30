@@ -2,7 +2,7 @@
    than a slab welded to the viewport edge. Shared by both consumers (the
    viewer's bottom dock and the file-preview modal, which puts it up top). */
 .pdf-viewer-toolbar {
-  border-radius: 0.625rem;
+  border-radius: var(--radius-nav);
   border: 1px solid var(--c-border-subtle);
   background: var(--c-surface);
   box-shadow: var(--shadow-md);
@@ -19,7 +19,7 @@
   from {
     /* The bar's own height plus its gutter, so it starts fully off-screen
        however tall the controls wrap. */
-    transform: translateY(calc(100% + 0.5rem));
+    transform: translateY(calc(100% + var(--nav-gutter)));
     opacity: 0;
   }
   to {

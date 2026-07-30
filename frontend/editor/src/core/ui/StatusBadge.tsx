@@ -28,7 +28,7 @@ export function StatusBadge({
 }: StatusBadgeProps) {
   const cls = [
     "sui-status",
-    showDot ? "sui-status--dot" : "sui-status--pill",
+    showDot ? "" : "sui-status--pill",
     `sui-status--${tone}`,
     `sui-status--${size}`,
     className ?? "",

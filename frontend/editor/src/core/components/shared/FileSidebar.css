@@ -15,12 +15,12 @@
      (sidebar-content-in, 0.18s) is timed against this 0.22s so labels resolve
      only after the width has settled — no squashed text mid-animation. */
   transition:
-    width 0.22s cubic-bezier(0.32, 0.72, 0, 1),
-    min-width 0.22s cubic-bezier(0.32, 0.72, 0, 1),
-    max-width 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+    width var(--motion-spring),
+    min-width var(--motion-spring),
+    max-width var(--motion-spring);
   /* Gap around the floating boxes. */
-  padding: 0.5rem;
-  gap: 0.5rem;
+  padding: var(--nav-gutter);
+  gap: var(--nav-gutter);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -155,6 +155,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onPickGoogleDriveFiles,
       onSearchClick,
       extraAction,
+      toggleAriaLabel,
+      toggleIcon,
     },
     ref,
   ) {
@@ -839,12 +841,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 className="file-sidebar-collapse-toggle"
                 onClick={() => onToggleCollapse()}
                 aria-label={
-                  collapsed
+                  toggleAriaLabel ??
+                  (collapsed
                     ? t("fileSidebar.expand", "Expand sidebar")
-                    : t("fileSidebar.collapse", "Collapse sidebar")
+                    : t("fileSidebar.collapse", "Collapse sidebar"))
                 }
               >
-                <SidebarToggleIcon size={18} />
+                {toggleIcon ?? <SidebarToggleIcon size={18} />}
               </ActionIcon>
             )}
           </div>

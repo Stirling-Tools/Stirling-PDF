@@ -11,10 +11,10 @@
   /* No left margin: the file sidebar's own 0.5rem padding already provides the
      gutter on that side, so adding one here would double it and leave the bar
      further from the sidebar than it is from the tool panel. */
-  margin: 0.5rem 0.5rem 0 0;
+  margin: var(--nav-gutter) var(--nav-gutter) 0 0;
   background-color: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
-  border-radius: 0.625rem;
+  border-radius: var(--radius-nav);
   flex-shrink: 0;
   z-index: 50;
 }

@@ -43,7 +43,7 @@ export function Logo({
 
   const cls = [
     "sui-logo",
-    orientation === "vertical" ? "sui-logo--vertical" : "sui-logo--horizontal",
+    orientation === "vertical" ? "sui-logo--vertical" : "",
     className ?? "",
   ]
     .filter(Boolean)
