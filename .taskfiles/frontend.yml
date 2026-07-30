@@ -184,13 +184,13 @@ tasks:
 
   storybook:
     desc: "Start Storybook dev server"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx storybook dev -p 6006 {{.CLI_ARGS}}
 
   storybook:build:
     desc: "Build static Storybook"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx storybook build {{.CLI_ARGS}}
 
@@ -204,7 +204,7 @@ tasks:
 
   storybook:test:
     desc: "Scan every story in real Chromium: it must render and pass axe"
-    deps: [install, storybook:browser]
+    deps: [prepare, storybook:browser]
     cmds:
       # Runs each story as a browser test. Pass a filter through, e.g.
       #   task frontend:storybook:test -- Button
@@ -212,44 +212,44 @@ tasks:
 
   storybook:a11y:
     desc: "a11y regression gate over every story: fail only on NEW axe violations"
-    deps: [install, storybook:browser]
+    deps: [prepare, storybook:browser]
     cmds:
-      - bash .storybook/a11y-scan.sh
+      - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
 
   storybook:a11y:changed:
-    desc: "a11y gate over stories changed vs a base ref (default origin/main)"
+    desc: "a11y gate over the stories this branch affects (default base origin/main)"
     summary: |
-      Scans only the stories this branch touches, which is what pull requests
-      run — a full scan takes ~30 minutes, far too long to sit in front of every
-      merge. The nightly job covers the rest of the suite.
+      Scans the stories a branch affects, which is what pull requests run — a
+      full scan takes ~30 minutes, far too long to sit in front of every merge.
+      A story is affected if its file changed, or if a same-named sibling
+      source file changed (editing Button.tsx or Button.css re-scans
+      Button.stories.tsx — the story renders the live component, so a component
+      edit changes what the story shows without touching the story file).
+      Changes that ripple further than a component's own stories are covered by
+      the nightly full sweep.
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
-    deps: [install, storybook:browser]
+    deps: [prepare, storybook:browser]
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
-      # Stories touched by this branch, plus any not yet committed.
       CHANGED:
-        sh: |
-          { git diff --name-only --diff-filter=d {{.CLI_ARGS | default "origin/main"}}...HEAD -- '*.stories.ts' '*.stories.tsx';
-            git diff --name-only --diff-filter=d -- '*.stories.ts' '*.stories.tsx';
-            git ls-files --others --exclude-standard -- '*.stories.ts' '*.stories.tsx'; } \
-          | sed 's|^frontend/||' | sort -u | tr '\n' ' '
+        sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
     cmds:
       - cmd: |
-          if [ -z "{{.CHANGED}}" ]; then
-            echo "a11y: no story files changed vs {{.BASE}} — nothing to check"
+          if [ -z '{{.CHANGED}}' ]; then
+            echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
-          bash .storybook/a11y-scan.sh {{.CHANGED}}
+          node .storybook/a11y-scan.mjs {{.CHANGED}}
           node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
 
   storybook:a11y:record:
     desc: "Re-record the a11y baseline (run after intentionally fixing/adding violations)"
-    deps: [install, storybook:browser]
+    deps: [prepare, storybook:browser]
     cmds:
-      - bash .storybook/a11y-scan.sh
+      - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record
 
   # ============================================================
