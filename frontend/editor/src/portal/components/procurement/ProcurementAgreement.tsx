@@ -116,7 +116,8 @@ export function ProcurementAgreement({
         subtitle={t("portal.procurement.agreement.docSub")}
         onClose={onClose}
         aside={
-          <>
+          // Grouped so the two document actions read as a pair, set apart from the close.
+          <div className="portal-agreement__actions">
             {/* On the document, like the quote's: it downloads what is on screen. */}
             <Button
               variant="tertiary"
@@ -132,7 +133,7 @@ export function ProcurementAgreement({
             <Button variant="tertiary" size="sm" onClick={onRequestChanges}>
               {t("portal.procurement.agreement.requestChanges")}
             </Button>
-          </>
+          </div>
         }
       />
 
@@ -176,16 +177,6 @@ export function ProcurementAgreement({
         </p>
       )}
 
-      <label className="portal-qb__eula portal-agreement__accept">
-        <input
-          type="checkbox"
-          checked={confirmed}
-          disabled={!scrolledToEnd}
-          onChange={(e) => setConfirmed(e.target.checked)}
-        />
-        <span>{t("portal.procurement.agreement.confirm")}</span>
-      </label>
-
       {error && (
         <p className="portal-proc__error">
           {t("portal.procurement.agreement.signError")}
@@ -198,54 +189,68 @@ export function ProcurementAgreement({
       )}
 
       {/* The signature block: who is bound, who signs, and the act of signing, on one line — the
-          shape of a paper signature block rather than a form above a button. */}
+          shape of a paper signature block rather than a form above a button. The consent sits
+          directly under the fields it qualifies, with no rule between them: it is part of signing,
+          not a separate section, and boxing it cost the document a quarter of its height. */}
       <div className="portal-qb__foot portal-agreement__signbar">
-        <div className="portal-qb__row portal-agreement__signfields">
-          <label className="portal-qb__field">
-            <span className="portal-qb__field-label">
-              {t("portal.procurement.agreement.legalName")}
-            </span>
-            <input
-              value={legalName}
-              placeholder={t(
-                "portal.procurement.agreement.legalNamePlaceholder",
-              )}
-              onChange={(e) => setLegalName(e.target.value)}
-            />
-          </label>
-          <label className="portal-qb__field">
-            <span className="portal-qb__field-label">
-              {t("portal.procurement.agreement.signatory")}
-            </span>
-            <input
-              value={signatory}
-              placeholder={t(
-                "portal.procurement.agreement.signatoryPlaceholder",
-              )}
-              onChange={(e) => setSignatory(e.target.value)}
-            />
-          </label>
-          <label className="portal-qb__field">
-            <span className="portal-qb__field-label">
-              {t("portal.procurement.agreement.signatoryTitle")}
-            </span>
-            <input
-              value={title}
-              placeholder={t(
-                "portal.procurement.agreement.signatoryTitlePlaceholder",
-              )}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </label>
+        <div className="portal-agreement__signrow">
+          <div className="portal-qb__row portal-agreement__signfields">
+            <label className="portal-qb__field">
+              <span className="portal-qb__field-label">
+                {t("portal.procurement.agreement.legalName")}
+              </span>
+              <input
+                value={legalName}
+                placeholder={t(
+                  "portal.procurement.agreement.legalNamePlaceholder",
+                )}
+                onChange={(e) => setLegalName(e.target.value)}
+              />
+            </label>
+            <label className="portal-qb__field">
+              <span className="portal-qb__field-label">
+                {t("portal.procurement.agreement.signatory")}
+              </span>
+              <input
+                value={signatory}
+                placeholder={t(
+                  "portal.procurement.agreement.signatoryPlaceholder",
+                )}
+                onChange={(e) => setSignatory(e.target.value)}
+              />
+            </label>
+            <label className="portal-qb__field">
+              <span className="portal-qb__field-label">
+                {t("portal.procurement.agreement.signatoryTitle")}
+              </span>
+              <input
+                value={title}
+                placeholder={t(
+                  "portal.procurement.agreement.signatoryTitlePlaceholder",
+                )}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </label>
+          </div>
+          <Button
+            variant="primary"
+            loading={busy || signing}
+            disabled={!ready}
+            onClick={sign}
+          >
+            {t("portal.procurement.agreement.agreeCta")}
+          </Button>
         </div>
-        <Button
-          variant="primary"
-          loading={busy || signing}
-          disabled={!ready}
-          onClick={sign}
-        >
-          {t("portal.procurement.agreement.agreeCta")}
-        </Button>
+
+        <label className="portal-agreement__accept">
+          <input
+            type="checkbox"
+            checked={confirmed}
+            disabled={!scrolledToEnd}
+            onChange={(e) => setConfirmed(e.target.checked)}
+          />
+          <span>{t("portal.procurement.agreement.confirm")}</span>
+        </label>
       </div>
     </div>
   );

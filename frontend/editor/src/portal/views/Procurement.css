@@ -1323,37 +1323,79 @@
 }
 
 /* ── Agreement (security) step ────────────────────────────────────────────── */
-/* The signature block: the three fields that name the bound party and its signatory, on the same line
-   as the act of signing. Fields shrink below the row's usual floor so all three plus the button hold
-   one line at the takeover's width; they wrap rather than clip if a translation runs long. */
-.portal-agreement__signbar {
-  gap: 0.9rem;
-  align-items: flex-end;
+/* The two document actions read as a pair, close together and set apart from the close beside them. */
+.portal-agreement__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
 }
-.portal-agreement__signbar .portal-agreement__signfields {
+
+/* The signature block: the three fields that name the bound party and its signatory, on the same line
+   as the act of signing, with the consent directly beneath them and no rule between. Fields shrink
+   below the row's usual floor so all three plus the button hold one line at the takeover's width;
+   they wrap rather than clip if a translation runs long. */
+.portal-agreement__signbar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+/* Bottom-aligned, not centred: the fields are a label above an input, so centring the button against
+   the whole block leaves it riding 11px above the inputs it belongs to. Sharing their baseline puts it
+   on the input row, where a button of the same height reads as centred on them. */
+.portal-agreement__signrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.9rem;
+}
+.portal-agreement__signrow .portal-agreement__signfields {
   flex: 1;
   gap: 0.6rem;
   min-width: 0;
 }
-.portal-agreement__signbar .portal-qb__field {
+.portal-agreement__signrow .portal-qb__field {
   min-width: 8.5rem;
+}
+/* Unboxed: a line of small print under the fields, not a panel competing with the document. */
+.portal-agreement__accept {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+}
+.portal-agreement__accept input {
+  margin: 0.1rem 0 0;
+  flex: 0 0 auto;
 }
 
 /* The agreement is presented as paper, not as app copy in a box: a sunken tray running to the panel's
    edges, with the terms on white stock in a serif face. Signing is the most consequential thing a
    buyer does here, so the document should read like the document it is. */
+/* The document takes every pixel the dialog can spare: it is what the buyer is here to read, and a
+   fixed height left it a small white box floating in a tall panel. The chain has to carry the fill —
+   each link needs min-height:0 or a flex child refuses to shrink below its content. */
 .portal-agreement {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .portal-agreement__tray {
   background: var(--c-surface-sunken);
   padding: 14px var(--flowmodal-inset);
   margin: 0 calc(-1 * var(--flowmodal-inset));
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .portal-agreement__doc {
-  max-height: 24rem;
+  flex: 1 1 auto;
+  width: 100%;
+  /* A floor so a short document still reads as a page, and no ceiling so a long one fills. */
+  min-height: 16rem;
   overflow-y: auto;
   padding: 1.35rem 1.6rem;
   border: 1px solid var(--c-border-subtle);

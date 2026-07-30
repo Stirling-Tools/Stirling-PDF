@@ -37,6 +37,9 @@
   flex-direction: column;
   gap: 0.9rem;
   color: var(--c-text);
+  /* So a step that fills the dialog's height (the agreement's document) can shrink to it: without
+     this a flex child refuses to go below its content height and overflows instead. */
+  min-height: 0;
 }
 
 /* One space-between row, so a step passes its two ends as siblings (Back on the left, Continue on
