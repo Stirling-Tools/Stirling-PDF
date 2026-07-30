@@ -12,8 +12,12 @@
  * the module that changes - callers only ever read the result.
  */
 
-/** What a node represents. The chain always has exactly one input and one output. */
-export type GraphNodeKind = "input" | "step" | "output";
+/**
+ * What a node represents. The chain always has exactly one input and one output. `placeholder` is
+ * the stand-in shown when a pipeline has no steps yet: it occupies the row the first step will take
+ * so the chain's shape is visible, and it is the affordance for adding that step.
+ */
+export type GraphNodeKind = "input" | "step" | "output" | "placeholder";
 
 /** Node id: `"input"`, `"output"`, or `"step:<index>"`. Stable for a given chain position. */
 export type GraphNodeId = string;
@@ -43,8 +47,8 @@ export interface LaidOutEdge {
   from: GraphNodeId;
   to: GraphNodeId;
   /**
-   * Where a step dropped on this wire lands in the step list. Null means the wire refuses
-   * inserts - the step above it must stay last (encryption locks the output).
+   * Where a step dropped on this wire lands in the step list. Null only for the wires either side
+   * of the placeholder, which is itself the affordance for adding the first step.
    */
   insertIndex: number | null;
   /** Straight vertical wire, from the upper node's bottom port to the lower node's top port. */
@@ -70,25 +74,29 @@ const ROW_PITCH = NODE_HEIGHT + EDGE_LENGTH;
 
 export interface LayoutChainOptions {
   stepCount: number;
-  /**
-   * Steps that must remain last, aligned with the step list. The wire below such a step accepts
-   * no insert, so nothing can be placed after it.
-   */
-  stepFinalOnly?: readonly boolean[];
 }
 
 /**
  * Lay the chain out top to bottom: input, each step in order, output. Rows are evenly pitched and
  * share one x, so wires are vertical and always aligned.
  */
-export function layoutChain({
-  stepCount,
-  stepFinalOnly,
-}: LayoutChainOptions): LaidOutChain {
+export function layoutChain({ stepCount }: LayoutChainOptions): LaidOutChain {
   const nodes: LaidOutNode[] = [];
   const row = (index: number) => index * ROW_PITCH;
+  // An empty pipeline still shows a step row, filled by the placeholder, so the chain reads as
+  // input -> something -> output rather than as a bare wire.
+  const rows = Math.max(stepCount, 1);
 
   nodes.push({ id: "input", kind: "input", stepIndex: null, x: 0, y: row(0) });
+  if (stepCount === 0) {
+    nodes.push({
+      id: "placeholder",
+      kind: "placeholder",
+      stepIndex: null,
+      x: 0,
+      y: row(1),
+    });
+  }
   for (let i = 0; i < stepCount; i++) {
     nodes.push({
       id: stepNodeId(i),
@@ -103,7 +111,7 @@ export function layoutChain({
     kind: "output",
     stepIndex: null,
     x: 0,
-    y: row(stepCount + 1),
+    y: row(rows + 1),
   });
 
   const centreX = NODE_WIDTH / 2;
@@ -114,14 +122,19 @@ export function layoutChain({
     // A wire's insert index is the step slot it sits above: the wire below the input opens slot 0,
     // the wire below step i opens slot i+1. A final-only step closes the wire beneath it.
     const above = upper.stepIndex;
-    const insertIndex =
-      above !== null && stepFinalOnly?.[above] ? null : (above ?? -1) + 1;
+    // The placeholder is itself the "add the first step" affordance, so the wires either side of it
+    // stay plain - two pluses for the same slot would be a choice with no difference.
+    const placeholderRow =
+      upper.kind === "placeholder" || lower.kind === "placeholder";
+    const insertIndex = placeholderRow ? null : (above ?? -1) + 1;
     edges.push({
       id: `${upper.id}->${lower.id}`,
       from: upper.id,
       to: lower.id,
       insertIndex,
       x: centreX,
+      // Exactly node-bottom to node-top: the wire meets both borders. The arrowhead is kept inside
+      // this box (see GraphEdge.css) so the node, drawn after it, cannot paint over the tip.
       y1: upper.y + NODE_HEIGHT,
       y2: lower.y,
     });
@@ -131,7 +144,7 @@ export function layoutChain({
     nodes,
     edges,
     width: NODE_WIDTH,
-    height: row(stepCount + 1) + NODE_HEIGHT,
+    height: row(rows + 1) + NODE_HEIGHT,
   };
 }
 

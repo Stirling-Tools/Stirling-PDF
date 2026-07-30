@@ -10,12 +10,21 @@ import {
 } from "@portal/components/pipelines/graph/pipelineLayout";
 
 describe("layoutChain", () => {
-  test("an empty chain is just input and output, joined by one wire", () => {
+  test("an empty chain reserves the first step's row for the placeholder", () => {
     const { nodes, edges } = layoutChain({ stepCount: 0 });
-    expect(nodes.map((n) => n.kind)).toEqual(["input", "output"]);
-    expect(edges).toHaveLength(1);
-    // The only wire opens the first step slot, so an empty pipeline can be filled.
-    expect(edges[0].insertIndex).toBe(0);
+    expect(nodes.map((n) => n.kind)).toEqual([
+      "input",
+      "placeholder",
+      "output",
+    ]);
+    // The placeholder is the affordance, so neither wire around it offers a plus as well.
+    expect(edges.map((e) => e.insertIndex)).toEqual([null, null]);
+  });
+
+  test("the empty chain is as tall as a one-step chain", () => {
+    expect(layoutChain({ stepCount: 0 }).height).toBe(
+      layoutChain({ stepCount: 1 }).height,
+    );
   });
 
   test("steps sit between input and output, in order", () => {
@@ -45,14 +54,15 @@ describe("layoutChain", () => {
     expect(height).toBe(last.y + NODE_HEIGHT);
   });
 
-  test("wires run vertically from one node's bottom to the next node's top", () => {
-    const { edges } = layoutChain({ stepCount: 1 });
+  test("wires span exactly from one node's bottom border to the next node's top", () => {
+    const { nodes, edges } = layoutChain({ stepCount: 1 });
     expect(edges).toHaveLength(2);
     for (const edge of edges) {
       expect(edge.x).toBe(NODE_WIDTH / 2);
-      expect(edge.y2).toBeGreaterThan(edge.y1);
       expect(edge.y2 - edge.y1).toBe(EDGE_LENGTH);
     }
+    expect(edges[0].y1).toBe(nodes[0].y + NODE_HEIGHT);
+    expect(edges[0].y2).toBe(nodes[1].y);
   });
 
   test("each wire opens the slot it sits above", () => {
@@ -61,21 +71,10 @@ describe("layoutChain", () => {
     expect(edges.map((e) => e.insertIndex)).toEqual([0, 1, 2, 3]);
   });
 
-  test("a final-only step closes the wire beneath it", () => {
-    // Add Password locks the output: nothing may run after it.
-    const { edges } = layoutChain({
-      stepCount: 2,
-      stepFinalOnly: [false, true],
-    });
-    expect(edges.map((e) => e.insertIndex)).toEqual([0, 1, null]);
-  });
-
-  test("a final-only step earlier in the chain closes only its own wire", () => {
-    const { edges } = layoutChain({
-      stepCount: 3,
-      stepFinalOnly: [false, true, false],
-    });
-    expect(edges.map((e) => e.insertIndex)).toEqual([0, 1, null, 3]);
+  test("every wire between real nodes stays open", () => {
+    // Ordering is the user's to choose: no pairing is refused, however odd it is.
+    const { edges } = layoutChain({ stepCount: 4 });
+    expect(edges.every((e) => e.insertIndex !== null)).toBe(true);
   });
 });
 

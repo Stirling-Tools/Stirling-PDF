@@ -23,15 +23,17 @@
   background: var(--c-border-strong);
 }
 
-/* Arrowhead at the arriving end, so the chain reads as directed. */
+/* Arrowhead at the arriving end, so the chain reads as directed. Rotating the square throws its
+   corner ~1px past the box, so it is lifted by the same amount: the tip then lands exactly on the
+   node's border instead of under it. */
 .portal-graph-edge__line::after {
   content: "";
   position: absolute;
-  bottom: 0;
+  bottom: 1px;
   left: 50%;
   width: 0.3125rem;
   height: 0.3125rem;
-  transform: translate(-50%, 0.0625rem) rotate(45deg);
+  transform: translate(-50%, 0) rotate(45deg);
   border-right: 1px solid var(--c-border-strong);
   border-bottom: 1px solid var(--c-border-strong);
 }
@@ -61,9 +63,54 @@
   border-color: var(--c-primary);
 }
 
-/* A wire that refuses inserts (the step above must stay last): a fainter line, no plus. */
-.portal-graph-edge.is-closed .portal-graph-edge__line {
+/* A wire with no slot of its own (either side of the placeholder): line only. */
+.portal-graph-edge.is-plain .portal-graph-edge__line {
   background: var(--c-border-subtle);
+}
+
+/* The pairing does not make much sense. Advisory: the wire still accepts drops and the chain still
+   runs - the order stays the user's choice. */
+.portal-graph-edge.has-warning {
+  width: auto;
+  min-width: 2.5rem;
+}
+
+.portal-graph-edge.has-warning .portal-graph-edge__line {
+  background: var(--c-warning);
+}
+
+.portal-graph-edge.has-warning .portal-graph-edge__line::after {
+  border-right-color: var(--c-warning);
+  border-bottom-color: var(--c-warning);
+}
+
+.portal-graph-edge__warning {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 15rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--c-warning);
+  /* Matches the shared Banner's warning treatment: tinted ground, amber border and glyph, ordinary
+     text. Amber words would not clear 4.5:1 at this size, and the tint is what makes the neutral
+     text read as part of a warning rather than as stray body copy. */
+  background: color-mix(in srgb, var(--c-warning) 12%, var(--c-surface));
+  color: var(--c-text);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+
+.portal-graph-edge__warning svg {
+  color: var(--c-warning);
+  flex: none;
+}
+
+.portal-graph-edge__warning-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* A step is in flight and this wire would accept it. */

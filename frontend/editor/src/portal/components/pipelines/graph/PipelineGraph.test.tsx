@@ -92,28 +92,63 @@ describe("PipelineGraph", () => {
     expect(handlers.onInsertStep).toHaveBeenCalledWith(1);
   });
 
-  it("offers a single insert when the chain is empty, plus a hint", () => {
+  it("holds the first step's place with a placeholder when the chain is empty", () => {
     const handlers = renderGraph({ steps: [] });
-    const inserts = screen.getAllByLabelText(
-      "portal.pipelines.graph.insertHere",
-    );
-    expect(inserts).toHaveLength(1);
-    fireEvent.click(inserts[0]);
-    expect(handlers.onInsertStep).toHaveBeenCalledWith(0);
+    // The placeholder is the affordance, so the wires either side of it carry no plus of their
+    // own - two ways to fill the same slot would be a choice with no difference.
     expect(
-      screen.getByText("portal.pipelines.graph.emptyHint"),
+      screen.queryByLabelText("portal.pipelines.graph.insertHere"),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("portal.pipelines.graph.addFirstTool"));
+    expect(handlers.onInsertStep).toHaveBeenCalledWith(0);
+  });
+
+  it("drops the placeholder once the chain has a step", () => {
+    renderGraph({ steps: [{ label: "OCR" }] });
+    expect(
+      screen.queryByText("portal.pipelines.graph.addFirstTool"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("warns on the wire arriving at a step it makes little sense to feed", () => {
+    renderGraph({
+      steps: [
+        { label: "Add Password" },
+        { label: "OCR", inputWarning: "OCR cannot read an encrypted file" },
+      ],
+    });
+    expect(
+      screen.getByText("OCR cannot read an encrypted file"),
     ).toBeInTheDocument();
   });
 
-  it("closes the wire below a step that must stay last", () => {
-    // Add Password locks the output, so nothing may be inserted after it.
-    renderGraph({
-      steps: [{ label: "OCR" }, { label: "Add Password", finalOnly: true }],
+  it("still allows the odd pairing: warned wires keep taking inserts", () => {
+    // Advisory, not a block - the order stays the user's to choose.
+    const handlers = renderGraph({
+      steps: [
+        { label: "Add Password" },
+        { label: "OCR", inputWarning: "OCR cannot read an encrypted file" },
+      ],
     });
-    // input->OCR and OCR->Add Password stay open; Add Password->output does not.
+    // The warned wire trades its plus for the note, so the two unwarned wires keep theirs.
+    const inserts = screen.getAllByLabelText(
+      "portal.pipelines.graph.insertHere",
+    );
+    expect(inserts).toHaveLength(2);
+    fireEvent.click(inserts[1]);
+    expect(handlers.onInsertStep).toHaveBeenCalledWith(2);
+  });
+
+  it("warns on the wire into the output too", () => {
+    renderGraph({
+      output: {
+        label: "Archive",
+        inputWarning: "Nothing writes a folder here",
+      },
+    });
     expect(
-      screen.getAllByLabelText("portal.pipelines.graph.insertHere"),
-    ).toHaveLength(2);
+      screen.getByText("Nothing writes a folder here"),
+    ).toBeInTheDocument();
   });
 
   it("removes a step from the node itself, and not the chain's ends", () => {

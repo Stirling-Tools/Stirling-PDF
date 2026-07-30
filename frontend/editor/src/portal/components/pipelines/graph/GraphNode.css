@@ -65,18 +65,27 @@
 
 .portal-graph-node__detail {
   font-size: 0.6875rem;
-  color: var(--c-text-subtle);
+  /* --c-text-subtle does not clear 4.5:1 at this size in either theme (axe: 4.39 light, 3.66
+     dark); --c-text-muted is the next rung up and does. */
+  color: var(--c-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Amber carries the tone on the glyph; the words stay body-coloured. --c-warning is amber-600,
+   which is only 3.18:1 on a light surface at this size (axe) - readable as an icon, not as text. */
 .portal-graph-node__warning {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   font-size: 0.6875rem;
+  color: var(--c-text);
+}
+
+.portal-graph-node__warning svg {
   color: var(--c-warning);
+  flex: none;
 }
 
 /* Selected: the node whose settings the inspector is showing. */

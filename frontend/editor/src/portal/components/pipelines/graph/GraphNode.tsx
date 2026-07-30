@@ -15,20 +15,23 @@ import "@portal/components/pipelines/graph/GraphNode.css";
 /** How a node is faring in the current or last test run. */
 export type NodeRunState = "running" | "done" | "failed";
 
-const KIND_ICON: Record<GraphNodeKind, ReactNode> = {
+/** The kinds this card renders. The placeholder is its own component, not a node variant. */
+type CardKind = Exclude<GraphNodeKind, "placeholder">;
+
+const KIND_ICON: Record<CardKind, ReactNode> = {
   input: <MoveToInboxRoundedIcon style={{ fontSize: "1.125rem" }} />,
   step: <TuneRoundedIcon style={{ fontSize: "1.125rem" }} />,
   output: <SendRoundedIcon style={{ fontSize: "1.125rem" }} />,
 };
 
-const KIND_ACCENT: Record<GraphNodeKind, IconBadgeAccent> = {
+const KIND_ACCENT: Record<CardKind, IconBadgeAccent> = {
   input: "green",
   step: "blue",
   output: "purple",
 };
 
 export interface GraphNodeProps {
-  kind: GraphNodeKind;
+  kind: CardKind;
   title: string;
   /** One-line summary under the title (the source's path, a step's parameters). */
   detail?: string;

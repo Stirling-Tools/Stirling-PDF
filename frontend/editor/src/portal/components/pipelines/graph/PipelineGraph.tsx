@@ -1,14 +1,15 @@
 import { useState, type KeyboardEvent, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
 import {
   GraphNode,
   type NodeRunState,
 } from "@portal/components/pipelines/graph/GraphNode";
 import { GraphEdge } from "@portal/components/pipelines/graph/GraphEdge";
+import { GraphPlaceholderNode } from "@portal/components/pipelines/graph/GraphPlaceholderNode";
 import {
   NODE_HEIGHT,
   NODE_WIDTH,
   layoutChain,
+  stepIndexOf,
 } from "@portal/components/pipelines/graph/pipelineLayout";
 import { useStepDraggable } from "@portal/components/pipelines/graph/useChainDragDrop";
 import "@portal/components/pipelines/graph/PipelineGraph.css";
@@ -23,12 +24,12 @@ export interface GraphNodeContent {
   detail?: string;
   /** Why this node blocks saving, shown in place of the detail. */
   warning?: string;
+  /** Why the input will not be much use. */
+  inputWarning?: string;
 }
 
 export interface GraphStepContent extends GraphNodeContent {
   icon?: ReactNode;
-  /** Must remain last: nothing may be inserted after it (encryption locks the output). */
-  finalOnly?: boolean;
   runState?: NodeRunState;
 }
 
@@ -62,12 +63,17 @@ export function PipelineGraph({
   onRemoveStep,
   onReorderStep,
 }: PipelineGraphProps) {
-  const { t } = useTranslation();
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const { nodes, edges, width, height } = layoutChain({
     stepCount: steps.length,
-    stepFinalOnly: steps.map((step) => Boolean(step.finalOnly)),
   });
+
+  // A wire carries the warning belonging to the node it arrives at.
+  const arrivalWarning = (nodeId: string): string | undefined => {
+    if (nodeId === "output") return output.inputWarning;
+    const index = stepIndexOf(nodeId);
+    return index === null ? undefined : steps[index]?.inputWarning;
+  };
 
   // Delete removes the selected step. Scoped to the graph, so typing in the inspector's fields is
   // never intercepted.
@@ -91,6 +97,7 @@ export function PipelineGraph({
             onInsert={onInsertStep}
             onReorder={onReorderStep}
             dragActive={draggingIndex !== null}
+            warning={arrivalWarning(edge.to)}
           />
         ))}
 
@@ -101,22 +108,30 @@ export function PipelineGraph({
             width: `${NODE_WIDTH}px`,
             minHeight: `${NODE_HEIGHT}px`,
           };
-          if (node.stepIndex === null) {
-            const content = node.kind === "input" ? input : output;
+          if (node.kind === "placeholder") {
+            return (
+              <div className="portal-graph__slot" key={node.id} style={style}>
+                <GraphPlaceholderNode onAdd={() => onInsertStep(0)} />
+              </div>
+            );
+          }
+          if (node.kind === "input" || node.kind === "output") {
+            const kind = node.kind;
+            const content = kind === "input" ? input : output;
             return (
               <div className="portal-graph__slot" key={node.id} style={style}>
                 <GraphNode
-                  kind={node.kind}
+                  kind={kind}
                   title={content.label}
                   detail={content.detail}
                   warning={content.warning}
-                  selected={selected === node.kind}
-                  onSelect={() => onSelect(node.kind)}
+                  selected={selected === kind}
+                  onSelect={() => onSelect(kind)}
                 />
               </div>
             );
           }
-          const index = node.stepIndex;
+          const index = node.stepIndex ?? 0;
           return (
             <div className="portal-graph__slot" key={node.id} style={style}>
               <ChainStepNode
@@ -134,12 +149,6 @@ export function PipelineGraph({
           );
         })}
       </div>
-
-      {steps.length === 0 && (
-        <p className="portal-graph__hint">
-          {t("portal.pipelines.graph.emptyHint")}
-        </p>
-      )}
     </div>
   );
 }

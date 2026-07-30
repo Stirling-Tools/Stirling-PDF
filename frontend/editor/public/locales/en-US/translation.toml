@@ -7881,7 +7881,8 @@ description = "Create your first pipeline: pick the sources it runs over, chain 
 title = "No pipelines yet"
 
 [portal.pipelines.graph]
-emptyHint = "Add a tool on the line to start building your pipeline."
+addFirstTool = "Add your first tool"
+addFirstToolHint = "Pick an operation to run on every document that arrives"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 
