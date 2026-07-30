@@ -8267,6 +8267,7 @@ exampleTag = "Example"
 intro = "Type {{ in any text field to insert a variable. Document and run variables are filled in per document when the step runs, so one step works for every file that passes through."
 introSteps = "steps.N carries an earlier step's answer into this one - N is that step's position in the chain. Its JSON reply is parsed once, so a dotted path reaches any field of it."
 menuLabel = "Variable suggestions"
+status = "{{count}} variable suggestions available"
 title = "Variables you can use"
 
 [portal.policies.variables.defs]

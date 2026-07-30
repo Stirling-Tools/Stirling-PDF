@@ -34,6 +34,11 @@ interface VariableFieldProps {
   rows?: number;
   placeholder?: string;
   "aria-label"?: string;
+  /** Set by FormField when it clones the control; the label's htmlFor points at it. */
+  id?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
+  required?: boolean;
   /** The scopes this team can use (see variableGroupsFor); defaults to everything. */
   groups?: VariableGroup[];
 }
@@ -62,6 +67,10 @@ export function VariableField({
   rows = 3,
   placeholder,
   "aria-label": ariaLabel,
+  id,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
+  required,
   groups = VARIABLE_GROUPS,
 }: VariableFieldProps) {
   const { t } = useTranslation();
@@ -179,11 +188,13 @@ export function VariableField({
           value={value}
           placeholder={placeholder}
           aria-label={ariaLabel}
-          // The combobox role is what makes aria-expanded/-controls/-activedescendant apply;
-          // a bare textbox does not support them.
-          role="combobox"
+          id={id}
+          aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
+          required={required}
+          // No role="combobox": ARIA does not allow it on a textarea. A textbox supports
+          // aria-autocomplete/-activedescendant, and the status line below reports the count.
           aria-autocomplete="list"
-          aria-expanded={open !== null}
           aria-controls={open ? menuId : undefined}
           aria-activedescendant={activeId}
           spellCheck={false}
@@ -202,6 +213,14 @@ export function VariableField({
           // Blur may be a click landing on the list; let that click run first.
           onBlur={() => setTimeout(() => setOpen(null), 150)}
         />
+      </div>
+
+      {/* Replaces aria-expanded, which a textbox does not support: announces that the
+          suggestion list opened and how many rows it holds. */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {open && matches.length > 0
+          ? t("portal.policies.variables.status", { count: matches.length })
+          : ""}
       </div>
 
       {open && matches.length > 0 && (
