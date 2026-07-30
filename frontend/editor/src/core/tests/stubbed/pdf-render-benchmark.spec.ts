@@ -74,8 +74,8 @@ test.describe("PDF Viewer Hot Paths Performance Benchmark", () => {
             options: { scaleFactor: number; dpr: number; imageType: string };
           }) => {
             wait: (
-              resolve: (val?: any) => void,
-              reject: (err?: any) => void,
+              resolve: (val?: void | PromiseLike<void>) => void,
+              reject: (err?: unknown) => void,
             ) => void;
           };
         };
