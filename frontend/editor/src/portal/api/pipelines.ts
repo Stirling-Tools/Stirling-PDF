@@ -122,7 +122,13 @@ export type PolicyRunStatus =
   | "FAILED"
   | "CANCELLED";
 
-/** A run's current state. Mirrors the backend `PolicyRunView` (outputs elided). */
+/** One file a run produced, downloadable via /api/v1/general/files/{fileId}. */
+export interface RunOutputFile {
+  fileId: string;
+  fileName: string | null;
+}
+
+/** A run's current state. Mirrors the backend `PolicyRunView`. */
 export interface PolicyRunView {
   runId: string;
   policyId: string | null;
@@ -132,6 +138,11 @@ export interface PolicyRunView {
   /** Human-readable failure message; set when status is FAILED. */
   error: string | null;
   errorCode: string | null;
+  /**
+   * Files the run produced, present once it completes. Whole-run, not per step: the backend keeps
+   * one flat list, so nothing here can be attributed to an individual step.
+   */
+  outputs?: RunOutputFile[] | null;
   createdAt: number;
 }
 
@@ -195,6 +206,42 @@ export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
   return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
     { method: "POST" },
+  );
+}
+
+/** What an ad-hoc test run posts: the steps as they stand, with no source and no trigger. */
+export interface TestRunDefinition {
+  name: string;
+  steps: unknown[];
+  output: OutputSpec;
+}
+
+/**
+ * POST /api/v1/policies/run: run a definition against one uploaded file now. The builder's test
+ * path - callers force an inline output so nothing reaches the pipeline's real destination, and
+ * the pipeline need not be saved first.
+ */
+export async function runPipelineTest(
+  definition: TestRunDefinition,
+  file: File,
+): Promise<{ runId: string }> {
+  const form = new FormData();
+  form.append(
+    "json",
+    new Blob([JSON.stringify(definition)], { type: "application/json" }),
+  );
+  form.append("fileInput", file);
+  const res = await apiClient.local.multipart<{ jobId: string }>(
+    "/api/v1/policies/run",
+    form,
+  );
+  return { runId: res.jobId };
+}
+
+/** GET /api/v1/general/files/{id}: download one of a run's outputs. */
+export async function fetchRunOutput(fileId: string): Promise<Blob> {
+  return apiClient.local.blob(
+    `/api/v1/general/files/${encodeURIComponent(fileId)}`,
   );
 }
 

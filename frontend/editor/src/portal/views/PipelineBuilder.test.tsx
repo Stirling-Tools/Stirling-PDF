@@ -258,8 +258,31 @@ describe("PipelineBuilder", () => {
     createIntegration.mockReset();
   });
 
-  // Choose the given source in the (pre-seeded) input row's dropdown.
+  // The settings of a node are reached by selecting it in the graph, so every helper below opens
+  // its node first. Nodes are found by position rather than by label, because a node's title is
+  // its current value - it changes as the pipeline is filled in.
+
+  /** The graph's selectable nodes, in chain order: input, each step, output. */
+  function graphNodes(): HTMLElement[] {
+    return screen
+      .getAllByRole("button")
+      .filter((b) => b.hasAttribute("aria-pressed"));
+  }
+
+  async function openInput() {
+    await screen.findByText("portal.pipelines.builder.chooseSource", {
+      exact: false,
+    });
+    fireEvent.click(graphNodes()[0]);
+  }
+
+  function openOutput() {
+    const nodes = graphNodes();
+    fireEvent.click(nodes[nodes.length - 1]);
+  }
+
   async function pickInputSource(sourceName: string) {
+    await openInput();
     fireEvent.click(
       await screen.findByRole("textbox", {
         name: "portal.pipelines.builder.inputSource",
@@ -268,24 +291,67 @@ describe("PipelineBuilder", () => {
     fireEvent.click(await screen.findByText(sourceName));
   }
 
-  it("always shows exactly one input row, with no add or remove controls", async () => {
+  /**
+   * Add a tool. An empty chain offers the placeholder; once it has steps, the wires carry the
+   * inserts instead.
+   */
+  async function addTool(toolName: string) {
+    const placeholder = screen.queryByText(
+      "portal.pipelines.graph.addFirstTool",
+    );
+    if (placeholder) {
+      fireEvent.click(placeholder);
+    } else {
+      fireEvent.click(
+        screen.getAllByLabelText("portal.pipelines.graph.insertHere")[0],
+      );
+    }
+    fireEvent.click(await screen.findByText(toolName));
+  }
+
+  async function pickDestination() {
+    openOutput();
+    fireEvent.click(await screen.findByText("pick output"));
+  }
+
+  /** Open the header's overflow tray. */
+  async function openTray() {
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.moreActions"),
+    );
+  }
+
+  it("shows one input and one output, neither of which can be removed", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    // The input row is a fixed part of the form: its source dropdown is present from the
-    // start, and there is nothing to add or remove.
+    // The ends of the chain are part of every pipeline: they are always present, and only steps
+    // carry a remove control.
     expect(
-      await screen.findAllByRole("textbox", {
+      await screen.findByText("portal.pipelines.builder.chooseSource"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.builder.chooseDestination"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/portal.pipelines.graph.removeNode/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("edits a node's settings only once it is selected", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await screen.findByText("portal.pipelines.builder.chooseSource");
+
+    // Nothing selected: the inspector says so rather than showing a form.
+    expect(
+      screen.getByText("portal.pipelines.inspector.noSelectionTitle"),
+    ).toBeInTheDocument();
+
+    await openInput();
+    expect(
+      screen.getByRole("textbox", {
         name: "portal.pipelines.builder.inputSource",
       }),
-    ).toHaveLength(1);
-    expect(
-      screen.queryByText("portal.pipelines.builder.addInput"),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", {
-        name: "portal.pipelines.builder.removeInput",
-      }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
   });
 
   it("builds a new pipeline: name it, add a tool, an input, a destination, and save", async () => {
@@ -300,12 +366,11 @@ describe("PipelineBuilder", () => {
       },
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
-    fireEvent.click(await screen.findByText("Compress"));
+    await addTool("Compress");
 
     // A pipeline must have at least one input source and one output destination.
     await pickInputSource("Claims intake");
-    fireEvent.click(screen.getByText("pick output"));
+    await pickDestination();
 
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
@@ -395,7 +460,7 @@ describe("PipelineBuilder", () => {
     expect(saveButton()).toBeDisabled();
 
     // Both chosen: allowed, and both are sent.
-    fireEvent.click(screen.getByText("pick output"));
+    await pickDestination();
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
@@ -425,9 +490,10 @@ describe("PipelineBuilder", () => {
 
   it("cannot edit an input source before one is chosen", async () => {
     renderBuilder("/processor/pipelines/new");
+    await openInput();
 
     expect(
-      await screen.findByLabelText("portal.pipelines.composer.editSource"),
+      screen.getByLabelText("portal.pipelines.composer.editSource"),
     ).toBeDisabled();
     await pickInputSource("Claims intake");
     expect(
@@ -443,9 +509,7 @@ describe("PipelineBuilder", () => {
         sources: [SOURCE, { ...SOURCE, id: "src-new", name: "Scanner drop" }],
       });
     renderBuilder("/processor/pipelines/new");
-    await screen.findByRole("textbox", {
-      name: "portal.pipelines.builder.inputSource",
-    });
+    await openInput();
 
     fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
     fireEvent.click(screen.getByText("source saved"));
@@ -471,6 +535,8 @@ describe("PipelineBuilder", () => {
         ],
       });
     renderBuilder("/processor/pipelines/new");
+    await openInput();
+    openOutput();
     await screen.findByText("pick output");
 
     fireEvent.click(screen.getByText("new destination"));
@@ -481,11 +547,10 @@ describe("PipelineBuilder", () => {
     await waitFor(() =>
       expect(screen.getByText("output:src-new")).toBeInTheDocument(),
     );
+    // The input was left alone: its node still shows the prompt.
     expect(
-      screen.getByRole("textbox", {
-        name: "portal.pipelines.builder.inputSource",
-      }),
-    ).toHaveValue("");
+      screen.getByText("portal.pipelines.builder.chooseSource"),
+    ).toBeInTheDocument();
   });
 
   it("leaves a new source that cannot be written to out of the destination", async () => {
@@ -501,25 +566,30 @@ describe("PipelineBuilder", () => {
         ],
       });
     renderBuilder("/processor/pipelines/new");
+    await openInput();
+    openOutput();
     await screen.findByText("pick output");
 
     fireEvent.click(screen.getByText("new destination"));
     fireEvent.click(screen.getByText("source saved"));
 
-    // It did arrive - it is offered as an input, where a webhook makes sense...
+    // It was not made the destination...
+    await waitFor(() => expect(fetchSources).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("pick output")).toBeInTheDocument();
+
+    // ...but it did arrive, and is offered as an input, where a webhook makes sense.
+    await openInput();
     fireEvent.click(
       screen.getByRole("textbox", {
         name: "portal.pipelines.builder.inputSource",
       }),
     );
     expect(await screen.findByText("Partner hook")).toBeInTheDocument();
-    // ...but it was not made the destination.
-    expect(screen.getByText("pick output")).toBeInTheDocument();
   });
 
   it("edits the chosen destination through the same modal", async () => {
     renderBuilder("/processor/pipelines/new");
-    fireEvent.click(await screen.findByText("pick output"));
+    await pickDestination();
 
     fireEvent.click(screen.getByText("edit destination"));
     expect(screen.getByText("source-modal:src-1")).toBeInTheDocument();
@@ -563,9 +633,8 @@ describe("PipelineBuilder", () => {
   it("clears processed history from the header and confirms", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
-    fireEvent.click(
-      await screen.findByText("portal.pipelines.detail.clearHistory"),
-    );
+    await openTray();
+    fireEvent.click(screen.getByText("portal.pipelines.detail.clearHistory"));
 
     await waitFor(() =>
       expect(clearProcessedHistory).toHaveBeenCalledWith("plc-1"),
@@ -586,8 +655,7 @@ describe("PipelineBuilder", () => {
         target: { value: "Watermarked" },
       },
     );
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
-    fireEvent.click(await screen.findByText("Compress"));
+    await addTool("Compress");
     // The tool's settings upload a file, which a stored pipeline can't persist yet.
     fireEvent.click(await screen.findByText("upload logo"));
 
@@ -612,10 +680,7 @@ describe("PipelineBuilder", () => {
         target: { value: "Notify only" },
       },
     );
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
-    fireEvent.click(
-      await screen.findByText("portal.policies.operations.discordNotify.label"),
-    );
+    await addTool("portal.policies.operations.discordNotify.label");
 
     // Operation chosen, account not: still not saveable.
     expect(
@@ -678,10 +743,7 @@ describe("PipelineBuilder", () => {
       },
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
-    fireEvent.click(
-      await screen.findByText("portal.policies.operations.discordNotify.label"),
-    );
+    await addTool("portal.policies.operations.discordNotify.label");
 
     fireEvent.click(
       await screen.findByPlaceholderText(
@@ -692,7 +754,7 @@ describe("PipelineBuilder", () => {
 
     // Saving needs the input's source and a destination.
     await pickInputSource("Claims intake");
-    fireEvent.click(screen.getByText("pick output"));
+    await pickDestination();
 
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 

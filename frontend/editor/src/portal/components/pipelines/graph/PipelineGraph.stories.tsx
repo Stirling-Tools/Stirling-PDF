@@ -43,12 +43,16 @@ function Playground({
   function insert(at: number) {
     const label = `New tool ${added + 1}`;
     setAdded((n) => n + 1);
-    setSteps((current) => current.toSpliced(at, 0, { label }));
+    setSteps((current) => {
+      const next = [...current];
+      next.splice(at, 0, { label });
+      return next;
+    });
     setSelected(at);
   }
 
   function remove(index: number) {
-    setSteps((current) => current.toSpliced(index, 1));
+    setSteps((current) => current.filter((_, i) => i !== index));
     setSelected(null);
   }
 

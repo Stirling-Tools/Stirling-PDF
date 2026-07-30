@@ -13,44 +13,6 @@
   padding: 4rem 0;
 }
 
-/* Header */
-.portal-builder__head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--c-border-subtle);
-}
-
-.portal-builder__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.portal-builder__back:hover {
-  color: var(--c-text);
-}
-
-.portal-builder__head-main {
-  flex: 1;
-  min-width: 12rem;
-}
-
-.portal-builder__head-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 /* Two-pane layout */
 .portal-builder__grid {
   display: grid;
@@ -65,202 +27,7 @@
   }
 }
 
-.portal-builder__flow {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.portal-builder__section-label {
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--c-text-subtle);
-  font-weight: 600;
-}
-
-.portal-builder__empty {
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-  margin: 0;
-  padding: 0.5rem 0;
-}
-
-/* Step cards */
-.portal-builder__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.portal-builder__step {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 0.5rem 0.625rem;
-  transition:
-    border-color var(--motion-fast),
-    background var(--motion-fast);
-}
-
-.portal-builder__step--active {
-  border-color: var(--c-primary);
-  background: var(--c-primary-tint);
-}
-
-.portal-builder__step-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  border: none;
-  background: none;
-  padding: 0.25rem;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-}
-
-.portal-builder__step-index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.375rem;
-  height: 1.375rem;
-  flex-shrink: 0;
-  border-radius: 50%;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  background: var(--c-primary-tint);
-  color: var(--c-primary);
-}
-
-.portal-builder__step--active .portal-builder__step-index {
-  background: var(--c-primary);
-  color: #fff;
-}
-
-.portal-builder__step-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.portal-builder__step-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--c-text);
-}
-
-.portal-builder__step-note {
-  font-size: 0.6875rem;
-  color: var(--c-text-subtle);
-}
-
-/* A step that cannot run on what the one before it produces. */
-.portal-builder__step-note--danger {
-  color: var(--c-danger);
-}
-
-/* A picker entry that cannot run on what the chain currently produces. */
-.portal-pipelines__picker-note {
-  margin-left: auto;
-  padding-left: 0.5rem;
-  font-size: 0.6875rem;
-  color: var(--c-text-subtle);
-}
-
-.portal-builder__step-actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.portal-builder__step-actions button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  color: var(--c-text-subtle);
-  cursor: pointer;
-  transition:
-    background var(--motion-fast),
-    color var(--motion-fast);
-}
-
-.portal-builder__step-actions button:hover:not(:disabled) {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
-.portal-builder__step-actions button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.portal-builder__add-step {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  width: 100%;
-  padding: 0.625rem;
-  border: 1px dashed var(--c-border);
-  border-radius: var(--radius-lg);
-  background: none;
-  color: var(--c-text-subtle);
-  font-size: 0.8125rem;
-  cursor: pointer;
-  transition:
-    border-color var(--motion-fast),
-    color var(--motion-fast);
-}
-
-.portal-builder__add-step:hover {
-  border-color: var(--c-primary);
-  color: var(--c-primary);
-}
-
-/* Pipeline settings (above the operation list) */
-.portal-builder__settings {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 1.125rem;
-}
-
-.portal-builder__settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 1.25rem;
-}
-
-.portal-builder__settings-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* Input and destination each span the full settings width so their row has room. */
-.portal-builder__inputs-col {
-  grid-column: 1 / -1;
-}
-
-/* The input row (source + trigger + optional schedule) and the destination row. */
+/* The input's source dropdown and its edit affordance, in the inspector. */
 .portal-builder__input-row {
   display: flex;
   flex-wrap: wrap;
@@ -271,35 +38,6 @@
 .portal-builder__input-field {
   flex: 1 1 11rem;
   min-width: 10rem;
-}
-
-/* The connect-source button trails to the end of the row. */
-.portal-builder__input-row > button:last-child {
-  margin-left: auto;
-}
-
-/* Inspector: heading sits outside the card so it aligns with the operations heading. */
-.portal-builder__inspector-col {
-  position: sticky;
-  top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-/* Once the grid stacks (60rem), a sticky inspector would ride over content */
-@media (max-width: 60rem) {
-  .portal-builder__inspector-col {
-    position: static;
-  }
-}
-
-.portal-builder__inspector {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 1.125rem;
 }
 
 /* Tool picker */
@@ -379,48 +117,9 @@
   margin: 0;
 }
 
-/* The back link, step row, add-step affordance, tool-picker item and step
-   actions are the shared Button/ActionIcon carrying bespoke styling. Re-assert
-   their original look over the design-system button base (which otherwise
-   imposes a fixed height, its own padding/border and accent text colour). */
-.portal-builder__back.sui-btn {
-  height: auto;
-  min-height: 0;
-  padding: 0;
-  font-weight: 400;
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-}
-
-.portal-builder__back.sui-btn:hover {
-  color: var(--c-text);
-}
-
-.portal-builder__step-main.sui-btn {
-  flex: 1;
-  height: auto;
-  min-height: 0;
-  padding: 0.25rem;
-  font-weight: 400;
-  color: inherit;
-}
-
-.portal-builder__add-step.sui-btn {
-  height: auto;
-  min-height: 0;
-  padding: 0.625rem;
-  border: 1px dashed var(--c-border);
-  background: none;
-  font-weight: 400;
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-}
-
-.portal-builder__add-step.sui-btn:hover {
-  border-color: var(--c-primary);
-  color: var(--c-primary);
-}
-
+/* The tool-picker item is the shared Button carrying bespoke styling, so re-assert its look over
+   the design-system base (which otherwise imposes a fixed height, its own padding and an accent
+   text colour). */
 .portal-pipelines__picker-item.sui-btn {
   height: auto;
   min-height: 0;
@@ -431,13 +130,6 @@
 
 .portal-pipelines__picker-item.sui-btn:hover {
   background: var(--c-hover);
-}
-
-.portal-builder__step-actions .sui-ai {
-  width: 1.5rem;
-  height: 1.5rem;
-  min-width: 1.5rem;
-  min-height: 1.5rem;
 }
 
 /* A quiet way into the chosen source's own settings, beside its dropdown. */
