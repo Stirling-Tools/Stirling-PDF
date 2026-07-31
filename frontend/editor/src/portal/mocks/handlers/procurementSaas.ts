@@ -162,7 +162,9 @@ export function priceQuote(cfg: Cfg) {
   seq += 1;
   return {
     quoteId: seq,
-    quoteNumber: `QT-DEMO-${String(seq).padStart(4, "0")}`,
+    // Same shape the server mints, QT-{deal}-{revision}. The mock runs one deal, so seq is the
+    // revision. Worth matching: this reference is what the agreement and the invoice both cite.
+    quoteNumber: `QT-00001-${String(seq).padStart(2, "0")}`,
     status: "draft",
     currency: "USD",
     annualNetMinor,

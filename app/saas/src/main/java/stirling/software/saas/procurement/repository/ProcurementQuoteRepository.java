@@ -9,4 +9,7 @@ import stirling.software.saas.procurement.model.ProcurementQuote;
 public interface ProcurementQuoteRepository extends JpaRepository<ProcurementQuote, Long> {
 
     List<ProcurementQuote> findByDealIdOrderByCreatedAtDesc(Long dealId);
+
+    /** Revision number for the deal's next quote; a count, so numbering never loads every row. */
+    long countByDealId(Long dealId);
 }

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -579,9 +578,25 @@ public class ProcurementService {
     }
 
     private String nextQuoteNumber(Long dealId) {
-        int seq = quoteRepo.findByDealIdOrderByCreatedAtDesc(dealId).size() + 1;
-        String token = UUID.randomUUID().toString().substring(0, 4).toUpperCase(Locale.ROOT);
-        return String.format(Locale.ROOT, "QT-%s-%04d", token, seq);
+        // Quotes are only ever added to a deal, never deleted, so the count is a stable revision.
+        return quoteNumber(dealId, quoteRepo.countByDealId(dealId) + 1);
+    }
+
+    /**
+     * The buyer-facing quote reference, printed on the quote, carried onto the Stripe quote and
+     * invoice, and cited by the signed agreement — so it has to be unique by construction rather
+     * than probably-unique. Deal id plus revision is exactly that, since a deal id identifies one
+     * deal.
+     *
+     * <p>This was four hex characters of a random UUID: 65k possibilities for a reference that
+     * almost always ended "-0001", so by the birthday bound a collision was likely within a few
+     * hundred quotes — on a document someone signs.
+     *
+     * <p>Package-private and static so the property can be tested without the service's
+     * dependencies.
+     */
+    static String quoteNumber(long dealId, long revision) {
+        return String.format(Locale.ROOT, "QT-%05d-%02d", dealId, revision);
     }
 
     private String writeLineItems(QuoteBreakdown breakdown) {
