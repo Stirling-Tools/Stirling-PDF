@@ -25,6 +25,7 @@ import stirling.software.proprietary.integration.repository.IntegrationConfigRep
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.policy.migration.InProcessCompletedMigrations;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
@@ -97,8 +98,7 @@ class EmbeddedS3CredentialMigrationTest {
                                 "Rotate",
                                 "alice",
                                 true,
-                                null,
-                                List.of(source.id()),
+                                List.of(PipelineInput.manual(source.id())),
                                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                                 new OutputSpec(
                                         "s3",
