@@ -139,7 +139,7 @@ public class ConvertPdfJsonController {
             description =
                     "Extracts document metadata, fonts, and page dimensions for the text editor tool. Caches the document for"
                             + " subsequent page requests. Returns a server-generated jobId scoped to the"
-                            + "authenticated user.")
+                            + " authenticated user.")
     public ResponseEntity<Resource> extractPdfMetadata(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -226,7 +226,7 @@ public class ConvertPdfJsonController {
             description =
                     "Retrieves a single page's content from a previously cached PDF document for the text editor tool."
                             + " Requires prior call to /pdf/text-editor/metadata. The jobId must belong to the"
-                            + "authenticated user.")
+                            + " authenticated user.")
     public ResponseEntity<Resource> extractSinglePage(
             @PathVariable String jobId, @PathVariable int pageNumber) throws Exception {
 
@@ -255,7 +255,7 @@ public class ConvertPdfJsonController {
             description =
                     "Retrieves the font payloads used by a single page from a previously cached PDF document."
                             + " Requires prior call to /pdf/text-editor/metadata. The jobId must belong to the"
-                            + "authenticated user.")
+                            + " authenticated user.")
     public ResponseEntity<Resource> extractPageFonts(
             @PathVariable String jobId, @PathVariable int pageNumber) throws Exception {
 

@@ -178,7 +178,7 @@ public class CertSignController {
             description =
                     "This endpoint accepts a PDF file, a digital certificate and related"
                             + " information to sign the PDF. It then returns the digitally signed PDF"
-                            + "file.")
+                            + " file.")
     public ResponseEntity<Resource> signPDFWithCert(
             @ModelAttribute SignPDFWithCertRequest request, HttpServletRequest httpRequest)
             throws Exception {

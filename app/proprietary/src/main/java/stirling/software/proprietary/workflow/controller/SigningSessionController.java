@@ -93,7 +93,7 @@ public class SigningSessionController {
             summary = "Create a shared signing session",
             description =
                     "Starts a collaboration session, distributes share links, and optionally notifies"
-                            + "participants.")
+                            + " participants.")
     public ResponseEntity<?> createSession(
             @org.springframework.web.bind.annotation.RequestParam("file")
                     org.springframework.web.multipart.MultipartFile file,
