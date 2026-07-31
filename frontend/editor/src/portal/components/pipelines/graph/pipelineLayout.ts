@@ -149,14 +149,32 @@ export function layoutChain({ stepCount }: LayoutChainOptions): LaidOutChain {
 }
 
 /**
- * Where a step lands when dropped on a wire. Lifting the step out of the chain first shifts every
- * later slot up by one, so a drop below its own position needs that accounted for. Returns null
- * when the move is a no-op (either side of the step's own position leaves it where it was).
+ * The chain's new order after dropping `moving` on the wire that opens `insertIndex`.
+ *
+ * Returns the original step indices in their new positions, or null when the move changes nothing
+ * (dropping a step on either of its own wires, say). The moved steps land together in the target
+ * slot, keeping their order relative to each other; the slot is expressed against the *original*
+ * chain, so lifting the moved steps out first has to be accounted for - which is done by counting
+ * how many of the steps that stay put sit above the slot.
  */
-export function reorderTarget(
-  fromIndex: number,
+export function reorderMany(
+  stepCount: number,
+  moving: readonly number[],
   insertIndex: number,
-): number | null {
-  const target = insertIndex > fromIndex ? insertIndex - 1 : insertIndex;
-  return target === fromIndex ? null : target;
+): number[] | null {
+  const lifted = [...new Set(moving)].sort((a, b) => a - b);
+  if (lifted.length === 0) return null;
+
+  const staying: number[] = [];
+  for (let i = 0; i < stepCount; i++) {
+    if (!lifted.includes(i)) staying.push(i);
+  }
+
+  const landing = staying.filter((i) => i < insertIndex).length;
+  const next = [
+    ...staying.slice(0, landing),
+    ...lifted,
+    ...staying.slice(landing),
+  ];
+  return next.every((value, i) => value === i) ? null : next;
 }

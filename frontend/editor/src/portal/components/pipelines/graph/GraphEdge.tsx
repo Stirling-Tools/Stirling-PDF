@@ -10,7 +10,9 @@ export interface GraphEdgeProps {
   edge: LaidOutEdge;
   /** Add a new step in the slot this wire opens. */
   onInsert: (index: number) => void;
-  onReorder: (fromIndex: number, toIndex: number) => void;
+  stepCount: number;
+  /** Given the chain's new order as original step indices. */
+  onReorder: (order: number[]) => void;
   /** A step is in flight, so open wires advertise themselves as landing spots. */
   dragActive: boolean;
   /**
@@ -29,6 +31,7 @@ export interface GraphEdgeProps {
 export function GraphEdge({
   edge,
   onInsert,
+  stepCount,
   onReorder,
   dragActive,
   warning,
@@ -36,6 +39,7 @@ export function GraphEdge({
   const { t } = useTranslation();
   const { ref, over } = useEdgeDrop({
     insertIndex: edge.insertIndex,
+    stepCount,
     onReorder,
   });
   const open = edge.insertIndex !== null;

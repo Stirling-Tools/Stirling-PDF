@@ -13,6 +13,11 @@ export interface PipelineInspectorProps {
    * the run reports a single failing step, so no other node can claim the error.
    */
   error?: string | null;
+  /**
+   * Shown instead of any editor - for a selection with no single thing to configure, such as
+   * several steps at once.
+   */
+  message?: string;
   /** The selected node's own editor. Absent when nothing is selected. */
   children?: ReactNode;
 }
@@ -28,9 +33,22 @@ export function PipelineInspector({
   title,
   icon,
   error,
+  message,
   children,
 }: PipelineInspectorProps) {
   const { t } = useTranslation();
+
+  if (message) {
+    return (
+      <aside className="portal-inspector">
+        <EmptyState
+          size="compact"
+          title={message}
+          description={t("portal.pipelines.inspector.multipleBody")}
+        />
+      </aside>
+    );
+  }
 
   if (!children) {
     return (

@@ -26,8 +26,8 @@ function renderGraph(overrides: Partial<PipelineGraphProps> = {}) {
   const handlers = {
     onSelect: vi.fn(),
     onInsertStep: vi.fn(),
-    onRemoveStep: vi.fn(),
-    onReorderStep: vi.fn(),
+    onRemoveSteps: vi.fn(),
+    onReorderSteps: vi.fn(),
   };
   render(
     <PipelineGraph
@@ -70,7 +70,43 @@ describe("PipelineGraph", () => {
     fireEvent.click(screen.getByText("Archive bucket"));
     expect(handlers.onSelect).toHaveBeenCalledWith("output");
     fireEvent.click(screen.getByText("Redact"));
-    expect(handlers.onSelect).toHaveBeenCalledWith(1);
+    expect(handlers.onSelect).toHaveBeenCalledWith({ steps: [1] });
+  });
+
+  it("adds and removes steps from the selection with cmd/ctrl-click", () => {
+    const handlers = renderGraph({ selected: { steps: [0] } });
+    fireEvent.click(screen.getByText("Redact"), { metaKey: true });
+    expect(handlers.onSelect).toHaveBeenCalledWith({ steps: [0, 1] });
+  });
+
+  it("cmd/ctrl-clicking the only selected step clears the selection", () => {
+    const handlers = renderGraph({ selected: { steps: [1] } });
+    fireEvent.click(screen.getByText("Redact"), { ctrlKey: true });
+    expect(handlers.onSelect).toHaveBeenCalledWith(null);
+  });
+
+  it("shift-click takes everything between the anchor and the clicked step", () => {
+    const handlers = renderGraph({
+      selected: { steps: [0] },
+      steps: [
+        { label: "OCR" },
+        { label: "Redact" },
+        { label: "Compress" },
+        { label: "Stamp" },
+      ],
+    });
+    fireEvent.click(screen.getByText("Stamp"), { shiftKey: true });
+    expect(handlers.onSelect).toHaveBeenCalledWith({ steps: [0, 1, 2, 3] });
+  });
+
+  it("marks every selected step as pressed, not just one", () => {
+    renderGraph({ selected: { steps: [0, 1] } });
+    for (const label of ["OCR", "Redact"]) {
+      expect(screen.getByText(label).closest("button")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    }
   });
 
   it("keeps the drag hint silent until a drag starts", () => {
@@ -83,21 +119,21 @@ describe("PipelineGraph", () => {
   });
 
   it("clears the selection when the canvas itself is clicked", () => {
-    const handlers = renderGraph({ selected: 1 });
+    const handlers = renderGraph({ selected: { steps: [1] } });
     fireEvent.click(document.querySelector(".portal-graph") as HTMLElement);
     expect(handlers.onSelect).toHaveBeenCalledWith(null);
   });
 
   it("does not clear the selection when a node is clicked", () => {
     // The node's own handler runs; the background handler must not undo it.
-    const handlers = renderGraph({ selected: 1 });
+    const handlers = renderGraph({ selected: { steps: [1] } });
     fireEvent.click(screen.getByText("OCR"));
-    expect(handlers.onSelect).toHaveBeenCalledWith(0);
+    expect(handlers.onSelect).toHaveBeenCalledWith({ steps: [0] });
     expect(handlers.onSelect).not.toHaveBeenCalledWith(null);
   });
 
   it("marks the selected node as pressed", () => {
-    renderGraph({ selected: 0 });
+    renderGraph({ selected: { steps: [0] } });
     expect(screen.getByText("OCR").closest("button")).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -182,19 +218,19 @@ describe("PipelineGraph", () => {
     fireEvent.click(
       screen.getByLabelText("portal.pipelines.graph.removeNode:Redact"),
     );
-    expect(handlers.onRemoveStep).toHaveBeenCalledWith(1);
+    expect(handlers.onRemoveSteps).toHaveBeenCalledWith([1]);
   });
 
-  it("deletes the selected step with the Delete key", () => {
-    const handlers = renderGraph({ selected: 1 });
+  it("deletes every selected step with the Delete key", () => {
+    const handlers = renderGraph({ selected: { steps: [0, 1] } });
     fireEvent.keyDown(screen.getByText("Redact"), { key: "Delete" });
-    expect(handlers.onRemoveStep).toHaveBeenCalledWith(1);
+    expect(handlers.onRemoveSteps).toHaveBeenCalledWith([0, 1]);
   });
 
   it("ignores Delete when an end of the chain is selected", () => {
     const handlers = renderGraph({ selected: "input" });
     fireEvent.keyDown(screen.getByText("Claims intake"), { key: "Delete" });
-    expect(handlers.onRemoveStep).not.toHaveBeenCalled();
+    expect(handlers.onRemoveSteps).not.toHaveBeenCalled();
   });
 
   it("shows a node's warning in place of its detail", () => {

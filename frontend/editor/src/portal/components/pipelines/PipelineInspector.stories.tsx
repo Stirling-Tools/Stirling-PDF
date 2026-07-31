@@ -64,3 +64,8 @@ export const FailedStep: Story = {
     </PipelineInspector>
   ),
 };
+
+/** Several steps at once: nothing single to configure, so the panel just says what is selected. */
+export const MultipleSelected: Story = {
+  render: () => <PipelineInspector message="3 steps selected" />,
+};

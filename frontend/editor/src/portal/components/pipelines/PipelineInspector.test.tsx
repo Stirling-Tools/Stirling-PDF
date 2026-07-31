@@ -43,6 +43,14 @@ describe("PipelineInspector", () => {
     expect(screen.getByText("step editor")).toBeInTheDocument();
   });
 
+  it("says how many are selected when there is no single thing to configure", () => {
+    renderInspector({ message: "3 steps selected" });
+    expect(screen.getByText("3 steps selected")).toBeInTheDocument();
+    // The message replaces the editor rather than sitting above it.
+    expect(screen.queryByText("step editor")).not.toBeInTheDocument();
+    expect(screen.queryByText("OCR")).not.toBeInTheDocument();
+  });
+
   it("stays node-scoped: no definition or run-wide results here", () => {
     renderInspector();
     // The definition and a run's files are pipeline-wide and belong to the header.

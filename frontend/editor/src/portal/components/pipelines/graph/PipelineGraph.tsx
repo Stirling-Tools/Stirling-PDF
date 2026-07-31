@@ -1,7 +1,7 @@
 import {
   useState,
   type KeyboardEvent,
-  type MouseEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,8 +20,18 @@ import {
 import { useStepDraggable } from "@portal/components/pipelines/graph/useChainDragDrop";
 import "@portal/components/pipelines/graph/PipelineGraph.css";
 
-/** What the inspector is showing: an end of the chain, a step by index, or nothing. */
-export type GraphSelection = "input" | "output" | number | null;
+/**
+ * What is selected: an end of the chain, one or more steps, or nothing. Only steps come in sets -
+ * the input and output are fixed ends, so there is nothing to gather or move.
+ */
+export type GraphSelection = "input" | "output" | { steps: number[] } | null;
+
+/** The selected step indices, in chain order. Empty unless steps are what is selected. */
+export function selectedSteps(selection: GraphSelection): number[] {
+  return selection !== null && typeof selection === "object"
+    ? selection.steps
+    : [];
+}
 
 /** A node's display content. The graph never derives copy - the builder owns every label. */
 export interface GraphNodeContent {
@@ -47,8 +57,10 @@ export interface PipelineGraphProps {
   onSelect: (selection: GraphSelection) => void;
   /** Add a step in the slot the clicked wire opens. */
   onInsertStep: (index: number) => void;
-  onRemoveStep: (index: number) => void;
-  onReorderStep: (fromIndex: number, toIndex: number) => void;
+  /** Remove every step given, in one go. */
+  onRemoveSteps: (indices: number[]) => void;
+  /** Reorder the chain to the given original step indices. */
+  onReorderSteps: (order: number[]) => void;
   onOpenStepError?: (index: number) => void;
 }
 
@@ -67,8 +79,8 @@ export function PipelineGraph({
   selected,
   onSelect,
   onInsertStep,
-  onRemoveStep,
-  onReorderStep,
+  onRemoveSteps,
+  onReorderSteps,
   onOpenStepError,
 }: PipelineGraphProps) {
   const { t } = useTranslation();
@@ -88,7 +100,7 @@ export function PipelineGraph({
    * Clicking the canvas itself clears the selection. Anything that is part of a node, a wire or the
    * placeholder handles its own click, so only bare background gets here.
    */
-  function onBackgroundClick(event: MouseEvent<HTMLDivElement>) {
+  function onBackgroundClick(event: ReactMouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
     if (
       target.closest(
@@ -100,13 +112,38 @@ export function PipelineGraph({
     onSelect(null);
   }
 
-  // Delete removes the selected step. Scoped to the graph, so typing in the inspector's fields is
+  const chosen = selectedSteps(selected);
+
+  /**
+   * Plain click selects one step. Cmd/Ctrl toggles a step in or out of the selection; Shift takes
+   * everything between the first selected step and this one. The ends of the chain are single-only.
+   */
+  function selectStep(index: number, event: ReactMouseEvent) {
+    if (event.metaKey || event.ctrlKey) {
+      const next = chosen.includes(index)
+        ? chosen.filter((i) => i !== index)
+        : [...chosen, index].sort((a, b) => a - b);
+      onSelect(next.length > 0 ? { steps: next } : null);
+      return;
+    }
+    if (event.shiftKey && chosen.length > 0) {
+      const anchor = chosen[0];
+      const [from, to] = anchor <= index ? [anchor, index] : [index, anchor];
+      const span = [];
+      for (let i = from; i <= to; i++) span.push(i);
+      onSelect({ steps: span });
+      return;
+    }
+    onSelect({ steps: [index] });
+  }
+
+  // Delete removes every selected step. Scoped to the graph, so typing in the inspector's fields is
   // never intercepted.
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Delete" && event.key !== "Backspace") return;
-    if (typeof selected !== "number") return;
+    if (chosen.length === 0) return;
     event.preventDefault();
-    onRemoveStep(selected);
+    onRemoveSteps(chosen);
   }
 
   return (
@@ -124,7 +161,8 @@ export function PipelineGraph({
             key={edge.id}
             edge={edge}
             onInsert={onInsertStep}
-            onReorder={onReorderStep}
+            stepCount={steps.length}
+            onReorder={onReorderSteps}
             dragActive={draggingIndex !== null}
             warning={arrivalWarning(edge.to)}
           />
@@ -179,10 +217,16 @@ export function PipelineGraph({
               <ChainStepNode
                 index={index}
                 step={steps[index]}
-                selected={selected === index}
-                dragging={draggingIndex === index}
-                onSelect={() => onSelect(index)}
-                onRemove={() => onRemoveStep(index)}
+                selected={chosen.includes(index)}
+                // Dragging any node of a selection lifts the whole selection, so they all dim.
+                dragging={
+                  draggingIndex !== null &&
+                  (draggingIndex === index ||
+                    (chosen.includes(draggingIndex) && chosen.includes(index)))
+                }
+                moving={chosen.includes(index) ? chosen : [index]}
+                onSelect={(event) => selectStep(index, event)}
+                onRemove={() => onRemoveSteps([index])}
                 onDragChange={(dragging) =>
                   setDraggingIndex(dragging ? index : null)
                 }
@@ -205,7 +249,9 @@ interface ChainStepNodeProps {
   step: GraphStepContent;
   selected: boolean;
   dragging: boolean;
-  onSelect: () => void;
+  /** The steps this node's drag carries: the selection when it is part of it, else just itself. */
+  moving: number[];
+  onSelect: (event: ReactMouseEvent) => void;
   onRemove: () => void;
   onDragChange: (dragging: boolean) => void;
   onOpenRunState?: () => void;
@@ -217,16 +263,18 @@ function ChainStepNode({
   step,
   selected,
   dragging,
+  moving,
   onSelect,
   onRemove,
   onDragChange,
   onOpenRunState,
 }: ChainStepNodeProps) {
-  const { ref, guardClick } = useStepDraggable({ index, onDragChange });
+  const { ref, guardClick } = useStepDraggable({ moving, onDragChange });
   return (
     <GraphNode
       ref={ref}
       kind="step"
+      stepIndex={index}
       title={step.label}
       detail={step.detail}
       warning={step.warning}

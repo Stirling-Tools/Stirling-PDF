@@ -4,7 +4,7 @@ import {
   NODE_HEIGHT,
   NODE_WIDTH,
   layoutChain,
-  reorderTarget,
+  reorderMany,
   stepIndexOf,
   stepNodeId,
 } from "@portal/components/pipelines/graph/pipelineLayout";
@@ -89,25 +89,52 @@ describe("node ids", () => {
   });
 });
 
-describe("reorderTarget", () => {
-  test("dropping below its own place accounts for the step lifting out first", () => {
-    // [a b c], drag a (0) onto the wire above c (slot 2) -> [b a c], so index 1.
-    expect(reorderTarget(0, 2)).toBe(1);
+describe("reorderMany", () => {
+  test("moving one step below its own place accounts for it lifting out first", () => {
+    // [a b c], drag a onto the wire above c (slot 2) -> [b a c].
+    expect(reorderMany(3, [0], 2)).toEqual([1, 0, 2]);
   });
 
-  test("dropping above its own place lands on the slot as given", () => {
-    // [a b c], drag c (2) onto the wire above b (slot 1) -> [a c b], so index 1.
-    expect(reorderTarget(2, 1)).toBe(1);
+  test("moving one step above its own place lands on the slot as given", () => {
+    // [a b c], drag c onto the wire above b (slot 1) -> [a c b].
+    expect(reorderMany(3, [2], 1)).toEqual([0, 2, 1]);
   });
 
-  test("the wires either side of a step are no-ops", () => {
-    // Both the wire above and the wire below step 1 leave it exactly where it is.
-    expect(reorderTarget(1, 1)).toBeNull();
-    expect(reorderTarget(1, 2)).toBeNull();
+  test("the wires either side of a lone step are no-ops", () => {
+    expect(reorderMany(3, [1], 1)).toBeNull();
+    expect(reorderMany(3, [1], 2)).toBeNull();
   });
 
-  test("moving to the ends works", () => {
-    expect(reorderTarget(2, 0)).toBe(0);
-    expect(reorderTarget(0, 3)).toBe(2);
+  test("moves to either end", () => {
+    expect(reorderMany(3, [2], 0)).toEqual([2, 0, 1]);
+    expect(reorderMany(3, [0], 3)).toEqual([1, 2, 0]);
+  });
+
+  test("a set of steps lands together, keeping its own order", () => {
+    // [a b c d], move a+c to the end -> [b d a c].
+    expect(reorderMany(4, [0, 2], 4)).toEqual([1, 3, 0, 2]);
+  });
+
+  test("a set gathers from apart into one run", () => {
+    // [a b c d e], move a+e above c (slot 2) -> [b a e c d].
+    expect(reorderMany(5, [0, 4], 2)).toEqual([1, 0, 4, 2, 3]);
+  });
+
+  test("a contiguous set dropped back where it already is, is a no-op", () => {
+    expect(reorderMany(4, [1, 2], 1)).toBeNull();
+    expect(reorderMany(4, [1, 2], 3)).toBeNull();
+  });
+
+  test("order of the given indices does not matter", () => {
+    expect(reorderMany(4, [2, 0], 4)).toEqual(reorderMany(4, [0, 2], 4));
+  });
+
+  test("moving every step is a no-op wherever it lands", () => {
+    expect(reorderMany(3, [0, 1, 2], 0)).toBeNull();
+    expect(reorderMany(3, [2, 1, 0], 3)).toBeNull();
+  });
+
+  test("nothing selected moves nothing", () => {
+    expect(reorderMany(3, [], 1)).toBeNull();
   });
 });

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   PipelineGraph,
+  selectedSteps,
   type GraphSelection,
   type GraphStepContent,
 } from "@portal/components/pipelines/graph/PipelineGraph";
@@ -48,22 +49,23 @@ function Playground({
       next.splice(at, 0, { label });
       return next;
     });
-    setSelected(at);
+    setSelected({ steps: [at] });
   }
 
-  function remove(index: number) {
-    setSteps((current) => current.filter((_, i) => i !== index));
+  function remove(indices: number[]) {
+    const gone = new Set(indices);
+    setSteps((current) => current.filter((_, i) => !gone.has(i)));
     setSelected(null);
   }
 
-  function reorder(from: number, to: number) {
-    setSteps((current) => {
-      const next = [...current];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
-    setSelected(to);
+  function reorder(order: number[]) {
+    const moving = new Set(selectedSteps(selected));
+    setSteps((current) => order.map((i) => current[i]));
+    const landed = order
+      .map((original, position) => ({ original, position }))
+      .filter(({ original }) => moving.has(original))
+      .map(({ position }) => position);
+    setSelected(landed.length > 0 ? { steps: landed } : null);
   }
 
   return (
@@ -74,8 +76,8 @@ function Playground({
       selected={selected}
       onSelect={setSelected}
       onInsertStep={insert}
-      onRemoveStep={remove}
-      onReorderStep={reorder}
+      onRemoveSteps={remove}
+      onReorderSteps={reorder}
     />
   );
 }
@@ -140,6 +142,23 @@ export const Problems: Story = {
         { label: "OCR", detail: "eng", runState: "done" },
         { label: "Redact", detail: "2 terms", runState: "failed" },
         { label: "Watermark", warning: "Needs an uploaded file" },
+      ]}
+    />
+  ),
+};
+
+/**
+ * Multi-selection: cmd/ctrl-click to add a step, shift-click for a run of them, then drag any one
+ * onto a line to move the whole set together.
+ */
+export const MultiSelect: Story = {
+  render: () => (
+    <Playground
+      initialSteps={[
+        { label: "OCR", detail: "eng" },
+        { label: "Redact", detail: "2 terms" },
+        { label: "Compress", detail: "level 7" },
+        { label: "Stamp", detail: "footer" },
       ]}
     />
   ),

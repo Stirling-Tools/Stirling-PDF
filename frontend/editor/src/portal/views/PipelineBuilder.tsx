@@ -70,6 +70,7 @@ import { PipelineInspector } from "@portal/components/pipelines/PipelineInspecto
 import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
 import {
   PipelineGraph,
+  selectedSteps,
   type GraphSelection,
   type GraphStepContent,
 } from "@portal/components/pipelines/graph/PipelineGraph";
@@ -386,7 +387,7 @@ export function PipelineBuilder() {
       next.splice(at, 0, step);
       return next;
     });
-    setSelected(at);
+    setSelected({ steps: [at] });
     setPickerAt(null);
   }
 
@@ -398,20 +399,24 @@ export function PipelineBuilder() {
     insertStep(newWorkingToolStep(tool, allTools));
   }
 
-  function removeStep(index: number) {
+  function removeSteps(indices: number[]) {
+    const gone = new Set(indices);
     setSelected(null);
-    setSteps((current) => current.filter((_, i) => i !== index));
+    setSteps((current) => current.filter((_, i) => !gone.has(i)));
   }
 
-  /** Move a step to another place in the chain, keeping it selected where it lands. */
-  function reorderStep(fromIndex: number, toIndex: number) {
-    setSteps((current) => {
-      const next = [...current];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved);
-      return next;
-    });
-    setSelected(toIndex);
+  /**
+   * Apply a reordered chain, given as the original step indices in their new positions. The moved
+   * steps stay selected where they land, so a set can be dragged again without re-picking it.
+   */
+  function reorderSteps(order: number[]) {
+    const moving = new Set(selectedSteps(selected));
+    setSteps((current) => order.map((i) => current[i]));
+    const landed = order
+      .map((original, position) => ({ original, position }))
+      .filter(({ original }) => moving.has(original))
+      .map(({ position }) => position);
+    setSelected(landed.length > 0 ? { steps: landed } : null);
   }
 
   function updateStepParams(index: number, params: ErasedToolParams) {
@@ -754,8 +759,10 @@ export function PipelineBuilder() {
     );
   }
 
+  const chosenSteps = selectedSteps(selected);
+  // One step selected means its settings; several means there is no single thing to configure.
   const selectedStep =
-    typeof selected === "number" ? (steps[selected] ?? null) : null;
+    chosenSteps.length === 1 ? (steps[chosenSteps[0]] ?? null) : null;
 
   const chosenSource = availableSources.find((s) => s.id === input.sourceId);
   const chosenDestination = writableSources.find((s) => s.id === outputIds[0]);
@@ -957,9 +964,7 @@ export function PipelineBuilder() {
         <PipelineStepSettings
           step={selectedStep}
           registry={allTools}
-          onChange={(params) =>
-            typeof selected === "number" && updateStepParams(selected, params)
-          }
+          onChange={(params) => updateStepParams(chosenSteps[0], params)}
         />
       );
     }
@@ -1043,9 +1048,9 @@ export function PipelineBuilder() {
           selected={selected}
           onSelect={setSelected}
           onInsertStep={setPickerAt}
-          onRemoveStep={removeStep}
-          onReorderStep={reorderStep}
-          onOpenStepError={setSelected}
+          onRemoveSteps={removeSteps}
+          onReorderSteps={reorderSteps}
+          onOpenStepError={(index) => setSelected({ steps: [index] })}
         />
 
         <PipelineInspector
@@ -1059,10 +1064,17 @@ export function PipelineBuilder() {
                   : undefined
           }
           error={
-            typeof selected === "number" &&
+            chosenSteps.length === 1 &&
             testRun?.status === "FAILED" &&
-            testRun.currentStep === selected
+            testRun.currentStep === chosenSteps[0]
               ? testRun.error
+              : undefined
+          }
+          message={
+            chosenSteps.length > 1
+              ? t("portal.pipelines.inspector.multipleSelected", {
+                  count: chosenSteps.length,
+                })
               : undefined
           }
         >

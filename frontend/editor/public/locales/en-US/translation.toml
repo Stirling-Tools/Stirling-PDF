@@ -7891,6 +7891,9 @@ failed = "Failed"
 running = "Running"
 
 [portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 

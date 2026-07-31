@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import type { MouseEvent, ReactNode, Ref } from "react";
 import { useTranslation } from "react-i18next";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -45,11 +45,16 @@ export interface GraphNodeProps {
   selected: boolean;
   runState?: NodeRunState;
   onOpenRunState?: () => void;
-  onSelect: () => void;
+  onSelect: (event: MouseEvent) => void;
   /** Steps only - the input and output nodes are part of every pipeline and cannot be removed. */
   onRemove?: () => void;
   /** True while this node is being dragged to another place in the chain. */
   dragging?: boolean;
+  /**
+   * The step's place in the chain, so a multi-step drag preview can find the other selected cards
+   * in the DOM. Absent for the input and output, which are never dragged.
+   */
+  stepIndex?: number;
   /** The card element, for the drag adapter to register against. */
   ref?: Ref<HTMLDivElement>;
 }
@@ -73,6 +78,7 @@ export function GraphNode({
   onSelect,
   onRemove,
   dragging,
+  stepIndex,
   ref,
 }: GraphNodeProps) {
   const { t } = useTranslation();
@@ -88,7 +94,12 @@ export function GraphNode({
     .join(" ");
 
   return (
-    <div className={className} ref={ref} data-graph-node={kind}>
+    <div
+      className={className}
+      ref={ref}
+      data-graph-node={kind}
+      data-step-index={stepIndex}
+    >
       <Button
         variant="quiet"
         className="portal-graph-node__select"
