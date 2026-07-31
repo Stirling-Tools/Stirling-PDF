@@ -4,22 +4,30 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,19 +37,31 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.model.api.docparse.ChunkDocumentApiRequest;
 import stirling.software.proprietary.model.api.docparse.ExtractFieldsApiRequest;
 import stirling.software.proprietary.model.api.docparse.ExtractTablesApiRequest;
+import stirling.software.proprietary.model.api.docparse.ParseDocumentApiRequest;
 import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
+import stirling.software.proprietary.model.api.docparse.SmartSplitApiRequest;
 import stirling.software.proprietary.model.api.docparse.SuggestSchemaApiRequest;
+import stirling.software.proprietary.model.docparse.ChunkDocumentResponse;
 import stirling.software.proprietary.model.docparse.DocChunk;
 import stirling.software.proprietary.model.docparse.DocTable;
 import stirling.software.proprietary.model.docparse.DocparseCapabilitiesView;
 import stirling.software.proprietary.model.docparse.DocparseMode;
 import stirling.software.proprietary.model.docparse.ExtractFieldsResponse;
 import stirling.software.proprietary.model.docparse.ExtractTablesResponse;
+import stirling.software.proprietary.model.docparse.FillDocxResponse;
+import stirling.software.proprietary.model.docparse.ParseDocumentResponse;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
+import stirling.software.proprietary.model.docparse.SmartSplitResponse;
+import stirling.software.proprietary.model.docparse.SplitPart;
 import stirling.software.proprietary.model.docparse.SuggestSchemaResponse;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.DocParseService;
@@ -67,7 +87,14 @@ public class DocParseController {
 
     private static final MediaType CSV = MediaType.parseMediaType("text/csv");
 
+    private static final MediaType MARKDOWN = MediaType.parseMediaType("text/markdown");
+    private static final MediaType DOCX =
+            MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
     private final DocParseService docParseService;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
     private final ObjectMapper objectMapper;
 
     @AutoJobPostMapping(
@@ -192,6 +219,123 @@ public class DocParseController {
                 docParseService.suggestSchema(request.getFileInput(), request.getMaxFields()));
     }
 
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/parse-document",
+            resourceWeight = ResourceWeight.XLARGE_WEIGHT)
+    @Operation(
+            summary = "Parse a document into structured blocks, tables, and markdown",
+            description =
+                    "Parses the PDF into layout blocks, tables, and a markdown rendering. The"
+                            + " basic tier reads the text layer; the advanced tier (docparse addon)"
+                            + " adds OCR, real table structure, and bounding boxes."
+                            + " Input:PDF Output:JSON Type:SISO")
+    public ResponseEntity<?> parseDocument(@ModelAttribute ParseDocumentApiRequest request)
+            throws IOException {
+        ParseDocumentResponse result =
+                docParseService.parse(
+                        request.getFileInput(),
+                        DocparseMode.fromWire(request.getMode()),
+                        request.isWithOcr());
+        if ("markdown".equalsIgnoreCase(request.getOutputFormat())) {
+            return WebResponseUtils.bytesToWebResponse(
+                    result.markdown().getBytes(StandardCharsets.UTF_8),
+                    outputName(request.getFileInput(), "_parsed.md"),
+                    MARKDOWN);
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/smart-split",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @Operation(
+            summary = "Split a document at content-derived boundaries",
+            description =
+                    "Asks the engine where sub-documents start (per the natural-language rule) and"
+                            + " returns a ZIP with one PDF per part, named from the part labels."
+                            + " Input:PDF Output:ZIP-PDF Type:SIMO")
+    public ResponseEntity<Resource> smartSplit(@ModelAttribute SmartSplitApiRequest request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
+        SmartSplitResponse split =
+                docParseService.split(file, request.getRule(), request.getMaxParts());
+        if (split.parts().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "The split rule produced no parts for this document");
+        }
+        TempFile zipTempFile = tempFileManager.createManagedTempFile(".zip");
+        try {
+            try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf")) {
+                Files.copy(
+                        file.getInputStream(),
+                        sourceTempFile.getPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+                try (ZipOutputStream zipOut =
+                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                    writeParts(sourceTempFile, split.parts(), zipOut);
+                }
+            }
+            return WebResponseUtils.zipFileToWebResponse(
+                    zipTempFile,
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.zip"));
+        } catch (Exception e) {
+            zipTempFile.close();
+            throw e;
+        }
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/chunk-document",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @Operation(
+            summary = "Chunk a document for RAG",
+            description =
+                    "Splits the document text into overlapping chunks with page spans and (advanced"
+                            + " tier) heading breadcrumbs. Input:PDF Output:JSON Type:SISO")
+    public ResponseEntity<ChunkDocumentResponse> chunkDocument(
+            @ModelAttribute ChunkDocumentApiRequest request) throws IOException {
+        return ResponseEntity.ok(
+                docParseService.chunk(
+                        request.getFileInput(),
+                        request.getChunkSize(),
+                        request.getOverlap(),
+                        DocparseMode.fromWire(request.getMode())));
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/fill-template",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @Operation(
+            summary = "Fill a DOCX template with JSON data",
+            description =
+                    "Replaces the template's placeholders with values from the JSON object and"
+                            + " returns the filled DOCX. Replacement counts and missing keys ride"
+                            + " the X-Stirling-Tool-Report header."
+                            + " Input:DOCX Output:DOCX Type:SISO")
+    public ResponseEntity<Resource> fillTemplate(
+            @RequestParam("templateFile") MultipartFile templateFile,
+            @RequestParam("data") String data)
+            throws IOException {
+        FillDocxResponse result = docParseService.fillDocx(templateFile, data);
+        byte[] filled = Base64.getDecoder().decode(result.docxBase64());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(DOCX);
+        headers.setContentDispositionFormData(
+                "attachment",
+                GeneralUtils.generateFilename(templateFile.getOriginalFilename(), "_filled.docx"));
+        headers.setContentLength(filled.length);
+        headers.set(
+                AiToolResponseHeaders.TOOL_REPORT,
+                objectMapper.writeValueAsString(
+                        new FillDocxResponse("", result.replaced(), result.missing())));
+        return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(filled));
+    }
+
     @GetMapping("/capabilities")
     @Operation(
             summary = "DocParse capability summary",
@@ -277,6 +421,40 @@ public class DocParseController {
     private static String baseName(String fileName) {
         int dot = fileName.lastIndexOf('.');
         return dot > 0 ? fileName.substring(0, dot) : fileName;
+    }
+
+    private void writeParts(TempFile sourceTempFile, List<SplitPart> parts, ZipOutputStream zipOut)
+            throws IOException {
+        for (int i = 0; i < parts.size(); i++) {
+            SplitPart part = parts.get(i);
+            // Load per part and remove pages outside the range: avoids the PDFBox cross-document
+            // addPage pitfalls while keeping shared resources intact.
+            try (PDDocument partDoc = pdfDocumentFactory.load(sourceTempFile.getFile())) {
+                int pageCount = partDoc.getNumberOfPages();
+                int start = Math.clamp(part.startPage(), 1, pageCount);
+                int end = Math.clamp(part.endPage(), start, pageCount);
+                for (int p = pageCount - 1; p >= 0; p--) {
+                    int pageNumber = p + 1;
+                    if (pageNumber < start || pageNumber > end) {
+                        partDoc.removePage(p);
+                    }
+                }
+                FormUtils.pruneOrphanedFormFields(partDoc);
+                zipOut.putNextEntry(new ZipEntry(partEntryName(i, part)));
+                partDoc.save(zipOut);
+                zipOut.closeEntry();
+            }
+        }
+    }
+
+    private static String partEntryName(int index, SplitPart part) {
+        String label = part.label() == null ? "" : part.label().trim();
+        String sanitized = label.replaceAll("[^A-Za-z0-9 ._-]", "_").replaceAll("\\s+", "_");
+        if (sanitized.isBlank() || sanitized.chars().allMatch(c -> c == '_' || c == '.')) {
+            sanitized = "part";
+        }
+        // Index prefix keeps entries unique even when labels repeat.
+        return String.format(Locale.ROOT, "%02d_%s.pdf", index + 1, sanitized);
     }
 
     private static String tablesToCsv(List<DocTable> tables) throws IOException {
