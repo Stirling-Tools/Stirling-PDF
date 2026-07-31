@@ -419,6 +419,7 @@ import { isPdfFile } from "@app/utils/fileUtils";
 import { useTranslation } from "react-i18next";
 import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
+import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
 import {
@@ -614,6 +615,7 @@ const PageContent = React.memo(function PageContent({
                 documentId={documentId}
                 pageIndex={pageIndex}
                 background="var(--pdf-selection-bg)"
+                selectionMenu={(props) => <TextSelectionMenu {...props} />}
               />
             </div>
             <TextSelectionHandler

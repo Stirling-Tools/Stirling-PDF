@@ -37,8 +37,10 @@ export function useFileWithUrl(
       try {
         url = URL.createObjectURL(file);
         if (globalUseFileWithUrlCache.size >= MAX_CACHE_SIZE) {
-          const [oldKey] = globalUseFileWithUrlCache.entries().next()
-            .value as [string, string];
+          const [oldKey] = globalUseFileWithUrlCache.entries().next().value as [
+            string,
+            string,
+          ];
           globalUseFileWithUrlCache.delete(oldKey);
         }
         globalUseFileWithUrlCache.set(key, url);
