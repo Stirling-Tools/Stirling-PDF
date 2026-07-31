@@ -67,8 +67,12 @@ public final class EncryptedFileFormat {
     /**
      * Parses a header from the first {@link #HEADER_LENGTH} bytes of a blob. Returns {@code null}
      * when the bytes are not a storage-encrypted object (legacy plaintext passthrough).
+     *
+     * @throws StorageEncryptionException when the magic matches but the version/suite is unknown —
+     *     checked so it flows through the callers' IOException error mapping instead of surfacing
+     *     as a bare 500.
      */
-    public static Header parse(byte[] prefix) {
+    public static Header parse(byte[] prefix) throws StorageEncryptionException {
         if (prefix == null || prefix.length < HEADER_LENGTH) {
             return null;
         }
@@ -87,7 +91,7 @@ public final class EncryptedFileFormat {
                 || suite != SUITE_AES_GCM_HKDF_1MIB
                 || plaintextLength < 0
                 || wrappedDekLength != WRAPPED_DEK_LENGTH) {
-            throw new IllegalStateException(
+            throw new StorageEncryptionException(
                     "Unsupported storage-encryption header (version="
                             + version
                             + ", suite="

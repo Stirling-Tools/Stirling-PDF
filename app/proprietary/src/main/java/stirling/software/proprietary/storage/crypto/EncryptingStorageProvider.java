@@ -16,6 +16,10 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,21 +28,24 @@ import com.google.crypto.tink.subtle.AesGcmHkdfStreaming;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
 
 /**
- * Envelope-encryption decorator over any {@link StorageProvider}: encrypts on {@code store},
- * decrypts on {@code load}, and passes legacy plaintext blobs through untouched (detected by the
- * {@link EncryptedFileFormat} magic). Backends store opaque ciphertext and need no changes.
+ * Envelope-encryption decorator over any {@link StorageProvider}: encrypts on {@code store} (when
+ * the write flag is on), decrypts on {@code load}, and passes legacy plaintext blobs through
+ * untouched (detected by the {@link EncryptedFileFormat} magic). Backends store opaque ciphertext
+ * and need no changes.
  *
- * <p>{@code writeEnabled=false} keeps decryption working after the feature is switched off, so
- * existing encrypted content never goes dark; only new writes revert to plaintext.
+ * <p>The decorator is installed unconditionally (see {@link StorageEncryptionState}), so a node
+ * whose config lags the cluster decrypts or fails loudly instead of streaming raw ciphertext.
+ * Decryption keeps working after the feature is switched off; only new writes revert to plaintext.
  *
- * <p>Presigned download URLs are deliberately suppressed for all objects: an S3 presigned GET would
- * hand ciphertext straight to the browser. Callers already fall back to app-streamed {@link #load}
- * when no URL is offered.
+ * <p>Presigned download URLs delegate to the backend only while no encrypted content can exist;
+ * otherwise they are suppressed, because an S3 presigned GET would hand ciphertext straight to the
+ * browser. Callers already fall back to app-streamed {@link #load} when no URL is offered.
  */
 @Slf4j
 public class EncryptingStorageProvider implements StorageProvider {
@@ -46,41 +53,65 @@ public class EncryptingStorageProvider implements StorageProvider {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final StorageProvider delegate;
-    private final FileEncryptionKeyService keys;
-    private final boolean writeEnabled;
+    private final StorageEncryptionState state;
+    private final TempFileManager tempFileManager;
+
+    public EncryptingStorageProvider(StorageProvider delegate, StorageEncryptionState state) {
+        this(delegate, state, null);
+    }
 
     public EncryptingStorageProvider(
-            StorageProvider delegate, FileEncryptionKeyService keys, boolean writeEnabled) {
+            StorageProvider delegate,
+            StorageEncryptionState state,
+            TempFileManager tempFileManager) {
         this.delegate = delegate;
-        this.keys = keys;
-        this.writeEnabled = writeEnabled;
+        this.state = state;
+        this.tempFileManager = tempFileManager;
+    }
+
+    /** Test convenience mirroring the pre-state constructor shape. */
+    public EncryptingStorageProvider(
+            StorageProvider delegate, FileEncryptionKeyService keys, boolean writeEnabled) {
+        this(delegate, StorageEncryptionState.of(writeEnabled, keys), null);
     }
 
     @Override
     public StoredObject store(User owner, MultipartFile file) throws IOException {
-        if (!writeEnabled) {
+        if (!state.isWriteEnabled()) {
             return delegate.store(owner, file);
         }
-        FileEncryptionKeyService.ScopeKek kek = keys.activeKekForOwner(owner);
+        FileEncryptionKeyService.ScopeKek kek = state.keyService().activeKekForOwner(owner);
         byte[] dek = new byte[EncryptedFileFormat.DEK_LENGTH_BYTES];
         RANDOM.nextBytes(dek);
 
         // Spool ciphertext to a temp file: DatabaseStorageProvider needs getBytes() and
         // S3StorageProvider needs an exact Content-Length, so the ciphertext size must be known
-        // before the delegate reads the upload.
-        Path spool = Files.createTempFile("stirling-enc-", ".bin");
+        // before the delegate reads the upload. TempFileManager-registered so a crash mid-upload
+        // doesn't orphan the spool forever.
+        Path spool = createSpoolFile();
         try {
             EncryptedFileFormat.Header header = buildHeader(kek, dek, file.getSize());
             byte[] aad = header.associatedData();
+            long plaintextBytes;
             try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(spool))) {
                 out.write(header.serialize());
                 OutputStream encrypting = streamingAead(dek).newEncryptingStream(out, aad);
                 try (InputStream in = file.getInputStream()) {
-                    in.transferTo(encrypting);
+                    plaintextBytes = in.transferTo(encrypting);
                 }
                 encrypting.close();
             } catch (GeneralSecurityException e) {
                 throw new StorageEncryptionException("Failed to encrypt upload", e);
+            }
+            // The header (and AAD) already carry file.getSize(); a MultipartFile that mis-reports
+            // would otherwise surface as a Content-Length mismatch, i.e. a truncated or hanging
+            // download instead of an error.
+            if (plaintextBytes != file.getSize()) {
+                throw new StorageEncryptionException(
+                        "Upload reported "
+                                + file.getSize()
+                                + " bytes but streamed "
+                                + plaintextBytes);
             }
             StoredObject stored = delegate.store(owner, new SpooledUpload(file, spool));
             log.debug(
@@ -96,6 +127,13 @@ public class EncryptingStorageProvider implements StorageProvider {
             Arrays.fill(dek, (byte) 0);
             Files.deleteIfExists(spool);
         }
+    }
+
+    private Path createSpoolFile() throws IOException {
+        if (tempFileManager != null) {
+            return tempFileManager.createTempFile(".enc").toPath();
+        }
+        return Files.createTempFile("stirling-enc-", ".bin");
     }
 
     @Override
@@ -122,14 +160,21 @@ public class EncryptingStorageProvider implements StorageProvider {
     }
 
     @Override
-    public Optional<URI> signedDownloadUrl(String storageKey, Duration ttl) {
-        return Optional.empty();
+    public Optional<URI> signedDownloadUrl(String storageKey, Duration ttl) throws IOException {
+        if (state.suppressDirectDownloads()) {
+            return Optional.empty();
+        }
+        return delegate.signedDownloadUrl(storageKey, ttl);
     }
 
     @Override
     public Optional<URI> signedDownloadUrl(
-            String storageKey, Duration ttl, boolean inline, String originalFilename) {
-        return Optional.empty();
+            String storageKey, Duration ttl, boolean inline, String originalFilename)
+            throws IOException {
+        if (state.suppressDirectDownloads()) {
+            return Optional.empty();
+        }
+        return delegate.signedDownloadUrl(storageKey, ttl, inline, originalFilename);
     }
 
     // ---- store helpers -------------------------------------------------------------------
@@ -161,11 +206,11 @@ public class EncryptingStorageProvider implements StorageProvider {
         try {
             byte[] iv = new byte[12];
             RANDOM.nextBytes(iv);
-            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(
-                    javax.crypto.Cipher.ENCRYPT_MODE,
-                    new javax.crypto.spec.SecretKeySpec(kek, "AES"),
-                    new javax.crypto.spec.GCMParameterSpec(128, iv));
+                    Cipher.ENCRYPT_MODE,
+                    new SecretKeySpec(kek, "AES"),
+                    new GCMParameterSpec(128, iv));
             cipher.updateAAD(aad);
             byte[] ct = cipher.doFinal(dek);
             byte[] out = new byte[iv.length + ct.length];
@@ -178,16 +223,16 @@ public class EncryptingStorageProvider implements StorageProvider {
     }
 
     private byte[] unwrapDek(EncryptedFileFormat.Header header) throws IOException {
-        byte[] kek = keys.kekForDecrypt(header.keyId());
+        byte[] kek = state.keyService().kekForDecrypt(header.keyId());
         try {
             byte[] wrapped = header.wrappedDek();
             byte[] iv = Arrays.copyOfRange(wrapped, 0, 12);
             byte[] ct = Arrays.copyOfRange(wrapped, 12, wrapped.length);
-            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(
-                    javax.crypto.Cipher.DECRYPT_MODE,
-                    new javax.crypto.spec.SecretKeySpec(kek, "AES"),
-                    new javax.crypto.spec.GCMParameterSpec(128, iv));
+                    Cipher.DECRYPT_MODE,
+                    new SecretKeySpec(kek, "AES"),
+                    new GCMParameterSpec(128, iv));
             cipher.updateAAD(header.associatedData());
             return cipher.doFinal(ct);
         } catch (GeneralSecurityException e) {
@@ -197,6 +242,13 @@ public class EncryptingStorageProvider implements StorageProvider {
         }
     }
 
+    /**
+     * Uses Tink's {@code subtle} API directly rather than the keyset/StreamingAead registry:
+     * keysets would store DEKs in Tink's own serialisation and key-management model, while this
+     * format keeps the (already-wrapped) DEK in our header. {@code subtle} is outside Tink's
+     * stability guarantee — the pinned version plus the round-trip tests are what make upgrades
+     * safe; re-run them on any Tink bump.
+     */
     private static AesGcmHkdfStreaming streamingAead(byte[] dek) throws GeneralSecurityException {
         return new AesGcmHkdfStreaming(
                 dek,
@@ -222,36 +274,54 @@ public class EncryptingStorageProvider implements StorageProvider {
         return new ReopenableDecryptedResource(raw, header, dek);
     }
 
-    /** One-shot delegate (S3 stream): the sniffed prefix must be replayed or decrypted inline. */
+    /**
+     * One-shot delegate (S3 stream): the sniffed prefix must be replayed or decrypted inline. The
+     * stream is a live HTTP connection, so every failure path (unknown header version, revoked key,
+     * tampered wrap) must close it — leaking here would starve the S3 connection pool precisely
+     * when the kill switch is being exercised.
+     */
     private Resource wrapOneShot(Resource raw) throws IOException {
         InputStream in = raw.getInputStream();
-        byte[] prefix = in.readNBytes(EncryptedFileFormat.HEADER_LENGTH);
-        EncryptedFileFormat.Header header = EncryptedFileFormat.parse(prefix);
-        if (header == null) {
-            long length;
-            try {
-                length = raw.contentLength();
-            } catch (IOException | RuntimeException e) {
-                // Stock InputStreamResource refuses contentLength() once the stream is
-                // partially read; S3's resource reports it from the response header instead.
-                length = -1;
-            }
-            return new OneShotResource(
-                    new SequenceInputStream(new ByteArrayInputStream(prefix), in),
-                    length,
-                    raw.getDescription());
-        }
-        byte[] dek = unwrapDek(header);
         try {
-            InputStream decrypting =
-                    streamingAead(dek).newDecryptingStream(in, header.associatedData());
+            byte[] prefix = in.readNBytes(EncryptedFileFormat.HEADER_LENGTH);
+            EncryptedFileFormat.Header header = EncryptedFileFormat.parse(prefix);
+            if (header == null) {
+                long length;
+                try {
+                    length = raw.contentLength();
+                } catch (IOException | RuntimeException e) {
+                    // Stock InputStreamResource refuses contentLength() once the stream is
+                    // partially read; S3's resource reports it from the response header instead.
+                    length = -1;
+                }
+                return new OneShotResource(
+                        new SequenceInputStream(new ByteArrayInputStream(prefix), in),
+                        length,
+                        raw.getDescription());
+            }
+            byte[] dek = unwrapDek(header);
+            InputStream decrypting;
+            try {
+                decrypting = streamingAead(dek).newDecryptingStream(in, header.associatedData());
+            } catch (GeneralSecurityException e) {
+                throw new StorageEncryptionException("Failed to open decrypting stream", e);
+            }
             return new OneShotResource(decrypting, header.plaintextLength(), raw.getDescription());
-        } catch (GeneralSecurityException e) {
-            throw new StorageEncryptionException("Failed to open decrypting stream", e);
+        } catch (IOException | RuntimeException e) {
+            try {
+                in.close();
+            } catch (IOException closeFailure) {
+                e.addSuppressed(closeFailure);
+            }
+            throw e;
         }
     }
 
-    /** Fresh decrypting stream per read; supports repeated reads and range-skip consumers. */
+    /**
+     * Fresh decrypting stream per read; supports repeated reads and range-skip consumers. Note a
+     * range request still decrypts from byte 0 and discards up to the offset — inherent to
+     * streaming AEAD without a seekable-channel implementation.
+     */
     private static final class ReopenableDecryptedResource extends AbstractResource {
         private final Resource ciphertext;
         private final EncryptedFileFormat.Header header;

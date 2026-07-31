@@ -125,6 +125,25 @@ class FileEncryptionKeyServiceTest {
     }
 
     @Test
+    void verifyMasterKey_retiredOnlyRegistry_stillVerifies() throws Exception {
+        FileEncryptionKeyService.ScopeKek created = service.activeKekForOwner(teamUser(1));
+        repo.rows.get(created.keyId()).setStatus(FileEncryptionKey.Status.RETIRED);
+
+        // A retired-only registry must still prove the key (RETIRED rows decrypt old blobs)...
+        new FileEncryptionKeyService(repo.mock, new FileEncryptionMasterKey(MASTER_A, false))
+                .verifyMasterKey();
+        // ...and still refuse a mismatched master key.
+        assertThatThrownBy(
+                        () ->
+                                new FileEncryptionKeyService(
+                                                repo.mock,
+                                                new FileEncryptionMasterKey(MASTER_B, false))
+                                        .verifyMasterKey())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cannot unwrap");
+    }
+
+    @Test
     void createActive_concurrentInsertRace_fallsBackToWinnersRow() throws Exception {
         // First save call hits the unique constraint; the service must re-read the winner's row.
         FileEncryptionKey winner = new FileEncryptionKey();
@@ -159,7 +178,7 @@ class FileEncryptionKeyServiceTest {
                             return row;
                         })
                 .when(repo.mock)
-                .save(any(FileEncryptionKey.class));
+                .saveAndFlush(any(FileEncryptionKey.class));
 
         FileEncryptionKeyService racedService = new FileEncryptionKeyService(repo.mock, master);
         FileEncryptionKeyService.ScopeKek resolved = racedService.activeKekForOwner(teamUser(9));
@@ -171,7 +190,7 @@ class FileEncryptionKeyServiceTest {
     void createActive_raceWithoutWinner_rethrows() {
         doThrow(new DataIntegrityViolationException("duplicate key"))
                 .when(repo.mock)
-                .save(any(FileEncryptionKey.class));
+                .saveAndFlush(any(FileEncryptionKey.class));
         assertThatThrownBy(() -> service.activeKekForOwner(teamUser(9)))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }

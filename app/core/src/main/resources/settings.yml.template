@@ -292,6 +292,26 @@ storage:
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
     enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+  # ====================================================================================
+  # ENCRYPTION AT REST - PRO / ENTERPRISE LICENSE REQUIRED TO ENABLE
+  # ====================================================================================
+  # Encrypts stored files (AES-256 envelope encryption, per-team keys). The master key is
+  # resolved in this order:
+  #   1. stirling.security.fileEncryptionKey property
+  #   2. STIRLING_FILE_ENCRYPTION_KEY environment variable
+  #   3. an auto-generated configs/file-encryption.key (single-node only; cluster mode
+  #      requires an explicitly shared key on every node)
+  # Generate a key with: openssl rand -base64 32
+  #
+  # *** BACK UP THE MASTER KEY. Losing it makes every encrypted stored file            ***
+  # *** permanently unrecoverable. Verify backups against the key fingerprint logged   ***
+  # *** at startup.                                                                    ***
+  #
+  # Enabling encrypts new writes only (existing files stay readable as plaintext).
+  # Disabling later only stops encrypting new writes - existing encrypted files remain
+  # readable as long as the key material is present.
+  encryption:
+    enabled: false # set to 'true' to encrypt stored files at rest
     userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)

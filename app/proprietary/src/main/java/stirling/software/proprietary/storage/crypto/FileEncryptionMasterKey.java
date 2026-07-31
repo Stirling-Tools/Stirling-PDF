@@ -57,11 +57,13 @@ public class FileEncryptionMasterKey {
 
     private static SecretKey resolveKey(String configuredKey, boolean clusterEnabled) {
         String configured = configuredKey;
+        String source = "stirling.security.fileEncryptionKey";
         if (configured == null || configured.isBlank()) {
             configured = System.getenv("STIRLING_FILE_ENCRYPTION_KEY");
+            source = "STIRLING_FILE_ENCRYPTION_KEY";
         }
         if (configured != null && !configured.isBlank()) {
-            return new SecretKeySpec(Base64.getDecoder().decode(configured.trim()), ALGORITHM);
+            return decodeKey(configured, source);
         }
         if (clusterEnabled) {
             throw new IllegalStateException(
@@ -73,12 +75,33 @@ public class FileEncryptionMasterKey {
         return loadOrCreateKeyFile();
     }
 
+    /**
+     * Decodes and validates key material: must be valid base64 for exactly 32 bytes. Without the
+     * length check a short key would silently downgrade to AES-128/192 while the startup log claims
+     * AES-256.
+     */
+    private static SecretKey decodeKey(String base64, String source) {
+        byte[] bytes;
+        try {
+            bytes = Base64.getDecoder().decode(base64.trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(source + " is not valid base64", e);
+        }
+        if (bytes.length != 32) {
+            throw new IllegalStateException(
+                    source
+                            + " must decode to exactly 32 bytes (a 256-bit AES key), got "
+                            + bytes.length
+                            + " bytes. Generate one with: openssl rand -base64 32");
+        }
+        return new SecretKeySpec(bytes, ALGORITHM);
+    }
+
     private static SecretKey loadOrCreateKeyFile() {
         Path path = Path.of(InstallationPathConfig.getConfigPath(), KEY_FILE);
         try {
             if (Files.exists(path)) {
-                String encoded = Files.readString(path).trim();
-                return new SecretKeySpec(Base64.getDecoder().decode(encoded), ALGORITHM);
+                return decodeKey(Files.readString(path), path.toString());
             }
             KeyGenerator generator = KeyGenerator.getInstance(ALGORITHM);
             generator.init(256);

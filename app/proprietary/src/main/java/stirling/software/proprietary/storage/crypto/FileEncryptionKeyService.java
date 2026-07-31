@@ -1,5 +1,6 @@
 package stirling.software.proprietary.storage.crypto;
 
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -7,6 +8,7 @@ import java.util.Base64;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.support.TransactionOperations;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -24,7 +26,8 @@ import stirling.software.proprietary.storage.repository.FileEncryptionKeyReposit
  * fallback for owners without a team; SOURCE is reserved for pipeline encryption (P2).
  *
  * <p>Unwrapped KEKs are cached briefly so the kill switch (DISABLED status) propagates across
- * cluster nodes within {@link #CACHE_TTL} without a per-read DB round-trip.
+ * cluster nodes within {@link #CACHE_TTL} without a per-read DB round-trip. Note the TTL bounds the
+ * write side too: a key disabled on another node can wrap new blobs for up to the TTL there.
  */
 @Slf4j
 public class FileEncryptionKeyService {
@@ -34,6 +37,16 @@ public class FileEncryptionKeyService {
 
     private final FileEncryptionKeyRepository repository;
     private final FileEncryptionMasterKey masterKey;
+
+    /**
+     * Runs key-row creation in its own committed transaction (REQUIRES_NEW in production). Callers
+     * like WorkflowSessionService are {@code @Transactional}, and with an assigned-UUID id the
+     * INSERT would otherwise defer to the outer commit — the duplicate-key exception would surface
+     * far from {@link #createActive}'s recovery catch, and the outer transaction would already be
+     * rollback-only.
+     */
+    private final TransactionOperations keyCreationTx;
+
     private final Cache<UUID, byte[]> unwrapCache =
             Caffeine.newBuilder().expireAfterWrite(CACHE_TTL).maximumSize(10_000).build();
     private final Cache<String, UUID> activeScopeCache =
@@ -41,8 +54,16 @@ public class FileEncryptionKeyService {
 
     public FileEncryptionKeyService(
             FileEncryptionKeyRepository repository, FileEncryptionMasterKey masterKey) {
+        this(repository, masterKey, TransactionOperations.withoutTransaction());
+    }
+
+    public FileEncryptionKeyService(
+            FileEncryptionKeyRepository repository,
+            FileEncryptionMasterKey masterKey,
+            TransactionOperations keyCreationTx) {
         this.repository = repository;
         this.masterKey = masterKey;
+        this.keyCreationTx = keyCreationTx;
     }
 
     public record ScopeKek(UUID keyId, byte[] key) {}
@@ -128,7 +149,9 @@ public class FileEncryptionKeyService {
                 .orElseGet(() -> createActive(scopeType, scopeId));
     }
 
-    private FileEncryptionKey createActive(FileEncryptionKey.ScopeType scopeType, long scopeId) {
+    // Package-private so the @DataJpaTest can drive the duplicate-insert recovery
+    // deterministically.
+    FileEncryptionKey createActive(FileEncryptionKey.ScopeType scopeType, long scopeId) {
         byte[] kek = new byte[EncryptedFileFormat.DEK_LENGTH_BYTES];
         RANDOM.nextBytes(kek);
         FileEncryptionKey row = new FileEncryptionKey();
@@ -148,7 +171,9 @@ public class FileEncryptionKeyService {
         row.setMasterKeyVersion(FileEncryptionMasterKey.CURRENT_VERSION);
         row.setStatus(FileEncryptionKey.Status.ACTIVE);
         try {
-            FileEncryptionKey saved = repository.save(row);
+            // saveAndFlush inside a fresh transaction so a unique-constraint violation surfaces
+            // right here (not at some outer commit) and the caller's transaction stays healthy.
+            FileEncryptionKey saved = keyCreationTx.execute(status -> repository.saveAndFlush(row));
             log.info(
                     "Created storage encryption key {} for {}:{}",
                     saved.getKeyId(),
@@ -184,6 +209,6 @@ public class FileEncryptionKeyService {
 
     // Binds each wrapped KEK to its row identity so ciphertexts can't be swapped between rows.
     private static byte[] aadFor(UUID keyId) {
-        return keyId.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        return keyId.toString().getBytes(StandardCharsets.US_ASCII);
     }
 }

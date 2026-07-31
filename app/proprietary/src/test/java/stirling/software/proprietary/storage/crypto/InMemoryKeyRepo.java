@@ -15,13 +15,20 @@ import stirling.software.proprietary.storage.model.FileEncryptionKey;
 import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 
 /** Map-backed Mockito stub of the key repository for crypto tests (no JPA slice needed). */
-final class InMemoryKeyRepo {
+public final class InMemoryKeyRepo {
 
-    final Map<UUID, FileEncryptionKey> rows = new ConcurrentHashMap<>();
-    final FileEncryptionKeyRepository mock;
+    public final Map<UUID, FileEncryptionKey> rows = new ConcurrentHashMap<>();
+    public final FileEncryptionKeyRepository mock;
 
-    InMemoryKeyRepo() {
+    public InMemoryKeyRepo() {
         mock = mock(FileEncryptionKeyRepository.class);
+        when(mock.saveAndFlush(any(FileEncryptionKey.class)))
+                .thenAnswer(
+                        inv -> {
+                            FileEncryptionKey row = inv.getArgument(0);
+                            rows.put(row.getKeyId(), row);
+                            return row;
+                        });
         when(mock.save(any(FileEncryptionKey.class)))
                 .thenAnswer(
                         inv -> {

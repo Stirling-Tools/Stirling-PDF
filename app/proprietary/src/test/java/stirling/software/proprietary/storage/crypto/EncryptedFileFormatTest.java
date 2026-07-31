@@ -19,7 +19,7 @@ class EncryptedFileFormatTest {
     }
 
     @Test
-    void serialize_parse_roundtrips() {
+    void serialize_parse_roundtrips() throws Exception {
         EncryptedFileFormat.Header header = sampleHeader();
         byte[] bytes = header.serialize();
         assertThat(bytes).hasSize(EncryptedFileFormat.HEADER_LENGTH);
@@ -32,7 +32,7 @@ class EncryptedFileFormatTest {
     }
 
     @Test
-    void parse_returnsNullForPlaintext() {
+    void parse_returnsNullForPlaintext() throws Exception {
         byte[] pdf = new byte[EncryptedFileFormat.HEADER_LENGTH];
         pdf[0] = '%';
         pdf[1] = 'P';
@@ -42,17 +42,19 @@ class EncryptedFileFormatTest {
     }
 
     @Test
-    void parse_returnsNullForShortPrefix() {
+    void parse_returnsNullForShortPrefix() throws Exception {
         assertThat(EncryptedFileFormat.parse(new byte[10])).isNull();
         assertThat(EncryptedFileFormat.parse(null)).isNull();
     }
 
     @Test
-    void parse_throwsOnUnknownVersion() {
+    void parse_throwsCheckedOnUnknownVersion() {
         byte[] bytes = sampleHeader().serialize();
         bytes[8] = 99; // format version
+        // Checked StorageEncryptionException so callers' IOException mapping catches it —
+        // a downgrade-read must not surface as a bare 500.
         assertThatThrownBy(() -> EncryptedFileFormat.parse(bytes))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(StorageEncryptionException.class)
                 .hasMessageContaining("Unsupported");
     }
 

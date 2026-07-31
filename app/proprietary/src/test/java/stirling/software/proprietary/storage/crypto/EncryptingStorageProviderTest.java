@@ -248,4 +248,144 @@ class EncryptingStorageProviderTest {
             assertThat(in.readAllBytes()).isEqualTo(tiny);
         }
     }
+
+    /** Tracks close() so leak regressions on the one-shot (S3-style) path are caught. */
+    private final class TrackingOneShotProvider implements StorageProvider {
+        final java.util.concurrent.atomic.AtomicInteger openStreams =
+                new java.util.concurrent.atomic.AtomicInteger();
+
+        @Override
+        public StoredObject store(User owner, MultipartFile file) throws IOException {
+            return inner.store(owner, file);
+        }
+
+        @Override
+        public Resource load(String storageKey) throws IOException {
+            openStreams.incrementAndGet();
+            InputStream tracked =
+                    new java.io.FilterInputStream(inner.load(storageKey).getInputStream()) {
+                        @Override
+                        public void close() throws IOException {
+                            openStreams.decrementAndGet();
+                            super.close();
+                        }
+                    };
+            return new InputStreamResource(tracked);
+        }
+
+        @Override
+        public void delete(String storageKey) throws IOException {
+            inner.delete(storageKey);
+        }
+    }
+
+    @Test
+    void load_oneShot_disabledKey_closesUnderlyingStream() throws IOException {
+        StoredObject stored = provider.store(owner, upload());
+        repo.rows
+                .get(UUID.fromString(stored.getEncryptionKeyId()))
+                .setStatus(FileEncryptionKey.Status.DISABLED);
+
+        TrackingOneShotProvider tracking = new TrackingOneShotProvider();
+        EncryptingStorageProvider oneShot =
+                new EncryptingStorageProvider(tracking, newKeyService(), true);
+
+        // Exercising the kill switch repeatedly must not leak connections.
+        for (int i = 0; i < 3; i++) {
+            assertThatThrownBy(() -> oneShot.load(stored.getStorageKey()))
+                    .isInstanceOf(StorageKeyRevokedException.class);
+        }
+        assertThat(tracking.openStreams.get()).isZero();
+    }
+
+    @Test
+    void load_oneShot_unknownHeaderVersion_closesUnderlyingStream() throws IOException {
+        StoredObject stored = provider.store(owner, upload());
+        Path blob = tempDir.resolve(stored.getStorageKey());
+        byte[] bytes = Files.readAllBytes(blob);
+        bytes[8] = 99; // future format version
+        Files.write(blob, bytes);
+
+        TrackingOneShotProvider tracking = new TrackingOneShotProvider();
+        EncryptingStorageProvider oneShot =
+                new EncryptingStorageProvider(tracking, newKeyService(), true);
+
+        assertThatThrownBy(() -> oneShot.load(stored.getStorageKey()))
+                .isInstanceOf(StorageEncryptionException.class)
+                .hasMessageContaining("Unsupported");
+        assertThat(tracking.openStreams.get()).isZero();
+    }
+
+    @Test
+    void store_uploadMisreportingSize_failsInsteadOfCorruptingContentLength() {
+        MultipartFile lying =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", PLAINTEXT) {
+                    @Override
+                    public long getSize() {
+                        return PLAINTEXT.length + 5;
+                    }
+                };
+        assertThatThrownBy(() -> provider.store(owner, lying))
+                .isInstanceOf(StorageEncryptionException.class)
+                .hasMessageContaining("streamed");
+    }
+
+    @Test
+    void load_tamperedPlaintextLength_failsAuthentication() throws IOException {
+        StoredObject stored = provider.store(owner, upload());
+        Path blob = tempDir.resolve(stored.getStorageKey());
+        byte[] bytes = Files.readAllBytes(blob);
+        bytes[33] ^= 0x01; // low byte of the header's plaintextLength field
+        Files.write(blob, bytes);
+
+        // plaintextLength is part of the AAD, so the DEK unwrap must reject the header.
+        assertThatThrownBy(() -> provider.load(stored.getStorageKey()))
+                .isInstanceOf(StorageEncryptionException.class);
+    }
+
+    @Test
+    void signedDownloadUrl_delegatesWhenNoEncryptedContentPossible() throws IOException {
+        // Vanilla install: flag off, no key rows anywhere -> keep the backend's fast path.
+        StorageEncryptionState vanilla =
+                new StorageEncryptionState(false, () -> newKeyService(), repo.mock);
+        StorageProvider withUrls =
+                new StorageProvider() {
+                    @Override
+                    public StoredObject store(User owner, MultipartFile file) throws IOException {
+                        return inner.store(owner, file);
+                    }
+
+                    @Override
+                    public Resource load(String storageKey) throws IOException {
+                        return inner.load(storageKey);
+                    }
+
+                    @Override
+                    public void delete(String storageKey) throws IOException {
+                        inner.delete(storageKey);
+                    }
+
+                    @Override
+                    public java.util.Optional<java.net.URI> signedDownloadUrl(
+                            String storageKey,
+                            Duration ttl,
+                            boolean inline,
+                            String originalFilename) {
+                        return java.util.Optional.of(java.net.URI.create("https://signed.example"));
+                    }
+                };
+        EncryptingStorageProvider decorated = new EncryptingStorageProvider(withUrls, vanilla);
+
+        assertThat(decorated.signedDownloadUrl("k", Duration.ofMinutes(5), false, "a.pdf"))
+                .contains(java.net.URI.create("https://signed.example"));
+
+        // As soon as key rows exist, the same node must stop handing out direct URLs.
+        StoredObject encrypted = provider.store(owner, upload());
+        assertThat(encrypted.getEncryptionKeyId()).isNotNull();
+        StorageEncryptionState drifted =
+                new StorageEncryptionState(false, () -> newKeyService(), repo.mock);
+        EncryptingStorageProvider driftedNode = new EncryptingStorageProvider(withUrls, drifted);
+        assertThat(driftedNode.signedDownloadUrl("k", Duration.ofMinutes(5), false, "a.pdf"))
+                .isEmpty();
+    }
 }
