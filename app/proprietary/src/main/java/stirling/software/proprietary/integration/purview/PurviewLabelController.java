@@ -24,6 +24,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -59,6 +61,7 @@ public class PurviewLabelController {
     private final ObjectMapper objectMapper;
 
     @PostMapping(value = "/purview-apply-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Apply a Microsoft Purview sensitivity label",
             description =
@@ -94,6 +97,7 @@ public class PurviewLabelController {
     }
 
     @PostMapping(value = "/purview-read-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Read the Microsoft Purview sensitivity label on a PDF",
             description =

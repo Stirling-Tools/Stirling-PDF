@@ -537,6 +537,33 @@ export interface HTMLToPdfRequest {
    */
   zoom?: number;
 }
+export interface IntegrationExternalApiCallRequest {
+  bodyMode?: string;
+  bodyTemplate?: string;
+  connectionId: string;
+  fields?: string;
+  fileFieldName?: string;
+  headers?: string;
+  includeContext?: boolean;
+  includeFile?: boolean;
+  method?: string;
+  path?: string;
+  requireTrue?: string;
+  responseMode?: string;
+  responseSelect?: string;
+  resultUrlHeader?: string;
+  resultUrlPath?: string;
+}
+export interface IntegrationPurviewApplyLabelRequest {
+  connectionId: string;
+  contentBits?: number;
+  labelId: string;
+  labelName?: string;
+  method?: string;
+}
+export interface IntegrationPurviewReadLabelRequest {
+  connectionId: string;
+}
 export type ListAttachmentsRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
   /**
@@ -1467,6 +1494,9 @@ export type ToolEndpoint =
   | "/api/v1/general/split-pages"
   | "/api/v1/general/split-pdf-by-chapters"
   | "/api/v1/general/split-pdf-by-sections"
+  | "/api/v1/integration/external-api-call"
+  | "/api/v1/integration/purview-apply-label"
+  | "/api/v1/integration/purview-read-label"
   | "/api/v1/misc/add-attachments"
   | "/api/v1/misc/add-comments"
   | "/api/v1/misc/add-image"
@@ -1564,6 +1594,9 @@ export interface ToolApiParams {
   "/api/v1/general/split-pages": SplitPagesRequest;
   "/api/v1/general/split-pdf-by-chapters": SplitPdfByChaptersRequest;
   "/api/v1/general/split-pdf-by-sections": SplitPdfBySectionsRequest;
+  "/api/v1/integration/external-api-call": IntegrationExternalApiCallRequest;
+  "/api/v1/integration/purview-apply-label": IntegrationPurviewApplyLabelRequest;
+  "/api/v1/integration/purview-read-label": IntegrationPurviewReadLabelRequest;
   "/api/v1/misc/add-attachments": AddAttachmentRequest;
   "/api/v1/misc/add-comments": AddCommentsRequest;
   "/api/v1/misc/add-image": OverlayImageRequest;
@@ -1662,6 +1695,9 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/general/split-pages",
   "/api/v1/general/split-pdf-by-chapters",
   "/api/v1/general/split-pdf-by-sections",
+  "/api/v1/integration/external-api-call",
+  "/api/v1/integration/purview-apply-label",
+  "/api/v1/integration/purview-read-label",
   "/api/v1/misc/add-attachments",
   "/api/v1/misc/add-comments",
   "/api/v1/misc/add-image",

@@ -16,15 +16,16 @@ import * as prettier from "prettier";
 // is absent from the spec, so it cannot appear here. Extend this list when other
 // namespaces become tools.
 //
-// `/api/v1/filter/` is included even though filters are not user-facing tools: a
-// stored pipeline can contain one, and ToolEndpoint keys the I/O table, so leaving
-// them out would stop a chain being checked past a filter step.
+// `/api/v1/filter/` and `/api/v1/integration/` are included even though neither is a
+// user-facing tool: a stored pipeline can contain one, and ToolEndpoint keys the I/O
+// table, so leaving them out would stop a chain being checked past such a step.
 const ALLOWED_PATH_PREFIXES = [
   "/api/v1/general/",
   "/api/v1/misc/",
   "/api/v1/security/",
   "/api/v1/convert/",
   "/api/v1/filter/",
+  "/api/v1/integration/",
 ];
 
 // File plumbing, not user parameters: `fileInput` is the uploaded document and
@@ -186,24 +187,37 @@ function computeRequired(schema: Json, properties: Json): string[] {
   });
 }
 
-/** The `x-stirling-io` declaration for every endpoint that carries one, path-sorted. */
-function collectToolIO(paths: Json): Record<string, unknown> {
+/**
+ * The `x-stirling-io` declaration for every endpoint that carries one, path-sorted.
+ *
+ * Restricted to `endpoints`, the paths that become {@link ToolEndpoint}: the table is typed by
+ * that union, so a declaration outside it would not type-check. `dropped` is reported rather
+ * than discarded silently, since a tool losing its declaration this way is invisible otherwise.
+ */
+function collectToolIO(
+  paths: Json,
+  endpoints: Set<string>,
+): { table: Record<string, unknown>; dropped: string[] } {
   const table: Record<string, unknown> = {};
+  const dropped: string[] = [];
   for (const path of Object.keys(paths).sort()) {
     const pathItem = paths[path];
     if (!isObject(pathItem)) continue;
     for (const operation of Object.values(pathItem)) {
       if (isObject(operation) && operation[IO_EXTENSION]) {
-        table[path] = operation[IO_EXTENSION];
+        if (endpoints.has(path)) table[path] = operation[IO_EXTENSION];
+        else dropped.push(path);
       }
     }
   }
-  return table;
+  return { table, dropped };
 }
 
-async function renderToolIO(spec: Json, outputPath: string): Promise<string> {
-  const paths = isObject(spec.paths) ? spec.paths : {};
-  const table = collectToolIO(paths);
+async function renderToolIO(
+  spec: Json,
+  table: Record<string, unknown>,
+  outputPath: string,
+): Promise<string> {
   if (Object.keys(table).length === 0) {
     throw new Error(
       `No ${IO_EXTENSION} declarations in the spec. The backend publishes these from @ToolIO; regenerate with 'task backend:swagger'.`,
@@ -331,16 +345,6 @@ async function main(): Promise<void> {
 
   const spec = JSON.parse(readFileSync(specPath, "utf-8")) as Json;
 
-  const ioTable = await renderToolIO(spec, ioOutputPath);
-  writeOrCheck(
-    ioOutputPath,
-    ioTable,
-    values.check ?? false,
-    "task frontend:tool-models",
-  );
-  console.log(
-    `${values.check ? "Up to date" : "Generated"}: ${Object.keys(collectToolIO(isObject(spec.paths) ? spec.paths : {})).length} tool I/O declarations.`,
-  );
   const paths = isObject(spec.paths) ? spec.paths : {};
   const components =
     isObject(spec.components) && isObject(spec.components.schemas)
@@ -420,6 +424,25 @@ async function main(): Promise<void> {
 
     tools.push({ path, className });
   }
+
+  const { table: ioDeclarations, dropped } = collectToolIO(
+    paths,
+    new Set(tools.map((tool) => tool.path)),
+  );
+  if (dropped.length > 0) {
+    console.warn(
+      `Dropped ${dropped.length} @ToolIO declaration(s) on paths that are not tool endpoints. Add the namespace to ALLOWED_PATH_PREFIXES if a pipeline can contain these steps:\n  ${dropped.join("\n  ")}`,
+    );
+  }
+  writeOrCheck(
+    ioOutputPath,
+    await renderToolIO(spec, ioDeclarations, ioOutputPath),
+    values.check ?? false,
+    "task frontend:tool-models",
+  );
+  console.log(
+    `${values.check ? "Up to date" : "Generated"}: ${Object.keys(ioDeclarations).length} tool I/O declarations.`,
+  );
 
   // Transitively inline every referenced component into `definitions`, rewriting its refs too.
   const queue = [...pendingComponents];

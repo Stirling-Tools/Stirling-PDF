@@ -43,7 +43,8 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/misc/",
                     "/api/v1/security/",
                     "/api/v1/convert/",
-                    "/api/v1/filter/");
+                    "/api/v1/filter/",
+                    "/api/v1/integration/");
 
     /**
      * Not document transforms, so nothing to declare. A path exempts everything nested under it.
