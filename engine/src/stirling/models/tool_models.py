@@ -251,31 +251,6 @@ class DetectionMode(StrEnum):
     osd = "osd"
 
 
-class AutoRotatePdfParams(ApiModel):
-    confidence_threshold: float = Field(
-        14.0,
-        description="Minimum Tesseract OSD orientation confidence required before a correction is applied. Matches OCRmyPDF's --rotate-pages-threshold scale",
-        ge=0.0,
-    )
-    detection_mode: DetectionMode = Field(
-        DetectionMode.auto,
-        description="Detection method. 'auto' tries embedded-text direction first and falls back to Tesseract OSD for pages without usable text; 'text' uses only embedded-text direction; 'osd' forces Tesseract OSD for every page",
-    )
-    dry_run: bool | None = Field(
-        None,
-        description="If true, no rotation is applied; returns a JSON report of the per-page detection results instead of a PDF",
-    )
-    infer_undetected: bool = Field(
-        True,
-        description="When a page cannot be decided on its own but the pages that could be decided agree on a single correction for that same current rotation, apply that shared correction to the undecided page. Handles documents rotated uniformly where some pages are too sparse to detect alone",
-    )
-    page_rotations: str | None = Field(
-        None,
-        description='Optional JSON object of pre-computed corrections to apply without running detection, mapping 1-based page number to additional clockwise degrees (multiples of 90), e.g. {"1":90,"4":180}. Pages not listed are left unchanged',
-        examples=['{"1":90,"4":180}'],
-    )
-
-
 class AutoSplitPdfParams(ApiModel):
     duplex_mode: bool = Field(
         False,
@@ -738,6 +713,19 @@ class OcrPdfParams(ApiModel):
     ocr_type: OcrType = Field(..., description="Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'")
     remove_images_after: bool | None = Field(None, description="Remove images from the output PDF if set to true")
     sidecar: bool | None = Field(None, description="Include OCR text in a sidecar text file if set to true")
+
+
+class PageRotation(ApiModel):
+    """
+    Optional pre-computed corrections to apply without running detection. Pages not listed are left unchanged, and a page may only appear once
+    """
+
+    page_number: int = Field(..., description="1-based page number to rotate", examples=[1])
+    rotation: int = Field(
+        ...,
+        description="Additional clockwise rotation to add to the page's current rotation, in degrees. Must be a multiple of 90",
+        examples=[90],
+    )
 
 
 class PdfToCbrParams(ApiModel):
@@ -1381,6 +1369,30 @@ class OutputFormat6(StrEnum):
 class VectorToPdfParams(ApiModel):
     output_format: OutputFormat6 = Field(OutputFormat6.eps, description="Target vector format extension")
     prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
+
+
+class AutoRotatePdfParams(ApiModel):
+    confidence_threshold: float = Field(
+        14.0,
+        description="Minimum Tesseract OSD orientation confidence required before a correction is applied. Matches OCRmyPDF's --rotate-pages-threshold scale",
+        ge=0.0,
+    )
+    detection_mode: DetectionMode = Field(
+        DetectionMode.auto,
+        description="Detection method. 'auto' tries embedded-text direction first and falls back to Tesseract OSD for pages without usable text; 'text' uses only embedded-text direction; 'osd' forces Tesseract OSD for every page",
+    )
+    dry_run: bool | None = Field(
+        None,
+        description="If true, no rotation is applied; returns a JSON report of the per-page detection results instead of a PDF",
+    )
+    infer_undetected: bool = Field(
+        True,
+        description="When a page cannot be decided on its own but the pages that could be decided agree on a single correction for that same current rotation, apply that shared correction to the undecided page. Handles documents rotated uniformly where some pages are too sparse to detect alone",
+    )
+    page_rotations: list[PageRotation] | None = Field(
+        None,
+        description="Optional pre-computed corrections to apply without running detection. Pages not listed are left unchanged, and a page may only appear once",
+    )
 
 
 class RedactExecuteParams(ApiModel):

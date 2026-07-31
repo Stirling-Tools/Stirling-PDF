@@ -1,7 +1,10 @@
 package stirling.software.SPDF.model.api.misc;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 
 import lombok.Data;
@@ -48,10 +51,8 @@ public class AutoRotatePdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Optional JSON object of pre-computed corrections to apply without running"
-                            + " detection, mapping 1-based page number to additional clockwise"
-                            + " degrees (multiples of 90), e.g. {\"1\":90,\"4\":180}. Pages not"
-                            + " listed are left unchanged",
-            example = "{\"1\":90,\"4\":180}")
-    private String pageRotations;
+                    "Optional pre-computed corrections to apply without running detection. Pages"
+                            + " not listed are left unchanged, and a page may only appear once")
+    @Valid
+    private List<PageRotation> pageRotations;
 }

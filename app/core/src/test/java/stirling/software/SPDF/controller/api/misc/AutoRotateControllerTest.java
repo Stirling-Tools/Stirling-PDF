@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -37,6 +38,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.AutoRotateAnalysisResult;
 import stirling.software.SPDF.model.api.misc.AutoRotatePdfRequest;
+import stirling.software.SPDF.model.api.misc.PageRotation;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -229,7 +231,7 @@ class AutoRotateControllerTest {
     @Test
     void appliesExplicitPageRotations() throws Exception {
         AutoRotatePdfRequest request = request(docWithUprightText(0, 0));
-        request.setPageRotations("{\"1\":90}");
+        request.setPageRotations(List.of(new PageRotation(1, 90)));
 
         ResponseEntity<?> response = controller.autoRotatePdf(request);
 
@@ -311,9 +313,28 @@ class AutoRotateControllerTest {
     }
 
     @Test
-    void rejectsMalformedPageRotations() throws Exception {
+    void rejectsRotationThatIsNotAMultipleOf90() throws Exception {
         AutoRotatePdfRequest request = request(docWithUprightText(0));
-        request.setPageRotations("{\"1\":45}");
+        request.setPageRotations(List.of(new PageRotation(1, 45)));
+
+        assertThatThrownBy(() -> controller.autoRotatePdf(request))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsPageRotationOutsideTheDocument() throws Exception {
+        AutoRotatePdfRequest request = request(docWithUprightText(0));
+        request.setPageRotations(List.of(new PageRotation(5, 90)));
+
+        assertThatThrownBy(() -> controller.autoRotatePdf(request))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsDuplicatePageInRotations() throws Exception {
+        // Rotations are additive, so applying the same page twice would over-rotate it.
+        AutoRotatePdfRequest request = request(docWithUprightText(0, 0));
+        request.setPageRotations(List.of(new PageRotation(1, 90), new PageRotation(1, 90)));
 
         assertThatThrownBy(() -> controller.autoRotatePdf(request))
                 .isInstanceOf(IllegalArgumentException.class);

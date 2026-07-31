@@ -219,9 +219,22 @@ export interface AutoRotatePdfRequest {
    */
   inferUndetected?: boolean;
   /**
-   * Optional JSON object of pre-computed corrections to apply without running detection, mapping 1-based page number to additional clockwise degrees (multiples of 90), e.g. {"1":90,"4":180}. Pages not listed are left unchanged
+   * Optional pre-computed corrections to apply without running detection. Pages not listed are left unchanged, and a page may only appear once
    */
-  pageRotations?: string;
+  pageRotations?: PageRotation[];
+}
+/**
+ * Optional pre-computed corrections to apply without running detection. Pages not listed are left unchanged, and a page may only appear once
+ */
+export interface PageRotation {
+  /**
+   * 1-based page number to rotate
+   */
+  pageNumber: number;
+  /**
+   * Additional clockwise rotation to add to the page's current rotation, in degrees. Must be a multiple of 90
+   */
+  rotation: number;
 }
 export interface AutoSplitPdfRequest {
   /**

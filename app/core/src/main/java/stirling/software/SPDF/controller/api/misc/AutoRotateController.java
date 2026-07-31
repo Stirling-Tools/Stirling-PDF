@@ -23,9 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 
 import jakarta.validation.Valid;
@@ -37,6 +34,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.AutoRotateAnalysisResult;
 import stirling.software.SPDF.model.api.misc.AutoRotateAnalysisResult.PageResult;
 import stirling.software.SPDF.model.api.misc.AutoRotatePdfRequest;
+import stirling.software.SPDF.model.api.misc.PageRotation;
 import stirling.software.SPDF.utils.AutoRotateDetection;
 import stirling.software.SPDF.utils.AutoRotateDetection.OsdResult;
 import stirling.software.SPDF.utils.AutoRotateDetection.TextDirection;
@@ -58,8 +56,6 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @RequiredArgsConstructor
 public class AutoRotateController {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     // OSD decides orientation from script shape, not character identity, so it does not need
     // OCR-grade resolution. 150 DPI is ample for that and a quarter of the pixels of 300.
@@ -103,7 +99,7 @@ public class AutoRotateController {
         }
 
         try (PDDocument document = pdfDocumentFactory.load(request)) {
-            if (request.getPageRotations() != null && !request.getPageRotations().isBlank()) {
+            if (request.getPageRotations() != null && !request.getPageRotations().isEmpty()) {
                 applyExplicitRotations(document, request.getPageRotations());
                 return pdfResponse(document, request);
             }
@@ -318,28 +314,29 @@ public class AutoRotateController {
         }
     }
 
-    private void applyExplicitRotations(PDDocument document, String pageRotationsJson)
-            throws IOException {
-        Map<Integer, Integer> rotations;
-        try {
-            rotations =
-                    OBJECT_MAPPER.readValue(
-                            pageRotationsJson, new TypeReference<Map<Integer, Integer>>() {});
-        } catch (IOException e) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
-                    "pageRotations",
-                    "must be a JSON object of page number to angle");
-        }
+    private void applyExplicitRotations(PDDocument document, List<PageRotation> rotations) {
         int pageCount = document.getNumberOfPages();
-        for (Map.Entry<Integer, Integer> entry : rotations.entrySet()) {
-            int pageNumber = entry.getKey();
-            int angle = entry.getValue();
-            if (pageNumber < 1 || pageNumber > pageCount || angle % 90 != 0) {
+        Set<Integer> seen = new HashSet<>();
+        for (PageRotation entry : rotations) {
+            Integer pageNumber = entry.getPageNumber();
+            Integer angle = entry.getRotation();
+            if (pageNumber == null
+                    || angle == null
+                    || pageNumber < 1
+                    || pageNumber > pageCount
+                    || angle % 90 != 0) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
                         "pageRotations",
-                        "page numbers must exist and angles must be multiples of 90");
+                        "page numbers must exist and rotations must be multiples of 90");
+            }
+            // Rotations are additive, so a repeated page would be turned twice; reject rather
+            // than silently pick a winner.
+            if (!seen.add(pageNumber)) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
+                        "pageRotations",
+                        "page " + pageNumber + " is listed more than once");
             }
             PDPage page = document.getPage(pageNumber - 1);
             page.setRotation(Math.floorMod(page.getRotation() + angle, 360));
