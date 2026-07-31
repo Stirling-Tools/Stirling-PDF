@@ -57,9 +57,6 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
-      # Rebuilds the OpenAPI spec from the current Java, regenerates every file
-      # derived from it in memory, and compares against what is committed. The
-      # same command developers run locally, and it leaves the tree untouched.
       - name: Verify generated models are up to date
         id: models-check
         continue-on-error: true
@@ -78,7 +75,7 @@ jobs:
               marker,
               '### Generated Models Check Failed',
               '',
-              'One or more generated files are out of date with the Java OpenAPI spec and will need to be regenerated before they can be merged in: `toolApiTypes.ts`, `tool_models.py`, `toolIO.ts`, `tool_io.py`.',
+              'One or more generated files are out of date with the Java OpenAPI spec and will need to be regenerated before they can be merged in.',
               '',
               'Run `task tool-models` to regenerate them, then commit the updated files.',
             ].join('\n');
@@ -111,9 +108,8 @@ jobs:
           echo "  Generated Models Check Failed"
           echo "============================================"
           echo ""
-          echo "One or more generated files (API request models or the"
-          echo "tool I/O tables) are out of date with the Java OpenAPI"
-          echo "spec and will need to be regenerated before merging."
+          echo "One or more generated files are out of date with the Java"
+          echo "OpenAPI spec and will need to be regenerated before merging."
           echo ""
           echo "Run 'task tool-models' to regenerate them, then"
           echo "commit the updated files."
