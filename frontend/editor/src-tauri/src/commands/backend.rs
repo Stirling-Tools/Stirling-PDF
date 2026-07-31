@@ -202,6 +202,15 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
 
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
+    #[cfg(target_os = "macos")]
+    let keychain_helper_option =
+        crate::commands::find_keychain_helper_path(app).map(|helper_path| {
+            add_log(format!("🔐 macOS keychain helper: {:?}", helper_path));
+            format!(
+                "-Dstirling.keychain.helper.path={}",
+                helper_path.to_string_lossy()
+            )
+        });
 
     let mut java_options = vec![
         "-Xmx2g",
@@ -220,6 +229,11 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     // Enable the login agreement on local desktop installs when it has been provisioned.
     if crate::commands::connection::login_agreement_enabled(app) {
         java_options.push("-Dlegal.loginAgreement.enabled=true");
+    }
+
+    #[cfg(target_os = "macos")]
+    if let Some(ref option) = keychain_helper_option {
+        java_options.push(option);
     }
 
     java_options.push("-jar");
