@@ -12,6 +12,7 @@ import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   ChangePermissionsParameters,
   defaultParameters,
+  validateChangePermissionsParameters,
 } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 // Change Permissions reuses the Add Password endpoint but sends only the
@@ -72,6 +73,7 @@ export const buildChangePermissionsFormData = (
 
 // Static configuration object
 export const changePermissionsOperationConfig = defineSingleFileTool({
+  validateParams: validateChangePermissionsParameters,
   buildFormData: buildChangePermissionsFormData,
   toApiParams: changePermissionsToApiParams,
   fromApiParams: changePermissionsFromApiParams,

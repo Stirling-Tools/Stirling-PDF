@@ -19,6 +19,7 @@ import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   AutoRotateParameters,
   defaultParameters,
+  validateAutoRotateParameters,
 } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
 
 export const AUTO_ROTATE_ENDPOINT = "/api/v1/misc/auto-rotate-pdf";
@@ -136,6 +137,7 @@ export const autoRotateOperationConfig = defineCustomTool<AutoRotateParameters>(
     endpoint: AUTO_ROTATE_ENDPOINT,
     customProcessor: createAutoRotateProcessor(),
     defaultParameters,
+    validateParams: validateAutoRotateParameters,
   },
 );
 
