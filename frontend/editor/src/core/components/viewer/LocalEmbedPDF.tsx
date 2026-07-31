@@ -867,7 +867,7 @@ export function LocalEmbedPDF({
     }
     // Do not revoke object URL synchronously on cleanup since the worker/PDFium
     // might still be asynchronously fetching it during React unmount/remount cycles.
-  }, [fileStableKey, url, file]);
+  }, [file ? fileStableKey : url]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
