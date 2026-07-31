@@ -13,6 +13,12 @@ interface SearchInterfaceProps {
 export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const { t } = useTranslation();
   const viewerContext = React.useContext(ViewerContext);
+  const viewerContextRef = useRef(viewerContext);
+
+  useEffect(() => {
+    viewerContextRef.current = viewerContext;
+  }, [viewerContext]);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -86,8 +92,8 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     if (!visible) return;
 
     const checkSearchState = () => {
-      // Fetch fresh search state from ViewerContext to avoid closure stale values
-      const searchState = viewerContext?.getSearchState();
+      // Fetch fresh search state from ViewerContext ref to avoid closure stale values
+      const searchState = viewerContextRef.current?.getSearchState();
       const searchResults = searchState?.results;
       const searchActiveIndex = searchState?.activeIndex;
 
@@ -116,7 +122,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     const interval = setInterval(checkSearchState, 200);
 
     return () => clearInterval(interval);
-  }, [visible, searchQuery, viewerContext]);
+  }, [visible, searchQuery]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
