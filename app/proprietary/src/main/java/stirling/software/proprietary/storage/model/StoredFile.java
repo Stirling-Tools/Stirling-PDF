@@ -123,6 +123,11 @@ public class StoredFile implements Serializable {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private Folder folder;
 
+    // Content revision, bumped atomically on every replace (StoredFileRepository).
+    // Nullable so pre-existing rows survive ddl-auto upgrade; readers treat null as 0.
+    @Column(name = "content_version")
+    private Long contentVersion;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -130,4 +135,9 @@ public class StoredFile implements Serializable {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    /** Null-safe content version; legacy rows without the column value read as 0. */
+    public long contentVersionOrZero() {
+        return contentVersion != null ? contentVersion : 0L;
+    }
 }

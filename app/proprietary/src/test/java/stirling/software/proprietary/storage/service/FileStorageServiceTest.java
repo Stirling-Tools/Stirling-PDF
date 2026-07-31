@@ -525,6 +525,186 @@ class FileStorageServiceTest {
         verify(storedFileRepository, never()).sumStorageBytesTotal();
     }
 
+    // replaceFile - collaborative editor write-back
+
+    private StoredObject storedObject(String key) {
+        return StoredObject.builder()
+                .storageKey(key)
+                .originalFilename("test.pdf")
+                .contentType("application/pdf")
+                .sizeBytes(1L)
+                .build();
+    }
+
+    @Test
+    void replaceFile_editorShare_nonOwnerCanWrite() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        User editor = user(2L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        FileShare share = shareFor(existing, editor, ShareAccessRole.EDITOR);
+        when(fileShareRepository.findByFileAndSharedWithUser(existing, editor))
+                .thenReturn(Optional.of(share));
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        service.replaceFile(editor, existing, file, null, null);
+
+        // Blob attribution stays with the file owner, not the acting editor.
+        verify(storageProvider).store(owner, file);
+    }
+
+    @Test
+    void replaceFile_viewerShare_nonOwnerForbidden() {
+        User owner = user(1L);
+        User viewer = user(2L);
+        StoredFile existing = ownedFile(owner);
+        FileShare share = shareFor(existing, viewer, ShareAccessRole.VIEWER);
+        when(fileShareRepository.findByFileAndSharedWithUser(existing, viewer))
+                .thenReturn(Optional.of(share));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFile(viewer, existing, file, null, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(403);
+    }
+
+    @Test
+    void replaceFile_nonOwner_sharingDisabled_forbidden() {
+        when(sharingProperties.isEnabled()).thenReturn(false);
+        User owner = user(1L);
+        User editor = user(2L);
+        StoredFile existing = ownedFile(owner);
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFile(editor, existing, file, null, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(403);
+    }
+
+    @Test
+    void replaceFile_versionMismatch_throwsConflict() {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setContentVersion(5L);
+        when(storedFileRepository.bumpContentVersionIfMatches(100L, 4L)).thenReturn(0);
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFile(owner, existing, file, null, null, 4L))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(409);
+        verify(storedFileRepository, never()).save(any());
+    }
+
+    @Test
+    void replaceFile_versionMatch_bumpsAndSaves() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setContentVersion(4L);
+        existing.setStorageKey("old-key");
+        when(storedFileRepository.bumpContentVersionIfMatches(100L, 4L)).thenReturn(1);
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        StoredFile updated = service.replaceFile(owner, existing, file, null, null, 4L);
+
+        assertThat(updated.getContentVersion()).isEqualTo(5L);
+    }
+
+    @Test
+    void replaceFile_noExpectedVersion_bumpsUnconditionally() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        StoredFile updated = service.replaceFile(owner, existing, file, null, null, null);
+
+        verify(storedFileRepository).bumpContentVersion(100L);
+        // Legacy null version reads as 0 and increments to 1.
+        assertThat(updated.getContentVersion()).isEqualTo(1L);
+    }
+
+    @Test
+    void replaceFileViaShareLink_editorRole_writes() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        FileShare linkShare = new FileShare();
+        linkShare.setFile(existing);
+        linkShare.setShareToken("token-1");
+        linkShare.setAccessRole(ShareAccessRole.EDITOR);
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        StoredFile updated = service.replaceFileViaShareLink(linkShare, file, null, null, null);
+
+        assertThat(updated.getStorageKey()).isEqualTo("new-key");
+        verify(storageProvider).store(owner, file);
+    }
+
+    @Test
+    void replaceFileViaShareLink_viewerRole_forbidden() {
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        FileShare linkShare = new FileShare();
+        linkShare.setFile(existing);
+        linkShare.setShareToken("token-1");
+        linkShare.setAccessRole(ShareAccessRole.VIEWER);
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFileViaShareLink(linkShare, file, null, null, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(403);
+    }
+
+    @Test
+    void replaceFile_editorShare_quotaChargedToOwner() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(quotasProperties);
+        when(quotasProperties.getMaxFileMb()).thenReturn(-1L);
+        when(quotasProperties.getMaxStorageMbPerUser()).thenReturn(10L);
+        when(quotasProperties.getMaxStorageMbTotal()).thenReturn(-1L);
+        User owner = user(1L);
+        User editor = user(2L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        FileShare share = shareFor(existing, editor, ShareAccessRole.EDITOR);
+        when(fileShareRepository.findByFileAndSharedWithUser(existing, editor))
+                .thenReturn(Optional.of(share));
+        when(storedFileRepository.sumStorageBytesByOwner(any())).thenReturn(0L);
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[1024 * 1024]);
+
+        service.replaceFile(editor, existing, file, null, null);
+
+        verify(storedFileRepository).sumStorageBytesByOwner(owner);
+        verify(storedFileRepository, never()).sumStorageBytesByOwner(editor);
+    }
+
     // -------------------------------------------------------------------------
     // deleteFile — workflow guard
     // -------------------------------------------------------------------------

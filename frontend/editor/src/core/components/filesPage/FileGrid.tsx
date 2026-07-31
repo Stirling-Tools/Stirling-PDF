@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Checkbox, Menu, Tooltip } from "@mantine/core";
+import { Badge, Checkbox, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -14,6 +14,8 @@ import HistoryIcon from "@mui/icons-material/History";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloudSyncIcon from "@mui/icons-material/CloudSync";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
@@ -37,6 +39,13 @@ import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearan
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
+import SaveToSharedModal from "@app/components/shared/SaveToSharedModal";
+import {
+  canEditSharedFile,
+  hasNewerSharedVersion,
+  useSharedFileActions,
+} from "@app/hooks/useSharedFileActions";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 export type FilesPageViewMode = "grid" | "list";
 
@@ -627,6 +636,17 @@ function FileCard({
     () => getFileDate({ lastModified: file.lastModified }),
     [file.lastModified],
   );
+  const [showSaveToSharedModal, setShowSaveToSharedModal] = useState(false);
+  const { fetchLatestCopy } = useSharedFileActions();
+  const { config } = useAppConfig();
+  const sharingEnabled =
+    config?.storageEnabled === true && config?.storageSharingEnabled === true;
+  const isSharedEditor = sharingEnabled && canEditSharedFile(file);
+  const isSharedWithYou =
+    sharingEnabled &&
+    (file.remoteOwnedByCurrentUser === false ||
+      Boolean(file.remoteSharedViaLink));
+  const hasRemoteUpdate = isSharedWithYou && hasNewerSharedVersion(file);
 
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -683,6 +703,17 @@ function FileCard({
         >
           <span className="files-page-card-open-dot" />
           {t("filesPage.inWorkspace", "Open")}
+        </span>
+      )}
+      {hasRemoteUpdate && (
+        <span
+          className="files-page-card-update-badge"
+          title={t(
+            "storageCollab.updateAvailableHint",
+            "A newer version of this shared file exists on the server.",
+          )}
+        >
+          {t("storageCollab.updateAvailable", "Update available")}
         </span>
       )}
       {/* Checkbox only renders once the user is explicitly in multi-select
@@ -809,6 +840,37 @@ function FileCard({
                 </Menu.Item>
               </Tooltip>
             )}
+            {isSharedEditor && (
+              <Menu.Item
+                leftSection={<CloudSyncIcon fontSize="small" />}
+                data-testid="file-menu-save-to-shared"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSaveToSharedModal(true);
+                }}
+              >
+                {t("storageCollab.saveToShared", "Save to shared file")}
+              </Menu.Item>
+            )}
+            {isSharedWithYou && (
+              <Menu.Item
+                leftSection={<FileDownloadIcon fontSize="small" />}
+                rightSection={
+                  hasRemoteUpdate ? (
+                    <Badge size="xs" color="orange" variant="filled">
+                      {t("storageCollab.newBadge", "New")}
+                    </Badge>
+                  ) : undefined
+                }
+                data-testid="file-menu-get-latest"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void fetchLatestCopy(file);
+                }}
+              >
+                {t("storageCollab.getLatest", "Get latest version")}
+              </Menu.Item>
+            )}
             {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
               <Menu.Item
                 leftSection={<HistoryIcon fontSize="small" />}
@@ -834,6 +896,13 @@ function FileCard({
           </Menu.Dropdown>
         </Menu>
       </div>
+      {isSharedEditor && (
+        <SaveToSharedModal
+          opened={showSaveToSharedModal}
+          onClose={() => setShowSaveToSharedModal(false)}
+          file={file}
+        />
+      )}
     </div>
   );
 }

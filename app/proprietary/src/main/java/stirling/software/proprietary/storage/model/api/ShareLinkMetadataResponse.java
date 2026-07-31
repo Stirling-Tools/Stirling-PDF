@@ -14,6 +14,9 @@ public class ShareLinkMetadataResponse {
     private final String owner;
     private final boolean ownedByCurrentUser;
     private final String accessRole;
+
+    // Content revision for optimistic concurrency; clients echo it back on update.
+    private final Long version;
     private final LocalDateTime createdAt;
     private final LocalDateTime expiresAt;
     private final LocalDateTime lastAccessedAt;

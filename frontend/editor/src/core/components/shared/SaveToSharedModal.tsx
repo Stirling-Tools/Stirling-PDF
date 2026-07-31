@@ -1,112 +1,112 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Modal, Stack, Text, Group, Alert } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloudSyncIcon from "@mui/icons-material/CloudSync";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useTranslation } from "react-i18next";
 
 import { alert } from "@app/components/toast";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import { uploadHistoryChain } from "@app/services/serverStorageUpload";
-import { SharedFileConflictError } from "@app/services/sharedFileSave";
-import { useSharedFileActions } from "@app/hooks/useSharedFileActions";
+import type { FileId } from "@app/types/file";
+import {
+  saveSharedFile,
+  SharedFileConflictError,
+} from "@app/services/sharedFileSave";
 import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions } from "@app/contexts/FileContext";
-import type { FileId } from "@app/types/file";
+import { useSharedFileActions } from "@app/hooks/useSharedFileActions";
 
-interface UploadToServerModalProps {
+interface SaveToSharedModalProps {
   opened: boolean;
   onClose: () => void;
   file: StirlingFileStub;
-  onUploaded?: () => Promise<void> | void;
+  onSaved?: () => Promise<void> | void;
 }
 
-const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
+// Saves a recipient's edits back to a shared file (editor role); version
+// conflicts get a guided choice instead of a silent overwrite.
+const SaveToSharedModal: React.FC<SaveToSharedModalProps> = ({
   opened,
   onClose,
   file,
-  onUploaded,
+  onSaved,
 }) => {
   const { t } = useTranslation();
   const { actions } = useFileActions();
-  const { fetchLatestCopy } = useSharedFileActions();
-  const [isUploading, setIsUploading] = useState(false);
+  const [isWorking, setIsWorking] = useState(false);
   const [hasConflict, setHasConflict] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!opened) {
-      setIsUploading(false);
+      setIsWorking(false);
       setHasConflict(false);
       setErrorMessage(null);
     }
   }, [opened]);
 
-  const handleUpload = useCallback(
+  const applySavedMetadata = useCallback(
+    async (version: number | undefined, updatedAt: number) => {
+      const originalFileId = (file.originalFileId || file.id) as FileId;
+      const chain = await fileStorage.getHistoryChainStubs(originalFileId);
+      const stubs = chain.length > 0 ? chain : [file];
+      const updates = {
+        remoteStorageUpdatedAt: updatedAt,
+        remoteVersionBase: version,
+        remoteVersionLatest: version,
+      };
+      for (const stub of stubs) {
+        actions.updateStirlingFileStub(stub.id, updates);
+        await fileStorage.updateFileMetadata(stub.id, updates);
+      }
+    },
+    [actions, file],
+  );
+
+  const handleSave = useCallback(
     async (force = false) => {
-      setIsUploading(true);
+      setIsWorking(true);
       setErrorMessage(null);
-
       try {
-        const originalFileId = (file.originalFileId || file.id) as FileId;
-        const remoteId = file.remoteStorageId;
-        const {
-          remoteId: storedId,
-          updatedAt,
-          version,
-          chain,
-        } = await uploadHistoryChain(originalFileId, remoteId, {
-          baseVersion: file.remoteVersionBase,
-          force,
-        });
-
-        for (const stub of chain) {
-          const updates = {
-            remoteStorageId: storedId,
-            remoteStorageUpdatedAt: updatedAt,
-            remoteOwnedByCurrentUser: true,
-            remoteVersionBase: version,
-            remoteVersionLatest: version,
-          };
-          actions.updateStirlingFileStub(stub.id, updates);
-          await fileStorage.updateFileMetadata(stub.id, updates);
-        }
-
+        const result = await saveSharedFile(file, { force });
+        await applySavedMetadata(result.version, result.updatedAt);
         alert({
           alertType: "success",
-          title: t("storageUpload.success", "Uploaded to server"),
+          title: t("storageCollab.saved", "Saved to shared file"),
           expandable: false,
           durationMs: 3000,
         });
-        if (onUploaded) {
-          await onUploaded();
+        if (onSaved) {
+          await onSaved();
         }
         onClose();
       } catch (error) {
         if (error instanceof SharedFileConflictError) {
           setHasConflict(true);
         } else {
-          console.error("Failed to upload file to server:", error);
+          console.error("Failed to save shared file:", error);
           setErrorMessage(
             t(
-              "storageUpload.failure",
-              "Upload failed. Please check your login and storage settings.",
+              "storageCollab.saveFailed",
+              "Unable to save your changes to the shared file.",
             ),
           );
         }
       } finally {
-        setIsUploading(false);
+        setIsWorking(false);
       }
     },
-    [actions, file, onClose, onUploaded, t],
+    [applySavedMetadata, file, onClose, onSaved, t],
   );
 
+  const { fetchLatestCopy } = useSharedFileActions();
+
   const handleGetLatestCopy = useCallback(async () => {
-    setIsUploading(true);
+    setIsWorking(true);
     setErrorMessage(null);
     const ok = await fetchLatestCopy(file);
-    setIsUploading(false);
+    setIsWorking(false);
     if (ok) {
       onClose();
     }
@@ -117,8 +117,9 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
       opened={opened}
       onClose={onClose}
       centered
-      title={t("storageUpload.title", "Upload to Server")}
+      title={t("storageCollab.saveTitle", "Save to Shared File")}
       zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
+      overlayProps={{ blur: 6 }}
       size={hasConflict ? "lg" : "md"}
     >
       <Stack gap="sm">
@@ -126,18 +127,17 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
           <>
             <Text size="sm">
               {t(
-                "storageUpload.description",
-                "This uploads the current file to server storage for your own access.",
+                "storageCollab.saveDescription",
+                "Save your changes back to the shared file. Everyone with access will see this version.",
               )}
             </Text>
             <Text size="sm" c="dimmed">
-              {t("storageUpload.fileLabel", "File")}: {file.name}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {t(
-                "storageUpload.hint",
-                "Public links and access modes are controlled by your server settings.",
-              )}
+              {t("storageShare.fileLabel", "File")}: {file.name}
+              {file.remoteOwnerUsername
+                ? ` • ${t("storageCollab.ownedBy", "Owned by {{owner}}", {
+                    owner: file.remoteOwnerUsername,
+                  })}`
+                : ""}
             </Text>
           </>
         )}
@@ -160,14 +160,14 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
         {errorMessage && (
           <Alert
             color="red"
-            title={t("storageUpload.errorTitle", "Upload failed")}
+            title={t("storageCollab.errorTitle", "Save failed")}
           >
             {errorMessage}
           </Alert>
         )}
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="secondary" onClick={onClose} disabled={isUploading}>
+          <Button variant="secondary" onClick={onClose} disabled={isWorking}>
             {t("cancel", "Cancel")}
           </Button>
           {hasConflict ? (
@@ -176,28 +176,26 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
                 variant="secondary"
                 leftSection={<FileDownloadIcon style={{ fontSize: 18 }} />}
                 onClick={() => void handleGetLatestCopy()}
-                loading={isUploading}
+                loading={isWorking}
               >
                 {t("storageCollab.getLatest", "Get latest version")}
               </Button>
               <Button
                 accent="danger"
-                leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />}
-                onClick={() => void handleUpload(true)}
-                loading={isUploading}
+                leftSection={<CloudSyncIcon style={{ fontSize: 18 }} />}
+                onClick={() => void handleSave(true)}
+                loading={isWorking}
               >
                 {t("storageCollab.overwrite", "Overwrite anyway")}
               </Button>
             </>
           ) : (
             <Button
-              leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />}
-              onClick={() => void handleUpload(false)}
-              loading={isUploading}
+              leftSection={<CloudSyncIcon style={{ fontSize: 18 }} />}
+              onClick={() => void handleSave(false)}
+              loading={isWorking}
             >
-              {file.remoteStorageId
-                ? t("storageUpload.updateButton", "Update on Server")
-                : t("storageUpload.uploadButton", "Upload to Server")}
+              {t("storageCollab.saveButton", "Save changes")}
             </Button>
           )}
         </Group>
@@ -206,4 +204,4 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
   );
 };
 
-export default UploadToServerModal;
+export default SaveToSharedModal;
