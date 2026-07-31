@@ -32,6 +32,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CsvSanitizer;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -70,7 +71,7 @@ public class ExtractCSVController {
                     StringWriter sw = new StringWriter();
                     try (CSVPrinter printer = format.print(sw)) {
                         for (List<String> row : fragments.get(i).rawRows()) {
-                            printer.printRecord(row);
+                            printer.printRecord(CsvSanitizer.sanitizeRow(row));
                         }
                     }
                     csvEntries.add(
