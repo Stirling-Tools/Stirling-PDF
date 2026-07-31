@@ -8,6 +8,7 @@ import {
 } from "@app/data/toolsTaxonomy";
 import { type ExecutableTool } from "@app/hooks/tools/shared/toolAutomation";
 import { toolAcceptsFormat } from "@app/utils/toolIOCompat";
+import { getToolFormatLabel } from "@app/utils/toolIOLabels";
 import { type ToolFormat } from "@app/types/toolIO";
 import {
   searchOperations,
@@ -127,7 +128,7 @@ export function ToolPicker({
                   !toolAcceptsFormat(tool.endpoint, precedingOutput) ? (
                     <span className="portal-pipelines__picker-note">
                       {t("portal.pipelines.builder.cannotFollow", {
-                        produced: precedingOutput,
+                        produced: getToolFormatLabel(t, precedingOutput),
                       })}
                     </span>
                   ) : null}

@@ -31,6 +31,10 @@ import {
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
 import {
+  getToolFormatLabel,
+  getToolFormatListLabel,
+} from "@app/utils/toolIOLabels";
+import {
   chainOutputFormat,
   diagnosticsForStep,
   hasBlockingDiagnostics,
@@ -160,7 +164,7 @@ function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
  * deletes it. Replaces the former modal composer and the list's inline detail card.
  */
 export function PipelineBuilder() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   // Pipelines are stored as policies, so a save/delete must invalidate both the
@@ -434,9 +438,10 @@ export function PipelineBuilder() {
   );
 
   function diagnosticNote(diagnostic: ToolDiagnostic): string {
+    const { accepts, produced } = diagnostic.detail;
     return t(`portal.pipelines.builder.diagnostic.${diagnostic.code}`, {
-      accepts: (diagnostic.detail.accepts ?? []).join(", "),
-      produced: diagnostic.detail.produced ?? "",
+      accepts: getToolFormatListLabel(t, i18n.language, accepts ?? []),
+      produced: produced ? getToolFormatLabel(t, produced) : "",
     });
   }
 
