@@ -1323,6 +1323,18 @@
 }
 
 /* ── Agreement (security) step ────────────────────────────────────────────── */
+/* The terminal steps (payment, live): a stacked eyebrow/title/description with the flow's own footer
+   bar beneath. No card of their own — the dialog is already the surface. */
+.portal-procstage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+/* Nothing to report on the left of these, so the actions take the whole bar. */
+.portal-procstage__foot {
+  justify-content: flex-end;
+}
+
 /* The two document actions read as a pair, close together and set apart from the close beside them. */
 .portal-agreement__actions {
   display: flex;

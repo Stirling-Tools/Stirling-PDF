@@ -8690,6 +8690,7 @@ uploadTitle = "Upload your purchase order"
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadAgreement = "Download signed agreement"
 downloadInvoice = "Download invoice"
+eyebrow = "Payment"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"
 
