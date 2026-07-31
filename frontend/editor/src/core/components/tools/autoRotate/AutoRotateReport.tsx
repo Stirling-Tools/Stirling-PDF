@@ -69,10 +69,7 @@ const noteLabel = (t: TFunction, note: string | null | undefined): string => {
         "Could not tell which way up",
       );
     case "belowThreshold":
-      return t(
-        "autoRotate.report.note.belowThreshold",
-        "Below confidence threshold",
-      );
+      return t("autoRotate.report.note.belowThreshold", "Below threshold");
     case "inferredFromDocument":
       return t(
         "autoRotate.report.note.inferredFromDocument",
@@ -149,25 +146,33 @@ const AutoRotateReport = ({ reports }: AutoRotateReportProps) => {
                             : t("autoRotate.report.noChange", "No change")}
                         </Text>
                       </Group>
-                      <Group gap={6} wrap="wrap">
-                        {methodBadge(t, page.method)}
-                        {confidence && (
-                          <Text
-                            size="xs"
-                            c="dimmed"
-                            style={{ fontVariantNumeric: "tabular-nums" }}
-                          >
-                            {t("autoRotate.report.confidenceValue", {
-                              defaultValue: "Confidence {{value}}",
-                              value: confidence,
-                            })}
-                          </Text>
-                        )}
-                        {note && (
-                          <Text size="xs" c="dimmed">
-                            {note}
-                          </Text>
-                        )}
+                      {/* Second line mirrors the first: detail under the page
+                          number, method badge under the rotation. */}
+                      <Group
+                        justify="space-between"
+                        gap="xs"
+                        wrap="nowrap"
+                        align="flex-start"
+                      >
+                        <Text
+                          size="xs"
+                          c="dimmed"
+                          style={{ fontVariantNumeric: "tabular-nums" }}
+                        >
+                          {[
+                            confidence &&
+                              t("autoRotate.report.confidenceValue", {
+                                defaultValue: "Confidence {{value}}",
+                                value: confidence,
+                              }),
+                            note,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </Text>
+                        <Box style={{ flexShrink: 0 }}>
+                          {methodBadge(t, page.method)}
+                        </Box>
                       </Group>
                     </Stack>
                   </Box>

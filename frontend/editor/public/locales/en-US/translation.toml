@@ -2210,7 +2210,7 @@ osd = "OCR"
 text = "Text"
 
 [autoRotate.report.note]
-belowThreshold = "Below confidence threshold"
+belowThreshold = "Below threshold"
 inferredFromDocument = "Same as the other pages"
 noDominantDirection = "Mixed text directions"
 osdFailed = "No readable text found"
