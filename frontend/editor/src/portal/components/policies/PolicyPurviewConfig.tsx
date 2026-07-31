@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { FormField, Input, Select } from "@app/ui";
 import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
+import "@portal/views/Policies.css";
 
 /**
  * Configures the Purview labelling step: which tenant, and which label.
@@ -30,8 +31,10 @@ export function PolicyPurviewConfig({
   const set = (key: keyof PurviewLabelParams, value: string) =>
     onChange({ ...parameters, [key]: value });
 
+  // Not `capability-config`: the wizard already wraps this in one, and repeating the class draws
+  // its dashed divider twice.
   return (
-    <div className="portal-policies__capability-config">
+    <div className="portal-policies__capability-settings">
       <FormField
         label={t("portal.policies.config.purview.fields.connection")}
         required
