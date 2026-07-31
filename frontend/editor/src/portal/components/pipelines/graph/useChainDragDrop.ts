@@ -51,6 +51,32 @@ export interface UseStepDraggableResult {
 }
 
 /**
+ * Tells a click that trails a drag apart from a genuine one.
+ *
+ * A gesture begins on pointerdown and may turn into a drag; only a click belonging to a gesture
+ * that dragged is swallowed. The clearing has to happen when the *next* gesture begins rather than
+ * when a click is swallowed - native HTML5 drag usually leaves no trailing click at all, so a flag
+ * cleared only by consuming one stays raised and eats the user's next real click on that node.
+ */
+export function createDragClickGuard() {
+  let dragged = false;
+  return {
+    /** A new press has started; nothing has dragged yet. */
+    beginGesture: () => {
+      dragged = false;
+    },
+    /** This gesture became a drag. */
+    noteDrag: () => {
+      dragged = true;
+    },
+    /** True if a click arriving now is the tail of a drag rather than a plain press. */
+    swallowsClick: () => dragged,
+  };
+}
+
+export type DragClickGuard = ReturnType<typeof createDragClickGuard>;
+
+/**
  * Stack a copy of every dragged card into the preview container, so a multi-step drag shows what is
  * actually moving rather than only the card that was grabbed. Exported for testing; the cards are
  * found in the DOM by their chain position.
@@ -77,7 +103,9 @@ export function useStepDraggable({
   onDragChange,
 }: UseStepDraggableOptions): UseStepDraggableResult {
   const ref = useRef<HTMLDivElement | null>(null);
-  const draggedRef = useRef(false);
+  const guardRef = useRef<DragClickGuard | null>(null);
+  guardRef.current ??= createDragClickGuard();
+  const guard = guardRef.current;
 
   // Read through refs so a reorder (which renumbers every later step) never re-registers the
   // adapter mid-gesture.
@@ -89,7 +117,13 @@ export function useStepDraggable({
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    return draggable({
+    // Any fresh input on the node starts a new gesture and clears the guard, so the only click it
+    // ever swallows is one trailing that same gesture's drag. Keyboard counts: activating the card
+    // with Enter or Space produces a click with no pointerdown before it.
+    const startGesture = () => guard.beginGesture();
+    element.addEventListener("pointerdown", startGesture);
+    element.addEventListener("keydown", startGesture);
+    const stopDraggable = draggable({
       element,
       getInitialData: (): StepDragData => ({
         type: DRAG_TYPE,
@@ -110,23 +144,25 @@ export function useStepDraggable({
         });
       },
       onDragStart: () => {
-        draggedRef.current = true;
+        guard.noteDrag();
         onDragChangeRef.current(true);
       },
       onDrop: () => onDragChangeRef.current(false),
     });
-  }, []);
+    return () => {
+      element.removeEventListener("pointerdown", startGesture);
+      element.removeEventListener("keydown", startGesture);
+      stopDraggable();
+    };
+  }, [guard]);
 
   const guardClick = useCallback(
     <E>(action: (event: E) => void) =>
       (event: E) => {
-        if (draggedRef.current) {
-          draggedRef.current = false;
-          return;
-        }
+        if (guard.swallowsClick()) return;
         action(event);
       },
-    [],
+    [guard],
   );
 
   return { ref, guardClick };

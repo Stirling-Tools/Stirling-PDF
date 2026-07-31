@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { fillDragPreview } from "@portal/components/pipelines/graph/useChainDragDrop";
+import {
+  createDragClickGuard,
+  fillDragPreview,
+} from "@portal/components/pipelines/graph/useChainDragDrop";
 
 /** Stands in for the graph's rendered cards, which the preview clones out of the DOM. */
 function renderCards(labels: string[]) {
@@ -47,5 +50,42 @@ describe("fillDragPreview", () => {
     const container = document.createElement("div");
     fillDragPreview(container, [0, 7]);
     expect(container.children).toHaveLength(1);
+  });
+});
+
+// The drag itself needs native HTML5 drag events, which jsdom does not implement, so the guard's
+// state machine is exercised here directly - it is the half that decides whether a click selects.
+describe("createDragClickGuard", () => {
+  it("lets a plain press through", () => {
+    const guard = createDragClickGuard();
+    guard.beginGesture();
+    expect(guard.swallowsClick()).toBe(false);
+  });
+
+  it("swallows the click that trails a drag", () => {
+    const guard = createDragClickGuard();
+    guard.beginGesture();
+    guard.noteDrag();
+    expect(guard.swallowsClick()).toBe(true);
+  });
+
+  it("still selects on the next press after a drag left no click behind", () => {
+    // The regression: native drag usually emits no trailing click, so a guard cleared only by
+    // consuming one stayed raised and ate the user's next real click on that node.
+    const guard = createDragClickGuard();
+    guard.beginGesture();
+    guard.noteDrag();
+    // ...drop, and no click follows.
+    guard.beginGesture();
+    expect(guard.swallowsClick()).toBe(false);
+  });
+
+  it("guards each drag, not just the first", () => {
+    const guard = createDragClickGuard();
+    for (const _ of [1, 2]) {
+      guard.beginGesture();
+      guard.noteDrag();
+      expect(guard.swallowsClick()).toBe(true);
+    }
   });
 });
