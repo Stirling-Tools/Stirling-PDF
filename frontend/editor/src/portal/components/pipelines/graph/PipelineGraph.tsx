@@ -4,6 +4,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   GraphNode,
   type NodeRunState,
@@ -70,6 +71,7 @@ export function PipelineGraph({
   onReorderStep,
   onOpenStepError,
 }: PipelineGraphProps) {
+  const { t } = useTranslation();
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const { nodes, edges, width, height } = layoutChain({
     stepCount: steps.length,
@@ -127,6 +129,19 @@ export function PipelineGraph({
             warning={arrivalWarning(edge.to)}
           />
         ))}
+
+        {draggingIndex !== null && edges.length > 0 && (
+          <p
+            className="portal-graph__drag-hint"
+            aria-live="polite"
+            style={{
+              left: `${edges[0].x}px`,
+              top: `${(edges[0].y1 + edges[0].y2) / 2}px`,
+            }}
+          >
+            {t("portal.pipelines.graph.dragHint")}
+          </p>
+        )}
 
         {nodes.map((node) => {
           const style = {

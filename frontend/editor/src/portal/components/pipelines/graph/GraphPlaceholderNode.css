@@ -38,23 +38,7 @@
   overflow: visible;
 }
 
-.portal-graph-placeholder__text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.0625rem;
-  min-width: 0;
-}
-
 .portal-graph-placeholder__title {
   font-size: 0.875rem;
   font-weight: 500;
-}
-
-.portal-graph-placeholder__hint {
-  font-size: 0.6875rem;
-  /* --c-text-subtle misses 4.5:1 at this size against the canvas in both themes (axe). */
-  color: var(--c-text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }

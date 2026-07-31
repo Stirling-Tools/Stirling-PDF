@@ -19,6 +19,19 @@
   border-radius: var(--radius-lg);
 }
 
+/* Sits beside the wire it is describing. Absolute, so appearing mid-drag moves nothing. */
+.portal-graph__drag-hint {
+  position: absolute;
+  margin: 0;
+  /* `left` is the column centre; clear the wire's hit area before the text starts. */
+  transform: translate(1.75rem, -50%);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--c-accent-fg, var(--c-primary));
+  pointer-events: none;
+}
+
 .portal-graph__canvas {
   position: relative;
   flex: none;

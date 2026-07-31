@@ -7880,7 +7880,7 @@ title = "No pipelines yet"
 
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
-addFirstToolHint = "Runs on every document that arrives"
+dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"

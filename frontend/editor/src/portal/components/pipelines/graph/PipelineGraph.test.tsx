@@ -73,6 +73,15 @@ describe("PipelineGraph", () => {
     expect(handlers.onSelect).toHaveBeenCalledWith(1);
   });
 
+  it("keeps the drag hint silent until a drag starts", () => {
+    // Only the silent half is testable here: starting a real drag needs native HTML5 drag events,
+    // which jsdom does not implement, so the visible half is checked in a browser.
+    renderGraph();
+    expect(
+      screen.queryByText("portal.pipelines.graph.dragHint"),
+    ).not.toBeInTheDocument();
+  });
+
   it("clears the selection when the canvas itself is clicked", () => {
     const handlers = renderGraph({ selected: 1 });
     fireEvent.click(document.querySelector(".portal-graph") as HTMLElement);
