@@ -59,6 +59,8 @@ import { humanizeOperation } from "@portal/components/pipelines/pipelineOperatio
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import {
+  DOC_INTELLIGENCE_STEPS,
+  isDocIntelligenceOperation,
   newDocIntelligenceStep,
   type DocIntelligenceStep,
 } from "@portal/components/pipelines/docIntelligenceSteps";
@@ -302,9 +304,12 @@ export function PipelineBuilder() {
   function updateStepParams(index: number, params: ErasedToolParams) {
     setSteps((current) =>
       current.map((step, i) =>
-        // Integration steps are deliberately toolId-less, so they must be editable too; only a
-        // genuinely unrecognised step has no editor to send changes from.
-        i === index && (step.toolId !== null || isIntegrationStep(step))
+        // Integration and document-intelligence steps are deliberately toolId-less, so they
+        // must be editable too; only a genuinely unrecognised step has no editor.
+        i === index &&
+        (step.toolId !== null ||
+          isIntegrationStep(step) ||
+          isDocIntelligenceOperation(step.operation))
           ? { ...step, params }
           : step,
       ),
@@ -316,6 +321,10 @@ export function PipelineBuilder() {
     // "External api call" for all of them. Name it by the operation instead.
     const op = stepOperation(step);
     if (op) return t(op.labelKey);
+    const docStep = DOC_INTELLIGENCE_STEPS.find(
+      (s) => s.operation === step.operation,
+    );
+    if (docStep) return t(docStep.labelKey);
     if (isIntegrationStep(step))
       return t("portal.pipelines.builder.sendToSystem");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
@@ -816,7 +825,8 @@ export function PipelineBuilder() {
                         <span className="portal-builder__step-note">
                           {t("portal.pipelines.builder.usesDefaults")}
                         </span>
-                      ) : step.support === "unknown" ? (
+                      ) : step.support === "unknown" &&
+                        !isDocIntelligenceOperation(step.operation) ? (
                         <span className="portal-builder__step-note">
                           {t("portal.pipelines.builder.unknownStep")}
                         </span>
