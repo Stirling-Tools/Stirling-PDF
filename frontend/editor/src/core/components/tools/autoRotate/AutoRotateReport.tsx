@@ -1,4 +1,12 @@
-import { Stack, Text, Table, Badge, ScrollArea } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Badge,
+  ScrollArea,
+  Group,
+  Divider,
+  Box,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
@@ -68,18 +76,18 @@ const noteLabel = (t: TFunction, note: string | null | undefined): string => {
     case "inferredFromDocument":
       return t(
         "autoRotate.report.note.inferredFromDocument",
-        "Matched the other pages",
+        "Same as the other pages",
       );
     default:
       return note ?? "";
   }
 };
 
-// Text confidence is a glyph-dominance percentage; OSD confidence is
-// Tesseract's unbounded score. Label them differently so the numbers are
-// interpretable when tuning the threshold.
-const confidenceLabel = (page: AutoRotatePageResult): string => {
-  if (page.confidence == null) return "—";
+// Text confidence is a glyph-dominance percentage; OCR confidence is an
+// unbounded score. Format them differently so the numbers stay interpretable
+// when tuning the threshold.
+const confidenceValue = (page: AutoRotatePageResult): string | null => {
+  if (page.confidence == null) return null;
   return page.method === "text"
     ? `${page.confidence.toFixed(1)}%`
     : page.confidence.toFixed(2);
@@ -108,50 +116,64 @@ const AutoRotateReport = ({ reports }: AutoRotateReportProps) => {
               unchanged: report.totalPages - report.pagesToRotate,
             })}
           </Text>
-          <ScrollArea.Autosize mah={320}>
-            <Table
-              striped
-              highlightOnHover
-              withTableBorder
-              verticalSpacing="xs"
-              fz="xs"
-            >
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>{t("autoRotate.report.page", "Page")}</Table.Th>
-                  <Table.Th>
-                    {t("autoRotate.report.methodHeader", "Method")}
-                  </Table.Th>
-                  <Table.Th>
-                    {t("autoRotate.report.confidence", "Confidence")}
-                  </Table.Th>
-                  <Table.Th>
-                    {t("autoRotate.report.rotation", "Rotation")}
-                  </Table.Th>
-                  <Table.Th>
-                    {t("autoRotate.report.noteHeader", "Note")}
-                  </Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {report.pages.map((page) => (
-                  <Table.Tr key={page.pageNumber}>
-                    <Table.Td>{page.pageNumber}</Table.Td>
-                    <Table.Td>{methodBadge(t, page.method)}</Table.Td>
-                    <Table.Td>{confidenceLabel(page)}</Table.Td>
-                    <Table.Td>
-                      {page.apply
-                        ? t("autoRotate.report.applied", {
-                            defaultValue: "{{degrees}}° CW",
-                            degrees: page.correction,
-                          })
-                        : "—"}
-                    </Table.Td>
-                    <Table.Td>{noteLabel(t, page.note)}</Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
+
+          {/* A per-page list rather than a table: the tool panel is too narrow
+              for five columns, which truncated the badges and wrapped notes. */}
+          <ScrollArea.Autosize mah={300}>
+            <Stack gap={0}>
+              {report.pages.map((page, index) => {
+                const confidence = confidenceValue(page);
+                const note = noteLabel(t, page.note);
+                return (
+                  <Box key={page.pageNumber}>
+                    {index > 0 && <Divider />}
+                    <Stack gap={2} py={6}>
+                      <Group justify="space-between" gap="xs" wrap="nowrap">
+                        <Text size="sm" fw={500}>
+                          {t("autoRotate.report.pageLabel", {
+                            defaultValue: "Page {{number}}",
+                            number: page.pageNumber,
+                          })}
+                        </Text>
+                        <Text
+                          size="sm"
+                          fw={page.apply ? 600 : 400}
+                          c={page.apply ? undefined : "dimmed"}
+                          style={{ fontVariantNumeric: "tabular-nums" }}
+                        >
+                          {page.apply
+                            ? t("autoRotate.report.applied", {
+                                defaultValue: "{{degrees}}° CW",
+                                degrees: page.correction,
+                              })
+                            : t("autoRotate.report.noChange", "No change")}
+                        </Text>
+                      </Group>
+                      <Group gap={6} wrap="wrap">
+                        {methodBadge(t, page.method)}
+                        {confidence && (
+                          <Text
+                            size="xs"
+                            c="dimmed"
+                            style={{ fontVariantNumeric: "tabular-nums" }}
+                          >
+                            {t("autoRotate.report.confidenceValue", {
+                              defaultValue: "Confidence {{value}}",
+                              value: confidence,
+                            })}
+                          </Text>
+                        )}
+                        {note && (
+                          <Text size="xs" c="dimmed">
+                            {note}
+                          </Text>
+                        )}
+                      </Group>
+                    </Stack>
+                  </Box>
+                );
+              })}
+            </Stack>
           </ScrollArea.Autosize>
         </Stack>
       ))}

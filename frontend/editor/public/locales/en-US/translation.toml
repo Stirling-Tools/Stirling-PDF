@@ -2197,11 +2197,9 @@ title = "Rotate low confidence pages to match"
 
 [autoRotate.report]
 applied = "{{degrees}}° CW"
-confidence = "Confidence"
-methodHeader = "Method"
-noteHeader = "Note"
-page = "Page"
-rotation = "Rotation"
+confidenceValue = "Confidence {{value}}"
+noChange = "No change"
+pageLabel = "Page {{number}}"
 summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
 title = "Detection report"
 
@@ -2213,7 +2211,7 @@ text = "Text"
 
 [autoRotate.report.note]
 belowThreshold = "Below confidence threshold"
-inferredFromDocument = "Matched the other pages"
+inferredFromDocument = "Same as the other pages"
 noDominantDirection = "Mixed text directions"
 osdFailed = "No readable text found"
 osdNoVerdict = "Could not tell which way up"
