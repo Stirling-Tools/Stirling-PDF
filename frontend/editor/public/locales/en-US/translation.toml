@@ -8267,6 +8267,11 @@ label = "Apply a watermark"
 description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
 labelsHeading = "Classification labels"
 
+[portal.policies.wizard.destinations]
+description = "Results always stay in Stirling. Each destination you select also receives a copy of every processed document."
+emptyPrompt = "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling."
+heading = "Deliver output to"
+
 [portal.policies.wizard.errors]
 deliveryUnconfigured = "Choose what the delivery step does and which account it uses first."
 noSources = "Select at least one source for the policy to process."
@@ -8296,11 +8301,6 @@ upload = "Upload"
 
 [portal.policies.wizard.settings]
 heading = "Settings"
-
-[portal.policies.wizard.destinations]
-description = "Results always stay in Stirling. Each destination you select also receives a copy of every processed document."
-emptyPrompt = "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling."
-heading = "Deliver output to"
 
 [portal.policies.wizard.sources]
 connect = "Connect a source"

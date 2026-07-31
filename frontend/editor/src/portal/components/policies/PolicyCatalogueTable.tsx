@@ -111,15 +111,17 @@ export function PolicyCatalogueTable({
               </StatusBadge>
             );
           }
+          // A span, not a button: the row itself is the control, and a nested
+          // focusable child breaks axe's nested-interactive rule.
           return (
-            <Button size="sm" variant="secondary" onClick={() => onOpen(entry)}>
+            <Button as="span" size="sm" variant="secondary">
               {t("portal.policySummary.action.setUp")}
             </Button>
           );
         },
       },
     ],
-    [t, onOpen, isLocked, lockedLabel],
+    [t, isLocked, lockedLabel],
   );
 
   return (
