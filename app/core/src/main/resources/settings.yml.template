@@ -292,28 +292,12 @@ storage:
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
     enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
-  # ====================================================================================
-  # ENCRYPTION AT REST - PRO / ENTERPRISE LICENSE REQUIRED TO ENABLE
-  # ====================================================================================
-  # Encrypts stored files (AES-256 envelope encryption, per-team keys). The master key is
-  # resolved in this order:
-  #   1. stirling.security.fileEncryptionKey property
-  #   2. STIRLING_FILE_ENCRYPTION_KEY environment variable
-  #   3. an auto-generated configs/file-encryption.key (single-node only; cluster mode
-  #      requires an explicitly shared key on every node)
-  # Generate a key with: openssl rand -base64 32
-  #
-  # *** BACK UP THE MASTER KEY. Losing it makes every encrypted stored file            ***
-  # *** permanently unrecoverable. Verify backups against the key fingerprint logged   ***
-  # *** at startup.                                                                    ***
-  #
-  # Enabling encrypts new writes only (existing files stay readable as plaintext).
-  # Disabling later only stops encrypting new writes - existing encrypted files remain
-  # readable as long as the key material is present.
-  # Master-key rotation: set the NEW key as stirling.security.fileEncryptionKey, keep the OLD
-  # key in stirling.security.fileEncryptionKeyPrevious, bump
-  # stirling.security.fileEncryptionKeyVersion, restart, then call
-  # POST /api/v1/admin/storage-encryption/master/rotate and remove the previous key.
+  # Encryption at rest for stored files (AES-256, per-team keys). Requires a Pro or
+  # Enterprise licence. Key setup, cluster requirements, the encrypt-existing migration,
+  # the revocation kill switch and master-key rotation are documented in
+  # devGuide/STORAGE_ENCRYPTION_AT_REST.md
+  # WARNING: back up the master key (configs/file-encryption.key by default) - losing it
+  # makes every encrypted stored file permanently unrecoverable.
   encryption:
     enabled: false # set to 'true' to encrypt stored files at rest
     auditReads: true # audit every decrypt of an encrypted file (denied decrypts and key lifecycle events are always audited)
