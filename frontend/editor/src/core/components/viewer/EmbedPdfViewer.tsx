@@ -377,7 +377,9 @@ const EmbedPdfViewerContent = ({
 
   // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
   const currentFileStableId = currentFile
-    ? (`${currentFile.name || "blob"}-${currentFile.size}-${currentFile.lastModified || ""}` as FileId)
+    ? isStirlingFile(currentFile) && currentFile.fileId
+      ? currentFile.fileId
+      : (`${currentFile.name || "blob"}-${currentFile.size}-${currentFile.lastModified || ""}` as FileId)
     : null;
   const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
 

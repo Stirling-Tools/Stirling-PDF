@@ -531,7 +531,7 @@ const LazyPageContent = ({
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: "#ffffff",
+            backgroundColor: "var(--pdf-page-bg)",
           }}
         />
       )}
@@ -697,7 +697,7 @@ const TiledPageBackground = ({
       style={{
         position: "absolute",
         inset: 0,
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--pdf-page-bg)",
         transition: "filter 0.25s ease",
         filter:
           pdfRenderMode === "dark"
@@ -849,7 +849,11 @@ export function LocalEmbedPDF({
 
   // Stable key — avoids recreating the blob URL (and crashing ViewportPlugin) when
   // FileContext produces new File object references for the same file content.
-  const fileStableKey = file ? `${(file as File).name}-${file.size}` : null;
+  const fileStableKey = fileId
+    ? fileId
+    : file
+      ? `${(file as File).name || "blob"}-${file.size}-${(file as File).lastModified || ""}`
+      : null;
   useEffect(() => {
     if (url) {
       setPdfUrl(url);
@@ -863,7 +867,7 @@ export function LocalEmbedPDF({
     }
     // Do not revoke object URL synchronously on cleanup since the worker/PDFium
     // might still be asynchronously fetching it during React unmount/remount cycles.
-  }, [file ? fileStableKey : url]);
+  }, [fileStableKey, url, file]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {

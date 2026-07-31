@@ -3,24 +3,16 @@ import { isFileObject } from "@app/types/fileContext";
 
 /**
  * Hook to convert a File object to { file: File; url: string } format
- * Creates blob URL on-demand and revokes it when file changes or component unmounts.
- *
- * @param stableKey - Optional stable identity key (e.g. fileId). When provided, the blob
- *   URL is only recreated when this key changes, not when the `file` object reference
- *   changes. This prevents spurious URL churn caused by getFiles() creating new
- *   StirlingFile references on every FileContext render.
- */
-const globalUseFileWithUrlCache = new Map<string, string>();
-
-/**
- * Hook to convert a File object to { file: File; url: string } format
- * Creates blob URL on-demand and caches it globally to prevent URL churn and
- * premature revocation during React unmount/remount/Suspense cycles.
+ * Creates blob URL on-demand and caches it globally with LRU eviction (cap of 25)
+ * to prevent memory leaks while avoiding URL churn during React cycles.
  *
  * @param stableKey - Optional stable identity key (e.g. fileId). When provided, the blob
  *   URL is only recreated when this key changes, not when the `file` object reference
  *   changes.
  */
+const globalUseFileWithUrlCache = new Map<string, string>();
+const MAX_CACHE_SIZE = 25;
+
 export function useFileWithUrl(
   file: File | Blob | null,
   stableKey?: string | null,
@@ -44,6 +36,12 @@ export function useFileWithUrl(
     if (!url) {
       try {
         url = URL.createObjectURL(file);
+        if (globalUseFileWithUrlCache.size >= MAX_CACHE_SIZE) {
+          const [oldKey, oldUrl] = globalUseFileWithUrlCache.entries().next()
+            .value as [string, string];
+          globalUseFileWithUrlCache.delete(oldKey);
+          URL.revokeObjectURL(oldUrl);
+        }
         globalUseFileWithUrlCache.set(key, url);
       } catch (error) {
         console.error(

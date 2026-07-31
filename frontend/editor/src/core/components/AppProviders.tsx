@@ -1,5 +1,7 @@
 import { ReactNode, useEffect } from "react";
-import "@app/debug/memoryTelemetry";
+if (import.meta.env.DEV) {
+  void import("@app/debug/memoryTelemetry");
+}
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";

@@ -158,6 +158,11 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const clearImageDataStore = useCallback(() => {
+    imageDataStore.current.forEach((data) => {
+      if (data.startsWith("blob:")) {
+        URL.revokeObjectURL(data);
+      }
+    });
     imageDataStore.current.clear();
   }, []);
 

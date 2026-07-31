@@ -84,6 +84,7 @@ export function ThumbnailSidebar({
       const CONCURRENCY_LIMIT = 3;
       // Initialize queue with all page indices
       const queue = Array.from({ length: scrollState.totalPages }, (_, i) => i);
+      let lastSortedTargetPage: number | null = null;
 
       const processNext = async () => {
         if (queue.length === 0 || isCancelled) return;
@@ -91,9 +92,12 @@ export function ThumbnailSidebar({
         // Sort the remaining queue dynamically so the next page processed
         // is always the one closest to the user's current viewport page
         const targetPage = currentPageRef.current - 1;
-        queue.sort(
-          (a, b) => Math.abs(a - targetPage) - Math.abs(b - targetPage),
-        );
+        if (targetPage !== lastSortedTargetPage) {
+          lastSortedTargetPage = targetPage;
+          queue.sort(
+            (a, b) => Math.abs(a - targetPage) - Math.abs(b - targetPage),
+          );
+        }
 
         const pageIndex = queue.shift()!;
 

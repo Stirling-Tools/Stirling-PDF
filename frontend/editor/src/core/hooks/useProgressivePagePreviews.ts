@@ -44,6 +44,7 @@ export const useProgressivePagePreviews = ({
     const url = pageBlobRegistryRef.current.get(pageNum);
     if (url) {
       URL.revokeObjectURL(url);
+      createdBlobUrlsRef.current.delete(url);
       pageBlobRegistryRef.current.delete(pageNum);
     }
   }, []);
