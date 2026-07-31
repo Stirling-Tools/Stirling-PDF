@@ -20,6 +20,9 @@ import {
   type ExternalApiStepParams,
   type StepOperation,
 } from "@portal/components/policies/stepOperations";
+// This component reuses the connection-picker card styles, so it must carry
+// them itself - hosts like the policy wizard don't load the Sources view.
+import "@portal/views/Sources.css";
 
 /**
  * Configures a "send the document to another system" step.

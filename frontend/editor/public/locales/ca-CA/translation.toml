@@ -7384,19 +7384,6 @@ keepFor = "Conserva durant"
 1 = "Arxivament automàtic"
 2 = "Bloqueig d'eliminació"
 
-[portal.policies.config.routing]
-summary = "Encamina documents a la destinació adequada segons el tipus i la classificació."
-
-[portal.policies.config.routing.fields]
-destination = "Destinació"
-notify = "Notifica en encaminar"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Classificació automàtica"
-1 = "Encamina a la carpeta"
-2 = "Notificació per webhook"
-
 [portal.policies.config.security]
 summary = "Detecta i redacta PII, elimina contingut actiu (JavaScript) i aplica marques d'aigua als documents."
 

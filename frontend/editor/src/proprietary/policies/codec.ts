@@ -1,10 +1,10 @@
 /**
  * Bidirectional codec between the portal's frontend `PolicyDecodedState` and
  * the backend `WirePolicy`. All policy-level metadata rides in
- * `output.options`; `trigger` is always null (the editor fires runs on
- * upload/export via `/run`). Mirrors the editor's `buildBackendPolicy` /
- * `fromBackendPolicy` from `policyPipeline.ts`, minus the editor-only
- * `automation` blob and toolRegistry coupling.
+ * `output.options`; the virtual editor source lives only there, while real
+ * backend sources are ALSO emitted as `sourceIds` so triggers and sweeps see
+ * them. Mirrors the editor's `buildBackendPolicy` / `fromBackendPolicy` from
+ * `policyPipeline.ts`, minus the editor-only `automation` blob.
  */
 
 import type {
@@ -17,6 +17,9 @@ const DEFAULTS = {
   maxRetries: 3,
   retryDelayMinutes: 5,
 } as const;
+
+/** The virtual editor source: display metadata only, never a wire sourceId. */
+export const EDITOR_SOURCE_ID = "editor";
 
 export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
   const options: WireOutputOptions = {
@@ -37,9 +40,11 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     name: state.name,
     owner: "",
     enabled: state.enabled,
-    trigger: null,
+    trigger: state.trigger,
+    sourceIds: state.sources.filter((id) => id !== EDITOR_SOURCE_ID),
     steps: state.steps,
     output: { type: "inline", options },
+    outputIds: state.outputIds,
   };
 }
 
@@ -55,12 +60,18 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
       : raw.position === "auto-number"
         ? "auto-number"
         : "prefix";
+  // Selection = display metadata ∪ wire sourceIds, so policies saved before
+  // sourceIds existed (sources only in options) still round-trip complete.
+  const optionSources = Array.isArray(raw.sources)
+    ? (raw.sources as string[])
+    : [];
+  const sources = [...new Set([...optionSources, ...(policy.sourceIds ?? [])])];
   return {
     id: policy.id,
     name: policy.name,
     enabled: policy.enabled,
     categoryId: str(raw.categoryId),
-    sources: Array.isArray(raw.sources) ? (raw.sources as string[]) : [],
+    sources,
     scopeTypes: Array.isArray(raw.scopeTypes)
       ? (raw.scopeTypes as string[])
       : [],
@@ -73,5 +84,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     maxRetries: num(raw.maxRetries, DEFAULTS.maxRetries),
     retryDelayMinutes: num(raw.retryDelayMinutes, DEFAULTS.retryDelayMinutes),
     steps: Array.isArray(policy.steps) ? policy.steps : [],
+    trigger: policy.trigger ?? null,
+    outputIds: policy.outputIds ?? [],
   };
 }

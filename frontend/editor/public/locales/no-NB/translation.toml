@@ -7384,19 +7384,6 @@ keepFor = "Behold i"
 1 = "Automatisk arkivering"
 2 = "Sletteblokkering"
 
-[portal.policies.config.routing]
-summary = "Ruter dokumenter til riktig destinasjon basert på type og klassifisering."
-
-[portal.policies.config.routing.fields]
-destination = "Destinasjon"
-notify = "Varsle ved ruting"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Automatisk klassifisering"
-1 = "Rut til mappe"
-2 = "Webhook-varsling"
-
 [portal.policies.config.security]
 summary = "Oppdager og redigerer bort PII, fjerner aktivt innhold (JavaScript), og vannmerker dokumenter."
 

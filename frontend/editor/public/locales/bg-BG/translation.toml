@@ -7384,19 +7384,6 @@ keepFor = "Пази за"
 1 = "Автоархивиране"
 2 = "Блокиране на изтриване"
 
-[portal.policies.config.routing]
-summary = "Насочва документи към правилната дестинация въз основа на тип и класификация."
-
-[portal.policies.config.routing.fields]
-destination = "Дестинация"
-notify = "Уведомяване при routing"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Автокласифициране"
-1 = "Насочване към папка"
-2 = "Webhook уведомяване"
-
 [portal.policies.config.security]
 summary = "Открива и редактира PII, премахва активно съдържание (JavaScript) и поставя водни знаци на документи."
 

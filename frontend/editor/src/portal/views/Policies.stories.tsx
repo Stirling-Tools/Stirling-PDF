@@ -28,3 +28,34 @@ export const Empty: Story = {
     },
   },
 };
+
+/** No connected sources (only the editor): the wizard shows its connect prompts. */
+export const NoSources: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.get("/api/v1/policies", () => HttpResponse.json([])),
+        http.get("/api/v1/policies/runs", () => HttpResponse.json([])),
+        http.get("/api/v1/sources", () =>
+          HttpResponse.json({
+            kpis: [],
+            sources: [
+              {
+                id: "editor",
+                name: "Editor",
+                type: "editor",
+                status: "active",
+                referenceCount: 0,
+                referencingPolicies: [],
+                config: [],
+                docsTotal: 0,
+                docs24h: 0,
+                docs30d: 0,
+              },
+            ],
+          }),
+        ),
+      ],
+    },
+  },
+};

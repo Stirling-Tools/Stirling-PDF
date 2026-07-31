@@ -7384,19 +7384,6 @@ keepFor = "Przechowuj przez"
 1 = "Automatyczna archiwizacja"
 2 = "Blokada usuwania"
 
-[portal.policies.config.routing]
-summary = "Kieruje dokumenty do właściwego miejsca docelowego na podstawie typu i klasyfikacji."
-
-[portal.policies.config.routing.fields]
-destination = "Miejsce docelowe"
-notify = "Powiadom przy routingu"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Automatycznie klasyfikuj"
-1 = "Kieruj do folderu"
-2 = "Powiadom przez webhook"
-
 [portal.policies.config.security]
 summary = "Wykrywa i redaguje PII, usuwa aktywną treść (JavaScript) i dodaje znaki wodne do dokumentów."
 

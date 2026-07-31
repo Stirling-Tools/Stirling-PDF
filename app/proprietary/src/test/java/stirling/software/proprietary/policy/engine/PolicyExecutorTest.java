@@ -119,6 +119,19 @@ class PolicyExecutorTest {
     }
 
     @Test
+    void emptyStepsPassInputsThroughUnchanged() throws IOException {
+        PolicyExecutionResult result =
+                executor.execute(
+                        definition(),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+
+        assertEquals(1, result.files().size());
+        assertEquals("input.pdf", result.files().get(0).getFilename());
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
     void multiInputEndpointIsCalledOnceWithAllFiles() throws IOException {
         when(toolMetadataService.isMultiInput(MERGE)).thenReturn(true);
         when(toolMetadataService.shouldUnpackZipResponse(MERGE)).thenReturn(false);
@@ -352,17 +365,6 @@ class PolicyExecutorTest {
                 () ->
                         executor.execute(
                                 definition(new PipelineStep(ROTATE, Map.of())),
-                                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
-                                PolicyProgressListener.NOOP));
-    }
-
-    @Test
-    void emptyPipelineIsRejected() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        executor.execute(
-                                new PipelineDefinition("empty", List.of(), OutputSpec.inline()),
                                 PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
                                 PolicyProgressListener.NOOP));
     }

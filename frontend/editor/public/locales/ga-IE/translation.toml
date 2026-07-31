@@ -7384,19 +7384,6 @@ keepFor = "Coinnigh ar feadh"
 1 = "Uathchartlannú"
 2 = "Bloc scriosta"
 
-[portal.policies.config.routing]
-summary = "Ródálann doiciméid chuig an gceann scríbe ceart bunaithe ar chineál agus ar aicmiú."
-
-[portal.policies.config.routing.fields]
-destination = "Ceann scríbe"
-notify = "Cuir in iúl ar ródú"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Uath-aicmiú"
-1 = "Ródáil chuig fillteán"
-2 = "Fógra webhook"
-
 [portal.policies.config.security]
 summary = "Braithíonn agus eagarthóidh sé PII, baineann ábhar gníomhach (JavaScript), agus cuireann comhartha uisce ar dhoiciméid."
 

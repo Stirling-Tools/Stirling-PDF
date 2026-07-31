@@ -7384,19 +7384,6 @@ keepFor = "Mantendu honetarako"
 1 = "Artxibatu automatikoki"
 2 = "Ezabaketa-blokeoa"
 
-[portal.policies.config.routing]
-summary = "Dokumentuak helmuga egokira bideratzen ditu motaren eta sailkapenaren arabera."
-
-[portal.policies.config.routing.fields]
-destination = "Helmuga"
-notify = "Jakinarazi bideratzean"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Sailkatu automatikoki"
-1 = "Bideratu karpetara"
-2 = "Webhook jakinarazpena"
-
 [portal.policies.config.security]
 summary = "PII detektatu eta erredaktatzen du, eduki aktiboa (JavaScript) kentzen du eta dokumentuei ur-marka jartzen die."
 

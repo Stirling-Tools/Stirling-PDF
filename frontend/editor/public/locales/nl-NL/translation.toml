@@ -7384,19 +7384,6 @@ keepFor = "Bewaren gedurende"
 1 = "Automatisch archiveren"
 2 = "Verwijderingsblokkade"
 
-[portal.policies.config.routing]
-summary = "Routeert documenten naar de juiste bestemming op basis van type en classificatie."
-
-[portal.policies.config.routing.fields]
-destination = "Bestemming"
-notify = "Melden bij routering"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Automatisch classificeren"
-1 = "Naar map routeren"
-2 = "Webhook-melding"
-
 [portal.policies.config.security]
 summary = "Detecteert en redigeert PII, verwijdert actieve content (JavaScript) en voegt watermerken toe aan documenten."
 

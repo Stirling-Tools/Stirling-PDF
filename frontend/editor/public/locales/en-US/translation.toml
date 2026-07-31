@@ -7950,17 +7950,12 @@ keepFor = "Keep for"
 2 = "Deletion block"
 
 [portal.policies.config.routing]
-summary = "Routes documents to the right destination based on type and classification."
-
-[portal.policies.config.routing.fields]
-destination = "Destination"
-notify = "Notify on route"
-webhookUrl = "Webhook URL"
+summary = "Moves documents from your sources to the destinations you choose, and can also hand them to a connected app: ticketing, email, or a webhook."
 
 [portal.policies.config.routing.rules]
-0 = "Auto-classify"
-1 = "Route to folder"
-2 = "Webhook notify"
+0 = "Source to destination"
+1 = "Email or notify"
+2 = "Custom API"
 
 [portal.policies.config.security]
 summary = "Detects and redacts PII, strips active content (JavaScript), and watermarks documents."
@@ -8267,7 +8262,9 @@ description = "Every uploaded document is classified against the built-in labels
 labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
-noTools = "Enable at least one tool in the workflow first."
+deliveryUnconfigured = "Choose what the delivery step does and which account it uses first."
+noSources = "Select at least one source for the policy to process."
+noTools = "Enable at least one action, or pick a destination to route documents to."
 saveFailed = "Couldn't save the policy. Please try again."
 
 [portal.policies.wizard.output]
@@ -8294,9 +8291,17 @@ upload = "Upload"
 [portal.policies.wizard.settings]
 heading = "Settings"
 
+[portal.policies.wizard.destinations]
+description = "Results always stay in Stirling. Each destination you select also receives a copy of every processed document."
+emptyPrompt = "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling."
+heading = "Deliver output to"
+
 [portal.policies.wizard.sources]
+connect = "Connect a source"
+emptyPrompt = "No sources connected yet - the policy still covers editor uploads. Connect a folder, S3, SFTP or webhook source to process documents from other systems."
 heading = "Sources"
 loading = "Loading sources…"
+triggerNote = "Folder and webhook sources run this policy automatically; other sources are checked hourly."
 
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"

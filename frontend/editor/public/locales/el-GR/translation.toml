@@ -7384,19 +7384,6 @@ keepFor = "Διατήρηση για"
 1 = "Αυτόματη αρχειοθέτηση"
 2 = "Μπλοκ διαγραφής"
 
-[portal.policies.config.routing]
-summary = "Δρομολογεί έγγραφα στον σωστό προορισμό με βάση τον τύπο και την ταξινόμηση."
-
-[portal.policies.config.routing.fields]
-destination = "Προορισμός"
-notify = "Ειδοποίηση κατά τη δρομολόγηση"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Αυτόματη ταξινόμηση"
-1 = "Δρομολόγηση σε φάκελο"
-2 = "Ειδοποίηση webhook"
-
 [portal.policies.config.security]
 summary = "Εντοπίζει και απομακρύνει PII, αφαιρεί ενεργό περιεχόμενο (JavaScript) και υδατογραφεί έγγραφα."
 

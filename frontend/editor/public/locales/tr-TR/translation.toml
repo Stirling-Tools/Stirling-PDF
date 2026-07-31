@@ -7384,19 +7384,6 @@ keepFor = "Şu kadar tut"
 1 = "Otomatik arşivle"
 2 = "Silme engeli"
 
-[portal.policies.config.routing]
-summary = "Belgeleri tür ve sınıflandırmaya göre doğru hedefe yönlendirir."
-
-[portal.policies.config.routing.fields]
-destination = "Hedef"
-notify = "Yönlendirmede bildir"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Otomatik sınıflandır"
-1 = "Klasöre yönlendir"
-2 = "Webhook bildirimi"
-
 [portal.policies.config.security]
 summary = "PII tespit eder ve redaction uygular, aktif içeriği (JavaScript) kaldırır ve belgelere filigran ekler."
 

@@ -7402,19 +7402,6 @@ keepFor = "Keep for"
 1 = "Auto-archive"
 2 = "Deletion block"
 
-[portal.policies.config.routing]
-summary = "Routes documents to the right destination based on type and classification."
-
-[portal.policies.config.routing.fields]
-destination = "Destination"
-notify = "Notify on route"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Auto-classify"
-1 = "Route to folder"
-2 = "Webhook notify"
-
 [portal.policies.config.security]
 summary = "Detects and redacts PII, strips active content (JavaScript), and watermarks documents."
 

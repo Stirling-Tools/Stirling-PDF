@@ -7384,19 +7384,6 @@ keepFor = "Bu müddətə saxla"
 1 = "Avtomatik arxivləşdir"
 2 = "Silinmə bloku"
 
-[portal.policies.config.routing]
-summary = "Sənədləri növ və təsnifata əsasən düzgün təyinat yerinə yönləndirir."
-
-[portal.policies.config.routing.fields]
-destination = "Təyinat yeri"
-notify = "Yönləndirmə zamanı xəbərdar et"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Avtomatik təsnif et"
-1 = "Qovluğa yönləndir"
-2 = "Webhook bildirişi"
-
 [portal.policies.config.security]
 summary = "PII aşkar edir və redaktə edir, aktiv məzmunu (JavaScript) çıxarır və sənədlərə su nişanı əlavə edir."
 

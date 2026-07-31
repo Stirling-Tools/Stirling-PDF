@@ -7384,19 +7384,6 @@ keepFor = "เก็บไว้เป็นเวลา"
 1 = "เก็บถาวรอัตโนมัติ"
 2 = "บล็อกการลบ"
 
-[portal.policies.config.routing]
-summary = "Route เอกสารไปยังปลายทางที่ถูกต้องตามประเภทและการจำแนก"
-
-[portal.policies.config.routing.fields]
-destination = "ปลายทาง"
-notify = "แจ้งเตือนเมื่อ route"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "จำแนกอัตโนมัติ"
-1 = "Route ไปยังโฟลเดอร์"
-2 = "แจ้งเตือน webhook"
-
 [portal.policies.config.security]
 summary = "ตรวจจับและ redact PII, ลบ active content (JavaScript) และใส่ลายน้ำเอกสาร"
 

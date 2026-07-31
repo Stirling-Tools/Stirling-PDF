@@ -7384,19 +7384,6 @@ keepFor = "保留時間"
 1 = "自動封存"
 2 = "刪除封鎖"
 
-[portal.policies.config.routing]
-summary = "根據類型與分類將文件路由到正確目的地。"
-
-[portal.policies.config.routing.fields]
-destination = "目的地"
-notify = "路由時通知"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "自動分類"
-1 = "路由到資料夾"
-2 = "Webhook 通知"
-
 [portal.policies.config.security]
 summary = "偵測並遮蔽 PII、移除主動內容 (JavaScript)，並為文件加上浮水印。"
 
