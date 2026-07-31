@@ -67,7 +67,7 @@
     "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
     "pixelmatch": "^7.1.0",
-    "posthog-js": "^1.393.4",
+    "posthog-js": "^1.268.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -135,8 +135,8 @@
     "@typescript-eslint/parser": "^8.61.1",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitejs/plugin-react-swc": "^4.1.0",
-    "@vitest/browser": "^3.2.6",
-    "@vitest/coverage-v8": "^3.2.6",
+    "@vitest/browser": "^3.2.7",
+    "@vitest/coverage-v8": "^3.2.7",
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
     "eslint": "^10.0.2",
@@ -161,7 +161,7 @@
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-static-copy": "^3.1.4",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.6"
+    "vitest": "^3.2.7"
   },
   "depcheck": {
     "ignoreMatches": [
@@ -176,10 +176,10 @@
     "tsconfck": {
       "typescript": "$typescript"
     },
-    "form-data": "^4.0.6",
-    "protobufjs": "^7.6.3",
     "esbuild": "^0.28.1",
-    "@babel/core": "^7.29.6"
+    "brace-expansion@1": "1.1.16",
+    "brace-expansion@2": "2.1.2",
+    "brace-expansion@5": "5.0.8"
   },
   "msw": {
     "workerDirectory": [
