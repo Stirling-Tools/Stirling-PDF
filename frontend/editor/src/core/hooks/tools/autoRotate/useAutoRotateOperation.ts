@@ -16,12 +16,43 @@ import {
   ToolOperationHook,
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import type {
+  ToolApiParams,
+  ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import {
   AutoRotateParameters,
+  AutoRotateDetectionMode,
   defaultParameters,
 } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
 
-export const AUTO_ROTATE_ENDPOINT = "/api/v1/misc/auto-rotate-pdf";
+export const AUTO_ROTATE_ENDPOINT =
+  "/api/v1/misc/auto-rotate-pdf" satisfies ToolEndpoint;
+
+type AutoRotateApiParams = ToolApiParams[typeof AUTO_ROTATE_ENDPOINT];
+
+/**
+ * Frontend params -> the endpoint's request model. Declaring these is what lets a
+ * backend pipeline step carry this tool's settings: serializeToolStep sends `{}`
+ * for a tool without mappers, and the pipeline composer can only offer a settings
+ * panel for a tool that can map its parameters both ways.
+ */
+export const autoRotateToApiParams = (
+  parameters: AutoRotateParameters,
+): AutoRotateApiParams => ({
+  detectionMode: parameters.detectionMode,
+  confidenceThreshold: parameters.confidenceThreshold,
+  inferUndetected: parameters.inferUndetected,
+});
+
+/** Rehydrate this tool's settings from a stored step's request body. */
+export const autoRotateFromApiParams = (
+  apiParams: AutoRotateApiParams,
+): Partial<AutoRotateParameters> => ({
+  detectionMode: apiParams.detectionMode as AutoRotateDetectionMode,
+  confidenceThreshold: apiParams.confidenceThreshold,
+  inferUndetected: apiParams.inferUndetected,
+});
 
 export type AutoRotateMethod = "text" | "osd" | "inferred" | "none";
 
@@ -135,6 +166,8 @@ export const autoRotateOperationConfig = defineCustomTool<AutoRotateParameters>(
     operationType: "autoRotate",
     endpoint: AUTO_ROTATE_ENDPOINT,
     customProcessor: createAutoRotateProcessor(),
+    toApiParams: autoRotateToApiParams,
+    fromApiParams: autoRotateFromApiParams,
     defaultParameters,
   },
 );
