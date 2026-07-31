@@ -10,10 +10,11 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.springframework.core.io.ClassPathResource;
-import jakarta.enterprise.context.ApplicationScoped;
 
 import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.JinjavaConfig;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.model.api.ai.create.AiDocument;
 

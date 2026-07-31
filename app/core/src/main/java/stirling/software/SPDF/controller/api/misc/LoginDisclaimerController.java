@@ -1,12 +1,12 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
-
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,8 +35,7 @@ public class LoginDisclaimerController {
             description =
                     "Returns whether the login agreement is enabled and, if so, the markdown to"
                             + " display for the requested language.")
-    public LoginDisclaimerResponse getLoginDisclaimer(
-            @QueryParam("lang") String lang) {
+    public LoginDisclaimerResponse getLoginDisclaimer(@QueryParam("lang") String lang) {
         boolean showInAnonymousMode = loginAgreementService.isShowInAnonymousMode();
         if (!loginAgreementService.isEnabled()) {
             return new LoginDisclaimerResponse(false, showInAnonymousMode, "", "markdown");

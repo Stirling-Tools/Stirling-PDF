@@ -3,6 +3,7 @@ package stirling.software.proprietary.integration.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.access.model.OwnerScope;

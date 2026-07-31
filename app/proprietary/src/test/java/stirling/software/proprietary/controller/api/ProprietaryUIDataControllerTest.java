@@ -24,7 +24,6 @@ import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
-import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.AccountData;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.DatabaseData;

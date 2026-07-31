@@ -8,8 +8,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.common.security.SessionInformation;
-
 @ApplicationScoped
 @RequiredArgsConstructor
 public class SessionScheduled {

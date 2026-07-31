@@ -17,7 +17,6 @@ import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities;
 import stirling.software.SPDF.model.api.security.Pkcs11CertificatesRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 

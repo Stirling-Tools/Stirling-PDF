@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import jakarta.inject.Inject;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +22,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 

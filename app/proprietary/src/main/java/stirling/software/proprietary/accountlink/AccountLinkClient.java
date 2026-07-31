@@ -8,10 +8,12 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import jakarta.inject.Inject;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 

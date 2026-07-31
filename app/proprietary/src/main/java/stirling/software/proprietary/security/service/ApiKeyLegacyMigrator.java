@@ -1,7 +1,8 @@
 package stirling.software.proprietary.security.service;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.transaction.annotation.Propagation;
+
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;

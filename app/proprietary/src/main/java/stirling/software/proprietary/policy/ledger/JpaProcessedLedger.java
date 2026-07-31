@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import jakarta.inject.Inject;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataIntegrityViolationException;
+
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -25,10 +25,10 @@ import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
+
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.enterprise.context.ApplicationScoped;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +66,8 @@ public class HardwareKeyStoreService {
     private static final String PKCS11_LIBRARIES_PROP = "stirling.pkcs11.libraries";
 
     // MIGRATION: was @Autowired(required=false) ctor injection of the @Named("machineType") bean.
-    // AppConfig always produces it, so this is plain field injection (matches TempFileCleanupService).
+    // AppConfig always produces it, so this is plain field injection (matches
+    // TempFileCleanupService).
     @Inject
     @Named("machineType")
     String machineType;

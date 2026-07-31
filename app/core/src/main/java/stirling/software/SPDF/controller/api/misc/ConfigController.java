@@ -55,6 +55,7 @@ public class ConfigController {
     @Inject
     @Named("machineType")
     Instance<String> machineType;
+
     private final Instance<stirling.software.common.service.LicenseServiceInterface> licenseService;
 
     @Inject

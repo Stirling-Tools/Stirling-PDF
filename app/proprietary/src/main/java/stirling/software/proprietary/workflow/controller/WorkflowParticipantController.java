@@ -466,13 +466,11 @@ public class WorkflowParticipantController {
             // Store the certificate keystores encrypted at rest.
             if (p12File != null && !p12File.isEmpty()) {
                 certSubmission.put(
-                        "p12Keystore",
-                        metadataEncryptionService.encryptBytes(p12File.getBytes()));
+                        "p12Keystore", metadataEncryptionService.encryptBytes(p12File.getBytes()));
             }
             if (jksFile != null && !jksFile.isEmpty()) {
                 certSubmission.put(
-                        "jksKeystore",
-                        metadataEncryptionService.encryptBytes(jksFile.getBytes()));
+                        "jksKeystore", metadataEncryptionService.encryptBytes(jksFile.getBytes()));
             }
 
             metadata.put("certificateSubmission", certSubmission);

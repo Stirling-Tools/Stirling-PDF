@@ -1,6 +1,7 @@
 package stirling.software.proprietary.access.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.access.service.DefaultPrincipalResolver;

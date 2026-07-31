@@ -19,9 +19,9 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import jakarta.enterprise.context.ApplicationScoped;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,8 +47,10 @@ public class CredentialEncryption {
     private final boolean clusterEnabled;
 
     public CredentialEncryption(
-            @ConfigProperty(name = "stirling.security.credentialEncryptionKey", defaultValue = "") String configuredKey,
-            @ConfigProperty(name = "cluster.enabled", defaultValue = "false") boolean clusterEnabled) {
+            @ConfigProperty(name = "stirling.security.credentialEncryptionKey", defaultValue = "")
+                    String configuredKey,
+            @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
+                    boolean clusterEnabled) {
         this.configuredKey = configuredKey;
         this.clusterEnabled = clusterEnabled;
     }

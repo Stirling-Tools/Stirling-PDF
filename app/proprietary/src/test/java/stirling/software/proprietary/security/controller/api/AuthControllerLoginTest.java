@@ -29,8 +29,6 @@ import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
-import stirling.software.proprietary.access.service.ResourceAccessService;
-import stirling.software.proprietary.access.service.TeamLeadLookup;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;

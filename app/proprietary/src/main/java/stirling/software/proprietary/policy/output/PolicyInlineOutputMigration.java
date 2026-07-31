@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;

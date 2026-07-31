@@ -3,8 +3,9 @@ package stirling.software.proprietary.security.service;
 import java.time.Instant;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.transaction.annotation.Propagation;
+
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;

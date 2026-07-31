@@ -17,7 +17,6 @@ import org.junit.jupiter.api.io.TempDir;
 import io.smallrye.config.SmallRyeConfig;
 
 import stirling.software.common.configuration.InstallationPathConfig;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;

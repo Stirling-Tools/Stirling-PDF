@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;

@@ -4,11 +4,13 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import io.quarkus.arc.profile.IfBuildProfile;
-import jakarta.annotation.security.RolesAllowed;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.annotation.security.RolesAllowed;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +42,8 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 // Self-hosted only: counts are server-wide. On SaaS this endpoint is owned by the team-scoped
-// SaasFleetUsageController (@IfBuildProfile("saas")) so one backend can't leak another tenant's usage.
+// SaasFleetUsageController (@IfBuildProfile("saas")) so one backend can't leak another tenant's
+// usage.
 @IfBuildProfile("!saas")
 public class FleetUsageController {
 

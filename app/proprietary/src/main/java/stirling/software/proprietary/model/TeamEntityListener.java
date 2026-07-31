@@ -1,9 +1,9 @@
 package stirling.software.proprietary.model;
 
-import jakarta.inject.Inject;
 import org.springframework.context.ApplicationEventPublisher;
-import jakarta.enterprise.context.ApplicationScoped;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.persistence.PostPersist;
 
 /** Publishes {@link TeamCreatedEvent} on insert; Spring bridges the publisher via a static. */

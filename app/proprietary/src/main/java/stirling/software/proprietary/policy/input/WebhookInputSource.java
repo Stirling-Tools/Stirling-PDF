@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;

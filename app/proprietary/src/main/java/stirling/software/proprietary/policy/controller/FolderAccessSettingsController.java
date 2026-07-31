@@ -2,10 +2,11 @@ package stirling.software.proprietary.policy.controller;
 
 import java.util.List;
 
-import jakarta.annotation.security.RolesAllowed;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.annotation.security.RolesAllowed;
 
 import lombok.RequiredArgsConstructor;
 

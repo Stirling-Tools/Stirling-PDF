@@ -1,10 +1,12 @@
 package stirling.software.proprietary.accountlink;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import jakarta.enterprise.context.ApplicationScoped;
-import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Registers the account-link entitlement gate. Path patterns cover the billable API surface; the

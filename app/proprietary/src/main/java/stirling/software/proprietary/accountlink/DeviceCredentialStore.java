@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -12,7 +14,8 @@ import jakarta.transaction.Transactional;
  * Secure-at-rest persistence for this instance's device credential. Thin wrapper over the
  * singleton-row repository so the rest of the feature never touches JPA directly.
  *
- * <p>Gated + {@code @IfBuildProfile("!saas")}: only the self-hosted profile links outward to a SaaS team.
+ * <p>Gated + {@code @IfBuildProfile("!saas")}: only the self-hosted profile links outward to a SaaS
+ * team.
  */
 @ApplicationScoped
 @IfBuildProfile("!saas")

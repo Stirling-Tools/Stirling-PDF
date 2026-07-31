@@ -11,8 +11,8 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import jakarta.inject.Inject;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 

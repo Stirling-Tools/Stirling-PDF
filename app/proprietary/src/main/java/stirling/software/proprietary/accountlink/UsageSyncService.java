@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.FixedDelayTask;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.springframework.security.core.GrantedAuthority;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 

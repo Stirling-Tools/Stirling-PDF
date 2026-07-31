@@ -30,13 +30,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.smallrye.config.SmallRyeConfig;
 
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
-import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 /**
  * Tests for {@link FolderInputSource}: consume (claim + route) and snapshot (read-only) modes.

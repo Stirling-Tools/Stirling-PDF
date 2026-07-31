@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.migration;
 import java.time.Instant;
 
 import org.springframework.dao.DataIntegrityViolationException;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;

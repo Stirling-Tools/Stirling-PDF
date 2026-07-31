@@ -5,10 +5,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import jakarta.inject.Inject;
-import jakarta.enterprise.context.ApplicationScoped;
-
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.cluster.s3.S3Clients;

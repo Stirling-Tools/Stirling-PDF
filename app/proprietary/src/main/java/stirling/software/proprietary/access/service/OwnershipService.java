@@ -4,9 +4,10 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 

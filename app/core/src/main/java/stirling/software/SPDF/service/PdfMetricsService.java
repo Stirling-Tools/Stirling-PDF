@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.quarkus.scheduler.Scheduled;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.common.model.ApplicationProperties;

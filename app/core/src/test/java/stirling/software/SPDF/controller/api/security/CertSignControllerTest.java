@@ -26,8 +26,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.enterprise.inject.Instance;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Response;
 
+import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -127,7 +129,8 @@ class CertSignControllerTest {
                         "test",
                         "tester",
                         1,
-                        false);
+                        false,
+                        httpRequest);
 
         assertNotNull(response.getEntity());
         assertEquals(200, response.getStatus());
@@ -153,7 +156,8 @@ class CertSignControllerTest {
                         "test",
                         "tester",
                         1,
-                        false);
+                        false,
+                        httpRequest);
 
         assertNotNull(response.getEntity());
         assertEquals(200, response.getStatus());
@@ -181,7 +185,8 @@ class CertSignControllerTest {
                                         "test",
                                         "tester",
                                         1,
-                                        false));
+                                        false,
+                                        httpRequest));
 
         assertTrue(exception.getMessage().contains("PKCS12 keystore"));
     }
@@ -207,7 +212,8 @@ class CertSignControllerTest {
                         "test",
                         "tester",
                         1,
-                        false);
+                        false,
+                        httpRequest);
 
         assertNotNull(response.getEntity());
         assertEquals(200, response.getStatus());
@@ -236,7 +242,8 @@ class CertSignControllerTest {
                         "test",
                         "tester",
                         1,
-                        false);
+                        false,
+                        httpRequest);
 
         assertNotNull(response.getEntity());
         assertEquals(200, response.getStatus());
@@ -264,7 +271,8 @@ class CertSignControllerTest {
                         "test",
                         "tester",
                         1,
-                        false);
+                        false,
+                        httpRequest);
 
         assertNotNull(response.getEntity());
         assertEquals(200, response.getStatus());
@@ -292,7 +300,8 @@ class CertSignControllerTest {
                         "test",
                         "tester",
                         1,
-                        false);
+                        false,
+                        httpRequest);
 
         assertNotNull(response.getEntity());
         assertEquals(200, response.getStatus());
@@ -320,7 +329,8 @@ class CertSignControllerTest {
                         "test",
                         "tester",
                         1,
-                        false);
+                        false,
+                        httpRequest);
 
         assertNotNull(response.getEntity());
         assertEquals(200, response.getStatus());

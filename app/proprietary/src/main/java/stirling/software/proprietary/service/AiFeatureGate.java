@@ -1,8 +1,9 @@
 package stirling.software.proprietary.service;
 
 import org.springframework.http.HttpStatus;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 

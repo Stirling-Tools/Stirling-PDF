@@ -9,10 +9,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -27,22 +23,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.github.benmanes.caffeine.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.JwtSigningKeyEntity;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.repository.JwtSigningKeyRepository;
 
-/**
- * MIGRATION (Spring -> Quarkus): {@code KeyPersistenceService} no longer takes a Spring {@code
- * CacheManager} (the {@code @Cacheable("verifyingKeys")} layer and {@code
- * ConcurrentMapCacheManager} are gone). The constructor takes only {@link ApplicationProperties};
- * the verifying-key cache is a directly-managed Caffeine {@code Cache} private field. The
- * key-present test seeds that internal cache by reflection, matching what {@code getKeyPair} reads
- * via {@code getIfPresent}.
- */
+/** DB-backed keystore: a key present only in the shared DB still resolves (the cross-node case). */
 @ExtendWith(MockitoExtension.class)
 class KeyPersistenceServiceInterfaceTest {
 
@@ -53,12 +42,15 @@ class KeyPersistenceServiceInterfaceTest {
 
     private KeyPersistenceService keyPersistenceService;
     private KeyPair testKeyPair;
+    private CacheManager cacheManager;
 
     @BeforeEach
     void setUp() throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
         testKeyPair = keyPairGenerator.generateKeyPair();
+
+        cacheManager = new ConcurrentMapCacheManager("verifyingKeys");
 
         lenient().when(applicationProperties.getSecurity()).thenReturn(security);
         lenient().when(security.getJwt()).thenReturn(jwtConfig);
@@ -80,23 +72,13 @@ class KeyPersistenceServiceInterfaceTest {
     @ValueSource(booleans = {true, false})
     void testKeystoreEnabled(boolean keystoreEnabled) {
         when(jwtConfig.isEnableKeystore()).thenReturn(keystoreEnabled);
-
-        // isKeystoreEnabled() reads only the config flag; no private-key directory access, so
-        // InstallationPathConfig is not stubbed here.
-        keyPersistenceService = new KeyPersistenceService(applicationProperties);
-
         assertEquals(keystoreEnabled, keyPersistenceService.isKeystoreEnabled());
     }
 
     @Test
-    void testGetActiveKeypairWhenNoActiveKeyExists() {
-        try (MockedStatic<InstallationPathConfig> mockedStatic =
-                mockStatic(InstallationPathConfig.class)) {
-            mockedStatic
-                    .when(InstallationPathConfig::getPrivateKeyPath)
-                    .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties);
-            keyPersistenceService.initializeKeystore();
+    void generatesAndPersistsAKeyWhenNoneIsActive() {
+        // getActiveKey with no active key mints one and persists it - no disk involved.
+        JwtVerificationKey active = keyPersistenceService.getActiveKey();
 
         assertNotNull(active);
         assertNotNull(active.getKeyId());
@@ -105,27 +87,15 @@ class KeyPersistenceServiceInterfaceTest {
     }
 
     @Test
-    void testGetActiveKeyPairWithExistingKey() throws Exception {
-        String keyId = "test-key-2024-01-01-120000";
-        String privateKeyBase64 =
-                Base64.getEncoder().encodeToString(testKeyPair.getPrivate().getEncoded());
+    void loadsTheMostRecentExistingKeyAsActive() {
+        when(keyRepository.count()).thenReturn(1L);
+        when(keyRepository.findAllByOrderByCreatedAtDesc())
+                .thenReturn(List.of(entityFrom("jwt-key-2026-07-13-000000-abcd1234")));
 
-        Path keyFile = tempDir.resolve(keyId + ".key");
-        Files.writeString(keyFile, privateKeyBase64);
+        keyPersistenceService.initializeKeystore();
+        JwtVerificationKey active = keyPersistenceService.getActiveKey();
 
-        try (MockedStatic<InstallationPathConfig> mockedStatic =
-                mockStatic(InstallationPathConfig.class)) {
-            mockedStatic
-                    .when(InstallationPathConfig::getPrivateKeyPath)
-                    .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties);
-            keyPersistenceService.initializeKeystore();
-
-            JwtVerificationKey result = keyPersistenceService.getActiveKey();
-
-            assertNotNull(result);
-            assertNotNull(result.getKeyId());
-        }
+        assertEquals("jwt-key-2026-07-13-000000-abcd1234", active.getKeyId());
     }
 
     @Test
@@ -136,60 +106,26 @@ class KeyPersistenceServiceInterfaceTest {
 
         Optional<KeyPair> result = keyPersistenceService.getKeyPair(keyId);
 
-        Path keyFile = tempDir.resolve(keyId + ".key");
-        Files.writeString(keyFile, privateKeyBase64);
-
-        try (MockedStatic<InstallationPathConfig> mockedStatic =
-                mockStatic(InstallationPathConfig.class)) {
-            mockedStatic
-                    .when(InstallationPathConfig::getPrivateKeyPath)
-                    .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties);
-
-            // Seed the directly-managed Caffeine cache (formerly the Spring "verifyingKeys" cache);
-            // getKeyPair resolves the verifying key from it via getIfPresent.
-            seedVerifyingKeyCache(keyPersistenceService, keyId, signingKey);
-
-            Optional<KeyPair> result = keyPersistenceService.getKeyPair(keyId);
-
-            assertTrue(result.isPresent());
-            assertNotNull(result.get().getPublic());
-            assertNotNull(result.get().getPrivate());
-        }
+        assertTrue(result.isPresent());
+        assertNotNull(result.get().getPublic());
+        assertNotNull(result.get().getPrivate());
     }
 
     @Test
-    void testGetKeyPairNotFound() {
-        // No key in the cache and no keystore read needed: getKeyPair short-circuits to empty
-        // before
-        // touching the private-key directory, so InstallationPathConfig is not stubbed here.
-        keyPersistenceService = new KeyPersistenceService(applicationProperties);
-
-        Optional<KeyPair> result = keyPersistenceService.getKeyPair("non-existent-key");
-
-        assertFalse(result.isPresent());
+    void getKeyPairIsEmptyWhenTheKeyIsUnknown() {
+        when(keyRepository.findById("nope")).thenReturn(Optional.empty());
+        assertFalse(keyPersistenceService.getKeyPair("nope").isPresent());
     }
 
     @Test
     void getKeyPairIsEmptyWhenKeystoreDisabled() {
         when(jwtConfig.isEnableKeystore()).thenReturn(false);
-
-        keyPersistenceService = new KeyPersistenceService(applicationProperties);
-
-        Optional<KeyPair> result = keyPersistenceService.getKeyPair("any-key");
-
-        assertFalse(result.isPresent());
+        assertFalse(keyPersistenceService.getKeyPair("any-key").isPresent());
     }
 
     @Test
-    void testInitializeKeystoreCreatesDirectory() throws IOException {
-        try (MockedStatic<InstallationPathConfig> mockedStatic =
-                mockStatic(InstallationPathConfig.class)) {
-            mockedStatic
-                    .when(InstallationPathConfig::getPrivateKeyPath)
-                    .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties);
-            keyPersistenceService.initializeKeystore();
+    void eligibleForCleanupIsSourcedFromTheDb() {
+        when(keyRepository.findByCreatedAtBefore(any())).thenReturn(List.of(entityFrom("old-key")));
 
         List<JwtVerificationKey> stale =
                 keyPersistenceService.getKeysEligibleForCleanup(java.time.LocalDateTime.now());
@@ -199,14 +135,18 @@ class KeyPersistenceServiceInterfaceTest {
     }
 
     @Test
-    void testLoadExistingKeypairWithMissingPrivateKeyFile() throws Exception {
-        try (MockedStatic<InstallationPathConfig> mockedStatic =
-                mockStatic(InstallationPathConfig.class)) {
-            mockedStatic
-                    .when(InstallationPathConfig::getPrivateKeyPath)
-                    .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties);
-            keyPersistenceService.initializeKeystore();
+    void reloadAdoptsTheNewestKeyAPeerMinted() {
+        // Boot with our own key active, then a peer mints a newer one in the shared DB.
+        when(keyRepository.count()).thenReturn(1L);
+        when(keyRepository.findAllByOrderByCreatedAtDesc())
+                .thenReturn(List.of(entityFrom("jwt-key-local-old")));
+        keyPersistenceService.initializeKeystore();
+        assertEquals("jwt-key-local-old", keyPersistenceService.getActiveKey().getKeyId());
+
+        when(keyRepository.findFirstByOrderByCreatedAtDesc())
+                .thenReturn(Optional.of(entityFrom("jwt-key-peer-new")));
+
+        keyPersistenceService.reloadActiveKeyFromDb();
 
         // Converged: this node now signs with the peer's newer key.
         assertEquals("jwt-key-peer-new", keyPersistenceService.getActiveKey().getKeyId());
@@ -237,14 +177,5 @@ class KeyPersistenceServiceInterfaceTest {
         keyPersistenceService.reloadActiveKeyFromDb();
 
         assertEquals("jwt-key-current", keyPersistenceService.getActiveKey().getKeyId());
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void seedVerifyingKeyCache(
-            KeyPersistenceService service, String keyId, JwtVerificationKey key) throws Exception {
-        Field f = KeyPersistenceService.class.getDeclaredField("verifyingKeyCache");
-        f.setAccessible(true);
-        Cache<Object, Object> cache = (Cache<Object, Object>) f.get(service);
-        cache.put(keyId, key);
     }
 }
