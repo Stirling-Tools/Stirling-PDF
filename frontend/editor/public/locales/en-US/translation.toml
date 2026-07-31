@@ -46,10 +46,8 @@ filesSelected = "{{count}} files"
 font = "Font"
 fontSizeTooltip = "Size of the page number text in points. Larger numbers create bigger text."
 fontTypeTooltip = "Font family for the page numbers. Choose based on your document style."
-genericSubmit = "Submit"
 green = "Green"
 help = "Help"
-imgPrompt = "Select Image(s)"
 incorrectPasswordMessage = "Current password is incorrect."
 info = "Info"
 invalidUndoData = "Cannot undo: invalid operation data"
@@ -62,7 +60,6 @@ loginAgreementTitle = "Login Agreement"
 logOut = "Log out"
 marginTooltip = "Distance between the page number and the edge of the page."
 moreOptions = "More Options"
-multiPdfPrompt = "Select PDFs (2+)"
 never = "Never"
 no = "No"
 noFileSelected = "No file loaded. Please upload one."
@@ -80,7 +77,6 @@ pageOrderPrompt = "Custom Page Order (Enter a comma-separated list of page numbe
 pages = "Pages"
 pageSelectionPrompt = "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)"
 password = "Password"
-pdfPrompt = "Select PDF(s)"
 pin = "Pin File (keep active after tool run)"
 pro = "Pro"
 processingComplete = "Your file is ready."
@@ -2444,33 +2440,6 @@ keywords = "Keywords: odd, even"
 numbers = "Numbers/ranges: 5, 10-20"
 progressions = "Progressions: 3n, 4n+1"
 
-[certificateChoice.tooltip]
-header = "Certificate Types"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Managed by system administrators"
-bullet2 = "Shared across authorized users"
-bullet3 = "Represents company identity, not individual"
-bullet4 = "Best for: Official documents, team signatures"
-description = "A shared certificate provided by your organization. Used for company-wide signing authority."
-title = "Organization Certificate"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "Generated automatically on first use"
-bullet2 = "Tied to your user account"
-bullet3 = "Cannot be shared with other users"
-bullet4 = "Best for: Personal documents, individual accountability"
-description = "An auto-generated certificate unique to your user account. Suitable for individual signatures."
-title = "Personal Certificate"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "Requires P12/PFX file and password"
-bullet2 = "Can be issued by external Certificate Authorities"
-bullet3 = "Higher trust level for legal documents"
-bullet4 = "Best for: Legally binding contracts, external validation"
-description = "Use your own PKCS#12 certificate file. Provides full control over certificate properties."
-title = "Upload Custom P12"
-
 [certSign]
 awaitingSignatures = "Awaiting signatures"
 chooseCertificate = "Choose Certificate File"
@@ -2796,34 +2765,6 @@ noOtherSources = "No other certificate sources are available."
 server = "Server"
 stepTitle = "Certificate source"
 upload = "Upload"
-
-[certSign.tooltip.header]
-title = "About Managing Signatures"
-
-[certSign.tooltip.overview]
-bullet1 = "Check existing signatures and their validity"
-bullet2 = "View detailed information about signers and certificates"
-bullet3 = "Add new digital signatures to secure your documents"
-bullet4 = "Multiple files supported with easy navigation"
-text = "This tool lets you check if your PDFs are digitally signed and add new digital signatures. Digital signatures prove who created or approved a document and show if it has been changed since signing."
-title = "What can this tool do?"
-
-[certSign.tooltip.signing]
-bullet1 = "Supports PEM, PKCS12, JKS, and server certificate formats"
-bullet2 = "Option to show or hide signature on the PDF"
-bullet3 = "Add reason, location, and signer name"
-bullet4 = "Choose which page to place visible signatures"
-bullet5 = "Use server certificate for simple 'Sign with Stirling-PDF' option"
-text = "To sign a PDF, you need a digital certificate (like PEM, PKCS12, or JKS). You can choose to make the signature visible on the document or keep it invisible for security only."
-title = "Adding Signatures"
-
-[certSign.tooltip.validation]
-bullet1 = "Shows if signatures are valid or invalid"
-bullet2 = "Displays signer information and signing date"
-bullet3 = "Checks if the document was modified after signing"
-bullet4 = "Can use custom certificates for verification"
-text = "When you check signatures, the tool tells you if they're valid, who signed the document, when it was signed, and whether the document has been changed since signing."
-title = "Checking Signatures"
 
 [changeCreds]
 changeUsername = "Update your username. You will be logged out after updating."
@@ -3519,24 +3460,6 @@ description = "These cookies are essential for the website to function properly.
 [cookieBanner.services]
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
-
-[credits.modal]
-advancedMonitoring = "Advanced monitoring"
-allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
-apiSandbox = "API sandbox"
-dedicatedSupportSlas = "Dedicated support & SLAs"
-fasterThroughput = "10x faster throughput"
-fullyPrivateFiles = "Fully private files"
-largeFileProcessing = "Large file processing"
-orgWideAccess = "Org-wide access controls"
-premiumAiModels = "Premium AI models"
-prioritySupport = "Priority support"
-privateDocCloud = "Private Document Cloud"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "Secure API access"
-standardThroughput = "Standard throughput"
-unlimitedApiAccess = "Unlimited API access"
-unlimitedSeats = "Unlimited seats"
 
 [crop]
 autoCrop = "Auto-crop whitespace"
@@ -8903,11 +8826,6 @@ name = "Name"
 namePlaceholder = "e.g. Claims intake"
 type = "Type"
 
-[portal.tier]
-enterprise = "Enterprise plan"
-free = "Editor plan"
-pro = "Processor plan"
-
 [portal.usage]
 managePayment = "Manage Payment"
 subtitle = "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console."
@@ -9672,38 +9590,6 @@ toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}
 
 [session]
 expired = "Your session has expired. Please refresh the page and try again."
-
-[sessionManagement.tooltip]
-header = "Managing Signing Sessions"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "New participants added to the end of signing order"
-bullet2 = "Cannot add participants after session is finalized"
-bullet3 = "Each participant receives a notification when it's their turn"
-description = "You can add more participants to an active session at any time before finalization."
-title = "Adding Participants"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>Full finalization</b>: All participants have signed"
-bullet2 = "<b>Partial finalization</b>: Some participants haven't signed yet"
-bullet3 = "Unsigned participants will be excluded from the final document"
-bullet4 = "Once finalized, you can load the signed PDF into active files"
-description = "Finalization combines all signatures into a single signed PDF. This action cannot be undone."
-title = "Session Finalization"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "Cannot remove participants who have already signed"
-bullet2 = "Removed participants no longer receive notifications"
-bullet3 = "Signing order adjusts automatically"
-description = "Participants can be removed from sessions before they sign."
-title = "Removing Participants"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "Each signature is applied sequentially to the PDF"
-bullet2 = "Later signers can see earlier signatures"
-bullet3 = "Critical for approval workflows and legal chains of custody"
-description = "The order you specify when creating the session determines who signs first."
-title = "Signature Order"
 
 [settings]
 close = "Close"
@@ -10783,11 +10669,6 @@ noToolsFound = "No tools found"
 quickAccess = "QUICK ACCESS"
 searchPlaceholder = "Search tools..."
 
-[toolPicker.categories]
-advancedTools = "Advanced Tools"
-recommendedTools = "Recommended Tools"
-standardTools = "Standard Tools"
-
 [toolPicker.subcategories]
 advancedFormatting = "Advanced Formatting"
 automation = "Automation"
@@ -11611,30 +11492,6 @@ title = "Watermark Text"
 [watermark.watermarkType]
 image = "Image"
 text = "Text"
-
-[wetSignature.tooltip]
-header = "Signature Creation Methods"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Customize pen color and thickness"
-bullet2 = "Clear and redraw until satisfied"
-bullet3 = "Works on touch devices (tablets, phones)"
-description = "Create a handwritten signature using your mouse or touchscreen. Best for personal, authentic signatures."
-title = "Draw Signature"
-
-[wetSignature.tooltip.type]
-bullet1 = "Choose from multiple fonts"
-bullet2 = "Customize text size and color"
-bullet3 = "Perfect for standardized signatures"
-description = "Generate a signature from typed text. Fast and consistent, suitable for business documents."
-title = "Type Signature"
-
-[wetSignature.tooltip.upload]
-bullet1 = "Supports PNG, JPG, and other image formats"
-bullet2 = "Transparent backgrounds recommended for best results"
-bullet3 = "Image will be resized to fit signature area"
-description = "Upload a pre-created signature image. Ideal if you have a scanned signature or company logo."
-title = "Upload Signature Image"
 
 [workbenchBar]
 activeFiles = "Active Files"
