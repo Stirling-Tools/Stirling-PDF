@@ -97,7 +97,10 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   // Writes that bypass this context (policy runs, share-link imports, watched
   // folders) reach the same store, so subscribe at the storage layer instead of
   // trusting every call site to announce itself.
-  useEffect(() => fileStorage.subscribeToChanges(scheduleBump), [scheduleBump]);
+  useEffect(() => {
+    const unsubscribe = fileStorage.subscribeToChanges(scheduleBump);
+    return unsubscribe;
+  }, [scheduleBump]);
 
   // LRU File cache to avoid repeated ArrayBuffer→File conversions
   const fileCache = useRef(
@@ -255,16 +258,20 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
   const updateThumbnail = useCallback(
     async (fileId: FileId, thumbnail: string): Promise<boolean> => {
-      return await fileStorage.updateThumbnail(fileId, thumbnail);
+      const result = await fileStorage.updateThumbnail(fileId, thumbnail);
+      if (result) scheduleBump();
+      return result;
     },
-    [],
+    [scheduleBump],
   );
 
   const markFileAsProcessed = useCallback(
     async (fileId: FileId): Promise<boolean> => {
-      return await fileStorage.markFileAsProcessed(fileId);
+      const result = await fileStorage.markFileAsProcessed(fileId);
+      if (result) scheduleBump();
+      return result;
     },
-    [],
+    [scheduleBump],
   );
 
   const moveFilesToFolder = useCallback(

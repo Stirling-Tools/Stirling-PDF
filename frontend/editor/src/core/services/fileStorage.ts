@@ -67,10 +67,17 @@ class FileStorageService {
   private readonly changeListeners = new Set<() => void>();
 
   /**
-   * Notified after every write or delete, whoever made it. Views subscribe via
-   * IndexedDBContext rather than relying on each call site to announce itself -
-   * plenty of them (policy runs, share-link imports, watched folders) write
-   * through this service directly and used to leave the file lists stale.
+   * Notified when the SET of stored files changes - added, deleted, moved
+   * between folders. Views subscribe via IndexedDBContext rather than relying
+   * on each call site to announce itself; plenty of them (share-link imports,
+   * watched folders, FileManagerContext) write here directly and used to leave
+   * the file lists stale.
+   *
+   * Deliberately NOT fired for in-place edits to an existing row (thumbnail,
+   * metadata, leaf flag): those run per file inside tool and policy batches,
+   * where a global refresh per write is both wasteful and, for callers that
+   * react by re-reading the workspace, unsafe. Callers that need those visible
+   * bump the revision themselves.
    */
   subscribeToChanges(listener: () => void): () => void {
     this.changeListeners.add(listener);
@@ -624,7 +631,6 @@ class FileStorageService {
             const updateRequest = store.put(record);
 
             updateRequest.onsuccess = () => {
-              this.notifyChanged();
               resolve(true);
             };
             updateRequest.onerror = () => {
@@ -770,7 +776,6 @@ class FileStorageService {
         request.onerror = () => reject(request.error);
       });
 
-      this.notifyChanged();
       return true;
     } catch (error) {
       console.error("Failed to mark file as processed:", error);
@@ -856,7 +861,6 @@ class FileStorageService {
         request.onerror = () => reject(request.error);
       });
 
-      this.notifyChanged();
       return true;
     } catch (error) {
       console.error("Failed to mark file as leaf:", error);
@@ -898,10 +902,7 @@ class FileStorageService {
         };
         getRequest.onerror = () => reject(getRequest.error);
 
-        transaction.oncomplete = () => {
-          if (recordFound) this.notifyChanged();
-          resolve(recordFound);
-        };
+        transaction.oncomplete = () => resolve(recordFound);
         transaction.onerror = () => reject(transaction.error);
         transaction.onabort = () =>
           reject(transaction.error ?? new Error("updateFileMetadata aborted"));

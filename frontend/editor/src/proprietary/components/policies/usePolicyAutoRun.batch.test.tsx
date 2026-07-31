@@ -97,6 +97,8 @@ vi.mock("@app/services/policyApi", () => ({
 }));
 vi.mock("@app/services/fileStorage", () => ({
   fileStorage: {
+    // IndexedDBContext subscribes to storage changes on mount.
+    subscribeToChanges: vi.fn().mockReturnValue(() => {}),
     getStirlingFile: mocks.getStirlingFile,
     getStirlingFileStub: mocks.getStirlingFileStub,
     persistVersionedOutputs: mocks.persistVersionedOutputs,
