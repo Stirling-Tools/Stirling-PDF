@@ -55,7 +55,13 @@ vi.mock("@app/services/userService", () => ({
 }));
 
 // Imported after the mocks so the provider picks them up.
-const { AuthProvider } = await import("./UseSession");
+const { AuthProvider, useAuth } = await import("./UseSession");
+
+/** Surfaces `loading` so a test can assert on it rather than on the container. */
+function LoadingProbe() {
+  const { loading } = useAuth();
+  return <span data-testid="loading">{String(loading)}</span>;
+}
 
 const USER_ID = "11111111-2222-3333-4444-555555555555";
 
@@ -96,7 +102,11 @@ function renderProvider() {
     return { data: { subscription: { unsubscribe } } };
   });
 
-  const utils = render(<AuthProvider>{null}</AuthProvider>);
+  const utils = render(
+    <AuthProvider>
+      <LoadingProbe />
+    </AuthProvider>,
+  );
 
   /**
    * Deliver an auth event and let its work finish. The provider defers handling
@@ -175,15 +185,44 @@ describe("AuthProvider user-data loading", () => {
   it("keeps loading false across repeat auth events", async () => {
     // Guards the Landing -> HomePage unmount: toggling `loading` on a wakeup
     // would tear down the tree on every tab switch.
-    const { fire, container } = renderProvider();
-    await waitFor(() => expect(createSignedUrl).toHaveBeenCalled());
+    const { fire, getByTestId } = renderProvider();
+    await waitFor(() =>
+      expect(getByTestId("loading").textContent).toBe("false"),
+    );
 
     await fire("SIGNED_IN", makeSession({ token: "token-4" }));
-    await fire("TOKEN_REFRESHED", makeSession({ token: "token-5" }));
+    expect(getByTestId("loading").textContent).toBe("false");
 
-    // Nothing rendered means no error boundary tripped and no remount loop.
-    expect(container).toBeTruthy();
+    await fire("TOKEN_REFRESHED", makeSession({ token: "token-5" }));
+    expect(getByTestId("loading").textContent).toBe("false");
+
     expect(callCounts().proStatus).toBe(1);
+  });
+
+  it("clears the initial spinner without waiting for the avatar upload", async () => {
+    // On a first login syncOAuthAvatar downloads, re-encodes and uploads the
+    // provider image. Gating `loading` on that would stall account creation
+    // behind an image upload, so it must settle in the background.
+    let releaseSync = () => {};
+    syncOAuthAvatar.mockImplementationOnce(
+      () =>
+        new Promise<boolean>((resolve) => {
+          releaseSync = () => resolve(false);
+        }),
+    );
+
+    const { getByTestId } = renderProvider();
+
+    await waitFor(() =>
+      expect(getByTestId("loading").textContent).toBe("false"),
+    );
+    // The picture read chains behind the sync, so it has not run yet either.
+    expect(createSignedUrl).not.toHaveBeenCalled();
+
+    await act(async () => {
+      releaseSync();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
   });
 
   it("refetches after a guest upgrade, which keeps the same user id", async () => {

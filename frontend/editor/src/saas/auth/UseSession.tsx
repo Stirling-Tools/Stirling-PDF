@@ -263,6 +263,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Idempotent per identity: Supabase re-fires SIGNED_IN and TOKEN_REFRESHED on
    * token refresh and tab-visibility wakeups, and those must not refetch.
    * Callers wanting a genuine reload (the guest upgrade) pass `force`.
+   *
+   * The returned promise covers pro status and avatar metadata only. Avatar
+   * sync and the profile picture settle in the background, so awaiting this
+   * never blocks on an image download.
    */
   const loadUserData = useCallback(
     (
@@ -292,19 +296,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       loadedForRef.current = key;
       const run = (async () => {
-        // The signed-URL read waits on the avatar sync: reading before an
-        // upload lands returns 404 and silently falls back to the provider
-        // photo. Pro status and metadata do not care, so they run alongside.
+        // Deliberately off the awaited path: on a first login this downloads,
+        // re-encodes and uploads the provider avatar, and initializeAuth gates
+        // the initial spinner on the promise returned below. The signed-URL
+        // read chains behind it because reading before the upload lands
+        // returns 404 and silently falls back to the provider photo.
         const avatarSync = syncOAuthAvatar(user).catch((err) => {
           console.debug("[Auth Debug] Failed to sync OAuth avatar:", err);
           return false;
         });
+        void avatarSync
+          .then(() => fetchProfilePicture(sessionToLoad))
+          .catch((err) => {
+            console.debug("[Auth Debug] Failed to fetch profile picture:", err);
+          });
+
         await Promise.all([
           fetchProStatus(sessionToLoad),
           fetchProfilePictureMetadata(sessionToLoad),
         ]);
-        await avatarSync;
-        await fetchProfilePicture(sessionToLoad);
       })()
         .catch((err) => {
           // Release the key so a later auth event can retry.
@@ -387,8 +397,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           setSession(data.session);
 
-          // Awaited so the initial spinner does not clear before pro status and
-          // the avatar are known. A SIGNED_IN for the same user is then a no-op.
+          // Awaited so the initial spinner does not clear before pro status is
+          // known, as it did before. A SIGNED_IN for the same user is then a
+          // no-op.
           await loadUserData(data.session);
         }
       } catch (err) {
