@@ -143,7 +143,10 @@ export function validateToolChain(
       return;
     }
 
-    if (carried === null) {
+    // Only the first step is handed the pipeline's input. Every later step is handed the previous
+    // step's output, which is simply unknown once an undeclared step intervened - checking it
+    // against the input again would judge it on a format it never receives.
+    if (index === 0) {
       if (options.sourceFormat && !acceptsFormat(spec, options.sourceFormat)) {
         diagnostics.push({
           stepIndex: index,
@@ -156,7 +159,7 @@ export function validateToolChain(
           },
         });
       }
-    } else {
+    } else if (carried !== null) {
       diagnostics.push(...checkTransition(index, step, spec, carried));
     }
     carried = resolveOutput(spec, step.parameters);

@@ -256,6 +256,18 @@
       "expected": [{ "stepIndex": 1, "severity": "WARN", "code": "undeclared-operation" }]
     },
     {
+      "name": "the source format is not re-applied to a step that follows an undeclared one",
+      "sourceFormat": "PDF_ENCRYPTED",
+      "steps": [{ "spec": "removePassword" }, { "spec": null }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "WARN", "code": "undeclared-operation" }]
+    },
+    {
+      "name": "an undeclared first step does not pass the source format on to the next step",
+      "sourceFormat": "PDF_ENCRYPTED",
+      "steps": [{ "spec": null }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 0, "severity": "WARN", "code": "undeclared-operation" }]
+    },
+    {
       "name": "every broken transition is reported, not just the first",
       "steps": [{ "spec": "extractImages" }, { "spec": "pdfToPdf" }, { "spec": "imageToPdf" }],
       "expected": [

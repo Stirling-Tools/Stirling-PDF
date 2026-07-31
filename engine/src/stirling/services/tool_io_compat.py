@@ -129,7 +129,10 @@ def validate_tool_chain(
             carried = None
             continue
 
-        if carried is None:
+        # Only the first step is handed the pipeline's input. Every later step is handed the
+        # previous step's output, which is simply unknown once an undeclared step intervened -
+        # checking it against the input again would judge it on a format it never receives.
+        if index == 0:
             if source_format is not None and not _accepts_format(spec, source_format):
                 diagnostics.append(
                     ToolDiagnostic(
@@ -139,7 +142,7 @@ def validate_tool_chain(
                         message=(f"{step.operation} accepts {_describe(spec)} but the input is {source_format}."),
                     )
                 )
-        else:
+        elif carried is not None:
             diagnostics.extend(_check_transition(index, step, spec, carried))
         carried = resolve_output(spec, step.parameters or None)
 
