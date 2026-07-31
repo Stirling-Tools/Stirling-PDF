@@ -154,9 +154,6 @@ export default function AdminAiModelsSection() {
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.ai.models.title", "Models & Providers")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.ai.models.description",

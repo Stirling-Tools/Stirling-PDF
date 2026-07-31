@@ -168,13 +168,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
 
   const colors = useMemo(
     () => ({
-      navBg: "var(--c-bg-raised)",
       sectionTitle: "var(--c-text-subtle)",
       navItem: "var(--modal-nav-item)",
       navItemActive: "var(--c-accent-fg)",
       navItemActiveBg: "var(--c-primary-subtle)",
-      contentBg: "var(--c-surface)",
-      headerBorder: "var(--c-border-subtle)",
     }),
     [],
   );
@@ -276,13 +273,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     >
       <div className="modal-container" data-tour="settings-modal">
         {/* Left navigation */}
-        <div
-          className={`modal-nav ${isMobile ? "mobile" : ""}`}
-          style={{
-            background: colors.navBg,
-            borderRight: `1px solid ${colors.headerBorder}`,
-          }}
-        >
+        <div className={`modal-nav ${isMobile ? "mobile" : ""}`}>
           <div className="modal-nav-scroll">
             {configNavSections.map((section) => (
               <div key={section.title} className="modal-nav-section">
@@ -401,13 +392,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
         <div className="modal-content" data-tour="settings-content-area">
           <div className="modal-content-scroll">
             {/* Sticky header with section title and small close button */}
-            <div
-              className="modal-header"
-              style={{
-                background: colors.contentBg,
-                borderBottom: `1px solid ${colors.headerBorder}`,
-              }}
-            >
+            <div className="modal-header">
               <Text fw={700} size="lg">
                 {activeLabel}
               </Text>

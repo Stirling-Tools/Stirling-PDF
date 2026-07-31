@@ -140,9 +140,6 @@ export default function AdminPrivacySection() {
         <LoginRequiredBanner show={!loginEnabled} />
 
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.privacy.title", "Privacy")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.privacy.description",

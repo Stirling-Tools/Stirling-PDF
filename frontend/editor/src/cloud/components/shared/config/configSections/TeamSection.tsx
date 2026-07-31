@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   TextInput,
   Group,
+  Paper,
   Text,
   Stack,
   Alert,
@@ -216,8 +217,9 @@ const TeamSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      {/* Header */}
-      <div>
+      {/* A personal team's name ("My Team") only restates the nav label, and it
+          has no rename/leave actions - so the header row is dropped there. */}
+      {!isPersonalTeam && (
         <Group justify="space-between" align="center">
           <div style={{ flex: 1 }}>
             {isEditingName ? (
@@ -299,7 +301,7 @@ const TeamSection: React.FC = () => {
             </Button>
           )}
         </Group>
-      </div>
+      )}
 
       {/* Error/Success Messages */}
       {error && (
@@ -316,8 +318,8 @@ const TeamSection: React.FC = () => {
 
       {/* Invite Members */}
       {isTeamLeader && (
-        <div>
-          <Text fw={600} size="md" mb="sm">
+        <Paper withBorder p="md" radius="md">
+          <Text fw={600} size="sm" mb="sm">
             {t("team.invite.title", "Invite Team Member")}
           </Text>
           <form onSubmit={handleInvite}>
@@ -347,12 +349,11 @@ const TeamSection: React.FC = () => {
               </Button>
             </Group>
           </form>
-        </div>
+        </Paper>
       )}
 
-      {/* Team Members Table */}
-      <div>
-        <Text fw={600} size="md" mb="sm">
+      <Paper withBorder p="md" radius="md">
+        <Text fw={600} size="sm" mb="sm">
           {t("team.members.title", "Team Members")}
         </Text>
         <Table
@@ -539,7 +540,7 @@ const TeamSection: React.FC = () => {
             )}
           </Table.Tbody>
         </Table>
-      </div>
+      </Paper>
     </Stack>
   );
 };

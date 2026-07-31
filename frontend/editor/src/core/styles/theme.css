@@ -243,9 +243,6 @@
   /* Config Modal colors (light mode) */
   --modal-nav-item: var(--p-gray-700);
 
-  /* API Keys section colors (light mode) */
-  --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
-
   --modal-nav-bg: var(--p-gray-100);
   --modal-nav-section-title: var(--p-gray-500);
   --modal-nav-item-active: var(--p-blue-500);
@@ -489,9 +486,6 @@
   /* Onboarding (dark mode) */
   --onboarding-step-active: var(--p-gray-250);
   --onboarding-step-inactive: var(--p-zinc-500);
-  /* API Keys section colors (dark mode) */
-  --api-keys-card-shadow: none;
-
   /* Migrated from the former saas-theme.css (dark) — see the light block. */
   --modal-nav-bg: var(--p-zinc-850);
   --modal-nav-section-title: var(--p-zinc-300);

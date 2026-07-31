@@ -118,9 +118,6 @@ export default function AdminMailSection() {
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.mail.title", "Mail Configuration")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.mail.description",

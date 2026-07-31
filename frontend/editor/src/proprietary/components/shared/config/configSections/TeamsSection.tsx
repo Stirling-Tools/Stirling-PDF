@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
+  Paper,
   Text,
   TextInput,
   Table,
@@ -273,9 +274,6 @@ export default function TeamsSection() {
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
       <div>
-        <Text fw={600} size="lg">
-          {t("workspace.teams.title")}
-        </Text>
         <Text size="sm" c="dimmed">
           {t("workspace.teams.description")}
         </Text>
@@ -292,160 +290,171 @@ export default function TeamsSection() {
         </Button>
       </Group>
 
-      {/* Teams Table */}
-      <Table
-        horizontalSpacing="md"
-        verticalSpacing="sm"
-        withRowBorders
-        highlightOnHover
-        style={
-          {
-            "--table-border-color": "var(--mantine-color-gray-3)",
-          } as React.CSSProperties
-        }
-      >
-        <Table.Thead>
-          <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-            <Table.Th
-              style={{
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                color: "var(--mantine-color-gray-7)",
-              }}
+      <Paper withBorder p="md" radius="md">
+        <Table
+          horizontalSpacing="md"
+          verticalSpacing="sm"
+          withRowBorders
+          highlightOnHover
+          style={
+            {
+              "--table-border-color": "var(--mantine-color-gray-3)",
+            } as React.CSSProperties
+          }
+        >
+          <Table.Thead>
+            <Table.Tr
+              style={{ backgroundColor: "var(--mantine-color-gray-0)" }}
             >
-              {t("workspace.teams.teamName")}
-            </Table.Th>
-            <Table.Th
-              style={{
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                color: "var(--mantine-color-gray-7)",
-              }}
-            >
-              {t("workspace.teams.totalMembers")}
-            </Table.Th>
-            <Table.Th style={{ width: 50 }}></Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {teams.length === 0 ? (
-            <Table.Tr>
-              <Table.Td colSpan={3}>
-                <Text ta="center" c="dimmed" py="xl">
-                  {t("workspace.teams.noTeamsFound")}
-                </Text>
-              </Table.Td>
-            </Table.Tr>
-          ) : (
-            teams.map((team) => (
-              <Table.Tr
-                key={team.id}
-                style={{ cursor: loginEnabled ? "pointer" : "default" }}
-                onClick={() => loginEnabled && setViewingTeamId(team.id)}
+              <Table.Th
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  color: "var(--mantine-color-gray-7)",
+                }}
               >
-                <Table.Td>
-                  <Group gap="xs">
-                    <Tooltip
-                      label={team.name}
-                      disabled={team.name.length <= 20}
-                      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-                    >
-                      <Text
-                        size="sm"
-                        fw={500}
-                        maw={200}
-                        style={{
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {team.name}
-                      </Text>
-                    </Tooltip>
-                    {team.name === "Internal" && (
-                      <Badge size="xs" color="gray" variant="light">
-                        {t("workspace.teams.system")}
-                      </Badge>
-                    )}
-                  </Group>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" c="dimmed">
-                    {team.userCount || 0}
+                {t("workspace.teams.teamName")}
+              </Table.Th>
+              <Table.Th
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  color: "var(--mantine-color-gray-7)",
+                }}
+              >
+                {t("workspace.teams.totalMembers")}
+              </Table.Th>
+              <Table.Th style={{ width: 50 }}></Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {teams.length === 0 ? (
+              <Table.Tr>
+                <Table.Td colSpan={3}>
+                  <Text ta="center" c="dimmed" py="xl">
+                    {t("workspace.teams.noTeamsFound")}
                   </Text>
                 </Table.Td>
-                <Table.Td onClick={(e) => e.stopPropagation()}>
-                  <Menu position="bottom-end" withinPortal>
-                    <Menu.Target>
-                      <ActionIcon
-                        variant="tertiary"
-                        disabled={!loginEnabled}
-                        aria-label={t(
-                          "workspace.teams.teamActions",
-                          "Team actions",
-                        )}
+              </Table.Tr>
+            ) : (
+              teams.map((team) => (
+                <Table.Tr
+                  key={team.id}
+                  style={{ cursor: loginEnabled ? "pointer" : "default" }}
+                  onClick={() => loginEnabled && setViewingTeamId(team.id)}
+                >
+                  <Table.Td>
+                    <Group gap="xs">
+                      <Tooltip
+                        label={team.name}
+                        disabled={team.name.length <= 20}
+                        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
                       >
-                        <LocalIcon
-                          icon="more-vert"
-                          width="1rem"
-                          height="1rem"
-                        />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown
-                      style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-                    >
-                      <Menu.Item
-                        leftSection={
+                        <Text
+                          size="sm"
+                          fw={500}
+                          maw={200}
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {team.name}
+                        </Text>
+                      </Tooltip>
+                      {team.name === "Internal" && (
+                        <Badge size="xs" color="gray" variant="light">
+                          {t("workspace.teams.system")}
+                        </Badge>
+                      )}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" c="dimmed">
+                      {team.userCount || 0}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td onClick={(e) => e.stopPropagation()}>
+                    <Menu position="bottom-end" withinPortal>
+                      <Menu.Target>
+                        <ActionIcon
+                          variant="tertiary"
+                          disabled={!loginEnabled}
+                          aria-label={t(
+                            "workspace.teams.teamActions",
+                            "Team actions",
+                          )}
+                        >
                           <LocalIcon
-                            icon="visibility"
+                            icon="more-vert"
                             width="1rem"
                             height="1rem"
                           />
-                        }
-                        onClick={() => setViewingTeamId(team.id)}
-                        disabled={!loginEnabled}
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown
+                        style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
                       >
-                        {t("workspace.teams.viewTeam", "View Team")}
-                      </Menu.Item>
-                      <Menu.Item
-                        leftSection={
-                          <LocalIcon icon="group" width="1rem" height="1rem" />
-                        }
-                        onClick={() => openAddMemberModal(team)}
-                        disabled={!loginEnabled}
-                      >
-                        {t("workspace.teams.addMember")}
-                      </Menu.Item>
-                      <Menu.Item
-                        leftSection={
-                          <LocalIcon icon="edit" width="1rem" height="1rem" />
-                        }
-                        onClick={() => openRenameModal(team)}
-                        disabled={!loginEnabled}
-                      >
-                        {t("workspace.teams.renameTeamLabel")}
-                      </Menu.Item>
-                      <Menu.Divider />
-                      <Menu.Item
-                        color="red"
-                        leftSection={
-                          <LocalIcon icon="delete" width="1rem" height="1rem" />
-                        }
-                        onClick={() => handleDeleteTeam(team)}
-                        disabled={!loginEnabled || team.name === "Internal"}
-                      >
-                        {t("workspace.teams.deleteTeamLabel")}
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Table.Td>
-              </Table.Tr>
-            ))
-          )}
-        </Table.Tbody>
-      </Table>
+                        <Menu.Item
+                          leftSection={
+                            <LocalIcon
+                              icon="visibility"
+                              width="1rem"
+                              height="1rem"
+                            />
+                          }
+                          onClick={() => setViewingTeamId(team.id)}
+                          disabled={!loginEnabled}
+                        >
+                          {t("workspace.teams.viewTeam", "View Team")}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={
+                            <LocalIcon
+                              icon="group"
+                              width="1rem"
+                              height="1rem"
+                            />
+                          }
+                          onClick={() => openAddMemberModal(team)}
+                          disabled={!loginEnabled}
+                        >
+                          {t("workspace.teams.addMember")}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={
+                            <LocalIcon icon="edit" width="1rem" height="1rem" />
+                          }
+                          onClick={() => openRenameModal(team)}
+                          disabled={!loginEnabled}
+                        >
+                          {t("workspace.teams.renameTeamLabel")}
+                        </Menu.Item>
+                        <Menu.Divider />
+                        <Menu.Item
+                          color="red"
+                          leftSection={
+                            <LocalIcon
+                              icon="delete"
+                              width="1rem"
+                              height="1rem"
+                            />
+                          }
+                          onClick={() => handleDeleteTeam(team)}
+                          disabled={!loginEnabled || team.name === "Internal"}
+                        >
+                          {t("workspace.teams.deleteTeamLabel")}
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            )}
+          </Table.Tbody>
+        </Table>
+      </Paper>
 
       {/* Create Team Modal */}
       <Modal

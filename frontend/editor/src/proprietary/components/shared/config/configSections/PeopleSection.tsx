@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
+  Paper,
   Text,
   TextInput,
   Table,
@@ -464,9 +465,6 @@ export default function PeopleSection() {
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
       <div>
-        <Text fw={600} size="lg">
-          {t("workspace.people.title")}
-        </Text>
         <Text size="sm" c="dimmed">
           {t("workspace.people.description")}
         </Text>
@@ -587,398 +585,410 @@ export default function PeopleSection() {
         </Tooltip>
       </Group>
 
-      {/* Members Table */}
-      <Table
-        horizontalSpacing="md"
-        verticalSpacing="sm"
-        withRowBorders
-        style={
-          {
-            "--table-border-color": "var(--mantine-color-gray-3)",
-          } as React.CSSProperties
-        }
-      >
-        <Table.Thead>
-          <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-            <Table.Th
-              style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }}
-              fz="sm"
+      <Paper withBorder p="md" radius="md">
+        <Table
+          horizontalSpacing="md"
+          verticalSpacing="sm"
+          withRowBorders
+          style={
+            {
+              "--table-border-color": "var(--mantine-color-gray-3)",
+            } as React.CSSProperties
+          }
+        >
+          <Table.Thead>
+            <Table.Tr
+              style={{ backgroundColor: "var(--mantine-color-gray-0)" }}
             >
-              {t("workspace.people.user")}
-            </Table.Th>
-            <Table.Th
-              style={{
-                fontWeight: 600,
-                color: "var(--mantine-color-gray-7)",
-                whiteSpace: "nowrap",
-              }}
-              fz="sm"
-            >
-              {t("workspace.people.role")}
-            </Table.Th>
-            <Table.Th
-              style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }}
-              fz="sm"
-            >
-              {t("workspace.people.team")}
-            </Table.Th>
-            <Table.Th w={50}></Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {filteredUsers.length === 0 ? (
-            <Table.Tr>
-              <Table.Td colSpan={4}>
-                <Text ta="center" c="dimmed" py="xl">
-                  {t("workspace.people.noMembersFound")}
-                </Text>
-              </Table.Td>
-            </Table.Tr>
-          ) : (
-            filteredUsers.map((user) => (
-              <Table.Tr
-                key={user.id}
-                style={
-                  isCurrentUser(user)
-                    ? {
-                        backgroundColor:
-                          "color-mix(in srgb, var(--c-primary) 8%, transparent)",
-                      }
-                    : undefined
-                }
+              <Table.Th
+                style={{
+                  fontWeight: 600,
+                  color: "var(--mantine-color-gray-7)",
+                }}
+                fz="sm"
               >
-                <Table.Td>
-                  <Group gap="xs" wrap="nowrap">
-                    <Tooltip
-                      label={
-                        !user.enabled
-                          ? t("workspace.people.disabled", "Disabled")
-                          : user.isActive
-                            ? t(
-                                "workspace.people.activeSession",
-                                "Active session",
-                              )
-                            : t("workspace.people.active", "Active")
-                      }
-                      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-                    >
-                      <Avatar
-                        size={32}
-                        color={user.enabled ? "blue" : "gray"}
-                        styles={{
-                          root: {
-                            border: user.isActive
-                              ? "2px solid var(--mantine-color-green-6)"
-                              : "none",
-                            opacity: user.enabled ? 1 : 0.5,
-                          },
-                        }}
-                      >
-                        {user.username.charAt(0).toUpperCase()}
-                      </Avatar>
-                    </Tooltip>
-                    <Box style={{ minWidth: 0, flex: 1 }}>
-                      <Group gap={6} wrap="nowrap" align="center">
-                        <Tooltip
-                          label={user.username}
-                          disabled={user.username.length <= 20}
-                          zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-                        >
-                          <Text
-                            size="sm"
-                            fw={500}
-                            maw={200}
-                            style={{
-                              lineHeight: 1.3,
-                              opacity: user.enabled ? 1 : 0.6,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {user.username}
-                          </Text>
-                        </Tooltip>
-                        {isLockedUser(user) && (
-                          <Badge color="orange" variant="light" size="xs">
-                            {t("workspace.people.lockedBadge", "Locked")}
-                          </Badge>
-                        )}
-                      </Group>
-                      {user.email && (
-                        <Text
-                          size="xs"
-                          c="dimmed"
-                          truncate
-                          style={{ lineHeight: 1.3 }}
-                        >
-                          {user.email}
-                        </Text>
-                      )}
-                    </Box>
-                  </Group>
+                {t("workspace.people.user")}
+              </Table.Th>
+              <Table.Th
+                style={{
+                  fontWeight: 600,
+                  color: "var(--mantine-color-gray-7)",
+                  whiteSpace: "nowrap",
+                }}
+                fz="sm"
+              >
+                {t("workspace.people.role")}
+              </Table.Th>
+              <Table.Th
+                style={{
+                  fontWeight: 600,
+                  color: "var(--mantine-color-gray-7)",
+                }}
+                fz="sm"
+              >
+                {t("workspace.people.team")}
+              </Table.Th>
+              <Table.Th w={50}></Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {filteredUsers.length === 0 ? (
+              <Table.Tr>
+                <Table.Td colSpan={4}>
+                  <Text ta="center" c="dimmed" py="xl">
+                    {t("workspace.people.noMembersFound")}
+                  </Text>
                 </Table.Td>
-                <Table.Td style={{ whiteSpace: "nowrap" }}>
-                  <Badge
-                    size="sm"
-                    variant="light"
-                    color={
-                      getUserRoleId(user) === "ROLE_ADMIN"
-                        ? "blue"
-                        : getUserRoleId(user) === "ROLE_PRO_USER"
-                          ? "grape"
-                          : "cyan"
-                    }
-                    styles={{
-                      root: { maxWidth: "none" },
-                      label: { overflow: "visible" },
-                    }}
-                  >
-                    {getRoleLabel(getUserRoleId(user))}
-                  </Badge>
-                </Table.Td>
-                <Table.Td>
-                  {user.team?.name ? (
-                    <Tooltip
-                      label={user.team.name}
-                      disabled={user.team.name.length <= 20}
-                      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-                    >
-                      <Text
-                        size="sm"
-                        maw={150}
-                        style={{
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {user.team.name}
-                      </Text>
-                    </Tooltip>
-                  ) : (
-                    <Text size="sm">—</Text>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs" wrap="nowrap">
-                    {/* Info icon with tooltip */}
-                    <Tooltip
-                      label={
-                        <div>
-                          <Text size="xs" fw={500}>
-                            Authentication:{" "}
-                            {user.authenticationType || "Unknown"}
-                          </Text>
-                          <Text size="xs">
-                            Last Activity:{" "}
-                            {user.lastRequest &&
-                            new Date(user.lastRequest).getFullYear() >= 1980
-                              ? new Date(user.lastRequest).toLocaleString()
-                              : t("never", "Never")}
-                          </Text>
-                        </div>
-                      }
-                      multiline
-                      w={220}
-                      position="left"
-                      withArrow
-                      zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
-                    >
-                      <ActionIcon
-                        variant="tertiary"
-                        size="sm"
-                        aria-label={t("workspace.people.userInfo", "User info")}
-                      >
-                        <LocalIcon icon="info" width="1rem" height="1rem" />
-                      </ActionIcon>
-                    </Tooltip>
-
-                    {/* Actions menu */}
-                    {!isCurrentUser(user) && (
-                      <Menu position="bottom-end" withinPortal>
-                        <Menu.Target>
-                          <ActionIcon
-                            variant="tertiary"
-                            disabled={!loginEnabled}
-                            aria-label={t(
-                              "workspace.people.memberActions",
-                              "Member actions",
-                            )}
-                          >
-                            <LocalIcon
-                              icon="more-vert"
-                              width="1rem"
-                              height="1rem"
-                            />
-                          </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown
-                          style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-                        >
-                          {!isCurrentUser(user) && (
-                            <Menu.Item
-                              leftSection={
-                                <LocalIcon
-                                  icon="edit"
-                                  width="1rem"
-                                  height="1rem"
-                                />
-                              }
-                              onClick={() => openEditModal(user)}
-                              disabled={!loginEnabled}
-                            >
-                              {t(
-                                "workspace.people.editRole",
-                                "Edit Role & Team",
-                              )}
-                            </Menu.Item>
-                          )}
-                          {!isCurrentUser(user) && (
-                            <Menu.Item
-                              leftSection={
-                                <LocalIcon
-                                  icon="lock"
-                                  width="1rem"
-                                  height="1rem"
-                                />
-                              }
-                              onClick={() => openChangePasswordModal(user)}
-                              disabled={!loginEnabled}
-                            >
-                              {t(
-                                "workspace.people.changePassword.action",
-                                "Change password",
-                              )}
-                            </Menu.Item>
-                          )}
-                          {!isCurrentUser(user) && (
-                            <Menu.Item
-                              leftSection={
-                                user.enabled ? (
-                                  <LocalIcon
-                                    icon="person-off"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
-                                ) : (
-                                  <LocalIcon
-                                    icon="person-check"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+              </Table.Tr>
+            ) : (
+              filteredUsers.map((user) => (
+                <Table.Tr
+                  key={user.id}
+                  style={
+                    isCurrentUser(user)
+                      ? {
+                          backgroundColor:
+                            "color-mix(in srgb, var(--c-primary) 8%, transparent)",
+                        }
+                      : undefined
+                  }
+                >
+                  <Table.Td>
+                    <Group gap="xs" wrap="nowrap">
+                      <Tooltip
+                        label={
+                          !user.enabled
+                            ? t("workspace.people.disabled", "Disabled")
+                            : user.isActive
+                              ? t(
+                                  "workspace.people.activeSession",
+                                  "Active session",
                                 )
-                              }
-                              onClick={() => handleToggleEnabled(user)}
-                              disabled={!loginEnabled}
+                              : t("workspace.people.active", "Active")
+                        }
+                        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                      >
+                        <Avatar
+                          size={32}
+                          color={user.enabled ? "blue" : "gray"}
+                          styles={{
+                            root: {
+                              border: user.isActive
+                                ? "2px solid var(--mantine-color-green-6)"
+                                : "none",
+                              opacity: user.enabled ? 1 : 0.5,
+                            },
+                          }}
+                        >
+                          {user.username.charAt(0).toUpperCase()}
+                        </Avatar>
+                      </Tooltip>
+                      <Box style={{ minWidth: 0, flex: 1 }}>
+                        <Group gap={6} wrap="nowrap" align="center">
+                          <Tooltip
+                            label={user.username}
+                            disabled={user.username.length <= 20}
+                            zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                          >
+                            <Text
+                              size="sm"
+                              fw={500}
+                              maw={200}
+                              style={{
+                                lineHeight: 1.3,
+                                opacity: user.enabled ? 1 : 0.6,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
                             >
-                              {user.enabled
-                                ? t("workspace.people.disable")
-                                : t("workspace.people.enable")}
-                            </Menu.Item>
+                              {user.username}
+                            </Text>
+                          </Tooltip>
+                          {isLockedUser(user) && (
+                            <Badge color="orange" variant="light" size="xs">
+                              {t("workspace.people.lockedBadge", "Locked")}
+                            </Badge>
                           )}
-                          {!isCurrentUser(user) && isLockedUser(user) && (
-                            <Menu.Item
-                              leftSection={
-                                <LocalIcon
-                                  icon="lock-open"
-                                  width="1rem"
-                                  height="1rem"
-                                />
-                              }
-                              onClick={() => handleUnlockUser(user)}
+                        </Group>
+                        {user.email && (
+                          <Text
+                            size="xs"
+                            c="dimmed"
+                            truncate
+                            style={{ lineHeight: 1.3 }}
+                          >
+                            {user.email}
+                          </Text>
+                        )}
+                      </Box>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td style={{ whiteSpace: "nowrap" }}>
+                    <Badge
+                      size="sm"
+                      variant="light"
+                      color={
+                        getUserRoleId(user) === "ROLE_ADMIN"
+                          ? "blue"
+                          : getUserRoleId(user) === "ROLE_PRO_USER"
+                            ? "grape"
+                            : "cyan"
+                      }
+                      styles={{
+                        root: { maxWidth: "none" },
+                        label: { overflow: "visible" },
+                      }}
+                    >
+                      {getRoleLabel(getUserRoleId(user))}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    {user.team?.name ? (
+                      <Tooltip
+                        label={user.team.name}
+                        disabled={user.team.name.length <= 20}
+                        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                      >
+                        <Text
+                          size="sm"
+                          maw={150}
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {user.team.name}
+                        </Text>
+                      </Tooltip>
+                    ) : (
+                      <Text size="sm">—</Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs" wrap="nowrap">
+                      {/* Info icon with tooltip */}
+                      <Tooltip
+                        label={
+                          <div>
+                            <Text size="xs" fw={500}>
+                              Authentication:{" "}
+                              {user.authenticationType || "Unknown"}
+                            </Text>
+                            <Text size="xs">
+                              Last Activity:{" "}
+                              {user.lastRequest &&
+                              new Date(user.lastRequest).getFullYear() >= 1980
+                                ? new Date(user.lastRequest).toLocaleString()
+                                : t("never", "Never")}
+                            </Text>
+                          </div>
+                        }
+                        multiline
+                        w={220}
+                        position="left"
+                        withArrow
+                        zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
+                      >
+                        <ActionIcon
+                          variant="tertiary"
+                          size="sm"
+                          aria-label={t(
+                            "workspace.people.userInfo",
+                            "User info",
+                          )}
+                        >
+                          <LocalIcon icon="info" width="1rem" height="1rem" />
+                        </ActionIcon>
+                      </Tooltip>
+
+                      {/* Actions menu */}
+                      {!isCurrentUser(user) && (
+                        <Menu position="bottom-end" withinPortal>
+                          <Menu.Target>
+                            <ActionIcon
+                              variant="tertiary"
                               disabled={!loginEnabled}
-                            >
-                              {t(
-                                "workspace.people.unlockAccount",
-                                "Unlock Account",
+                              aria-label={t(
+                                "workspace.people.memberActions",
+                                "Member actions",
                               )}
-                            </Menu.Item>
-                          )}
-                          {!isCurrentUser(user) && user.mfaEnabled && (
-                            <>
-                              <Menu.Divider />
+                            >
+                              <LocalIcon
+                                icon="more-vert"
+                                width="1rem"
+                                height="1rem"
+                              />
+                            </ActionIcon>
+                          </Menu.Target>
+                          <Menu.Dropdown
+                            style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                          >
+                            {!isCurrentUser(user) && (
                               <Menu.Item
-                                color="red"
                                 leftSection={
                                   <LocalIcon
-                                    icon="key"
+                                    icon="edit"
                                     width="1rem"
                                     height="1rem"
                                   />
                                 }
-                                onClick={async () => {
-                                  try {
-                                    await userManagementService.disableMfaByAdmin(
-                                      user.username,
-                                    );
-                                    alert({
-                                      alertType: "success",
-                                      title: t(
-                                        "workspace.people.mfa.adminDisableSuccess",
-                                        "MFA disabled successfully for user",
-                                      ),
-                                    });
-                                  } catch (error: unknown) {
-                                    console.error(
-                                      "[PeopleSection] Failed to disable MFA for user:",
-                                      error,
-                                    );
-                                    const errorMessage = isAxiosError(error)
-                                      ? error.response?.data?.message ||
-                                        error.response?.data?.error ||
-                                        error.message
-                                      : (error instanceof Error
-                                          ? error.message
-                                          : undefined) ||
-                                        t(
-                                          "workspace.people.mfa.adminDisableError",
-                                          "Failed to disable MFA for user",
-                                        );
-                                    alert({
-                                      alertType: "error",
-                                      title: errorMessage,
-                                    });
-                                  }
-                                }}
+                                onClick={() => openEditModal(user)}
                                 disabled={!loginEnabled}
                               >
                                 {t(
-                                  "workspace.people.mfa.disableByAdmin",
-                                  "Disable MFA",
+                                  "workspace.people.editRole",
+                                  "Edit Role & Team",
                                 )}
                               </Menu.Item>
-                            </>
-                          )}
-                          {!isCurrentUser(user) && (
-                            <>
-                              <Menu.Divider />
+                            )}
+                            {!isCurrentUser(user) && (
                               <Menu.Item
-                                color="red"
                                 leftSection={
                                   <LocalIcon
-                                    icon="delete"
+                                    icon="lock"
                                     width="1rem"
                                     height="1rem"
                                   />
                                 }
-                                onClick={() => handleDeleteUser(user)}
+                                onClick={() => openChangePasswordModal(user)}
                                 disabled={!loginEnabled}
                               >
-                                {t("workspace.people.deleteUser")}
+                                {t(
+                                  "workspace.people.changePassword.action",
+                                  "Change password",
+                                )}
                               </Menu.Item>
-                            </>
-                          )}
-                        </Menu.Dropdown>
-                      </Menu>
-                    )}
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))
-          )}
-        </Table.Tbody>
-      </Table>
+                            )}
+                            {!isCurrentUser(user) && (
+                              <Menu.Item
+                                leftSection={
+                                  user.enabled ? (
+                                    <LocalIcon
+                                      icon="person-off"
+                                      width="1rem"
+                                      height="1rem"
+                                    />
+                                  ) : (
+                                    <LocalIcon
+                                      icon="person-check"
+                                      width="1rem"
+                                      height="1rem"
+                                    />
+                                  )
+                                }
+                                onClick={() => handleToggleEnabled(user)}
+                                disabled={!loginEnabled}
+                              >
+                                {user.enabled
+                                  ? t("workspace.people.disable")
+                                  : t("workspace.people.enable")}
+                              </Menu.Item>
+                            )}
+                            {!isCurrentUser(user) && isLockedUser(user) && (
+                              <Menu.Item
+                                leftSection={
+                                  <LocalIcon
+                                    icon="lock-open"
+                                    width="1rem"
+                                    height="1rem"
+                                  />
+                                }
+                                onClick={() => handleUnlockUser(user)}
+                                disabled={!loginEnabled}
+                              >
+                                {t(
+                                  "workspace.people.unlockAccount",
+                                  "Unlock Account",
+                                )}
+                              </Menu.Item>
+                            )}
+                            {!isCurrentUser(user) && user.mfaEnabled && (
+                              <>
+                                <Menu.Divider />
+                                <Menu.Item
+                                  color="red"
+                                  leftSection={
+                                    <LocalIcon
+                                      icon="key"
+                                      width="1rem"
+                                      height="1rem"
+                                    />
+                                  }
+                                  onClick={async () => {
+                                    try {
+                                      await userManagementService.disableMfaByAdmin(
+                                        user.username,
+                                      );
+                                      alert({
+                                        alertType: "success",
+                                        title: t(
+                                          "workspace.people.mfa.adminDisableSuccess",
+                                          "MFA disabled successfully for user",
+                                        ),
+                                      });
+                                    } catch (error: unknown) {
+                                      console.error(
+                                        "[PeopleSection] Failed to disable MFA for user:",
+                                        error,
+                                      );
+                                      const errorMessage = isAxiosError(error)
+                                        ? error.response?.data?.message ||
+                                          error.response?.data?.error ||
+                                          error.message
+                                        : (error instanceof Error
+                                            ? error.message
+                                            : undefined) ||
+                                          t(
+                                            "workspace.people.mfa.adminDisableError",
+                                            "Failed to disable MFA for user",
+                                          );
+                                      alert({
+                                        alertType: "error",
+                                        title: errorMessage,
+                                      });
+                                    }
+                                  }}
+                                  disabled={!loginEnabled}
+                                >
+                                  {t(
+                                    "workspace.people.mfa.disableByAdmin",
+                                    "Disable MFA",
+                                  )}
+                                </Menu.Item>
+                              </>
+                            )}
+                            {!isCurrentUser(user) && (
+                              <>
+                                <Menu.Divider />
+                                <Menu.Item
+                                  color="red"
+                                  leftSection={
+                                    <LocalIcon
+                                      icon="delete"
+                                      width="1rem"
+                                      height="1rem"
+                                    />
+                                  }
+                                  onClick={() => handleDeleteUser(user)}
+                                  disabled={!loginEnabled}
+                                >
+                                  {t("workspace.people.deleteUser")}
+                                </Menu.Item>
+                              </>
+                            )}
+                          </Menu.Dropdown>
+                        </Menu>
+                      )}
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            )}
+          </Table.Tbody>
+        </Table>
+      </Paper>
 
       {/* Invite Members Modal (reusable) */}
       <InviteMembersModal

@@ -252,9 +252,6 @@ export default function AdminEndpointsSection() {
         <LoginRequiredBanner show={!loginEnabled} />
 
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.endpoints.title", "API Endpoints")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.endpoints.description",

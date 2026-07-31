@@ -156,9 +156,6 @@ export default function AdminMcpSection() {
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.mcp.title", "MCP Server")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.mcp.description",

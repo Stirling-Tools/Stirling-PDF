@@ -1,9 +1,15 @@
 /* AppConfigModal styles */
+
+/* Nav rail is a surface, like the app's side panels; content is the canvas. */
+.mantine-Modal-content:has(.modal-container) {
+  background: var(--c-bg);
+}
 .modal-container {
   display: flex;
   gap: 0;
   height: 45rem; /* 720px */
   max-height: 90dvh; /* matches Mantine's default modal max-height so the outer wrapper never has to scroll */
+  background: var(--c-bg);
 }
 
 .modal-nav {
@@ -13,6 +19,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border-subtle);
 }
 
 /* Mobile: compact icon-only navigation */
@@ -121,6 +129,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--c-bg);
 }
 
 .modal-content-scroll {
@@ -166,11 +175,28 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
+  background: var(--c-bg);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .modal-body {
   padding: 2rem;
   padding-top: 1rem;
+}
+
+/* Normalise every section's Paper/Card here; exclusions are inline overlays. */
+.modal-body
+  :is(.mantine-Paper-root, .mantine-Card-root):not(
+    .mantine-Menu-dropdown,
+    .mantine-Popover-dropdown,
+    .mantine-HoverCard-dropdown,
+    .mantine-Modal-content,
+    .mantine-Tooltip-tooltip
+  ) {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-nav);
+  box-shadow: none;
 }
 
 .settings-search-select {
@@ -214,7 +240,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--c-surface);
+  background: var(--c-bg);
   border-top: 1px solid var(--c-border-subtle);
   padding: 1rem 2rem;
   margin: 0 -2rem;

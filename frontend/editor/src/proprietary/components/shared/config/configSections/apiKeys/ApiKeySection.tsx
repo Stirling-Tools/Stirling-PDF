@@ -23,15 +23,8 @@ export default function ApiKeySection({
   const { t } = useTranslation();
   return (
     <>
-      <Paper
-        radius="md"
-        p={18}
-        style={{
-          background: "var(--c-surface)",
-          border: "1px solid var(--c-border)",
-          boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
-        }}
-      >
+      {/* Surface treatment comes from the card rule in AppConfigModal.css. */}
+      <Paper p={18}>
         <Group align="flex-end" wrap="nowrap">
           <Box style={{ flex: 1 }}>
             <Box
