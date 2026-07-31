@@ -1999,6 +1999,12 @@
   "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Paused": [
     "color-contrast"
   ],
+  "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Sharing Every Channel": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Sharing Narrowed": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: With Flagged Items": [
     "color-contrast"
   ],
@@ -2037,6 +2043,11 @@
     "label"
   ],
   "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Edit": [
+    "color-contrast",
+    "label"
+  ],
+  "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Sharing": [
+    "button-name",
     "color-contrast",
     "label"
   ],

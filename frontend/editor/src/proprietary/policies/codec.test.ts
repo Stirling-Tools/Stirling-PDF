@@ -30,11 +30,12 @@ describe("toWirePolicy", () => {
     expect(toWirePolicy(FULL_STATE).trigger).toBeNull();
   });
 
-  it("gives the sharing category a real share trigger", () => {
-    // Egress is enforced server-side with no client in the loop, so the backend
-    // has to be able to find the policy by trigger type.
+  it("marks the sharing category by categoryId, not a trigger", () => {
+    // Egress has no source to hang a trigger on, so the backend finds the
+    // policy by the category it was authored under.
     const wire = toWirePolicy({ ...FULL_STATE, categoryId: "sharing" });
-    expect(wire.trigger).toEqual({ type: "share", options: {} });
+    expect(wire.trigger).toBeNull();
+    expect(wire.output.options.categoryId).toBe("sharing");
   });
 
   it("sets output.type to inline", () => {

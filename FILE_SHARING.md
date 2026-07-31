@@ -300,7 +300,7 @@ Returns per-user access history (username, VIEW/DOWNLOAD, timestamp), sorted des
 
 ## Sharing Policies (egress enforcement)
 
-A **Sharing** policy governs how documents leave the workspace. It is an ordinary stored policy (`/api/v1/policies`) carrying the `share` trigger, so it is created and edited in the portal's Policies page like any other — but nothing sweeps or polls for it. The sharing endpoints evaluate it inline, on the request that grants or delivers a share.
+A **Sharing** policy governs how documents leave the workspace. It is an ordinary stored policy (`/api/v1/policies`) authored under the `sharing` category, so it is created and edited in the portal's Policies page like any other - but it has no input source and nothing sweeps or polls for it. The sharing endpoints evaluate it inline, on the request that grants or delivers a share.
 
 The governing policies are always the **file owner's team's**, never the accessor's.
 

@@ -17,7 +17,6 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
-import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.model.User;
@@ -67,6 +66,28 @@ class ShareEgressPolicyServiceTest {
     }
 
     @Test
+    void aPolicyFromAnotherCategoryDoesNotGovernEgress() {
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Security Policy",
+                        owner.getUsername(),
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep(WATERMARK, Map.of(), Map.of())),
+                        new OutputSpec(
+                                "inline",
+                                Map.of(
+                                        "categoryId",
+                                        "security",
+                                        "fieldValues",
+                                        Map.of("externalRecipients", "block"))),
+                        TEAM));
+
+        assertTrue(grant("bob@partner.com", ShareAccessRole.EDITOR).allowed());
+    }
+
+    @Test
     void adisabledPolicyDoesNotGovernAnything() {
         Policy policy = sharing(Map.of("externalRecipients", "block"), List.of(), TEAM);
         policyStore.save(
@@ -75,8 +96,7 @@ class ShareEgressPolicyServiceTest {
                         policy.name(),
                         policy.owner(),
                         false,
-                        policy.trigger(),
-                        policy.sourceIds(),
+                        policy.inputs(),
                         policy.steps(),
                         policy.output(),
                         policy.outputIds(),
@@ -248,7 +268,6 @@ class ShareEgressPolicyServiceTest {
                         "Sharing Policy",
                         owner.getUsername(),
                         true,
-                        new TriggerConfig("share", Map.of()),
                         List.of(),
                         List.of(),
                         new OutputSpec(
@@ -310,7 +329,6 @@ class ShareEgressPolicyServiceTest {
                 "Sharing Policy",
                 owner.getUsername(),
                 true,
-                new TriggerConfig("share", Map.of()),
                 List.of(),
                 List.of(new PipelineStep(WATERMARK, Map.of(), Map.of())),
                 new OutputSpec(

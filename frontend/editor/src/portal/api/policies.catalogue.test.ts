@@ -97,8 +97,8 @@ describe("sharing policy round-trip", () => {
     t,
   );
 
-  it("persists a real share trigger so the backend can fire it", () => {
-    expect(wire.trigger).toEqual({ type: "share", options: {} });
+  it("carries no trigger - the backend finds egress policies by category", () => {
+    expect(wire.trigger).toBeNull();
   });
 
   it("persists the channels the backend narrows on", () => {

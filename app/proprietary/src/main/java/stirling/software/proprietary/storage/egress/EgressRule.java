@@ -49,6 +49,9 @@ public record EgressRule(
         }
     }
 
+    /** The portal category id a Sharing policy is stored under. */
+    static final String CATEGORY_SHARING = "sharing";
+
     /** Field keys as persisted by the portal's Sharing policy settings. */
     static final String FIELD_DEFAULT_ACCESS = "defaultAccess";
 
@@ -57,10 +60,17 @@ public record EgressRule(
     static final String FIELD_LINK_EXPIRY = "linkExpiry";
     static final String FIELD_DOWNLOADS = "downloads";
 
+    /**
+     * Whether this stored policy is a Sharing policy. Egress has no source to hang a trigger on, so
+     * the portal category the policy was authored under is what marks it, as for classification.
+     */
+    public static boolean governsSharing(Policy policy) {
+        return CATEGORY_SHARING.equals(optionsOf(policy).get("categoryId"));
+    }
+
     /** Read a stored policy as an egress rule. */
     public static EgressRule from(Policy policy) {
-        Map<String, Object> options =
-                policy.output() == null ? Map.of() : policy.output().options();
+        Map<String, Object> options = optionsOf(policy);
         Map<String, Object> fields = asMap(options.get("fieldValues"));
         return new EgressRule(
                 policy.id(),
@@ -77,6 +87,10 @@ public record EgressRule(
     /** Whether this rule governs the given channel. */
     public boolean covers(ShareChannel channel) {
         return channels.isEmpty() || channels.contains(channel);
+    }
+
+    private static Map<String, Object> optionsOf(Policy policy) {
+        return policy.output() == null ? Map.of() : policy.output().options();
     }
 
     private static Set<ShareChannel> parseChannels(Object raw) {

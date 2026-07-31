@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -17,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
-import stirling.software.proprietary.policy.trigger.ShareTrigger;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
@@ -148,8 +146,8 @@ public class ShareEgressPolicyService {
         Long ownerTeamId =
                 owner != null && owner.getTeam() != null ? owner.getTeam().getId() : null;
         List<EgressRule> rules = new ArrayList<>();
-        for (Policy policy : policyStore.findByTriggerType(ShareTrigger.TYPE)) {
-            if (!Objects.equals(policy.teamId(), ownerTeamId)) {
+        for (Policy policy : policyStore.findByTeam(ownerTeamId)) {
+            if (!policy.enabled() || !EgressRule.governsSharing(policy)) {
                 continue;
             }
             EgressRule rule = EgressRule.from(policy);

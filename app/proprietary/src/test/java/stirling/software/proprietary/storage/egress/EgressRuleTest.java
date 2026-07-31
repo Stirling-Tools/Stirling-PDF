@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
-import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 
 /** Reading a policy's untyped options bag as a typed rule, and still coming out usable. */
@@ -96,7 +95,6 @@ class EgressRuleTest {
                 "Sharing Policy",
                 "owner@example.com",
                 true,
-                new TriggerConfig("share", Map.of()),
                 List.of(),
                 List.of(new PipelineStep("/api/v1/security/add-watermark", Map.of(), Map.of())),
                 new OutputSpec("inline", options),

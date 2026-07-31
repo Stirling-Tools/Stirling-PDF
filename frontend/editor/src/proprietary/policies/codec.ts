@@ -1,8 +1,8 @@
 /**
  * Bidirectional codec between the portal's frontend `PolicyDecodedState` and
  * the backend `WirePolicy`. All policy-level metadata rides in
- * `output.options`; `trigger` is null except for egress policies, which the
- * server fires itself. Mirrors the editor's `buildBackendPolicy` /
+ * `output.options`, including the `categoryId` the server reads back to find
+ * egress policies. Mirrors the editor's `buildBackendPolicy` /
  * `fromBackendPolicy` from `policyPipeline.ts`, minus the editor-only
  * `automation` blob and toolRegistry coupling.
  */
@@ -11,23 +11,12 @@ import type {
   PolicyDecodedState,
   WireOutputOptions,
   WirePolicy,
-  WireTriggerConfig,
 } from "@app/policies/types";
 
 const DEFAULTS = {
   maxRetries: 3,
   retryDelayMinutes: 5,
 } as const;
-
-/** Category ids the backend must fire itself, and the trigger type each uses. */
-const SERVER_TRIGGERS: Record<string, string> = {
-  sharing: "share",
-};
-
-function triggerFor(categoryId: string): WireTriggerConfig | null {
-  const type = SERVER_TRIGGERS[categoryId];
-  return type ? { type, options: {} } : null;
-}
 
 export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
   const options: WireOutputOptions = {
@@ -48,7 +37,7 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     name: state.name,
     owner: "",
     enabled: state.enabled,
-    trigger: triggerFor(state.categoryId),
+    trigger: null,
     steps: state.steps,
     output: { type: "inline", options },
   };

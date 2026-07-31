@@ -69,7 +69,7 @@ export interface PolicyCategory {
   providesClassification?: boolean;
   comingSoon?: boolean;
   requiresAiEngine?: boolean;
-  /** Fires when a document leaves (a share), not on upload/export: real `share` trigger, share
+  /** Fires when a document leaves (a share), not on upload/export: enforced server-side, share
    *  channels instead of sources, and valid with no tool chain at all. */
   runsAtEgress?: boolean;
 }
