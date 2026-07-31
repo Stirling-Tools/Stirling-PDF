@@ -193,8 +193,7 @@ class PolicyValidatorTest {
                 "p",
                 "owner",
                 true,
-                null,
-                List.of(folderSourceId()),
+                List.of(PipelineInput.manual(folderSourceId())),
                 java.util.Arrays.stream(operations)
                         .map(op -> new PipelineStep(op, Map.of(), Map.of()))
                         .toList(),

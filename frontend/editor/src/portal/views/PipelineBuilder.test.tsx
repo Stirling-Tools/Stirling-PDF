@@ -284,12 +284,13 @@ describe("PipelineBuilder", () => {
   it("blocks saving a chain whose steps can't run on each other", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Broken chain" },
-    });
-    fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      { target: { value: "Broken chain" } },
     );
+    await pickInputSource("Claims intake");
     fireEvent.click(screen.getByText("pick output"));
 
     // Extract images emits images; compress only takes a PDF, so it can never run.
@@ -309,12 +310,13 @@ describe("PipelineBuilder", () => {
   it("allows a chain whose steps line up", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Fine chain" },
-    });
-    fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      { target: { value: "Fine chain" } },
     );
+    await pickInputSource("Claims intake");
     fireEvent.click(screen.getByText("pick output"));
 
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));

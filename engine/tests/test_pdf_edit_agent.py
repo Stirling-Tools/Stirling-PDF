@@ -137,6 +137,33 @@ async def test_pdf_edit_agent_builds_multi_step_plan(runtime: AppRuntime) -> Non
     assert isinstance(response.steps[1].parameters, FlattenParams)
 
 
+_ANY_SELECTION = PdfEditPlanSelection(operations=[ToolEndpoint.ROTATE_PDF], summary="s", rationale="r")
+
+
+def test_selection_prompt_says_nothing_about_output_formats(runtime: AppRuntime) -> None:
+    # Compatibility is only raised once a plan has actually failed, so the operation list stays
+    # about what each tool does. Leaking format hints here re-inflates an already large prompt.
+    agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
+    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS), [])
+    assert "outputs:" not in prompt
+    assert "IMAGE (several files)" not in prompt
+
+
+def test_repair_prompt_offers_reorder_or_telling_the_user(runtime: AppRuntime) -> None:
+    # The model decides which: it has the user's intent, and a reorder that changes the result
+    # is worse than saying it cannot be done.
+    agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
+    prompt = agent._build_selection_prompt(
+        PdfEditRequest(user_message="anything", files=[]),
+        list(OPERATIONS),
+        [],
+        "step 3 (SANITIZE_PDF) accepts PDF but the previous step produces IMAGE.",
+    )
+    assert "SANITIZE_PDF" in prompt
+    assert "different order" in prompt
+    assert "cannot_do" in prompt
+
+
 @pytest.mark.anyio
 async def test_pdf_edit_agent_retries_a_plan_whose_steps_cannot_chain(runtime: AppRuntime) -> None:
     # Extracting images emits images, which rotate cannot take. The agent should be told exactly

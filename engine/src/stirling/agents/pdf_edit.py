@@ -27,7 +27,6 @@ from stirling.contracts import (
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
-from stirling.models.tool_io import TOOL_IO, ToolArity, ToolFormat
 from stirling.services import AppRuntime, ToolChainStep, blocking, validate_tool_chain
 
 logger = logging.getLogger(__name__)
@@ -335,9 +334,12 @@ class PdfEditAgent:
         repair_note: str = "",
     ) -> str:
         repair_line = (
-            f"A previous attempt produced a plan that cannot run: {repair_note}\n"
-            "Produce a different plan that avoids this, inserting a conversion step or "
-            "reordering as needed.\n"
+            f"A previous attempt planned operations in an order that cannot run: {repair_note}\n"
+            "If running them in a different order still gives the user what they asked for, "
+            "return that plan. If it would not - reordering changes the result, or no order "
+            "works - return cannot_do and say plainly which step cannot accept the previous "
+            "step's output. This is the one case where cannot_do is right even though some "
+            "order of these operations would run.\n"
             if repair_note
             else ""
         )
@@ -398,16 +400,6 @@ class PdfEditAgent:
         return "; ".join(f"step {d.step_index + 1} ({steps[d.step_index].name}) {d.message}" for d in errors)
 
     @staticmethod
-    def _output_note(operation: ToolEndpoint) -> str:
-        """What an operation emits, when it is not simply one PDF. Cheap next to the operation
-        list, and heads off most bad orderings before a retry is needed."""
-        spec = TOOL_IO[operation]
-        if spec.produces == ToolFormat.PDF and spec.arity == ToolArity.SISO:
-            return ""
-        many = " (several files)" if spec.arity in (ToolArity.SIMO, ToolArity.MIMO) else ""
-        return f" [outputs: {spec.produces.value}{many}]"
-
-    @staticmethod
     def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
         return ", ".join(f"{op.name} ({op.value})" for op in operations)
 
@@ -421,7 +413,7 @@ class PdfEditAgent:
         lines: list[str] = []
         for op in operations:
             schema = OPERATIONS[op].model_json_schema()
-            head = f"- {op.name} ({op.value}){PdfEditAgent._output_note(op)}"
+            head = f"- {op.name} ({op.value})"
             description = (schema.get("description") or "").strip()
             if description:
                 head += f": {description}"
