@@ -287,9 +287,9 @@ public class EncryptingStorageProvider implements StorageProvider {
 
     /**
      * One-shot delegate (S3 stream): the sniffed prefix must be replayed or decrypted inline. The
-     * stream is a live HTTP connection, so every failure path (unknown header version, revoked
-     * key, tampered wrap) must close it — leaking here would starve the S3 connection pool
-     * precisely when the kill switch is being exercised.
+     * stream is a live HTTP connection, so every failure path (unknown header version, revoked key,
+     * tampered wrap) must close it — leaking here would starve the S3 connection pool precisely
+     * when the kill switch is being exercised.
      */
     private Resource wrapOneShot(String storageKey, Resource raw) throws IOException {
         InputStream in = raw.getInputStream();

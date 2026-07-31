@@ -9,9 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 
 /**
- * Holds the storage-encryption machinery for the always-installed {@link
- * EncryptingStorageProvider} decorator, shared with the admin API and migration job so kill-switch
- * cache invalidation hits the caches the decorator reads.
+ * Holds the storage-encryption machinery for the always-installed {@link EncryptingStorageProvider}
+ * decorator, shared with the admin API and migration job so kill-switch cache invalidation hits the
+ * caches the decorator reads.
  *
  * <p>The decorator is unconditional so a node whose config lags the cluster (flag off, rolling
  * deploy, config drift) can never stream raw ciphertext: it always sniffs the header and decrypts
@@ -78,8 +78,8 @@ public class StorageEncryptionState {
     }
 
     /**
-     * The key service, created on first use. A failure here (no key material, wrong key) is a
-     * loud, actionable error - never silently-served ciphertext.
+     * The key service, created on first use. A failure here (no key material, wrong key) is a loud,
+     * actionable error - never silently-served ciphertext.
      */
     public FileEncryptionKeyService keyService() throws StorageEncryptionException {
         FileEncryptionKeyService current = keyService;

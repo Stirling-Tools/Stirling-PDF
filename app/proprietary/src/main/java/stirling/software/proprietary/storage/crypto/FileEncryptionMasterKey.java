@@ -70,8 +70,8 @@ public class FileEncryptionMasterKey {
         this.previousKey =
                 previousKeyBase64 == null || previousKeyBase64.isBlank()
                         ? null
-                        : new SecretKeySpec(
-                                Base64.getDecoder().decode(previousKeyBase64.trim()), ALGORITHM);
+                        : decodeKey(
+                                previousKeyBase64, "stirling.security.fileEncryptionKeyPrevious");
         this.currentVersion = Math.max(1, currentVersion);
         log.info(
                 "Storage encryption master key initialised (AES-256-GCM, fingerprint {}, version"

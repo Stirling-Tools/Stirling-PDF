@@ -396,7 +396,11 @@ class EncryptingStorageProviderTest {
     void signedDownloadUrl_delegatesWhenNoEncryptedContentPossible() throws IOException {
         // Vanilla install: flag off, no key rows anywhere -> keep the backend's fast path.
         StorageEncryptionState vanilla =
-                new StorageEncryptionState(false, () -> newKeyService(), repo.mock);
+                new StorageEncryptionState(
+                        false,
+                        () -> newKeyService(),
+                        repo.mock,
+                        StorageEncryptionAuditListener.NOOP);
         StorageProvider withUrls =
                 new StorageProvider() {
                     @Override
@@ -432,7 +436,11 @@ class EncryptingStorageProviderTest {
         StoredObject encrypted = provider.store(owner, upload());
         assertThat(encrypted.getEncryptionKeyId()).isNotNull();
         StorageEncryptionState drifted =
-                new StorageEncryptionState(false, () -> newKeyService(), repo.mock);
+                new StorageEncryptionState(
+                        false,
+                        () -> newKeyService(),
+                        repo.mock,
+                        StorageEncryptionAuditListener.NOOP);
         EncryptingStorageProvider driftedNode = new EncryptingStorageProvider(withUrls, drifted);
         assertThat(driftedNode.signedDownloadUrl("k", Duration.ofMinutes(5), false, "a.pdf"))
                 .isEmpty();

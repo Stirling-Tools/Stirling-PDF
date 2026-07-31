@@ -310,8 +310,13 @@ storage:
   # Enabling encrypts new writes only (existing files stay readable as plaintext).
   # Disabling later only stops encrypting new writes - existing encrypted files remain
   # readable as long as the key material is present.
+  # Master-key rotation: set the NEW key as stirling.security.fileEncryptionKey, keep the OLD
+  # key in stirling.security.fileEncryptionKeyPrevious, bump
+  # stirling.security.fileEncryptionKeyVersion, restart, then call
+  # POST /api/v1/admin/storage-encryption/master/rotate and remove the previous key.
   encryption:
     enabled: false # set to 'true' to encrypt stored files at rest
+    auditReads: true # audit every decrypt of an encrypted file (denied decrypts and key lifecycle events are always audited)
     userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)

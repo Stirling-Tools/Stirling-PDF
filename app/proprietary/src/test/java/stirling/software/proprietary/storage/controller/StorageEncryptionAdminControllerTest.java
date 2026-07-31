@@ -48,7 +48,7 @@ class StorageEncryptionAdminControllerTest {
         migrationService = mock(StorageEncryptionMigrationService.class);
         controller =
                 new StorageEncryptionAdminController(
-                        new StorageEncryptionState(
+                        StorageEncryptionState.of(
                                 true, keyService, StorageEncryptionAuditListener.NOOP),
                         keyRepo.mock,
                         storedFileRepository,
@@ -134,7 +134,13 @@ class StorageEncryptionAdminControllerTest {
     void rotate_whenInactive_conflicts() {
         StorageEncryptionAdminController inactive =
                 new StorageEncryptionAdminController(
-                        StorageEncryptionState.INACTIVE,
+                        new StorageEncryptionState(
+                                false,
+                                () -> {
+                                    throw new IllegalStateException("no key material configured");
+                                },
+                                keyRepo.mock,
+                                StorageEncryptionAuditListener.NOOP),
                         keyRepo.mock,
                         storedFileRepository,
                         migrationService,

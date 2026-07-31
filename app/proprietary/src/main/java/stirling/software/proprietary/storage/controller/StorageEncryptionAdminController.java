@@ -68,11 +68,22 @@ public class StorageEncryptionAdminController {
                                                 k.getStatusChangedAt(),
                                                 k.getStatusChangedBy()))
                         .toList();
+        String fingerprint = null;
+        Integer masterKeyVersion = null;
+        if (encryptionState.isMaterialised()) {
+            try {
+                FileEncryptionKeyService keyService = encryptionState.keyService();
+                fingerprint = keyService.masterKey().fingerprint();
+                masterKeyVersion = keyService.masterKey().currentVersion();
+            } catch (StorageEncryptionException ignored) {
+                // Materialisation failed; status still reports counts and key rows.
+            }
+        }
         return new StorageEncryptionStatusResponse(
                 encryptionState.isWriteEnabled(),
-                encryptionState.isActive(),
-                encryptionState.keyService().map(s -> s.masterKey().fingerprint()).orElse(null),
-                encryptionState.keyService().map(s -> s.masterKey().currentVersion()).orElse(null),
+                encryptionState.isMaterialised(),
+                fingerprint,
+                masterKeyVersion,
                 storedFileRepository.countByEncryptionKeyIdIsNotNull(),
                 storedFileRepository.countByEncryptionKeyIdIsNull(),
                 keys);
@@ -132,14 +143,7 @@ public class StorageEncryptionAdminController {
      */
     @PostMapping("/master/rotate")
     public Map<String, Object> rotateMasterKey() {
-        FileEncryptionKeyService keyService =
-                encryptionState
-                        .keyService()
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.CONFLICT,
-                                                "Storage encryption is not active"));
+        FileEncryptionKeyService keyService = requireKeyService();
         int rewrapped;
         try {
             rewrapped = keyService.rotateMasterKey();
@@ -164,18 +168,22 @@ public class StorageEncryptionAdminController {
     }
 
     private FileEncryptionKey setStatus(UUID keyId, FileEncryptionKey.Status status) {
-        FileEncryptionKeyService keyService =
-                encryptionState
-                        .keyService()
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.CONFLICT,
-                                                "Storage encryption is not active"));
+        FileEncryptionKeyService keyService = requireKeyService();
         try {
             return keyService.setKeyStatus(keyId, status, currentUsername());
         } catch (StorageEncryptionException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    private FileEncryptionKeyService requireKeyService() {
+        try {
+            return encryptionState.keyService();
+        } catch (StorageEncryptionException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Storage encryption is not configured: " + e.getMessage(),
+                    e);
         }
     }
 

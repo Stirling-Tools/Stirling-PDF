@@ -116,7 +116,7 @@ class StorageEncryptionMigrationServiceTest {
                 new StorageEncryptionMigrationService(
                         fileRepo,
                         provider,
-                        new StorageEncryptionState(
+                        StorageEncryptionState.of(
                                 true, keyService, StorageEncryptionAuditListener.NOOP),
                         mock(AuditService.class));
     }
@@ -236,7 +236,8 @@ class StorageEncryptionMigrationServiceTest {
                 new StorageEncryptionMigrationService(
                         fileRepo,
                         provider,
-                        StorageEncryptionState.INACTIVE,
+                        new StorageEncryptionState(
+                                false, () -> null, null, StorageEncryptionAuditListener.NOOP),
                         mock(AuditService.class));
         assertThatThrownBy(disabled::start)
                 .isInstanceOf(IllegalStateException.class)

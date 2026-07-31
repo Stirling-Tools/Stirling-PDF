@@ -110,8 +110,7 @@ class StorageProviderConfigTest {
     void encryption_enabled_wrongLengthKey_failsStartup() {
         StorageProviderConfig cfg = newConfig("local", License.SERVER, true);
         String shortKey = Base64.getEncoder().encodeToString("only16bytes-yes!".getBytes());
-        assertThatThrownBy(
-                        () -> cfg.storageEncryptionState(shortKey, "", 1, false, txManager))
+        assertThatThrownBy(() -> cfg.storageEncryptionState(shortKey, "", 1, false, txManager))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("32 bytes");
     }

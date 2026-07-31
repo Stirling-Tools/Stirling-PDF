@@ -162,7 +162,9 @@ public class FileEncryptionKeyService {
         return saved;
     }
 
-    /** Drops cached material for a key so status changes take effect without waiting out the TTL. */
+    /**
+     * Drops cached material for a key so status changes take effect without waiting out the TTL.
+     */
     public void invalidate(UUID keyId) {
         unwrapCache.invalidate(keyId);
         activeScopeCache.asMap().values().removeIf(keyId::equals);
@@ -192,8 +194,8 @@ public class FileEncryptionKeyService {
     }
 
     /**
-     * Startup self-check: proves the resolved master key can unwrap an existing row, so a wrong
-     * key fails fast instead of silently writing new files under a second key hierarchy.
+     * Startup self-check: proves the resolved master key can unwrap an existing row, so a wrong key
+     * fails fast instead of silently writing new files under a second key hierarchy.
      */
     public void verifyMasterKey() {
         if (masterKey.hasPreviousKey()) {
