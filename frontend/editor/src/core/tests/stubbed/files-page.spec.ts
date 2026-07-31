@@ -876,4 +876,81 @@ test.describe("Files page", () => {
       expect(after).toBeGreaterThanOrEqual(before + 24);
     });
   });
+  test.describe("Persistence and bulk actions", () => {
+    test.beforeEach(async ({ page }) => {
+      await stubStorageApis(page);
+    });
+
+    test("grid/list choice survives a reload", async ({ page }) => {
+      await seedFiles(page, [
+        { id: "f1", name: "one.pdf", remoteStorageId: null },
+        { id: "f2", name: "two.pdf", remoteStorageId: null },
+      ]);
+      await gotoFilesPage(page);
+
+      await page.locator('label[for$="-list"]').first().click();
+      await expect(page.locator(".files-page-list-row").first()).toBeVisible();
+
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await expect(page.locator(".files-page-list-row").first()).toBeVisible({
+        timeout: 10_000,
+      });
+      const stored = await page.evaluate(() =>
+        JSON.parse(localStorage.getItem("stirlingpdf_preferences") ?? "{}"),
+      );
+      expect(stored.filesPageViewMode).toBe("list");
+    });
+
+    test("deleting a large selection clears the grid without waiting on storage", async ({
+      page,
+    }) => {
+      await seedFiles(
+        page,
+        Array.from({ length: 50 }, (_, i) => ({
+          id: `bulk-${i}`,
+          name: `bulk_${i}.pdf`,
+          remoteStorageId: null,
+        })),
+      );
+      await gotoFilesPage(page);
+
+      const cards = page.locator(
+        ".files-page-card:not(.files-page-skeleton-card)",
+      );
+      await expect(cards).toHaveCount(50, { timeout: 10_000 });
+
+      await page.getByRole("button", { name: /select all/i }).click();
+      await page.keyboard.press("Delete");
+
+      // Rows go immediately - the IDB write and the refresh that follows it
+      // must not hold the grid on stale contents.
+      await expect(cards).toHaveCount(0, { timeout: 2_000 });
+
+      // ...and the delete really reached storage. Checked directly because the
+      // seed init-script would re-populate IDB on a reload.
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              () =>
+                new Promise<number>((resolve) => {
+                  const open = window.indexedDB.open("stirling-pdf-files");
+                  open.onsuccess = () => {
+                    const db = open.result;
+                    const req = db
+                      .transaction("files", "readonly")
+                      .objectStore("files")
+                      .count();
+                    req.onsuccess = () => {
+                      resolve(req.result);
+                      db.close();
+                    };
+                  };
+                }),
+            ),
+          { timeout: 10_000 },
+        )
+        .toBe(0);
+    });
+  });
 });

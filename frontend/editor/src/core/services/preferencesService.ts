@@ -3,6 +3,7 @@ import {
   DEFAULT_TOOL_PANEL_MODE,
 } from "@app/constants/toolPanel";
 import { type ThemeMode } from "@app/constants/theme";
+import { type FilesPageViewMode } from "@app/constants/filesPageView";
 
 export type LogoVariant = "modern" | "classic";
 
@@ -44,6 +45,8 @@ export interface UserPreferences {
   hideUnavailableConversions: boolean;
   logoVariant: LogoVariant | null;
   pdfRenderMode: PdfRenderMode;
+  /** Last grid/list choice on the files page. */
+  filesPageViewMode: FilesPageViewMode;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -64,6 +67,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hideUnavailableConversions: false,
   logoVariant: null,
   pdfRenderMode: "normal",
+  filesPageViewMode: "grid",
 };
 
 const STORAGE_KEY = "stirlingpdf_preferences";

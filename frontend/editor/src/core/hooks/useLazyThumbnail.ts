@@ -42,18 +42,23 @@ export function useLazyThumbnail(
   thumbnailUrl?: string,
 ): string | undefined {
   const [thumb, setThumb] = useState<string | undefined>(thumbnailUrl);
-  const attempted = useRef(false);
+  // Latched only once a generation actually finishes (or is ruled out), so a
+  // re-render that cancels queued work doesn't leave the row permanently blank.
+  const generated = useRef(false);
   const indexedDB = useIndexedDB();
   const { updateStirlingFileStub } = useFileManagement();
+  // Held in a ref so their identity can't re-run the effect: a re-run cancels
+  // the queued task, and the row would then be skipped forever.
+  const depsRef = useRef({ indexedDB, updateStirlingFileStub });
+  depsRef.current = { indexedDB, updateStirlingFileStub };
 
   useEffect(() => {
     if (thumbnailUrl) setThumb(thumbnailUrl);
   }, [thumbnailUrl]);
 
   useEffect(() => {
-    if (thumbnailUrl || attempted.current || size >= THUMBNAIL_SIZE_LIMIT)
+    if (thumbnailUrl || generated.current || size >= THUMBNAIL_SIZE_LIMIT)
       return;
-    attempted.current = true;
     let cancelled = false;
 
     scheduleLazyThumb(async () => {
@@ -61,13 +66,22 @@ export function useLazyThumbnail(
       // in the queue — skip the expensive byte load entirely.
       if (cancelled) return;
       try {
-        const file = await indexedDB.loadFile(fileId);
-        if (!file || cancelled) return;
+        const file = await depsRef.current.indexedDB.loadFile(fileId);
+        if (cancelled) return;
+        // No cached bytes to render from: don't queue this row again.
+        if (!file) {
+          generated.current = true;
+          return;
+        }
         const thumbnail = await generateThumbnailForFile(file);
-        if (cancelled || !thumbnail) return;
+        if (cancelled) return;
+        generated.current = true;
+        if (!thumbnail) return;
         setThumb(thumbnail);
-        void indexedDB.updateThumbnail(fileId, thumbnail);
-        updateStirlingFileStub(fileId, { thumbnailUrl: thumbnail });
+        void depsRef.current.indexedDB.updateThumbnail(fileId, thumbnail);
+        depsRef.current.updateStirlingFileStub(fileId, {
+          thumbnailUrl: thumbnail,
+        });
       } catch {
         // non-critical
       }
@@ -76,7 +90,7 @@ export function useLazyThumbnail(
     return () => {
       cancelled = true;
     };
-  }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub]);
+  }, [fileId, size, thumbnailUrl]);
 
   return thumb;
 }

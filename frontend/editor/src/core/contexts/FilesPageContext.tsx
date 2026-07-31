@@ -30,10 +30,13 @@ import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
+import { usePreferences } from "@app/contexts/PreferencesContext";
+import { type FilesPageViewMode } from "@app/constants/filesPageView";
 
-/** View-toggle modes; tuple keeps the union and iterator in sync. */
-export const FILES_PAGE_VIEW_MODES = ["grid", "list"] as const;
-export type FilesPageViewMode = (typeof FILES_PAGE_VIEW_MODES)[number];
+export {
+  FILES_PAGE_VIEW_MODES,
+  type FilesPageViewMode,
+} from "@app/constants/filesPageView";
 export type FilesPageSortMode =
   | "name-asc"
   | "name-desc"
@@ -153,6 +156,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { actions: fileActions } = useFileActions();
   const { config: appConfig } = useAppConfig();
   const { isAnonymous } = useAuth();
+  const { preferences, updatePreference } = usePreferences();
 
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
@@ -230,7 +234,12 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   }, [folders.currentFolderId, clearSelection]);
 
   // View + sort + search + filters ----------------------------------------
-  const [viewMode, setViewMode] = useState<FilesPageViewMode>("grid");
+  // Persisted so the choice survives a reload (preferences are localStorage-backed).
+  const viewMode = preferences.filesPageViewMode;
+  const setViewMode = useCallback(
+    (mode: FilesPageViewMode) => updatePreference("filesPageViewMode", mode),
+    [updatePreference],
+  );
   const [sortMode, setSortMode] = useState<FilesPageSortMode>("modified-desc");
   const [search, setSearch] = useState("");
   const [originFilter, setOriginFilter] =
@@ -415,6 +424,18 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         .map((id) => fileMap.get(id))
         .filter((s): s is StirlingFileStub => Boolean(s));
 
+      // Drop the rows now rather than after the cloud round-trip and the IDB
+      // rewrite - deleting a large selection otherwise leaves the grid frozen
+      // on the old contents for seconds. The refresh that follows the write is
+      // the source of truth; anything that failed to delete reappears.
+      const removedIds = new Set(fileIds);
+      setAllFiles((prev) => prev.filter((f) => !removedIds.has(f.id)));
+      setSelectedFileIds((prev) => {
+        const next = new Set(prev);
+        for (const id of removedIds) next.delete(id);
+        return next;
+      });
+
       // Cloud delete (owner-only). Dedup by remoteStorageId since a history
       // chain shares a single server file.
       if (scope === "cloud" || scope === "everywhere") {
@@ -459,16 +480,12 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      const removedIds = new Set(fileIds);
-      setSelectedFileIds((prev) => {
-        const next = new Set(prev);
-        for (const id of removedIds) next.delete(id);
-        return next;
-      });
-      // reconcile picks up the cloud deletions and strips stale remote pointers.
-      await refresh();
+      // The storage write notifies IndexedDBContext, whose revision bump
+      // re-runs refresh() - which reconciles the cloud deletions and strips
+      // stale remote pointers. No explicit refresh here: it would be a second
+      // full pass over every stub for the same delete.
     },
-    [fileMap, fileActions, folders, refresh, t],
+    [fileMap, fileActions, folders, t],
   );
 
   const removeFiles = useCallback(
@@ -501,9 +518,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const confirmRemoveFiles = useCallback(
     async (scope: DeleteScope) => {
-      await performDelete(deleteDialogFileIds, scope);
+      const fileIds = deleteDialogFileIds;
       setDeleteDialogOpen(false);
       setDeleteDialogFileIds([]);
+      await performDelete(fileIds, scope);
     },
     [deleteDialogFileIds, performDelete],
   );

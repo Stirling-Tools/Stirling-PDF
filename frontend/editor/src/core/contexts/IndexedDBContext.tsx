@@ -7,6 +7,7 @@ import React, {
   createContext,
   useContext,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -80,6 +81,24 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const [revision, setRevision] = useState(0);
   const bumpRevision = useCallback(() => setRevision((r) => r + 1), []);
 
+  // One bump per burst: a 50-file delete or a folder drop fires a write per
+  // file, and each bump re-reads every stub downstream. Coalescing on a
+  // microtask turns that storm into a single refresh.
+  const pendingBump = useRef(false);
+  const scheduleBump = useCallback(() => {
+    if (pendingBump.current) return;
+    pendingBump.current = true;
+    queueMicrotask(() => {
+      pendingBump.current = false;
+      bumpRevision();
+    });
+  }, [bumpRevision]);
+
+  // Writes that bypass this context (policy runs, share-link imports, watched
+  // folders) reach the same store, so subscribe at the storage layer instead of
+  // trusting every call site to announce itself.
+  useEffect(() => fileStorage.subscribeToChanges(scheduleBump), [scheduleBump]);
+
   // LRU File cache to avoid repeated ArrayBuffer→File conversions
   const fileCache = useRef(
     new Map<FileId, { file: File; lastAccessed: number }>(),
@@ -148,10 +167,9 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
         );
       }
 
-      bumpRevision();
       return storedFile;
     },
-    [bumpRevision],
+    [evictLRUEntries],
   );
 
   const loadFile = useCallback(
@@ -188,17 +206,13 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     [],
   );
 
-  const deleteFile = useCallback(
-    async (fileId: FileId): Promise<void> => {
-      // Remove from cache
-      fileCache.current.delete(fileId);
+  const deleteFile = useCallback(async (fileId: FileId): Promise<void> => {
+    // Remove from cache
+    fileCache.current.delete(fileId);
 
-      // Remove from IndexedDB
-      await fileStorage.deleteStirlingFile(fileId);
-      bumpRevision();
-    },
-    [bumpRevision],
-  );
+    // Remove from IndexedDB
+    await fileStorage.deleteStirlingFile(fileId);
+  }, []);
 
   const loadLeafMetadata = useCallback(async (): Promise<
     StirlingFileStub[]
@@ -223,9 +237,8 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
       // Delete all in a single IDB transaction
       await fileStorage.deleteMultipleStirlingFiles(fileIds);
-      bumpRevision();
     },
-    [bumpRevision],
+    [],
   );
 
   const clearAll = useCallback(async (): Promise<void> => {
@@ -234,8 +247,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
     // Clear IndexedDB
     await fileStorage.clearAll();
-    bumpRevision();
-  }, [bumpRevision]);
+  }, []);
 
   const getStorageStats = useCallback(async () => {
     return await fileStorage.getStorageStats();
@@ -243,38 +255,30 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
   const updateThumbnail = useCallback(
     async (fileId: FileId, thumbnail: string): Promise<boolean> => {
-      const result = await fileStorage.updateThumbnail(fileId, thumbnail);
-      if (result) bumpRevision();
-      return result;
+      return await fileStorage.updateThumbnail(fileId, thumbnail);
     },
-    [bumpRevision],
+    [],
   );
 
   const markFileAsProcessed = useCallback(
     async (fileId: FileId): Promise<boolean> => {
-      const result = await fileStorage.markFileAsProcessed(fileId);
-      if (result) bumpRevision();
-      return result;
+      return await fileStorage.markFileAsProcessed(fileId);
     },
-    [bumpRevision],
+    [],
   );
 
   const moveFilesToFolder = useCallback(
     async (fileIds: FileId[], folderId: FolderId | null): Promise<FileId[]> => {
-      const updated = await fileStorage.moveFilesToFolder(fileIds, folderId);
-      if (updated.length > 0) bumpRevision();
-      return updated;
+      return await fileStorage.moveFilesToFolder(fileIds, folderId);
     },
-    [bumpRevision],
+    [],
   );
 
   const clearFolderForFiles = useCallback(
     async (folderIds: FolderId[]): Promise<number> => {
-      const cleared = await fileStorage.clearFolderForFiles(folderIds);
-      if (cleared > 0) bumpRevision();
-      return cleared;
+      return await fileStorage.clearFolderForFiles(folderIds);
     },
-    [bumpRevision],
+    [],
   );
 
   // Memoize the context value so consumers' useIndexedDB() reference stays

@@ -64,6 +64,30 @@ export function legacyDerivedFromTool(
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
   private readonly storeName = "files";
+  private readonly changeListeners = new Set<() => void>();
+
+  /**
+   * Notified after every write or delete, whoever made it. Views subscribe via
+   * IndexedDBContext rather than relying on each call site to announce itself -
+   * plenty of them (policy runs, share-link imports, watched folders) write
+   * through this service directly and used to leave the file lists stale.
+   */
+  subscribeToChanges(listener: () => void): () => void {
+    this.changeListeners.add(listener);
+    return () => {
+      this.changeListeners.delete(listener);
+    };
+  }
+
+  private notifyChanged(): void {
+    for (const listener of this.changeListeners) {
+      try {
+        listener();
+      } catch (error) {
+        console.error("[fileStorage] change listener failed", error);
+      }
+    }
+  }
 
   /**
    * Get database connection using centralized manager
@@ -176,6 +200,7 @@ class FileStorageService {
           reject(request.error);
         };
         request.onsuccess = () => {
+          this.notifyChanged();
           resolve();
         };
       } catch (error) {
@@ -486,6 +511,7 @@ class FileStorageService {
       });
     });
 
+    if (updated.length > 0) this.notifyChanged();
     return updated;
   }
 
@@ -534,6 +560,7 @@ class FileStorageService {
       }
     });
 
+    if (cleared > 0) this.notifyChanged();
     return cleared;
   }
 
@@ -549,7 +576,10 @@ class FileStorageService {
       const request = store.delete(id);
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        this.notifyChanged();
+        resolve();
+      };
     });
   }
 
@@ -563,7 +593,10 @@ class FileStorageService {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
-      transaction.oncomplete = () => resolve();
+      transaction.oncomplete = () => {
+        this.notifyChanged();
+        resolve();
+      };
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () =>
         reject(transaction.error ?? new Error("Transaction aborted"));
@@ -591,6 +624,7 @@ class FileStorageService {
             const updateRequest = store.put(record);
 
             updateRequest.onsuccess = () => {
+              this.notifyChanged();
               resolve(true);
             };
             updateRequest.onerror = () => {
@@ -628,7 +662,10 @@ class FileStorageService {
       const request = store.clear();
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        this.notifyChanged();
+        resolve();
+      };
     });
   }
 
@@ -733,6 +770,7 @@ class FileStorageService {
         request.onerror = () => reject(request.error);
       });
 
+      this.notifyChanged();
       return true;
     } catch (error) {
       console.error("Failed to mark file as processed:", error);
@@ -818,6 +856,7 @@ class FileStorageService {
         request.onerror = () => reject(request.error);
       });
 
+      this.notifyChanged();
       return true;
     } catch (error) {
       console.error("Failed to mark file as leaf:", error);
@@ -859,7 +898,10 @@ class FileStorageService {
         };
         getRequest.onerror = () => reject(getRequest.error);
 
-        transaction.oncomplete = () => resolve(recordFound);
+        transaction.oncomplete = () => {
+          if (recordFound) this.notifyChanged();
+          resolve(recordFound);
+        };
         transaction.onerror = () => reject(transaction.error);
         transaction.onabort = () =>
           reject(transaction.error ?? new Error("updateFileMetadata aborted"));

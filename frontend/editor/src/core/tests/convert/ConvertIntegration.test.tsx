@@ -70,6 +70,8 @@ const mockedApiClient = vi.mocked(apiClient);
 vi.mock("../../services/fileStorage", () => ({
   fileStorage: {
     init: vi.fn().mockResolvedValue(undefined),
+    // IndexedDBContext subscribes to storage changes on mount.
+    subscribeToChanges: vi.fn().mockReturnValue(() => {}),
     storeFile: vi.fn().mockImplementation((file, thumbnail) => {
       return Promise.resolve({
         id: `mock-id-${file.name}`,
