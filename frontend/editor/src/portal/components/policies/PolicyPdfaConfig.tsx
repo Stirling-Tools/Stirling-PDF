@@ -54,7 +54,7 @@ export function PolicyPdfaConfig({
             size="sm"
             checked={parameters.strict}
             onChange={(checked) => onChange({ ...parameters, strict: checked })}
-            label=""
+            aria-label={t("portal.policies.config.pdfa.fields.strict.label")}
           />
         }
       />

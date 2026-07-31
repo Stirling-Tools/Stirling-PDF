@@ -1990,6 +1990,12 @@
   "editor/src/portal/components/policies/PolicyCategoryCard.stories.tsx :: Not Set Up": [
     "color-contrast"
   ],
+  "editor/src/portal/components/policies/PolicyComplianceCheckConfig.stories.tsx :: Accessibility Warn Only": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/policies/PolicyComplianceCheckConfig.stories.tsx :: Default": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Active": [
     "color-contrast"
   ],
@@ -2017,6 +2023,12 @@
   "editor/src/portal/components/policies/PolicyFieldRow.stories.tsx :: Text": [
     "color-contrast"
   ],
+  "editor/src/portal/components/policies/PolicyPdfaConfig.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/policies/PolicyPdfaConfig.stories.tsx :: Strict": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/policies/PolicyPurviewConfig.stories.tsx :: Configured": [
     "color-contrast"
   ],
@@ -2030,6 +2042,9 @@
     "color-contrast"
   ],
   "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Classification": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Compliance": [
     "color-contrast"
   ],
   "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Create": [

@@ -539,7 +539,7 @@ function PolicySetupWizardBody({
                           onChange={(checked) =>
                             setToolEnabled(tl.toolId, checked)
                           }
-                          label=""
+                          aria-label={label}
                         />
                       }
                     />

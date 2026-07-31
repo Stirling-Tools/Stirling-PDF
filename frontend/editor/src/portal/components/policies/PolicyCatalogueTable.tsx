@@ -128,10 +128,11 @@ export function PolicyCatalogueTable({
       columns={columns}
       rows={entries}
       rowKey={(e) => e.category.id}
-      onRowClick={(entry) =>
-        entry.category.comingSoon || isLocked?.(entry)
-          ? undefined
-          : onOpen(entry)
+      onRowClick={onOpen}
+      // A row with no policy renders its own "Set up" button, so making the row a button too
+      // would nest one interactive control inside another.
+      isRowInteractive={(entry) =>
+        !entry.category.comingSoon && !isLocked?.(entry) && !!entry.policy
       }
     />
   );
