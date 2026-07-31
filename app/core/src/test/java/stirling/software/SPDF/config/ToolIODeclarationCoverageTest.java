@@ -55,8 +55,11 @@ class ToolIODeclarationCoverageTest {
                     // documents.
                     "/api/v1/convert/pdf/text-editor",
                     "/api/v1/convert/text-editor/pdf",
-                    // Certificate signing: session and token management, not a pipeline step.
-                    "/api/v1/security/cert-sign");
+                    // Signing sessions, certificate checks and hardware token enumeration; the
+                    // signing tool itself is /api/v1/security/cert-sign, which is declared.
+                    "/api/v1/security/cert-sign/sessions",
+                    "/api/v1/security/cert-sign/validate-certificate",
+                    "/api/v1/security/cert-sign/hardware");
 
     private record Scan(Set<String> required, Map<String, ToolIOSpec> declared) {}
 
@@ -109,7 +112,9 @@ class ToolIODeclarationCoverageTest {
                 "/api/v1/general/rotate-pdf",
                 "/api/v1/general/merge-pdfs",
                 // Corrected: was declared MIMO, but it returns one overlaid document.
-                "/api/v1/general/overlay-pdfs"
+                "/api/v1/general/overlay-pdfs",
+                // Sits under the exempted cert-sign session paths; pinned so it stays declared.
+                "/api/v1/security/cert-sign"
             })
     void singleResultEndpointsAreNotUnpacked(String path) {
         assertFalse(spec(path).resolveOutput().arity().isMultiOutput(), path);

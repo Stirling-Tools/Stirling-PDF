@@ -79,6 +79,8 @@ import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
@@ -170,6 +172,7 @@ public class CertSignController {
             value = "/cert-sign",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =

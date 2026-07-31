@@ -87,8 +87,8 @@ export interface ToolIOSpec {
 
 /**
  * What each endpoint accepts and produces, keyed by {@link ToolEndpoint} so the paths live in
- * exactly one place. Partial: the cert-signing and text-editor session endpoints are not
- * document transforms and declare nothing.
+ * exactly one place. Partial: endpoints that manage a session, a device or a stored resource
+ * rather than transform a document declare nothing.
  */
 export type ToolIOTable = Partial<Record<ToolEndpoint, ToolIOSpec>>;
 
@@ -505,6 +505,11 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/security/auto-redact": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
+  "/api/v1/security/cert-sign": {
     accepts: ["PDF"],
     produces: "PDF",
     arity: "SISO",
