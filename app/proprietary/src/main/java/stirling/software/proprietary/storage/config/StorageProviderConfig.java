@@ -21,6 +21,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.cluster.s3.S3Clients;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.crypto.AuditingStorageEncryptionListener;
@@ -66,6 +67,7 @@ public class StorageProviderConfig {
         boolean writeEnabled = applicationProperties.getStorage().getEncryption().isEnabled();
         if (writeEnabled) {
             licenseKeyChecker.requireProOrEnterprise("storage.encryption");
+            warnIfAuditUnavailable();
         }
         StorageEncryptionAuditListener listener =
                 new AuditingStorageEncryptionListener(
@@ -98,6 +100,21 @@ public class StorageProviderConfig {
                     writeEnabled ? "encrypted" : "plaintext; decrypt-only mode");
         }
         return state;
+    }
+
+    /**
+     * Encryption at rest is available on Pro, but {@code AuditService} only records events on an
+     * Enterprise licence. Without this warning a Pro operator would enable encryption, be told it
+     * is audited, and silently get no encrypt/decrypt/revocation trail at all.
+     */
+    private void warnIfAuditUnavailable() {
+        if (licenseKeyChecker.getPremiumLicenseEnabledResult() != License.ENTERPRISE) {
+            log.warn(
+                    "Storage encryption at rest is enabled, but audit events require an Enterprise"
+                            + " licence: encrypt/decrypt, revocation and plaintext-export events"
+                            + " will NOT be recorded on this licence tier. Encryption itself is"
+                            + " unaffected. See devGuide/STORAGE_ENCRYPTION_AT_REST.md");
+        }
     }
 
     private FileEncryptionKeyService createKeyService(

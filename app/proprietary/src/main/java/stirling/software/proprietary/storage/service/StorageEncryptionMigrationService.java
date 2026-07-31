@@ -217,10 +217,16 @@ public class StorageEncryptionMigrationService {
             User owner, String storageKey, String filename, String contentType, Long sizeBytes)
             throws IOException {
         Resource plaintext = storageProvider.load(storageKey);
-        long size;
+        long size = -1;
         try {
             size = plaintext.contentLength();
         } catch (IOException | RuntimeException e) {
+            // Some resources refuse contentLength() once partially read.
+            size = -1;
+        }
+        if (size < 0) {
+            // A resource may also simply report -1; the row's recorded plaintext size is
+            // authoritative, so prefer it over failing the file.
             size = sizeBytes != null ? sizeBytes : -1;
         }
         if (size < 0) {

@@ -7,6 +7,13 @@ or in S3 are unreadable without the master key. Requires a Pro or Enterprise lic
 > unrecoverable. There is no recovery path by design — that is what makes the encryption
 > meaningful.
 
+> **Audit trail requires Enterprise.** Encryption itself works on Pro, but the audit events
+> below (encrypt, decrypt, revocation, plaintext export, migration) are only recorded on an
+> Enterprise licence — the audit subsystem is Enterprise-gated platform-wide. On Pro the files
+> are encrypted exactly the same way, but there is no access trail, which matters if you are
+> enabling this to satisfy an audit-logging requirement (HIPAA, CMMC). A warning is logged at
+> startup when encryption is enabled without an Enterprise licence.
+
 ## How it works
 
 Envelope encryption, three levels:
@@ -79,7 +86,9 @@ curl          http://localhost:8080/api/v1/admin/storage-encryption/migrate/stat
 The job is throttled, resumable, and safe to re-run: for each file it writes the encrypted copy
 under a new storage key, swaps the database row only if nothing else changed it, and deletes the old
 blob last. If a user replaces a file mid-migration their copy wins and the job skips it. Progress is
-in-memory, so a restart mid-run loses the counters — just start it again.
+in-memory, so a restart mid-run loses the counters and `migrate/status` reports `IDLE` again — just
+start it again; already-encrypted files are skipped. There is currently no way to cancel a run, and
+on a cluster the guard is per-node, so trigger the migration on one node only.
 
 ## Revoking access (kill switch)
 
@@ -109,10 +118,21 @@ Key material is never accepted over HTTP; the endpoint only performs the re-wrap
 
 ## Auditing
 
+**Requires an Enterprise licence** (see the note at the top): on Pro these events are silently
+dropped by the audit subsystem, and a warning is logged at startup.
+
 Encrypt, decrypt, denied-decrypt, key lifecycle, rotation, and migration events are written to the
 audit trail, along with a `plaintextExport` marker whenever a plaintext copy of encrypted content is
 served. Per-read decrypt events can be noisy on busy instances and can be turned off with
 `storage.encryption.auditReads: false`; denials and key lifecycle events are always recorded.
+
+Two semantics worth knowing when reading the trail:
+
+- A `decrypt` event means a decryption was *authorised and opened*, not that bytes were read to
+  completion — a load that is discarded still records one, and a re-read of the same open resource
+  (e.g. an HTTP range request) does not record a second.
+- `plaintextExport` is currently emitted for stored-file and share-link downloads. Workflow-file
+  downloads are not yet marked.
 
 ## Status and backup verification
 
