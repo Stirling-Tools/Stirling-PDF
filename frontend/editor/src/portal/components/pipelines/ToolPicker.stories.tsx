@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Modal } from "@app/ui";
 import { SubcategoryId } from "@app/data/toolsTaxonomy";
 import { type ExecutableTool } from "@app/hooks/tools/shared/toolAutomation";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import "@portal/views/PipelineBuilder.css";
 
 const tools: ExecutableTool[] = [
   {
@@ -55,6 +57,21 @@ const meta = {
     onPick: () => {},
     onClose: () => {},
   },
+  // The picker has no frame of its own - it fills the modal that hosts it, which is where its
+  // edges, width and scrolling come from. Shown bare, it would be a shape the app never renders.
+  decorators: [
+    (Story) => (
+      <Modal
+        open
+        onClose={() => {}}
+        width="md"
+        title="Add tool"
+        className="portal-pipelines__picker-modal"
+      >
+        <Story />
+      </Modal>
+    ),
+  ],
 } satisfies Meta<typeof ToolPicker>;
 export default meta;
 type Story = StoryObj<typeof meta>;

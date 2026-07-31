@@ -7796,7 +7796,6 @@ title = "Pipelines"
 newPipeline = "New pipeline"
 
 [portal.pipelines.builder]
-addStep = "Add tool"
 back = "Back to pipelines"
 cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
@@ -7858,7 +7857,6 @@ hours = "hours"
 minutes = "minutes"
 
 [portal.pipelines.definition]
-jsonCaption = "Pipeline definition"
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 

@@ -77,11 +77,7 @@ export function ToolPicker({
   }, [tools, query, t]);
 
   return (
-    <div
-      className="portal-pipelines__picker"
-      role="dialog"
-      aria-label={t("portal.pipelines.builder.addStep")}
-    >
+    <div className="portal-pipelines__picker">
       <div className="portal-pipelines__picker-search">
         <input
           autoFocus

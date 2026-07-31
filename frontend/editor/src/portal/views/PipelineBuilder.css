@@ -41,17 +41,17 @@
 }
 
 /* Tool picker */
-.portal-pipelines__picker {
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  background: var(--c-surface);
-  overflow: hidden;
+/* The picker fills the modal hosting it rather than sitting in a card of its own: same surface,
+   same radius, so a bordered box in here would frame nothing. Its rows carry the structure, and
+   they run to the panel's edges - which is what lets the search divider span the full width. */
+.portal-pipelines__picker-modal .sui-modal__body {
+  padding: 0;
 }
 
 .portal-pipelines__picker-search {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1.125rem;
   border-bottom: 1px solid var(--c-border-subtle);
 }
 
@@ -72,7 +72,7 @@
 }
 
 .portal-pipelines__picker-group-label {
-  padding: 0.5rem 0.75rem 0.25rem;
+  padding: 0.5rem 1.125rem 0.25rem;
   font-size: 0.6875rem;
   color: var(--c-text-subtle);
 }
@@ -84,7 +84,7 @@
   width: 100%;
   border: none;
   background: none;
-  padding: 0.4375rem 0.75rem;
+  padding: 0.4375rem 1.125rem;
   text-align: left;
   cursor: pointer;
   color: var(--c-text);
@@ -111,7 +111,7 @@
 }
 
 .portal-pipelines__picker-empty {
-  padding: 1rem 0.75rem;
+  padding: 1rem 1.125rem;
   font-size: 0.8125rem;
   color: var(--c-text-subtle);
   margin: 0;
@@ -123,7 +123,7 @@
 .portal-pipelines__picker-item.sui-btn {
   height: auto;
   min-height: 0;
-  padding: 0.4375rem 0.75rem;
+  padding: 0.4375rem 1.125rem;
   font-weight: 400;
   color: var(--c-text);
 }
