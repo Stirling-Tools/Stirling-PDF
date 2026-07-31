@@ -1,7 +1,9 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,9 +61,9 @@ public class AutoRotateController {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    // OSD only needs to recognise script orientation, but sparse or small text still benefits
-    // from OCR-grade resolution; matches the DPI the OCR tool renders at by default.
-    private static final int OSD_RENDER_DPI = 300;
+    // OSD decides orientation from script shape, not character identity, so it does not need
+    // OCR-grade resolution. 150 DPI is ample for that and a quarter of the pixels of 300.
+    private static final int OSD_RENDER_DPI = 150;
 
     private static final String METHOD_TEXT = "text";
     private static final String METHOD_OSD = "osd";
@@ -134,6 +136,10 @@ public class AutoRotateController {
         List<Integer> osdCandidates = new ArrayList<>();
 
         int pageCount = document.getNumberOfPages();
+        // One walk of the document for all pages, rather than one walk per page.
+        List<TextDirection> textDirections =
+                useText ? AutoRotateDetection.detectTextDirections(document) : List.of();
+
         for (int i = 0; i < pageCount; i++) {
             int currentRotation = Math.floorMod(document.getPage(i).getRotation(), 360);
             PageResult result =
@@ -144,7 +150,7 @@ public class AutoRotateController {
                             .build();
 
             if (useText) {
-                TextDirection direction = AutoRotateDetection.detectTextDirection(document, i);
+                TextDirection direction = textDirections.get(i);
                 if (direction.isConclusive()) {
                     int correction =
                             AutoRotateDetection.correctionFromTextDirection(
@@ -245,24 +251,32 @@ public class AutoRotateController {
         try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
             PDFRenderer renderer = new PDFRenderer(document);
             renderer.setSubsamplingAllowed(true);
+            // One reused path, deleted after every page: the images are throwaway input for
+            // Tesseract, so a long document must not accumulate one file per page on disk.
+            File imageFile = new File(tempDir.getPath().toFile(), "osd-page.bmp");
 
             for (int pageIndex : pageIndexes) {
                 PageResult result = results.get(pageIndex);
                 try {
                     // Rendering honours the page's current /Rotate, so OSD sees the page exactly
                     // as a viewer would and its verdict is always an additive correction.
-                    var image =
+                    BufferedImage image =
                             ExceptionUtils.handleOomRendering(
                                     pageIndex + 1,
                                     renderDpi,
                                     () ->
                                             renderer.renderImageWithDPI(
                                                     pageIndex, renderDpi, ImageType.GRAY));
-                    File imageFile =
-                            new File(
-                                    tempDir.getPath().toFile(),
-                                    String.format(Locale.ROOT, "page_%d.png", pageIndex));
-                    ImageIO.write(image, "png", imageFile);
+
+                    if (AutoRotateDetection.isBlankRender(image)) {
+                        // Nothing for OSD to read; skip the process spawn entirely.
+                        result.setNote("blankPage");
+                        continue;
+                    }
+
+                    // BMP, not PNG: the file is deleted straight after Tesseract reads it, so
+                    // paying for compression only to discard the result is wasted work.
+                    ImageIO.write(image, "bmp", imageFile);
 
                     List<String> command = new ArrayList<>();
                     command.add("tesseract");
@@ -294,9 +308,11 @@ public class AutoRotateController {
                         result.setNote("belowThreshold");
                     }
                 } catch (IOException e) {
-                    // Blank or textless pages make Tesseract exit non-zero; skip, never guess.
+                    // Textless pages make Tesseract exit non-zero; skip, never guess.
                     log.debug("OSD failed for page {}: {}", pageIndex + 1, e.getMessage());
                     result.setNote("osdFailed");
+                } finally {
+                    Files.deleteIfExists(imageFile.toPath());
                 }
             }
         }

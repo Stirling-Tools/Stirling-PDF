@@ -2,7 +2,11 @@ package stirling.software.SPDF.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -62,7 +66,7 @@ class AutoRotateDetectionTest {
     void detectsCorrectionForRotatedTextAndPages(
             int textAngle, int pageRotation, int expectedCorrection) throws IOException {
         try (PDDocument document = docWithText(textAngle, pageRotation)) {
-            TextDirection direction = AutoRotateDetection.detectTextDirection(document, 0);
+            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
 
             assertThat(direction.isConclusive())
                     .as(
@@ -92,7 +96,7 @@ class AutoRotateDetectionTest {
             content.endText();
         }
         try (document) {
-            TextDirection direction = AutoRotateDetection.detectTextDirection(document, 0);
+            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
             assertThat(direction.isConclusive()).isFalse();
         }
     }
@@ -101,7 +105,7 @@ class AutoRotateDetectionTest {
     void emptyPageIsNotConclusive() throws IOException {
         try (PDDocument document = new PDDocument()) {
             document.addPage(new PDPage(PDRectangle.LETTER));
-            TextDirection direction = AutoRotateDetection.detectTextDirection(document, 0);
+            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
             assertThat(direction.glyphCount()).isZero();
             assertThat(direction.isConclusive()).isFalse();
         }
@@ -120,7 +124,7 @@ class AutoRotateDetectionTest {
             content.endText();
         }
         try (document) {
-            TextDirection direction = AutoRotateDetection.detectTextDirection(document, 0);
+            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
             assertThat(direction.isConclusive()).isFalse();
         }
     }
@@ -140,7 +144,7 @@ class AutoRotateDetectionTest {
             content.endText();
         }
         try (document) {
-            TextDirection direction = AutoRotateDetection.detectTextDirection(document, 0);
+            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
             assertThat(direction.glyphCount())
                     .isBetween(
                             AutoRotateDetection.MIN_GLYPHS_UNANIMOUS,
@@ -149,6 +153,70 @@ class AutoRotateDetectionTest {
             assertThat(direction.isConclusive()).isTrue();
             assertThat(direction.dominantDirection()).isEqualTo(90);
         }
+    }
+
+    @Test
+    void bucketsGlyphsPerPageInOneWalk() throws IOException {
+        // Each page carries text at a different angle; the single-pass walk must attribute
+        // glyphs to the right page rather than pooling them.
+        int[] angles = {0, 90, 180, 270};
+        try (PDDocument document = new PDDocument()) {
+            for (int angle : angles) {
+                PDPage page = new PDPage(PDRectangle.LETTER);
+                document.addPage(page);
+                try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                    content.beginText();
+                    content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                    content.setTextMatrix(
+                            Matrix.getRotateInstance(Math.toRadians(angle), 300, 400));
+                    content.showText(SAMPLE_TEXT);
+                    content.endText();
+                }
+            }
+
+            List<TextDirection> directions = AutoRotateDetection.detectTextDirections(document);
+
+            assertThat(directions).hasSize(angles.length);
+            for (int i = 0; i < angles.length; i++) {
+                assertThat(directions.get(i).isConclusive()).as("page %d", i + 1).isTrue();
+                assertThat(directions.get(i).dominantDirection())
+                        .as("page %d direction", i + 1)
+                        .isEqualTo(angles[i]);
+            }
+        }
+    }
+
+    @Test
+    void detectsBlankAndInkedRenders() {
+        BufferedImage blank = new BufferedImage(200, 200, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D g = blank.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, 200, 200);
+        g.dispose();
+        assertThat(AutoRotateDetection.isBlankRender(blank)).isTrue();
+
+        BufferedImage speck = copyOf(blank);
+        Graphics2D specked = speck.createGraphics();
+        specked.setColor(Color.BLACK);
+        specked.fillRect(0, 0, 2, 2); // a dust speck must not count as content
+        specked.dispose();
+        assertThat(AutoRotateDetection.isBlankRender(speck)).isTrue();
+
+        BufferedImage inked = copyOf(blank);
+        Graphics2D inkedG = inked.createGraphics();
+        inkedG.setColor(Color.BLACK);
+        inkedG.fillRect(20, 20, 120, 60);
+        inkedG.dispose();
+        assertThat(AutoRotateDetection.isBlankRender(inked)).isFalse();
+    }
+
+    private static BufferedImage copyOf(BufferedImage source) {
+        BufferedImage copy =
+                new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+        Graphics2D g = copy.createGraphics();
+        g.drawImage(source, 0, 0, null);
+        g.dispose();
+        return copy;
     }
 
     @Test

@@ -2,6 +2,14 @@ import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@app/services/apiClient";
 import {
+  getPdfiumModule,
+  openRawDocumentSafe,
+  setPageRotation,
+  degreesToPdfiumRotation,
+  saveRawDocument,
+  closeDocAndFreeBuffer,
+} from "@app/services/pdfiumService";
+import {
   useToolOperation,
   defineCustomTool,
   CustomProcessorResult,
@@ -40,10 +48,14 @@ export interface AutoRotateReport {
 }
 
 /**
- * Two-phase processor: an analysis pass (dryRun) returns the per-page report the
- * tool surfaces in its results panel, then the detected corrections are applied
- * via pageRotations so detection never runs twice. onReport receives the report
- * from the analysis pass; the registry (automation) config passes no callback.
+ * Detection needs the server (page rendering and OCR); setting /Rotate does not.
+ * So the file is uploaded once for the analysis pass and the resulting rotations
+ * are applied in the browser with PDFium, as the page editor does. Uploading a
+ * second time to apply would double the bandwidth, the PDFBox load and the job's
+ * resource accounting for what amounts to one dictionary entry per page.
+ *
+ * onReport receives the report from the analysis pass; the registry (automation)
+ * config passes no callback.
  */
 const createAutoRotateProcessor =
   (onReport?: (report: AutoRotateReport, fileName: string) => void) =>
@@ -74,35 +86,44 @@ const createAutoRotateProcessor =
       const report = analysis.data;
       onReport?.(report, inputFile.name);
 
-      const corrections: Record<number, number> = {};
-      for (const page of report.pages) {
-        if (page.apply && page.correction !== 0) {
-          corrections[page.pageNumber] = page.correction;
-        }
-      }
+      // The report carries each page's existing rotation, so the absolute target
+      // is known without reading the PDF. Corrections are additive, matching the
+      // server's own apply path.
+      const targets = report.pages
+        .filter((page) => page.apply && page.correction !== 0)
+        .map((page) => ({
+          pageIndex: page.pageNumber - 1,
+          absoluteRotation:
+            (((page.currentRotation + page.correction) % 360) + 360) % 360,
+        }));
 
       // Nothing to fix: pass the input through unchanged so the flow completes
       // and the report explains why (all upright, or nothing detected).
-      if (Object.keys(corrections).length === 0) {
+      if (targets.length === 0) {
         outputs.push(inputFile);
         continue;
       }
 
-      const applyForm = new FormData();
-      applyForm.append("fileInput", inputFile);
-      applyForm.append("pageRotations", JSON.stringify(corrections));
-
-      const response = await apiClient.post<Blob>(
-        AUTO_ROTATE_ENDPOINT,
-        applyForm,
-        { responseType: "blob" },
-      );
-      const baseName = inputFile.name.replace(/\.pdf$/i, "");
-      outputs.push(
-        new File([response.data], `${baseName}_auto_rotated.pdf`, {
-          type: response.data.type || "application/pdf",
-        }),
-      );
+      const pdfium = await getPdfiumModule();
+      const docPtr = await openRawDocumentSafe(await inputFile.arrayBuffer());
+      try {
+        for (const { pageIndex, absoluteRotation } of targets) {
+          await setPageRotation(
+            docPtr,
+            pageIndex,
+            degreesToPdfiumRotation(absoluteRotation),
+          );
+        }
+        const rotatedBytes = await saveRawDocument(docPtr);
+        const baseName = inputFile.name.replace(/\.pdf$/i, "");
+        outputs.push(
+          new File([rotatedBytes], `${baseName}_auto_rotated.pdf`, {
+            type: "application/pdf",
+          }),
+        );
+      } finally {
+        closeDocAndFreeBuffer(pdfium, docPtr);
+      }
     }
 
     return { files: outputs, consumedAllInputs: true };

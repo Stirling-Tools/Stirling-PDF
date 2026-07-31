@@ -2211,6 +2211,7 @@ text = "Text"
 
 [autoRotate.report.note]
 belowThreshold = "Below threshold"
+blankPage = "Page is blank"
 inferredFromDocument = "Same as the other pages"
 noDominantDirection = "Mixed text directions"
 osdFailed = "No readable text found"

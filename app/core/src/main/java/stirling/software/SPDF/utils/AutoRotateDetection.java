@@ -1,6 +1,9 @@
 package stirling.software.SPDF.utils;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,24 +70,61 @@ public final class AutoRotateDetection {
     private static final Pattern OSD_CONFIDENCE =
             Pattern.compile("^Orientation confidence:\\s*([0-9.]+)", Pattern.MULTILINE);
 
-    /** Counts non-whitespace glyph directions for a single page. */
-    public static TextDirection detectTextDirection(PDDocument document, int pageIndex)
-            throws IOException {
-        DirectionCountingStripper stripper = new DirectionCountingStripper();
-        stripper.setStartPage(pageIndex + 1);
-        stripper.setEndPage(pageIndex + 1);
+    /**
+     * Counts non-whitespace glyph directions for every page in one pass. A stripper per page would
+     * re-walk the document once per page, which is quadratic on long documents; this walks it once
+     * and buckets glyphs by the page being processed.
+     *
+     * @return one entry per page, in page order
+     */
+    public static List<TextDirection> detectTextDirections(PDDocument document) throws IOException {
+        int pageCount = document.getNumberOfPages();
+        DirectionCountingStripper stripper = new DirectionCountingStripper(pageCount);
+        stripper.setStartPage(1);
+        stripper.setEndPage(pageCount);
         stripper.getText(document);
 
-        int total = 0;
-        int bestIndex = 0;
-        for (int i = 0; i < 4; i++) {
-            total += stripper.counts[i];
-            if (stripper.counts[i] > stripper.counts[bestIndex]) {
-                bestIndex = i;
+        List<TextDirection> directions = new ArrayList<>(pageCount);
+        for (int page = 0; page < pageCount; page++) {
+            int[] counts = stripper.counts[page];
+            int total = 0;
+            int bestIndex = 0;
+            for (int i = 0; i < 4; i++) {
+                total += counts[i];
+                if (counts[i] > counts[bestIndex]) {
+                    bestIndex = i;
+                }
+            }
+            double dominance = total == 0 ? 0 : (double) counts[bestIndex] / total;
+            directions.add(new TextDirection(bestIndex * 90, dominance, total));
+        }
+        return directions;
+    }
+
+    /**
+     * True when a rendered page carries no ink worth analysing. Checked after rendering but before
+     * spawning Tesseract, since the process spawn costs far more than the pixel scan and this
+     * catches both empty generated pages and scanned blanks (the back of a duplex sheet).
+     */
+    public static boolean isBlankRender(BufferedImage image) {
+        final int darkThreshold = 200; // 8-bit grey; anything lighter counts as paper
+        final int step = 4; // subsample: blank pages are uniform, no need for every pixel
+        long sampled = 0;
+        long dark = 0;
+        for (int y = 0; y < image.getHeight(); y += step) {
+            for (int x = 0; x < image.getWidth(); x += step) {
+                sampled++;
+                if ((image.getRGB(x, y) & 0xFF) < darkThreshold) {
+                    dark++;
+                    // A page needs a meaningful amount of ink before OSD can do anything;
+                    // bail out as soon as we know there is enough.
+                    if (dark > sampled / 1000 + 20) {
+                        return false;
+                    }
+                }
             }
         }
-        double dominance = total == 0 ? 0 : (double) stripper.counts[bestIndex] / total;
-        return new TextDirection(bestIndex * 90, dominance, total);
+        return true;
     }
 
     /**
@@ -119,8 +159,12 @@ public final class AutoRotateDetection {
 
     private static class DirectionCountingStripper extends PDFTextStripper {
 
-        // counts[i] holds glyphs whose direction is i * 90 degrees
-        final int[] counts = new int[4];
+        // counts[page][i] holds glyphs on that page whose direction is i * 90 degrees
+        final int[][] counts;
+
+        DirectionCountingStripper(int pageCount) throws IOException {
+            this.counts = new int[pageCount][4];
+        }
 
         /**
          * PDFBox snaps glyph direction to a quadrant, so getDir() only ever yields 0/90/180/270 —
@@ -134,7 +178,11 @@ public final class AutoRotateDetection {
             if (unicode == null || unicode.isBlank()) {
                 return;
             }
-            counts[Math.floorMod(Math.round(text.getDir()), 360) / 90]++;
+            int page = getCurrentPageNo() - 1;
+            if (page < 0 || page >= counts.length) {
+                return;
+            }
+            counts[page][Math.floorMod(Math.round(text.getDir()), 360) / 90]++;
             // super is intentionally not called: we only count, no text assembly needed
         }
     }

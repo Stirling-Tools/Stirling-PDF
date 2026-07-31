@@ -61,6 +61,8 @@ const noteLabel = (t: TFunction, note: string | null | undefined): string => {
         "autoRotate.report.note.tesseractUnavailable",
         "OCR not installed",
       );
+    case "blankPage":
+      return t("autoRotate.report.note.blankPage", "Page is blank");
     case "osdFailed":
       return t("autoRotate.report.note.osdFailed", "No readable text found");
     case "osdNoVerdict":
