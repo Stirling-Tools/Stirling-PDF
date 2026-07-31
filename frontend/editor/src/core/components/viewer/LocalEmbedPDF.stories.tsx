@@ -33,4 +33,3 @@ export const UnsupportedFile: Story = {
     file: new File(["not a pdf"], "notes.txt", { type: "text/plain" }),
   },
 };
-

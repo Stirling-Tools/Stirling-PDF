@@ -1,7 +1,10 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
 
-const SAMPLE_PDF = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 test.describe("PDF Viewer Hot Paths Performance Benchmark", () => {
   test("measure and profile render formats, load times, and search speeds", async ({

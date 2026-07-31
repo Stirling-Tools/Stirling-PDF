@@ -1,7 +1,10 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
 
-const SAMPLE_PDF = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 test.describe("PDF Viewer E2E Memory Leak and DOM Stability Tests", () => {
   test("verify memory and DOM element count do not grow unbounded during active scrolling", async ({
