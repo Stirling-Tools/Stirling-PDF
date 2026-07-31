@@ -383,6 +383,18 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/misc/auto-rotate-pdf": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+    cases: [
+      {
+        when: [{ param: "dryRun", matches: ["true"] }],
+        produces: "JSON",
+        arity: "SISO",
+      },
+    ],
+  },
   "/api/v1/misc/auto-split-pdf": {
     accepts: ["PDF"],
     produces: "PDF",
