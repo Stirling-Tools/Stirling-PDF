@@ -23,11 +23,14 @@
 }
 
 /* A flow's header is a slot, not a string: it carries its own heading, step badge and subtitle, each
-   with its own type. Neutralise the base title wrapper's type so those children inherit nothing from
-   it — it is 600, which would otherwise render every flow subtitle semibold. */
+   with its own type. Neutralise the base title wrapper's weight and size so those children inherit
+   nothing from it — it is 600, which would otherwise render every flow subtitle semibold.
+   Colour is deliberately NOT inherited here: the panel sets none, so `inherit` reached past it to the
+   document and dropped the header below the contrast floor. */
 .portal-flowmodal .sui-modal__title {
-  font: inherit;
-  color: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  color: var(--c-text);
 }
 
 /* The flows stack blocks down the body and space them evenly; the base modal leaves spacing to its
