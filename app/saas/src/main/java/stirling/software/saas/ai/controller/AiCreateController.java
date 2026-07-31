@@ -112,7 +112,8 @@ public class AiCreateController {
                             user.getTeam().getId(),
                             source,
                             ProcessType.SINGLE_TOOL,
-                            BillingCategory.AI);
+                            BillingCategory.AI,
+                            null);
             jobChargeService.chargeStandalone(ctx, 1);
         } catch (RuntimeException e) {
             log.warn(

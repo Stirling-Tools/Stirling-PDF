@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.eclipse.microprofile.config.Config;
+import org.slf4j.MDC;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
@@ -57,10 +58,18 @@ public class InternalApiClient {
     // The second alternation carves out `/api/v1/ai/tools/*` specifically — AI tools are
     // dispatchable, but the broader `/api/v1/ai/` surface (orchestrate, health, etc.) is
     // intentionally NOT permitted to avoid plan steps re-entering the orchestrator.
+    //
+    // `/api/v1/integration/*` holds third-party steps (external API call, Purview labelling,
+    // ConsignO). They reach outside the JVM, so the namespace is deliberately kept to tools that
+    // dereference an admin-owned connection rather than a caller-supplied host — see
+    // ApiConnectionResolver.
     private static final Pattern ALLOWED_ENDPOINT_PATH =
             Pattern.compile(
-                    "^/api/v1/(general|misc|security|convert|filter)(/[A-Za-z0-9_-]+)+$"
+                    "^/api/v1/(general|misc|security|convert|filter|integration)(/[A-Za-z0-9_-]+)+$"
                             + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
+
+    /** Header values must be single-line; used to flatten the forwarded policy name. */
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
 
     /**
      * Marker propagated on every internal sub-step dispatch so the saas PAYG interceptor classifies
@@ -71,6 +80,17 @@ public class InternalApiClient {
      * per-tool {@code @RequiresFeature} annotation.
      */
     public static final String AUTOMATION_HEADER = "X-Stirling-Automation";
+
+    /**
+     * Header carrying the parent policy's name onto each sub-step dispatch, read from MDC key
+     * {@link #POLICY_NAME_MDC_KEY} (set by the policy runner on the worker thread). Lets the audit
+     * layer attribute a tool step to the policy that ran it, instead of showing it as a bare direct
+     * call.
+     */
+    public static final String POLICY_NAME_HEADER = "X-Stirling-Policy-Name";
+
+    /** MDC key the policy runner stamps with the running policy's name; forwarded as a header. */
+    public static final String POLICY_NAME_MDC_KEY = "auditPolicyName";
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
@@ -133,6 +153,27 @@ public class InternalApiClient {
         // step inside a policy run must bill as AUTOMATION, not AI). Set unconditionally because
         // every caller of this dispatcher is an automation surface by design.
         requestBuilder.header(AUTOMATION_HEADER, "true");
+        // Propagate the current automation run id (set by the orchestrator around its dispatch
+        // loop) so the PAYG interceptor groups every sub-step of this one run into a single charge,
+        // and never merges two separate runs that happen to touch identical bytes. Absent → the
+        // receiving call is treated as standalone. See AutomationRunContext.
+        String runId = AutomationRunContext.current();
+        if (runId != null && !runId.isEmpty()) {
+            requestBuilder.header(AutomationRunContext.RUN_ID_HEADER, runId);
+        }
+
+        // Forward the parent policy name (set in MDC by the policy runner) so the audited sub-step
+        // ties back to its policy. Single-line, length-capped: it becomes an HTTP header value.
+        String policyName = MDC.get(POLICY_NAME_MDC_KEY);
+        if (policyName != null && !policyName.isBlank()) {
+            String safe = NEWLINE_PATTERN.matcher(policyName).replaceAll(" ").trim();
+            if (safe.length() > 200) {
+                safe = safe.substring(0, 200);
+            }
+            if (!safe.isEmpty()) {
+                requestBuilder.header(POLICY_NAME_HEADER, safe);
+            }
+        }
 
         try {
             HttpResponse<InputStream> response =

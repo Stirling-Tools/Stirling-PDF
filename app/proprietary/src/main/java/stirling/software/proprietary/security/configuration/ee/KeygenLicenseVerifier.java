@@ -135,9 +135,9 @@ public class KeygenLicenseVerifier {
 
             try {
                 JsonNode attrs = objectMapper.readTree(payload);
-                encryptedData = attrs.path("enc").asText("");
-                encodedSignature = attrs.path("sig").asText("");
-                algorithm = attrs.path("alg").asText("");
+                encryptedData = attrs.path("enc").asString("");
+                encodedSignature = attrs.path("sig").asString("");
+                algorithm = attrs.path("alg").asString("");
             } catch (Exception e) {
                 log.error("Failed to parse license file: {}", e.getMessage());
                 return false;
@@ -220,11 +220,11 @@ public class KeygenLicenseVerifier {
                 String issuedStr =
                         metaObj.path("issued").isNull()
                                 ? null
-                                : metaObj.path("issued").asText(null);
+                                : metaObj.path("issued").asString(null);
                 String expiryStr =
                         metaObj.path("expiry").isNull()
                                 ? null
-                                : metaObj.path("expiry").asText(null);
+                                : metaObj.path("expiry").asString(null);
 
                 if (issuedStr != null && expiryStr != null) {
                     java.time.Instant issued = java.time.Instant.parse(issuedStr);
@@ -288,7 +288,7 @@ public class KeygenLicenseVerifier {
                 }
 
                 // Check license status if available
-                String status = attributesObj.path("status").asText(null);
+                String status = attributesObj.path("status").asString(null);
                 if (status != null
                         && !"ACTIVE".equals(status)
                         && !"EXPIRING".equals(status)) { // Accept "EXPIRING" status as valid
@@ -382,7 +382,7 @@ public class KeygenLicenseVerifier {
 
             JsonNode licenseObj = licenseData.path("license");
             if (licenseObj.isMissingNode() || !licenseObj.isObject()) {
-                String id = licenseData.path("id").asText(null);
+                String id = licenseData.path("id").asString(null);
                 if (id != null) {
                     log.info("Found license ID: {}", id);
                     licenseObj = licenseData; // Use the root object as the license object
@@ -392,7 +392,7 @@ public class KeygenLicenseVerifier {
                 }
             }
 
-            String licenseId = licenseObj.path("id").asText("unknown");
+            String licenseId = licenseObj.path("id").asString("unknown");
             log.info("Processing license with ID: {}", licenseId);
 
             // Check for floating license in license object
@@ -403,7 +403,7 @@ public class KeygenLicenseVerifier {
             }
 
             // Check expiry date
-            String expiryStr = licenseObj.path("expiry").asText(null);
+            String expiryStr = licenseObj.path("expiry").asString(null);
             if (expiryStr != null && !"null".equals(expiryStr)) {
                 java.time.Instant expiry = java.time.Instant.parse(expiryStr);
                 java.time.Instant now = java.time.Instant.now();
@@ -421,7 +421,7 @@ public class KeygenLicenseVerifier {
             // Extract account, product, policy info
             JsonNode accountObj = licenseData.path("account");
             if (!accountObj.isMissingNode() && accountObj.isObject()) {
-                String accountId = accountObj.path("id").asText("unknown");
+                String accountId = accountObj.path("id").asString("unknown");
                 log.info("License belongs to account: {}", accountId);
 
                 // Verify this matches your expected account ID
@@ -434,7 +434,7 @@ public class KeygenLicenseVerifier {
             // Extract policy information if available
             JsonNode policyObj = licenseData.path("policy");
             if (!policyObj.isMissingNode() && policyObj.isObject()) {
-                String policyId = policyObj.path("id").asText("unknown");
+                String policyId = policyObj.path("id").asString("unknown");
                 log.info("License uses policy: {}", policyId);
 
                 // Check for floating license in policy
@@ -504,9 +504,9 @@ public class KeygenLicenseVerifier {
                         validateLicense(licenseKey, machineFingerprint, context);
                 if (validationResponse != null) {
                     boolean isValid = validationResponse.path("meta").path("valid").asBoolean();
-                    String licenseId = validationResponse.path("data").path("id").asText("");
+                    String licenseId = validationResponse.path("data").path("id").asString("");
                     if (!isValid) {
-                        String code = validationResponse.path("meta").path("code").asText("");
+                        String code = validationResponse.path("meta").path("code").asString("");
                         log.info(code);
                         if ("NO_MACHINE".equals(code)
                                 || "NO_MACHINES".equals(code)
@@ -590,8 +590,8 @@ public class KeygenLicenseVerifier {
             JsonNode metaNode = jsonResponse.path("meta");
             boolean isValid = metaNode.path("valid").asBoolean();
 
-            String detail = metaNode.path("detail").asText("");
-            String code = metaNode.path("code").asText("");
+            String detail = metaNode.path("detail").asString("");
+            String code = metaNode.path("code").asString("");
 
             log.info("License validity: {}", isValid);
             log.info("Validation detail: {}", detail);
@@ -615,7 +615,7 @@ public class KeygenLicenseVerifier {
 
             if (includedNode.isArray()) {
                 for (JsonNode node : includedNode) {
-                    if ("policies".equals(node.path("type").asText(""))) {
+                    if ("policies".equals(node.path("type").asString(""))) {
                         policyNode = node;
                         break;
                     }
@@ -701,9 +701,9 @@ public class KeygenLicenseVerifier {
 
                 for (JsonNode machine : machines) {
                     if (machineFingerprint.equals(
-                            machine.path("attributes").path("fingerprint").asText(""))) {
+                            machine.path("attributes").path("fingerprint").asString(""))) {
                         isCurrentMachineActivated = true;
-                        currentMachineId = machine.path("id").asText("");
+                        currentMachineId = machine.path("id").asString("");
                         log.info(
                                 "Current machine is already activated with ID: {}",
                                 currentMachineId);
@@ -730,14 +730,14 @@ public class KeygenLicenseVerifier {
 
                         for (JsonNode machine : machines) {
                             String createdStr =
-                                    machine.path("attributes").path("created").asText(null);
+                                    machine.path("attributes").path("created").asString(null);
                             if (createdStr != null && !createdStr.isEmpty()) {
                                 try {
                                     java.time.Instant createdTime =
                                             java.time.Instant.parse(createdStr);
                                     if (oldestTime == null || createdTime.isBefore(oldestTime)) {
                                         oldestTime = createdTime;
-                                        oldestMachineId = machine.path("id").asText("");
+                                        oldestMachineId = machine.path("id").asString("");
                                     }
                                 } catch (Exception e) {
                                     log.warn(
@@ -751,7 +751,7 @@ public class KeygenLicenseVerifier {
                         if (oldestMachineId == null) {
                             log.warn(
                                     "Could not determine oldest machine by timestamp, using first machine in list");
-                            oldestMachineId = machines.path(0).path("id").asText("");
+                            oldestMachineId = machines.path(0).path("id").asString("");
                         }
 
                         log.info("Deregistering machine with ID: {}", oldestMachineId);

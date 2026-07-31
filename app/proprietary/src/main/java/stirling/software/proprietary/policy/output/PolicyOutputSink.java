@@ -26,6 +26,6 @@ public interface PolicyOutputSink {
     default void validate(OutputSpec spec) {}
 
     /** Persist/deliver the output files and return their descriptors. */
-    List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
+    List<ResultFile> deliver(OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
             throws IOException;
 }

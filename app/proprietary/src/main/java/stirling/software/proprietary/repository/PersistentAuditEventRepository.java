@@ -342,6 +342,21 @@ public class PersistentAuditEventRepository
         return find("principal IN ?1", Sort.descending("timestamp"), principals);
     }
 
+    // Noise-excluding scans for the portal: keep the page window full of meaningful events so the
+    // list doesn't shrink as read/polling noise (UI_DATA/HTTP_REQUEST) grows in the recent window.
+    public PanacheQuery<PersistentAuditEvent> findByTypeNotIn(List<String> excludedTypes) {
+        return find("type NOT IN ?1", Sort.descending("timestamp"), excludedTypes);
+    }
+
+    public PanacheQuery<PersistentAuditEvent> findByTypeNotInAndPrincipalIn(
+            List<String> excludedTypes, List<String> principals) {
+        return find(
+                "type NOT IN ?1 AND principal IN ?2",
+                Sort.descending("timestamp"),
+                excludedTypes,
+                principals);
+    }
+
     public PanacheQuery<PersistentAuditEvent> findByTypeInAndTimestampBetween(
             List<String> types, Instant startDate, Instant endDate) {
         return find(
@@ -440,5 +455,51 @@ public class PersistentAuditEventRepository
                 Sort.descending("timestamp"),
                 excludeType,
                 startDate);
+    }
+
+    // Free-editor fleet usage: count genuine free-UI operations (source = "WEB") by type.
+    public long countByTypeInAndSourceAndTimestampAfter(
+            List<String> types, String source, Instant since) {
+        return count("type IN ?1 AND source = ?2 AND timestamp > ?3", types, source, since);
+    }
+
+    public long countDistinctPrincipalsBySourceExcludingTypeAfter(
+            String source, String excludeType, Instant since) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
+                                + "WHERE e.source = :source AND e.type <> :excludeType AND"
+                                + " e.timestamp > :since",
+                        Long.class)
+                .setParameter("source", source)
+                .setParameter("excludeType", excludeType)
+                .setParameter("since", since)
+                .getSingleResult();
+    }
+
+    // Team-scoped (SaaS) variants: same free-UI counts, constrained to a team's member principals.
+    public long countByTypeInAndSourceAndPrincipalInAndTimestampAfter(
+            List<String> types, String source, List<String> principals, Instant since) {
+        return count(
+                "type IN ?1 AND source = ?2 AND principal IN ?3 AND timestamp > ?4",
+                types,
+                source,
+                principals,
+                since);
+    }
+
+    public long countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
+            String source, String excludeType, List<String> principals, Instant since) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
+                                + "WHERE e.source = :source AND e.type <> :excludeType "
+                                + "AND e.principal IN :principals AND e.timestamp > :since",
+                        Long.class)
+                .setParameter("source", source)
+                .setParameter("excludeType", excludeType)
+                .setParameter("principals", principals)
+                .setParameter("since", since)
+                .getSingleResult();
     }
 }

@@ -57,11 +57,24 @@ public class CustomAuditEventRepository {
                 return;
             }
             String rid = MDC.get("requestId");
+            String apiKeyLabel =
+                    MDC.get(
+                            stirling.software.proprietary.security.service
+                                    .ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
 
-            if (rid != null) {
+            if (rid != null || apiKeyLabel != null) {
                 clean = new java.util.HashMap<>(clean);
-                clean.put("requestId", rid);
+                if (rid != null) {
+                    clean.put("requestId", rid);
+                }
+                // Named key that made the request; surfaces as the doc source in the processor
+                // feed.
+                if (apiKeyLabel != null) {
+                    clean.put("__apiKeyLabel", apiKeyLabel);
+                }
             }
+
+            String source = MDC.get("auditSource");
 
             String auditEventData = MAPPER.writeValueAsString(clean);
             log.debug("AuditEvent data (JSON): {}", auditEventData);
@@ -70,6 +83,7 @@ public class CustomAuditEventRepository {
                     PersistentAuditEvent.builder()
                             .principal(safePrincipal(principal))
                             .type(type)
+                            .source(source)
                             .data(auditEventData)
                             .timestamp(timestamp)
                             .build();

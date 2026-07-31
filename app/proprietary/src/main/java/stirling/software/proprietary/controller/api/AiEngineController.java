@@ -33,6 +33,7 @@ import jakarta.ws.rs.sse.SseEventSink;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
@@ -44,6 +45,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiEngineEndpointResolver;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiWorkflowService;
 
 import tools.jackson.core.JacksonException;
@@ -67,19 +69,18 @@ public class AiEngineController {
     private final JobOwnershipService jobOwnershipService;
     private final AiEngineEndpointResolver endpointResolver;
     private final Instance<UserServiceInterface> userService;
+    private final AiFeatureGate aiFeatureGate;
 
     /**
-     * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
-     * 1000-page scan, splitting a huge PDF, etc.) without the emitter completing out from under the
-     * executor. Configurable via {@code stirling.ai.streamTimeoutMs}.
+     * SSE stream timeout (ms), long enough for multi-gigabyte PDF workflows without completing out
+     * from under the executor. Derived from {@code aiEngine.streamTimeoutSeconds}.
      *
      * <p>TODO: Migration required - the JAX-RS SSE API has no per-emitter timeout equivalent to
      * Spring's {@code SseEmitter} constructor argument. Enforce this timeout against the background
      * orchestration task (e.g. a scheduled cancellation / Future.get with timeout) if a hard cap is
      * required; for now it only drives the timeout error frame's wording.
      */
-    @ConfigProperty(name = "stirling.ai.streamTimeoutMs", defaultValue = "1800000")
-    long streamTimeoutMs;
+    private final long streamTimeoutMs;
 
     @Inject
     public AiEngineController(
@@ -90,6 +91,8 @@ public class AiEngineController {
             TaskManager taskManager,
             JobOwnershipService jobOwnershipService,
             AiEngineEndpointResolver endpointResolver,
+            AiFeatureGate aiFeatureGate,
+            ApplicationProperties applicationProperties,
             Instance<UserServiceInterface> userService) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
@@ -98,7 +101,10 @@ public class AiEngineController {
         this.taskManager = taskManager;
         this.jobOwnershipService = jobOwnershipService;
         this.endpointResolver = endpointResolver;
+        this.aiFeatureGate = aiFeatureGate;
         this.userService = userService;
+        this.streamTimeoutMs =
+                applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
     }
 
     private String currentUserId() {
@@ -132,6 +138,7 @@ public class AiEngineController {
             @Valid @BeanParam AiWorkflowRequest request,
             @RestForm("fileInput") List<FileUpload> fileInputs)
             throws IOException {
+        aiFeatureGate.requireConversationalWorkflow();
         request.setFileInputs(toFileInputs(fileInputs));
         AiWorkflowResponse result = aiWorkflowService.orchestrate(request);
         registerFileResultAsJob(result);
@@ -164,6 +171,7 @@ public class AiEngineController {
             @RestForm("fileInput") List<FileUpload> fileInputs,
             @Context Sse sse,
             @Context SseEventSink sink) {
+        aiFeatureGate.requireConversationalWorkflow();
         request.setFileInputs(toFileInputs(fileInputs));
         // The JAX-RS SseEventSink replaces Spring's SseEmitter. There is no onTimeout/onError
         // callback registration; sink.send(...) returns a CompletionStage and a disconnected
@@ -281,6 +289,8 @@ public class AiEngineController {
                     "Sends a user message to the PDF edit agent which returns a structured plan"
                             + " of tool operations to perform")
     public Response pdfEdit(String requestBody) throws IOException {
+        // Same gate as /orchestrate: edit agent is a model call on the same conversational surface.
+        aiFeatureGate.requireConversationalWorkflow();
         JsonNode parsed = parseJson(requestBody);
         if (!parsed.isObject()) {
             throw new WebApplicationException(

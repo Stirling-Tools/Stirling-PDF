@@ -17,11 +17,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.TeamApi;
+import stirling.software.proprietary.access.model.PrincipalType;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
+import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 
 @TeamApi
@@ -34,6 +38,9 @@ public class TeamController {
 
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
+    private final ResourceGrantRepository resourceGrantRepository;
+    private final IntegrationConfigRepository integrationConfigRepository;
+    private final TeamMembershipService teamMembershipService;
 
     @RolesAllowed("ADMIN")
     @POST
@@ -114,8 +121,78 @@ public class TeamController {
                     .build();
         }
 
+        if (integrationConfigRepository.existsByOwnerTeam_Id(teamId)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "Team still owns integration configurations. Delete or reassign them first."));
+        }
+
+        // Team grants and membership rows would dangle once the team row is gone
+        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(PrincipalType.TEAM, teamId);
+        teamMembershipService.deleteAllForTeam(teamId);
         teamRepository.delete(team);
         return Response.ok(Map.of("message", "Team deleted successfully")).build();
+    }
+
+    @RolesAllowed("ADMIN")
+    @POST
+    @Path("/setOwner")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
+    public Response setTeamOwner(
+            @QueryParam("teamId") Long teamId, @QueryParam("userId") Long userId) {
+        return mutateOwner(teamId, userId, true);
+    }
+
+    @RolesAllowed("ADMIN")
+    @POST
+    @Path("/removeOwner")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
+    public Response removeTeamOwner(
+            @QueryParam("teamId") Long teamId, @QueryParam("userId") Long userId) {
+        return mutateOwner(teamId, userId, false);
+    }
+
+    private Response mutateOwner(Long teamId, Long userId, boolean owner) {
+        Optional<Team> teamOpt = teamRepository.findByIdOptional(teamId);
+        if (teamOpt.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", "Team not found."))
+                    .build();
+        }
+        Team team = teamOpt.get();
+
+        // System teams have no owners
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())
+                || TeamService.DEFAULT_TEAM_NAME.equals(team.getName())) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "System teams cannot have owners."))
+                    .build();
+        }
+
+        Optional<User> userOpt = userRepository.findByIdOptional(userId);
+        if (userOpt.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", "User not found."))
+                    .build();
+        }
+        User user = userOpt.get();
+
+        if (user.getTeam() == null || !user.getTeam().getId().equals(teamId)) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "User must be a member of the team."))
+                    .build();
+        }
+
+        if (owner) {
+            teamMembershipService.setOwner(team, user);
+            return Response.ok(Map.of("message", "Team owner assigned successfully")).build();
+        }
+        teamMembershipService.removeOwner(team, user);
+        return Response.ok(Map.of("message", "Team owner removed successfully")).build();
     }
 
     @RolesAllowed("ADMIN")
@@ -162,6 +239,7 @@ public class TeamController {
         // Assign user to team
         user.setTeam(team);
         userRepository.persist(user);
+        teamMembershipService.syncMembership(user);
 
         return Response.ok(Map.of("message", "User added to team successfully")).build();
     }

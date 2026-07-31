@@ -66,4 +66,37 @@ public class SessionRepository implements PanacheRepositoryBase<SessionEntity, S
                 .setParameter("teamId", teamId)
                 .getResultList();
     }
+
+    /** Latest request instant per principal. */
+    public List<Object[]> findLatestRequestPerPrincipal() {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT s.principalName, MAX(s.lastRequest) FROM SessionEntity s GROUP BY"
+                                + " s.principalName",
+                        Object[].class)
+                .getResultList();
+    }
+
+    /** Principals with a live (non-expired, within-window) session. */
+    public List<String> findActivePrincipalsSince(Instant cutoff) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT DISTINCT s.principalName FROM SessionEntity s "
+                                + "WHERE s.expired = false AND s.lastRequest > :cutoff",
+                        String.class)
+                .setParameter("cutoff", cutoff)
+                .getResultList();
+    }
+
+    /** Flag timed-out sessions as expired. */
+    @Transactional
+    public int expireOlderThan(Instant cutoff) {
+        return update("expired = true WHERE expired = false AND lastRequest < ?1", cutoff);
+    }
+
+    /** Purge long-expired sessions to bound table growth. */
+    @Transactional
+    public int deleteExpiredOlderThan(Instant cutoff) {
+        return (int) delete("expired = true AND lastRequest < ?1", cutoff);
+    }
 }

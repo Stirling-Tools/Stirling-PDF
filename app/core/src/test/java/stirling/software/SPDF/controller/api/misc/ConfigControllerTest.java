@@ -22,6 +22,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.System;
 import stirling.software.common.service.LicenseServiceInterface;
@@ -38,6 +39,7 @@ class ConfigControllerTest {
 
     @Mock private Instance<ServerCertificateServiceInterface> serverCertificateService;
     @Mock private Instance<UserServiceInterface> userService;
+    @Mock private Instance<ShowAdminInterface> showAdmin;
     @Mock private Instance<LicenseServiceInterface> licenseService;
 
     private ConfigController configController;
@@ -57,6 +59,7 @@ class ConfigControllerTest {
                         endpointConfiguration,
                         serverCertificateService,
                         userService,
+                        showAdmin,
                         licenseService,
                         mock(stirling.software.SPDF.config.ExternalAppDepConfig.class));
     }

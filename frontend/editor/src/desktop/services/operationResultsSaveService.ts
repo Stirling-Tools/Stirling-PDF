@@ -1,10 +1,9 @@
 import type { FileId } from "@app/types/fileContext";
 import type { OperationSaveContext } from "@core/services/operationResultsSaveService";
-import {
-  downloadFile,
-  downloadFromUrl,
-  DownloadResult,
-} from "@app/services/downloadService";
+import { downloadFromUrl, DownloadResult } from "@app/services/downloadService";
+// Save through the export gateway so a "run on export" policy enforces before
+// the file is written out (no-op when no such policy is active).
+import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 
 export type { OperationSaveContext };
 

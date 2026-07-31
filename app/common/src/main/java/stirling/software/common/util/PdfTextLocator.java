@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -28,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ApplicationScoped
 public class PdfTextLocator {
+
+    private static final Pattern NON_ALPHANUMERIC_PATTERN = Pattern.compile("[^A-Za-z0-9]");
 
     /** One found line of text with its user-space bounding box. */
     public record MatchedBox(float x, float y, float width, float height) {}
@@ -83,7 +86,7 @@ public class PdfTextLocator {
 
     /** Strip everything non-alphanumeric and lowercase for tolerant matching. */
     private static String normalize(String s) {
-        return s.replaceAll("[^A-Za-z0-9]", "").toLowerCase(Locale.ROOT);
+        return NON_ALPHANUMERIC_PATTERN.matcher(s).replaceAll("").toLowerCase(Locale.ROOT);
     }
 
     private static final class CapturedLine {

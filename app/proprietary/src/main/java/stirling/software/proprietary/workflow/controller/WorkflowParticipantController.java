@@ -463,16 +463,16 @@ public class WorkflowParticipantController {
             certSubmission.put("reason", reason);
             certSubmission.put("showLogo", showLogo);
 
-            // Store certificate files as base64
+            // Store the certificate keystores encrypted at rest.
             if (p12File != null && !p12File.isEmpty()) {
                 certSubmission.put(
                         "p12Keystore",
-                        java.util.Base64.getEncoder().encodeToString(p12File.getBytes()));
+                        metadataEncryptionService.encryptBytes(p12File.getBytes()));
             }
             if (jksFile != null && !jksFile.isEmpty()) {
                 certSubmission.put(
                         "jksKeystore",
-                        java.util.Base64.getEncoder().encodeToString(jksFile.getBytes()));
+                        metadataEncryptionService.encryptBytes(jksFile.getBytes()));
             }
 
             metadata.put("certificateSubmission", certSubmission);

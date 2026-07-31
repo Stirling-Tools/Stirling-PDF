@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.MDC;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.servlet.Filter;
@@ -35,8 +37,9 @@ import stirling.software.common.security.UsernameNotFoundException;
 import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.model.AuthenticationType;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
@@ -60,6 +63,7 @@ public class JwtAuthenticationFilter implements Filter {
     // Spring Security AuthenticationEntryPoint interface.
     @Inject JwtAuthenticationEntryPoint authenticationEntryPoint;
     @Inject ApplicationProperties.Security securityProperties;
+    @Inject ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Override
     public void doFilter(
@@ -67,6 +71,10 @@ public class JwtAuthenticationFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+        // Start clean so a pooled thread can't inherit a prior request's key label. This filter
+        // runs before UserAuthenticationFilter, so in JWT mode it owns the API-key label lifecycle.
+        MDC.remove(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
 
         if (!jwtService.isJwtEnabled()) {
             filterChain.doFilter(request, response);
@@ -150,9 +158,14 @@ public class JwtAuthenticationFilter implements Filter {
 
             if (apiKey != null && !apiKey.isBlank()) {
                 try {
-                    Optional<User> user = userService.getUserByApiKey(apiKey);
+                    // Resolve through the shared service so the multi-key table (then the legacy
+                    // per-user key) is consulted and per-key usage is recorded; the key runs as its
+                    // owner. It also yields a per-key label for the processor's document
+                    // attribution.
+                    Optional<ApiKeyAuthentication> resolved =
+                            apiKeyAuthenticationService.authenticate(apiKey);
 
-                    if (user.isEmpty()) {
+                    if (resolved.isEmpty()) {
                         handleAuthenticationFailure(
                                 request,
                                 response,
@@ -168,7 +181,7 @@ public class JwtAuthenticationFilter implements Filter {
                     // to keep the API-key authentication intent; in Quarkus this should be a
                     // SecurityIdentity produced by a custom IdentityProvider for the API key.
                     List<GrantedAuthority> authorities =
-                            user.get().getAuthorities().stream()
+                            resolved.get().user().getAuthorities().stream()
                                     .map(
                                             a ->
                                                     (GrantedAuthority)
@@ -177,8 +190,13 @@ public class JwtAuthenticationFilter implements Filter {
                                     .toList();
                     authentication =
                             new UsernamePasswordAuthenticationToken(
-                                    user.get(), apiKey, authorities);
+                                    resolved.get().user(), apiKey, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    if (resolved.get().auditLabel() != null) {
+                        MDC.put(
+                                ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY,
+                                resolved.get().auditLabel());
+                    }
                     return true;
                 } catch (AuthenticationException e) {
                     handleAuthenticationFailure(

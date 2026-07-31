@@ -24,6 +24,8 @@ import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.security.AuthenticationException;
 import stirling.software.common.security.UsernameNotFoundException;
+import stirling.software.proprietary.access.service.ResourceAccessService;
+import stirling.software.proprietary.access.service.TeamLeadLookup;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -60,6 +62,8 @@ public class AuthController {
     @Inject ApplicationProperties.Security securityProperties;
     @Inject ApplicationProperties applicationProperties;
     @Inject AiUserDataService aiUserDataService;
+    @Inject ResourceAccessService resourceAccessService;
+    @Inject TeamLeadLookup teamLeadLookup;
 
     @Inject SecurityIdentity securityIdentity;
 
@@ -703,6 +707,13 @@ public class AuthController {
         userMap.put("username", user.getUsername());
         userMap.put("role", user.getRolesAsString());
         userMap.put("enabled", user.isEnabled());
+        userMap.put("portalAccess", resourceAccessService.canAccessPortal(user));
+        userMap.put("teamLead", teamLeadLookup.isAnyTeamLeader(user));
+        // Expose the caller's team so non-admin team owners can scope their own team's resources.
+        if (user.getTeam() != null) {
+            userMap.put(
+                    "team", Map.of("id", user.getTeam().getId(), "name", user.getTeam().getName()));
+        }
         userMap.put(
                 "authenticationType",
                 user.getAuthenticationType()); // Expose authentication type for SSO detection

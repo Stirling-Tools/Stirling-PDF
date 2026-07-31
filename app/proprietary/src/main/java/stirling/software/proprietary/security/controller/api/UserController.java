@@ -52,6 +52,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -74,6 +75,7 @@ public class UserController {
     private final jakarta.enterprise.inject.Instance<EmailService> emailService;
     private final UserLicenseSettingsService licenseSettingsService;
     private final LoginAttemptService loginAttemptService;
+    private final TeamMembershipService teamMembershipService;
 
     // JAX-RS injects the current security context; replaces Spring's Principal/Authentication
     // method parameters. securityContext.getUserPrincipal() is null when unauthenticated.
@@ -751,6 +753,7 @@ public class UserController {
                 // The user was loaded earlier in this request (detached); Panache persist() rejects
                 // a detached entity. Re-attach via merge (the frontend sends teamId here).
                 userRepository.getEntityManager().merge(user);
+                teamMembershipService.syncMembership(user);
             }
         }
 

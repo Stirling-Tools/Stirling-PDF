@@ -37,6 +37,8 @@ import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.model.AmrMethod;
@@ -81,6 +83,7 @@ public class SupabaseAuthenticationFilter {
     private final SupabaseUserService supabaseUserService;
     private final SaasTeamService saasTeamService;
     private final JwtDecoder jwtDecoder;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     // TODO: Migration required - the Spring AuthenticationEntryPoint
     // (BearerTokenAuthenticationEntryPoint) that wrote the 401 challenge has no Quarkus equivalent
@@ -92,12 +95,14 @@ public class SupabaseAuthenticationFilter {
             UserService userService,
             SupabaseUserService supabaseUserService,
             SaasTeamService saasTeamService,
-            JwtDecoder jwtDecoder) {
+            JwtDecoder jwtDecoder,
+            ApiKeyAuthenticationService apiKeyAuthenticationService) {
         this.teamService = teamService;
         this.userService = userService;
         this.supabaseUserService = supabaseUserService;
         this.saasTeamService = saasTeamService;
         this.jwtDecoder = jwtDecoder;
+        this.apiKeyAuthenticationService = apiKeyAuthenticationService;
     }
 
     // TODO: Migration required - this retains the original OncePerRequestFilter.doFilterInternal
@@ -107,6 +112,9 @@ public class SupabaseAuthenticationFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        // Start clean so a pooled thread can't inherit a prior request's API-key label.
+        MDC.remove(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
 
         if (isStaticResource(request.getContextPath(), request.getRequestURI())) {
             filterChain.doFilter(request, response);
@@ -299,15 +307,13 @@ public class SupabaseAuthenticationFilter {
             user.setUsername(supabaseUser.getEmail());
         }
         try {
-            User saved = userService.saveUser(user);
             // Give the account its own team rather than the shared Default team.
-            saved.setTeam(saasTeamService.ensurePersonalTeam(saved));
-            return saved;
+            return saasTeamService.saveUserWithPersonalTeam(user);
         } catch (PersistenceException e) {
             // TODO: Migration required - was Spring's DataIntegrityViolationException
-            // (email-collision
-            // race). jakarta.persistence.PersistenceException is broader; narrow to the
-            // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
+            // (email-collision race). jakarta.persistence.PersistenceException is broader; narrow
+            // to the Hibernate/JPA constraint-violation type once the persistence layer is
+            // finalized.
             log.warn(
                     "Email collision upgrading anonymous user {} to {}: {}",
                     user.getId(),
@@ -407,39 +413,24 @@ public class SupabaseAuthenticationFilter {
             throw new AuthenticationFailureException("Failed to create SupabaseUser", e);
         }
 
-        User savedUser;
-        boolean weCreatedThisUser = true;
+        // Guests get NO team: the editor is free and needs none. Everyone else is provisioned
+        // atomically, so a user visible to a parallel request always already has one.
         try {
-            savedUser = userService.saveUser(newUser);
+            return isAnonymous(jwt)
+                    ? userService.saveUser(newUser)
+                    : saasTeamService.saveUserWithPersonalTeam(newUser);
         } catch (PersistenceException dup) {
             // Parallel filter won the race; fetch the winning row.
             // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to
-            // the
-            // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
-            weCreatedThisUser = false;
-            savedUser =
-                    userService
-                            .findBySupabaseId(supabaseId)
-                            .orElseThrow(
-                                    () ->
-                                            new AuthenticationFailureException(
-                                                    "User creation conflict, but unable to find existing user",
-                                                    dup));
+            // the Hibernate/JPA constraint-violation type once the persistence layer is finalized.
+            return userService
+                    .findBySupabaseId(supabaseId)
+                    .orElseThrow(
+                            () ->
+                                    new AuthenticationFailureException(
+                                            "User creation conflict, but unable to find existing user",
+                                            dup));
         }
-
-        // Only the DB-race winner runs first-time init; the losers skip it.
-        if (weCreatedThisUser) {
-            try {
-                savedUser.setTeam(saasTeamService.ensurePersonalTeam(savedUser));
-            } catch (Exception e) {
-                log.warn(
-                        "Failed to create personal team for new user {} ({}): {}",
-                        LogRedactionUtils.redactSupabaseId(supabaseId),
-                        LogRedactionUtils.redactEmail(savedUser.getUsername()),
-                        e.getMessage());
-            }
-        }
-        return savedUser;
     }
 
     private boolean apiKeyAuthenticated(HttpServletRequest request) throws AuthenticationException {
@@ -453,27 +444,34 @@ public class SupabaseAuthenticationFilter {
             return false;
         }
 
-        Optional<User> user = userService.getUserByApiKey(apiKey);
-        if (user.isEmpty()) {
+        // Resolves the multi-key table then the legacy key, records per-key usage, and yields a
+        // label for the processor's document-source attribution.
+        Optional<ApiKeyAuthentication> resolved = apiKeyAuthenticationService.authenticate(apiKey);
+        if (resolved.isEmpty()) {
             throw new AuthenticationFailureException("Invalid API Key.");
         }
+        User user = resolved.get().user();
 
-        userService.trackApiKeyFirstUse(user.get());
+        userService.trackApiKeyFirstUse(user);
 
         // TODO: Migration required - ApiKeyAuthenticationToken is a plain POJO that does not
         // implement the Authentication shim. Wrap the principal/credentials/authorities in a
         // UsernamePasswordAuthenticationToken (which does) so it can be set on the SecurityContext.
         // Re-wire to a Quarkus SecurityIdentity when the API-key auth path is migrated.
         java.util.Collection<stirling.software.common.security.GrantedAuthority> mappedAuthorities =
-                user.get().getAuthorities().stream()
+                user.getAuthorities().stream()
                         .map(
                                 a ->
-                                        new stirling.software.common.security
-                                                .SimpleGrantedAuthority(a.getAuthority()))
+                                        (stirling.software.common.security.GrantedAuthority)
+                                                new stirling.software.common.security
+                                                        .SimpleGrantedAuthority(a.getAuthority()))
                         .collect(java.util.stream.Collectors.toList());
         UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(user.get(), apiKey, mappedAuthorities);
+                new UsernamePasswordAuthenticationToken(user, apiKey, mappedAuthorities);
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        if (resolved.get().auditLabel() != null) {
+            MDC.put(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY, resolved.get().auditLabel());
+        }
         return true;
     }
 

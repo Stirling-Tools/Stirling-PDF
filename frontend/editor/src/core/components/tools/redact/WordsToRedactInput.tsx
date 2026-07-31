@@ -1,13 +1,8 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Stack,
-  Text,
-  TextInput,
-  Button,
-  Group,
-  ActionIcon,
-} from "@mantine/core";
+import { Stack, Text, TextInput, Group } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 
 interface WordsToRedactInputProps {
   wordsToRedact: string[];
@@ -73,10 +68,11 @@ export default function WordsToRedactInput({
           </Text>
           <ActionIcon
             size="sm"
-            variant="subtle"
-            color="red"
+            variant="tertiary"
+            accent="danger"
             onClick={() => removeWord(index)}
             disabled={disabled}
+            aria-label={t("remove", "Remove")}
           >
             ×
           </ActionIcon>
@@ -99,7 +95,7 @@ export default function WordsToRedactInput({
         />
         <Button
           size="sm"
-          variant="light"
+          variant="secondary"
           onClick={addWord}
           disabled={disabled || !currentWord.trim()}
         >

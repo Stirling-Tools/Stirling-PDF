@@ -29,10 +29,11 @@ public class WalletLedgerRepository implements PanacheRepositoryBase<WalletLedge
     }
 
     /**
-     * Per-category debit totals over an arbitrary window, as positive units. Rows with NULL
-     * category (system entries) are excluded; BYPASSED never reaches the ledger by construction.
+     * Per-category debit totals with BOTH the size-scaled unit sum and the input-file count ({@code
+     * doc_count}) over a window. Rows: {@code [category, units, docs]}. Lets the wallet show, per
+     * category, "X PDFs · Y meter units" rather than conflating the two.
      */
-    public List<Object[]> sumPeriodAmountByCategory(
+    public List<Object[]> sumPeriodByCategoryWithDocs(
             Long teamId,
             LedgerEntryType entryType,
             LocalDateTime periodStart,
@@ -40,7 +41,8 @@ public class WalletLedgerRepository implements PanacheRepositoryBase<WalletLedge
         return getEntityManager()
                 .createQuery(
                         "SELECT e.billingCategory AS category,"
-                                + " COALESCE(SUM(-e.amountUnits), 0) AS units"
+                                + " COALESCE(SUM(-e.amountUnits), 0) AS units,"
+                                + " COALESCE(SUM(e.docCount), 0) AS docs"
                                 + " FROM WalletLedgerEntry e"
                                 + " WHERE e.teamId = :teamId"
                                 + " AND e.entryType = :entryType"
@@ -48,6 +50,41 @@ public class WalletLedgerRepository implements PanacheRepositoryBase<WalletLedge
                                 + " AND e.occurredAt >= :periodStart"
                                 + " AND e.occurredAt < :periodEnd"
                                 + " GROUP BY e.billingCategory",
+                        Object[].class)
+                .setParameter("teamId", teamId)
+                .setParameter("entryType", entryType)
+                .setParameter("periodStart", periodStart)
+                .setParameter("periodEnd", periodEnd)
+                .getResultList();
+    }
+
+    /**
+     * Period usage analytics in one row: {@code [docsProcessed, uniquePdfs, sizeMultiplierPdfs]}.
+     * {@code docsProcessed} sums input-file counts; {@code uniquePdfs} counts distinct input
+     * fingerprints (a file hit by N operations counts once); {@code sizeMultiplierPdfs} sums the
+     * input files on charges where the size multiplier kicked in (units billed &gt; input files).
+     * DEBIT + non-null category only.
+     *
+     * <p>Returns a single-element {@code List} (aggregate-only query - always one row) so callers
+     * keep the {@code get(0)} access the Spring Data version required.
+     */
+    public List<Object[]> periodUsageAnalytics(
+            Long teamId,
+            LedgerEntryType entryType,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT COALESCE(SUM(e.docCount), 0) AS docs,"
+                                + " COUNT(DISTINCT e.documentFingerprint) AS uniquePdfs,"
+                                + " COALESCE(SUM(CASE WHEN (-e.amountUnits) > e.docCount THEN"
+                                + " e.docCount ELSE 0 END), 0) AS sizeMultiplierPdfs"
+                                + " FROM WalletLedgerEntry e"
+                                + " WHERE e.teamId = :teamId"
+                                + " AND e.entryType = :entryType"
+                                + " AND e.billingCategory IS NOT NULL"
+                                + " AND e.occurredAt >= :periodStart"
+                                + " AND e.occurredAt < :periodEnd",
                         Object[].class)
                 .setParameter("teamId", teamId)
                 .setParameter("entryType", entryType)

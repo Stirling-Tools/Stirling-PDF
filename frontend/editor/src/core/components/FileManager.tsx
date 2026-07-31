@@ -198,6 +198,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
       }}
     >
       <div
+        data-tour="files-modal"
         style={{
           position: "relative",
           height: modalHeight,
@@ -220,7 +221,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             width: "100%",
             border: "none",
             borderRadius: "var(--radius-md)",
-            backgroundColor: "var(--bg-file-manager)",
+            backgroundColor: "var(--c-bg)",
           }}
           styles={{
             inner: { pointerEvents: "all" },

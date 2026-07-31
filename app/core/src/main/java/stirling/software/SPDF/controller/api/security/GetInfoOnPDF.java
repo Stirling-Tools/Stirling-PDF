@@ -314,6 +314,23 @@ public class GetInfoOnPDF {
         }
     }
 
+    /**
+     * Info-dictionary keys exposed above via typed getters; any other key in the dictionary is
+     * surfaced as custom metadata (e.g. the classification policy's StirlingPDFClassification
+     * entry).
+     */
+    private static final java.util.Set<String> STANDARD_INFO_KEYS =
+            java.util.Set.of(
+                    "Title",
+                    "Author",
+                    "Subject",
+                    "Keywords",
+                    "Producer",
+                    "Creator",
+                    "CreationDate",
+                    "ModDate",
+                    "Trapped");
+
     private static ObjectNode extractMetadata(PDDocument document) {
         ObjectNode metadata = objectMapper.createObjectNode();
 
@@ -343,6 +360,18 @@ public class GetInfoOnPDF {
                                         : null);
                 if (modificationDate != null) {
                     metadata.put("ModificationDate", modificationDate);
+                }
+
+                // Surface custom Info-dictionary entries (anything beyond the
+                // standard fields above) — e.g. StirlingPDFClassification
+                for (String key : info.getMetadataKeys()) {
+                    if (STANDARD_INFO_KEYS.contains(key)) {
+                        continue;
+                    }
+                    String value = info.getCustomMetadataValue(key);
+                    if (value != null && !value.isBlank()) {
+                        metadata.put(key, value);
+                    }
                 }
             }
         } catch (Exception e) {

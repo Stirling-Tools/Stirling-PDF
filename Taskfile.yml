@@ -78,6 +78,24 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
+  dev:portal:
+    desc: "Start backend + editor; the portal is an admin route at /portal"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+      - task: frontend:dev:proprietary
+        vars:
+          PORT: '{{.EDITOR_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
   dev:saas:
     desc: "Start SaaS backend + frontend concurrently on free ports"
     cmds:
@@ -165,6 +183,16 @@ tasks:
       - task: backend:format:check
       - task: frontend:format:check
       - task: engine:format:check
+
+  # ============================================================
+  # Code generation
+  # ============================================================
+
+  tool-models:
+    desc: "Generate all API models from the Java OpenAPI spec"
+    cmds:
+      - task: frontend:tool-models
+      - task: engine:tool-models
 
   # ============================================================
   # Quality Gate

@@ -1,6 +1,7 @@
 package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
@@ -47,8 +49,11 @@ import tools.jackson.databind.node.ObjectNode;
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class PdfCommentAgentController {
 
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\r\n]");
+
     @Inject PdfCommentAgentOrchestrator orchestrator;
     @Inject ObjectMapper objectMapper;
+    @Inject AiFeatureGate aiFeatureGate;
 
     @POST
     @Path("/pdf-comment-agent")
@@ -79,12 +84,14 @@ public class PdfCommentAgentController {
                     @RestForm("prompt")
                     String prompt)
             throws IOException {
+        aiFeatureGate.requirePdfComment();
 
         MultipartFile fileInput = FileUploadMultipartFile.of(fileInputUpload);
 
+        String originalFilename = fileInput.getOriginalFilename();
         String safeName =
-                fileInput.getOriginalFilename() != null
-                        ? fileInput.getOriginalFilename().replaceAll("[\\r\\n]", "_")
+                originalFilename != null
+                        ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
                         : "<unnamed>";
         log.info(
                 "[pdf-comment-agent] request file={} promptLen={}",

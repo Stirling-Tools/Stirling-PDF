@@ -149,8 +149,10 @@ public class TempFileCleanupService {
         int directoriesDeletedCount = 0;
         for (Path directory : registry.getTempDirectories()) {
             try {
-                if (Files.exists(directory)) {
+                if (Files.exists(directory)
+                        && shouldDeleteRegisteredDirectory(directory, maxAgeMillis)) {
                     GeneralUtils.deleteDirectory(directory);
+                    registry.unregisterDirectory(directory);
                     directoriesDeletedCount++;
                     log.debug("Cleaned up temporary directory: {}", directory);
                 }
@@ -278,6 +280,21 @@ public class TempFileCleanupService {
         }
 
         return totalDeletedCount.get();
+    }
+
+    private boolean shouldDeleteRegisteredDirectory(Path directory, long maxAgeMillis) {
+        if (maxAgeMillis <= 0) {
+            return true;
+        }
+
+        try {
+            long currentTime = System.currentTimeMillis();
+            long lastModified = Files.getLastModifiedTime(directory).toMillis();
+            return (currentTime - lastModified) > maxAgeMillis;
+        } catch (IOException e) {
+            log.debug("Could not check directory age, skipping cleanup: {}", directory, e);
+            return false;
+        }
     }
 
     /** Get the system temp directory path based on configuration or system property. */

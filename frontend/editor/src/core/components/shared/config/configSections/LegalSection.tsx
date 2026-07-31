@@ -1,5 +1,6 @@
 import React from "react";
-import { Anchor, Button, Group, Paper, Stack, Text } from "@mantine/core";
+import { Anchor, Group, Paper, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -126,7 +127,7 @@ const LegalSection: React.FC = () => {
               </Text>
             </div>
             <Button
-              variant="default"
+              variant="secondary"
               size="sm"
               id="cookieBanner"
               onClick={showCookiePreferences}

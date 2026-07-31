@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Text, ActionIcon, ScrollArea } from "@mantine/core";
+import { Text, ScrollArea } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import {
   CardModalPhase,
@@ -129,7 +130,7 @@ export function CardExpansionModal({
           willChange: "top, left, width, height, opacity",
           borderRadius: "var(--mantine-radius-md)",
           overflow: "hidden",
-          backgroundColor: "var(--bg-toolbar)",
+          backgroundColor: "var(--c-bg-raised)",
           display: "flex",
           flexDirection: "column",
           boxShadow: "0 1.5rem 3rem rgba(0,0,0,0.3)",
@@ -141,7 +142,7 @@ export function CardExpansionModal({
             position: "relative",
             height: headerH,
             flexShrink: 0,
-            borderBottom: "0.0625rem solid var(--border-subtle)",
+            borderBottom: "0.0625rem solid var(--c-border-subtle)",
             overflow: "hidden",
           }}
         >
@@ -198,9 +199,8 @@ export function CardExpansionModal({
             </div>
 
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
               size="lg"
-              color="gray"
               onClick={onClose}
               aria-label={t("close", "Close")}
               style={{
@@ -221,14 +221,14 @@ export function CardExpansionModal({
               display: "flex",
               flexDirection: "column",
               minHeight: 0,
-              backgroundColor: "var(--bg-toolbar)",
+              backgroundColor: "var(--c-bg-raised)",
             }}
           >
             {toolbar && (
               <div
                 style={{
                   flexShrink: 0,
-                  borderBottom: "0.0625rem solid var(--border-subtle)",
+                  borderBottom: "0.0625rem solid var(--c-border-subtle)",
                 }}
               >
                 {toolbar}
@@ -251,7 +251,7 @@ export function CardExpansionModal({
                 <div
                   style={{
                     padding: "0.75rem 1rem",
-                    backgroundColor: "var(--bg-toolbar)",
+                    backgroundColor: "var(--c-bg-raised)",
                   }}
                 >
                   {children}
@@ -262,7 +262,7 @@ export function CardExpansionModal({
               <div
                 style={{
                   padding: "0.75rem 1rem",
-                  borderTop: "0.0625rem solid var(--border-subtle)",
+                  borderTop: "0.0625rem solid var(--c-border-subtle)",
                   flexShrink: 0,
                 }}
               >

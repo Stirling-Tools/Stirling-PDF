@@ -24,6 +24,7 @@ import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.AccountData;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.DatabaseData;
@@ -33,6 +34,7 @@ import stirling.software.proprietary.security.database.repository.SessionReposit
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.DatabaseService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -57,6 +59,7 @@ class ProprietaryUIDataControllerTest {
     @Mock private SessionPersistentRegistry sessionPersistentRegistry;
     @Mock private UserRepository userRepository;
     @Mock private TeamRepository teamRepository;
+    @Mock private TeamMembershipRepository teamMembershipRepository;
     @Mock private SessionRepository sessionRepository;
     @Mock private DatabaseService databaseService;
     @Mock private UserLicenseSettingsService licenseSettingsService;
@@ -90,6 +93,7 @@ class ProprietaryUIDataControllerTest {
                         sessionPersistentRegistry,
                         userRepository,
                         teamRepository,
+                        teamMembershipRepository,
                         sessionRepository,
                         databaseService,
                         objectMapper,

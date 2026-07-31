@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.security.Authentication;
 import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -41,7 +42,21 @@ import stirling.software.saas.util.AuthenticationUtils;
  *
  * <p>Scope: routes whose handler method (or bean type) carries either {@link AutoJobPostMapping}
  * (multipart tool POSTs) or {@link RequiresFeature} (AI controllers, future non-multipart gated
- * routes). Admin / info / config endpoints carry neither annotation and never trip the guard.
+ * routes), plus two proprietary route families recognised by path since they can't carry the
+ * annotation: AI document tools ({@link AiToolRoutes} gated on AI_SUPPORT) and policy execute
+ * endpoints ({@link PolicyRunRoutes} gated on AUTOMATION). Admin / info / config endpoints are
+ * excluded by the path-pattern in {@code PaygWebMvcConfig} and are additionally skipped here when
+ * they carry no annotation and match no such family, so non-billable infra never trips the guard.
+ *
+ * <p>Decision matrix:
+ *
+ * <table>
+ *   <tr><th>auth</th><th>required gates</th><th>snapshot enabled?</th><th>outcome</th></tr>
+ *   <tr><td>anonymous</td><td>AUTOMATION or AI_SUPPORT</td><td>n/a</td><td>401 SIGNUP_REQUIRED</td></tr>
+ *   <tr><td>anonymous</td><td>OFFSITE_PROCESSING / CLIENT_SIDE</td><td>n/a</td><td>200 (pass through)</td></tr>
+ *   <tr><td>authenticated</td><td>required ⊆ enabled</td><td>yes</td><td>200</td></tr>
+ *   <tr><td>authenticated</td><td>required ⊄ enabled</td><td>no</td><td>402 FEATURE_DEGRADED</td></tr>
+ * </table>
  *
  * <p>Fail-open: any unexpected exception is logged at WARN and the request passes through. The cap
  * pipeline must never block a customer because the guard tripped on a transient DB error.
@@ -126,7 +141,10 @@ public class EntitlementGuard {
         // AiToolRoutes
         // and PaygChargeInterceptor, which classify the same routes as AI.
         boolean aiToolRoute = AiToolRoutes.matches(request);
-        if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
+        // Policy execute routes (/api/v1/policies/**/run etc.) are proprietary and can't carry
+        // @RequiresFeature; recognise them by path and gate on AUTOMATION (mirrors aiToolRoute).
+        boolean policyRunRoute = PolicyRunRoutes.matches(request);
+        if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute && !policyRunRoute) {
             skippedNoAnnotationCounter.increment();
             return true;
         }
@@ -134,7 +152,9 @@ public class EntitlementGuard {
         FeatureGate[] required =
                 aiToolRoute
                         ? new FeatureGate[] {FeatureGate.AI_SUPPORT}
-                        : resolveRequiredGates(resourceMethod, beanType);
+                        : policyRunRoute
+                                ? new FeatureGate[] {FeatureGate.AUTOMATION}
+                                : resolveRequiredGates(resourceMethod, beanType);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         boolean anonymous = isAnonymous(auth);

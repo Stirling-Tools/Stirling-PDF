@@ -72,8 +72,8 @@ export default function ApiKeys() {
         p="md"
         radius="md"
         style={{
-          background: "var(--bg-muted)",
-          border: "1px solid var(--border-subtle)",
+          background: "var(--c-surface-sunken)",
+          border: "1px solid var(--c-border-subtle)",
         }}
       >
         <Group gap="xs" wrap="nowrap" align="flex-start">
@@ -159,8 +159,8 @@ export default function ApiKeys() {
           style={{
             padding: 18,
             borderRadius: 12,
-            background: "var(--api-keys-card-bg)",
-            border: "1px solid var(--api-keys-card-border)",
+            background: "var(--c-surface)",
+            border: "1px solid var(--c-border)",
             boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
           }}
         >

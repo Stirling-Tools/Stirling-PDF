@@ -13,6 +13,7 @@ import io.vertx.core.http.HttpServerRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
@@ -27,6 +28,7 @@ import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.SPDF.controller.api.security.TimestampController;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
@@ -47,6 +49,12 @@ public class ConfigController {
     // @Autowired(required=false) -> Instance<T> for optional (possibly-absent) CDI beans.
     private final Instance<ServerCertificateServiceInterface> serverCertificateService;
     private final Instance<UserServiceInterface> userService;
+    private final Instance<ShowAdminInterface> showAdmin;
+
+    // MIGRATION: replaces applicationContext.getBean("machineType", String.class).
+    @Inject
+    @Named("machineType")
+    Instance<String> machineType;
     private final Instance<stirling.software.common.service.LicenseServiceInterface> licenseService;
 
     @Inject
@@ -55,12 +63,14 @@ public class ConfigController {
             EndpointConfiguration endpointConfiguration,
             Instance<ServerCertificateServiceInterface> serverCertificateService,
             Instance<UserServiceInterface> userService,
+            Instance<ShowAdminInterface> showAdmin,
             Instance<stirling.software.common.service.LicenseServiceInterface> licenseService,
             stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
         this.userService = userService;
+        this.showAdmin = showAdmin;
         this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
     }
@@ -71,6 +81,10 @@ public class ConfigController {
 
     private UserServiceInterface userService() {
         return userService.isResolvable() ? userService.get() : null;
+    }
+
+    private ShowAdminInterface showAdmin() {
+        return showAdmin.isResolvable() ? showAdmin.get() : null;
     }
 
     private stirling.software.common.service.LicenseServiceInterface licenseService() {
@@ -334,6 +348,10 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
+            boolean shouldShowUpdate =
+                    applicationProperties.getSystem().isShowUpdate()
+                            && (showAdmin() == null || showAdmin().getShowUpdateOnlyAdmins());
+            configData.put("shouldShowUpdate", shouldShowUpdate);
             configData.put(
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
@@ -346,7 +364,19 @@ public class ConfigController {
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
             // AI Engine settings
-            configData.put("aiEngineEnabled", applicationProperties.getAiEngine().isEnabled());
+            ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();
+            configData.put("aiEngineEnabled", aiEngineConfig.isEnabled());
+            // Per-capability flags let the UI hide individual AI tools an admin has turned off.
+            ApplicationProperties.AiEngine.Features aiFeatures = aiEngineConfig.getFeatures();
+            configData.put(
+                    "aiFeatures",
+                    Map.ofEntries(
+                            Map.entry("chat", aiFeatures.isChat()),
+                            Map.entry("documentQuestions", aiFeatures.isDocumentQuestions()),
+                            Map.entry("createPdf", aiFeatures.isCreatePdf()),
+                            Map.entry("mathAuditor", aiFeatures.isMathAuditor()),
+                            Map.entry("pdfComment", aiFeatures.isPdfComment()),
+                            Map.entry("classify", aiFeatures.isClassify())));
 
             // Timestamp TSA settings — single source of truth for presets + admin URLs
             ApplicationProperties.Security.Timestamp tsConfig =
@@ -359,6 +389,18 @@ public class ConfigController {
             ServerCertificateServiceInterface certService = serverCertificateService();
             configData.put(
                     "serverCertificateEnabled", certService != null && certService.isEnabled());
+
+            // Hardware-backed signing (Windows store / USB PKCS#11 tokens) is only viable on the
+            // desktop bundle, where the backend runs locally in the user's session. The Tauri
+            // bundle signals this via STIRLING_PDF_TAURI_MODE (machineType is Server-jar there);
+            // the bare-jar desktop launcher signals it via a Client-* machineType.
+            boolean hardwareSigningAvailable =
+                    Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
+            if (!hardwareSigningAvailable && machineType.isResolvable()) {
+                String mt = machineType.get();
+                hardwareSigningAvailable = mt != null && mt.startsWith("Client-");
+            }
+            configData.put("hardwareSigningAvailable", hardwareSigningAvailable);
 
             // Legal settings
             configData.put(

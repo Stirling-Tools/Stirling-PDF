@@ -1,0 +1,1719 @@
+{
+  "labels": [
+    {
+      "id": "invoice",
+      "name": "Invoice",
+      "icon": "receipt-long"
+    },
+    {
+      "id": "receipt",
+      "name": "Receipt",
+      "icon": "receipt"
+    },
+    {
+      "id": "credit-note",
+      "name": "Credit note",
+      "icon": "currency-exchange"
+    },
+    {
+      "id": "debit-note",
+      "name": "Debit note",
+      "icon": "attach-money"
+    },
+    {
+      "id": "purchase-order",
+      "name": "Purchase order",
+      "icon": "shopping-cart"
+    },
+    {
+      "id": "order-confirmation",
+      "name": "Order confirmation",
+      "icon": "shopping-cart"
+    },
+    {
+      "id": "quote",
+      "name": "Quote",
+      "icon": "request-quote"
+    },
+    {
+      "id": "estimate",
+      "name": "Estimate",
+      "icon": "price-check"
+    },
+    {
+      "id": "proforma-invoice",
+      "name": "Proforma invoice",
+      "icon": "paid"
+    },
+    {
+      "id": "bank-statement",
+      "name": "Bank statement",
+      "icon": "account-balance"
+    },
+    {
+      "id": "financial-statement",
+      "name": "Financial statement",
+      "icon": "account-balance-wallet"
+    },
+    {
+      "id": "balance-sheet",
+      "name": "Balance sheet",
+      "icon": "table-chart"
+    },
+    {
+      "id": "income-statement",
+      "name": "Income statement",
+      "icon": "functions"
+    },
+    {
+      "id": "cash-flow-statement",
+      "name": "Cash flow statement",
+      "icon": "query-stats"
+    },
+    {
+      "id": "expense-report",
+      "name": "Expense report",
+      "icon": "credit-card"
+    },
+    {
+      "id": "budget",
+      "name": "Budget",
+      "icon": "savings"
+    },
+    {
+      "id": "financial-forecast",
+      "name": "Financial forecast",
+      "icon": "insights"
+    },
+    {
+      "id": "payslip",
+      "name": "Payslip",
+      "icon": "payments"
+    },
+    {
+      "id": "payroll-document",
+      "name": "Payroll document",
+      "icon": "wallet"
+    },
+    {
+      "id": "tax-form",
+      "name": "Tax form",
+      "icon": "calculate"
+    },
+    {
+      "id": "tax-return",
+      "name": "Tax return",
+      "icon": "percent"
+    },
+    {
+      "id": "tax-statement",
+      "name": "Tax statement",
+      "icon": "calculate"
+    },
+    {
+      "id": "remittance-advice",
+      "name": "Remittance advice",
+      "icon": "send"
+    },
+    {
+      "id": "payment-reminder",
+      "name": "Payment reminder",
+      "icon": "schedule"
+    },
+    {
+      "id": "statement-of-account",
+      "name": "Statement of account",
+      "icon": "inbox"
+    },
+    {
+      "id": "dunning-letter",
+      "name": "Dunning letter",
+      "icon": "mail"
+    },
+    {
+      "id": "audit-report",
+      "name": "Audit report",
+      "icon": "fact-check"
+    },
+    {
+      "id": "annual-report",
+      "name": "Annual report",
+      "icon": "leaderboard"
+    },
+    {
+      "id": "quarterly-report",
+      "name": "Quarterly report",
+      "icon": "bar-chart"
+    },
+    {
+      "id": "pricing-sheet",
+      "name": "Pricing sheet",
+      "icon": "sell"
+    },
+    {
+      "id": "price-list",
+      "name": "Price list",
+      "icon": "format-list-bulleted"
+    },
+    {
+      "id": "loan-document",
+      "name": "Loan document",
+      "icon": "assured-workload"
+    },
+    {
+      "id": "mortgage-document",
+      "name": "Mortgage document",
+      "icon": "home"
+    },
+    {
+      "id": "investment-summary",
+      "name": "Investment summary",
+      "icon": "trending-up"
+    },
+    {
+      "id": "donation-receipt",
+      "name": "Donation receipt",
+      "icon": "volunteer-activism"
+    },
+    {
+      "id": "contract",
+      "name": "Contract",
+      "icon": "handshake"
+    },
+    {
+      "id": "nda",
+      "name": "NDA",
+      "icon": "lock"
+    },
+    {
+      "id": "service-agreement",
+      "name": "Service agreement",
+      "icon": "handshake"
+    },
+    {
+      "id": "employment-contract",
+      "name": "Employment contract",
+      "icon": "work"
+    },
+    {
+      "id": "lease-agreement",
+      "name": "Lease agreement",
+      "icon": "home-work"
+    },
+    {
+      "id": "rental-agreement",
+      "name": "Rental agreement",
+      "icon": "home-work"
+    },
+    {
+      "id": "license-agreement",
+      "name": "License agreement",
+      "icon": "verified"
+    },
+    {
+      "id": "purchase-agreement",
+      "name": "Purchase agreement",
+      "icon": "shopping-cart"
+    },
+    {
+      "id": "partnership-agreement",
+      "name": "Partnership agreement",
+      "icon": "diversity-3"
+    },
+    {
+      "id": "loan-agreement",
+      "name": "Loan agreement",
+      "icon": "account-balance"
+    },
+    {
+      "id": "settlement-agreement",
+      "name": "Settlement agreement",
+      "icon": "balance"
+    },
+    {
+      "id": "vendor-agreement",
+      "name": "Vendor agreement",
+      "icon": "storefront"
+    },
+    {
+      "id": "franchise-agreement",
+      "name": "Franchise agreement",
+      "icon": "business-center"
+    },
+    {
+      "id": "non-compete-agreement",
+      "name": "Non-compete agreement",
+      "icon": "gavel"
+    },
+    {
+      "id": "amendment",
+      "name": "Amendment",
+      "icon": "edit-document"
+    },
+    {
+      "id": "addendum",
+      "name": "Addendum",
+      "icon": "edit-document"
+    },
+    {
+      "id": "terms-and-conditions",
+      "name": "Terms and conditions",
+      "icon": "gavel"
+    },
+    {
+      "id": "terms-of-service",
+      "name": "Terms of service",
+      "icon": "gavel"
+    },
+    {
+      "id": "privacy-policy",
+      "name": "Privacy policy",
+      "icon": "privacy-tip"
+    },
+    {
+      "id": "power-of-attorney",
+      "name": "Power of attorney",
+      "icon": "gavel"
+    },
+    {
+      "id": "affidavit",
+      "name": "Affidavit",
+      "icon": "gavel"
+    },
+    {
+      "id": "will",
+      "name": "Will",
+      "icon": "history-edu"
+    },
+    {
+      "id": "trust-document",
+      "name": "Trust document",
+      "icon": "shield"
+    },
+    {
+      "id": "deed",
+      "name": "Deed",
+      "icon": "home-work"
+    },
+    {
+      "id": "court-filing",
+      "name": "Court filing",
+      "icon": "balance"
+    },
+    {
+      "id": "legal-brief",
+      "name": "Legal brief",
+      "icon": "balance"
+    },
+    {
+      "id": "legal-opinion",
+      "name": "Legal opinion",
+      "icon": "balance"
+    },
+    {
+      "id": "legal-notice",
+      "name": "Legal notice",
+      "icon": "gavel"
+    },
+    {
+      "id": "subpoena",
+      "name": "Subpoena",
+      "icon": "gavel"
+    },
+    {
+      "id": "cease-and-desist",
+      "name": "Cease and desist",
+      "icon": "gavel"
+    },
+    {
+      "id": "compliance-document",
+      "name": "Compliance document",
+      "icon": "rule"
+    },
+    {
+      "id": "regulatory-filing",
+      "name": "Regulatory filing",
+      "icon": "rule"
+    },
+    {
+      "id": "consent-form",
+      "name": "Consent form",
+      "icon": "fact-check"
+    },
+    {
+      "id": "waiver",
+      "name": "Waiver",
+      "icon": "fact-check"
+    },
+    {
+      "id": "memorandum-of-understanding",
+      "name": "Memorandum of understanding",
+      "icon": "handshake"
+    },
+    {
+      "id": "letter-of-intent",
+      "name": "Letter of intent",
+      "icon": "draft"
+    },
+    {
+      "id": "articles-of-incorporation",
+      "name": "Articles of incorporation",
+      "icon": "business-center"
+    },
+    {
+      "id": "bylaws",
+      "name": "Bylaws",
+      "icon": "rule"
+    },
+    {
+      "id": "shareholder-agreement",
+      "name": "Shareholder agreement",
+      "icon": "handshake"
+    },
+    {
+      "id": "board-resolution",
+      "name": "Board resolution",
+      "icon": "groups"
+    },
+    {
+      "id": "resume",
+      "name": "Resume",
+      "icon": "person"
+    },
+    {
+      "id": "cv",
+      "name": "CV",
+      "icon": "person"
+    },
+    {
+      "id": "cover-letter",
+      "name": "Cover letter",
+      "icon": "mail"
+    },
+    {
+      "id": "job-description",
+      "name": "Job description",
+      "icon": "topic"
+    },
+    {
+      "id": "job-application",
+      "name": "Job application",
+      "icon": "note-add"
+    },
+    {
+      "id": "offer-letter",
+      "name": "Offer letter",
+      "icon": "work"
+    },
+    {
+      "id": "onboarding-document",
+      "name": "Onboarding document",
+      "icon": "badge"
+    },
+    {
+      "id": "employee-handbook",
+      "name": "Employee handbook",
+      "icon": "menu-book"
+    },
+    {
+      "id": "hr-policy",
+      "name": "HR policy",
+      "icon": "policy"
+    },
+    {
+      "id": "performance-review",
+      "name": "Performance review",
+      "icon": "monitoring"
+    },
+    {
+      "id": "timesheet",
+      "name": "Timesheet",
+      "icon": "schedule"
+    },
+    {
+      "id": "leave-request",
+      "name": "Leave request",
+      "icon": "event"
+    },
+    {
+      "id": "resignation-letter",
+      "name": "Resignation letter",
+      "icon": "mail"
+    },
+    {
+      "id": "termination-letter",
+      "name": "Termination letter",
+      "icon": "send"
+    },
+    {
+      "id": "reference-letter",
+      "name": "Reference letter",
+      "icon": "contact-page"
+    },
+    {
+      "id": "recommendation-letter",
+      "name": "Recommendation letter",
+      "icon": "how-to-reg"
+    },
+    {
+      "id": "training-material",
+      "name": "Training material",
+      "icon": "school"
+    },
+    {
+      "id": "organization-chart",
+      "name": "Organization chart",
+      "icon": "supervisor-account"
+    },
+    {
+      "id": "benefits-summary",
+      "name": "Benefits summary",
+      "icon": "health-and-safety"
+    },
+    {
+      "id": "hr-memo",
+      "name": "HR memo",
+      "icon": "sticky-note-2"
+    },
+    {
+      "id": "letter",
+      "name": "Letter",
+      "icon": "mail"
+    },
+    {
+      "id": "email-thread",
+      "name": "Email thread",
+      "icon": "alternate-email"
+    },
+    {
+      "id": "memo",
+      "name": "Memo",
+      "icon": "sticky-note-2"
+    },
+    {
+      "id": "meeting-minutes",
+      "name": "Meeting minutes",
+      "icon": "groups"
+    },
+    {
+      "id": "meeting-agenda",
+      "name": "Meeting agenda",
+      "icon": "checklist"
+    },
+    {
+      "id": "newsletter",
+      "name": "Newsletter",
+      "icon": "newspaper"
+    },
+    {
+      "id": "announcement",
+      "name": "Announcement",
+      "icon": "campaign"
+    },
+    {
+      "id": "notice",
+      "name": "Notice",
+      "icon": "campaign"
+    },
+    {
+      "id": "public-notice",
+      "name": "Public notice",
+      "icon": "public"
+    },
+    {
+      "id": "press-release",
+      "name": "Press release",
+      "icon": "campaign"
+    },
+    {
+      "id": "complaint-letter",
+      "name": "Complaint letter",
+      "icon": "forum"
+    },
+    {
+      "id": "demand-letter",
+      "name": "Demand letter",
+      "icon": "mail"
+    },
+    {
+      "id": "confirmation-letter",
+      "name": "Confirmation letter",
+      "icon": "mail"
+    },
+    {
+      "id": "report",
+      "name": "Report",
+      "icon": "bar-chart"
+    },
+    {
+      "id": "progress-report",
+      "name": "Progress report",
+      "icon": "timeline"
+    },
+    {
+      "id": "status-report",
+      "name": "Status report",
+      "icon": "monitoring"
+    },
+    {
+      "id": "incident-report",
+      "name": "Incident report",
+      "icon": "emergency"
+    },
+    {
+      "id": "inspection-report",
+      "name": "Inspection report",
+      "icon": "fact-check"
+    },
+    {
+      "id": "survey-results",
+      "name": "Survey results",
+      "icon": "pie-chart"
+    },
+    {
+      "id": "market-research",
+      "name": "Market research",
+      "icon": "insights"
+    },
+    {
+      "id": "case-study",
+      "name": "Case study",
+      "icon": "article"
+    },
+    {
+      "id": "white-paper",
+      "name": "White paper",
+      "icon": "library-books"
+    },
+    {
+      "id": "research-paper",
+      "name": "Research paper",
+      "icon": "science"
+    },
+    {
+      "id": "research-abstract",
+      "name": "Research abstract",
+      "icon": "text-snippet"
+    },
+    {
+      "id": "feasibility-study",
+      "name": "Feasibility study",
+      "icon": "architecture"
+    },
+    {
+      "id": "risk-assessment",
+      "name": "Risk assessment",
+      "icon": "security"
+    },
+    {
+      "id": "analytics-report",
+      "name": "Analytics report",
+      "icon": "analytics"
+    },
+    {
+      "id": "sales-report",
+      "name": "Sales report",
+      "icon": "trending-up"
+    },
+    {
+      "id": "expense-summary",
+      "name": "Expense summary",
+      "icon": "pie-chart"
+    },
+    {
+      "id": "board-report",
+      "name": "Board report",
+      "icon": "groups"
+    },
+    {
+      "id": "sustainability-report",
+      "name": "Sustainability report",
+      "icon": "eco"
+    },
+    {
+      "id": "standard-operating-procedure",
+      "name": "Standard operating procedure",
+      "icon": "rule"
+    },
+    {
+      "id": "work-instruction",
+      "name": "Work instruction",
+      "icon": "checklist"
+    },
+    {
+      "id": "manual",
+      "name": "Manual",
+      "icon": "menu-book"
+    },
+    {
+      "id": "user-guide",
+      "name": "User guide",
+      "icon": "auto-stories"
+    },
+    {
+      "id": "quick-start-guide",
+      "name": "Quick start guide",
+      "icon": "menu-book"
+    },
+    {
+      "id": "checklist",
+      "name": "Checklist",
+      "icon": "checklist"
+    },
+    {
+      "id": "inventory-list",
+      "name": "Inventory list",
+      "icon": "inventory-2"
+    },
+    {
+      "id": "stock-report",
+      "name": "Stock report",
+      "icon": "warehouse"
+    },
+    {
+      "id": "packing-slip",
+      "name": "Packing slip",
+      "icon": "package-2"
+    },
+    {
+      "id": "delivery-note",
+      "name": "Delivery note",
+      "icon": "local-shipping"
+    },
+    {
+      "id": "bill-of-lading",
+      "name": "Bill of lading",
+      "icon": "pallet"
+    },
+    {
+      "id": "waybill",
+      "name": "Waybill",
+      "icon": "map"
+    },
+    {
+      "id": "customs-declaration",
+      "name": "Customs declaration",
+      "icon": "flight"
+    },
+    {
+      "id": "customs-form",
+      "name": "Customs form",
+      "icon": "assignment"
+    },
+    {
+      "id": "freight-document",
+      "name": "Freight document",
+      "icon": "forklift"
+    },
+    {
+      "id": "shipping-confirmation",
+      "name": "Shipping confirmation",
+      "icon": "send"
+    },
+    {
+      "id": "supply-order",
+      "name": "Supply order",
+      "icon": "shopping-cart"
+    },
+    {
+      "id": "work-order",
+      "name": "Work order",
+      "icon": "task"
+    },
+    {
+      "id": "maintenance-log",
+      "name": "Maintenance log",
+      "icon": "build"
+    },
+    {
+      "id": "service-report",
+      "name": "Service report",
+      "icon": "engineering"
+    },
+    {
+      "id": "quality-report",
+      "name": "Quality report",
+      "icon": "verified"
+    },
+    {
+      "id": "safety-data-sheet",
+      "name": "Safety data sheet",
+      "icon": "health-and-safety"
+    },
+    {
+      "id": "safety-procedure",
+      "name": "Safety procedure",
+      "icon": "health-and-safety"
+    },
+    {
+      "id": "warehouse-receipt",
+      "name": "Warehouse receipt",
+      "icon": "inventory-2"
+    },
+    {
+      "id": "return-authorization",
+      "name": "Return authorization",
+      "icon": "redeem"
+    },
+    {
+      "id": "proposal",
+      "name": "Proposal",
+      "icon": "slideshow"
+    },
+    {
+      "id": "business-proposal",
+      "name": "Business proposal",
+      "icon": "business-center"
+    },
+    {
+      "id": "sales-proposal",
+      "name": "Sales proposal",
+      "icon": "trending-up"
+    },
+    {
+      "id": "pitch-deck",
+      "name": "Pitch deck",
+      "icon": "leaderboard"
+    },
+    {
+      "id": "presentation",
+      "name": "Presentation",
+      "icon": "slideshow"
+    },
+    {
+      "id": "brochure",
+      "name": "Brochure",
+      "icon": "image"
+    },
+    {
+      "id": "flyer",
+      "name": "Flyer",
+      "icon": "palette"
+    },
+    {
+      "id": "catalog",
+      "name": "Catalog",
+      "icon": "menu-book"
+    },
+    {
+      "id": "product-sheet",
+      "name": "Product sheet",
+      "icon": "description"
+    },
+    {
+      "id": "marketing-plan",
+      "name": "Marketing plan",
+      "icon": "campaign"
+    },
+    {
+      "id": "campaign-brief",
+      "name": "Campaign brief",
+      "icon": "campaign"
+    },
+    {
+      "id": "media-kit",
+      "name": "Media kit",
+      "icon": "photo-camera"
+    },
+    {
+      "id": "promotional-material",
+      "name": "Promotional material",
+      "icon": "celebration"
+    },
+    {
+      "id": "advertisement",
+      "name": "Advertisement",
+      "icon": "campaign"
+    },
+    {
+      "id": "request-for-proposal",
+      "name": "Request for proposal",
+      "icon": "assignment"
+    },
+    {
+      "id": "request-for-quotation",
+      "name": "Request for quotation",
+      "icon": "request-quote"
+    },
+    {
+      "id": "tender-document",
+      "name": "Tender document",
+      "icon": "assignment"
+    },
+    {
+      "id": "statement-of-work",
+      "name": "Statement of work",
+      "icon": "task"
+    },
+    {
+      "id": "scope-of-work",
+      "name": "Scope of work",
+      "icon": "task"
+    },
+    {
+      "id": "specification",
+      "name": "Specification",
+      "icon": "engineering"
+    },
+    {
+      "id": "technical-specification",
+      "name": "Technical specification",
+      "icon": "code"
+    },
+    {
+      "id": "requirements-document",
+      "name": "Requirements document",
+      "icon": "checklist"
+    },
+    {
+      "id": "design-document",
+      "name": "Design document",
+      "icon": "design-services"
+    },
+    {
+      "id": "architecture-document",
+      "name": "Architecture document",
+      "icon": "architecture"
+    },
+    {
+      "id": "datasheet",
+      "name": "Datasheet",
+      "icon": "table-chart"
+    },
+    {
+      "id": "schematic",
+      "name": "Schematic",
+      "icon": "bolt"
+    },
+    {
+      "id": "blueprint",
+      "name": "Blueprint",
+      "icon": "construction"
+    },
+    {
+      "id": "technical-drawing",
+      "name": "Technical drawing",
+      "icon": "engineering"
+    },
+    {
+      "id": "floor-plan",
+      "name": "Floor plan",
+      "icon": "apartment"
+    },
+    {
+      "id": "patent",
+      "name": "Patent",
+      "icon": "copyright"
+    },
+    {
+      "id": "test-plan",
+      "name": "Test plan",
+      "icon": "checklist"
+    },
+    {
+      "id": "test-report",
+      "name": "Test report",
+      "icon": "fact-check"
+    },
+    {
+      "id": "release-notes",
+      "name": "Release notes",
+      "icon": "article"
+    },
+    {
+      "id": "change-log",
+      "name": "Change log",
+      "icon": "edit-document"
+    },
+    {
+      "id": "api-documentation",
+      "name": "API documentation",
+      "icon": "api"
+    },
+    {
+      "id": "bill-of-materials",
+      "name": "Bill of materials",
+      "icon": "inventory-2"
+    },
+    {
+      "id": "business-plan",
+      "name": "Business plan",
+      "icon": "business-center"
+    },
+    {
+      "id": "project-plan",
+      "name": "Project plan",
+      "icon": "task"
+    },
+    {
+      "id": "project-charter",
+      "name": "Project charter",
+      "icon": "task"
+    },
+    {
+      "id": "roadmap",
+      "name": "Roadmap",
+      "icon": "trending-up"
+    },
+    {
+      "id": "timeline",
+      "name": "Timeline",
+      "icon": "timeline"
+    },
+    {
+      "id": "meeting-notes",
+      "name": "Meeting notes",
+      "icon": "sticky-note-2"
+    },
+    {
+      "id": "action-plan",
+      "name": "Action plan",
+      "icon": "checklist"
+    },
+    {
+      "id": "retrospective",
+      "name": "Retrospective",
+      "icon": "psychology"
+    },
+    {
+      "id": "transcript",
+      "name": "Transcript",
+      "icon": "school"
+    },
+    {
+      "id": "diploma",
+      "name": "Diploma",
+      "icon": "history-edu"
+    },
+    {
+      "id": "certificate",
+      "name": "Certificate",
+      "icon": "verified"
+    },
+    {
+      "id": "certificate-of-completion",
+      "name": "Certificate of completion",
+      "icon": "verified"
+    },
+    {
+      "id": "course-syllabus",
+      "name": "Course syllabus",
+      "icon": "menu-book"
+    },
+    {
+      "id": "lesson-plan",
+      "name": "Lesson plan",
+      "icon": "school"
+    },
+    {
+      "id": "assignment-brief",
+      "name": "Assignment brief",
+      "icon": "assignment"
+    },
+    {
+      "id": "exam-paper",
+      "name": "Exam paper",
+      "icon": "assignment"
+    },
+    {
+      "id": "grade-report",
+      "name": "Grade report",
+      "icon": "school"
+    },
+    {
+      "id": "thesis",
+      "name": "Thesis",
+      "icon": "science"
+    },
+    {
+      "id": "dissertation",
+      "name": "Dissertation",
+      "icon": "science"
+    },
+    {
+      "id": "study-guide",
+      "name": "Study guide",
+      "icon": "menu-book"
+    },
+    {
+      "id": "academic-record",
+      "name": "Academic record",
+      "icon": "school"
+    },
+    {
+      "id": "medical-report",
+      "name": "Medical report",
+      "icon": "medical-services"
+    },
+    {
+      "id": "lab-report",
+      "name": "Lab report",
+      "icon": "science"
+    },
+    {
+      "id": "radiology-report",
+      "name": "Radiology report",
+      "icon": "monitor-heart"
+    },
+    {
+      "id": "pathology-report",
+      "name": "Pathology report",
+      "icon": "medical-information"
+    },
+    {
+      "id": "prescription",
+      "name": "Prescription",
+      "icon": "medication"
+    },
+    {
+      "id": "referral-letter",
+      "name": "Referral letter",
+      "icon": "stethoscope"
+    },
+    {
+      "id": "discharge-summary",
+      "name": "Discharge summary",
+      "icon": "medical-services"
+    },
+    {
+      "id": "immunization-record",
+      "name": "Immunization record",
+      "icon": "vaccines"
+    },
+    {
+      "id": "medical-invoice",
+      "name": "Medical invoice",
+      "icon": "receipt-long"
+    },
+    {
+      "id": "insurance-policy",
+      "name": "Insurance policy",
+      "icon": "shield"
+    },
+    {
+      "id": "insurance-claim",
+      "name": "Insurance claim",
+      "icon": "security"
+    },
+    {
+      "id": "insurance-certificate",
+      "name": "Insurance certificate",
+      "icon": "approval"
+    },
+    {
+      "id": "explanation-of-benefits",
+      "name": "Explanation of benefits",
+      "icon": "medical-information"
+    },
+    {
+      "id": "property-listing",
+      "name": "Property listing",
+      "icon": "real-estate-agent"
+    },
+    {
+      "id": "appraisal-report",
+      "name": "Appraisal report",
+      "icon": "real-estate-agent"
+    },
+    {
+      "id": "home-inspection-report",
+      "name": "Home inspection report",
+      "icon": "home"
+    },
+    {
+      "id": "title-document",
+      "name": "Title document",
+      "icon": "home-work"
+    },
+    {
+      "id": "closing-statement",
+      "name": "Closing statement",
+      "icon": "real-estate-agent"
+    },
+    {
+      "id": "tenancy-agreement",
+      "name": "Tenancy agreement",
+      "icon": "home-work"
+    },
+    {
+      "id": "eviction-notice",
+      "name": "Eviction notice",
+      "icon": "gavel"
+    },
+    {
+      "id": "hoa-document",
+      "name": "HOA document",
+      "icon": "home-work"
+    },
+    {
+      "id": "utility-bill",
+      "name": "Utility bill",
+      "icon": "bolt"
+    },
+    {
+      "id": "permit",
+      "name": "Permit",
+      "icon": "approval"
+    },
+    {
+      "id": "license",
+      "name": "License",
+      "icon": "verified"
+    },
+    {
+      "id": "registration-form",
+      "name": "Registration form",
+      "icon": "how-to-reg"
+    },
+    {
+      "id": "application-form",
+      "name": "Application form",
+      "icon": "assignment"
+    },
+    {
+      "id": "government-notice",
+      "name": "Government notice",
+      "icon": "campaign"
+    },
+    {
+      "id": "grant-application",
+      "name": "Grant application",
+      "icon": "assignment"
+    },
+    {
+      "id": "grant-agreement",
+      "name": "Grant agreement",
+      "icon": "handshake"
+    },
+    {
+      "id": "visa-document",
+      "name": "Visa document",
+      "icon": "public"
+    },
+    {
+      "id": "immigration-document",
+      "name": "Immigration document",
+      "icon": "badge"
+    },
+    {
+      "id": "legal-filing",
+      "name": "Legal filing",
+      "icon": "balance"
+    },
+    {
+      "id": "itinerary",
+      "name": "Itinerary",
+      "icon": "map"
+    },
+    {
+      "id": "travel-itinerary",
+      "name": "Travel itinerary",
+      "icon": "flight"
+    },
+    {
+      "id": "booking-confirmation",
+      "name": "Booking confirmation",
+      "icon": "hotel"
+    },
+    {
+      "id": "reservation",
+      "name": "Reservation",
+      "icon": "restaurant"
+    },
+    {
+      "id": "ticket",
+      "name": "Ticket",
+      "icon": "confirmation-number"
+    },
+    {
+      "id": "event-agenda",
+      "name": "Event agenda",
+      "icon": "calendar-month"
+    },
+    {
+      "id": "event-program",
+      "name": "Event program",
+      "icon": "calendar-month"
+    },
+    {
+      "id": "invitation",
+      "name": "Invitation",
+      "icon": "mail"
+    },
+    {
+      "id": "registration-confirmation",
+      "name": "Registration confirmation",
+      "icon": "fact-check"
+    },
+    {
+      "id": "form",
+      "name": "Form",
+      "icon": "assignment"
+    },
+    {
+      "id": "questionnaire",
+      "name": "Questionnaire",
+      "icon": "assignment"
+    },
+    {
+      "id": "survey-form",
+      "name": "Survey form",
+      "icon": "checklist"
+    },
+    {
+      "id": "feedback-form",
+      "name": "Feedback form",
+      "icon": "forum"
+    },
+    {
+      "id": "intake-form",
+      "name": "Intake form",
+      "icon": "assignment"
+    },
+    {
+      "id": "order-form",
+      "name": "Order form",
+      "icon": "shopping-cart"
+    },
+    {
+      "id": "claim-form",
+      "name": "Claim form",
+      "icon": "assignment"
+    },
+    {
+      "id": "warranty-document",
+      "name": "Warranty document",
+      "icon": "assured-workload"
+    },
+    {
+      "id": "membership-document",
+      "name": "Membership document",
+      "icon": "badge"
+    },
+    {
+      "id": "subscription-confirmation",
+      "name": "Subscription confirmation",
+      "icon": "fact-check"
+    },
+    {
+      "id": "gift-certificate",
+      "name": "Gift certificate",
+      "icon": "redeem"
+    },
+    {
+      "id": "sponsorship-agreement",
+      "name": "Sponsorship agreement",
+      "icon": "handshake"
+    },
+    {
+      "id": "petition",
+      "name": "Petition",
+      "icon": "history-edu"
+    },
+    {
+      "id": "agenda",
+      "name": "Agenda",
+      "icon": "checklist"
+    },
+    {
+      "id": "fact-sheet",
+      "name": "Fact sheet",
+      "icon": "summarize"
+    },
+    {
+      "id": "faq-document",
+      "name": "FAQ document",
+      "icon": "chat"
+    },
+    {
+      "id": "glossary",
+      "name": "Glossary",
+      "icon": "menu-book"
+    },
+    {
+      "id": "index",
+      "name": "Index",
+      "icon": "format-list-bulleted"
+    },
+    {
+      "id": "table-of-contents",
+      "name": "Table of contents",
+      "icon": "topic"
+    }
+  ],
+  "families": [
+    {
+      "id": "finance",
+      "name": "Financial",
+      "icon": "payments",
+      "labelIds": [
+        "invoice",
+        "receipt",
+        "credit-note",
+        "debit-note",
+        "purchase-order",
+        "order-confirmation",
+        "quote",
+        "estimate",
+        "proforma-invoice",
+        "bank-statement",
+        "financial-statement",
+        "balance-sheet",
+        "income-statement",
+        "cash-flow-statement",
+        "expense-report",
+        "budget",
+        "financial-forecast",
+        "payslip",
+        "payroll-document",
+        "tax-form",
+        "tax-return",
+        "tax-statement",
+        "remittance-advice",
+        "payment-reminder",
+        "statement-of-account",
+        "dunning-letter",
+        "audit-report",
+        "annual-report",
+        "quarterly-report",
+        "pricing-sheet",
+        "price-list",
+        "loan-document",
+        "mortgage-document",
+        "investment-summary",
+        "donation-receipt"
+      ]
+    },
+    {
+      "id": "legal",
+      "name": "Legal",
+      "icon": "gavel",
+      "labelIds": [
+        "contract",
+        "nda",
+        "service-agreement",
+        "employment-contract",
+        "lease-agreement",
+        "rental-agreement",
+        "license-agreement",
+        "purchase-agreement",
+        "partnership-agreement",
+        "loan-agreement",
+        "settlement-agreement",
+        "vendor-agreement",
+        "franchise-agreement",
+        "non-compete-agreement",
+        "amendment",
+        "addendum",
+        "terms-and-conditions",
+        "terms-of-service",
+        "privacy-policy",
+        "power-of-attorney",
+        "affidavit",
+        "will",
+        "trust-document",
+        "deed",
+        "court-filing",
+        "legal-brief",
+        "legal-opinion",
+        "legal-notice",
+        "subpoena",
+        "cease-and-desist",
+        "compliance-document",
+        "regulatory-filing",
+        "consent-form",
+        "waiver",
+        "memorandum-of-understanding",
+        "letter-of-intent",
+        "articles-of-incorporation",
+        "bylaws",
+        "shareholder-agreement",
+        "board-resolution"
+      ]
+    },
+    {
+      "id": "hr",
+      "name": "HR",
+      "icon": "badge",
+      "labelIds": [
+        "resume",
+        "cv",
+        "cover-letter",
+        "job-description",
+        "job-application",
+        "offer-letter",
+        "onboarding-document",
+        "employee-handbook",
+        "hr-policy",
+        "performance-review",
+        "timesheet",
+        "leave-request",
+        "resignation-letter",
+        "termination-letter",
+        "reference-letter",
+        "recommendation-letter",
+        "training-material",
+        "organization-chart",
+        "benefits-summary",
+        "hr-memo"
+      ]
+    },
+    {
+      "id": "correspondence",
+      "name": "Correspondence",
+      "icon": "mail",
+      "labelIds": [
+        "letter",
+        "email-thread",
+        "memo",
+        "meeting-minutes",
+        "meeting-agenda",
+        "newsletter",
+        "announcement",
+        "notice",
+        "public-notice",
+        "press-release",
+        "complaint-letter",
+        "demand-letter",
+        "confirmation-letter"
+      ]
+    },
+    {
+      "id": "reports",
+      "name": "Reports",
+      "icon": "monitoring",
+      "labelIds": [
+        "report",
+        "progress-report",
+        "status-report",
+        "incident-report",
+        "inspection-report",
+        "survey-results",
+        "market-research",
+        "case-study",
+        "white-paper",
+        "research-paper",
+        "research-abstract",
+        "feasibility-study",
+        "risk-assessment",
+        "analytics-report",
+        "sales-report",
+        "expense-summary",
+        "board-report",
+        "sustainability-report"
+      ]
+    },
+    {
+      "id": "operations",
+      "name": "Operations",
+      "icon": "local-shipping",
+      "labelIds": [
+        "standard-operating-procedure",
+        "work-instruction",
+        "manual",
+        "user-guide",
+        "quick-start-guide",
+        "checklist",
+        "inventory-list",
+        "stock-report",
+        "packing-slip",
+        "delivery-note",
+        "bill-of-lading",
+        "waybill",
+        "customs-declaration",
+        "customs-form",
+        "freight-document",
+        "shipping-confirmation",
+        "supply-order",
+        "work-order",
+        "maintenance-log",
+        "service-report",
+        "quality-report",
+        "safety-data-sheet",
+        "safety-procedure",
+        "warehouse-receipt",
+        "return-authorization"
+      ]
+    },
+    {
+      "id": "sales",
+      "name": "Marketing",
+      "icon": "campaign",
+      "labelIds": [
+        "proposal",
+        "business-proposal",
+        "sales-proposal",
+        "pitch-deck",
+        "presentation",
+        "brochure",
+        "flyer",
+        "catalog",
+        "product-sheet",
+        "marketing-plan",
+        "campaign-brief",
+        "media-kit",
+        "promotional-material",
+        "advertisement",
+        "request-for-proposal",
+        "request-for-quotation",
+        "tender-document",
+        "statement-of-work",
+        "scope-of-work"
+      ]
+    },
+    {
+      "id": "engineering",
+      "name": "Engineering",
+      "icon": "engineering",
+      "labelIds": [
+        "specification",
+        "technical-specification",
+        "requirements-document",
+        "design-document",
+        "architecture-document",
+        "datasheet",
+        "schematic",
+        "blueprint",
+        "technical-drawing",
+        "floor-plan",
+        "patent",
+        "test-plan",
+        "test-report",
+        "release-notes",
+        "change-log",
+        "api-documentation",
+        "bill-of-materials"
+      ]
+    },
+    {
+      "id": "projects",
+      "name": "Projects",
+      "icon": "task",
+      "labelIds": [
+        "business-plan",
+        "project-plan",
+        "project-charter",
+        "roadmap",
+        "timeline",
+        "meeting-notes",
+        "action-plan",
+        "retrospective"
+      ]
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "icon": "school",
+      "labelIds": [
+        "transcript",
+        "diploma",
+        "certificate",
+        "certificate-of-completion",
+        "course-syllabus",
+        "lesson-plan",
+        "assignment-brief",
+        "exam-paper",
+        "grade-report",
+        "thesis",
+        "dissertation",
+        "study-guide",
+        "academic-record"
+      ]
+    },
+    {
+      "id": "health",
+      "name": "Medical",
+      "icon": "medical-services",
+      "labelIds": [
+        "medical-report",
+        "lab-report",
+        "radiology-report",
+        "pathology-report",
+        "prescription",
+        "referral-letter",
+        "discharge-summary",
+        "immunization-record",
+        "medical-invoice",
+        "insurance-policy",
+        "insurance-claim",
+        "insurance-certificate",
+        "explanation-of-benefits"
+      ]
+    },
+    {
+      "id": "property",
+      "name": "Property",
+      "icon": "real-estate-agent",
+      "labelIds": [
+        "property-listing",
+        "appraisal-report",
+        "home-inspection-report",
+        "title-document",
+        "closing-statement",
+        "tenancy-agreement",
+        "eviction-notice",
+        "hoa-document",
+        "utility-bill"
+      ]
+    },
+    {
+      "id": "government",
+      "name": "Government",
+      "icon": "account-balance",
+      "labelIds": [
+        "permit",
+        "license",
+        "registration-form",
+        "application-form",
+        "government-notice",
+        "grant-application",
+        "grant-agreement",
+        "visa-document",
+        "immigration-document",
+        "legal-filing"
+      ]
+    },
+    {
+      "id": "travel",
+      "name": "Travel",
+      "icon": "flight",
+      "labelIds": [
+        "itinerary",
+        "travel-itinerary",
+        "booking-confirmation",
+        "reservation",
+        "ticket",
+        "event-agenda",
+        "event-program",
+        "invitation",
+        "registration-confirmation"
+      ]
+    },
+    {
+      "id": "forms",
+      "name": "Forms",
+      "icon": "assignment",
+      "labelIds": [
+        "form",
+        "questionnaire",
+        "survey-form",
+        "feedback-form",
+        "intake-form",
+        "order-form",
+        "claim-form",
+        "warranty-document",
+        "membership-document",
+        "subscription-confirmation",
+        "gift-certificate",
+        "sponsorship-agreement",
+        "petition",
+        "agenda",
+        "fact-sheet",
+        "faq-document",
+        "glossary",
+        "index",
+        "table-of-contents"
+      ]
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,6 +45,7 @@ import tools.jackson.databind.json.JsonMapper;
 class PdfCommentAgentControllerTest {
 
     @Mock private PdfCommentAgentOrchestrator orchestrator;
+    @Mock private AiFeatureGate aiFeatureGate;
 
     private PdfCommentAgentController controller;
 
@@ -101,6 +103,27 @@ class PdfCommentAgentControllerTest {
         assertThrows(NullPointerException.class, () -> controller.pdfCommentAgent(null, "test"));
 
         verify(orchestrator, never()).applyComments(any(), any());
+    }
+
+    @Test
+    void returnsServiceUnavailableWhenPdfCommentFeatureDisabled() throws Exception {
+        doThrow(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE))
+                .when(aiFeatureGate)
+                .requirePdfComment();
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput",
+                        "input.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "%PDF-1.4\n%%EOF".getBytes());
+
+        mockMvc.perform(
+                        multipart("/api/v1/ai/tools/pdf-comment-agent")
+                                .file(pdfFile)
+                                .param("prompt", "flag dates"))
+                .andExpect(status().isServiceUnavailable());
+
+        verify(orchestrator, never()).applyComments(any(), anyString());
     }
 
     @Test

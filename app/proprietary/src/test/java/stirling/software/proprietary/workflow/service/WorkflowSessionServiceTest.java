@@ -145,6 +145,76 @@ class WorkflowSessionServiceTest {
     }
 
     @Test
+    void signDocument_encryptsUploadedKeystoreBytesAtRest() throws Exception {
+        // Use a REAL encryption service (not a mock) so we verify the persisted keystore is
+        // genuinely AES-256-GCM encrypted, not merely base64-encoded.
+        ApplicationProperties.AutomaticallyGenerated generated =
+                new ApplicationProperties.AutomaticallyGenerated();
+        generated.setKey("test-encryption-key-for-unit-tests-only");
+        ApplicationProperties realProps = new ApplicationProperties();
+        realProps.setAutomaticallyGenerated(generated);
+        MetadataEncryptionService realEncryption = new MetadataEncryptionService(realProps);
+
+        // Validator is exercised by the real flow but its result is irrelevant here, so stub it.
+        CertificateSubmissionValidator validator = mock(CertificateSubmissionValidator.class);
+
+        WorkflowSessionService svc =
+                new WorkflowSessionService(
+                        workflowSessionRepository,
+                        workflowParticipantRepository,
+                        storedFileRepository,
+                        userRepository,
+                        storageProvider,
+                        objectMapper,
+                        applicationProperties,
+                        realEncryption,
+                        validator);
+
+        User user = user("dave");
+        WorkflowParticipant participant = pendingParticipant(user);
+        sessionWithParticipant("s7", participant);
+        when(workflowParticipantRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        byte[] p12Bytes;
+        try (var in = getClass().getResourceAsStream("/test-certs/valid-test.p12")) {
+            assertThat(in).as("valid-test.p12 fixture present").isNotNull();
+            p12Bytes = in.readAllBytes();
+        }
+
+        SignDocumentRequest req = new SignDocumentRequest();
+        req.setCertType("PKCS12");
+        req.setPassword("changeit");
+        req.setP12File(
+                new MockMultipartFile(
+                        "p12File", "valid-test.p12", "application/x-pkcs12", p12Bytes));
+
+        svc.signDocument("s7", user, req);
+
+        ArgumentCaptor<WorkflowParticipant> captor =
+                ArgumentCaptor.forClass(WorkflowParticipant.class);
+        verify(workflowParticipantRepository).save(captor.capture());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> cert =
+                (Map<String, Object>)
+                        captor.getValue().getParticipantMetadata().get("certificateSubmission");
+        String storedKeystore = (String) cert.get("p12Keystore");
+
+        // 1. Stored keystore is encrypted (enc: prefix), not plaintext base64.
+        assertThat(storedKeystore).startsWith(MetadataEncryptionService.ENC_PREFIX);
+        assertThat(storedKeystore)
+                .as("must not be the plain base64 of the keystore")
+                .isNotEqualTo(java.util.Base64.getEncoder().encodeToString(p12Bytes));
+
+        // 2. The raw keystore bytes must not appear anywhere in the stored value.
+        assertThat(storedKeystore)
+                .doesNotContain(java.util.Base64.getEncoder().encodeToString(p12Bytes));
+
+        // 3. It round-trips back to the exact original keystore bytes.
+        assertThat(realEncryption.decryptBytes(storedKeystore)).isEqualTo(p12Bytes);
+    }
+
+    @Test
     void signDocument_preservesExistingParticipantMetadata() {
         User user = user("carol");
         WorkflowParticipant participant = pendingParticipant(user);

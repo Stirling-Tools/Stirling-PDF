@@ -6,9 +6,11 @@
  */
 
 import apiClient from "@app/services/apiClient";
+import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";
 import type {
   BackendPipelineDefinition,
   BackendPolicy,
+  PolicyExecutionTarget,
   PolicyRunView,
 } from "@app/services/policyPipeline";
 
@@ -47,6 +49,15 @@ export async function getPolicy(id: string): Promise<BackendPolicy> {
 /** Delete a stored policy by id. */
 export async function deletePolicy(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/policies/${encodeURIComponent(id)}`);
+}
+
+/**
+ * Persist the team's run order (server-side, shared by the whole team). Sends the
+ * ordered backend policy ids; the backend maps position → order and ignores any
+ * id outside the caller's team. Team-leader/admin only (403 otherwise).
+ */
+export async function reorderPolicies(orderedIds: string[]): Promise<void> {
+  await apiClient.put("/api/v1/policies/order", orderedIds);
 }
 
 /** Run a stored policy by id on the supplied files; returns the run id. */
@@ -88,10 +99,25 @@ export async function runPolicyPipeline(
   return res.data.jobId;
 }
 
-/** Download a run's output file by id (via the shared general-files endpoint). */
-export async function downloadPolicyOutput(fileId: string): Promise<Blob> {
+/**
+ * Where a policy run executes, and thus the backend that holds its outputs.
+ */
+export function resolvePolicyRunTarget(): PolicyExecutionTarget {
+  return "saas";
+}
+
+/**
+ * Download a run's output file by id (via the shared general-files endpoint).
+ * `target` is where the run executed: it selects the backend the file is fetched
+ * from, so a SaaS run's output isn't looked for on the bundled local backend.
+ */
+export async function downloadPolicyOutput(
+  fileId: string,
+  target: PolicyExecutionTarget,
+): Promise<Blob> {
+  const base = getPolicyOutputBaseUrl(target);
   const res = await apiClient.get<Blob>(
-    `/api/v1/general/files/${encodeURIComponent(fileId)}`,
+    `${base}/api/v1/general/files/${encodeURIComponent(fileId)}`,
     { responseType: "blob" },
   );
   return res.data;

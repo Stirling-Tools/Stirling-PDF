@@ -17,9 +17,11 @@ import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
+import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
+import { LoginLandingRedirect } from "@app/components/LoginLandingRedirect";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -80,6 +82,10 @@ export default function App() {
           }
         />
 
+        {/* Admin-only route-set (the portal): its own top-level shell, mounted
+            before the catch-all. */}
+        {getAdminRouteExtensions()}
+
         {/* Everything else needs the auth/backend providers. */}
         <Route
           path="*"
@@ -89,6 +95,7 @@ export default function App() {
             >
               <AppLayout>
                 <NonAuthBootstraps />
+                <LoginLandingRedirect />
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />

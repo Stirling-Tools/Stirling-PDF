@@ -25,6 +25,7 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -36,6 +37,7 @@ class InitialSecuritySetupTest {
     @Mock private TeamService teamService;
     @Mock private DatabaseServiceInterface databaseService;
     @Mock private UserLicenseSettingsService licenseSettingsService;
+    @Mock private TeamMembershipService teamMembershipService;
 
     private ApplicationProperties applicationProperties;
     private InitialSecuritySetup initialSecuritySetup;
@@ -59,7 +61,8 @@ class InitialSecuritySetupTest {
                         teamService,
                         applicationProperties,
                         databaseService,
-                        licenseSettingsService);
+                        licenseSettingsService,
+                        teamMembershipService);
     }
 
     @Test

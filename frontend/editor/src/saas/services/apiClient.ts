@@ -6,6 +6,7 @@ import {
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
 import { withBasePath } from "@app/constants/app";
+import { getBrowserId } from "@app/utils/browserIdentifier";
 
 // Helper: decode base64url JWT payload safely
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -81,6 +82,8 @@ apiClient.interceptors.request.use(
     } catch (error) {
       console.error("[API Client] Error in request interceptor:", error);
     }
+
+    config.headers["X-Browser-Id"] = getBrowserId();
 
     return config;
   },

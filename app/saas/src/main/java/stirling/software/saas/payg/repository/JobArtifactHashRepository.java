@@ -48,7 +48,40 @@ public class JobArtifactHashRepository
                 .getResultList();
     }
 
-    /** Prunes rows older than cutoff; run from a scheduled task. */
+    /**
+     * Run-scoped lineage lookup: as {@link #findOpenJobsForSignatures} but additionally requires
+     * {@code j.runId = :runId}, so only jobs belonging to the same automation run can be joined.
+     */
+    public List<LineageMatch> findOpenJobsForSignaturesInRun(
+            Long userId,
+            JobStatus openStatus,
+            LocalDateTime since,
+            Collection<String> signatures,
+            String runId,
+            int limit) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT new stirling.software.saas.payg.lineage.LineageMatch("
+                                + " h.id.jobId, h.id.kind, j.lastStepAt)"
+                                + " FROM JobArtifactHash h"
+                                + " JOIN ProcessingJob j ON j.id = h.id.jobId"
+                                + " WHERE j.ownerUserId = :userId"
+                                + " AND j.status = :openStatus"
+                                + " AND j.lastStepAt > :since"
+                                + " AND j.runId = :runId"
+                                + " AND h.id.contentHash IN :signatures"
+                                + " ORDER BY j.lastStepAt DESC",
+                        LineageMatch.class)
+                .setParameter("userId", userId)
+                .setParameter("openStatus", openStatus)
+                .setParameter("since", since)
+                .setParameter("runId", runId)
+                .setParameter("signatures", signatures)
+                .setMaxResults(limit)
+                .getResultList();
+    }
+
+    /** Prunes rows older than {@code cutoff}; run from a scheduled task. */
     @Transactional
     public int deleteOlderThan(LocalDateTime cutoff) {
         return (int) delete("createdAt < ?1", cutoff);

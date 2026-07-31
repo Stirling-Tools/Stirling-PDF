@@ -2,6 +2,7 @@ package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.regex.Pattern;
 
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.proprietary.model.api.ai.Verdict;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiToolInputValidator;
 import stirling.software.proprietary.service.MathAuditorOrchestrator;
 
@@ -49,7 +51,9 @@ import stirling.software.proprietary.service.MathAuditorOrchestrator;
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class MathAuditorAgentController {
 
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
     private final MathAuditorOrchestrator orchestrator;
+    private final AiFeatureGate aiFeatureGate;
 
     @POST
     @Path("/math-auditor-agent")
@@ -82,6 +86,7 @@ public class MathAuditorAgentController {
                                             + " ignored (default: 0.01)")
                     @RestForm("tolerance")
                     BigDecimal tolerance) {
+        aiFeatureGate.requireMathAuditor();
 
         BigDecimal effectiveTolerance = tolerance != null ? tolerance : new BigDecimal("0.01");
 
@@ -91,9 +96,10 @@ public class MathAuditorAgentController {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
+        String originalFilename = fileInputMpf.getOriginalFilename();
         String safeName =
-                fileInputMpf.getOriginalFilename() != null
-                        ? fileInputMpf.getOriginalFilename().replaceAll("[\\r\\n]", "_")
+                originalFilename != null
+                        ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
                         : "<unnamed>";
         log.info("[math-auditor-agent] request file={} tolerance={}", safeName, effectiveTolerance);
 

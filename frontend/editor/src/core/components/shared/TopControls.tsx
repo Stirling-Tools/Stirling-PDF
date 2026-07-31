@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { SegmentedControl, Loader } from "@mantine/core";
+import { Loader } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import GridViewIcon from "@mui/icons-material/GridView";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -205,45 +206,15 @@ const TopControls = ({
       <div className="flex justify-center">
         <SegmentedControl
           data-tour="view-switcher"
-          data={viewOptions}
+          options={viewOptions}
           value={currentView}
           onChange={handleViewChange}
-          color="blue"
+          variant="secondary"
           fullWidth
           style={{
             transition: "all 0.2s ease",
             opacity: switchingTo ? 0.8 : 1,
             pointerEvents: "auto",
-          }}
-          styles={{
-            root: {
-              borderRadius: "0 0 16px 16px",
-              height: "1.8rem",
-              backgroundColor: "var(--bg-toolbar)",
-              border: "1px solid var(--border-default)",
-              borderTop: "none",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              outline: "1px solid rgba(0, 0, 0, 0.1)",
-              outlineOffset: "-1px",
-              padding: "0 0",
-              gap: "0",
-            },
-            control: {
-              borderRadius: "0 0 16px 16px",
-              padding: "0",
-              border: "none",
-            },
-            indicator: {
-              borderRadius: "0 0 16px 16px",
-              height: "100%",
-              top: "0rem",
-              margin: "0",
-              border: "none",
-            },
-            label: {
-              paddingTop: "0",
-              paddingBottom: "0",
-            },
           }}
         />
       </div>

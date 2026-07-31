@@ -6,7 +6,7 @@
  * IndexedDB backing folder still holds the editable automation + run state.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import {
@@ -14,6 +14,7 @@ import {
   onPoliciesChange,
   updatePolicy,
   resetPolicy,
+  reorderPolicies as persistPolicyOrder,
 } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import {
@@ -33,12 +34,19 @@ import {
   setPolicyEnabled,
   removePolicy,
 } from "@app/services/policyBackend";
+import { reorderPolicies as reorderBackendPolicies } from "@app/services/policyApi";
 import type { PolicyToStore } from "@app/services/policyPipeline";
 import type {
   PoliciesByCategory,
   PolicyConfigResult,
   PolicyWizardResult,
 } from "@app/types/policies";
+
+/** Cold-start reconcile retry budget + capped backoff (≈0.5s→5s, ~1 min total),
+ *  enough to outlast a backend that starts a little after the frontend. */
+const RECONCILE_MAX_ATTEMPTS = 15;
+const reconcileRetryDelay = (attempt: number) =>
+  Math.min(500 * 2 ** attempt, 5000);
 
 /** Build the backend store-request for a category from a wizard result. */
 function toStoreRequest(
@@ -65,23 +73,31 @@ function toStoreRequest(
 
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
-  const { config } = useAppConfig();
+  const { config, refetch: refetchAppConfig } = useAppConfig();
   const { isTeamLeader } = useSaaSTeam();
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
-  // Reconcile the local cache against the backend (the source of truth) on
-  // mount. Backend config wins; the locally-cached folderId (which the backend
-  // doesn't track) is preserved. If the backend is unreachable we keep the
-  // local cache as-is, so the surface still works offline.
+  // Latest refetch, read from inside the retry loop without re-triggering it.
+  const refetchAppConfigRef = useRef(refetchAppConfig);
+  refetchAppConfigRef.current = refetchAppConfig;
+
+  // Reconcile local cache against the backend (source of truth), preserving the
+  // locally-cached folderId; retry with backoff since the backend may not be up yet.
+  // On recovery, also re-resolve app config in case its admin/team-leader flags settled false while down.
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
+    let attempt = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const reconcile = async () => {
       let byCategory;
       try {
         byCategory = await fetchPoliciesByCategory();
       } catch {
-        return; // offline / backend down — local cache stands.
+        if (cancelled || attempt >= RECONCILE_MAX_ATTEMPTS) return;
+        timer = setTimeout(reconcile, reconcileRetryDelay(attempt++));
+        return;
       }
       if (cancelled) return;
       const local = loadPolicies();
@@ -90,14 +106,24 @@ export function usePolicies() {
         const decoded = byCategory.get(cat.id);
         reconciled[cat.id] = decoded
           ? decodedToState(decoded, local[cat.id]?.folderId)
-          : { ...local[cat.id], configured: false, status: "default" };
+          : {
+              ...local[cat.id],
+              configured: false,
+              status: "default",
+              backendId: undefined,
+            };
       }
       for (const [id, state] of Object.entries(reconciled)) {
         updatePolicy(id, state);
       }
-    })();
+      // The backend was down at first load (we retried) — re-resolve the app
+      // config so the admin/team-leader gate isn't stuck on its offline default.
+      if (attempt > 0) void refetchAppConfigRef.current();
+    };
+    void reconcile();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
@@ -134,6 +160,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },
@@ -170,6 +197,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },
@@ -234,6 +262,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },
@@ -242,14 +271,42 @@ export function usePolicies() {
 
   const pausePolicy = useCallback(async (id: string) => {
     const current = loadPolicies()[id];
-    if (current?.backendId) await setPolicyEnabled(current.backendId, false);
+    if (current?.backendId) {
+      await setPolicyEnabled(current.backendId, false).catch((err: unknown) => {
+        if (
+          (err as { response?: { status?: number } })?.response?.status === 404
+        ) {
+          updatePolicy(id, {
+            backendId: undefined,
+            configured: false,
+            status: "default",
+          });
+          return;
+        }
+        throw err;
+      });
+    }
     if (current?.folderId) await setPolicyFolderPaused(current.folderId, true);
     updatePolicy(id, { status: "paused" });
   }, []);
 
   const resumePolicy = useCallback(async (id: string) => {
     const current = loadPolicies()[id];
-    if (current?.backendId) await setPolicyEnabled(current.backendId, true);
+    if (current?.backendId) {
+      await setPolicyEnabled(current.backendId, true).catch((err: unknown) => {
+        if (
+          (err as { response?: { status?: number } })?.response?.status === 404
+        ) {
+          updatePolicy(id, {
+            backendId: undefined,
+            configured: false,
+            status: "default",
+          });
+          return;
+        }
+        throw err;
+      });
+    }
     if (current?.folderId) await setPolicyFolderPaused(current.folderId, false);
     updatePolicy(id, { status: "active" });
   }, []);
@@ -259,6 +316,26 @@ export function usePolicies() {
     if (current?.backendId) await removePolicy(current.backendId);
     if (current?.folderId) await deletePolicyFolder(current.folderId);
     resetPolicy(id);
+  }, []);
+
+  /**
+   * Persist a new execution order for the given categories (in the sequence
+   * provided). The order is server-side and team-wide: it's mirrored to the
+   * backend (mapping each category to its stored policy id) so it survives a
+   * cleared browser and is shared by the whole team. The local cache is updated
+   * first for an instant re-render; the next reconcile re-reads the server order.
+   */
+  const reorderPolicies = useCallback((orderedCategoryIds: string[]) => {
+    persistPolicyOrder(orderedCategoryIds);
+    const current = loadPolicies();
+    const backendIds = orderedCategoryIds
+      .map((categoryId) => current[categoryId]?.backendId)
+      .filter((id): id is string => !!id);
+    if (backendIds.length > 0) {
+      // Fire-and-forget: on failure (offline / not a team leader) the optimistic
+      // local order stands until the next reconcile re-reads the server's order.
+      void reorderBackendPolicies(backendIds).catch(() => {});
+    }
   }, []);
 
   /**
@@ -312,6 +389,7 @@ export function usePolicies() {
     pausePolicy,
     resumePolicy,
     deletePolicy,
+    reorderPolicies,
     ensurePolicyFolder,
   };
 }

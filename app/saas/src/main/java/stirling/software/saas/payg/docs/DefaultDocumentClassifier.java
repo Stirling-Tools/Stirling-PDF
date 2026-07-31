@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,6 +20,9 @@ import stirling.software.common.model.MultipartFile;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.proprietary.billing.DocumentUnitCalculator;
+import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
+import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.saas.payg.policy.PricingPolicy;
 
 /**
@@ -43,9 +47,6 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
     private static final String PDF_CONTENT_TYPE = "application/pdf";
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
-    /** Floor for non-empty input. Distinct from {@code policy.minChargeUnits} (applied later). */
-    private static final int MIN_UNITS_PER_NONEMPTY_FILE = 1;
-
     private final TempFileManager tempFileManager;
 
     @Override
@@ -60,13 +61,7 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
         Objects.requireNonNull(policy, "policy");
 
         FileFacts facts = inspect(file, materialisedPath);
-        long rawUnits = computeRawUnits(facts.pages, facts.bytes, policy);
-        // toIntExact: fail loud on overflow rather than silently wrapping a billing number.
-        int units =
-                Math.toIntExact(
-                        Math.max(
-                                MIN_UNITS_PER_NONEMPTY_FILE,
-                                Math.min(policy.getFileUnitCap(), rawUnits)));
+        int units = DocumentUnitCalculator.unitsForFile(facts.pages, facts.bytes, unitCalc(policy));
         return new DocumentMetrics(facts.pages, facts.bytes, facts.contentType, units);
     }
 
@@ -94,17 +89,16 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
 
         int totalPages = 0;
         long totalBytes = 0;
-        long rawUnitsSum = 0;
         String firstContentType = null;
+        List<FileSize> sizes = new ArrayList<>(files.size());
 
         for (int i = 0; i < files.size(); i++) {
             MultipartFile file = files.get(i);
             Path path = materialisedPaths == null ? null : materialisedPaths.get(i);
             FileFacts facts = inspect(file, path);
-            // Sum the *raw* (unclamped) per-file units so the group cap below can actually bind.
-            // Per-file clamping in this loop would make the group cap a no-op.
-            rawUnitsSum =
-                    saturatedAdd(rawUnitsSum, computeRawUnits(facts.pages, facts.bytes, policy));
+            // Collect raw page/byte facts; the group cap is applied over the raw sum in the
+            // calculator (per-file clamping here would make the group cap a no-op).
+            sizes.add(new FileSize(facts.pages, facts.bytes));
             totalPages = saturatedAdd(totalPages, facts.pages);
             totalBytes = saturatedAdd(totalBytes, facts.bytes);
             if (firstContentType == null) {
@@ -112,19 +106,21 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
             }
         }
 
-        long groupCap = (long) policy.getFileUnitCap() * files.size();
-        // toIntExact: fail loud on overflow rather than silently wrapping.
-        int totalUnits =
-                Math.toIntExact(
-                        Math.max(
-                                (long) MIN_UNITS_PER_NONEMPTY_FILE,
-                                Math.min(groupCap, rawUnitsSum)));
+        int totalUnits = DocumentUnitCalculator.unitsForGroup(sizes, unitCalc(policy));
 
         return new DocumentMetrics(
                 totalPages,
                 totalBytes,
                 firstContentType != null ? firstContentType : DEFAULT_CONTENT_TYPE,
                 totalUnits);
+    }
+
+    private static UnitCalcPolicy unitCalc(PricingPolicy policy) {
+        return new UnitCalcPolicy(
+                policy.getDocPagesPerUnit(),
+                policy.getDocBytesPerUnit(),
+                policy.getMinChargeUnits(),
+                policy.getFileUnitCap());
     }
 
     private FileFacts inspect(MultipartFile file, Path materialisedPath) {
@@ -139,19 +135,6 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
                             : readPageCount(file);
         }
         return new FileFacts(pages, bytes, contentType);
-    }
-
-    private static long computeRawUnits(int pages, long bytes, PricingPolicy policy) {
-        long pageUnits = pages > 0 ? ceilDiv(pages, policy.getDocPagesPerUnit()) : 0L;
-        long byteUnits = ceilDiv(bytes, policy.getDocBytesPerUnit());
-        return Math.max(pageUnits, byteUnits);
-    }
-
-    private static long ceilDiv(long numerator, long divisor) {
-        if (numerator <= 0) {
-            return 0;
-        }
-        return (numerator + divisor - 1) / divisor;
     }
 
     private static boolean isPdf(String contentType, String filename) {

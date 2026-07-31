@@ -41,6 +41,8 @@ class CertSignControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private HardwareKeyStoreService hardwareKeyStoreService;
+    @Mock private HttpServletRequest httpRequest;
 
     @Mock private Instance<ServerCertificateServiceInterface> serverCertificateService;
 

@@ -64,13 +64,17 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -99,15 +103,18 @@ public class CertSignController {
     // @Autowired(required = false) -> CDI Instance<T> (optional / may be unsatisfied).
     private final Instance<ServerCertificateServiceInterface> serverCertificateService;
     private final TempFileManager tempFileManager;
+    private final HardwareKeyStoreService hardwareKeyStoreService;
 
     @Inject
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
             Instance<ServerCertificateServiceInterface> serverCertificateService,
-            TempFileManager tempFileManager) {
+            TempFileManager tempFileManager,
+            HardwareKeyStoreService hardwareKeyStoreService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
         this.tempFileManager = tempFileManager;
+        this.hardwareKeyStoreService = hardwareKeyStoreService;
     }
 
     public static void sign(
@@ -175,7 +182,8 @@ public class CertSignController {
             @RestForm("location") String locationForm,
             @RestForm("name") String nameForm,
             @RestForm("pageNumber") Integer pageNumberForm,
-            @RestForm("showLogo") Boolean showLogoForm)
+            @RestForm("showLogo") Boolean showLogoForm,
+            @Context HttpServletRequest httpRequest)
             throws Exception {
         SignPDFWithCertRequest request = new SignPDFWithCertRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileInput));
@@ -217,6 +225,8 @@ public class CertSignController {
 
         KeyStore ks = null;
         String keystorePassword = password;
+        Provider signingProvider = null;
+        HardwareKeyStoreService.Pkcs11Session pkcs11Session = null;
 
         switch (certType) {
             case "PEM":
@@ -268,6 +278,31 @@ public class CertSignController {
                 ks = serverCertService.getServerKeyStore();
                 keystorePassword = serverCertService.getServerCertificatePassword();
                 break;
+            case "WINDOWS_STORE":
+                hardwareKeyStoreService.assertLocalDesktop(httpRequest);
+                ks = hardwareKeyStoreService.loadWindowsKeyStore();
+                signingProvider = hardwareKeyStoreService.windowsProvider();
+                // PIN is prompted by the Windows CSP / token middleware, not passed here.
+                keystorePassword = password;
+                break;
+            case "PKCS11":
+                hardwareKeyStoreService.assertLocalDesktop(httpRequest);
+                char[] pkcs11Pin = password != null ? password.toCharArray() : null;
+                try {
+                    pkcs11Session =
+                            hardwareKeyStoreService.openPkcs11(
+                                    request.getPkcs11LibraryPath(),
+                                    request.getPkcs11Slot(),
+                                    pkcs11Pin);
+                } finally {
+                    if (pkcs11Pin != null) {
+                        java.util.Arrays.fill(pkcs11Pin, '\0');
+                    }
+                }
+                ks = pkcs11Session.keyStore();
+                signingProvider = pkcs11Session.provider();
+                keystorePassword = password;
+                break;
             default:
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument",
@@ -275,7 +310,9 @@ public class CertSignController {
                         "certificate type: " + certType);
         }
 
-        CreateSignature createSignature = new CreateSignature(ks, keystorePassword.toCharArray());
+        char[] pin = keystorePassword != null ? keystorePassword.toCharArray() : null;
+        CreateSignature createSignature =
+                new CreateSignature(ks, pin, request.getAlias(), signingProvider);
         TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
         try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
             sign(
@@ -292,6 +329,14 @@ public class CertSignController {
         } catch (IOException e) {
             signedOut.close();
             throw e;
+        } finally {
+            // Clear the PIN copy and log out the token session once signing is done.
+            if (pin != null) {
+                java.util.Arrays.fill(pin, '\0');
+            }
+            if (pkcs11Session != null) {
+                pkcs11Session.close();
+            }
         }
         // Return the signed PDF
         return WebResponseUtils.pdfFileToWebResponse(
@@ -347,7 +392,22 @@ public class CertSignController {
                         NoSuchAlgorithmException,
                         IOException,
                         CertificateException {
-            super(keystore, pin);
+            this(keystore, pin, null, null);
+        }
+
+        public CreateSignature(
+                KeyStore keystore, char[] pin, String alias, Provider signingProvider)
+                throws KeyStoreException,
+                        UnrecoverableKeyException,
+                        NoSuchAlgorithmException,
+                        IOException,
+                        CertificateException {
+            super(keystore, pin, alias);
+            setSigningProvider(signingProvider);
+            loadLogo();
+        }
+
+        private void loadLogo() throws IOException {
             ClassPathResource resource = new ClassPathResource("static/images/signature.png");
             try (InputStream is = resource.getInputStream()) {
                 logoFile = Files.createTempFile("signature", ".png").toFile();

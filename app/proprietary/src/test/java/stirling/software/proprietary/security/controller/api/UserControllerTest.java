@@ -30,6 +30,7 @@ import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -53,6 +54,7 @@ class UserControllerTest {
     @Mock private EmailService emailService;
     @Mock private UserLicenseSettingsService licenseSettingsService;
     @Mock private LoginAttemptService loginAttemptService;
+    @Mock private TeamMembershipService teamMembershipService;
 
     private ApplicationProperties applicationProperties;
     private UserController controller;

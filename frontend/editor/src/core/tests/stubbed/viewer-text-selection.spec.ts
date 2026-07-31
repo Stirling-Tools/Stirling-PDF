@@ -1,7 +1,7 @@
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 const MULTIPAGE_PDF = path.join(FIXTURES_DIR, "annotations_out_of_order.pdf");
 
@@ -96,7 +96,15 @@ test("hovering over text changes the cursor to an I-beam", async ({ page }) => {
 test("Ctrl+C copies selected text to the clipboard", async ({
   page,
   context,
+  browserName,
 }) => {
+  // Reading the clipboard requires the `clipboard-read` permission, which only
+  // chromium supports via `grantPermissions` (firefox throws "Unknown
+  // permission"; webkit can't expose `navigator.clipboard.readText` in tests).
+  test.skip(
+    browserName !== "chromium",
+    "clipboard read/permissions are chromium-only in Playwright",
+  );
   test.setTimeout(60_000);
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const firstPage = await loadSampleAndOpenViewer(page);
@@ -169,7 +177,15 @@ test("right-click on the page does not surface the browser context menu", async 
 test("floating Copy menu appears after drag-select and copies", async ({
   page,
   context,
+  browserName,
 }) => {
+  // Verifying the copy result reads the clipboard, which needs the
+  // `clipboard-read` permission - chromium-only in Playwright. The Copy menu's
+  // appearance is covered cross-browser by the right-click test above.
+  test.skip(
+    browserName !== "chromium",
+    "clipboard read/permissions are chromium-only in Playwright",
+  );
   test.setTimeout(60_000);
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const firstPage = await loadSampleAndOpenViewer(page);

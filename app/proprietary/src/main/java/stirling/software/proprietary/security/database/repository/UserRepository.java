@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.database.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -74,6 +75,24 @@ public class UserRepository implements PanacheRepositoryBase<User, Long> {
         return list("SELECT u FROM User u LEFT JOIN FETCH u.team");
     }
 
+    /** All users with team + authorities fetched (DISTINCT dedupes the collection join). */
+    public List<User> findAllWithTeamAndAuthorities() {
+        return list(
+                "SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.team LEFT JOIN FETCH"
+                        + " u.authorities");
+    }
+
+    /** (userId, key, value) settings rows for the given users. */
+    public List<Object[]> findSettingsByUserIds(Collection<Long> ids) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT u.id, KEY(s), VALUE(s) FROM User u JOIN u.settings s WHERE u.id IN"
+                                + " :ids",
+                        Object[].class)
+                .setParameter("ids", ids)
+                .getResultList();
+    }
+
     public List<User> findAllByTeamId(Long teamId) {
         return list(
                 "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id ="
@@ -83,6 +102,11 @@ public class UserRepository implements PanacheRepositoryBase<User, Long> {
 
     public long countByTeam(Team team) {
         return count("team", team);
+    }
+
+    /** Count real users, excluding a reserved username such as the internal API user. */
+    public long countByUsernameNot(String username) {
+        return count("username <> ?1", username);
     }
 
     public List<User> findAllByTeam(Team team) {

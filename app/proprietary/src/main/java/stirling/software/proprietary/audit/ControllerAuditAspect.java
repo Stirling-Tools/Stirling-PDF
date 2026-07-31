@@ -159,6 +159,7 @@ public class ControllerAuditAspect {
 
         String previousPrincipal = MDC.get("auditPrincipal");
         String previousOrigin = MDC.get("auditOrigin");
+        String previousSource = MDC.get("auditSource");
         String previousIp = MDC.get("auditIp");
 
         // EARLY CAPTURE: Capture from SecurityContext on request thread, store in MDC for async
@@ -188,6 +189,14 @@ public class ControllerAuditAspect {
             // @Audited methods are audited by AuditAspect.
             if (auditedAnnotation != null) {
                 return joinPoint.proceed();
+            }
+
+            // Stamp the free-UI source only for non-@Audited controller traffic — an actual
+            // tool / UI action. @Audited events (login, settings) return above without a source,
+            // so they never count as an "active editor" or a free UI run. The finally block
+            // restores auditSource, so a pooled thread can't leak a stale "WEB" into them.
+            if (previousSource == null) {
+                MDC.put("auditSource", auditService.captureCurrentSource());
             }
 
             long start = System.currentTimeMillis();
@@ -231,6 +240,10 @@ public class ControllerAuditAspect {
 
                 // Call auditService but with isHttpRequest=true to skip additional timing
                 auditService.addTimingData(data, start, resp, level, true);
+
+                // Merge controller-set policy context + the internal-automation marker (set after
+                // the body ran, so it must happen here rather than with the pre-proceed HTTP data).
+                auditService.addAutomationContext(data, req);
 
                 // Resolve the event type using the unified method
                 AuditEventType eventType =
@@ -283,6 +296,7 @@ public class ControllerAuditAspect {
         } finally {
             restoreMdcValue("auditPrincipal", previousPrincipal);
             restoreMdcValue("auditOrigin", previousOrigin);
+            restoreMdcValue("auditSource", previousSource);
             restoreMdcValue("auditIp", previousIp);
         }
     }

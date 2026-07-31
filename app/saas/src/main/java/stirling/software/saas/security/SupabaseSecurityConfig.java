@@ -25,8 +25,10 @@ import stirling.software.common.security.GrantedAuthority;
 import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
@@ -54,6 +56,7 @@ public class SupabaseSecurityConfig {
     private final SupabaseUserService supabaseUserService;
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @ConfigProperty(name = "app.supabase.issuer", defaultValue = "")
     String issuer;

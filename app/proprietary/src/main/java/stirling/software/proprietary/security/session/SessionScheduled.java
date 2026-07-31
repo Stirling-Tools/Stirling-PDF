@@ -1,9 +1,6 @@
 package stirling.software.proprietary.security.session;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
+import java.time.Duration;
 
 import io.quarkus.scheduler.Scheduled;
 
@@ -17,23 +14,15 @@ import stirling.software.common.security.SessionInformation;
 @RequiredArgsConstructor
 public class SessionScheduled {
 
+    // Retention before an expired session is purged.
+    private static final Duration EXPIRED_SESSION_RETENTION = Duration.ofDays(30);
+
     private final SessionPersistentRegistry sessionPersistentRegistry;
 
     @Scheduled(cron = "0 0/5 * * * ?")
     public void expireSessions() {
-        Instant now = Instant.now();
-        for (Object principal : sessionPersistentRegistry.getAllPrincipals()) {
-            List<SessionInformation> sessionInformations =
-                    sessionPersistentRegistry.getAllSessions(principal, false);
-            for (SessionInformation sessionInformation : sessionInformations) {
-                Date lastRequest = sessionInformation.getLastRequest();
-                int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
-                Instant expirationTime =
-                        lastRequest.toInstant().plus(maxInactiveInterval, ChronoUnit.SECONDS);
-                if (now.isAfter(expirationTime)) {
-                    sessionPersistentRegistry.expireSession(sessionInformation.getSessionId());
-                }
-            }
-        }
+        // Flag timed-out sessions, then purge long-dead ones.
+        sessionPersistentRegistry.expireStaleSessions();
+        sessionPersistentRegistry.purgeExpiredSessions(EXPIRED_SESSION_RETENTION);
     }
 }

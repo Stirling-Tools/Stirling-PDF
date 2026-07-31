@@ -69,6 +69,14 @@ public class TeamBillingService {
      */
     private static final String PAYG_LOOKUP_KEY = "plan:processor";
 
+    /**
+     * Stripe Price {@code lookup_key} for the prepaid-bundle price — the per-credit rate the bundle
+     * calculator prices its pool at. A DIFFERENT price from {@link #PAYG_LOOKUP_KEY} (the metered
+     * per-document rate); the two must not be conflated, or the in-app estimate diverges from the
+     * amount the checkout edge fn actually charges (which bills against this same price).
+     */
+    private static final String BUNDLE_LOOKUP_KEY = "bundle:processor";
+
     private final PaygTeamExtensionsRepository extensionsRepository;
     private final WalletPolicyRepository walletPolicyRepository;
     private final PricingPolicyService pricingPolicyService;
@@ -253,6 +261,23 @@ public class TeamBillingService {
                 BigDecimal.valueOf(capMinor)
                         .divide(ctx.perDocMinor(), 0, RoundingMode.FLOOR)
                         .longValue());
+    }
+
+    /**
+     * Per-credit rate of the prepaid-bundle Stripe Price (lookup key {@code bundle:processor}) in
+     * {@code currency} (USD fallback) — the rate the in-app bundle calculator multiplies its pool
+     * by, so its estimate matches the amount the checkout edge fn charges (which bills the pool
+     * against this same price). Distinct from the metered {@code perDocMinor}; a bundle credit is
+     * one size-scaled run, priced per {@code unit_amount} of the bundle price. {@code null} when
+     * the rate can't be resolved (stripe schema absent, price unsynced) — the calculator then hides
+     * the figure and defers to the server total.
+     */
+    public BigDecimal resolveBundleRatePerCreditMinor(String currency) {
+        return subscriptionDao
+                .findRateByLookupKey(
+                        BUNDLE_LOOKUP_KEY, currency != null ? currency : DISPLAY_CURRENCY)
+                .map(StripeSubscriptionDao.PriceRate::perDocMinor)
+                .orElse(null);
     }
 
     /**

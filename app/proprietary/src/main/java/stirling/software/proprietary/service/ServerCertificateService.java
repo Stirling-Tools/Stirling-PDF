@@ -22,14 +22,13 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -42,29 +41,23 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     private static final String KEYSTORE_ALIAS = "stirling-pdf-server";
     private static final String DEFAULT_PASSWORD = "stirling-pdf-server-cert";
 
-    @Inject
-    @ConfigProperty(name = "system.serverCertificate.enabled", defaultValue = "false")
-    boolean enabled;
-
-    @Inject
-    @ConfigProperty(
-            name = "system.serverCertificate.organizationName",
-            defaultValue = "Stirling-PDF")
-    String organizationName;
-
-    @Inject
-    @ConfigProperty(name = "system.serverCertificate.validity", defaultValue = "365")
-    int validityDays;
-
-    @Inject
-    @ConfigProperty(name = "system.serverCertificate.regenerateOnStartup", defaultValue = "false")
-    boolean regenerateOnStartup;
+    private final boolean enabled;
+    private final String organizationName;
+    private final int validityDays;
+    private final boolean regenerateOnStartup;
 
     private final LicenseKeyChecker licenseKeyChecker;
 
     @Inject
-    public ServerCertificateService(LicenseKeyChecker licenseKeyChecker) {
+    public ServerCertificateService(
+            LicenseKeyChecker licenseKeyChecker, ApplicationProperties applicationProperties) {
         this.licenseKeyChecker = licenseKeyChecker;
+        ApplicationProperties.System.ServerCertificate config =
+                applicationProperties.getSystem().getServerCertificate();
+        this.enabled = config.isEnabled();
+        this.organizationName = config.getOrganizationName();
+        this.validityDays = config.getValidity();
+        this.regenerateOnStartup = config.isRegenerateOnStartup();
     }
 
     static {

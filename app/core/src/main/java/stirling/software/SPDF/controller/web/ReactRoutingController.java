@@ -60,6 +60,8 @@ public class ReactRoutingController {
     private boolean loggedMissingIndex = false;
     private String cachedSaasLandingHtml;
     private boolean saasLandingExists = false;
+    private String cachedMobileUploadHtml;
+    private boolean mobileUploadHtmlExists = false;
 
     @PostConstruct
     public void init() {
@@ -81,6 +83,12 @@ public class ReactRoutingController {
                 log.warn("Failed to read saas-landing.html; falling back to index.html", ex);
             }
         }
+
+        // Desktop (Tauri) serves the SPA from its bundled webview, so a phone scanning the QR can't
+        // load the React /mobile-scanner route from the local backend. Cache the self-contained
+        // static upload page to serve at that route in desktop mode instead.
+        this.cachedMobileUploadHtml = readStaticHtml("mobile-upload.html");
+        this.mobileUploadHtmlExists = this.cachedMobileUploadHtml != null;
 
         // Check for external index.html first (customFiles/static/)
         java.nio.file.Path externalIndexPath =
@@ -164,6 +172,29 @@ public class ReactRoutingController {
         return new ClassPathResource("static/index.html");
     }
 
+    private String readStaticHtml(String filename) {
+        try {
+            java.nio.file.Path external =
+                    Paths.get(InstallationPathConfig.getStaticPath(), filename);
+            if (Files.exists(external) && Files.isReadable(external)) {
+                return Files.readString(external, StandardCharsets.UTF_8);
+            }
+            ClassPathResource resource = new ClassPathResource("static/" + filename);
+            if (resource.exists()) {
+                try (InputStream in = resource.getInputStream()) {
+                    return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to read static HTML {}", filename, ex);
+        }
+        return null;
+    }
+
+    private static boolean isDesktopMode() {
+        return Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
+    }
+
     @GET
     @Path("/")
     @Produces(MediaType.TEXT_HTML)
@@ -232,6 +263,21 @@ public class ReactRoutingController {
     @Path("/share/{token}")
     @Produces(MediaType.TEXT_HTML)
     public Response serveShareLinkPage(@PathParam("token") String token) {
+        return serveIndexHtml();
+    }
+
+    // Desktop (Tauri) serves the SPA from its own webview, so a phone scanning the QR cannot load
+    // the React /mobile-scanner route; serve the self-contained static upload page instead.
+    @GET
+    @Path("/mobile-scanner")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveMobileScanner() {
+        if (isDesktopMode() && mobileUploadHtmlExists) {
+            return Response.ok(cachedMobileUploadHtml)
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
+        }
         return serveIndexHtml();
     }
 

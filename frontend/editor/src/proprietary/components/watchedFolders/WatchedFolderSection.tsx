@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Box, Button, Text, Stack } from "@mantine/core";
+import { Box, Text, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import { useWatchedFolders } from "@app/hooks/useWatchedFolders";
@@ -77,8 +78,8 @@ export function WatchedFolderSection() {
   return (
     <Box
       style={{
-        borderTop: "1px solid var(--border-subtle)",
-        backgroundColor: "var(--bg-toolbar)",
+        borderTop: "1px solid var(--c-border-subtle)",
+        backgroundColor: "var(--c-bg-raised)",
         display: "flex",
         flexDirection: "column",
         height: "100%",
@@ -132,11 +133,12 @@ export function WatchedFolderSection() {
           ))}
 
           <Button
-            variant="subtle"
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
             className="tool-button"
             fullWidth
-            justify="flex-start"
-            px="sm"
+            justify="start"
             leftSection={
               <AddIcon
                 style={{ fontSize: 14, color: "var(--mantine-color-gray-5)" }}

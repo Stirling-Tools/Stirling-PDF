@@ -75,6 +75,10 @@ public class UserBasedRateLimitingFilter implements jakarta.servlet.Filter {
             filterChain.doFilter(request, response);
             return;
         }
+        // Bucket by the resolved user (the auth filter runs first and populates the context, even
+        // for X-API-KEY requests), so all of a user's API keys share ONE per-user quota - minting
+        // extra keys can't multiply the daily limit. Fall back to the raw key / IP only when the
+        // request is unauthenticated.
         String identifier = null;
         // Check for API key in the request headers
         String apiKey = request.getHeader("X-API-KEY");
@@ -84,9 +88,13 @@ public class UserBasedRateLimitingFilter implements jakarta.servlet.Filter {
         } else if (securityIdentity != null && !securityIdentity.isAnonymous()) {
             identifier = securityIdentity.getPrincipal().getName();
         }
-        // If neither API key nor an authenticated user is present, use IP address
         if (identifier == null) {
-            identifier = request.getRemoteAddr();
+            String apiKey = request.getHeader("X-API-KEY");
+            if (apiKey != null && !apiKey.trim().isEmpty()) {
+                identifier = "API_KEY_" + apiKey;
+            } else {
+                identifier = request.getRemoteAddr();
+            }
         }
         Role userRole = getRoleFromIdentity(securityIdentity);
         if (request.getHeader("X-API-KEY") != null) {
