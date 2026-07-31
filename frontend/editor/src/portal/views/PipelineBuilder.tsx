@@ -791,6 +791,8 @@ export function PipelineBuilder() {
     }
     if (stepRequiresUpload(step))
       return t("portal.pipelines.builder.needsUpload");
+    if (stepNeedsConfiguring(step, allTools))
+      return t("portal.pipelines.builder.needsConfiguring");
     return undefined;
   }
 
