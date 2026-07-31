@@ -19,7 +19,7 @@ export interface WirePipelineStep {
 
 export interface WireOutputOptions {
   runOn: "upload" | "export";
-  mode: "new_file" | "new_version";
+  mode: "new_file" | "new_version" | "discard";
   name: string;
   position: "prefix" | "suffix" | "auto-number";
   maxRetries?: number;
@@ -32,7 +32,7 @@ export interface WireOutputOptions {
 }
 
 export interface WireOutputSpec {
-  type: "inline";
+  type: "inline" | "discard";
   options: Partial<WireOutputOptions>;
 }
 
@@ -84,7 +84,7 @@ export interface PolicyDecodedState {
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
   runOn: "upload" | "export";
-  outputMode: "new_file" | "new_version";
+  outputMode: "new_file" | "new_version" | "discard";
   outputName: string;
   outputNamePosition: "prefix" | "suffix" | "auto-number";
   maxRetries: number;

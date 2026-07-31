@@ -307,8 +307,10 @@ function PolicySetupWizardBody({
   // Store username (which is the email in Spring Security) as reviewerEmail.
   // See UserSelector.tsx in the editor for the grouping/display pattern.
   const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
-  const [outputMode, setOutputMode] = useState<"new_file" | "new_version">(
-    policy?.state.outputMode ?? "new_version",
+  const [outputMode, setOutputMode] = useState<
+    "new_file" | "new_version" | "discard"
+  >(
+    policy?.state.outputMode ?? entry.config.defaultOutputMode ?? "new_version",
   );
   const [outputName, setOutputName] = useState(policy?.state.outputName ?? "");
   const [outputNamePosition, setOutputNamePosition] = useState<
@@ -685,7 +687,8 @@ function PolicySetupWizardBody({
                     onChange={(value) => {
                       const mode = (value ?? "new_file") as
                         | "new_file"
-                        | "new_version";
+                        | "new_version"
+                        | "discard";
                       setOutputMode(mode);
                       // Auto-number only applies to separate new files.
                       if (
@@ -708,61 +711,76 @@ function PolicySetupWizardBody({
                           "portal.policies.wizard.output.outputAs.newFile",
                         ),
                       },
+                      {
+                        value: "discard",
+                        label: t(
+                          "portal.policies.wizard.output.outputAs.discard",
+                        ),
+                      },
                     ]}
                   />
                 </FormField>
-                <FormField
-                  label={t("portal.policies.wizard.output.filenameRule.label")}
-                >
-                  <div className="portal-policies__name-row">
-                    <Select
-                      inputSize="sm"
-                      value={outputNamePosition}
-                      onChange={(value) =>
-                        setOutputNamePosition(
-                          (value ?? "suffix") as
-                            | "prefix"
-                            | "suffix"
-                            | "auto-number",
-                        )
-                      }
-                      options={[
-                        {
-                          value: "prefix",
-                          label: t(
-                            "portal.policies.wizard.output.filenameRule.prefix",
-                          ),
-                        },
-                        {
-                          value: "suffix",
-                          label: t(
-                            "portal.policies.wizard.output.filenameRule.suffix",
-                          ),
-                        },
-                        ...(outputMode === "new_file"
-                          ? [
-                              {
-                                value: "auto-number",
-                                label: t(
-                                  "portal.policies.wizard.output.filenameRule.autoNumber",
-                                ),
-                              },
-                            ]
-                          : []),
-                      ]}
-                    />
-                    {outputNamePosition !== "auto-number" && (
-                      <Input
-                        inputSize="sm"
-                        value={outputName}
-                        placeholder={t(
-                          "portal.policies.wizard.output.filenameRule.placeholder",
-                        )}
-                        onChange={(e) => setOutputName(e.target.value)}
-                      />
+                {outputMode === "discard" && (
+                  <p className="portal-policies__wizard-note">
+                    {t("portal.policies.wizard.output.outputAs.discardHelp")}
+                  </p>
+                )}
+                {outputMode !== "discard" && (
+                  <FormField
+                    label={t(
+                      "portal.policies.wizard.output.filenameRule.label",
                     )}
-                  </div>
-                </FormField>
+                  >
+                    <div className="portal-policies__name-row">
+                      <Select
+                        inputSize="sm"
+                        value={outputNamePosition}
+                        onChange={(value) =>
+                          setOutputNamePosition(
+                            (value ?? "suffix") as
+                              | "prefix"
+                              | "suffix"
+                              | "auto-number",
+                          )
+                        }
+                        options={[
+                          {
+                            value: "prefix",
+                            label: t(
+                              "portal.policies.wizard.output.filenameRule.prefix",
+                            ),
+                          },
+                          {
+                            value: "suffix",
+                            label: t(
+                              "portal.policies.wizard.output.filenameRule.suffix",
+                            ),
+                          },
+                          ...(outputMode === "new_file"
+                            ? [
+                                {
+                                  value: "auto-number",
+                                  label: t(
+                                    "portal.policies.wizard.output.filenameRule.autoNumber",
+                                  ),
+                                },
+                              ]
+                            : []),
+                        ]}
+                      />
+                      {outputNamePosition !== "auto-number" && (
+                        <Input
+                          inputSize="sm"
+                          value={outputName}
+                          placeholder={t(
+                            "portal.policies.wizard.output.filenameRule.placeholder",
+                          )}
+                          onChange={(e) => setOutputName(e.target.value)}
+                        />
+                      )}
+                    </div>
+                  </FormField>
+                )}
               </>
             )}
             {/* TODO: reviewer user-picker goes here */}

@@ -69,6 +69,8 @@ export interface PolicyConfigDef {
   scopeLabel: string;
   fields: PolicyField[];
   defaultOperations: PolicyToolStep[];
+  /** Wizard default for "Output as"; e.g. ingestion discards the processed file. */
+  defaultOutputMode?: "new_file" | "new_version" | "discard";
 }
 
 export interface PolicyState {
@@ -78,7 +80,7 @@ export interface PolicyState {
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
-  outputMode?: "new_file" | "new_version";
+  outputMode?: "new_file" | "new_version" | "discard";
   outputName?: string;
   outputNamePosition?: "prefix" | "suffix" | "auto-number";
   runOn?: "upload" | "export";
@@ -93,7 +95,7 @@ export interface PolicySetupResult {
   sources: string[];
   scopeTypes: string[];
   reviewerEmail: string;
-  outputMode: "new_file" | "new_version";
+  outputMode: "new_file" | "new_version" | "discard";
   outputName: string;
   outputNamePosition: "prefix" | "suffix" | "auto-number";
   runOn: "upload" | "export";
@@ -242,6 +244,9 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       policyStep("ragIngest"),
     ],
     fields: [],
+    // Ingestion's product is the index/export, not a transformed PDF: the
+    // OCR+flatten normalization feeds extraction and is then discarded.
+    defaultOutputMode: "discard",
   },
   security: {
     summary: "portal.policies.config.security.summary",

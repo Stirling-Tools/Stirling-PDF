@@ -39,7 +39,12 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     enabled: state.enabled,
     trigger: null,
     steps: state.steps,
-    output: { type: "inline", options },
+    // "discard" is a real sink type: side effects (indexing, exports to
+    // destinations) happen, but no processed file is stored or written back.
+    output: {
+      type: state.outputMode === "discard" ? "discard" : "inline",
+      options,
+    },
   };
 }
 
@@ -67,7 +72,12 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     reviewerEmail: str(raw.reviewerEmail),
     fieldValues: raw.fieldValues ?? {},
     runOn: raw.runOn === "export" ? "export" : "upload",
-    outputMode: raw.mode === "new_file" ? "new_file" : "new_version",
+    outputMode:
+      raw.mode === "new_file"
+        ? "new_file"
+        : raw.mode === "discard"
+          ? "discard"
+          : "new_version",
     outputName: str(raw.name),
     outputNamePosition: position,
     maxRetries: num(raw.maxRetries, DEFAULTS.maxRetries),

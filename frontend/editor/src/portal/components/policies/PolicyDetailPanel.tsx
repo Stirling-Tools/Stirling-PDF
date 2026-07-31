@@ -129,7 +129,9 @@ export function PolicyDetailPanel({
   const outputLabel =
     state.outputMode === "new_file"
       ? t("portal.policies.detail.outputAsNewFile")
-      : t("portal.policies.detail.outputAsNewVersion");
+      : state.outputMode === "discard"
+        ? t("portal.policies.detail.outputDiscarded")
+        : t("portal.policies.detail.outputAsNewVersion");
 
   function sourceLabel(id: string) {
     if (id === "editor") return t("portal.sources.types.editor.label");

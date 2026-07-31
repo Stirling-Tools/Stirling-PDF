@@ -8007,6 +8007,7 @@ onEveryExport = "On every export"
 onEveryUpload = "On every upload"
 outputAsNewFile = "as a new file"
 outputAsNewVersion = "as a new version"
+outputDiscarded = "without saving a processed file"
 recentActivity = "Recent activity"
 retry = "Retry"
 showLess = "Show less"
@@ -8271,7 +8272,7 @@ desc = "Compresses the document to a smaller file size."
 label = "Reduce file size"
 
 [portal.policies.wizard.capability.flatten]
-desc = "Merges form fields and annotations into the page so they can't be edited."
+desc = "Merges form fields and annotations into the page - so they can't be edited, and so filled-in answers are part of the extracted text."
 label = "Flatten the document"
 
 [portal.policies.wizard.capability.ocr]
@@ -8317,6 +8318,8 @@ prefix = "Prefix"
 suffix = "Suffix"
 
 [portal.policies.wizard.output.outputAs]
+discard = "Don't save processed file (index and export only)"
+discardHelp = "The document is normalized (OCR, flatten) only to feed extraction; nothing is written back. Exports still reach any configured destinations."
 label = "Output as"
 newFile = "New file"
 newVersion = "New version"
