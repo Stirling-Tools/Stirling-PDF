@@ -2,6 +2,7 @@
 
 from .document_classifier import DocumentClassifierAgent
 from .execution import ExecutionPlanningAgent
+from .knowledge_ask import KnowledgeAskAgent
 from .orchestrator import OrchestratorAgent
 from .pdf_create import PdfCreateAgent
 from .pdf_edit import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
@@ -12,6 +13,7 @@ from .user_spec import UserSpecAgent
 __all__ = [
     "DocumentClassifierAgent",
     "ExecutionPlanningAgent",
+    "KnowledgeAskAgent",
     "OrchestratorAgent",
     "PdfCreateAgent",
     "PdfEditAgent",

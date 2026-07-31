@@ -440,6 +440,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("DocParse", "smart-split");
         addEndpointToGroup("DocParse", "chunk-document");
         addEndpointToGroup("DocParse", "rag-ingest");
+        addEndpointToGroup("DocParse", "rag-documents");
+        addEndpointToGroup("DocParse", "rag-search");
+        addEndpointToGroup("DocParse", "rag-ask");
         addEndpointToGroup("DocParse", "extract-tables");
         addEndpointToGroup("DocParse", "suggest-schema");
         addEndpointToGroup("DocParse", "fill-template");

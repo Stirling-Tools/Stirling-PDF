@@ -75,3 +75,65 @@ class PurgeOwnerResponse(ApiModel):
 
     owner_id: OwnerId
     deleted: int = Field(ge=0)
+
+
+class DocumentStatsResponse(ApiModel):
+    """Returned by ``GET /api/v1/documents/stats``. Deployment-wide counts
+    (every owner's content) powering the admin dashboard."""
+
+    backend: str
+    documents: int = Field(ge=0)
+    chunks: int = Field(ge=0)
+    embedding_model: str
+
+
+class DocumentSummary(ApiModel):
+    """One stored document the caller can read: its id, source label, chunk count."""
+
+    document_id: FileId
+    source: str
+    chunks: int = Field(ge=0)
+
+
+class ListDocumentsResponse(ApiModel):
+    """Returned by ``GET /api/v1/documents/list``. Caller-scoped rollup."""
+
+    documents: list[DocumentSummary]
+
+
+class SearchDocumentsRequest(ApiModel):
+    """Semantic search over every document the caller can read."""
+
+    query: str = Field(min_length=1)
+    top_k: int = Field(default=8, ge=1, le=50)
+
+
+class DocumentPassage(ApiModel):
+    """A retrieved chunk on the wire. Page bounds and heading path come from
+    chunk metadata when present (docparse chunks carry them); nulls otherwise."""
+
+    document_id: FileId
+    text: str
+    score: float
+    page_start: int | None = None
+    page_end: int | None = None
+    heading_path: list[str] = Field(default_factory=list)
+    source: str | None = None
+
+
+class SearchDocumentsResponse(ApiModel):
+    passages: list[DocumentPassage]
+
+
+class AskDocumentsRequest(ApiModel):
+    """Question answered only from the caller's stored documents."""
+
+    question: str = Field(min_length=1)
+    top_k: int = Field(default=8, ge=1, le=20)
+
+
+class AskDocumentsResponse(ApiModel):
+    """Grounded answer with inline citations plus the passages it drew from."""
+
+    answer: str
+    passages: list[DocumentPassage]

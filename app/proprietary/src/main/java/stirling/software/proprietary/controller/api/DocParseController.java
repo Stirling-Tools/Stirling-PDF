@@ -23,6 +23,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,7 +49,9 @@ import stirling.software.proprietary.model.api.docparse.ChunkDocumentApiRequest;
 import stirling.software.proprietary.model.api.docparse.ExtractFieldsApiRequest;
 import stirling.software.proprietary.model.api.docparse.ExtractTablesApiRequest;
 import stirling.software.proprietary.model.api.docparse.ParseDocumentApiRequest;
+import stirling.software.proprietary.model.api.docparse.RagAskApiRequest;
 import stirling.software.proprietary.model.api.docparse.RagIngestApiRequest;
+import stirling.software.proprietary.model.api.docparse.RagSearchApiRequest;
 import stirling.software.proprietary.model.api.docparse.SmartSplitApiRequest;
 import stirling.software.proprietary.model.api.docparse.SuggestSchemaApiRequest;
 import stirling.software.proprietary.model.docparse.ChunkDocumentResponse;
@@ -60,6 +64,7 @@ import stirling.software.proprietary.model.docparse.ExtractTablesResponse;
 import stirling.software.proprietary.model.docparse.FillDocxResponse;
 import stirling.software.proprietary.model.docparse.ParseDocumentResponse;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
+import stirling.software.proprietary.model.docparse.RagStatsView;
 import stirling.software.proprietary.model.docparse.SmartSplitResponse;
 import stirling.software.proprietary.model.docparse.SplitPart;
 import stirling.software.proprietary.model.docparse.SuggestSchemaResponse;
@@ -366,6 +371,52 @@ public class DocParseController {
                 tablesToCsv(result.tables()).getBytes(StandardCharsets.UTF_8),
                 outputName(request.getFileInput(), "_tables.csv"),
                 CSV);
+    }
+
+    @GetMapping("/rag-stats")
+    @Operation(
+            summary = "RAG store statistics",
+            description =
+                    "The engine's document-store totals (backend, documents, chunks, embedding"
+                            + " model) merged with the DocParse capability fields. Answers with"
+                            + " zeros and engineReachable=false when the engine is down.")
+    public ResponseEntity<RagStatsView> ragStats() {
+        return ResponseEntity.ok(docParseService.ragStats());
+    }
+
+    @GetMapping("/rag-documents")
+    @Operation(
+            summary = "List documents in the RAG store",
+            description =
+                    "Engine passthrough of the caller-visible indexed documents (documentId,"
+                            + " source, chunk count).")
+    public ResponseEntity<String> ragDocuments() throws IOException {
+        return jsonPassthrough(docParseService.ragDocuments());
+    }
+
+    @PostMapping(value = "/rag-search", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Semantic search over the RAG store",
+            description =
+                    "Searches the caller-visible indexed documents and returns the top passages"
+                            + " with scores, page spans, and heading breadcrumbs.")
+    public ResponseEntity<String> ragSearch(@RequestBody RagSearchApiRequest request)
+            throws IOException {
+        return jsonPassthrough(docParseService.ragSearch(request.getQuery(), request.getTopK()));
+    }
+
+    @PostMapping(value = "/rag-ask", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Ask a question over the RAG store",
+            description =
+                    "Answers the question from the caller-visible indexed documents and returns"
+                            + " the answer with its supporting passages.")
+    public ResponseEntity<String> ragAsk(@RequestBody RagAskApiRequest request) throws IOException {
+        return jsonPassthrough(docParseService.ragAsk(request.getQuestion(), request.getTopK()));
+    }
+
+    private static ResponseEntity<String> jsonPassthrough(String engineJson) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(engineJson);
     }
 
     /** Original + requested corpus files in one ZIP, so destinations receive them together. */

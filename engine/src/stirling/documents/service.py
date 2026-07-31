@@ -1,14 +1,31 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 
 from stirling.contracts.documents import Page, PageRange, PageText
 from stirling.documents.embedder import EmbeddingService
-from stirling.documents.store import Document, DocumentStore, SearchResult, StoredPage
+from stirling.documents.store import (
+    CollectionSummary,
+    Document,
+    DocumentStore,
+    SearchResult,
+    StoredPage,
+    StoreStats,
+)
 from stirling.models import FileId, OwnerId, PrincipalId
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class CollectionSearchHit:
+    """A search result tagged with the collection it came from."""
+
+    collection: FileId
+    result: SearchResult
+
 
 PAGE_NUMBER_METADATA_KEY = "page_number"
 CONTENT_TYPE_METADATA_KEY = "content_type"
@@ -187,6 +204,32 @@ class DocumentService:
         all_results.sort(key=lambda r: r.score, reverse=True)
         return all_results[:k]
 
+    async def search_with_collections(
+        self,
+        query: str,
+        principals: list[PrincipalId],
+        top_k: int | None = None,
+    ) -> list[CollectionSearchHit]:
+        """Cross-collection search like :meth:`search`, but every result keeps
+        the collection it came from. Restricted to what ``principals`` can read.
+        """
+        k = top_k if top_k is not None else self._default_top_k
+        query_embedding = await self._embedder.embed_query(query)
+        hits: list[CollectionSearchHit] = []
+        for col_name in await self._store.list_collections(principals):
+            try:
+                results = await self._store.search(col_name, query_embedding, k, principals)
+            except Exception:  # noqa: BLE001 - any backend error on one collection should not stop the others
+                logger.warning(
+                    "Skipping collection %s during cross-collection search",
+                    col_name,
+                    exc_info=True,
+                )
+                continue
+            hits.extend(CollectionSearchHit(collection=FileId(col_name), result=r) for r in results)
+        hits.sort(key=lambda hit: hit.result.score, reverse=True)
+        return hits[:k]
+
     async def read_pages(
         self,
         collection: FileId,
@@ -223,6 +266,10 @@ class DocumentService:
         """List collections readable by at least one of ``principals``."""
         return [FileId(name) for name in await self._store.list_collections(principals)]
 
+    async def list_documents(self, principals: list[PrincipalId]) -> list[CollectionSummary]:
+        """Per-document rollup (source, chunk count) readable by ``principals``."""
+        return await self._store.list_collection_summaries(principals)
+
     async def grant_read(
         self,
         collection: FileId,
@@ -240,6 +287,10 @@ class DocumentService:
     ) -> None:
         """Revoke a principal's access on an existing doc."""
         await self._store.revoke(collection, owner_id, principal)
+
+    async def stats(self) -> StoreStats:
+        """Deployment-wide document/chunk counts from the backing store."""
+        return await self._store.stats()
 
     async def close(self) -> None:
         """Release the underlying store's resources."""

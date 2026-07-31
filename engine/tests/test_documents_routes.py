@@ -6,9 +6,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from stirling.api import app
-from stirling.api.dependencies import get_document_service
+from stirling.api.dependencies import get_document_service, get_knowledge_ask_agent
+from stirling.contracts import AskDocumentsRequest, AskDocumentsResponse, DocumentPassage
 from stirling.documents import Document, DocumentService, SqliteVecStore
-from stirling.models import FileId, PrincipalId, UserId
+from stirling.models import FileId, OwnerId, PrincipalId, UserId
 
 USER = UserId("test-user")
 USER_PRINCIPALS = [PrincipalId("test-user")]
@@ -346,6 +347,274 @@ def test_purge_by_owner_is_idempotent(client: TestClient) -> None:
 def test_purge_by_owner_rejects_missing_user_header(client: TestClient) -> None:
     response = client.delete("/api/v1/documents/by-owner")
     assert response.status_code == 401
+
+
+# ── GET /documents/list ─────────────────────────────────────────────────
+
+
+def _ingest(client: TestClient, document_id: str, source: str, texts: list[str], owner: str) -> None:
+    client.post(
+        "/api/v1/documents",
+        json={
+            "documentId": document_id,
+            "source": source,
+            "pageText": [{"pageNumber": i, "text": t} for i, t in enumerate(texts, 1)],
+            "ownerId": owner,
+            "readPrincipals": [owner],
+            "expiresAt": None,
+        },
+        headers={"X-User-Id": owner},
+    )
+
+
+def test_list_documents_returns_caller_rollup(client: TestClient) -> None:
+    _ingest(client, "list-a", "a.pdf", ["Page one text.", "Page two text."], USER)
+    _ingest(client, "list-b", "b.pdf", ["Only page."], USER)
+
+    response = client.get("/api/v1/documents/list", headers=HEADERS)
+    assert response.status_code == 200
+    documents = response.json()["documents"]
+    assert [d["documentId"] for d in documents] == ["list-a", "list-b"]
+    by_id = {d["documentId"]: d for d in documents}
+    assert by_id["list-a"]["source"] == "a.pdf"
+    assert by_id["list-a"]["chunks"] >= 2
+    assert by_id["list-b"]["source"] == "b.pdf"
+    assert by_id["list-b"]["chunks"] >= 1
+
+
+def test_list_documents_empty_for_new_user(client: TestClient) -> None:
+    response = client.get("/api/v1/documents/list", headers=HEADERS)
+    assert response.status_code == 200
+    assert response.json() == {"documents": []}
+
+
+def test_list_documents_hides_other_users_documents(client: TestClient) -> None:
+    """User A must never see user B's documents in the rollup."""
+    _ingest(client, "alice-doc", "alice.pdf", ["alice content"], "alice")
+    _ingest(client, "bob-doc", "bob.pdf", ["bob content"], "bob")
+
+    alice_docs = client.get("/api/v1/documents/list", headers={"X-User-Id": "alice"}).json()["documents"]
+    bob_docs = client.get("/api/v1/documents/list", headers={"X-User-Id": "bob"}).json()["documents"]
+    assert [d["documentId"] for d in alice_docs] == ["alice-doc"]
+    assert [d["documentId"] for d in bob_docs] == ["bob-doc"]
+
+
+def test_list_documents_rejects_missing_user_header(client: TestClient) -> None:
+    assert client.get("/api/v1/documents/list").status_code == 401
+
+
+# ── POST /documents/search ──────────────────────────────────────────────
+
+
+def test_search_documents_maps_page_text_chunks(client: TestClient) -> None:
+    """Plain ingested chunks only carry page_number: both bounds map to it and
+    the ":page:N" suffix is stripped off the source."""
+    client.post(
+        "/api/v1/documents",
+        json={
+            "documentId": "report",
+            "source": "report.pdf",
+            "pageText": [{"pageNumber": 3, "text": "The launch is planned for October."}],
+            "ownerId": USER,
+            "readPrincipals": [USER],
+            "expiresAt": None,
+        },
+        headers=HEADERS,
+    )
+
+    response = client.post("/api/v1/documents/search", json={"query": "launch", "topK": 5}, headers=HEADERS)
+    assert response.status_code == 200
+    passages = response.json()["passages"]
+    assert len(passages) >= 1
+    passage = passages[0]
+    assert passage["documentId"] == "report"
+    assert passage["pageStart"] == 3
+    assert passage["pageEnd"] == 3
+    assert passage["headingPath"] == []
+    assert passage["source"] == "report.pdf"
+    assert "launch" in passage["text"]
+    assert isinstance(passage["score"], float)
+
+
+@pytest.mark.anyio
+async def test_search_documents_maps_docparse_chunk_metadata(client: TestClient, service: DocumentService) -> None:
+    """Docparse chunks carry page bounds + heading path; they map straight onto the wire."""
+    await service.ingest_prepared(
+        collection=FileId("dp-doc"),
+        chunks=[
+            (
+                "Revenue grew 12% in Q2.",
+                {
+                    "content_type": "docparse_chunk",
+                    "page_start": "2",
+                    "page_end": "3",
+                    "heading_path": "Report > Finance",
+                },
+            )
+        ],
+        source="q2.pdf",
+        owner_id=OwnerId(USER),
+        read_principals=USER_PRINCIPALS,
+        expires_at=None,
+    )
+
+    response = client.post("/api/v1/documents/search", json={"query": "revenue"}, headers=HEADERS)
+    assert response.status_code == 200
+    passage = response.json()["passages"][0]
+    assert passage["documentId"] == "dp-doc"
+    assert passage["pageStart"] == 2
+    assert passage["pageEnd"] == 3
+    assert passage["headingPath"] == ["Report", "Finance"]
+    assert passage["source"] == "q2.pdf"
+
+
+def test_search_documents_cannot_see_other_users_documents(client: TestClient) -> None:
+    """User B searching for user A's content must get nothing back."""
+    _ingest(client, "alice-doc", "alice.pdf", ["The secret launch code is October."], "alice")
+
+    bob = client.post("/api/v1/documents/search", json={"query": "secret launch"}, headers={"X-User-Id": "bob"})
+    assert bob.status_code == 200
+    assert bob.json()["passages"] == []
+
+    alice = client.post("/api/v1/documents/search", json={"query": "secret launch"}, headers={"X-User-Id": "alice"})
+    assert alice.json()["passages"] != []
+
+
+def test_search_documents_rejects_empty_query(client: TestClient) -> None:
+    response = client.post("/api/v1/documents/search", json={"query": ""}, headers=HEADERS)
+    assert response.status_code == 422
+
+
+def test_search_documents_rejects_top_k_above_cap(client: TestClient) -> None:
+    response = client.post("/api/v1/documents/search", json={"query": "x", "topK": 51}, headers=HEADERS)
+    assert response.status_code == 422
+
+
+def test_search_documents_rejects_missing_user_header(client: TestClient) -> None:
+    assert client.post("/api/v1/documents/search", json={"query": "x"}).status_code == 401
+
+
+# ── POST /documents/ask ─────────────────────────────────────────────────
+
+
+class StubKnowledgeAskAgent:
+    """Stands in for KnowledgeAskAgent so route tests don't call a model."""
+
+    def __init__(self, response: AskDocumentsResponse) -> None:
+        self._response = response
+        self.calls: list[tuple[AskDocumentsRequest, list[PrincipalId]]] = []
+
+    async def ask(self, request: AskDocumentsRequest, principals: list[PrincipalId]) -> AskDocumentsResponse:
+        self.calls.append((request, principals))
+        return self._response
+
+
+@pytest.fixture
+def ask_agent() -> StubKnowledgeAskAgent:
+    return StubKnowledgeAskAgent(
+        AskDocumentsResponse(
+            answer="Revenue grew 12% (q2.pdf p.2).",
+            passages=[
+                DocumentPassage(
+                    document_id=FileId("dp-doc"),
+                    text="Revenue grew 12% in Q2.",
+                    score=0.91,
+                    page_start=2,
+                    page_end=3,
+                    heading_path=["Report", "Finance"],
+                    source="q2.pdf",
+                )
+            ],
+        )
+    )
+
+
+@pytest.fixture
+def ask_client(client: TestClient, ask_agent: StubKnowledgeAskAgent) -> Iterator[TestClient]:
+    app.dependency_overrides[get_knowledge_ask_agent] = lambda: ask_agent
+    try:
+        yield client
+    finally:
+        app.dependency_overrides.pop(get_knowledge_ask_agent, None)
+
+
+def test_ask_documents_returns_answer_and_passages(ask_client: TestClient) -> None:
+    response = ask_client.post("/api/v1/documents/ask", json={"question": "How did revenue do?"}, headers=HEADERS)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer"] == "Revenue grew 12% (q2.pdf p.2)."
+    assert body["passages"] == [
+        {
+            "documentId": "dp-doc",
+            "text": "Revenue grew 12% in Q2.",
+            "score": 0.91,
+            "pageStart": 2,
+            "pageEnd": 3,
+            "headingPath": ["Report", "Finance"],
+            "source": "q2.pdf",
+        }
+    ]
+
+
+def test_ask_documents_scopes_to_calling_user(ask_client: TestClient, ask_agent: StubKnowledgeAskAgent) -> None:
+    """The route hands the agent exactly the caller's principal set."""
+    ask_client.post("/api/v1/documents/ask", json={"question": "anything"}, headers=HEADERS)
+    request, principals = ask_agent.calls[0]
+    assert principals == [PrincipalId(USER)]
+    assert request.top_k == 8
+
+
+def test_ask_documents_rejects_empty_question(ask_client: TestClient) -> None:
+    response = ask_client.post("/api/v1/documents/ask", json={"question": ""}, headers=HEADERS)
+    assert response.status_code == 422
+
+
+def test_ask_documents_rejects_top_k_above_cap(ask_client: TestClient) -> None:
+    response = ask_client.post("/api/v1/documents/ask", json={"question": "x", "topK": 21}, headers=HEADERS)
+    assert response.status_code == 422
+
+
+def test_ask_documents_rejects_missing_user_header(ask_client: TestClient) -> None:
+    assert ask_client.post("/api/v1/documents/ask", json={"question": "x"}).status_code == 401
+
+
+# ── GET /documents/stats ────────────────────────────────────────────────
+
+
+def test_stats_on_empty_store_reports_zero(client: TestClient) -> None:
+    response = client.get("/api/v1/documents/stats", headers=HEADERS)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["documents"] == 0
+    assert body["chunks"] == 0
+    assert body["backend"] in ("sqlite", "pgvector")
+    assert body["embeddingModel"]
+
+
+def test_stats_counts_seeded_documents_across_owners(client: TestClient) -> None:
+    """Stats are deployment-wide: both owners' content is counted."""
+    for owner, doc in (("alice", "doc-a"), ("bob", "doc-b")):
+        client.post(
+            "/api/v1/documents",
+            json={
+                "documentId": doc,
+                "source": f"{doc}.pdf",
+                "pageText": [{"pageNumber": 1, "text": "Some content for the stats endpoint."}],
+                "ownerId": owner,
+                "readPrincipals": [owner],
+                "expiresAt": None,
+            },
+            headers={"X-User-Id": owner},
+        )
+    response = client.get("/api/v1/documents/stats", headers=HEADERS)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["documents"] == 2
+    assert body["chunks"] >= 2
+
+
+def test_stats_rejects_missing_user_header(client: TestClient) -> None:
+    assert client.get("/api/v1/documents/stats").status_code == 401
 
 
 def test_delete_document_only_affects_calling_user(client: TestClient) -> None:

@@ -11,7 +11,14 @@ from pathlib import Path
 import sqlite_vec
 
 from stirling.contracts.documents import Page, PageRange
-from stirling.documents.store import Document, DocumentStore, SearchResult, StoredPage
+from stirling.documents.store import (
+    CollectionSummary,
+    Document,
+    DocumentStore,
+    SearchResult,
+    StoredPage,
+    StoreStats,
+)
 from stirling.models import OwnerId, PrincipalId
 
 _READ_PERMISSION = "read"
@@ -537,6 +544,42 @@ class SqliteVecStore(DocumentStore):
             (_READ_PERMISSION, *principals),
         ).fetchall()
         return [r[0] for r in rows]
+
+    async def list_collection_summaries(self, principals: list[PrincipalId]) -> list[CollectionSummary]:
+        async with self._lock:
+            return await asyncio.to_thread(self._sync_list_collection_summaries, principals)
+
+    def _sync_list_collection_summaries(self, principals: list[PrincipalId]) -> list[CollectionSummary]:
+        if not principals:
+            return []
+        placeholders = ",".join("?" * len(principals))
+        # MIN(owner_id) mirrors _readable_owner_for's ORDER BY owner_id LIMIT 1.
+        rows = self._conn.execute(
+            f"""
+            SELECT r.collection, m.source, COUNT(d.id)
+            FROM (
+                SELECT collection, MIN(owner_id) AS owner_id
+                FROM document_acl
+                WHERE permission = ? AND principal_id IN ({placeholders})
+                GROUP BY collection
+            ) r
+            JOIN documents_meta m ON m.collection = r.collection AND m.owner_id = r.owner_id
+            LEFT JOIN documents d ON d.collection = r.collection AND d.owner_id = r.owner_id
+            GROUP BY r.collection, m.source
+            ORDER BY r.collection
+            """,
+            (_READ_PERMISSION, *principals),
+        ).fetchall()
+        return [CollectionSummary(collection=r[0], source=r[1], chunks=int(r[2])) for r in rows]
+
+    async def stats(self) -> StoreStats:
+        async with self._lock:
+            return await asyncio.to_thread(self._sync_stats)
+
+    def _sync_stats(self) -> StoreStats:
+        documents = self._conn.execute("SELECT COUNT(DISTINCT collection) FROM documents_meta").fetchone()[0]
+        chunks = self._conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
+        return StoreStats(documents=int(documents), chunks=int(chunks))
 
     async def close(self) -> None:
         async with self._lock:

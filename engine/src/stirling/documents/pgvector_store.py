@@ -10,7 +10,14 @@ from pgvector.psycopg import register_vector_async
 from psycopg_pool import AsyncConnectionPool
 
 from stirling.contracts.documents import Page, PageRange
-from stirling.documents.store import Document, DocumentStore, SearchResult, StoredPage
+from stirling.documents.store import (
+    CollectionSummary,
+    Document,
+    DocumentStore,
+    SearchResult,
+    StoredPage,
+    StoreStats,
+)
 from stirling.models import OwnerId, PrincipalId
 
 _READ_PERMISSION = "read"
@@ -410,6 +417,45 @@ class PgVectorStore(DocumentStore):
                 )
                 rows = await cur.fetchall()
         return [r[0] for r in rows]
+
+    async def list_collection_summaries(self, principals: list[PrincipalId]) -> list[CollectionSummary]:
+        if not principals:
+            return []
+        await self._ensure_ready()
+        async with self._pool.connection() as conn:
+            async with conn.cursor() as cur:
+                # MIN(owner_id) mirrors _readable_owner_for's ORDER BY owner_id LIMIT 1.
+                await cur.execute(
+                    """
+                    SELECT r.collection, m.source, COUNT(d.id)
+                    FROM (
+                        SELECT collection, MIN(owner_id) AS owner_id
+                        FROM document_acl
+                        WHERE permission = %s AND principal_id = ANY(%s)
+                        GROUP BY collection
+                    ) r
+                    JOIN documents_meta m ON m.collection = r.collection AND m.owner_id = r.owner_id
+                    LEFT JOIN rag_documents d ON d.collection = r.collection AND d.owner_id = r.owner_id
+                    GROUP BY r.collection, m.source
+                    ORDER BY r.collection
+                    """,
+                    (_READ_PERMISSION, list(principals)),
+                )
+                rows = await cur.fetchall()
+        return [CollectionSummary(collection=r[0], source=r[1], chunks=int(r[2])) for r in rows]
+
+    async def stats(self) -> StoreStats:
+        await self._ensure_ready()
+        async with self._pool.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT COUNT(DISTINCT collection) FROM documents_meta")
+                doc_row = await cur.fetchone()
+                await cur.execute("SELECT COUNT(*) FROM rag_documents")
+                chunk_row = await cur.fetchone()
+        return StoreStats(
+            documents=int(doc_row[0]) if doc_row else 0,
+            chunks=int(chunk_row[0]) if chunk_row else 0,
+        )
 
     async def close(self) -> None:
         await self._pool.close()

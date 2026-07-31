@@ -10,6 +10,7 @@ from pydantic_ai.models import Model
 from stirling.agents import (
     DocumentClassifierAgent,
     ExecutionPlanningAgent,
+    KnowledgeAskAgent,
     OrchestratorAgent,
     PdfEditAgent,
     PdfQuestionAgent,
@@ -36,6 +37,7 @@ class AppState:
     math_auditor_agent: MathAuditorAgent
     pdf_comment_agent: PdfCommentAgent
     document_classifier_agent: DocumentClassifierAgent
+    knowledge_ask_agent: KnowledgeAskAgent
     extract_fields_agent: ExtractFieldsAgent
     smart_split_agent: SmartSplitAgent
     suggest_schema_agent: SuggestSchemaAgent
@@ -67,6 +69,7 @@ def build_app_state(
         math_auditor_agent=MathAuditorAgent(runtime),
         pdf_comment_agent=PdfCommentAgent(runtime),
         document_classifier_agent=DocumentClassifierAgent(runtime),
+        knowledge_ask_agent=KnowledgeAskAgent(runtime),
         extract_fields_agent=ExtractFieldsAgent(runtime),
         smart_split_agent=SmartSplitAgent(runtime),
         suggest_schema_agent=SuggestSchemaAgent(runtime),

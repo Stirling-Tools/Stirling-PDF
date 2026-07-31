@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, Request, status
 from stirling.agents import (
     DocumentClassifierAgent,
     ExecutionPlanningAgent,
+    KnowledgeAskAgent,
     OrchestratorAgent,
     PdfEditAgent,
     PdfQuestionAgent,
@@ -61,16 +62,20 @@ def get_document_classifier_agent(request: Request) -> DocumentClassifierAgent:
     return request.app.state.document_classifier_agent
 
 
+def get_knowledge_ask_agent(request: Request) -> KnowledgeAskAgent:
+    return request.app.state.knowledge_ask_agent
+
+
 def get_extract_fields_agent(request: Request) -> ExtractFieldsAgent:
     return request.app.state.extract_fields_agent
 
 
-def get_suggest_schema_agent(request: Request) -> SuggestSchemaAgent:
-    return request.app.state.suggest_schema_agent
-
-
 def get_smart_split_agent(request: Request) -> SmartSplitAgent:
     return request.app.state.smart_split_agent
+
+
+def get_suggest_schema_agent(request: Request) -> SuggestSchemaAgent:
+    return request.app.state.suggest_schema_agent
 
 
 def require_user_id() -> UserId:

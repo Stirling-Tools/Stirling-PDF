@@ -27,6 +27,7 @@ import stirling.software.proprietary.model.docparse.DocparseCapabilities;
 import stirling.software.proprietary.model.docparse.DocparseCapabilitiesView;
 import stirling.software.proprietary.model.docparse.DocparseMode;
 import stirling.software.proprietary.model.docparse.DocparseTier;
+import stirling.software.proprietary.model.docparse.DocumentStoreStats;
 import stirling.software.proprietary.model.docparse.ExtractFieldsRequest;
 import stirling.software.proprietary.model.docparse.ExtractFieldsResponse;
 import stirling.software.proprietary.model.docparse.ExtractTablesRequest;
@@ -35,8 +36,11 @@ import stirling.software.proprietary.model.docparse.FillDocxRequest;
 import stirling.software.proprietary.model.docparse.FillDocxResponse;
 import stirling.software.proprietary.model.docparse.ParseDocumentRequest;
 import stirling.software.proprietary.model.docparse.ParseDocumentResponse;
+import stirling.software.proprietary.model.docparse.RagAskRequest;
 import stirling.software.proprietary.model.docparse.RagIngestRequest;
 import stirling.software.proprietary.model.docparse.RagIngestResponse;
+import stirling.software.proprietary.model.docparse.RagSearchRequest;
+import stirling.software.proprietary.model.docparse.RagStatsView;
 import stirling.software.proprietary.model.docparse.SmartSplitRequest;
 import stirling.software.proprietary.model.docparse.SmartSplitResponse;
 import stirling.software.proprietary.model.docparse.SuggestSchemaRequest;
@@ -63,6 +67,10 @@ public class DocParseService {
     private static final String FILL_DOCX_ENDPOINT = "/api/v1/docparse/fill-docx";
     private static final String SUGGEST_SCHEMA_ENDPOINT = "/api/v1/docparse/suggest-schema";
     private static final String RAG_INGEST_ENDPOINT = "/api/v1/docparse/rag-ingest";
+    private static final String DOCUMENT_STATS_ENDPOINT = "/api/v1/documents/stats";
+    private static final String DOCUMENT_LIST_ENDPOINT = "/api/v1/documents/list";
+    private static final String DOCUMENT_SEARCH_ENDPOINT = "/api/v1/documents/search";
+    private static final String DOCUMENT_ASK_ENDPOINT = "/api/v1/documents/ask";
 
     /** Below this average of extractable chars per page the document is treated as scanned. */
     static final int SCANNED_AVG_CHARS_PER_PAGE = 100;
@@ -351,6 +359,61 @@ public class DocParseService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "'" + fieldName + "' is required");
         }
+    }
+
+    /** Engine RAG store totals merged with the cached capability fields; graceful when down. */
+    public RagStatsView ragStats() {
+        DocparseCapabilities capabilities = capabilityService.capabilities();
+        try {
+            // The engine's documents routes are user-gated; an id-less probe 401s
+            // and would read as "engine offline" in the UI.
+            String json = aiEngineClient.get(DOCUMENT_STATS_ENDPOINT, currentUserId());
+            DocumentStoreStats stats = objectMapper.readValue(json, DocumentStoreStats.class);
+            return new RagStatsView(
+                    stats.backend(),
+                    stats.documents(),
+                    stats.chunks(),
+                    stats.embeddingModel(),
+                    capabilities.advancedInstalled(),
+                    capabilities.doclingVersion(),
+                    true);
+        } catch (Exception e) {
+            log.debug("RAG stats probe failed: {}", e.getMessage());
+            return new RagStatsView(
+                    null,
+                    0,
+                    0,
+                    null,
+                    capabilities.advancedInstalled(),
+                    capabilities.doclingVersion(),
+                    false);
+        }
+    }
+
+    /** Engine document-list passthrough; X-User-Id scopes it to the caller's ACLs. */
+    public String ragDocuments() throws IOException {
+        requireEnabled();
+        return aiEngineClient.get(DOCUMENT_LIST_ENDPOINT, currentUserId());
+    }
+
+    /** Semantic-search passthrough over the caller-visible RAG documents. */
+    public String ragSearch(String query, int topK) throws IOException {
+        requireEnabled();
+        requireNonBlank(query, "query");
+        RagSearchRequest request = new RagSearchRequest(query, Math.clamp(topK, 1, 50));
+        return aiEngineClient.post(
+                DOCUMENT_SEARCH_ENDPOINT,
+                objectMapper.writeValueAsString(request),
+                currentUserId());
+    }
+
+    /** Grounded-answer passthrough; long-running because local models answer slowly. */
+    public String ragAsk(String question, int topK) throws IOException {
+        requireEnabled();
+        requireNonBlank(question, "question");
+        RagAskRequest request = new RagAskRequest(question, Math.clamp(topK, 1, 20));
+        return aiEngineClient.postLongRunning(
+                DOCUMENT_ASK_ENDPOINT, objectMapper.writeValueAsString(request), currentUserId());
     }
 
     /**

@@ -34,6 +34,23 @@ class StoredPage:
     char_count: int
 
 
+@dataclass
+class StoreStats:
+    """Deployment-wide counts: distinct document ids and total vector-chunk rows."""
+
+    documents: int
+    chunks: int
+
+
+@dataclass
+class CollectionSummary:
+    """Rollup row for one readable collection: stored source label + chunk count."""
+
+    collection: str
+    source: str
+    chunks: int
+
+
 class DocumentStore(ABC):
     """Abstract interface for document storage backends.
 
@@ -147,6 +164,20 @@ class DocumentStore(ABC):
     @abstractmethod
     async def list_collections(self, principals: list[PrincipalId]) -> list[str]:
         """Return collection names readable by at least one of ``principals``."""
+
+    @abstractmethod
+    async def list_collection_summaries(self, principals: list[PrincipalId]) -> list[CollectionSummary]:
+        """Per-collection rollup (source + chunk count) readable by ``principals``.
+
+        Counts cover the same owner's copy a read would resolve to, so the
+        rollup never leaks another tenant's content.
+        """
+
+    # ── deployment-wide stats (not tenant-scoped) ──────────────────────────
+
+    @abstractmethod
+    async def stats(self) -> StoreStats:
+        """Count every owner's content: distinct document ids + total chunk rows."""
 
     # ── lifecycle ──────────────────────────────────────────────────────────
 

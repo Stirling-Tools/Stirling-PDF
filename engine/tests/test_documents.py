@@ -7,7 +7,7 @@ from stirling.documents.chunker import chunk_text
 from stirling.documents.rag_capability import RagCapability
 from stirling.documents.service import DocumentService
 from stirling.documents.sqlite_vec_store import SqliteVecStore
-from stirling.documents.store import Document, SearchResult
+from stirling.documents.store import CollectionSummary, Document, SearchResult
 from stirling.models import FileId, OwnerId, PrincipalId
 
 # Personal-doc tests reuse the same opaque string in all three roles — keeps the
@@ -179,6 +179,27 @@ class TestSqliteVecStore:
         assert await store.list_collections(OTHER_OWNER_PRINCIPALS) == ["c.pdf"]
 
     @pytest.mark.anyio
+    async def test_stats_count_distinct_document_ids_and_chunk_rows(self) -> None:
+        """Stats span every owner; a document id shared by two owners counts once."""
+        store = SqliteVecStore.ephemeral()
+        empty = await store.stats()
+        assert (empty.documents, empty.chunks) == (0, 0)
+
+        for owner, principals, name, texts in (
+            (OWNER, OWNER_PRINCIPALS, "doc-a", ["one", "two"]),
+            (OWNER, OWNER_PRINCIPALS, "doc-b", ["three"]),
+            (OTHER_OWNER, OTHER_OWNER_PRINCIPALS, "doc-b", ["four"]),
+        ):
+            await store.ensure_collection(name, f"{name}.pdf", owner, None)
+            await store.grant_read(name, owner, principals)
+            docs = [Document(id=str(i), text=t, metadata={}) for i, t in enumerate(texts)]
+            await store.add_documents(name, docs, [[1.0, 0.0]] * len(docs), owner)
+
+        stats = await store.stats()
+        assert stats.documents == 2
+        assert stats.chunks == 4
+
+    @pytest.mark.anyio
     async def test_reap_expired_drops_collections_past_expires_at(self) -> None:
         """TTL backstop: rows with ``expires_at`` in the past go away on reap."""
         from datetime import UTC, datetime, timedelta
@@ -238,6 +259,47 @@ class TestSqliteVecStore:
         assert await store.has_collection("doc", [team_principal]) is False
         # Owner still can.
         assert await store.has_collection("doc", OWNER_PRINCIPALS) is True
+
+    @pytest.mark.anyio
+    async def test_list_collection_summaries_rolls_up_readable_collections(self) -> None:
+        """Rollup: one row per readable collection with its source and chunk count."""
+        store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("doc-a", "a.pdf", OWNER, None)
+        await store.grant_read("doc-a", OWNER, OWNER_PRINCIPALS)
+        docs = [Document(id="1", text="one", metadata={}), Document(id="2", text="two", metadata={})]
+        await store.add_documents("doc-a", docs, [[1.0, 0.0], [0.0, 1.0]], OWNER)
+        # Collection with no vector chunks yet: still listed, zero count.
+        await store.ensure_collection("doc-b", "b.pdf", OWNER, None)
+        await store.grant_read("doc-b", OWNER, OWNER_PRINCIPALS)
+
+        summaries = await store.list_collection_summaries(OWNER_PRINCIPALS)
+        assert summaries == [
+            CollectionSummary(collection="doc-a", source="a.pdf", chunks=2),
+            CollectionSummary(collection="doc-b", source="b.pdf", chunks=0),
+        ]
+
+    @pytest.mark.anyio
+    async def test_list_collection_summaries_scoped_to_principals(self) -> None:
+        """One principal's rollup never lists, or counts, another owner's copy."""
+        store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("shared-id", "alice.pdf", OWNER, None)
+        await store.grant_read("shared-id", OWNER, OWNER_PRINCIPALS)
+        await store.add_documents("shared-id", [Document(id="1", text="alice", metadata={})], [[1.0, 0.0]], OWNER)
+        await store.ensure_collection("shared-id", "bob.pdf", OTHER_OWNER, None)
+        await store.grant_read("shared-id", OTHER_OWNER, OTHER_OWNER_PRINCIPALS)
+        bob_docs = [Document(id="1", text="bob", metadata={}), Document(id="2", text="bob2", metadata={})]
+        await store.add_documents("shared-id", bob_docs, [[1.0, 0.0], [0.0, 1.0]], OTHER_OWNER)
+        await store.ensure_collection("bob-only", "bob-only.pdf", OTHER_OWNER, None)
+        await store.grant_read("bob-only", OTHER_OWNER, OTHER_OWNER_PRINCIPALS)
+
+        assert await store.list_collection_summaries(OWNER_PRINCIPALS) == [
+            CollectionSummary(collection="shared-id", source="alice.pdf", chunks=1)
+        ]
+        assert await store.list_collection_summaries(OTHER_OWNER_PRINCIPALS) == [
+            CollectionSummary(collection="bob-only", source="bob-only.pdf", chunks=0),
+            CollectionSummary(collection="shared-id", source="bob.pdf", chunks=2),
+        ]
+        assert await store.list_collection_summaries([]) == []
 
 
 # DocumentService (with stub embedder)
@@ -397,6 +459,31 @@ class TestDocumentService:
         # Caller with both memberships (or org-wide principal) still sees it via eng.
         multi_results = await documents.search("deploy", principals=[hr_group, eng_group])
         assert len(multi_results) > 0
+
+    @pytest.mark.anyio
+    async def test_search_with_collections_tags_results_and_respects_acl(self, documents: DocumentService) -> None:
+        """Collection-tagged search only reaches collections the caller can read."""
+        await documents.ingest(
+            FileId("col-a"),
+            _pages("Alpha content."),
+            source="a.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
+        )
+        await documents.ingest(
+            FileId("col-b"),
+            _pages("Beta content."),
+            source="b.pdf",
+            owner_id=OTHER_OWNER,
+            read_principals=OTHER_OWNER_PRINCIPALS,
+            expires_at=None,
+        )
+
+        hits = await documents.search_with_collections("content", principals=OWNER_PRINCIPALS)
+        assert hits
+        assert {hit.collection for hit in hits} == {"col-a"}
+        assert all(hit.result.document.text for hit in hits)
 
     @pytest.mark.anyio
     async def test_delete_collection(self, documents: DocumentService) -> None:
