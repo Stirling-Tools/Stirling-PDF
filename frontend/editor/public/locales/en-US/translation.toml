@@ -2181,12 +2181,10 @@ submit = "Auto Rotate"
 tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
 
 [autoRotate.confidenceThreshold]
-desc = "Pages below this orientation confidence are left unchanged. Lower it to rotate more aggressively."
-title = "OCR confidence threshold"
+title = "Confidence threshold"
 
 [autoRotate.detectionMode]
 auto = "Auto"
-desc = "Auto reads embedded text direction first and falls back to Tesseract orientation detection (OCR) for scanned pages."
 osd = "OCR only"
 text = "Text only"
 title = "Detection method"
@@ -2195,8 +2193,7 @@ title = "Detection method"
 failed = "An error occurred while auto-rotating the PDF."
 
 [autoRotate.inferUndetected]
-desc = "When the readable pages agree on a rotation, apply it to pages that were too sparse to detect on their own."
-title = "Fill undetected pages from document"
+title = "Rotate low confidence pages to match"
 
 [autoRotate.report]
 applied = "{{degrees}}° CW"
@@ -2205,21 +2202,21 @@ methodHeader = "Method"
 noteHeader = "Note"
 page = "Page"
 rotation = "Rotation"
-summary = "{{rotated}} of {{total}} pages rotated ({{text}} by text, {{osd}} by OCR, {{inferred}} inferred, {{undetected}} undetected)"
+summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
 title = "Detection report"
 
 [autoRotate.report.method]
-inferred = "Inferred"
+inferred = "Matched"
 none = "Skipped"
 osd = "OCR"
 text = "Text"
 
 [autoRotate.report.note]
 belowThreshold = "Below confidence threshold"
-inferredFromDocument = "From document consensus"
+inferredFromDocument = "Matched the other pages"
 noDominantDirection = "Mixed text directions"
 osdFailed = "No readable text found"
-osdNoVerdict = "OCR gave no verdict"
+osdNoVerdict = "Could not tell which way up"
 tesseractUnavailable = "OCR not installed"
 tooFewGlyphs = "Too little text"
 
@@ -2228,6 +2225,24 @@ title = "Auto Rotate Results"
 
 [autoRotate.settings]
 title = "Settings"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "How certain the check has to be before a page is turned. Lower it to rotate more pages, raise it to leave more pages untouched."
+title = "Confidence threshold"
+
+[autoRotate.tooltip.description]
+text = "Works out which way up each page should be and turns it the right way round. Pages that are already upright are left alone."
+
+[autoRotate.tooltip.detectionMode]
+text = "Auto reads the text on the page first, then looks at the page as an image if that is not enough. Text only skips the image check, which is quickest for documents that were never scanned. OCR only treats every page as an image."
+title = "Detection method"
+
+[autoRotate.tooltip.header]
+title = "Auto Rotate"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Blank or nearly blank pages cannot be checked on their own. When every page that could be read needs the same turn, these pages are turned to match them."
+title = "Rotate low confidence pages to match"
 
 [autoSizeSplitPDF]
 tags = "pdf,split,document,organization"

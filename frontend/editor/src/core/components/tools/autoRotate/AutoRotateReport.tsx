@@ -27,7 +27,7 @@ const methodBadge = (t: TFunction, method: AutoRotatePageResult["method"]) => {
     case "inferred":
       return (
         <Badge size="sm" variant="light" color="grape">
-          {t("autoRotate.report.method.inferred", "Inferred")}
+          {t("autoRotate.report.method.inferred", "Matched")}
         </Badge>
       );
     default:
@@ -56,7 +56,10 @@ const noteLabel = (t: TFunction, note: string | null | undefined): string => {
     case "osdFailed":
       return t("autoRotate.report.note.osdFailed", "No readable text found");
     case "osdNoVerdict":
-      return t("autoRotate.report.note.osdNoVerdict", "OCR gave no verdict");
+      return t(
+        "autoRotate.report.note.osdNoVerdict",
+        "Could not tell which way up",
+      );
     case "belowThreshold":
       return t(
         "autoRotate.report.note.belowThreshold",
@@ -65,7 +68,7 @@ const noteLabel = (t: TFunction, note: string | null | undefined): string => {
     case "inferredFromDocument":
       return t(
         "autoRotate.report.note.inferredFromDocument",
-        "From document consensus",
+        "Matched the other pages",
       );
     default:
       return note ?? "";
@@ -99,13 +102,10 @@ const AutoRotateReport = ({ reports }: AutoRotateReportProps) => {
           <Text size="xs" c="dimmed">
             {t("autoRotate.report.summary", {
               defaultValue:
-                "{{rotated}} of {{total}} pages rotated ({{text}} by text, {{osd}} by OCR, {{inferred}} inferred, {{undetected}} undetected)",
+                "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are",
               rotated: report.pagesToRotate,
               total: report.totalPages,
-              text: report.detectedByText,
-              osd: report.detectedByOsd,
-              inferred: report.inferred,
-              undetected: report.undetected,
+              unchanged: report.totalPages - report.pagesToRotate,
             })}
           </Text>
           <ScrollArea.Autosize mah={320}>

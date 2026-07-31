@@ -6,9 +6,11 @@ import { useAutoRotateParameters } from "@app/hooks/tools/autoRotate/useAutoRota
 import { useAutoRotateOperation } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useAutoRotateTips } from "@app/components/tooltips/useAutoRotateTips";
 
 const AutoRotate = (props: BaseToolProps) => {
   const { t } = useTranslation();
+  const autoRotateTips = useAutoRotateTips();
 
   // Instantiated here (not inside useBaseTool) so the component can read the
   // per-page detection reports the operation hook additionally exposes.
@@ -33,6 +35,7 @@ const AutoRotate = (props: BaseToolProps) => {
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset
           : undefined,
+        tooltip: autoRotateTips,
         content: (
           <AutoRotateSettings
             parameters={base.params}

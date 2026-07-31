@@ -12,6 +12,8 @@ interface AutoRotateSettingsProps {
   disabled?: boolean;
 }
 
+// Explanatory copy for these controls lives in the step tooltip
+// (useAutoRotateTips), so the panel itself stays to labels only.
 const AutoRotateSettings = ({
   parameters,
   disabled = false,
@@ -47,22 +49,12 @@ const AutoRotateSettings = ({
             },
           ]}
         />
-        <Text size="xs" c="dimmed">
-          {t(
-            "autoRotate.detectionMode.desc",
-            "Auto reads embedded text direction first and falls back to Tesseract orientation detection (OCR) for scanned pages.",
-          )}
-        </Text>
       </Stack>
 
       <NumberInput
         label={t(
           "autoRotate.confidenceThreshold.title",
-          "OCR confidence threshold",
-        )}
-        description={t(
-          "autoRotate.confidenceThreshold.desc",
-          "Pages below this orientation confidence are left unchanged. Lower it to rotate more aggressively.",
+          "Confidence threshold",
         )}
         min={0}
         step={1}
@@ -79,11 +71,7 @@ const AutoRotateSettings = ({
       <Checkbox
         label={t(
           "autoRotate.inferUndetected.title",
-          "Fill undetected pages from document",
-        )}
-        description={t(
-          "autoRotate.inferUndetected.desc",
-          "When the readable pages agree on a rotation, apply it to pages that were too sparse to detect on their own.",
+          "Rotate low confidence pages to match",
         )}
         disabled={disabled}
         checked={parameters.parameters.inferUndetected}

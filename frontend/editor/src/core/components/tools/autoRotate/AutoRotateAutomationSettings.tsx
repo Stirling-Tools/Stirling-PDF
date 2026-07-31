@@ -51,7 +51,7 @@ const AutoRotateAutomationSettings = ({
       <NumberInput
         label={t(
           "autoRotate.confidenceThreshold.title",
-          "OCR confidence threshold",
+          "Confidence threshold",
         )}
         min={0}
         step={1}
@@ -68,7 +68,7 @@ const AutoRotateAutomationSettings = ({
       <Checkbox
         label={t(
           "autoRotate.inferUndetected.title",
-          "Fill undetected pages from document",
+          "Rotate low confidence pages to match",
         )}
         disabled={disabled}
         checked={parameters.inferUndetected}
