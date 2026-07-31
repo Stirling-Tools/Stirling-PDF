@@ -16,9 +16,6 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const searchState = viewerContext?.getSearchState();
-  const searchResults = searchState?.results;
-  const searchActiveIndex = searchState?.activeIndex;
   const searchActions = viewerContext?.searchActions;
   const [searchQuery, setSearchQuery] = useState("");
   const [jumpToValue, setJumpToValue] = useState("");
@@ -89,7 +86,11 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     if (!visible) return;
 
     const checkSearchState = () => {
-      // Use ViewerContext state instead of window APIs
+      // Fetch fresh search state from ViewerContext to avoid closure stale values
+      const searchState = viewerContext?.getSearchState();
+      const searchResults = searchState?.results;
+      const searchActiveIndex = searchState?.activeIndex;
+
       if (searchResults && searchResults.length > 0) {
         const activeIndex = searchActiveIndex || 1;
 
@@ -115,7 +116,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     const interval = setInterval(checkSearchState, 200);
 
     return () => clearInterval(interval);
-  }, [visible, searchResults, searchActiveIndex, searchQuery]);
+  }, [visible, searchQuery, viewerContext]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -279,7 +280,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             variant="tertiary"
             size="sm"
             onClick={handlePrevious}
-            disabled={!resultInfo || resultInfo.currentIndex <= 1}
+            disabled={!resultInfo || resultInfo.totalResults === 0}
             aria-label={t("viewer.search.previous", "Previous result")}
           >
             <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
@@ -288,9 +289,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             variant="tertiary"
             size="sm"
             onClick={handleNext}
-            disabled={
-              !resultInfo || resultInfo.currentIndex >= resultInfo.totalResults
-            }
+            disabled={!resultInfo || resultInfo.totalResults === 0}
             aria-label={t("viewer.search.next", "Next result")}
           >
             <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
