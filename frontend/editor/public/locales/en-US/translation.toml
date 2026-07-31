@@ -2175,6 +2175,73 @@ secureWorkflowDesc = "Secures PDF documents by removing potentially malicious co
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
+[autoRotate]
+submit = "Auto Rotate"
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Confidence threshold"
+
+[autoRotate.detectionMode]
+auto = "Auto"
+osd = "OCR only"
+text = "Text only"
+title = "Detection method"
+
+[autoRotate.error]
+failed = "An error occurred while auto-rotating the PDF."
+
+[autoRotate.inferUndetected]
+title = "Rotate low confidence pages to match"
+
+[autoRotate.report]
+applied = "{{degrees}}° CW"
+confidenceValue = "Confidence {{value}}"
+noChange = "No change"
+pageLabel = "Page {{number}}"
+summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
+title = "Detection report"
+
+[autoRotate.report.method]
+inferred = "Matched"
+none = "Skipped"
+osd = "OCR"
+text = "Text"
+
+[autoRotate.report.note]
+belowThreshold = "Below threshold"
+blankPage = "Page is blank"
+inferredFromDocument = "Same as the other pages"
+noDominantDirection = "Mixed text directions"
+osdFailed = "No readable text found"
+osdNoVerdict = "Could not tell which way up"
+tesseractUnavailable = "OCR not installed"
+tooFewGlyphs = "Too little text"
+
+[autoRotate.results]
+title = "Auto Rotate Results"
+
+[autoRotate.settings]
+title = "Settings"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "How certain the check has to be before a page is turned. Lower it to rotate more pages, raise it to leave more pages untouched."
+title = "Confidence threshold"
+
+[autoRotate.tooltip.description]
+text = "Works out which way up each page should be and turns it the right way round. Pages that are already upright are left alone."
+
+[autoRotate.tooltip.detectionMode]
+text = "Auto reads the text on the page first, then looks at the page as an image if that is not enough. Text only skips the image check, which is quickest for documents that were never scanned. OCR only treats every page as an image."
+title = "Detection method"
+
+[autoRotate.tooltip.header]
+title = "Auto Rotate"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Blank or nearly blank pages cannot be checked on their own. When every page that could be read needs the same turn, these pages are turned to match them."
+title = "Rotate low confidence pages to match"
+
 [autoSizeSplitPDF]
 tags = "pdf,split,document,organization"
 
@@ -4493,6 +4560,11 @@ title = "Automate"
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
+
+[home.autoRotate]
+desc = "Detect each page's orientation and rotate it upright automatically."
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+title = "Auto Rotate"
 
 [home.autoSizeSplitPDF]
 tags = "auto,split,size"
@@ -7745,11 +7817,17 @@ newPipeline = "New pipeline"
 addStep = "Add tool"
 back = "Back to pipelines"
 chooseAccount = "Choose an account"
+chooseDestination = "Choose a destination"
 chooseOperation = "Choose what this step does"
+chooseSource = "Choose a source"
 discard = "Discard changes"
 enabled = "Enabled"
+inputs = "Input"
+inputSource = "Input source"
+inputTrigger = "Trigger"
 keepEditing = "Keep editing"
 needsUpload = "Needs an uploaded file"
+noSources = "No sources connected yet. Create one to use it as an input."
 noToolMatches = "No tools match your search."
 pipelineSettings = "Pipeline settings"
 searchTools = "Search tools"
@@ -7777,7 +7855,7 @@ namePlaceholder = "e.g. Redaction sweep"
 noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
-output = "Destinations"
+output = "Destination"
 removeStep = "Remove operation"
 save = "Save changes"
 scheduleEvery = "Run every"
