@@ -73,6 +73,20 @@ describe("PipelineGraph", () => {
     expect(handlers.onSelect).toHaveBeenCalledWith(1);
   });
 
+  it("clears the selection when the canvas itself is clicked", () => {
+    const handlers = renderGraph({ selected: 1 });
+    fireEvent.click(document.querySelector(".portal-graph") as HTMLElement);
+    expect(handlers.onSelect).toHaveBeenCalledWith(null);
+  });
+
+  it("does not clear the selection when a node is clicked", () => {
+    // The node's own handler runs; the background handler must not undo it.
+    const handlers = renderGraph({ selected: 1 });
+    fireEvent.click(screen.getByText("OCR"));
+    expect(handlers.onSelect).toHaveBeenCalledWith(0);
+    expect(handlers.onSelect).not.toHaveBeenCalledWith(null);
+  });
+
   it("marks the selected node as pressed", () => {
     renderGraph({ selected: 0 });
     expect(screen.getByText("OCR").closest("button")).toHaveAttribute(

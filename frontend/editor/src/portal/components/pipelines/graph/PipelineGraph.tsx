@@ -1,4 +1,9 @@
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import {
   GraphNode,
   type NodeRunState,
@@ -77,6 +82,22 @@ export function PipelineGraph({
     return index === null ? undefined : steps[index]?.inputWarning;
   };
 
+  /**
+   * Clicking the canvas itself clears the selection. Anything that is part of a node, a wire or the
+   * placeholder handles its own click, so only bare background gets here.
+   */
+  function onBackgroundClick(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    if (
+      target.closest(
+        "[data-graph-node], .portal-graph-edge, .portal-graph-placeholder",
+      )
+    ) {
+      return;
+    }
+    onSelect(null);
+  }
+
   // Delete removes the selected step. Scoped to the graph, so typing in the inspector's fields is
   // never intercepted.
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -87,7 +108,11 @@ export function PipelineGraph({
   }
 
   return (
-    <div className="portal-graph" onKeyDown={onKeyDown}>
+    <div
+      className="portal-graph"
+      onKeyDown={onKeyDown}
+      onClick={onBackgroundClick}
+    >
       <div
         className="portal-graph__canvas"
         style={{ width: `${width}px`, height: `${height}px` }}

@@ -7879,8 +7879,8 @@ description = "Create your first pipeline: pick the sources it runs over, chain 
 title = "No pipelines yet"
 
 [portal.pipelines.graph]
-addFirstTool = "Add your first tool"
-addFirstToolHint = "Pick an operation to run on every document that arrives"
+addFirstTool = "Add a tool"
+addFirstToolHint = "Runs on every document that arrives"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"

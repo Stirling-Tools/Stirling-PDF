@@ -54,4 +54,7 @@
   font-size: 0.6875rem;
   /* --c-text-subtle misses 4.5:1 at this size against the canvas in both themes (axe). */
   color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
