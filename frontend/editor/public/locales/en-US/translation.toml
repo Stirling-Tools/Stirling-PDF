@@ -692,7 +692,6 @@ manualLinks = "Manual downloads: click the links and place the files into the te
 noLanguages = "No tessdata languages found in the configured directory."
 permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
 
-# AI engine admin settings (AI nav group)
 [admin.settings.ai.documents]
 description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
 title = "Documents & RAG"
@@ -2175,6 +2174,73 @@ secureWorkflowDesc = "Secures PDF documents by removing potentially malicious co
 [autoRename]
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+
+[autoRotate]
+submit = "Auto Rotate"
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Confidence threshold"
+
+[autoRotate.detectionMode]
+auto = "Auto"
+osd = "OCR only"
+text = "Text only"
+title = "Detection method"
+
+[autoRotate.error]
+failed = "An error occurred while auto-rotating the PDF."
+
+[autoRotate.inferUndetected]
+title = "Rotate low confidence pages to match"
+
+[autoRotate.report]
+applied = "{{degrees}}° CW"
+confidenceValue = "Confidence {{value}}"
+noChange = "No change"
+pageLabel = "Page {{number}}"
+summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
+title = "Detection report"
+
+[autoRotate.report.method]
+inferred = "Matched"
+none = "Skipped"
+osd = "OCR"
+text = "Text"
+
+[autoRotate.report.note]
+belowThreshold = "Below threshold"
+blankPage = "Page is blank"
+inferredFromDocument = "Same as the other pages"
+noDominantDirection = "Mixed text directions"
+osdFailed = "No readable text found"
+osdNoVerdict = "Could not tell which way up"
+tesseractUnavailable = "OCR not installed"
+tooFewGlyphs = "Too little text"
+
+[autoRotate.results]
+title = "Auto Rotate Results"
+
+[autoRotate.settings]
+title = "Settings"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "How certain the check has to be before a page is turned. Lower it to rotate more pages, raise it to leave more pages untouched."
+title = "Confidence threshold"
+
+[autoRotate.tooltip.description]
+text = "Works out which way up each page should be and turns it the right way round. Pages that are already upright are left alone."
+
+[autoRotate.tooltip.detectionMode]
+text = "Auto reads the text on the page first, then looks at the page as an image if that is not enough. Text only skips the image check, which is quickest for documents that were never scanned. OCR only treats every page as an image."
+title = "Detection method"
+
+[autoRotate.tooltip.header]
+title = "Auto Rotate"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Blank or nearly blank pages cannot be checked on their own. When every page that could be read needs the same turn, these pages are turned to match them."
+title = "Rotate low confidence pages to match"
 
 [autoSizeSplitPDF]
 tags = "pdf,split,document,organization"
@@ -4494,6 +4560,11 @@ title = "Automate"
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
+
+[home.autoRotate]
+desc = "Detect each page's orientation and rotate it upright automatically."
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+title = "Auto Rotate"
 
 [home.autoSizeSplitPDF]
 tags = "auto,split,size"
@@ -7304,7 +7375,6 @@ sectionsAriaLabel = "Infrastructure sections"
 subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
-# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
@@ -7737,11 +7807,17 @@ newPipeline = "New pipeline"
 addStep = "Add tool"
 back = "Back to pipelines"
 chooseAccount = "Choose an account"
+chooseDestination = "Choose a destination"
 chooseOperation = "Choose what this step does"
+chooseSource = "Choose a source"
 discard = "Discard changes"
 enabled = "Enabled"
+inputs = "Input"
+inputSource = "Input source"
+inputTrigger = "Trigger"
 keepEditing = "Keep editing"
 needsUpload = "Needs an uploaded file"
+noSources = "No sources connected yet. Create one to use it as an input."
 noToolMatches = "No tools match your search."
 pipelineSettings = "Pipeline settings"
 searchTools = "Search tools"
@@ -7761,20 +7837,16 @@ addTool = "Add tool"
 cancel = "Cancel"
 chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
-directory = "Output folder"
-directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
 moveDown = "Move down"
 moveUp = "Move up"
 name = "Name"
 namePlaceholder = "e.g. Redaction sweep"
-noSources = "No sources connected yet. The pipeline can still run on files supplied to it directly."
 noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
-output = "Output"
+output = "Destination"
 removeStep = "Remove operation"
-s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Save changes"
 scheduleEvery = "Run every"
 sources = "Sources"
@@ -7808,11 +7880,6 @@ title = "No pipelines yet"
 active = "Active"
 paused = "Paused"
 total = "Pipelines"
-
-[portal.pipelines.output]
-folder = "Write to folder"
-inline = "Return files"
-s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
 allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
@@ -8432,13 +8499,10 @@ region = "State / region"
 regionPlaceholder = "California"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
 s1Sub = "Your team, and the PDFs you expect to run each year."
-# Step 1 — volume
 s1Title = "How much will you process?"
 s2Sub = "Longer terms discount the rate; your service level sets support."
-# Step 2 — commitment & service
 s2Title = "Commitment and service"
 s3Sub = "For the quote and the agreement it generates."
-# Step 3 — details
 s3Title = "Your details"
 serviceLevel = "Service level"
 size_compact = "Compact"
@@ -8753,7 +8817,7 @@ confirm = "Delete"
 title = "Delete source?"
 
 [portal.sources.empty]
-description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
+description = "Connect a storage location so your policies have somewhere to pull data from."
 title = "No sources connected yet"
 
 [portal.sources.kpi]
