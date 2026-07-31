@@ -107,9 +107,8 @@ export function resolveOutput(
         allHold = false;
         continue;
       }
-      allHold &&= condition.matches.includes(
-        normalise(parameters[condition.param]),
-      );
+      const value = normalise(parameters[condition.param]);
+      allHold &&= condition.matches.some((match) => normalise(match) === value);
     }
     if (allHold) {
       return { format: rule.produces, arity: rule.arity, certain: true };

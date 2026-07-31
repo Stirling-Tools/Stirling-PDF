@@ -74,6 +74,11 @@ def _accepts_format(spec: ToolIOSpec, candidate: ToolFormat) -> bool:
     return candidate == ToolFormat.ANY or ToolFormat.ANY in spec.accepts or candidate in spec.accepts
 
 
+def _normalise(value: object) -> str:
+    """Both sides of a condition go through this, so a declaration's casing cannot matter."""
+    return "" if value is None else str(value).strip().lower()
+
+
 def resolve_output(spec: ToolIOSpec, parameters: dict[str, object] | None) -> ResolvedOutput:
     """First case whose conditions all hold wins.
 
@@ -88,9 +93,8 @@ def resolve_output(spec: ToolIOSpec, parameters: dict[str, object] | None) -> Re
                 saw_unknown_param = True
                 all_hold = False
                 continue
-            value = parameters[condition.param]
-            normalised = "" if value is None else str(value).strip().lower()
-            all_hold = all_hold and normalised in condition.matches
+            normalised = _normalise(parameters[condition.param])
+            all_hold = all_hold and any(_normalise(m) == normalised for m in condition.matches)
         if all_hold:
             return ResolvedOutput(format=rule.produces, arity=rule.arity, certain=True)
     return ResolvedOutput(format=spec.produces, arity=spec.arity, certain=not saw_unknown_param)

@@ -14,10 +14,18 @@ public record ToolIOSpec(
     public record When(String param, List<String> matches) {
 
         boolean holdsFor(Object value) {
-            String normalised =
-                    value == null ? "" : String.valueOf(value).trim().toLowerCase(Locale.ROOT);
-            return matches.contains(normalised);
+            String normalised = normalise(value);
+            return matches.stream().anyMatch(match -> normalise(match).equals(normalised));
         }
+    }
+
+    /**
+     * Both sides of a condition are normalised at comparison, not at construction: the declaration
+     * reaches the frontend and the engine as published data, and normalising only one side there
+     * would silently disagree with this one.
+     */
+    public static String normalise(Object value) {
+        return value == null ? "" : String.valueOf(value).trim().toLowerCase(Locale.ROOT);
     }
 
     public record Case(List<When> when, ToolFormat produces, ToolArity arity) {
@@ -49,11 +57,7 @@ public record ToolIOSpec(
     }
 
     private static When toWhen(ToolIOWhen condition) {
-        List<String> matches =
-                Arrays.stream(condition.matches())
-                        .map(value -> value.trim().toLowerCase(Locale.ROOT))
-                        .toList();
-        return new When(condition.param(), matches);
+        return new When(condition.param(), List.of(condition.matches()));
     }
 
     /**

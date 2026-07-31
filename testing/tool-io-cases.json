@@ -44,6 +44,18 @@
         }
       ]
     },
+    "pdfToImageMixedCase": {
+      "accepts": ["PDF"],
+      "produces": "IMAGE",
+      "arity": "SIMO",
+      "cases": [
+        {
+          "when": [{ "param": "singleOrMultiple", "matches": ["  SiNgLe "] }],
+          "produces": "IMAGE",
+          "arity": "SISO"
+        }
+      ]
+    },
     "addPasswordTwoKeys": {
       "accepts": ["PDF"],
       "produces": "PDF_ENCRYPTED",
@@ -218,6 +230,22 @@
       "name": "the default branch of an arity case fans in",
       "steps": [
         { "spec": "pdfToImageConfigurable", "parameters": { "singleOrMultiple": "multiple" } },
+        { "spec": "imageToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-in" }]
+    },
+    {
+      "name": "a condition matches regardless of the casing and padding it was declared with",
+      "steps": [
+        { "spec": "pdfToImageMixedCase", "parameters": { "singleOrMultiple": "SINGLE" } },
+        { "spec": "imageToPdf" }
+      ],
+      "expected": []
+    },
+    {
+      "name": "a condition declared in mixed case still fails on a genuinely different value",
+      "steps": [
+        { "spec": "pdfToImageMixedCase", "parameters": { "singleOrMultiple": "multiple" } },
         { "spec": "imageToPdf" }
       ],
       "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-in" }]
