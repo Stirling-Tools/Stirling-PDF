@@ -25,6 +25,8 @@ import org.springframework.web.server.ResponseStatusException;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.egress.ShareEgressDecision;
+import stirling.software.proprietary.storage.egress.ShareEgressPolicyService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -47,6 +49,7 @@ class FileStorageServiceTest {
     @Mock private ApplicationProperties applicationProperties;
     @Mock private StorageProvider storageProvider;
     @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
+    @Mock private ShareEgressPolicyService shareEgressPolicyService;
 
     @Mock private ApplicationProperties.Security securityProperties;
     @Mock private ApplicationProperties.System systemProperties;
@@ -67,7 +70,13 @@ class FileStorageServiceTest {
                         applicationProperties,
                         storageProvider,
                         Optional.empty(),
-                        storageCleanupEntryRepository);
+                        storageCleanupEntryRepository,
+                        shareEgressPolicyService);
+
+        // No sharing policy configured: every share proceeds exactly as asked.
+        when(shareEgressPolicyService.evaluateGrant(any(), any(), any(), any(), any()))
+                .thenAnswer(
+                        invocation -> ShareEgressDecision.unrestricted(invocation.getArgument(4)));
 
         // Default: storage and sharing fully enabled, share links enabled, no expiry
         when(applicationProperties.getSecurity()).thenReturn(securityProperties);

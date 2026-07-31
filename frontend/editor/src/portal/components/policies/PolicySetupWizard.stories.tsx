@@ -11,6 +11,7 @@ const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
 const classification = POLICY_CATEGORIES.find(
   (c) => c.id === "classification",
 )!;
+const sharing = POLICY_CATEGORIES.find((c) => c.id === "sharing")!;
 
 const meta: Meta<typeof PolicySetupWizard> = {
   title: "Portal/Policies/PolicySetupWizard",
@@ -59,5 +60,13 @@ export const Classification: Story = {
       config: POLICY_CONFIG.classification,
       policy: null,
     },
+  },
+};
+
+/** Sharing: an egress policy. "Runs on" offers share channels instead of input sources, and the
+ *  editor-only output naming is gone — the copy is replaced in flight. */
+export const Sharing: Story = {
+  args: {
+    entry: { category: sharing, config: POLICY_CONFIG.sharing, policy: null },
   },
 };

@@ -4,9 +4,9 @@
  *
  * The backend stores all portal-level metadata (categoryId, sources, scope,
  * reviewer, fieldValues, runOn, output settings) inside `output.options` — the
- * same "options bag" the editor uses. `trigger` is always null for
- * portal/editor-authored policies; the editor fires runs on upload/export via
- * `/run`, so there is no server-side trigger.
+ * same "options bag" the editor uses. `trigger` is null for upload/export
+ * policies (the editor fires those via `/run`) and a real `share` trigger for
+ * egress policies, which the server fires itself.
  */
 
 // ── Wire types (match Policy.java / PipelineStep.java / PolicyRunView.java) ──
@@ -36,12 +36,18 @@ export interface WireOutputSpec {
   options: Partial<WireOutputOptions>;
 }
 
+/** Mirrors TriggerConfig.java — `type` keys a server-side `PolicyTrigger` bean. */
+export interface WireTriggerConfig {
+  type: string;
+  options?: Record<string, unknown>;
+}
+
 export interface WirePolicy {
   id: string;
   name: string;
   owner?: string;
   enabled: boolean;
-  trigger: null;
+  trigger: WireTriggerConfig | null;
   steps: WirePipelineStep[];
   output: WireOutputSpec;
   teamId?: string;

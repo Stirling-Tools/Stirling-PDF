@@ -26,8 +26,15 @@ const FULL_STATE: PolicyDecodedState = {
 };
 
 describe("toWirePolicy", () => {
-  it("sets trigger to null", () => {
+  it("sets trigger to null for categories the editor fires itself", () => {
     expect(toWirePolicy(FULL_STATE).trigger).toBeNull();
+  });
+
+  it("gives the sharing category a real share trigger", () => {
+    // Egress is enforced server-side with no client in the loop, so the backend
+    // has to be able to find the policy by trigger type.
+    const wire = toWirePolicy({ ...FULL_STATE, categoryId: "sharing" });
+    expect(wire.trigger).toEqual({ type: "share", options: {} });
   });
 
   it("sets output.type to inline", () => {

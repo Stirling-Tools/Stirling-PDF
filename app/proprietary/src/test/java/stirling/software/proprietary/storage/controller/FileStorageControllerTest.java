@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.egress.ShareEgressProcessor;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.service.FileStorageService;
@@ -40,13 +41,15 @@ class FileStorageControllerTest {
 
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
+    @Mock private ShareEgressProcessor shareEgressProcessor;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         FileStorageController controller =
-                new FileStorageController(fileStorageService, storageProvider);
+                new FileStorageController(
+                        fileStorageService, storageProvider, shareEgressProcessor);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
