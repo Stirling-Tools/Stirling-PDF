@@ -8600,12 +8600,10 @@ title = "The procurement track opens with Enterprise"
 
 [portal.procurement.milestone]
 downloadError = "Could not download the quote PDF just yet — please try again in a moment."
-edit = "Edit quote"
 
 [portal.procurement.modal]
 cancel = "Cancel"
 chooseFile = "Choose file"
-close = "Close"
 downloadBody = "Your download will begin shortly."
 downloadCta = "Download"
 downloadTitle = "Download"
