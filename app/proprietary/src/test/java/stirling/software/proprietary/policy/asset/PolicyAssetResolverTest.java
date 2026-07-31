@@ -118,14 +118,6 @@ class PolicyAssetResolverTest {
 
     private static Policy policy(Long teamId, PipelineStep step) {
         return new Policy(
-                "p1",
-                "p",
-                "owner",
-                true,
-                null,
-                List.of(),
-                List.of(step),
-                OutputSpec.inline(),
-                teamId);
+                "p1", "p", "owner", true, List.of(), List.of(step), OutputSpec.inline(), teamId);
     }
 }
