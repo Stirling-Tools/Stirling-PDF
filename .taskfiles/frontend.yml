@@ -388,6 +388,13 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/src/portal/tsconfig.json }
 
+  typecheck:storybook:
+    desc: "Typecheck Storybook config and stories"
+    deps: [prepare]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: .storybook/tsconfig.json }
+
   typecheck:all:
     desc: "Typecheck all build variants"
     cmds:
@@ -399,6 +406,7 @@ tasks:
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal
+      - task: typecheck:storybook
 
   # ============================================================
   # Quality Gate
