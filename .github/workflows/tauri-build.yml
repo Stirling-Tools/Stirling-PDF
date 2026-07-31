@@ -12,7 +12,7 @@ on:
   workflow_call:
     inputs:
       platform:
-        description: "Platform to build (windows, windows-arm64, macos, linux, or all)."
+        description: "Platform to build (windows, windows-arm64, macos, linux, windows-macos, or all)."
         required: false
         type: string
         default: "all"
@@ -29,7 +29,7 @@ on:
   workflow_dispatch:
     inputs:
       platform:
-        description: "Platform to build (windows, windows-arm64, macos, linux, or all)"
+        description: "Platform to build (windows, windows-arm64, macos, linux, windows-macos, or all)"
         required: true
         default: "all"
         type: choice
@@ -39,6 +39,7 @@ on:
           - windows-arm64
           - macos
           - linux
+          - windows-macos
       sign:
         description: "Sign and notarize the bundles."
         required: false
@@ -84,6 +85,7 @@ jobs:
             windows-arm64) ENTRIES=("$WINDOWS_ARM64") ;;
             macos)         ENTRIES=("$MACOS") ;;
             linux)         ENTRIES=("$LINUX") ;;
+            windows-macos) ENTRIES=("$WINDOWS" "$MACOS") ;;
             *)             ENTRIES=("$WINDOWS" "$WINDOWS_ARM64" "$MACOS" "$LINUX") ;;
           esac
 
