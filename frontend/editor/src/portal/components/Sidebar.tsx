@@ -1,6 +1,6 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { Tooltip } from "@mantine/core";
-import { ActionIcon, NavItem } from "@app/ui";
+import { ActionIcon, NavItem, NavSurface } from "@app/ui";
 import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
@@ -130,9 +130,10 @@ export function Sidebar() {
 
       <nav className="portal-sidebar__nav">
         {NAV_SECTIONS.map((section) => (
-          <section
+          <NavSurface
             key={section.labelKey}
-            className="portal-sidebar__section sui-nav-surface"
+            as="section"
+            className="portal-sidebar__section"
           >
             <h2 className="portal-sidebar__section-label">
               {t(section.labelKey)}
@@ -140,11 +141,11 @@ export function Sidebar() {
             <div className="portal-sidebar__group">
               {renderGroup(section.entries)}
             </div>
-          </section>
+          </NavSurface>
         ))}
       </nav>
 
-      <div className="portal-sidebar__footer sui-nav-surface">
+      <NavSurface className="portal-sidebar__footer">
         <LinkAccountFooterItem />
         <NavItem
           id="settings"
@@ -152,7 +153,7 @@ export function Sidebar() {
           icon={<SettingsIcon />}
           onClick={() => openSettings()}
         />
-      </div>
+      </NavSurface>
     </aside>
   );
 }
