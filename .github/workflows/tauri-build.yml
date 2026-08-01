@@ -108,6 +108,9 @@ jobs:
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+      # Job-level so step `if:` can test it; the `secrets` context is not
+      # available in conditions.
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -401,6 +404,21 @@ jobs:
           # AppImage runs in its own continue-on-error step below so its
           # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
           args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+
+      # Dependabot and fork PRs get no repo secrets, so the updater key arrives
+      # empty and tauri dies decoding it after bundling. PRs publish nothing.
+      - name: Disable updater artifacts when no signing key
+        if: ${{ !inputs.sign && env.TAURI_SIGNING_PRIVATE_KEY == '' }}
+        shell: bash
+        run: |
+          node -e '
+            const fs = require("fs");
+            const path = "frontend/editor/src-tauri/tauri.conf.json";
+            const config = JSON.parse(fs.readFileSync(path, "utf8"));
+            config.bundle.createUpdaterArtifacts = false;
+            fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
+          '
+          echo "::notice::No TAURI_SIGNING_PRIVATE_KEY available - building without updater artifacts"
 
       - name: Build Tauri app (unsigned)
         if: ${{ !inputs.sign }}
