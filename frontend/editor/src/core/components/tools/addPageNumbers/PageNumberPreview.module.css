@@ -52,6 +52,7 @@
   user-select: none;
   font-weight: 600;
   position: relative;
+  padding: 8px;
 }
 
 /* Position numbers at edges within each tile with extra top/bottom spacing */
@@ -97,11 +98,6 @@
   justify-content: flex-end;
   padding-bottom: 4px;
 } /* bottom-right */
-
-/* Base padding for all tiles */
-.gridTile {
-  padding: 8px;
-}
 
 .gridTileSelected,
 .gridTileHovered {
