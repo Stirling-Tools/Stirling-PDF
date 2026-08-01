@@ -37,7 +37,7 @@ ext {
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.3"
-    jackson2Version = "2.21.4"
+    jackson2Version = "2.22.1"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
