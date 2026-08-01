@@ -65,7 +65,6 @@ class PolicyOutputResolverTest {
                 "Pipeline",
                 "owner",
                 true,
-                null,
                 List.of(),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
