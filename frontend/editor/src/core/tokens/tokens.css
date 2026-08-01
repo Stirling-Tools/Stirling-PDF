@@ -153,6 +153,27 @@
     var(--p-red-500) 50%,
     var(--p-red-600) 100%
   );
+
+  /* Code palette — theme-aware: a light GitHub-style box in light mode, the
+     dark terminal palette in dark mode. (CodeBlock renders plain text, so only
+     the base colours are load-bearing; the syntax slots are kept for future
+     Shiki. */
+  --code-bg: var(--p-c-f6f8fa);
+  --code-bg-alt: var(--p-c-eef1f4);
+  --code-bg-header: var(--p-c-eaeef2);
+  --code-text: var(--p-c-1f2328);
+  --code-dim: var(--p-c-656d76);
+  --code-muted: var(--p-c-8c959f);
+  --code-keyword: var(--p-c-cf222e);
+  --code-string: var(--p-code-string);
+  --code-number: var(--p-c-0550ae);
+  --code-fn: var(--p-c-8250df);
+  --code-type: var(--p-code-type);
+  --code-property: var(--p-c-0550ae);
+  --code-comment: var(--p-c-6e7781);
+  --code-border: var(--p-c-d0d7de);
+  /* Window-chrome traffic-light dots in the code-block header. */
+  --code-dot: var(--p-c-d0d7de);
 }
 
 [data-theme="dark"] {
@@ -224,31 +245,8 @@
     var(--p-blue-600) 50%,
     var(--p-blue-700) 100%
   );
-}
 
-/* Code palette — theme-aware: a light GitHub-style box in light mode, the dark
-   terminal palette in dark mode. (CodeBlock renders plain text, so only the
-   base colours are load-bearing; the syntax slots are kept for future Shiki. */
-:root,
-[data-theme="light"] {
-  --code-bg: var(--p-c-f6f8fa);
-  --code-bg-alt: var(--p-c-eef1f4);
-  --code-bg-header: var(--p-c-eaeef2);
-  --code-text: var(--p-c-1f2328);
-  --code-dim: var(--p-c-656d76);
-  --code-muted: var(--p-c-8c959f);
-  --code-keyword: var(--p-c-cf222e);
-  --code-string: var(--p-code-string);
-  --code-number: var(--p-c-0550ae);
-  --code-fn: var(--p-c-8250df);
-  --code-type: var(--p-code-type);
-  --code-property: var(--p-c-0550ae);
-  --code-comment: var(--p-c-6e7781);
-  --code-border: var(--p-c-d0d7de);
-  /* Window-chrome traffic-light dots in the code-block header. */
-  --code-dot: var(--p-c-d0d7de);
-}
-[data-theme="dark"] {
+  /* Code palette */
   --code-bg: var(--p-c-0f172a);
   --code-bg-alt: var(--p-c-1e293b);
   --code-bg-header: var(--p-c-1a2332);

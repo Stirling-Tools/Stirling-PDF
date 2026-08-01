@@ -320,11 +320,6 @@
   color: var(--c-text-muted); /* subtitle text */
 }
 
-/* Light mode selected header stroke override */
-:global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: var(--c-primary);
-}
-
 /* =========================
    Add File Card Styles
    ========================= */
