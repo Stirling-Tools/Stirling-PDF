@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import { NavSurface } from "@app/ui/NavSurface";
 import { Button } from "@app/ui/Button";
 import { NavItem } from "@app/ui/NavItem";
 import { useTranslation } from "react-i18next";
@@ -854,7 +855,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </div>
 
           {/* Box 1 — top controls (search + open / my files / cloud). No title. */}
-          <div className="sui-nav-surface file-sidebar-controls">
+          <NavSurface className="file-sidebar-controls">
             {/* Search row */}
             <Tooltip
               label={t("fileSidebar.search", "Search")}
@@ -1033,10 +1034,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 onClick={openWatchedFolders}
               />
             )}
-          </div>
+          </NavSurface>
 
           {/* Box 2 — the file tree (this box scrolls). */}
-          <div className="sui-nav-surface file-sidebar-files-box">
+          <NavSurface className="file-sidebar-files-box">
             <div className="file-sidebar-scroll">
               {/* Files section - always visible when expanded */}
               {!collapsed && (
@@ -1184,7 +1185,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 </div>
               )}
             </div>
-          </div>
+          </NavSurface>
         </div>
 
         {/* Kebab "Save to cloud" upload modal (one file at a time). */}
@@ -1215,7 +1216,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         <SidebarChecklistSlot collapsed={collapsed} />
 
         {/* Box 3 — account footer (avatar + name + settings). */}
-        <div className="sui-nav-surface file-sidebar-footer-box">
+        <NavSurface className="file-sidebar-footer-box">
           {/* Bottom bar: user name + settings */}
           <Tooltip
             label={
@@ -1277,7 +1278,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               )}
             </div>
           </Tooltip>
-        </div>
+        </NavSurface>
       </div>
     );
   },

@@ -1,0 +1,7 @@
+.sui-nav-surface {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-nav);
+  /* Clips full-bleed nav rows to the rounded corners. */
+  overflow: hidden;
+}
