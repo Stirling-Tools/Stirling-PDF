@@ -9,7 +9,11 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigation } from "@app/contexts/NavigationContext";
-import { useFileSelector, useFileSelectors } from "@app/contexts/FileContext";
+import {
+  useFileIndex,
+  useFileSelector,
+  useFileSelectors,
+} from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { enforceExportPolicies } from "@app/services/policyExport";
@@ -258,12 +262,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     if (!stillInWorkbench) setActiveFileId(null);
   }, [activeFileId, fileIds]);
 
-  const activeFileIndex = useMemo(() => {
-    if (!activeFileId) return 0;
-    const files = selectors.getFiles();
-    const idx = files.findIndex((f) => f.fileId === activeFileId);
-    return idx >= 0 ? idx : 0;
-  }, [activeFileId, selectors]);
+  const activeFileIndex = useFileIndex(activeFileId);
   const setActiveFileIndex = useCallback(
     (index: number) => {
       const files = selectors.getFiles();

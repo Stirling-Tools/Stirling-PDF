@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { buildPolicyBadgeMap } from "@app/hooks/usePolicyFileBadges";
+import {
+  buildPolicyBadgeMap,
+  reusePolicyBadgeArrays,
+} from "@app/hooks/usePolicyFileBadges";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
 const labels = new Map([
@@ -193,5 +196,75 @@ describe("buildPolicyBadgeMap — in-flight indicators", () => {
     expect(badges.map((b) => b.id)).toEqual(["classification"]);
     expect(badges[0].background).toBe(true);
     expect(enforcingOn(map, "in")).toBe(false);
+  });
+});
+
+describe("reusePolicyBadgeArrays — per-file identity across rebuilds", () => {
+  // buildPolicyBadgeMap allocates fresh arrays every call and the run store hands
+  // back a new `runs` array on every status poll, so without this the memoized
+  // sidebar rows get a new `policies` prop for EVERY badged file on each tick.
+  const build = (runs: PolicyRunRecord[], stubs: { id: string }[]) =>
+    buildPolicyBadgeMap(runs, stubs, labels);
+
+  const twoFiles = [{ id: "a" }, { id: "b" }];
+  // Settled + imported, so the badge is a plain one (a COMPLETED run keeps
+  // `enforcing` until its outputs land — see the in-flight tests above).
+  const settled = (id: string) =>
+    run({
+      runId: `r${id}`,
+      fileId: id,
+      outputFileIds: [id],
+      status: "COMPLETED",
+      imported: true,
+    });
+  const bothSettled = () => [settled("a"), settled("b")];
+
+  it("returns the same map when nothing changed", () => {
+    const first = build(bothSettled(), twoFiles);
+    const second = reusePolicyBadgeArrays(
+      first,
+      build(bothSettled(), twoFiles),
+    );
+    expect(second).toBe(first);
+  });
+
+  it("keeps the untouched file's array identity when another file changes", () => {
+    const first = build(bothSettled(), twoFiles);
+    // "a" goes in-flight; "b" is unaffected and must keep its exact array.
+    const next = build(
+      [
+        run({
+          runId: "ra",
+          fileId: "a",
+          outputFileIds: ["a"],
+          status: "RUNNING",
+        }),
+        settled("b"),
+      ],
+      twoFiles,
+    );
+    const second = reusePolicyBadgeArrays(first, next);
+    expect(second).not.toBe(first);
+    expect(second.get("b")).toBe(first.get("b"));
+    expect(second.get("a")).not.toBe(first.get("a"));
+    expect((second.get("a") ?? [])[0].enforcing).toBe(true);
+    expect((first.get("a") ?? [])[0].enforcing).toBeUndefined();
+  });
+
+  it("a new badged file doesn't disturb the existing files' arrays", () => {
+    const first = build(bothSettled(), twoFiles);
+    const next = build(
+      [...bothSettled(), settled("c")],
+      [...twoFiles, { id: "c" }],
+    );
+    const second = reusePolicyBadgeArrays(first, next);
+    expect(second.get("a")).toBe(first.get("a"));
+    expect(second.get("b")).toBe(first.get("b"));
+    expect((second.get("c") ?? []).map((b) => b.id)).toEqual(["security"]);
+  });
+
+  it("passes the fresh map straight through on the first build", () => {
+    const map = build(bothSettled(), twoFiles);
+    expect(reusePolicyBadgeArrays(null, map)).toBe(map);
   });
 });

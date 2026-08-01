@@ -147,6 +147,29 @@ export function useFileSelectors(): FileContextSelectors {
 }
 
 /**
+ * Position of `fileId` in the resolved file list — the SAME array useAllFiles()
+ * returns, which drops ids whose bytes haven't hydrated into memory yet, so the
+ * index lines up with what consumers actually index into. 0 when unset/absent.
+ *
+ * Selects a NUMBER, so the consumer re-renders only when the index actually
+ * moves. useAllFiles() would do the job too, but it re-renders on every
+ * unrelated stub update (thumbnail hydration, labels, …) — too costly for a
+ * high-level provider whose context value isn't memoized.
+ */
+export function useFileIndex(fileId: string | null | undefined): number {
+  // Raw (unguarded) selectors: the read below runs inside the subscription
+  // selector, so it IS reactive and the render-phase guard doesn't apply.
+  const { selectors } = useFileStore();
+  return useFileSelector((s) => {
+    if (!fileId) return 0;
+    const index = selectors
+      .getFiles(s.files.ids)
+      .findIndex((file) => file.fileId === fileId);
+    return index >= 0 ? index : 0;
+  });
+}
+
+/**
  * Hook for accessing file state (will re-render on any state change)
  * Use individual selector hooks below for better performance
  */

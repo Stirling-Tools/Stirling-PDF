@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
@@ -123,20 +123,70 @@ export function buildPolicyBadgeMap(
   return result;
 }
 
+/** Field-wise equality for a badge ref — the whole shape `PolicyBadges` renders. */
+function sameRef(a: FileItemPolicyRef, b: FileItemPolicyRef): boolean {
+  return (
+    a.id === b.id &&
+    a.name === b.name &&
+    a.accentColor === b.accentColor &&
+    !!a.enforcing === !!b.enforcing &&
+    !!a.background === !!b.background
+  );
+}
+
+function sameRefs(a: FileItemPolicyRef[], b: FileItemPolicyRef[]): boolean {
+  return a.length === b.length && a.every((ref, i) => sameRef(ref, b[i]));
+}
+
+/**
+ * Carry the previous map's array references over to files whose badges didn't
+ * change, and return the previous MAP itself when none did.
+ *
+ * {@link buildPolicyBadgeMap} allocates a fresh array per badged file on every
+ * call, and the run store hands back a new `runs` array on every status poll —
+ * so without this, one file's poll tick gives EVERY badged file a new `policies`
+ * identity, and the memoized sidebar rows can never bail out (the case the
+ * memoization exists for). `NO_POLICIES` in FileSidebar only covers the rows
+ * with no badges at all.
+ */
+export function reusePolicyBadgeArrays(
+  previous: Map<string, FileItemPolicyRef[]> | null,
+  next: Map<string, FileItemPolicyRef[]>,
+): Map<string, FileItemPolicyRef[]> {
+  if (!previous) return next;
+  let changed = previous.size !== next.size;
+  for (const [fileId, refs] of next) {
+    const before = previous.get(fileId);
+    if (before && sameRefs(before, refs)) next.set(fileId, before);
+    else changed = true;
+  }
+  return changed ? next : previous;
+}
+
 /**
  * Distinct policies that have produced each file, keyed by fileId, derived from
  * the reactive policy run store. Drives the file sidebar's shield badges. The
  * badge follows a document down its tool-edit chain — see
  * {@link buildPolicyBadgeMap}. Shadows the core stub via the {@code @app/*}
  * alias cascade.
+ *
+ * Per-file array identity is preserved across rebuilds so memoized consumers
+ * (the sidebar rows) only re-render for the file that actually changed — see
+ * {@link reusePolicyBadgeArrays}.
  */
 export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
   const runs = usePolicyRuns();
   const { fileStubs } = useAllFiles();
+  const previous = useRef<Map<string, FileItemPolicyRef[]> | null>(null);
   return useMemo(() => {
     const labelById = new Map(
       loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
     );
-    return buildPolicyBadgeMap(runs, fileStubs, labelById);
+    const map = reusePolicyBadgeArrays(
+      previous.current,
+      buildPolicyBadgeMap(runs, fileStubs, labelById),
+    );
+    previous.current = map;
+    return map;
   }, [runs, fileStubs]);
 }
