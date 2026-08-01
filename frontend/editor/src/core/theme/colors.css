@@ -30,6 +30,81 @@ html[data-app-theme="light"] {
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+  --c-warning: var(--p-amber-600);
+  /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
+  --c-highlight: var(--p-flash-yellow);
+  /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */
+  --c-brand: var(--p-brand-red);
+  --c-brand-hover: var(--p-brand-red-600);
+
+  --c-primary-tint: color-mix(in srgb, var(--c-primary) 14%, var(--c-surface));
+  --c-primary-border: color-mix(
+    in srgb,
+    var(--c-primary) 32%,
+    var(--c-surface)
+  );
+  --c-danger-subtle: color-mix(in srgb, var(--c-danger) 10%, var(--c-surface));
+  --c-success-subtle: color-mix(
+    in srgb,
+    var(--c-success) 10%,
+    var(--c-surface)
+  );
+
+  /* ── Decorative / brand / categorical palette ──────────────────────────
+     Fixed hues that intentionally do NOT follow the chosen accent: brand
+     marks, vendor colours, categorical avatar dots, static illustrations,
+     and the multi-hue gradients on feature/upgrade/onboarding surfaces.
+     Named here so components reference a --c-* token, never a raw --p-*. */
+  --c-brand-mark: var(--p-brand-red-650); /* Stirling logo mark fill */
+  --c-accent-stripe: var(--p-periwinkle-500); /* Stripe "connect" CTA */
+
+  /* Feature-accent hues (fixed) used as stops in multi-hue gradients. */
+  --c-hue-blue: var(--p-blue-500);
+  --c-hue-indigo: var(--p-indigo-500);
+  --c-hue-violet: var(--p-violet-600);
+  --c-hue-purple: var(--p-purple-500);
+  --c-hue-pink: var(--p-pink-500);
+
+  /* Categorical avatar palette (per-user dot colour). */
+  --c-avatar-1: var(--p-azure-500);
+  --c-avatar-2: var(--p-violet-500);
+  --c-avatar-3: var(--p-pink-500);
+  --c-avatar-4: var(--p-emerald-500);
+  --c-avatar-5: var(--p-amber-500);
+  --c-avatar-6: var(--p-cyan-500);
+
+  /* Connection picker: muted categorical marks + brand-red accent. */
+  --c-conn-accent: var(--p-art-red-muted);
+  --c-conn-storage: var(--p-art-blue-muted);
+  --c-conn-signing: var(--p-art-green-muted);
+  --c-conn-notify: var(--p-art-amber-muted);
+  --c-conn-neutral: var(--p-gray-mid);
+
+  /* Always-dark marketing/product hero strip (portal). Same in both themes. */
+  --c-hero-dark: var(--p-zinc-950);
+  --c-hero-dark-cta-text: var(--p-navy-700);
+
+  /* Neutral solid badge fill (grey pill). */
+  --c-neutral-fill: var(--p-gray-500);
+
+  /* Static document illustration (theme-independent line work). */
+  --c-illustration-line: var(--p-gray-200);
+  --c-illustration-line-strong: var(--p-gray-300);
+
+  /* Viewer active file-tab tint base. */
+  --c-tab-active-tint: var(--p-blue-200);
+
+  /* Themed: file-card resting/unselected header (branded navy). */
+  --c-file-header-resting: var(--p-navy-500);
+
+  /* Themed: onboarding hero panel gradient + inset tile. */
+  --c-onboarding-hero: linear-gradient(
+    155deg,
+    var(--p-tint-blue) 0%,
+    var(--p-tint-violet) 55%,
+    var(--p-tint-pink) 100%
+  );
+  --c-onboarding-hero-tile: var(--p-white);
 }
 
 /* ── MIDNIGHT (original navy) — also the default portal/Storybook dark ────── */
@@ -60,6 +135,17 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
+  --c-warning: var(--p-amber-500);
+
+  /* Themed decorative dark overrides (see :root for light + rationale). */
+  --c-file-header-resting: var(--p-navy-950);
+  --c-onboarding-hero: linear-gradient(
+    155deg,
+    var(--p-navy-850) 0%,
+    var(--p-navy-880) 55%,
+    var(--p-plum-900) 100%
+  );
+  --c-onboarding-hero-tile: var(--p-navy-900);
 }
 
 /* ── Base accent — fixed default (blue buttons); [data-accent="default"] blocks at the end keep surfaces neutral. LIGHT base here, DARK base next. ── */
@@ -217,6 +303,17 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
+  --c-warning: var(--p-amber-500);
+
+  /* Themed decorative dark overrides (see :root for light + rationale). */
+  --c-file-header-resting: var(--p-navy-950);
+  --c-onboarding-hero: linear-gradient(
+    155deg,
+    var(--p-navy-850) 0%,
+    var(--p-navy-880) 55%,
+    var(--p-plum-900) 100%
+  );
+  --c-onboarding-hero-tile: var(--p-navy-900);
 
   /* Category icon chips → neutral. */
   --icon-tools-bg: var(--c-surface-raised);

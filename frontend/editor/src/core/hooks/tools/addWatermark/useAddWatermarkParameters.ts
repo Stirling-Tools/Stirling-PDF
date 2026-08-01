@@ -34,19 +34,25 @@ export const defaultParameters: AddWatermarkParameters = {
 export type AddWatermarkParametersHook =
   BaseParametersHook<AddWatermarkParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateAddWatermarkParameters(
+  params: AddWatermarkParameters,
+): boolean {
+  if (!params.watermarkType) {
+    return false;
+  }
+  if (params.watermarkType === "text") {
+    return params.watermarkText.trim().length > 0;
+  } else {
+    return params.watermarkImage !== undefined;
+  }
+}
+
 export const useAddWatermarkParameters = (): AddWatermarkParametersHook => {
   return useBaseParameters({
     defaultParameters: defaultParameters,
     endpointName: "add-watermark",
-    validateFn: (params): boolean => {
-      if (!params.watermarkType) {
-        return false;
-      }
-      if (params.watermarkType === "text") {
-        return params.watermarkText.trim().length > 0;
-      } else {
-        return params.watermarkImage !== undefined;
-      }
-    },
+    validateFn: validateAddWatermarkParameters,
   });
 };

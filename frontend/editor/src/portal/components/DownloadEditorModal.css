@@ -14,7 +14,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 .portal-install__section:first-child {
   margin-top: 0;
@@ -27,9 +27,9 @@
   gap: 0.875rem;
   width: 100%;
   padding: 0.75rem 0.875rem;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--c-surface);
   text-align: left;
   cursor: pointer;
   transition:
@@ -37,8 +37,8 @@
     background var(--motion-fast);
 }
 .portal-install__option:hover {
-  border-color: var(--color-border-input);
-  background: var(--color-bg-hover);
+  border-color: var(--c-border);
+  background: var(--c-hover);
 }
 
 .portal-install__option-icon {
@@ -48,8 +48,8 @@
   height: 2.25rem;
   flex-shrink: 0;
   border-radius: 0.625rem;
-  color: var(--color-blue);
-  background: var(--color-blue-light);
+  color: var(--c-primary);
+  background: var(--c-primary-tint);
 }
 
 .portal-install__option-text {
@@ -60,14 +60,14 @@
 .portal-install__option-text strong {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .portal-install__option-text span {
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 .portal-install__option-chevron {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   flex-shrink: 0;
 }
 
@@ -88,13 +88,13 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 .portal-install__note {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 .portal-install__guide {
   align-self: flex-start;
@@ -106,7 +106,7 @@
   background: none;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-blue);
+  color: var(--c-primary);
   cursor: pointer;
 }
 .portal-install__guide:hover {
