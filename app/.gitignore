@@ -1,3 +1,4 @@
 # Whitelist committed env defaults. `.env.saas.local` (and any other .env*)
 # stays ignored via the root .gitignore.
 !.env.saas
+!.env.proprietary

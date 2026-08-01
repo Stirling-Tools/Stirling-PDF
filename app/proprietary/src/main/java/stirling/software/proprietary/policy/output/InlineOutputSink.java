@@ -17,9 +17,8 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
- * Default output sink: stores each output file in {@code FileStorage} so it is downloadable via
- * {@code GET /api/v1/general/files/{fileId}}. This is the destination for manually-triggered runs
- * whose results are returned to the caller.
+ * Default sink: stores each output in {@code FileStorage} so it is downloadable via {@code GET
+ * /api/v1/general/files/{fileId}}. Used for manual runs whose results return to the caller.
  */
 @Service
 @RequiredArgsConstructor
@@ -40,8 +39,8 @@ public class InlineOutputSink implements PolicyOutputSink {
     }
 
     @Override
-    public List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
-            throws IOException {
+    public List<ResultFile> deliver(
+            OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);

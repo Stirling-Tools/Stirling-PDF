@@ -30,6 +30,7 @@ import {
 import { createNewStirlingFileStub } from "@app/types/fileContext";
 import { ToolOperation } from "@app/types/file";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
+import { trackEditorOperation } from "@app/services/analytics";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
@@ -39,6 +40,9 @@ import {
 } from "@app/hooks/tools/shared/toolOperationHelpers";
 import {
   ToolType,
+  defineSingleFileTool,
+  defineMultiFileTool,
+  defineCustomTool,
   ToolOperationConfig,
   ToolOperationHook,
   CustomProcessorResult,
@@ -49,7 +53,12 @@ import {
   ResponseHandler,
 } from "@app/hooks/tools/shared/toolOperationTypes";
 
-export { ToolType };
+export {
+  ToolType,
+  defineSingleFileTool,
+  defineMultiFileTool,
+  defineCustomTool,
+};
 export type {
   ToolOperationConfig,
   ToolOperationHook,
@@ -68,10 +77,10 @@ export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
  * Shared hook for tool operations providing consistent error handling, progress tracking,
  * and FileContext integration. Eliminates boilerplate while maintaining flexibility.
  *
- * Supports three tool patterns:
- * 1. Single-file tools: Set multiFileEndpoint: false, processes files individually
- * 2. Multi-file tools: Set multiFileEndpoint: true, single API call with all files
- * 3. Complex tools: Provide customProcessor for full control over processing logic
+ * Supports three tool patterns, selected by the config's toolType:
+ * 1. Single-file tools (ToolType.singleFile): processes files individually
+ * 2. Multi-file tools (ToolType.multiFile): single API call with all files
+ * 3. Complex tools (ToolType.custom): customProcessor takes full control
  *
  * @param config - Tool operation configuration
  * @returns Hook interface with state and execution methods
@@ -155,18 +164,13 @@ export const useToolOperation = <TParams>(
           fileActions.openEncryptedUnlockPrompt(ef.fileId);
         }
         actions.setError(
-          encryptedFiles.length === 1
-            ? t(
-                "encryptedFileBlocked",
-                "File is password-protected. Unlock it first.",
-              )
-            : t(
-                "encryptedFilesBlocked",
-                "{{count}} files are password-protected. Unlock them first.",
-                {
-                  count: encryptedFiles.length,
-                },
-              ),
+          t(
+            "encryptedFilesBlocked",
+            "{{count}} files are password-protected. Unlock them first.",
+            {
+              count: encryptedFiles.length,
+            },
+          ),
         );
         return;
       }
@@ -270,6 +274,11 @@ export const useToolOperation = <TParams>(
               typeof config.endpoint === "function"
                 ? config.endpoint(params)
                 : config.endpoint;
+            if (!endpoint) {
+              throw new Error(
+                "This operation has no backend endpoint and cannot be executed directly.",
+              );
+            }
 
             const response = await apiClient.post(endpoint, formData, {
               responseType: "blob",
@@ -389,6 +398,11 @@ export const useToolOperation = <TParams>(
         }
 
         if (processedFiles.length > 0) {
+          trackEditorOperation(
+            config.operationType,
+            successSourceIds.length || validFiles.length,
+          );
+
           actions.setFiles(processedFiles);
 
           // Generate thumbnails and download URL concurrently

@@ -15,8 +15,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -28,11 +30,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
@@ -51,7 +58,11 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.output.InlineOutputSink;
+import stirling.software.proprietary.policy.output.OutputDelivery;
+import stirling.software.proprietary.policy.output.PolicyOutputResolver;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 import tools.jackson.databind.json.JsonMapper;
 
@@ -77,6 +88,7 @@ class PolicyEngineTest {
 
     @TempDir Path tempDir;
 
+    private final RecordingSink recordingSink = new RecordingSink();
     private PolicyRunRegistry registry;
     private PolicyEngine engine;
 
@@ -94,6 +106,7 @@ class PolicyEngineTest {
                         JsonMapper.builder().build());
         registry = new PolicyRunRegistry(new ApplicationProperties());
         InlineOutputSink sink = new InlineOutputSink(fileStorage);
+        PolicyOutputResolver outputResolver = new PolicyOutputResolver(new InProcessSourceStore());
         engine =
                 new PolicyEngine(
                         executor,
@@ -101,7 +114,8 @@ class PolicyEngineTest {
                         registry,
                         fileStorage,
                         jobOwnershipService,
-                        List.of(sink),
+                        List.of(sink, recordingSink),
+                        outputResolver,
                         resourceMonitor,
                         jobQueue);
 
@@ -153,6 +167,36 @@ class PolicyEngineTest {
     }
 
     @Test
+    void deliversTheRunsFilesToEveryDestination() throws Exception {
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(COMPRESS, pdf("compressed", "out.pdf"));
+
+        // Two destinations of a recording sink; each fully reads the (shared) result file, so this
+        // also proves the result Resources are re-readable across more than one delivery.
+        PipelineDefinition definition =
+                new PipelineDefinition(
+                        "multi",
+                        List.of(new PipelineStep(COMPRESS, Map.of())),
+                        List.of(
+                                new OutputSpec("record", Map.of("dest", "a")),
+                                new OutputSpec("record", Map.of("dest", "b"))));
+
+        PolicyRun run =
+                engine.submit(
+                                definition,
+                                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                                PolicyProgressListener.NOOP)
+                        .completion()
+                        .get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        // One result file per destination, and each destination read the same output content.
+        assertEquals(2, run.getOutputs().size());
+        assertEquals(List.of("a:compressed", "b:compressed"), recordingSink.deliveries());
+    }
+
+    @Test
     void submitFailsRunWhenAToolErrors() throws Exception {
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
@@ -168,6 +212,35 @@ class PolicyEngineTest {
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
         verify(taskManager).setError(eq(runId), anyString());
         verify(taskManager, never()).setComplete(runId);
+    }
+
+    @Test
+    void runBlockedByUsageLimit_surfacesErrorCodeAndSubscribed() throws Exception {
+        // A downstream tool call gets a 402 entitlement block. The run fails, but its errorCode +
+        // subscribed are taken from the 402 body so the client can pop the right usage-limit modal
+        // (the policy 402 happens server-side, out of reach of the apiClient interceptor).
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        String body = "{\"error\":\"PAYG_LIMIT_REACHED\",\"subscribed\":true}";
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenThrow(
+                        HttpClientErrorException.create(
+                                HttpStatus.PAYMENT_REQUIRED,
+                                "Payment Required",
+                                HttpHeaders.EMPTY,
+                                body.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                                java.nio.charset.StandardCharsets.UTF_8));
+
+        PolicyRun run =
+                engine.submit(
+                                definition(new PipelineStep(ROTATE, Map.of())),
+                                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                                PolicyProgressListener.NOOP)
+                        .completion()
+                        .get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        assertEquals("PAYG_LIMIT_REACHED", run.getErrorCode());
+        assertEquals(Boolean.TRUE, run.getErrorSubscribed());
     }
 
     @Test
@@ -189,7 +262,7 @@ class PolicyEngineTest {
                         "rotate",
                         "owner",
                         true,
-                        null,
+                        List.of(),
                         List.of(new PipelineStep(ROTATE, Map.of())),
                         OutputSpec.inline());
 
@@ -202,6 +275,86 @@ class PolicyEngineTest {
         PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
         assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
         verify(internalApiClient).post(eq(ROTATE), any());
+    }
+
+    @Test
+    void runPolicyDispatchesToolCallsAsTheOwner() throws Exception {
+        // Billing-attribution regression: the pipeline runs on a background worker thread, but the
+        // policy owner must be propagated as the audit principal so InternalApiClient (and thus
+        // PAYG) attributes each tool call to the owner — not the INTERNAL_API_USER fallback.
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        int[] counter = {0};
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenAnswer(
+                        inv ->
+                                new StoredFile(
+                                        "file-" + ++counter[0],
+                                        ((InputStream) inv.getArgument(0)).readAllBytes().length));
+
+        String[] principalAtDispatch = {"<none>"};
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        inv -> {
+                            principalAtDispatch[0] = MDC.get("auditPrincipal");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+
+        Policy policy =
+                new Policy(
+                        "p1",
+                        "rotate",
+                        "alice",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep(ROTATE, Map.of())),
+                        OutputSpec.inline());
+
+        engine.runPolicy(
+                        policy,
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP)
+                .completion()
+                .get(10, TimeUnit.SECONDS);
+
+        assertEquals("alice", principalAtDispatch[0]);
+    }
+
+    @Test
+    void adHocRunDispatchesToolCallsAsTheSubmittingUser() throws Exception {
+        // Ad-hoc runs (no stored policy) bill whoever kicked them off; the principal is captured on
+        // the request thread (here simulated via MDC) and re-established on the worker thread.
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        int[] counter = {0};
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenAnswer(
+                        inv ->
+                                new StoredFile(
+                                        "file-" + ++counter[0],
+                                        ((InputStream) inv.getArgument(0)).readAllBytes().length));
+
+        String[] principalAtDispatch = {"<none>"};
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        inv -> {
+                            principalAtDispatch[0] = MDC.get("auditPrincipal");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+
+        MDC.put("auditPrincipal", "bob"); // the request thread's audit principal
+        try {
+            engine.submit(
+                            definition(new PipelineStep(ROTATE, Map.of())),
+                            PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                            PolicyProgressListener.NOOP)
+                    .completion()
+                    .get(10, TimeUnit.SECONDS);
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+
+        assertEquals("bob", principalAtDispatch[0]);
     }
 
     @Test
@@ -221,6 +374,27 @@ class PolicyEngineTest {
 
         verify(jobQueue).queueJob(eq(handle.runId()), anyInt(), any(), anyLong());
         assertEquals(PolicyRunStatus.PENDING, registry.get(handle.runId()).getStatus());
+    }
+
+    @Test
+    void runRejectedWhenQueueFullCarriesTransientErrorCode() {
+        when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(true);
+        // Admission rejected (queue full): the queued future completes exceptionally.
+        CompletableFuture<Object> rejected = new CompletableFuture<>();
+        rejected.completeExceptionally(
+                new RuntimeException("Job queue full, please try again later"));
+        doReturn(rejected).when(jobQueue).queueJob(anyString(), anyInt(), any(), anyLong());
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+
+        PolicyRun run = registry.get(handle.runId());
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        // Tagged transient so the client backs off and retries instead of hard-failing.
+        assertEquals("POLICY_QUEUE_FULL", run.getErrorCode());
     }
 
     @Test
@@ -250,5 +424,51 @@ class PolicyEngineTest {
                 return filename;
             }
         };
+    }
+
+    /**
+     * A test output sink (type "record") that fully reads each delivered file and records
+     * "{dest}:{content}" per file, so a test can assert the run was delivered to every destination.
+     */
+    private static final class RecordingSink implements PolicyOutputSink {
+
+        private final List<String> deliveries = new ArrayList<>();
+
+        List<String> deliveries() {
+            return deliveries;
+        }
+
+        @Override
+        public String type() {
+            return "record";
+        }
+
+        @Override
+        public boolean supports(OutputSpec spec) {
+            return spec != null && "record".equals(spec.type());
+        }
+
+        @Override
+        public List<ResultFile> deliver(
+                OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
+                throws IOException {
+            String dest = String.valueOf(spec.options().get("dest"));
+            List<ResultFile> results = new ArrayList<>();
+            for (Resource file : outputs) {
+                byte[] bytes;
+                try (InputStream is = file.getInputStream()) {
+                    bytes = is.readAllBytes();
+                }
+                deliveries.add(dest + ":" + new String(bytes));
+                results.add(
+                        ResultFile.builder()
+                                .fileId("rec-" + dest)
+                                .fileName(dest + "/" + file.getFilename())
+                                .contentType("application/pdf")
+                                .fileSize(bytes.length)
+                                .build());
+            }
+            return results;
+        }
     }
 }

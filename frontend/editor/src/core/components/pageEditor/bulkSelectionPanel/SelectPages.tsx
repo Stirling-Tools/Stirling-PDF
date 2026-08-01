@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Button, Text, NumberInput, Group } from "@mantine/core";
+import { Text, NumberInput, Group } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
 
 interface SelectPagesProps {
@@ -49,7 +50,7 @@ const SelectPages = ({
 
   return (
     <div className={classes.advancedCard}>
-      <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">
+      <Text size="sm" fw={600} c="var(--c-text-muted)" mb="xs">
         {title}
       </Text>
       {error && (

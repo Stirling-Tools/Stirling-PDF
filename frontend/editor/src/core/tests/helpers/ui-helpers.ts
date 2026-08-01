@@ -12,6 +12,37 @@ import { expect, type Page, type Locator } from "@playwright/test";
 const MANTINE_MODAL_OVERLAY = ".mantine-Modal-overlay";
 
 /**
+ * Suppress the native OS file picker for the whole page, on every browser.
+ *
+ * Several upload entry points (the FileSidebar "Open from computer" button,
+ * the Mantine `<FileInput>`, AddFileCard, etc.) open a file dialog by clicking
+ * a hidden `<input type="file">`. On firefox/webkit Playwright only intercepts
+ * that dialog while the page has a `filechooser` listener - it toggles
+ * `Page.setInterceptFileChooserDialog` off the event subscription. With no
+ * listener the real OS picker leaks onto the host and hangs the nightly run.
+ *
+ * Registering a (no-op) `filechooser` listener flips that interception on for
+ * every browser, so the dialog is suppressed at the browser level however it
+ * was triggered - a programmatic `.click()`, a `<label>` activation, or
+ * Playwright's own click. We deliberately don't set files in the handler: specs
+ * still drive uploads explicitly via `setInputFiles()`, which sets files
+ * through the protocol regardless of the pending intercepted chooser. This lets
+ * a spec click the real entry-point button while the picker stays mocked
+ * cross-browser - unlike a global `HTMLInputElement.prototype.click` override,
+ * which misses `<label>`-triggered pickers and never enables Playwright's own
+ * interception.
+ *
+ * Installed once per page by the shared test fixtures (stub + live), so no spec
+ * has to opt in.
+ */
+export function suppressNativeFilePicker(page: Page): void {
+  page.on("filechooser", () => {
+    // Interception alone suppresses the native dialog; specs provide the files
+    // themselves via setInputFiles() on the hidden input.
+  });
+}
+
+/**
  * Wait for a Mantine Modal overlay to appear or disappear. Most file pickers,
  * settings dialogs, encrypted-PDF unlock prompts and so on render through
  * this overlay; specs use it as a synchronisation point.
@@ -39,8 +70,10 @@ export async function waitForModalClose(
 /**
  * Upload one or more files through the FileSidebar's "Open from computer"
  * action. The button is always rendered (collapsed or expanded sidebar) and
- * triggers the hidden `data-testid="file-input"` native picker directly -
- * there is no modal to wait for under the post-refactor design.
+ * fires the hidden `data-testid="file-input"`. Its native OS picker is mocked
+ * globally by `suppressNativeFilePicker` (installed by the test fixtures), so
+ * the click is safe on every browser; we then set the files directly on the
+ * input via `setInputFiles`.
  *
  * `setInputFiles` doesn't await the input's async onChange (which writes to
  * IndexedDB via `addFiles`), so without a sync point a caller that follows
@@ -73,8 +106,15 @@ export async function switchToEditorIfViewerMode(page: Page): Promise<void> {
   const goToEditor = page.getByRole("button", {
     name: /go to file editor/i,
   });
+  // The affordance only exists while the workbench is transiently in viewer
+  // mode after an upload. The app can auto-leave viewer mode and detach the
+  // button between our visibility check and the click - the transition timing
+  // differs on firefox/webkit, where the detached button hangs a plain
+  // `click()` for the full actionability timeout. Treat a vanished button as
+  // "already in editor mode": swallow the click failure and let the caller's
+  // run-button assertion catch any genuine regression.
   if (await goToEditor.isVisible({ timeout: 1_000 }).catch(() => false)) {
-    await goToEditor.click();
+    await goToEditor.click({ timeout: 5_000 }).catch(() => {});
   }
 }
 

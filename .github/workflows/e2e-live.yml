@@ -5,27 +5,17 @@ name: Playwright E2E (live backend)
 # server.
 on:
   workflow_call:
-    inputs:
-      depot_cores:
-        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
-        required: false
-        type: string
-        default: "8"
 
 permissions:
   contents: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   playwright-e2e-live:
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -42,7 +32,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Install Playwright (chromium only)
         run: task e2e:install -- chromium
       - name: Build frontend (production bundle for vite preview)
@@ -62,7 +52,17 @@ jobs:
           # .test-state/playwright/coverage-pw/ for the post-process step
           # to aggregate. Chromium-only - other engines silently skip.
           PW_COVERAGE: "1"
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
         run: task e2e:live
+      - name: Flag flaky tests
+        # Runs regardless of the test outcome: a flaky test (passed on retry)
+        # leaves the step green, so this is the only place it surfaces. Emits
+        # ::warning:: annotations + a job summary; never fails the job.
+        if: always()
+        working-directory: frontend
+        run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
       - name: Generate JaCoCo report from e2e:live .exec
         if: always()
         id: live-coverage
@@ -84,7 +84,7 @@ jobs:
           fi
       - name: Set up Python for coverage summary
         if: always() && steps.live-coverage.outputs.report == 'true'
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Install defusedxml for coverage summary
@@ -124,7 +124,7 @@ jobs:
         # a summary even on backend failure, as long as some Playwright
         # tests ran far enough to dump V8 coverage.
         if: always()
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
 
@@ -169,7 +169,7 @@ jobs:
         if: always() && steps.pw-frontend-coverage.outputs.summary == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-frontend-coverage-${{ github.run_id }}
+          name: playwright-frontend-coverage
           path: |
             .test-state/playwright/coverage-pw-summary/
             .test-state/playwright/coverage-pw/
@@ -188,10 +188,30 @@ jobs:
           name: backend-log-live-${{ github.run_id }}
           path: .test-state/playwright/backend.log
           retention-days: 7
-      - name: Upload Playwright report
+      - name: List Playwright output locations (debug)
+        if: always()
+        run: |
+          echo "::group::Playwright output dirs"
+          # Playwright anchors its default outputDir + HTML report to the
+          # nearest package.json, which is frontend/ (frontend/editor has
+          # none), so artifacts land under frontend/, not frontend/editor/.
+          ls -la frontend/playwright-report 2>/dev/null \
+            || echo "no playwright-report at frontend/"
+          ls -la frontend/test-results 2>/dev/null \
+            || echo "no test-results at frontend/"
+          find . -name node_modules -prune -o -name 'trace.zip' -print 2>/dev/null || true
+          echo "::endgroup::"
+      - name: Upload Playwright report + traces
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-live-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          # test-results/ holds the per-test trace.zip (with browser console
+          # logs) + screenshots/video; playwright-report/ is the HTML report.
+          # Both live under frontend/ (Playwright anchors them to the nearest
+          # package.json, which is frontend/; frontend/editor has none).
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
           retention-days: 7
+          if-no-files-found: warn

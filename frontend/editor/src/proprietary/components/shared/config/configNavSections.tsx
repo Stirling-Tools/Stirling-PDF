@@ -2,7 +2,6 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   useConfigNavSections as useCoreConfigNavSections,
-  createConfigNavSections as createCoreConfigNavSections,
   ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
 import PeopleSection from "@app/components/shared/config/configSections/PeopleSection";
@@ -18,12 +17,17 @@ import AdminPlanSection from "@app/components/shared/config/configSections/Admin
 import AdminFeaturesSection from "@app/components/shared/config/configSections/AdminFeaturesSection";
 import AdminEndpointsSection from "@app/components/shared/config/configSections/AdminEndpointsSection";
 import AdminMcpSection from "@app/components/shared/config/configSections/AdminMcpSection";
+import AdminAiGeneralSection from "@app/components/shared/config/configSections/AdminAiGeneralSection";
+import AdminAiModelsSection from "@app/components/shared/config/configSections/AdminAiModelsSection";
+import AdminAiDocumentsSection from "@app/components/shared/config/configSections/AdminAiDocumentsSection";
+import AdminAiLimitsSection from "@app/components/shared/config/configSections/AdminAiLimitsSection";
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
+import AdminFolderAccessSection from "@app/components/shared/config/configSections/AdminFolderAccessSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import AccountSection from "@app/components/shared/config/configSections/AccountSection";
-import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
+import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
 
 /**
  * Hook version of proprietary config nav sections with proper i18n support
@@ -33,6 +37,7 @@ export const useConfigNavSections = (
   runningEE: boolean = false,
   loginEnabled: boolean = false,
   onRequestClose: () => void = () => {},
+  showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
@@ -42,6 +47,7 @@ export const useConfigNavSections = (
     runningEE,
     loginEnabled,
     onRequestClose,
+    showSettingsWhenNoLogin,
   );
 
   // Add account management under Preferences
@@ -51,7 +57,7 @@ export const useConfigNavSections = (
   if (preferencesSection) {
     preferencesSection.items = preferencesSection.items.map((item) =>
       item.key === "general"
-        ? { ...item, component: <GeneralSection /> }
+        ? { ...item, component: <GeneralWithLoginLanding /> }
         : item,
     );
 
@@ -65,8 +71,9 @@ export const useConfigNavSections = (
     }
   }
 
-  // Add Admin sections if user is admin OR if login is disabled (but mark as disabled)
-  if (isAdmin || !loginEnabled) {
+  // Add Admin sections for admins. When login is disabled, keep the historical
+  // read-only admin preview only if system.showSettingsWhenNoLogin allows it.
+  if (isAdmin || (!loginEnabled && showSettingsWhenNoLogin)) {
     const requiresLogin = !loginEnabled;
     const enableLoginTooltip = t(
       "settings.tooltips.enableLoginFirst",
@@ -130,6 +137,14 @@ export const useConfigNavSections = (
           badgeColor: "orange",
         },
         {
+          key: "adminFolderAccess",
+          label: t("settings.configuration.folderAccess", "Folder Access"),
+          icon: "folder-rounded",
+          component: <AdminFolderAccessSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
           key: "adminEndpoints",
           label: t("settings.configuration.endpoints", "Endpoints"),
           icon: "api-rounded",
@@ -158,6 +173,45 @@ export const useConfigNavSections = (
           label: t("settings.configuration.advanced", "Advanced"),
           icon: "tune-rounded",
           component: <AdminAdvancedSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+      ],
+    });
+
+    // AI
+    sections.push({
+      title: t("settings.ai.title", "AI"),
+      items: [
+        {
+          key: "adminAiGeneral",
+          label: t("settings.ai.general", "General"),
+          icon: "smart-toy-rounded",
+          component: <AdminAiGeneralSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
+          key: "adminAiModels",
+          label: t("settings.ai.models", "Models & Providers"),
+          icon: "psychology",
+          component: <AdminAiModelsSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
+          key: "adminAiDocuments",
+          label: t("settings.ai.documents", "Documents & RAG"),
+          icon: "description",
+          component: <AdminAiDocumentsSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
+          key: "adminAiLimits",
+          label: t("settings.ai.limits", "Limits & Performance"),
+          icon: "speed",
+          component: <AdminAiLimitsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
@@ -256,251 +310,6 @@ export const useConfigNavSections = (
         {
           key: "api-keys",
           label: t("settings.developer.apiKeys", "API Keys"),
-          icon: "key-rounded",
-          component: <ApiKeys />,
-        },
-      ],
-    };
-
-    // Add Developer section after Preferences (or Workspace if it exists)
-    const insertIndex = isAdmin ? 2 : 1;
-    sections.splice(insertIndex, 0, developerSection);
-  }
-
-  return sections;
-};
-
-/**
- * Deprecated: Use useConfigNavSections hook instead
- * Proprietary extension of createConfigNavSections that adds all admin and workspace sections
- */
-export const createConfigNavSections = (
-  isAdmin: boolean = false,
-  runningEE: boolean = false,
-  loginEnabled: boolean = false,
-): ConfigNavSection[] => {
-  console.warn(
-    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
-  );
-
-  // Get the core sections (just Preferences)
-  const sections = createCoreConfigNavSections(
-    isAdmin,
-    runningEE,
-    loginEnabled,
-  );
-
-  // Add account management under Preferences
-  const preferencesSection = sections.find((section) =>
-    section.items.some((item) => item.key === "general"),
-  );
-  if (preferencesSection) {
-    preferencesSection.items = preferencesSection.items.map((item) =>
-      item.key === "general"
-        ? { ...item, component: <GeneralSection /> }
-        : item,
-    );
-
-    if (loginEnabled) {
-      preferencesSection.items.push({
-        key: "account",
-        label: "Account",
-        icon: "person-rounded",
-        component: <AccountSection />,
-      });
-    }
-  }
-
-  // Add Admin sections if user is admin OR if login is disabled (but mark as disabled)
-  if (isAdmin || !loginEnabled) {
-    const requiresLogin = !loginEnabled;
-
-    // Workspace
-    sections.push({
-      title: "Workspace",
-      items: [
-        {
-          key: "people",
-          label: "People",
-          icon: "group-rounded",
-          component: <PeopleSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "teams",
-          label: "Teams",
-          icon: "groups-rounded",
-          component: <TeamsSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-      ],
-    });
-
-    // Configuration
-    sections.push({
-      title: "Configuration",
-      items: [
-        {
-          key: "adminGeneral",
-          label: "System Settings",
-          icon: "settings-rounded",
-          component: <AdminGeneralSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "adminFeatures",
-          label: "Features",
-          icon: "extension-rounded",
-          component: <AdminFeaturesSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "adminEndpoints",
-          label: "Endpoints",
-          icon: "api-rounded",
-          component: <AdminEndpointsSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "adminDatabase",
-          label: "Database",
-          icon: "storage-rounded",
-          component: <AdminDatabaseSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "adminAdvanced",
-          label: "Advanced",
-          icon: "tune-rounded",
-          component: <AdminAdvancedSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-      ],
-    });
-
-    // Security & Authentication
-    sections.push({
-      title: "Security & Authentication",
-      items: [
-        {
-          key: "adminSecurity",
-          label: "Security",
-          icon: "shield-rounded",
-          component: <AdminSecuritySection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "adminConnections",
-          label: "Connections",
-          icon: "link-rounded",
-          component: <AdminConnectionsSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-      ],
-    });
-
-    // Licensing & Analytics
-    sections.push({
-      title: "Licensing & Analytics",
-      items: [
-        {
-          key: "adminPlan",
-          label: "Plan",
-          icon: "star-rounded",
-          component: <AdminPlanSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "adminAudit",
-          label: "Audit",
-          icon: "fact-check-rounded",
-          component: <AdminAuditSection />,
-          // Non-Enterprise users can click in to see the demo preview.
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "adminUsage",
-          label: "Usage Analytics",
-          icon: "analytics-rounded",
-          component: <AdminUsageSection />,
-          // Non-Enterprise users can click in to see the demo preview.
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-      ],
-    });
-
-    // Policies & Privacy
-    sections.push({
-      title: "Policies & Privacy",
-      items: [
-        {
-          key: "adminLegal",
-          label: "Legal",
-          icon: "gavel-rounded",
-          component: <AdminLegalSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-        {
-          key: "adminPrivacy",
-          label: "Privacy",
-          icon: "visibility-rounded",
-          component: <AdminPrivacySection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin
-            ? "Enable login mode first"
-            : undefined,
-        },
-      ],
-    });
-  }
-
-  // Add Developer section if login is enabled
-  if (loginEnabled) {
-    const developerSection: ConfigNavSection = {
-      title: "Developer",
-      items: [
-        {
-          key: "api-keys",
-          label: "API Keys",
           icon: "key-rounded",
           component: <ApiKeys />,
         },

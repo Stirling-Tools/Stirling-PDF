@@ -22,11 +22,32 @@ except ImportError:
     sys.exit(1)
 
 
+# USD per 1M tokens (input, output)
+MODEL_PRICING = {
+    "gpt-5.5": (5.0, 30.0),
+    "gpt-5.6-sol": (5.0, 30.0),
+    "gpt-5.6-terra": (2.5, 15.0),
+    "gpt-5.6-luna": (1.0, 6.0),
+    "gpt-5": (1.25, 10.0),
+}
+
+
+def estimate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float:
+    """Estimate USD cost for a call; 0.0 if model pricing is unknown."""
+    if model not in MODEL_PRICING:
+        return 0.0
+    in_price, out_price = MODEL_PRICING[model]
+    return (prompt_tokens * in_price + completion_tokens * out_price) / 1_000_000
+
+
 class BatchTranslator:
-    def __init__(self, api_key: str, model: str = "gpt-5"):
+    def __init__(self, api_key: str, model: str = "gpt-5.5"):
         """Initialize translator with OpenAI API key."""
         self.client = OpenAI(api_key=api_key)
         self.model = model
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
+        self.total_cost = 0.0
 
     def get_translation_prompt(self, language_name: str, language_code: str) -> str:
         """Generate the system prompt for translation."""
@@ -79,6 +100,23 @@ CRITICAL RULES - MUST FOLLOW EXACTLY:
 
 Return ONLY the translated JSON. No markdown, no explanations, just the JSON object."""
 
+    def _record_usage(self, response) -> None:
+        """Accumulate token usage/cost and print a per-batch line."""
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            return
+
+        prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        completion_tokens = getattr(usage, "completion_tokens", 0) or 0
+        cost = estimate_cost(self.model, prompt_tokens, completion_tokens)
+
+        self.total_prompt_tokens += prompt_tokens
+        self.total_completion_tokens += completion_tokens
+        self.total_cost += cost
+
+        cost_note = f", ~${cost:.4f}" if cost else ""
+        print(f"  Tokens: {prompt_tokens:,} in / {completion_tokens:,} out{cost_note}")
+
     def translate_batch(
         self, batch_data: dict, target_language: str, language_code: str
     ) -> dict:
@@ -90,7 +128,7 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
         print(f"Input size: {len(input_json)} characters")
 
         try:
-            # GPT-5 only supports temperature=1, so we don't include it
+            # GPT-5.x models only support the default temperature, so we omit it
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -106,6 +144,8 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
                     },
                 ],
             )
+
+            self._record_usage(response)
 
             translated_text = response.choices[0].message.content.strip()
 
@@ -250,8 +290,8 @@ Examples:
     )
     parser.add_argument(
         "--model",
-        default="gpt-5",
-        help="OpenAI model to use (default: gpt-5, options: gpt-5-mini, gpt-5-nano)",
+        default="gpt-5.5",
+        help="OpenAI model (default: gpt-5.5; gpt-5.6-sol/terra/luna if your org has 5.6 access)",
     )
     parser.add_argument(
         "--output-suffix",
@@ -353,6 +393,15 @@ Examples:
     print(f"Successful: {successful}/{len(input_files)}")
     if failed > 0:
         print(f"Failed: {failed}/{len(input_files)}")
+
+    # Cost summary
+    print("-" * 60)
+    print(
+        f"Total tokens: {translator.total_prompt_tokens:,} in / "
+        f"{translator.total_completion_tokens:,} out"
+    )
+    if translator.total_cost:
+        print(f"Estimated cost ({args.model}): ${translator.total_cost:.4f}")
 
     sys.exit(0 if failed == 0 else 1)
 

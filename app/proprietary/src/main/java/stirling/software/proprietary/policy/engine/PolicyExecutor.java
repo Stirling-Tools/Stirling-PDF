@@ -35,15 +35,11 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Runs an ordered chain of tool steps, chaining each step's output files into the next step's
- * input.
+ * Runs an ordered chain of tool steps, feeding each step's output files into the next.
  *
- * <p>This is the single execution loop for the proprietary surface (AI plans now;
- * manually-triggered runs and watched folders later). Each step is dispatched synchronously via
- * {@link InternalApiClient} loopback HTTP: the tool runs in its own handler and returns its file
- * inline. The caller decides how to run the executor itself (the AI turn loop calls it directly;
- * the engine runs it on a virtual thread for async runs). Files cross step boundaries as {@link
- * Resource} temp files; they are only persisted to durable storage at the run boundaries by the
+ * <p>Steps dispatch synchronously via {@link InternalApiClient} loopback HTTP (each tool runs in
+ * its own handler, returns its file inline). The caller controls threading. Files cross step
+ * boundaries as {@link Resource} temp files and are only persisted at the run boundaries by the
  * caller.
  */
 @Slf4j
@@ -58,25 +54,21 @@ public class PolicyExecutor {
     private final TempFileManager tempFileManager;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Internal value-class for tool responses. {@code files} holds any result files (typically one;
-     * multiple for ZIP-response tools). {@code report} holds an optional structured metadata
-     * payload the tool chose to surface alongside (or instead of) a file.
-     */
+    // files: result files (one, or many for ZIP-response tools). report: optional structured
+    // payload the tool surfaced alongside or instead of a file.
     private record ToolResult(List<Resource> files, JsonNode report) {}
 
+    // A step's output files paired with each file's origin (the index into the original pipeline
+    // inputs it traces back to, or null when it has no single source). Origins compose across steps
+    // so the final result can be mapped back onto the files that entered the pipeline.
+    private record StepOutput(List<Resource> files, List<Integer> origins, JsonNode report) {}
+
     /**
-     * Execute every step in {@code definition} in order, feeding each step's output into the next.
-     * Supporting files supplied in {@code inputs} are bound to steps' named file fields and never
-     * enter the document stream.
+     * Run every step in order, feeding each step's output into the next. Supporting files in {@code
+     * inputs} bind to named file fields and never enter the document stream.
      *
-     * @param definition the pipeline to run (must have at least one step)
-     * @param inputs the primary documents plus the named supporting-file store
-     * @param listener receives per-step progress
-     * @return the final output files plus the last structured report produced, if any
      * @throws InternalApiTimeoutException if a tool does not respond within its read timeout
-     * @throws IOException if a tool returns a non-OK response, references a missing supporting
-     *     file, or a file cannot be read
+     * @throws IOException on a non-OK tool response, a missing supporting file, or a read failure
      */
     public PolicyExecutionResult execute(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener)
@@ -88,7 +80,13 @@ public class PolicyExecutor {
 
         List<Resource> currentFiles = inputs.primary();
         Map<String, List<Resource>> supportingFiles = inputs.supportingFiles();
-        // Propagate the *last* non-null report; the terminal step defines the output.
+        // Seed each input with its own index as origin; steps carry these through so the final
+        // outputs can be traced back to the files that entered the pipeline.
+        List<Integer> currentOrigins = new ArrayList<>();
+        for (int k = 0; k < currentFiles.size(); k++) {
+            currentOrigins.add(k);
+        }
+        // Last non-null report wins: the terminal step defines the output.
         JsonNode lastReport = null;
         String lastReportTool = null;
 
@@ -100,8 +98,10 @@ public class PolicyExecutor {
                         "Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
-            ToolResult stepResult = executeStep(step, currentFiles, supportingFiles);
+            StepOutput stepResult =
+                    executeStep(step, currentFiles, currentOrigins, supportingFiles);
             currentFiles = stepResult.files();
+            currentOrigins = stepResult.origins();
             if (stepResult.report() != null) {
                 lastReport = stepResult.report();
                 lastReportTool = operation;
@@ -109,54 +109,65 @@ public class PolicyExecutor {
             listener.onStepComplete(i + 1, steps.size(), operation);
         }
 
-        return new PolicyExecutionResult(currentFiles, lastReport, lastReportTool);
+        return new PolicyExecutionResult(currentFiles, currentOrigins, lastReport, lastReportTool);
     }
 
     /**
-     * Execute a single tool step. If the endpoint accepts multiple files, all files are sent in one
-     * call. Otherwise, the endpoint is called once per file. ZIP responses are unpacked so each
-     * inner file is treated as its own result (e.g. split outputs a ZIP of pages).
-     *
-     * <p>A structured {@code report} may be returned alongside (or instead of) files; see {@link
-     * ToolResult}. For per-file dispatch (single-input endpoints called once per input), the first
-     * non-null report wins.
+     * Multi-input endpoints get all files in one call; others are called once per file. ZIP
+     * responses are unpacked so each inner file is its own result (e.g. split). For per-file
+     * dispatch the first non-null report wins.
      */
-    private ToolResult executeStep(
+    private StepOutput executeStep(
             PipelineStep step,
             List<Resource> inputFiles,
+            List<Integer> inputOrigins,
             Map<String, List<Resource>> supportingFiles)
             throws IOException {
         requireAcceptedTypes(step.operation(), inputFiles);
         List<Resource> files = new ArrayList<>();
+        List<Integer> origins = new ArrayList<>();
         JsonNode report = null;
         if (toolMetadataService.isMultiInput(step.operation())) {
+            // One call over all inputs. The outputs derive from a single input only when exactly
+            // one entered; otherwise (a genuine merge) there is no single source.
             ToolResult r = callEndpoint(step, inputFiles, supportingFiles);
-            files.addAll(r.files());
+            Integer origin = inputOrigins.size() == 1 ? inputOrigins.get(0) : null;
+            for (Resource file : r.files()) {
+                files.add(file);
+                origins.add(origin);
+            }
+            report = r.report();
+        } else if (inputFiles.isEmpty()) {
+            ToolResult r = callEndpoint(step, List.of(), supportingFiles);
+            for (Resource file : r.files()) {
+                files.add(file);
+                origins.add(null);
+            }
             report = r.report();
         } else {
-            for (Resource file : inputFiles) {
-                ToolResult r = callEndpoint(step, List.of(file), supportingFiles);
-                files.addAll(r.files());
+            // One call per file: every output of this call inherits that input's origin, so a 1:1
+            // op keeps its chain and a split (one input, many outputs) tags each output with the
+            // same source.
+            for (int k = 0; k < inputFiles.size(); k++) {
+                Integer origin = inputOrigins.get(k);
+                ToolResult r = callEndpoint(step, List.of(inputFiles.get(k)), supportingFiles);
+                for (Resource file : r.files()) {
+                    files.add(file);
+                    origins.add(origin);
+                }
                 if (report == null) {
                     report = r.report();
                 }
             }
         }
-        return new ToolResult(files, report);
+        return new StepOutput(files, origins, report);
     }
 
     /**
-     * Call an endpoint and return its result files and optional report.
-     *
-     * <ul>
-     *   <li>JSON body (Content-Type: application/json): the entire body is the report, no files are
-     *       returned.
-     *   <li>File body (PDF etc.): the file is returned; if an {@link
-     *       AiToolResponseHeaders#TOOL_REPORT} header is present, its (minified JSON) value is
-     *       parsed as the report.
-     *   <li>ZIP responses declared by the tool metadata service are unpacked so callers always see
-     *       a flat list of result files.
-     * </ul>
+     * Call an endpoint, returning result files and optional report. Response handling: JSON body is
+     * the report with no file; a file body returns the file plus any {@link
+     * AiToolResponseHeaders#TOOL_REPORT} header report; ZIP responses (per tool metadata) are
+     * unpacked to a flat file list.
      */
     private ToolResult callEndpoint(
             PipelineStep step, List<Resource> files, Map<String, List<Resource>> supportingFiles)
@@ -166,8 +177,8 @@ public class PolicyExecutor {
         for (Resource file : files) {
             body.add("fileInput", file);
         }
-        // Bind supporting files to their named tool fields (e.g. stampImage, overlayFiles). These
-        // come from the run's named asset store, not the document stream.
+        // Bind supporting files to named tool fields (e.g. stampImage); from the asset store, not
+        // the document stream.
         for (Map.Entry<String, String> binding : step.fileParameters().entrySet()) {
             String fieldName = binding.getKey();
             String assetKey = binding.getValue();
@@ -189,9 +200,9 @@ public class PolicyExecutor {
         for (Map.Entry<String, Object> entry : step.parameters().entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
                 if (containsStructuredElements(list)) {
-                    // Endpoints binding lists of structured objects (e.g. /security/redact's
-                    // redactions, /general/edit-text's edits) parse a single JSON string field via
-                    // a property editor. Pre-serialize the whole list so binding succeeds.
+                    // These endpoints (e.g. /security/redact redactions, /general/edit-text edits)
+                    // bind a list of structured objects from a single JSON string field via a
+                    // property editor, so pre-serialize the whole list.
                     body.add(entry.getKey(), objectMapper.writeValueAsString(list));
                 } else {
                     for (Object item : list) {
@@ -209,8 +220,8 @@ public class PolicyExecutor {
         }
         Resource resource = response.getBody();
 
-        // Filter operations return an empty body to signal the file was filtered out: drop it
-        // rather than forwarding a zero-byte document.
+        // Filter ops return an empty body to mean "filtered out": drop it rather than forward a
+        // zero-byte document.
         if (isFilterOperation(endpointPath) && isEmpty(resource)) {
             return new ToolResult(List.of(), null);
         }
@@ -218,7 +229,7 @@ public class PolicyExecutor {
         HttpHeaders headers = response.getHeaders();
         MediaType contentType = headers.getContentType();
 
-        // JSON-only response: the whole body is the structured report, no result file.
+        // JSON-only response: whole body is the report, no file.
         if (contentType != null && MediaType.APPLICATION_JSON.isCompatibleWith(contentType)) {
             try (InputStream is = resource.getInputStream()) {
                 JsonNode report = objectMapper.readTree(is);
@@ -233,10 +244,7 @@ public class PolicyExecutor {
         return new ToolResult(List.of(resource), report);
     }
 
-    /**
-     * Parse the optional {@link AiToolResponseHeaders#TOOL_REPORT} header into a {@link JsonNode},
-     * or return null.
-     */
+    /** Parse the optional {@link AiToolResponseHeaders#TOOL_REPORT} header, or null. */
     private JsonNode parseReportHeader(HttpHeaders headers, String endpointPath) {
         String raw = headers.getFirst(AiToolResponseHeaders.TOOL_REPORT);
         if (raw == null || raw.isBlank()) {
@@ -264,8 +272,7 @@ public class PolicyExecutor {
     }
 
     /**
-     * Fail the run if any document in the primary stream is not a file type the step accepts. An
-     * endpoint that declares no specific input type accepts anything.
+     * Fail if any primary-stream file is a type the step rejects. No declared type means anything.
      */
     private void requireAcceptedTypes(String operation, List<Resource> files) throws IOException {
         List<String> accepted = toolMetadataService.getExtensionTypes(false, operation);
