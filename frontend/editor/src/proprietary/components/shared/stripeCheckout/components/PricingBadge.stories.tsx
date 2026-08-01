@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PricingBadge } from "@app/components/shared/stripeCheckout/components/PricingBadge";
 
 /**
