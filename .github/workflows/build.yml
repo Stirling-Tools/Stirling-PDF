@@ -174,13 +174,12 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
-    # PR smoke build: Linux only (fastest + cheapest to compile), unsigned,
-    # deb-only, no AppImage. The full signed multi-OS matrix runs on release;
+    # PR smoke build: macOS + Windows (the platforms our developers use). 
+    # The full signed multi-OS matrix runs on release;
     # nightly still warms the Rust cache with all-OS defaults.
     with:
-      platform: linux
+      platform: windows-macos
       sign: false
-      minimal: true
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'

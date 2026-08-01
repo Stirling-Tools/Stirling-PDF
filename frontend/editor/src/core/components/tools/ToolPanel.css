@@ -9,113 +9,6 @@
   flex-shrink: 0;
 }
 
-/* CSS Custom Properties for Fullscreen Mode */
-.tool-panel__fullscreen-surface-inner {
-  --fullscreen-bg-surface-1: color-mix(
-    in srgb,
-    var(--c-bg-raised) 96%,
-    transparent
-  );
-  --fullscreen-bg-surface-2: color-mix(in srgb, var(--c-bg) 90%, transparent);
-  --fullscreen-bg-header: var(--c-bg-raised);
-  --fullscreen-bg-controls-1: var(--c-bg-raised);
-  --fullscreen-bg-controls-2: color-mix(
-    in srgb,
-    var(--c-bg-raised) 95%,
-    var(--c-bg)
-  );
-  --fullscreen-bg-body-1: color-mix(in srgb, var(--c-bg) 86%, transparent);
-  --fullscreen-bg-body-2: color-mix(
-    in srgb,
-    var(--c-bg-raised) 78%,
-    transparent
-  );
-  --fullscreen-bg-group: color-mix(
-    in srgb,
-    var(--c-bg-raised) 82%,
-    transparent
-  );
-  --fullscreen-bg-item: color-mix(in srgb, var(--c-bg-raised) 88%, transparent);
-  --fullscreen-bg-list-item: color-mix(
-    in srgb,
-    var(--c-bg-raised) 86%,
-    transparent
-  );
-  --fullscreen-bg-icon-detailed: color-mix(
-    in srgb,
-    var(--c-surface-sunken) 75%,
-    transparent
-  );
-  --fullscreen-bg-icon-compact: color-mix(
-    in srgb,
-    var(--c-surface-sunken) 70%,
-    transparent
-  );
-  --fullscreen-border-subtle-75: color-mix(
-    in srgb,
-    var(--c-border-subtle) 75%,
-    transparent
-  );
-  --fullscreen-border-subtle-70: color-mix(
-    in srgb,
-    var(--c-border-subtle) 70%,
-    transparent
-  );
-  --fullscreen-border-subtle-65: color-mix(
-    in srgb,
-    var(--c-border-subtle) 65%,
-    transparent
-  );
-  --fullscreen-border-favorites: color-mix(
-    in srgb,
-    var(--special-color-favorites) 25%,
-    var(--c-border-subtle)
-  );
-  --fullscreen-border-recommended: color-mix(
-    in srgb,
-    var(--special-color-recommended) 25%,
-    var(--c-border-subtle)
-  );
-  --fullscreen-shadow-primary: color-mix(
-    in srgb,
-    var(--shadow-color, color-mix(in srgb, black 55%, transparent)) 25%,
-    transparent
-  );
-  --fullscreen-shadow-secondary: color-mix(
-    in srgb,
-    var(--shadow-color, color-mix(in srgb, black 35%, transparent)) 30%,
-    transparent
-  );
-  --fullscreen-shadow-group: color-mix(
-    in srgb,
-    var(--shadow-color, color-mix(in srgb, black 45%, transparent)) 18%,
-    transparent
-  );
-  --fullscreen-accent-hover: color-mix(
-    in srgb,
-    var(--c-text) 20%,
-    var(--c-border-subtle)
-  );
-  --fullscreen-accent-selected: color-mix(
-    in srgb,
-    var(--c-text) 30%,
-    var(--c-border-subtle)
-  );
-  --fullscreen-accent-ring: color-mix(in srgb, var(--c-text) 15%, transparent);
-  --fullscreen-accent-list-bg: color-mix(
-    in srgb,
-    var(--c-text) 8%,
-    var(--c-bg-raised)
-  );
-  --fullscreen-accent-list-border: color-mix(
-    in srgb,
-    var(--c-text) 20%,
-    var(--c-border-subtle)
-  );
-  --fullscreen-text-icon: var(--c-text);
-  --fullscreen-text-icon-compact: var(--c-text);
-}
-
 .tool-panel {
   position: relative;
   background: var(--c-surface);
@@ -395,6 +288,110 @@
   --fullscreen-anim-out-duration: var(--fullscreen-anim-duration-out);
   animation: tool-panel-fullscreen-slide-in var(--fullscreen-anim-in-duration)
     ease forwards;
+
+  --fullscreen-bg-surface-1: color-mix(
+    in srgb,
+    var(--c-bg-raised) 96%,
+    transparent
+  );
+  --fullscreen-bg-surface-2: color-mix(in srgb, var(--c-bg) 90%, transparent);
+  --fullscreen-bg-header: var(--c-bg-raised);
+  --fullscreen-bg-controls-1: var(--c-bg-raised);
+  --fullscreen-bg-controls-2: color-mix(
+    in srgb,
+    var(--c-bg-raised) 95%,
+    var(--c-bg)
+  );
+  --fullscreen-bg-body-1: color-mix(in srgb, var(--c-bg) 86%, transparent);
+  --fullscreen-bg-body-2: color-mix(
+    in srgb,
+    var(--c-bg-raised) 78%,
+    transparent
+  );
+  --fullscreen-bg-group: color-mix(
+    in srgb,
+    var(--c-bg-raised) 82%,
+    transparent
+  );
+  --fullscreen-bg-item: color-mix(in srgb, var(--c-bg-raised) 88%, transparent);
+  --fullscreen-bg-list-item: color-mix(
+    in srgb,
+    var(--c-bg-raised) 86%,
+    transparent
+  );
+  --fullscreen-bg-icon-detailed: color-mix(
+    in srgb,
+    var(--c-surface-sunken) 75%,
+    transparent
+  );
+  --fullscreen-bg-icon-compact: color-mix(
+    in srgb,
+    var(--c-surface-sunken) 70%,
+    transparent
+  );
+  --fullscreen-border-subtle-75: color-mix(
+    in srgb,
+    var(--c-border-subtle) 75%,
+    transparent
+  );
+  --fullscreen-border-subtle-70: color-mix(
+    in srgb,
+    var(--c-border-subtle) 70%,
+    transparent
+  );
+  --fullscreen-border-subtle-65: color-mix(
+    in srgb,
+    var(--c-border-subtle) 65%,
+    transparent
+  );
+  --fullscreen-border-favorites: color-mix(
+    in srgb,
+    var(--special-color-favorites) 25%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-border-recommended: color-mix(
+    in srgb,
+    var(--special-color-recommended) 25%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-shadow-primary: color-mix(
+    in srgb,
+    var(--shadow-color, color-mix(in srgb, black 55%, transparent)) 25%,
+    transparent
+  );
+  --fullscreen-shadow-secondary: color-mix(
+    in srgb,
+    var(--shadow-color, color-mix(in srgb, black 35%, transparent)) 30%,
+    transparent
+  );
+  --fullscreen-shadow-group: color-mix(
+    in srgb,
+    var(--shadow-color, color-mix(in srgb, black 45%, transparent)) 18%,
+    transparent
+  );
+  --fullscreen-accent-hover: color-mix(
+    in srgb,
+    var(--c-text) 20%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-accent-selected: color-mix(
+    in srgb,
+    var(--c-text) 30%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-accent-ring: color-mix(in srgb, var(--c-text) 15%, transparent);
+  --fullscreen-accent-list-bg: color-mix(
+    in srgb,
+    var(--c-text) 8%,
+    var(--c-bg-raised)
+  );
+  --fullscreen-accent-list-border: color-mix(
+    in srgb,
+    var(--c-text) 20%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-text-icon: var(--c-text);
+  --fullscreen-text-icon-compact: var(--c-text);
 }
 
 .tool-panel__fullscreen-surface-inner--exiting {
@@ -450,8 +447,15 @@
   flex: 1 1 auto;
 }
 
+/* Used by both FullscreenToolSurface and DetailedToolItem. */
 .tool-panel__fullscreen-body {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+  /* Prevent long content (names, descriptions, shortcuts) from overflowing */
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   background: transparent;
 }
@@ -659,16 +663,6 @@
   font-size: 1.65rem;
   position: relative;
   z-index: var(--z-fullscreen-icon-svg);
-}
-
-.tool-panel__fullscreen-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  text-align: left;
-  /* Prevent long content (names, descriptions, shortcuts) from overflowing */
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .tool-panel__fullscreen-name {

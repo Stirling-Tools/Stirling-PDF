@@ -12,6 +12,7 @@ import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   AddStampParameters,
   defaultParameters,
+  validateAddStampParameters,
 } from "@app/components/tools/addStamp/useAddStampParameters";
 
 const ENDPOINT = "/api/v1/misc/add-stamp" satisfies ToolEndpoint;
@@ -88,6 +89,7 @@ export const buildAddStampFormData = (
   );
 
 export const addStampOperationConfig = defineSingleFileTool({
+  validateParams: validateAddStampParameters,
   buildFormData: buildAddStampFormData,
   toApiParams: addStampToApiParams,
   fromApiParams: addStampFromApiParams,
