@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Stack, Button, Text, Image } from "@mantine/core";
+import { Stack, Text, Image } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -100,8 +101,8 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
           </div>
 
           <Button
-            variant="light"
-            color="red"
+            variant="secondary"
+            accent="danger"
             leftSection={<DeleteIcon sx={{ fontSize: 16 }} />}
             onClick={handleClear}
             disabled={disabled}
@@ -112,7 +113,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
         </Stack>
       ) : (
         <Button
-          variant="outline"
+          variant="secondary"
           leftSection={<UploadFileIcon sx={{ fontSize: 16 }} />}
           onClick={handleUploadClick}
           disabled={disabled}

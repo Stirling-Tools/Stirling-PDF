@@ -30,11 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
-import stirling.software.SPDF.pdf.parser.PdfIngester;
-import stirling.software.SPDF.pdf.parser.PdfModels.ParsedPage;
-import stirling.software.SPDF.pdf.parser.PdfModels.RawLine;
 import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
-import stirling.software.SPDF.pdf.parser.PdfModels.TextFragment;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -50,7 +46,6 @@ import stirling.software.proprietary.model.api.ai.FolioType;
 public class PdfContentExtractor {
 
     private final TabulaTableParser tabulaTableParser;
-    private final PdfIngester pdfIngester;
 
     private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
 
@@ -196,8 +191,6 @@ public class PdfContentExtractor {
             case PAGE_TEXT, FULL_TEXT ->
                     Optional.<PdfContentResult>ofNullable(
                             extractText(lf, fileReq, remainingPages, remainingCharacters));
-            case PAGE_LAYOUT ->
-                    Optional.<PdfContentResult>ofNullable(extractPageLayout(lf, remainingPages));
             default -> {
                 log.warn(
                         "Content type {} not yet implemented, skipping for {}",
@@ -222,45 +215,11 @@ public class PdfContentExtractor {
         return extracted.isEmpty() ? null : buildExtractedFileText(lf.fileName(), extracted);
     }
 
-    private PageLayoutFileResult extractPageLayout(LoadedFile lf, int maxPages) throws IOException {
-        List<ParsedPage> parsedPages = pdfIngester.parse(lf.document(), maxPages);
-        List<LayoutPage> pages = new ArrayList<>();
-        for (ParsedPage pp : parsedPages) {
-            if (pp.layoutLines().isEmpty()) continue;
-            List<LayoutLine> lines = new ArrayList<>();
-            for (RawLine rawLine : pp.layoutLines()) {
-                List<LayoutFragment> fragments = new ArrayList<>();
-                for (TextFragment tf : rawLine.fragments()) {
-                    fragments.add(
-                            new LayoutFragment(
-                                    tf.text(),
-                                    tf.bounds().x(),
-                                    tf.bounds().y(),
-                                    tf.bounds().width(),
-                                    tf.fontSize(),
-                                    tf.bold()));
-                }
-                lines.add(new LayoutLine(rawLine.bounds().y(), fragments));
-            }
-            pages.add(new LayoutPage(pp.pageNumber(), lines));
-        }
-        if (pages.isEmpty()) return null;
-        PageLayoutFileResult result = new PageLayoutFileResult();
-        result.setFileName(lf.fileName());
-        result.setPages(pages);
-        return result;
-    }
-
     private WorkflowArtifact buildArtifact(ArtifactKind kind, List<PdfContentResult> results) {
         return switch (kind) {
             case EXTRACTED_TEXT -> {
                 ExtractedTextArtifact artifact = new ExtractedTextArtifact();
                 artifact.setFiles(results.stream().map(ExtractedFileText.class::cast).toList());
-                yield artifact;
-            }
-            case PAGE_LAYOUT -> {
-                PageLayoutArtifact artifact = new PageLayoutArtifact();
-                artifact.setFiles(results.stream().map(PageLayoutFileResult.class::cast).toList());
                 yield artifact;
             }
             case TOOL_REPORT ->
@@ -569,7 +528,6 @@ public class PdfContentExtractor {
      */
     enum ArtifactKind {
         EXTRACTED_TEXT("extracted_text"),
-        PAGE_LAYOUT("page_layout"),
         TOOL_REPORT("tool_report");
 
         private final String value;
@@ -632,41 +590,5 @@ public class PdfContentExtractor {
             this.sourceTool = sourceTool;
             this.report = report;
         }
-    }
-
-    // Serialization contract with the Python engine — see PageLayoutArtifactContractTest.
-
-    /** One text fragment with its bounding-box geometry and font properties. */
-    record LayoutFragment(
-            String text, float x, float y, float width, float fontSize, boolean bold) {}
-
-    /** A visual line on the page: y-coordinate and all fragments on that line. */
-    record LayoutLine(float y, List<LayoutFragment> fragments) {}
-
-    /** All layout lines for a single page. */
-    record LayoutPage(int pageNumber, List<LayoutLine> lines) {}
-
-    /** Page layout data for one file, as a PdfContentResult. */
-    @Data
-    static final class PageLayoutFileResult implements PdfContentResult {
-        private String fileName;
-        private List<LayoutPage> pages = new ArrayList<>();
-
-        @Override
-        public ArtifactKind getArtifactKind() {
-            return ArtifactKind.PAGE_LAYOUT;
-        }
-
-        @Override
-        public int pagesConsumed() {
-            return pages.size();
-        }
-    }
-
-    /** Artifact carrying full spatial page layout for all input files. */
-    @Data
-    static final class PageLayoutArtifact implements WorkflowArtifact {
-        private final ArtifactKind kind = ArtifactKind.PAGE_LAYOUT;
-        private List<PageLayoutFileResult> files = new ArrayList<>();
     }
 }

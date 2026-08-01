@@ -197,7 +197,7 @@ export default function AdminPremiumSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.premium.enabled.label",

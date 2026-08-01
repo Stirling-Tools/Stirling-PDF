@@ -11,6 +11,10 @@ import React, {
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useFileState } from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
+import type { FileId } from "@app/types/file";
+import { enforceExportPolicies } from "@app/services/policyExport";
+import { useTranslation } from "react-i18next";
+import { alert } from "@app/components/toast";
 import {
   preferencesService,
   type PdfRenderMode,
@@ -216,6 +220,7 @@ interface ViewerProviderProps {
 }
 
 export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
+  const { t } = useTranslation();
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] =
     useState(false);
@@ -537,6 +542,45 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     triggerImmediateZoomUpdate,
   });
 
+  // Printing is an exit path, so a "run on export" policy must enforce here too.
+  // Enforce the current file through the same path export uses: when a policy
+  // rewrites it, that path versions the in-editor file to the enforced output
+  // and marks it enforced, so a follow-up print of the unedited result prints
+  // it as-is instead of re-running the (non-idempotent) policy. Ask the user to
+  // review the updated doc before printing again, rather than printing bytes
+  // they haven't seen. With no active export policy this is a no-op and print
+  // runs straight away.
+  const printWithPolicy = useCallback(async () => {
+    const file = activeFileId
+      ? selectors.getFiles([activeFileId as FileId])[0]
+      : undefined;
+    if (!activeFileId || !file) {
+      printActions.print();
+      return;
+    }
+    const [enforced] = await enforceExportPolicies(
+      [file],
+      [activeFileId],
+      "print",
+    );
+    // Original file back means no policy rewrote it (no active policy, already
+    // enforced, or graceful failure fallback) — nothing new to review, print it.
+    if (!enforced || enforced === file) {
+      printActions.print();
+      return;
+    }
+    alert({
+      alertType: "warning",
+      title: t("policies.enforcement.printPolicyAppliedTitle"),
+      body: t("policies.enforcement.printPolicyAppliedBody"),
+    });
+  }, [activeFileId, selectors, printActions]);
+
+  const enforcedPrintActions = useMemo<PrintActions>(
+    () => ({ print: printWithPolicy }),
+    [printWithPolicy],
+  );
+
   const value: ViewerContextType = {
     // UI state
     isThumbnailSidebarVisible,
@@ -610,7 +654,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     exportActions,
     bookmarkActions,
     attachmentActions,
-    printActions,
+    printActions: enforcedPrintActions,
 
     // Bridge registration
     registerBridge,

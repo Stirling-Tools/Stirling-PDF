@@ -26,9 +26,8 @@ import stirling.software.saas.payg.policy.admin.PolicyDtos.PolicyResponse;
 import stirling.software.saas.payg.policy.admin.PolicyDtos.TeamOverrideRequest;
 
 /**
- * Tests {@link PricingPolicyAdminController} as a plain Java unit (matching {@code
- * CreditControllerApiKeyTest}'s style — no MockMvc layer). Covers happy paths and the controller's
- * error mapping (4xx for validation, 404 for missing rows).
+ * Tests {@link PricingPolicyAdminController} as a plain Java unit (no MockMvc layer). Covers happy
+ * paths and the controller's error mapping (4xx for validation, 404 for missing rows).
  */
 @ExtendWith(MockitoExtension.class)
 class PricingPolicyAdminControllerTest {

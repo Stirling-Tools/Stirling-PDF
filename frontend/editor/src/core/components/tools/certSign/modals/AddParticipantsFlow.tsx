@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Modal, Stack, TextInput, Button, Group } from "@mantine/core";
+import { Modal, Stack, TextInput, Group } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import UserSelector from "@app/components/shared/UserSelector";
@@ -74,15 +75,15 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
         />
 
         <Group justify="flex-end">
-          <Button variant="default" onClick={handleClose}>
+          <Button variant="secondary" onClick={handleClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button
+            accent="success"
             onClick={handleSubmit}
             loading={submitting}
             disabled={selectedUserIds.length === 0}
             leftSection={<AddIcon sx={{ fontSize: 16 }} />}
-            color="green"
           >
             {t(
               "certSign.collab.addParticipants.add",
