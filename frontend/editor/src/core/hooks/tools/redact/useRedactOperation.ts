@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateRedactParameters,
   RedactParameters,
   defaultParameters,
 } from "@app/hooks/tools/redact/useRedactParameters";
@@ -65,6 +66,7 @@ export const buildRedactFormData = (
 
 // Static configuration object
 export const redactOperationConfig = defineSingleFileTool({
+  validateParams: validateRedactParameters,
   buildFormData: buildRedactFormData,
   toApiParams: redactToApiParams,
   fromApiParams: redactFromApiParams,
