@@ -41,7 +41,6 @@ class DefaultClassificationPolicySeederTest {
                 "Classification Policy",
                 "system",
                 true,
-                null,
                 List.of(),
                 List.of(),
                 new OutputSpec("inline", Map.of("categoryId", "classification")),
