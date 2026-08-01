@@ -645,7 +645,7 @@ export function WatchedFolderManagementModal({
                   {t("watchedFolders.modal.advanced", "Advanced")}
                 </Button>
 
-                <Collapse in={showAdvanced} transitionDuration={180}>
+                <Collapse expanded={showAdvanced} transitionDuration={180}>
                   <Stack gap="sm" mt="sm">
                     {/* Replace original */}
                     <Switch

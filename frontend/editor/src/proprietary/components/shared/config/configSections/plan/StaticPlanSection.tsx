@@ -350,7 +350,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
         </div>
 
         {/* Feature Comparison Table */}
-        <Collapse in={showComparison}>
+        <Collapse expanded={showComparison}>
           <FeatureComparisonTable plans={staticPlans} />
         </Collapse>
       </div>

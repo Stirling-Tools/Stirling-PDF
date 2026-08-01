@@ -53,7 +53,7 @@ describe("AddPasswordSettings", () => {
 
     // Should render key length select input
     expect(
-      screen.getByRole("textbox", { name: /keyLength/i }),
+      screen.getByRole("combobox", { name: /keyLength/i }),
     ).toBeInTheDocument();
   });
 
@@ -117,7 +117,7 @@ describe("AddPasswordSettings", () => {
   });
 
   test("should disable all form elements when disabled prop is true", () => {
-    render(
+    const { container } = render(
       <TestWrapper>
         <AddPasswordSettings
           parameters={defaultParameters}
@@ -127,9 +127,13 @@ describe("AddPasswordSettings", () => {
       </TestWrapper>,
     );
 
-    // Check password inputs are disabled
-    const passwordInputs = screen.getAllByRole("textbox");
-    passwordInputs.forEach((input) => {
+    // Queried as raw inputs: password fields expose no ARIA role.
+    // Hidden inputs excluded - Select renders one for form submission.
+    const inputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    );
+    expect(inputs).toHaveLength(3);
+    inputs.forEach((input) => {
       expect(input).toBeDisabled();
     });
 
@@ -140,7 +144,7 @@ describe("AddPasswordSettings", () => {
   });
 
   test("should enable all form elements when disabled prop is false", () => {
-    render(
+    const { container } = render(
       <TestWrapper>
         <AddPasswordSettings
           parameters={defaultParameters}
@@ -150,9 +154,13 @@ describe("AddPasswordSettings", () => {
       </TestWrapper>,
     );
 
-    // Check password inputs are enabled
-    const passwordInputs = screen.getAllByRole("textbox");
-    passwordInputs.forEach((input) => {
+    // Queried as raw inputs: password fields expose no ARIA role.
+    // Hidden inputs excluded - Select renders one for form submission.
+    const inputs = Array.from(
+      container.querySelectorAll('input:not([type="hidden"])'),
+    );
+    expect(inputs).toHaveLength(3);
+    inputs.forEach((input) => {
       expect(input).not.toBeDisabled();
     });
 
