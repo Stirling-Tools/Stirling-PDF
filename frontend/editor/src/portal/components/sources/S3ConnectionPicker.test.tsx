@@ -44,10 +44,9 @@ describe("S3ConnectionPicker", () => {
     fireEvent.click(
       await screen.findByText("portal.connections.picker.createNew"),
     );
-    fireEvent.change(
-      screen.getByLabelText(/portal\.connections\.fields\.name/),
-      { target: { value: "New bucket" } },
-    );
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+      target: { value: "New bucket" },
+    });
     fireEvent.change(
       screen.getByLabelText(
         /portal\.connections\.types\.s3\.fields\.bucket\.label/,
