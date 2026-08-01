@@ -156,22 +156,17 @@ export default function AdminFolderAccessSection() {
       <div className="settings-section-content">
         <Stack gap="sm">
           <LoginRequiredBanner show={!loginEnabled} />
-          <div>
-            <Group gap="xs" align="center">
-              <Text fw={600} size="lg">
-                {t("admin.settings.folderAccess.title", "Folder Access")}
-              </Text>
-              {isFieldPending("allowedFolderRoots") && (
-                <PendingBadge show={true} />
-              )}
-            </Group>
+          <Group gap="xs" align="center">
             <Text size="sm" c="dimmed">
               {t(
                 "admin.settings.folderAccess.description",
                 "Directories that folder sources and folder outputs are allowed to read from and write to. This is a security boundary: automations can never be pointed at a server path outside this list.",
               )}
             </Text>
-          </div>
+            {isFieldPending("allowedFolderRoots") && (
+              <PendingBadge show={true} />
+            )}
+          </Group>
 
           <Alert variant="light" color="blue">
             <Text size="xs">

@@ -559,11 +559,7 @@ export default function AdminConnectionsSection() {
       <Stack gap="xl" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        {/* Header */}
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.connections.title", "Connections")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.connections.description",

@@ -10,6 +10,7 @@ import { Loader, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { NavSurface } from "@app/ui/NavSurface";
 import { Button } from "@app/ui/Button";
+import { NavItem } from "@app/ui/NavItem";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
@@ -862,47 +863,35 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               withinPortal
               disabled={!collapsed}
             >
-              <div
-                className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
-                onClick={!searchActive ? handleSearchClick : undefined}
-                role={!searchActive ? "button" : undefined}
-                tabIndex={!searchActive ? 0 : undefined}
-                onKeyDown={
-                  !searchActive
-                    ? (e) => e.key === "Enter" && handleSearchClick()
-                    : undefined
-                }
-              >
-                {searchActive && !collapsed ? (
-                  <CloseIcon
-                    className="file-sidebar-search-icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSearchClose();
-                    }}
-                  />
-                ) : (
-                  <SearchIcon className="file-sidebar-search-icon" />
-                )}
-                {!collapsed &&
-                  (searchActive ? (
-                    <input
-                      ref={searchInputRef}
-                      className="file-sidebar-search-input sidebar-content-fade"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t(
-                        "fileSidebar.searchPlaceholder",
-                        "Search files...",
-                      )}
-                      onClick={(e) => e.stopPropagation()}
+              {searchActive && !collapsed ? (
+                <div className="sui-navitem sui-navitem--field file-sidebar-search-row">
+                  <span className="sui-navitem__icon">
+                    <CloseIcon
+                      className="file-sidebar-search-close"
+                      onClick={handleSearchClose}
                     />
-                  ) : (
-                    <span className="file-sidebar-search-label sidebar-content-fade">
-                      {t("fileSidebar.search", "Search")}
-                    </span>
-                  ))}
-              </div>
+                  </span>
+                  <input
+                    ref={searchInputRef}
+                    className="file-sidebar-search-input sidebar-content-fade"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t(
+                      "fileSidebar.searchPlaceholder",
+                      "Search files...",
+                    )}
+                  />
+                </div>
+              ) : (
+                <NavItem
+                  id="search"
+                  className="file-sidebar-search-row"
+                  label={t("fileSidebar.search", "Search")}
+                  icon={<SearchIcon />}
+                  iconOnly={collapsed}
+                  onClick={handleSearchClick}
+                />
+              )}
             </Tooltip>
 
             {/* Hidden native file input - kept outside the !collapsed gate so
@@ -931,8 +920,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               withinPortal
               disabled={!collapsed}
             >
-              <div
-                className="file-sidebar-action-row"
+              <NavItem
+                id="openFromComputer"
+                label={t("fileSidebar.openFromComputer", "Open from computer")}
+                icon={<UploadFileIcon />}
+                iconOnly={collapsed}
                 // `files-button` is the long-standing upload entry-point
                 // testid: click + setInputFiles on `file-input` above. Tour
                 // anchor lives here too - the tour now spotlights the native
@@ -945,26 +937,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   // is reachable via "My Files" below.
                   nativeFileInputRef.current?.click();
                 }}
-                role="button"
-                tabIndex={0}
-                aria-label={t(
-                  "fileSidebar.openFromComputer",
-                  "Open from computer",
-                )}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    nativeFileInputRef.current?.click();
-                  }
-                }}
-              >
-                <UploadFileIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.openFromComputer", "Open from computer")}
-                  </span>
-                )}
-              </div>
+              />
             </Tooltip>
 
             {extraAction && (
@@ -987,34 +960,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   !(extraAction.disabled && extraAction.disabledTooltip)
                 }
               >
-                <div
-                  className={`file-sidebar-action-row${extraAction.disabled ? " disabled" : ""}`}
+                <NavItem
+                  id="extraAction"
+                  label={extraAction.label}
+                  icon={extraAction.icon}
+                  iconOnly={collapsed}
+                  disabled={extraAction.disabled}
                   data-testid={extraAction.testId}
-                  onClick={() => {
-                    if (extraAction.disabled) return;
-                    extraAction.onClick();
-                  }}
-                  role="button"
-                  tabIndex={extraAction.disabled ? -1 : 0}
-                  aria-disabled={extraAction.disabled}
-                  aria-label={extraAction.label}
-                  onKeyDown={(e) => {
-                    if (extraAction.disabled) return;
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      extraAction.onClick();
-                    }
-                  }}
-                >
-                  <span className="file-sidebar-action-icon">
-                    {extraAction.icon}
-                  </span>
-                  {!collapsed && (
-                    <span className="file-sidebar-action-label sidebar-content-fade">
-                      {extraAction.label}
-                    </span>
-                  )}
-                </div>
+                  onClick={extraAction.onClick}
+                />
               </Tooltip>
             )}
 
@@ -1024,30 +978,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               withinPortal
               disabled={!collapsed}
             >
-              <div
-                className="file-sidebar-action-row"
+              <NavItem
+                id="myFiles"
+                label={t("fileSidebar.myFiles", "My Files")}
+                icon={<FolderOpenIcon />}
+                iconOnly={collapsed}
                 data-testid="my-files-button"
                 onClick={() => {
                   if (collapsed && onToggleCollapse) onToggleCollapse();
                   navigate("/files");
                 }}
-                role="button"
-                tabIndex={0}
-                aria-label={t("fileSidebar.myFiles", "My Files")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    navigate("/files");
-                  }
-                }}
-              >
-                <FolderOpenIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.myFiles", "My Files")}
-                  </span>
-                )}
-              </div>
+              />
             </Tooltip>
 
             {!shouldHideGoogleDrive && (
@@ -1064,66 +1005,34 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 withinPortal
                 disabled={!collapsed}
               >
-                <div
-                  className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
-                  onClick={handleGoogleDriveClick}
-                  role="button"
-                  tabIndex={isGoogleDriveEnabled ? 0 : -1}
-                  aria-disabled={!isGoogleDriveEnabled}
-                  aria-label={
-                    !isGoogleDriveEnabled
-                      ? t(
-                          "fileSidebar.googleDriveDisabled",
-                          "Google Drive is not configured",
-                        )
-                      : t("fileSidebar.googleDrive", "Open from Google Drive")
+                <NavItem
+                  id="googleDrive"
+                  label={t("fileSidebar.googleDrive", "Google Drive")}
+                  icon={<GoogleDriveIcon />}
+                  // Only light up the brand mark when Drive is configured.
+                  hoverIcon={
+                    isGoogleDriveEnabled ? (
+                      <GoogleDriveIcon colored />
+                    ) : undefined
                   }
-                >
-                  <div className="file-sidebar-cloud-icon-wrapper">
-                    <GoogleDriveIcon
-                      className="file-sidebar-cloud-icon-gray"
-                      style={{ color: "var(--c-text-muted)" }}
-                    />
-                    {isGoogleDriveEnabled && (
-                      <GoogleDriveIcon
-                        colored
-                        className="file-sidebar-cloud-icon-color"
-                      />
-                    )}
-                  </div>
-                  {!collapsed && (
-                    <span className="file-sidebar-action-label sidebar-content-fade">
-                      {t("fileSidebar.googleDrive", "Google Drive")}
-                    </span>
-                  )}
-                </div>
+                  iconOnly={collapsed}
+                  disabled={!isGoogleDriveEnabled}
+                  onClick={handleGoogleDriveClick}
+                />
               </Tooltip>
             )}
 
             {/* Watched Folders entry */}
             {WATCHED_FOLDERS_ENABLED && (
-              <div
-                className="file-sidebar-action-row"
+              <NavItem
+                id="watchedFolders"
+                label={t("watchedFolders.sidebarTitle", "Watched Folders")}
+                icon={<FolderSpecialIcon />}
+                iconOnly={collapsed}
+                isActive={isWatchedFoldersActive}
                 data-testid="watchedFolders-button"
-                data-active={isWatchedFoldersActive}
                 onClick={openWatchedFolders}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && openWatchedFolders()}
-                aria-label={t("watchedFolders.sidebarTitle", "Watched Folders")}
-                style={
-                  isWatchedFoldersActive
-                    ? { backgroundColor: "var(--c-active)" }
-                    : undefined
-                }
-              >
-                <FolderSpecialIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("watchedFolders.sidebarTitle", "Watched Folders")}
-                  </span>
-                )}
-              </div>
+              />
             )}
           </NavSurface>
 

@@ -434,9 +434,6 @@ export default function AdminGeneralSection() {
         <LoginRequiredBanner show={!loginEnabled} />
 
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.general.title", "System Settings")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.general.description",

@@ -263,9 +263,6 @@ export default function AdminSecuritySection() {
         <LoginRequiredBanner show={!loginEnabled} />
 
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.security.title", "Security")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.security.description",

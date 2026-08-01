@@ -151,9 +151,6 @@ export default function AdminFeaturesSection() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.features.title", "Features")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.features.description",

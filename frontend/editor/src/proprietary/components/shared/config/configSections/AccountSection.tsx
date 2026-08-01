@@ -349,9 +349,6 @@ const AccountSection: React.FC = () => {
   return (
     <Stack gap="md">
       <div>
-        <Text fw={600} size="lg">
-          {t("account.accountSettings", "Account")}
-        </Text>
         <Text size="sm" c="dimmed">
           {t("changeCreds.header", "Update Your Account Details")}
         </Text>

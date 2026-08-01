@@ -57,7 +57,6 @@ export interface DesktopUpdateModeControl {
 }
 
 interface GeneralSectionProps {
-  hideTitle?: boolean;
   hideUpdateSection?: boolean;
   hideAdminBanner?: boolean;
   /** Desktop-only: Tauri updater install state, passed from the desktop override. */
@@ -76,7 +75,6 @@ interface GeneralSectionProps {
 }
 
 const GeneralSection: React.FC<GeneralSectionProps> = ({
-  hideTitle = false,
   hideUpdateSection = false,
   hideAdminBanner = false,
   desktopInstall,
@@ -170,19 +168,12 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
 
   return (
     <Stack gap="lg">
-      {!hideTitle && (
-        <div>
-          <Text fw={600} size="lg">
-            {t("settings.general.title", "General")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "settings.general.description",
-              "Configure general application preferences.",
-            )}
-          </Text>
-        </div>
-      )}
+      <Text size="sm" c="dimmed">
+        {t(
+          "settings.general.description",
+          "Configure general application preferences.",
+        )}
+      </Text>
 
       {!hideAdminBanner && loginDisabled && !bannerDismissed && (
         <Paper

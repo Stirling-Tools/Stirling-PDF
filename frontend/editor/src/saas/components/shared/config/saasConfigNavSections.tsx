@@ -229,7 +229,7 @@ export function createSaasConfigNavSections(
       },
       {
         key: "security",
-        label: "Passwords & Security",
+        label: t("config.account.security.title", "Passwords & Security"),
         icon: "lock",
         component: <PasswordSecurity />,
       },

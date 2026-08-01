@@ -70,15 +70,7 @@ export default function ApiKeys() {
       )}
 
       {isAnonymous ? (
-        <Paper
-          radius="md"
-          p={18}
-          style={{
-            background: "var(--c-surface)",
-            border: "1px solid var(--c-border)",
-            boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
-          }}
-        >
+        <Paper p={18}>
           <Stack gap={10}>
             <Text fw={500}>{t("config.apiKeys.label", "API Key")}</Text>
             <Group
@@ -107,21 +99,13 @@ export default function ApiKeys() {
               "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
             )}
           </Text>
-          <div
-            style={{
-              padding: 18,
-              borderRadius: 12,
-              background: "var(--c-surface)",
-              border: "1px solid var(--c-border)",
-              boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
-            }}
-          >
+          <Paper p={18}>
             <Group align="center" gap={12} wrap="nowrap">
               <SkeletonLoader type="block" width="100%" height={36} />
               <SkeletonLoader type="block" width={76} height={32} />
               <SkeletonLoader type="block" width={92} height={32} />
             </Group>
-          </div>
+          </Paper>
         </>
       ) : (
         <ApiKeySection

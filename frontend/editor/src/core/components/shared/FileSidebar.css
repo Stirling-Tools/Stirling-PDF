@@ -64,7 +64,7 @@
 /* Horizontal padding is 0 so row highlights bleed to the surface edges; each
    row's own inner padding keeps its text/icon indented. */
 .file-sidebar-controls {
-  padding: 0.25rem 0;
+  padding: 0;
   flex-shrink: 0;
 }
 .file-sidebar-files-box {
@@ -83,7 +83,6 @@
 /* Collapsed rail: the file tree isn't rendered, so hide its (empty) box and
    let the boxes stack at the top — controls, then the settings footer right
    after — instead of the files box stretching to fill. */
-.file-sidebar[data-collapsed="true"] .file-sidebar-controls,
 .file-sidebar[data-collapsed="true"] .file-sidebar-footer-box {
   padding: 0.25rem;
 }
@@ -92,15 +91,6 @@
 }
 .file-sidebar[data-collapsed="true"] .file-sidebar-inner {
   flex: 0 0 auto;
-}
-/* Centre each row's icon in the narrow rail (no side padding/margin to shove
-   it off the edge). */
-.file-sidebar[data-collapsed="true"] .file-sidebar-search-row,
-.file-sidebar[data-collapsed="true"] .file-sidebar-action-row,
-.file-sidebar[data-collapsed="true"] .file-sidebar-cloud-row {
-  justify-content: center;
-  padding-inline: 0;
-  margin: 0;
 }
 
 /* ---- Native file drag-and-drop ---- */
@@ -139,30 +129,16 @@
   color: var(--mantine-color-blue-6, var(--c-primary));
 }
 
-/* ---- Search row ---- */
-.file-sidebar-search-row {
-  display: flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 8px;
-  gap: 0;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 0;
-  flex-shrink: 0;
-  transition: background-color 0.15s ease;
-}
-
-.file-sidebar-search-row:not(.active):hover {
-  background-color: var(--c-hover);
-}
-
-.file-sidebar-search-icon {
-  color: var(--c-text-subtle) !important;
-  font-size: 18px !important;
+.file-sidebar .sui-navitem {
   flex-shrink: 0;
 }
 
+.file-sidebar .sui-navitem__label {
+  animation: sidebar-content-in 0.12s ease 0.18s both;
+  white-space: nowrap;
+}
+
+/* ---- Search row (open state) ---- */
 .file-sidebar-search-close {
   cursor: pointer;
 }
@@ -172,20 +148,13 @@
   background: transparent;
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: inherit;
   color: var(--c-text);
-  margin-left: 12px;
   min-width: 0;
 }
 
 .file-sidebar-search-input::placeholder {
   color: var(--c-text-subtle);
-}
-
-.file-sidebar-search-label {
-  margin-left: 12px;
-  font-size: 14px;
-  color: var(--c-text);
 }
 
 /* ---- Scrollable content ---- */
@@ -208,112 +177,6 @@
 .file-sidebar-scroll::-webkit-scrollbar-thumb {
   background: rgb(var(--border));
   border-radius: 2px;
-}
-
-/* ---- Action rows (Open from Computer, etc.) ---- */
-.file-sidebar-action-row {
-  display: flex;
-  align-items: center;
-  height: 32px;
-  padding: 0 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 0;
-  gap: 0;
-  transition: background-color 0.15s ease;
-  flex-shrink: 0;
-}
-
-.file-sidebar-action-row:hover {
-  background-color: var(--c-hover);
-}
-
-.file-sidebar-action-row.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: auto;
-}
-.file-sidebar-action-row.disabled:hover {
-  background-color: transparent;
-}
-
-.file-sidebar-action-icon {
-  color: var(--c-text-subtle) !important;
-  font-size: 18px !important;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-}
-
-/* When the icon is a wrapper around an SVG (extraAction case), force
- * the SVG to inherit the wrapper's 18px sizing instead of MUI's default
- * 1.5rem so it matches the other rail icons. */
-.file-sidebar-action-icon > svg {
-  font-size: inherit;
-  width: 1em;
-  height: 1em;
-}
-
-.file-sidebar-action-label {
-  margin-left: 12px;
-  font-size: 14px;
-  color: var(--c-text);
-  white-space: nowrap;
-}
-
-/* ---- Cloud storage rows ---- */
-.file-sidebar-cloud-row {
-  display: flex;
-  align-items: center;
-  height: 32px;
-  padding: 0 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 0;
-  gap: 0;
-  transition: background-color 0.15s ease;
-  flex-shrink: 0;
-}
-
-.file-sidebar-cloud-row:not(.disabled):hover {
-  background-color: var(--c-hover);
-}
-
-.file-sidebar-cloud-row.disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-
-.file-sidebar-cloud-icon-wrapper {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.file-sidebar-cloud-icon-gray {
-  position: absolute;
-  inset: 0;
-  transition: opacity 0.2s ease;
-  opacity: 1;
-}
-
-.file-sidebar-cloud-icon-color {
-  position: absolute;
-  inset: 0;
-  transition: opacity 0.2s ease;
-  opacity: 0;
-}
-
-.file-sidebar-cloud-row:not(.disabled):hover .file-sidebar-cloud-icon-gray {
-  opacity: 0;
-}
-
-.file-sidebar-cloud-row:not(.disabled):hover .file-sidebar-cloud-icon-color {
-  opacity: 1;
 }
 
 /* ---- Files section ---- */

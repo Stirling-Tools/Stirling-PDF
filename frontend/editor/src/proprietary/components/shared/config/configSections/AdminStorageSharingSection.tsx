@@ -146,22 +146,17 @@ export default function AdminStorageSharingSection() {
       <div className="settings-section-content">
         <Stack gap="sm">
           <LoginRequiredBanner show={!loginEnabled} />
-          <div>
-            <Group gap="xs" align="center">
-              <Text fw={600} size="lg">
-                {t("admin.settings.storage.title", "File Storage & Sharing")}
-              </Text>
-              <Badge size="sm" variant="light" color="orange">
-                {t("toolPanel.alpha", "Alpha")}
-              </Badge>
-            </Group>
+          <Group gap="xs" align="center">
             <Text size="sm" c="dimmed">
               {t(
                 "admin.settings.storage.description",
                 "Control server storage and sharing options.",
               )}
             </Text>
-          </div>
+            <Badge size="sm" variant="light" color="orange">
+              {t("toolPanel.alpha", "Alpha")}
+            </Badge>
+          </Group>
 
           <Paper withBorder p="sm" radius="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">

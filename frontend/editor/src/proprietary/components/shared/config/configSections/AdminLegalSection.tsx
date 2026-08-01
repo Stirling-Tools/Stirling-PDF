@@ -122,9 +122,6 @@ export default function AdminLegalSection() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
         <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.legal.title", "Legal Documents")}
-          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "admin.settings.legal.description",

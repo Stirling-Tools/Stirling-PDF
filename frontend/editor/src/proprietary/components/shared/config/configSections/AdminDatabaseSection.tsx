@@ -454,9 +454,6 @@ export default function AdminDatabaseSection() {
         <div>
           <Group justify="space-between" align="center">
             <div>
-              <Text fw={600} size="lg">
-                {t("admin.settings.database.title", "Database")}
-              </Text>
               <Text size="sm" c="dimmed">
                 {t(
                   "admin.settings.database.description",

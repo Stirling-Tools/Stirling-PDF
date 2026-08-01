@@ -87,7 +87,7 @@
   text-transform: uppercase;
 }
 
-/* Tree rows - mirror .file-sidebar-action-row from FileSidebar.css so the
+/* Tree rows - mirror the shared .sui-navitem (core/ui/NavItem.css) so the
    slide-out folder navigator reads as a continuation of the main sidebar's
    design language. Same row height, padding, font weight, muted icon
    treatment. The hover/active state uses the same --hover-bg pill that
@@ -116,11 +116,11 @@
 }
 
 .files-page-tree-node:hover {
-  background: var(--c-hover);
+  background: var(--c-active);
 }
 
 .files-page-tree-node.is-active {
-  background: var(--c-hover);
+  background: var(--c-active);
   color: var(--c-text);
   font-weight: 500;
 }

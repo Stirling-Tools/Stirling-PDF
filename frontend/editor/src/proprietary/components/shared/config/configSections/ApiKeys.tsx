@@ -68,14 +68,7 @@ export default function ApiKeys() {
         )}
       </Text>
 
-      <Paper
-        p="md"
-        radius="md"
-        style={{
-          background: "var(--c-surface-sunken)",
-          border: "1px solid var(--c-border-subtle)",
-        }}
-      >
+      <Paper p="md">
         <Group gap="xs" wrap="nowrap" align="flex-start">
           <LocalIcon
             icon="info-rounded"
@@ -155,21 +148,13 @@ export default function ApiKeys() {
       )}
 
       {apiKeyLoading ? (
-        <div
-          style={{
-            padding: 18,
-            borderRadius: 12,
-            background: "var(--c-surface)",
-            border: "1px solid var(--c-border)",
-            boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
-          }}
-        >
+        <Paper p={18}>
           <Group align="center" gap={12} wrap="nowrap">
             <Skeleton height={36} style={{ flex: 1 }} />
             <Skeleton height={32} width={76} />
             <Skeleton height={32} width={92} />
           </Group>
-        </div>
+        </Paper>
       ) : (
         <ApiKeySection
           publicKey={apiKey ?? ""}

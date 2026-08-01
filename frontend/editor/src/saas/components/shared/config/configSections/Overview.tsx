@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   Alert,
   Avatar,
-  Divider,
+  Paper,
   Group,
   Image,
   LoadingOverlay,
@@ -315,31 +315,10 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
     >
       <LoadingOverlay visible={isLoading || isDeletingAccount} />
 
-      <div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-          }}
-        >
+      <Paper withBorder p="md" radius="md">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
           <div>
-            <h3
-              style={{
-                margin: 0,
-                color: "var(--mantine-color-text)",
-                fontSize: "1rem",
-              }}
-            >
-              {t("config.account.overview.title", "Account Settings")}
-            </h3>
-            <p
-              style={{
-                margin: "0.25rem 0 0 0",
-                color: "var(--mantine-color-dimmed)",
-                fontSize: "0.875rem",
-              }}
-            >
+            <Text size="xs" c="dimmed">
               {isAnonymous
                 ? t(
                     "config.account.overview.guestDescription",
@@ -349,50 +328,30 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                     "config.account.overview.manageAccountPreferences",
                     "Manage your account preferences",
                   )}
-            </p>
+            </Text>
             {user?.email && (
-              <p
-                style={{
-                  margin: "0.25rem 0 0 0",
-                  color: "var(--mantine-color-dimmed)",
-                  fontSize: "0.75rem",
-                }}
-              >
+              <Text size="xs" c="dimmed" mt={4}>
                 {t("config.account.overview.signedInAs", "Signed in as")}:{" "}
                 {user.email}
-              </p>
+              </Text>
             )}
           </div>
           <DSButton variant="primary" accent="danger" onClick={onLogoutClick}>
             {t("logOut", "Log out")}
           </DSButton>
-        </div>
-      </div>
+        </Group>
+      </Paper>
 
-      <Divider />
-
-      <div>
-        <h3
-          style={{
-            margin: 0,
-            color: "var(--mantine-color-text)",
-            fontSize: "1rem",
-          }}
-        >
+      <Paper withBorder p="md" radius="md">
+        <Text fw={600} size="sm">
           {t("config.account.profilePicture.title", "Profile picture")}
-        </h3>
-        <p
-          style={{
-            margin: "0.25rem 0 1rem 0",
-            color: "var(--mantine-color-dimmed)",
-            fontSize: "0.875rem",
-          }}
-        >
+        </Text>
+        <Text size="xs" c="dimmed" mt={4} mb="md">
           {t(
             "config.account.profilePicture.description",
             "Upload an image to personalize your account.",
           )}
-        </p>
+        </Text>
 
         {profileError && (
           <Alert color="red" mb="md">
@@ -489,7 +448,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
             </div>
           </Group>
         )}
-      </div>
+      </Paper>
 
       <ProfilePictureCropper
         file={cropperFile}
@@ -501,32 +460,18 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
         onCropComplete={handleCropComplete}
       />
 
-      {isAnonymous && <Divider />}
-
       {isAnonymous && (
-        <div>
+        <Paper withBorder p="md" radius="md">
           <div>
-            <h3
-              style={{
-                margin: 0,
-                color: "var(--mantine-color-text)",
-                fontSize: "1rem",
-              }}
-            >
+            <Text fw={600} size="sm">
               {t("config.account.upgrade.title", "Upgrade Guest Account")}
-            </h3>
-            <p
-              style={{
-                margin: "0.25rem 0 1rem 0",
-                color: "var(--mantine-color-dimmed)",
-                fontSize: "0.875rem",
-              }}
-            >
+            </Text>
+            <Text size="xs" c="dimmed" mt={4} mb="md">
               {t(
                 "config.account.upgrade.description",
                 "Link your account to preserve your history and access more features!",
               )}
-            </p>
+            </Text>
           </div>
 
           {upgradeError && (
@@ -627,28 +572,21 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               </Group>
             </form>
           </div>
-        </div>
+        </Paper>
       )}
 
-      {/* Delete Account Section */}
       {!isAnonymous && (
-        <div
-          style={{
-            marginTop: "auto",
-            paddingTop: "1.5rem",
-            display: "flex",
-            justifyContent: "flex-end",
-            borderTop: "1px solid var(--mantine-color-default-border)",
-          }}
-        >
-          <DSButton
-            variant="secondary"
-            accent="danger"
-            onClick={() => setDeleteModalOpen(true)}
-          >
-            {t("config.account.overview.deleteAccount", "Delete Account")}
-          </DSButton>
-        </div>
+        <Paper withBorder p="md" radius="md">
+          <Group justify="flex-end">
+            <DSButton
+              variant="secondary"
+              accent="danger"
+              onClick={() => setDeleteModalOpen(true)}
+            >
+              {t("config.account.overview.deleteAccount", "Delete Account")}
+            </DSButton>
+          </Group>
+        </Paper>
       )}
 
       {/* Delete Account Confirmation Modal */}

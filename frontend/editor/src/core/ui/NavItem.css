@@ -1,22 +1,32 @@
+/* Shared sidebar nav row; surface-specific spacing lives with each surface. */
 .sui-navitem {
   display: flex;
   align-items: center;
   gap: 0.625rem;
   width: 100%;
-  padding: 0.4375rem 0.75rem;
-  margin: 0.0625rem 0.5rem;
-  border-radius: var(--radius-lg);
-  color: var(--c-text-subtle);
+  padding: 0.5rem 0.75rem;
+  /* Full-bleed: the highlight spans its surface edge to edge, with the
+     surface's own overflow clipping it at the rounded corners. */
+  margin: 0;
+  border-radius: 0;
+  color: var(--c-text-muted);
   font-size: 0.8125rem;
   font-weight: 400;
+  /* Own the button chrome; the editor and portal reset buttons differently. */
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
   transition:
     background var(--motion-fast),
     color var(--motion-fast);
   text-align: left;
 }
+/* --c-hover alone is near-invisible on the surfaces these rows sit on. */
 .sui-navitem:hover {
-  background: var(--c-hover);
-  color: var(--c-text-muted);
+  background: var(--c-active);
+  color: var(--c-text);
 }
 .sui-navitem.is-active {
   background: var(--c-primary-subtle);
@@ -25,14 +35,30 @@
 }
 .sui-navitem.is-active:hover {
   background: var(--c-primary-subtle);
+  color: var(--c-accent-fg);
+}
+.sui-navitem.is-disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.sui-navitem.is-disabled:hover {
+  background: transparent;
+  color: var(--c-text-muted);
 }
 .sui-navitem__icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+/* Icons arrive from several sources; pin them all to the row's icon box. */
+.sui-navitem__icon > svg {
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
 }
 .sui-navitem__label {
   flex: 1;
@@ -44,7 +70,44 @@
 }
 .sui-navitem:focus-visible {
   outline: 0.125rem solid var(--c-primary);
-  outline-offset: 0.125rem;
+  outline-offset: -0.125rem;
+}
+
+/* ---- Collapsed rail (icon only) ---- */
+.sui-navitem--icon-only {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+/* ---- Hover icon swap ---- */
+.sui-navitem__icon--swap {
+  position: relative;
+}
+.sui-navitem__icon--swap > span {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--motion-fast);
+}
+.sui-navitem__icon-hover {
+  opacity: 0;
+}
+.sui-navitem:hover:not(.is-disabled) .sui-navitem__icon-rest {
+  opacity: 0;
+}
+.sui-navitem:hover:not(.is-disabled) .sui-navitem__icon-hover {
+  opacity: 1;
+}
+
+/* ---- Field row: a row hosting an inline control, so not a <button> ---- */
+.sui-navitem--field {
+  cursor: default;
+}
+.sui-navitem--field:hover {
+  background: transparent;
+  color: var(--c-text-muted);
 }
 
 /* ---- Status accent (optional) ---- */

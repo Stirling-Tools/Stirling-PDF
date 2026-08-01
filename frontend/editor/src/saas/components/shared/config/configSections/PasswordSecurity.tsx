@@ -6,6 +6,8 @@ import {
   LoadingOverlay,
   Modal,
   Divider,
+  Paper,
+  Text,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
@@ -86,40 +88,21 @@ const PasswordSecurity: React.FC = () => {
     <div style={{ position: "relative" }}>
       <LoadingOverlay visible={isLoading} />
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div>
-          <h3
-            style={{
-              margin: 0,
-              color: "var(--mantine-color-text)",
-              fontSize: "1rem",
-            }}
-          >
-            {t("config.account.security.title", "Passwords & Security")}
-          </h3>
-          <p
-            style={{
-              margin: "0.25rem 0 1rem 0",
-              color: "var(--mantine-color-dimmed)",
-              fontSize: "0.875rem",
-            }}
-          >
-            {t(
-              "config.account.security.description",
-              "Manage your password and security settings.",
-            )}
-          </p>
-        </div>
-        <Button type="button" onClick={() => setOpened(true)}>
-          {t("config.account.security.changePassword", "Change password")}
-        </Button>
-      </div>
+      <Paper withBorder p="md" radius="md">
+        <Group justify="space-between" align="center" wrap="nowrap">
+          <div>
+            <Text size="xs" c="dimmed">
+              {t(
+                "config.account.security.description",
+                "Manage your password and security settings.",
+              )}
+            </Text>
+          </div>
+          <Button type="button" onClick={() => setOpened(true)}>
+            {t("config.account.security.changePassword", "Change password")}
+          </Button>
+        </Group>
+      </Paper>
 
       <Modal
         opened={opened}
