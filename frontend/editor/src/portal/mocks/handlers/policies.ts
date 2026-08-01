@@ -14,7 +14,7 @@ import type { PolicyRunView, WirePolicy } from "@app/policies/types";
  * - DELETE /api/v1/policies/:id → 204
  *
  * The decorated catalogue (summary, category grouping, stats) is assembled
- * client-side in api/policies.ts#fetchPolicies(), mirroring the real backend.
+ * client-side in api/policies.ts#assemblePolicies(), mirroring the real backend.
  */
 
 let store: WirePolicy[] = seedPolicies();
