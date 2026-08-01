@@ -141,56 +141,77 @@ export function SupabaseAuthProvider({
     };
   }, []);
 
-  // Enrich with backend truth: grant-based portal access and team leadership
-  // come from /api/v1/auth/me, not Supabase claims. Best-effort; the
-  // isAdminRole fallback below covers failures and anonymous sessions.
+  // Enrich with backend truth: grant-based portal access and team leadership come from
+  // /api/v1/auth/me, not Supabase claims. Portal/Processor access is active-team-dependent on the
+  // backend, and a team switch made elsewhere doesn't change our session object - so besides the
+  // initial load we re-validate whenever the tab regains focus, else a user whose access dropped
+  // would keep seeing the Processor until a full reload. Best-effort; the isAdminRole fallback
+  // below covers failures and anonymous sessions.
   useEffect(() => {
     const token = session?.access_token;
     const sessionUser = session?.user;
-    if (
-      !token ||
-      !sessionUser ||
-      sessionUser.is_anonymous ||
-      sessionUser.portalAccess !== undefined
-    ) {
+    if (!token || !sessionUser || sessionUser.is_anonymous) {
       return;
     }
     let cancelled = false;
-    void fetch("/api/v1/auth/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then(
-        (
-          data: {
-            user?: { portalAccess?: boolean; teamLead?: boolean };
-          } | null,
-        ) => {
-          if (cancelled || !data?.user) return;
+    const loadAccess = () => {
+      void fetch("/api/v1/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then(
+          (
+            data: {
+              user?: { portalAccess?: boolean; teamLead?: boolean };
+            } | null,
+          ) => {
+            if (cancelled || !data?.user) return;
+            setSession((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    user: {
+                      ...prev.user,
+                      portalAccess: data.user?.portalAccess,
+                      teamLead: data.user?.teamLead,
+                    },
+                  }
+                : prev,
+            );
+          },
+        )
+        .catch(() => {
+          // Backend unreachable or /me unsupported: resolve portalAccess to the role-based
+          // fallback so gates awaiting it don't hang on a spinner. This deliberately ignores
+          // grant-based access (a non-admin grant-holder is denied while /me is down) - grants
+          // can't be known without /me, so we fail safe; a later focus refetch recovers it.
+          if (cancelled) return;
           setSession((prev) =>
-            prev
+            prev && prev.user.portalAccess === undefined
               ? {
                   ...prev,
                   user: {
                     ...prev.user,
-                    portalAccess: data.user?.portalAccess,
-                    teamLead: data.user?.teamLead,
+                    portalAccess: isAdminRole(prev.user.role),
                   },
                 }
               : prev,
           );
-        },
-      )
-      .catch(() => {
-        // Backend unreachable or /me unsupported: keep the claim fallback.
-      });
+        });
+    };
+    loadAccess();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") loadAccess();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [session?.access_token, session?.user?.id, session?.user?.portalAccess]);
+  }, [session?.access_token, session?.user?.id]);
 
   const user = session?.user ?? null;
   const value: AuthContextValue = {

@@ -90,7 +90,9 @@ export const createCustomMetadataFunctions = (
 };
 
 // Validation function
-const validateParameters = (params: ChangeMetadataParameters): boolean => {
+export const validateChangeMetadataParameters = (
+  params: ChangeMetadataParameters,
+): boolean => {
   // If deleteAll is true, no other validation needed
   if (params.deleteAll) {
     return true;
@@ -127,7 +129,7 @@ export const useChangeMetadataParameters = (): ChangeMetadataParametersHook => {
   const base = useBaseParameters({
     defaultParameters,
     endpointName: "update-metadata",
-    validateFn: validateParameters,
+    validateFn: validateChangeMetadataParameters,
   });
 
   // Use the utility functions with the hook's parameters and updateParameter

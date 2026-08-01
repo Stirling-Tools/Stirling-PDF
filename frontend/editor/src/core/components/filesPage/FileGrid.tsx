@@ -499,7 +499,7 @@ function FolderCard({
       <div
         className="files-page-card-thumb"
         style={{
-          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.color ?? "var(--accent-interactive, #6366f1)"} 18%, var(--bg-surface)), color-mix(in srgb, ${folder.color ?? "var(--accent-interactive, #6366f1)"} 6%, var(--bg-surface)))`,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.color ?? "var(--c-primary)"} 18%, var(--c-surface)), color-mix(in srgb, ${folder.color ?? "var(--c-primary)"} 6%, var(--c-surface)))`,
         }}
       >
         <FolderThumbnail
