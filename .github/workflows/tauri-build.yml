@@ -420,7 +420,9 @@ jobs:
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
           # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+          args: >-
+            ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+            --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
@@ -613,7 +615,14 @@ jobs:
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && needs.build.result == 'success'
+    # Fork and Dependabot pull_request runs receive a read-only GITHUB_TOKEN,
+    # so the API cannot create or update PR comments there. The artifacts are
+    # still uploaded and remain available from the Actions run page.
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.build.result == 'success' &&
+      !github.event.pull_request.head.repo.fork &&
+      github.actor != 'dependabot[bot]'
     permissions:
       pull-requests: write
     steps:
