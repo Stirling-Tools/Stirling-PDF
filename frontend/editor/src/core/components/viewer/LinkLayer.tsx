@@ -19,7 +19,8 @@ import {
 import { Z_INDEX_VIEWER_FLOATING_MENU } from "@app/styles/zIndex";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { getExternalHref, openExternalUrl } from "@app/utils/openExternalUrl";
+import { openExternalTab } from "@app/platform/openExternalTab";
+import { getExternalHref } from "@app/utils/externalUrl";
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
@@ -403,12 +404,12 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
             behavior: "smooth",
           });
         } else if (action.type === PdfActionType.URI) {
-          const uri = action.uri;
-          void openExternalUrl(uri).then((opened) => {
-            if (!opened) {
-              console.warn("[LinkLayer] Blocked unsafe URL:", uri);
-            }
-          });
+          const href = getExternalHref(action.uri);
+          if (href) {
+            void openExternalTab(href);
+          } else {
+            console.warn("[LinkLayer] Blocked unsafe URL:", action.uri);
+          }
         }
       }
 
