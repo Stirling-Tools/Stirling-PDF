@@ -11,8 +11,8 @@
   position: sticky;
   top: 0;
   z-index: 5;
-  background: var(--color-sidebar-bg);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border);
 }
 .portal-usage__header-inner {
   display: flex;
@@ -35,13 +35,13 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-usage__subtitle {
   margin: 0.25rem 0 0;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* Two-column row: current plan + spend cap */
@@ -67,13 +67,13 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-usage__section-sub {
   margin: 0.25rem 0 0;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* Current plan card */
@@ -96,14 +96,14 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-usage__plan-name {
   margin: 0.125rem 0 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 /* Wallet contract card */
@@ -139,13 +139,13 @@
   font-size: 2.25rem;
   font-weight: 600;
   line-height: 1;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 
 .portal-usage__wallet-hero-unit {
   font-size: 0.875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* Cap progress (free) */
@@ -160,12 +160,12 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-usage__cap-pct {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -183,7 +183,7 @@
   gap: 0.75rem;
   padding: 0.5rem 0;
   font-size: 0.8125rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-usage__breakdown-row:last-child {
@@ -191,24 +191,24 @@
 }
 
 .portal-usage__breakdown-label {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-usage__breakdown-value {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 
 .portal-usage__breakdown-row--total {
   margin-top: 0.25rem;
   padding-top: 0.625rem;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--c-border);
   font-size: 0.875rem;
 }
 
 .portal-usage__breakdown-row--total .portal-usage__breakdown-label {
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-weight: 600;
 }
 
@@ -254,7 +254,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-usage__plan-card-price {
@@ -267,19 +267,19 @@
 .portal-usage__plan-card-amount {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-usage__plan-card-cadence {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-usage__plan-card-blurb {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-usage__plan-card-features {
@@ -297,7 +297,7 @@
   align-items: flex-start;
   gap: 0.5rem;
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-usage__plan-card-check {
@@ -338,18 +338,18 @@
   align-items: center;
   gap: 0.625rem;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* Billing history */
 .portal-usage__hist-date {
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-usage__hist-amount {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -370,7 +370,7 @@
   margin: 0 0 1rem;
   font-size: 0.875rem;
   line-height: 1.55;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-usage__modal-bullets {
@@ -387,7 +387,7 @@
   align-items: flex-start;
   gap: 0.5rem;
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-usage__modal-actions {

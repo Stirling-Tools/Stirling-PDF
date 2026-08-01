@@ -56,9 +56,9 @@ export const InContext_UsageMeter: Story = {
         style={{
           width: "16rem",
           padding: 14,
-          border: "1px solid var(--color-border)",
+          border: "1px solid var(--c-border)",
           borderRadius: 8,
-          background: "var(--color-surface)",
+          background: "var(--c-surface)",
         }}
       >
         <S />
@@ -75,8 +75,8 @@ export const InContext_UsageMeter: Story = {
           marginBottom: 6,
         }}
       >
-        <span style={{ color: "var(--color-text-4)" }}>Docs processed</span>
-        <span style={{ color: "var(--color-text-2)", fontWeight: 500 }}>
+        <span style={{ color: "var(--c-text-subtle)" }}>Docs processed</span>
+        <span style={{ color: "var(--c-text-muted)", fontWeight: 500 }}>
           412 / 500
         </span>
       </div>

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MethodBadge, type HttpMethod } from "@app/ui/MethodBadge";
 
 const meta: Meta<typeof MethodBadge> = {
@@ -23,7 +23,7 @@ export const InRow: Story = {
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <MethodBadge method="POST" />
       <span
-        style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-2)" }}
+        style={{ fontFamily: "var(--font-mono)", color: "var(--c-text-muted)" }}
       >
         /v1/coi
       </span>

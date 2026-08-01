@@ -2,12 +2,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { Button, EmptyState, Skeleton } from "@app/ui";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import {
-  fetchPipelines,
-  type PipelinesOverviewResponse,
-  type PipelineView,
-} from "@portal/api/pipelines";
+import { useSectionFlags } from "@portal/hooks/useAsync";
+import { usePipelines } from "@portal/queries/pipelines";
+import { type PipelineView } from "@portal/api/pipelines";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { PipelinesIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
@@ -17,7 +14,7 @@ import "@portal/views/Pipelines.css";
 export function Pipelines() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const state = useAsync<PipelinesOverviewResponse>(() => fetchPipelines(), []);
+  const state = usePipelines();
   const { data, loading } = state;
   const { isLoading } = useSectionFlags(state);
 

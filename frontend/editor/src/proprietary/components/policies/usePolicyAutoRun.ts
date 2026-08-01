@@ -42,6 +42,7 @@ import { readClassificationLabelsFromFile } from "@app/services/fileClassificati
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
+import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import {
   addReconciledRun,
   dispatchKey,
@@ -128,6 +129,7 @@ export function usePolicyAutoRun(): void {
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
+  const aiEnabled = useAiEngineEnabled();
   const runs = usePolicyRuns();
   // Live view of the workspace files, read inside the import effect WITHOUT making
   // it a dependency. The silent consume that delivers an output mutates fileStubs,
@@ -161,18 +163,21 @@ export function usePolicyAutoRun(): void {
     () =>
       Object.entries(policies)
         .filter(
-          ([, s]) =>
+          ([id, s]) =>
             s.configured &&
             s.status === "active" &&
             s.backendId &&
             (!s.sources ||
               s.sources.length === 0 ||
               s.sources.includes("editor")) &&
-            (s.runOn ?? "upload") === "upload",
+            (s.runOn ?? "upload") === "upload" &&
+            // Non-AI systems classify in the browser (useClientSideClassification), so keep the
+            // Classification policy out of the server chain when the AI engine is off.
+            !(id === "classification" && !aiEnabled),
         )
         .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
         .map(([id]) => id),
-    [policies],
+    [policies, aiEnabled],
   );
 
   // Runs whose chain-continuation we've already handled this session, so the next

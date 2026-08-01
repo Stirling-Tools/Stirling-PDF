@@ -21,17 +21,6 @@ export type MemberStatus = "active" | "invited" | "suspended";
  */
 export type PortalAccessState = "admin" | "role" | "team" | "granted" | "none";
 
-export const PORTAL_ACCESS_TONE: Record<
-  PortalAccessState,
-  "success" | "info" | "neutral" | "warning"
-> = {
-  admin: "info",
-  role: "info",
-  team: "info",
-  granted: "success",
-  none: "neutral",
-};
-
 export interface Member {
   id: string;
   name: string;
@@ -158,15 +147,6 @@ export interface UsersResponse {
 /*  Presentation metadata — product copy, lives client-side                  */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export const MEMBER_STATUS_TONE: Record<
-  MemberStatus,
-  "success" | "warning" | "danger" | "neutral" | "info"
-> = {
-  active: "success",
-  invited: "info",
-  suspended: "danger",
-};
-
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Role catalogue                                                           */
 /*  The same five roles exist on every tier — what varies is who can fill    */
@@ -232,9 +212,6 @@ export const ROLE_LABEL: Record<RoleId, string> = Object.fromEntries(
 export const ROLE_TONE: Record<RoleId, Role["tone"]> = Object.fromEntries(
   ROLES.map((r) => [r.id, r.tone]),
 ) as Record<RoleId, Role["tone"]>;
-
-/** Roles an admin can assign from the portal; guest is derived, not assigned. */
-export const ASSIGNABLE_ROLES: RoleId[] = ["admin", "team_owner", "member"];
 
 /* ── backend payload (subset of AdminSettingsData) ─────────────────────── */
 
