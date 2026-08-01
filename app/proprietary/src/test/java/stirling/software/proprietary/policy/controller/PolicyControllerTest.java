@@ -135,11 +135,11 @@ class PolicyControllerTest {
 
     private static PipelineDefinition definitionWithStep() {
         return new PipelineDefinition(
-                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), null);
+                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), List.of());
     }
 
     private static Policy policy(String id, Long teamId) {
-        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), null, teamId);
+        return new Policy(id, "name", "owner", true, List.of(), List.of(), null, teamId);
     }
 
     private static Policy s3OutputPolicy(String id, String secret) {
@@ -150,7 +150,7 @@ class PolicyControllerTest {
                                 "bucket", "outbox",
                                 "accessKeyId", "AKIAEXAMPLE",
                                 "secretAccessKey", secret));
-        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), output, 1L);
+        return new Policy(id, "name", "owner", true, List.of(), List.of(), output, 1L);
     }
 
     private static PolicyRunHandle handle(String runId) {
@@ -190,7 +190,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmptyPipeline() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), null);
+            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.run(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
@@ -241,7 +241,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmpty() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), null);
+            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.runStream(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class);
@@ -401,8 +401,7 @@ class PolicyControllerTest {
         void updatePreservesOwnership() {
             applicationProperties.getSecurity().setEnableLogin(false);
             Policy existing =
-                    new Policy(
-                            "p2", "name", "origOwner", true, null, List.of(), List.of(), null, 3L);
+                    new Policy("p2", "name", "origOwner", true, List.of(), List.of(), null, 3L);
             when(policyStore.get("p2")).thenReturn(Optional.of(existing));
             when(policyAccessGuard.canAccess(existing)).thenReturn(true);
             when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -410,8 +409,7 @@ class PolicyControllerTest {
             ResponseEntity<Policy> response =
                     controller.savePolicy(
                             new Policy(
-                                    "p2", "name", "forged", true, null, List.of(), List.of(), null,
-                                    77L));
+                                    "p2", "name", "forged", true, List.of(), List.of(), null, 77L));
 
             assertThat(response.getBody().owner()).isEqualTo("origOwner");
             assertThat(response.getBody().teamId()).isEqualTo(3L);

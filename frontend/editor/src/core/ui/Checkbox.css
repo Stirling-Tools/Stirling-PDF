@@ -61,18 +61,16 @@
 .sui-check--mixed .sui-check__tick {
   opacity: 0;
 }
-.sui-check--mixed .sui-check__dash {
-  position: absolute;
-  width: 0.5rem;
-  height: 2px;
-  background: var(--color-text-on-accent);
-  border-radius: 1px;
-}
 .sui-check__dash {
   display: none;
 }
 .sui-check--mixed .sui-check__dash {
   display: block;
+  position: absolute;
+  width: 0.5rem;
+  height: 2px;
+  background: var(--color-text-on-accent);
+  border-radius: 1px;
 }
 
 .sui-check__icon {
