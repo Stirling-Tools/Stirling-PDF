@@ -1,0 +1,169 @@
+package stirling.software.saas.procurement.model;
+
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+/**
+ * A priced, itemised offer built against a {@link ProcurementDeal}. The config columns are the
+ * buyer's choices; {@code annualNetMinor}/{@code tcvMinor} and {@code lineItemsJson} are the
+ * server-computed result (never trusted from the client). Stripe fields are populated when the
+ * accepted quote is turned into a checkout.
+ */
+@Entity
+@Table(name = "procurement_quote")
+@NoArgsConstructor
+@Getter
+@Setter
+public class ProcurementQuote implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    public static final String STATUS_DRAFT = "draft";
+    public static final String STATUS_SENT = "sent";
+    public static final String STATUS_ACCEPTED = "accepted";
+    public static final String STATUS_EXPIRED = "expired";
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "quote_id")
+    private Long quoteId;
+
+    @Column(name = "deal_id", nullable = false)
+    private Long dealId;
+
+    @Column(name = "quote_number", nullable = false, length = 64)
+    private String quoteNumber;
+
+    @Column(name = "status", nullable = false, length = 24)
+    private String status = STATUS_DRAFT;
+
+    @Column(name = "currency", nullable = false, length = 8)
+    private String currency = "USD";
+
+    @Column(name = "volume", nullable = false)
+    private long volume;
+
+    @Column(name = "seats")
+    private Integer seats;
+
+    /** Policy posture as runs-per-PDF: Essentials 2, Governed 4, Regulated 7. Defaults Governed. */
+    @Column(name = "intensity", nullable = false)
+    private int intensity = 4;
+
+    /** File-size tier multiplier on the rate (D93): Compact 1.0, Standard 1.4, Heavy 2.4. */
+    @Column(name = "size_mult", nullable = false)
+    private double sizeMult = 1.0;
+
+    @Column(name = "deployment", length = 24)
+    private String deployment;
+
+    @Column(name = "term_years", nullable = false)
+    private int termYears;
+
+    @Column(name = "service_level", nullable = false, length = 24)
+    private String serviceLevel;
+
+    @Column(name = "indemnification", nullable = false)
+    private boolean indemnification;
+
+    @Column(name = "training", nullable = false)
+    private boolean training;
+
+    @Column(name = "qbr", nullable = false)
+    private boolean qbr;
+
+    @Column(name = "annual_net_minor", nullable = false)
+    private long annualNetMinor;
+
+    @Column(name = "tcv_minor", nullable = false)
+    private long tcvMinor;
+
+    // First post-term renewal fee (annual net + one CPI step), locked at quote time so the buyer's
+    // quoted renewal doesn't drift if the rate card changes later.
+    @Column(name = "renewal_annual_minor", nullable = false)
+    private long renewalAnnualMinor;
+
+    @Column(name = "line_items", columnDefinition = "text")
+    private String lineItemsJson;
+
+    // The Stripe Quote this was issued as (finalized → has a number + PDF). Set by the edge fn.
+    @Column(name = "stripe_quote_id", length = 128)
+    private String stripeQuoteId;
+
+    // Hosted Stripe invoice URL for the subscription's first invoice, set once the quote is
+    // accepted.
+    @Column(name = "stripe_invoice_url", columnDefinition = "text")
+    private String stripeInvoiceUrl;
+
+    // Direct PDF link for that first invoice (Stripe invoice_pdf), set at accept alongside the URL;
+    // persisted so the portal's download button works after a reload, not just in the accept
+    // response.
+    @Column(name = "stripe_invoice_pdf", columnDefinition = "text")
+    private String stripeInvoicePdf;
+
+    // Buyer's company name (shown on the quote/agreement); echoed back so an edit remembers it.
+    @Column(name = "business_name", length = 255)
+    private String businessName;
+
+    // Buyer/AP details captured on the quote's "Your details" step. All optional — they never gate
+    // quote generation; they flow onto the Stripe customer (name + bill-to address) and the invoice
+    // (PO number + tax id as invoice custom fields), and seed the builder on a re-edit. Country and
+    // currency are intentionally out of scope for now.
+    @Column(name = "contact_name", length = 255)
+    private String contactName;
+
+    @Column(name = "contact_email", length = 255)
+    private String contactEmail;
+
+    @Column(name = "address_line1", length = 255)
+    private String addressLine1;
+
+    @Column(name = "address_line2", length = 255)
+    private String addressLine2;
+
+    @Column(name = "city", length = 128)
+    private String city;
+
+    @Column(name = "region", length = 128)
+    private String region;
+
+    @Column(name = "postal_code", length = 32)
+    private String postalCode;
+
+    @Column(name = "po_number", length = 128)
+    private String poNumber;
+
+    @Column(name = "tax_id", length = 64)
+    private String taxId;
+
+    @Column(name = "valid_until")
+    private LocalDate validUntil;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+}

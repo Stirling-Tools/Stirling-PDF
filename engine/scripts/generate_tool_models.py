@@ -59,6 +59,36 @@ class ToolDiscovery:
         "/api/v1/convert/",
     )
 
+    # Endpoints under the allowed prefixes that are NOT edit-agent operations. A listed
+    # path and everything nested under it is dropped. Several kinds live here:
+    EXCLUDED_PATHS = (
+        # 1. Cert-signing family: needs certificate/key files the agent can't supply, plus
+        #    interactive session and hardware-token management. The whole subtree is dropped.
+        "/api/v1/security/cert-sign",
+        # 2. Interactive PDF text-editor endpoints, not one-shot operations.
+        "/api/v1/convert/pdf/text-editor",
+        "/api/v1/convert/text-editor/pdf",
+        # 3. Introspection / query endpoints that return metadata, a listing, or a
+        #    verification verdict rather than a transformed document, so they belong to
+        #    the question path, not the edit agent. (decompress is a dev-only stream op.)
+        "/api/v1/security/get-info-on-pdf",
+        "/api/v1/security/verify-pdf",
+        "/api/v1/security/validate-signature",
+        "/api/v1/misc/list-attachments",
+        "/api/v1/misc/show-javascript",
+        "/api/v1/misc/decompress-pdf",
+        "/api/v1/general/extract-bookmarks",
+        # 4. Require a secondary file (image, overlay PDF, attachments) on top of the input
+        #    PDF. The agent only ever supplies the input PDF(s), so these can never run.
+        #    (add-stamp / add-watermark stay: their text mode needs no extra file.)
+        "/api/v1/misc/add-image",
+        "/api/v1/misc/add-attachments",
+        "/api/v1/general/overlay-pdfs",
+    )
+
+    def _is_excluded(self, path: str) -> bool:
+        return any(path == p or path.startswith(p + "/") for p in self.EXCLUDED_PATHS)
+
     def __init__(self, spec: dict[str, Any]):
         resource = Resource.from_contents(spec, default_specification=DRAFT202012)
         self.resolver = Registry().with_resource("", resource).resolver()
@@ -73,17 +103,15 @@ class ToolDiscovery:
         for path, path_item in sorted(self.spec.get("paths", {}).items()):
             if "{" in path or not any(path.startswith(p) for p in self.ALLOWED_PATH_PREFIXES):
                 continue
+            if self._is_excluded(path):
+                continue
             body_schema = self._get_request_body_schema(path_item) or {}
             query_props = self._get_query_parameters(path_item)
             body_props = body_schema.get("properties") or {}
             # Body properties win on name collision — body is the canonical param source
             # for the existing tools; query params are additive.
             properties = {**query_props, **body_props}
-            if not properties:
-                continue
             clean_props = self._filter_properties(properties)
-            if not clean_props:
-                continue
 
             enum_name = _deduplicate(_path_to_enum_name(path), used_enum)
             class_name = _deduplicate(_path_to_class_name(path), used_class)

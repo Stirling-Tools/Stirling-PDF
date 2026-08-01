@@ -4,6 +4,11 @@ import { ToolId } from "@app/types/toolId";
 import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
 import { AutomationFileProcessor } from "@app/utils/automationFileProcessor";
 import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  type ErasedToolParams,
+  type MultiFileToolOperationConfig,
+  type SingleFileToolOperationConfig,
+} from "@app/hooks/tools/shared/toolOperationTypes";
 import { zipFileService } from "@app/services/zipFileService";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 
@@ -76,22 +81,25 @@ const executeApiRequest = async (
  * Execute single-file tool operation (processes files one at a time)
  */
 const executeSingleFileOperation = async (
-  config: any,
-  parameters: any,
+  config: SingleFileToolOperationConfig<ErasedToolParams>,
+  parameters: ErasedToolParams,
   files: File[],
   filePrefix: string,
 ): Promise<File[]> => {
   const resultFiles: File[] = [];
 
-  for (const file of files) {
-    const endpoint =
-      typeof config.endpoint === "function"
-        ? config.endpoint(parameters)
-        : config.endpoint;
+  const endpoint =
+    typeof config.endpoint === "function"
+      ? config.endpoint(parameters)
+      : config.endpoint;
+  if (!endpoint) {
+    throw new Error(
+      "This operation has no backend endpoint and cannot be executed directly.",
+    );
+  }
 
-    const formData = (
-      config.buildFormData as (params: any, file: File) => FormData
-    )(parameters, file);
+  for (const file of files) {
+    const formData = config.buildFormData(parameters, file);
 
     const processedFiles = await executeApiRequest(
       endpoint,
@@ -110,8 +118,8 @@ const executeSingleFileOperation = async (
  * Execute multi-file tool operation (processes all files in one request)
  */
 const executeMultiFileOperation = async (
-  config: any,
-  parameters: any,
+  config: MultiFileToolOperationConfig<ErasedToolParams>,
+  parameters: ErasedToolParams,
   files: File[],
   filePrefix: string,
 ): Promise<File[]> => {
@@ -119,10 +127,13 @@ const executeMultiFileOperation = async (
     typeof config.endpoint === "function"
       ? config.endpoint(parameters)
       : config.endpoint;
+  if (!endpoint) {
+    throw new Error(
+      "This operation has no backend endpoint and cannot be executed directly.",
+    );
+  }
 
-  const formData = (
-    config.buildFormData as (params: any, files: File[]) => FormData
-  )(parameters, files);
+  const formData = config.buildFormData(parameters, files);
 
   return await executeApiRequest(
     endpoint,
@@ -138,7 +149,7 @@ const executeMultiFileOperation = async (
  */
 export const executeToolOperation = async (
   operationName: string,
-  parameters: any,
+  parameters: ErasedToolParams,
   files: File[],
   toolRegistry: ToolRegistry,
 ): Promise<File[]> => {
@@ -156,7 +167,7 @@ export const executeToolOperation = async (
  */
 export const executeToolOperationWithPrefix = async (
   operationName: string,
-  parameters: any,
+  parameters: ErasedToolParams,
   files: File[],
   toolRegistry: ToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX,

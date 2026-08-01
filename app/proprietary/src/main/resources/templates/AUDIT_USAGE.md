@@ -223,7 +223,7 @@ Use consistent event types throughout the application:
 - `FILE_DOWNLOAD` - When a file is downloaded
 - `PDF_PROCESS` - When a PDF is processed (split, merged, etc.)
 - `USER_CREATE` - When a user is created
-- `USER_UPDATE` - When a user details are updated
+- `USER_UPDATE` - When a user's details are updated
 - `PASSWORD_CHANGE` - When a password is changed
 - `PERMISSION_CHANGE` - When permissions are modified
 - `SETTINGS_CHANGE` - When system settings are changed

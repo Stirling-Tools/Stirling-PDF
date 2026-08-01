@@ -9,8 +9,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,120 +23,103 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.security.database.repository.UserRepository;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.ai.service.AiProxyService;
-import stirling.software.saas.service.CreditService;
-import stirling.software.saas.service.TeamCreditService;
-import stirling.software.saas.util.AuthenticationUtils;
-import stirling.software.saas.util.CreditHeaderUtils;
+import stirling.software.saas.payg.cap.RequiresFeature;
+import stirling.software.saas.payg.model.FeatureGate;
 
 @RestController
 @Profile("saas")
 @RequestMapping("/api/v1/ai")
+@RequiresFeature(FeatureGate.AI_SUPPORT)
 @Tag(name = "AI")
 @Hidden
 @Slf4j
 public class AiProxyController {
 
     private final AiProxyService aiProxyService;
-    private final CreditService creditService;
-    private final TeamCreditService teamCreditService;
-    private final UserRepository userRepository;
-    private final CreditHeaderUtils creditHeaderUtils;
 
-    public AiProxyController(
-            AiProxyService aiProxyService,
-            CreditService creditService,
-            TeamCreditService teamCreditService,
-            UserRepository userRepository,
-            CreditHeaderUtils creditHeaderUtils) {
+    public AiProxyController(AiProxyService aiProxyService) {
         this.aiProxyService = aiProxyService;
-        this.creditService = creditService;
-        this.teamCreditService = teamCreditService;
-        this.userRepository = userRepository;
-        this.creditHeaderUtils = creditHeaderUtils;
     }
 
     @PostMapping("/generate_section")
     public ResponseEntity<StreamingResponseBody> generateSection(HttpServletRequest request) {
-        return proxy("POST", "/api/generate_section", request, false, false);
+        return proxy("POST", "/api/generate_section", request, false);
     }
 
     @PostMapping("/generate_all_sections")
     public ResponseEntity<StreamingResponseBody> generateAllSections(HttpServletRequest request) {
-        return proxy("POST", "/api/generate_all_sections", request, false, false);
+        return proxy("POST", "/api/generate_all_sections", request, false);
     }
 
     @PostMapping("/intent/check")
     public ResponseEntity<StreamingResponseBody> intentCheck(HttpServletRequest request) {
-        return proxy("POST", "/api/intent/check", request, false, false);
+        return proxy("POST", "/api/intent/check", request, false);
     }
 
     @PostMapping("/chat/route")
     public ResponseEntity<StreamingResponseBody> chatRoute(HttpServletRequest request) {
-        return proxy("POST", "/api/chat/route", request, false, true);
+        return proxy("POST", "/api/chat/route", request, false);
     }
 
     @PostMapping("/chat/create-smart-folder")
     public ResponseEntity<StreamingResponseBody> createSmartFolder(HttpServletRequest request) {
-        return proxy("POST", "/api/chat/create-smart-folder", request, false, true);
+        return proxy("POST", "/api/chat/create-smart-folder", request, false);
     }
 
     @PostMapping("/chat/info")
     public ResponseEntity<StreamingResponseBody> chatInfo(HttpServletRequest request) {
-        return proxy("POST", "/api/chat/info", request, false, true);
+        return proxy("POST", "/api/chat/info", request, false);
     }
 
     @PostMapping("/pdf/answer")
     public ResponseEntity<StreamingResponseBody> pdfAnswer(HttpServletRequest request) {
-        return proxy("POST", "/api/pdf/answer", request, false, false);
+        return proxy("POST", "/api/pdf/answer", request, false);
     }
 
     @PostMapping("/progressive_render")
     public ResponseEntity<StreamingResponseBody> progressiveRender(HttpServletRequest request) {
-        return proxy("POST", "/api/progressive_render", request, false, false);
+        return proxy("POST", "/api/progressive_render", request, false);
     }
 
     @GetMapping("/versions/{userId}")
     public ResponseEntity<StreamingResponseBody> versions(
             @PathVariable("userId") String userId, HttpServletRequest request) {
-        return proxy("GET", "/api/versions/" + userId, request, false, false);
+        return proxy("GET", "/api/versions/" + userId, request, false);
     }
 
     @GetMapping("/style/{userId}")
     public ResponseEntity<StreamingResponseBody> style(
             @PathVariable("userId") String userId, HttpServletRequest request) {
-        return proxy("GET", "/api/style/" + userId, request, false, false);
+        return proxy("GET", "/api/style/" + userId, request, false);
     }
 
     @PostMapping("/style/{userId}")
     public ResponseEntity<StreamingResponseBody> updateStyle(
             @PathVariable("userId") String userId, HttpServletRequest request) {
-        return proxy("POST", "/api/style/" + userId, request, false, false);
+        return proxy("POST", "/api/style/" + userId, request, false);
     }
 
     @PostMapping("/import_template")
     public ResponseEntity<StreamingResponseBody> importTemplate(HttpServletRequest request) {
-        return proxy("POST", "/api/import_template", request, false, false);
+        return proxy("POST", "/api/import_template", request, false);
     }
 
     @PostMapping("/edit/sessions")
     public ResponseEntity<StreamingResponseBody> createEditSession(HttpServletRequest request) {
-        return proxy("POST", "/api/edit/sessions", request, false, false);
+        return proxy("POST", "/api/edit/sessions", request, false);
     }
 
     @PostMapping("/edit/sessions/{sessionId}/messages")
     public ResponseEntity<StreamingResponseBody> editSessionMessage(
             @PathVariable("sessionId") String sessionId, HttpServletRequest request) {
-        return proxy("POST", "/api/edit/sessions/" + sessionId + "/messages", request, false, true);
+        return proxy("POST", "/api/edit/sessions/" + sessionId + "/messages", request, false);
     }
 
     @PostMapping("/edit/sessions/{sessionId}/attachments")
     public ResponseEntity<StreamingResponseBody> editSessionAttachment(
             @PathVariable("sessionId") String sessionId, HttpServletRequest request) {
-        return proxy(
-                "POST", "/api/edit/sessions/" + sessionId + "/attachments", request, false, false);
+        return proxy("POST", "/api/edit/sessions/" + sessionId + "/attachments", request, false);
     }
 
     @PostMapping(
@@ -146,17 +127,17 @@ public class AiProxyController {
             produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> runEditSession(
             @PathVariable("sessionId") String sessionId, HttpServletRequest request) {
-        return proxy("POST", "/api/edit/sessions/" + sessionId + "/run", request, true, false);
+        return proxy("POST", "/api/edit/sessions/" + sessionId + "/run", request, true);
     }
 
     @GetMapping("/pdf-editor/document")
     public ResponseEntity<StreamingResponseBody> pdfEditorDocument(HttpServletRequest request) {
-        return proxy("GET", "/api/pdf-editor/document", request, false, false);
+        return proxy("GET", "/api/pdf-editor/document", request, false);
     }
 
     @PostMapping("/pdf-editor/upload")
     public ResponseEntity<StreamingResponseBody> pdfEditorUpload(HttpServletRequest request) {
-        return proxy("POST", "/api/pdf-editor/upload", request, false, false);
+        return proxy("POST", "/api/pdf-editor/upload", request, false);
     }
 
     @GetMapping("/output/**")
@@ -164,27 +145,22 @@ public class AiProxyController {
         String requestUri = request.getRequestURI();
         String prefix = request.getContextPath() + "/api/v1/ai/output/";
         String path = requestUri.startsWith(prefix) ? requestUri.substring(prefix.length()) : "";
-        return proxy("GET", "/output/" + path, request, false, false);
+        return proxy("GET", "/output/" + path, request, false);
     }
 
     // Health endpoint at /api/v1/ai/health is owned by the proprietary AiEngineController; both
     // proxy to the same backing AI engine. No need for credit-aware wrapping on a health probe.
 
     /**
-     * Proxy method that optionally adds credit headers.
+     * Proxy method.
      *
      * @param method HTTP method
      * @param path API path
      * @param request The incoming request
      * @param acceptEventStream Whether to accept event stream responses
-     * @param includeCreditsHeader Whether to add credit balance header
      */
     private ResponseEntity<StreamingResponseBody> proxy(
-            String method,
-            String path,
-            HttpServletRequest request,
-            boolean acceptEventStream,
-            boolean includeCreditsHeader) {
+            String method, String path, HttpServletRequest request, boolean acceptEventStream) {
         try {
             // Forward to AI backend
             HttpResponse<InputStream> aiResponse =
@@ -199,11 +175,6 @@ public class AiProxyController {
             copyHeader(aiResponse, headers, HttpHeaders.CONTENT_LENGTH);
             if (acceptEventStream && !headers.containsHeader(HttpHeaders.CONTENT_TYPE)) {
                 headers.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_EVENT_STREAM_VALUE);
-            }
-
-            // Add credit headers if requested (after AI processing completes)
-            if (includeCreditsHeader) {
-                addCreditHeaders(headers);
             }
 
             StreamingResponseBody body =
@@ -243,31 +214,5 @@ public class AiProxyController {
                                 log.warn("Skipping invalid header {}: {}", headerName, value);
                             }
                         });
-    }
-
-    /**
-     * Add credit headers to the response headers.
-     *
-     * @param headers The headers to add credit information to
-     */
-    private void addCreditHeaders(HttpHeaders headers) {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated()) {
-                log.debug("[AI-PROXY] No authentication found, skipping credit header");
-                return;
-            }
-
-            User user = AuthenticationUtils.getCurrentUser(auth, userRepository);
-            int remainingCredits =
-                    creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService);
-            if (remainingCredits >= 0) {
-                headers.set("X-Credits-Remaining", Integer.toString(remainingCredits));
-                log.warn("[AI-PROXY] Added X-Credits-Remaining header: {}", remainingCredits);
-            }
-            headers.set("X-Credit-Source", "AI_TOOL_CALL");
-        } catch (Exception e) {
-            log.error("[AI-PROXY] Failed to add credit header: {}", e.getMessage(), e);
-        }
     }
 }

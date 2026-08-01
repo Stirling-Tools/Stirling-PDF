@@ -5,12 +5,3 @@ pypdf
 reportlab
 PyCryptodome
 qrcode[pil]
-# PAYG cucumber scenarios inspect shadow rows directly against the
-# saas-profile Postgres container — see testing/cucumber/features/steps/payg_step_definitions.py.
-# Loaded by the saas-cucumber CI job only; main behave run doesn't touch it.
-psycopg[binary]
-# psycopg declares `typing-extensions>=4.6` under a Python-version marker that
-# pip-compile leaves unpinned, which trips `--require-hashes`. Listing it here
-# forces pip-compile to lock it to a concrete version with a hash. Without this,
-# both saas-cucumber and the main docker-compose-tests fail on `pip install`.
-typing-extensions

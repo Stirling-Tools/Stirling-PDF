@@ -1,21 +1,25 @@
 package stirling.software.proprietary.policy.store;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 
 /**
- * In-memory {@link PolicyStore}. Not the runtime bean - {@link JpaPolicyStore} is the durable
- * store. Kept as a lightweight, dependency-free implementation for tests and for any future no-
- * database mode.
+ * In-memory {@link PolicyStore} for tests and any future no-database mode. {@link JpaPolicyStore}
+ * is the runtime bean.
  */
 public class InProcessPolicyStore implements PolicyStore {
 
     private final Map<String, Policy> policies = new ConcurrentHashMap<>();
+    // Run-order position per policy id, mirroring JpaPolicyStore's sort_order column.
+    private final Map<String, Integer> sortOrders = new ConcurrentHashMap<>();
 
     @Override
     public Policy save(Policy policy) {
@@ -29,12 +33,29 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.name(),
                         policy.owner(),
                         policy.enabled(),
-                        policy.trigger(),
-                        policy.sources(),
+                        policy.inputs(),
                         policy.steps(),
-                        policy.output());
+                        policy.output(),
+                        policy.outputIds(),
+                        policy.teamId());
         policies.put(id, stored);
+        // Existing policy keeps its position; a new one appends to the end of its team's queue.
+        sortOrders.computeIfAbsent(id, key -> nextSortOrder(stored.teamId()));
         return stored;
+    }
+
+    private int nextSortOrder(Long teamId) {
+        return policies.values().stream()
+                        .filter(policy -> Objects.equals(policy.teamId(), teamId))
+                        .map(policy -> sortOrders.getOrDefault(policy.id(), 0))
+                        .max(Comparator.naturalOrder())
+                        .orElse(-1)
+                + 1;
+    }
+
+    private Comparator<Policy> byRunOrder() {
+        return Comparator.<Policy>comparingInt(policy -> sortOrders.getOrDefault(policy.id(), 0))
+                .thenComparing(Policy::id);
     }
 
     @Override
@@ -44,20 +65,38 @@ public class InProcessPolicyStore implements PolicyStore {
 
     @Override
     public List<Policy> all() {
-        return List.copyOf(policies.values());
+        return policies.values().stream().sorted(byRunOrder()).toList();
     }
 
     @Override
-    public List<Policy> findByTriggerType(String triggerType) {
+    public List<Policy> findByTeam(Long teamId) {
         return policies.values().stream()
-                .filter(Policy::enabled)
-                .filter(policy -> policy.trigger() != null)
-                .filter(policy -> triggerType.equals(policy.trigger().type()))
+                .filter(policy -> Objects.equals(policy.teamId(), teamId))
+                .sorted(byRunOrder())
                 .toList();
     }
 
     @Override
+    public List<PolicyBinding> findBindingsByTriggerType(String triggerType) {
+        List<Policy> enabled = policies.values().stream().filter(Policy::enabled).toList();
+        return PolicyBinding.matching(enabled, triggerType);
+    }
+
+    @Override
+    public void reorder(Long teamId, List<String> orderedIds) {
+        int position = 0;
+        for (String id : orderedIds) {
+            Policy policy = policies.get(id);
+            if (policy == null || !Objects.equals(policy.teamId(), teamId)) {
+                continue;
+            }
+            sortOrders.put(id, position++);
+        }
+    }
+
+    @Override
     public boolean delete(String id) {
+        sortOrders.remove(id);
         return policies.remove(id) != null;
     }
 }

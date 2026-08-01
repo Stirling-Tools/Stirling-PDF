@@ -1,11 +1,5 @@
-import {
-  Stack,
-  Text,
-  Button,
-  TextInput,
-  NumberInput,
-  Switch,
-} from "@mantine/core";
+import { Stack, Text, TextInput, NumberInput, Switch } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 
 export interface SignatureSettings {
@@ -49,8 +43,8 @@ const SignatureSettingsInput = ({
       {/* Signature Visibility */}
       <div style={{ display: "flex", gap: "4px" }}>
         <Button
-          variant={!value.showSignature ? "filled" : "outline"}
-          color={!value.showSignature ? "blue" : "var(--text-muted)"}
+          accent={!value.showSignature ? "default" : "neutral"}
+          variant={!value.showSignature ? "primary" : "secondary"}
           onClick={() => handleChange("showSignature", false)}
           disabled={disabled}
           style={{
@@ -67,8 +61,8 @@ const SignatureSettingsInput = ({
           </div>
         </Button>
         <Button
-          variant={value.showSignature ? "filled" : "outline"}
-          color={value.showSignature ? "blue" : "var(--text-muted)"}
+          accent={value.showSignature ? "default" : "neutral"}
+          variant={value.showSignature ? "primary" : "secondary"}
           onClick={() => handleChange("showSignature", true)}
           disabled={disabled}
           style={{

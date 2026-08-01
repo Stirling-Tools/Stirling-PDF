@@ -10,21 +10,16 @@
  * save UX that users expect from browser PDF viewers.
  */
 import React, { useCallback, useState } from "react";
-import {
-  Stack,
-  Group,
-  Text,
-  Button,
-  Transition,
-  CloseButton,
-  Paper,
-  Badge,
-} from "@mantine/core";
+import { Stack, Group, Text, Transition, Paper, Badge } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
 import EditNoteIcon from "@mui/icons-material/EditNote";
+import CloseIcon from "@mui/icons-material/Close";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 
 interface FormSaveBarProps {
   /** The current file being viewed */
@@ -33,12 +28,15 @@ interface FormSaveBarProps {
   isFormFillToolActive: boolean;
   /** Callback when form changes are applied (should reload PDF with filled values) */
   onApply?: (filledBlob: Blob) => Promise<void>;
+  /** Disable download while an ingestion-time policy run is in flight. */
+  policyEnforcing?: boolean;
 }
 
 export function FormSaveBar({
   file,
   isFormFillToolActive,
   onApply,
+  policyEnforcing = false,
 }: FormSaveBarProps) {
   const { t } = useTranslation();
   const { state, submitForm } = useFormFill();
@@ -77,15 +75,12 @@ export function FormSaveBar({
     setSaving(true);
     try {
       const blob = await submitForm(file, false);
-      // Trigger browser download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file instanceof File ? file.name : "filled-form.pdf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Route through the export gateway so a "run on export" policy enforces on
+      // the filled PDF before it leaves the app (no-op when no such policy is set).
+      await downloadFileWithPolicy({
+        data: blob,
+        filename: file instanceof File ? file.name : "filled-form.pdf",
+      });
     } catch (err) {
       console.error("[FormSaveBar] Download failed:", err);
     } finally {
@@ -162,37 +157,36 @@ export function FormSaveBar({
                     </Text>
                   </div>
                 </Group>
-                <CloseButton
+                <ActionIcon
                   size="sm"
-                  variant="subtle"
+                  variant="tertiary"
                   onClick={() => setDismissed(true)}
                   aria-label={t("viewer.formBar.dismiss", "Dismiss")}
-                />
+                >
+                  <CloseIcon sx={{ fontSize: 16 }} />
+                </ActionIcon>
               </Group>
 
               {isDirty && (
                 <Group gap="xs" mt="xs">
                   <Button
                     size="sm"
-                    variant="light"
-                    color="blue"
+                    variant="secondary"
                     leftSection={<SaveIcon sx={{ fontSize: 18 }} />}
                     loading={applying}
                     disabled={saving}
                     onClick={handleApply}
-                    flex={1}
+                    style={{ flex: 1 }}
                   >
                     {t("viewer.formBar.apply", "Apply Changes")}
                   </Button>
                   <Button
                     size="sm"
-                    variant="filled"
-                    color="blue"
                     leftSection={<DownloadIcon sx={{ fontSize: 18 }} />}
                     loading={saving}
-                    disabled={applying}
+                    disabled={applying || policyEnforcing}
                     onClick={handleDownload}
-                    flex={1}
+                    style={{ flex: 1 }}
                   >
                     {t("viewer.formBar.download", "Download PDF")}
                   </Button>

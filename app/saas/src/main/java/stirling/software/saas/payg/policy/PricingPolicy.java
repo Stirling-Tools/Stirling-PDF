@@ -74,18 +74,14 @@ public class PricingPolicy implements Serializable {
     private Integer fileUnitCap = 1000;
 
     /**
-     * Free-tier allowance — doc units a team on this policy can consume per cycle before they must
-     * add a card. {@code 0} (default) means no free tier; the team is blocked at 402 from their
-     * very first tool call until they pay. New-signup defaults will set this to a sensible positive
-     * value; the special launch policy used by the day-1 legacy migration script can override with
-     * a different size if product wants the original 10 customers to feel special.
-     *
-     * <p>Enforced by {@code PaygTeamUsageService} (PR-SB-4) on every tool call, gated on {@code
-     * payg_team_extensions.payg_subscription_id IS NULL} — teams with an active subscription bypass
-     * this check entirely.
+     * One-time lifetime free document grant handed to a team on creation. {@code 0} (default) means
+     * no free grant. NOT per-cycle: it never replenishes and a team keeps any unused portion after
+     * subscribing. The value is copied into {@code payg_team_extensions.free_units_remaining} when
+     * the team's sidecar row is created (V14 trigger, updated in V19); from then on the per-team
+     * counter is authoritative and this column is only the seed for new teams.
      */
-    @Column(name = "free_tier_units_per_cycle", nullable = false)
-    private Long freeTierUnitsPerCycle = 0L;
+    @Column(name = "free_tier_units", nullable = false)
+    private Long freeTierUnits = 0L;
 
     /**
      * Max tool steps allowed in one process before it splits, keyed by the caller's {@link
@@ -117,6 +113,21 @@ public class PricingPolicy implements Serializable {
             joinColumns = @JoinColumn(name = "policy_id"))
     @Column(name = "stripe_price_id", nullable = false, length = 128)
     private Set<String> stripePriceIds = new HashSet<>();
+
+    /**
+     * One-time Stripe Price id for prepaid-bundle checkout — same {@code unit_amount} as the
+     * metered price (Stripe {@code currency_options} cover all currencies on one Price). Read by
+     * the create-payg-bundle-checkout edge fn via {@code payg_get_bundle_checkout_context}. Null =
+     * bundles not offered for this policy. Money lives in Stripe; this is just the handle.
+     */
+    @Column(name = "bundle_stripe_price_id", length = 128)
+    private String bundleStripePriceId;
+
+    // No bundle_coupon_id field: the 12-for-10 discount is minted per-quote as an inline amount_off
+    // coupon by the create-payg-bundle-quote edge fn (computed from the bundle Price), so the
+    // pre-made percent coupon this policy used to carry is no longer consulted by anything. The
+    // column still exists (payg_get_bundle_pricing returns it) and is dropped in a later cleanup;
+    // ddl-auto=update never drops columns, so removing the mapping here is safe.
 
     /**
      * Exactly one row in the table has {@code is_default = true}; enforced by partial unique idx.

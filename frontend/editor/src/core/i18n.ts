@@ -2,71 +2,27 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import TomlBackend from "@app/i18n/tomlBackend";
+import {
+  supportedLanguages,
+  rtlLanguages,
+  I18N_STORAGE_KEYS,
+  LanguageSource,
+  normalizeLanguageCode,
+  toUnderscoreFormat,
+  toUnderscoreLanguages,
+} from "@app/i18n/languages";
 
-// Define supported languages (based on your existing translations)
-export const supportedLanguages = {
-  "en-US": "English (US)",
-  "en-GB": "English (UK)",
-  "ar-AR": "العربية",
-  "az-AZ": "Azərbaycan Dili",
-  "bg-BG": "Български",
-  "ca-CA": "Català",
-  "cs-CZ": "Česky",
-  "da-DK": "Dansk",
-  "de-DE": "Deutsch",
-  "el-GR": "Ελληνικά",
-  "es-ES": "Español",
-  "eu-ES": "Euskara",
-  "fa-IR": "فارسی",
-  "fr-FR": "Français",
-  "ga-IE": "Gaeilge",
-  "hi-IN": "हिंदी",
-  "hr-HR": "Hrvatski",
-  "hu-HU": "Magyar",
-  "id-ID": "Bahasa Indonesia",
-  "it-IT": "Italiano",
-  "ja-JP": "日本語",
-  "ko-KR": "한국어",
-  "ml-ML": "മലയാളം",
-  "nl-NL": "Nederlands",
-  "no-NB": "Norsk",
-  "pl-PL": "Polski",
-  "pt-BR": "Português (Brasil)",
-  "pt-PT": "Português",
-  "ro-RO": "Română",
-  "ru-RU": "Русский",
-  "sk-SK": "Slovensky",
-  "sl-SI": "Slovenščina",
-  "sr-LATN-RS": "Srpski",
-  "sv-SE": "Svenska",
-  "th-TH": "ไทย",
-  "tr-TR": "Türkçe",
-  "uk-UA": "Українська",
-  "vi-VN": "Tiếng Việt",
-  "zh-BO": "བོད་ཡིག",
-  "zh-CN": "简体中文",
-  "zh-TW": "繁體中文",
+// Language metadata and code helpers are shared with the portal via
+// @app/i18n. Re-export them so existing `@app/i18n` consumers are unchanged.
+export {
+  supportedLanguages,
+  rtlLanguages,
+  I18N_STORAGE_KEYS,
+  LanguageSource,
+  normalizeLanguageCode,
+  toUnderscoreFormat,
+  toUnderscoreLanguages,
 };
-
-// RTL languages (based on your existing language.direction property)
-export const rtlLanguages = ["ar-AR", "fa-IR"];
-
-// LocalStorage keys for i18next
-export const I18N_STORAGE_KEYS = {
-  LANGUAGE: "i18nextLng",
-  LANGUAGE_SOURCE: "i18nextLng-source",
-} as const;
-
-/**
- * Language selection priority levels
- * Higher number = higher priority (cannot be overridden by lower priority)
- */
-export enum LanguageSource {
-  Fallback = 0,
-  Browser = 1,
-  ServerDefault = 2,
-  User = 3,
-}
 
 i18n
   .use(TomlBackend)
@@ -138,36 +94,6 @@ i18n.on("initialized", () => {
     }
   }
 });
-
-export function normalizeLanguageCode(languageCode: string): string {
-  // Replace underscores with hyphens to align with i18next/translation file naming
-  const hyphenated = languageCode.replace(/_/g, "-");
-  const [base, ...rest] = hyphenated.split("-");
-
-  if (rest.length === 0) {
-    return base.toLowerCase();
-  }
-
-  const normalizedParts = rest.map((part) =>
-    part.length <= 3 ? part.toUpperCase() : part,
-  );
-  return [base.toLowerCase(), ...normalizedParts].join("-");
-}
-
-/**
- * Convert language codes to underscore format (e.g., en-US → en_US)
- * Used for backend API communication which expects underscore format
- */
-export function toUnderscoreFormat(languageCode: string): string {
-  return languageCode.replace(/-/g, "_");
-}
-
-/**
- * Convert array of language codes to underscore format
- */
-export function toUnderscoreLanguages(languages: string[]): string[] {
-  return languages.map(toUnderscoreFormat);
-}
 
 /**
  * Get the current language source priority

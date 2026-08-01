@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +42,8 @@ public class ReactRoutingController {
     private boolean loggedMissingIndex = false;
     private String cachedSaasLandingHtml;
     private boolean saasLandingExists = false;
+    private String cachedMobileUploadHtml;
+    private boolean mobileUploadHtmlExists = false;
 
     @PostConstruct
     public void init() {
@@ -65,8 +66,14 @@ public class ReactRoutingController {
             }
         }
 
+        // Desktop (Tauri) serves the SPA from its bundled webview, so a phone scanning the QR can't
+        // load the React /mobile-scanner route from the local backend. Cache the self-contained
+        // static upload page to serve at that route in desktop mode instead.
+        this.cachedMobileUploadHtml = readStaticHtml("mobile-upload.html");
+        this.mobileUploadHtmlExists = this.cachedMobileUploadHtml != null;
+
         // Check for external index.html first (customFiles/static/)
-        Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
+        Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
         log.debug("Checking for custom index.html at: {}", externalIndexPath);
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             log.info("Using custom index.html from: {}", externalIndexPath);
@@ -136,13 +143,35 @@ public class ReactRoutingController {
 
     private Resource getIndexHtmlResource() {
         // Check external location first
-        Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
+        Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             return new FileSystemResource(externalIndexPath.toFile());
         }
 
         // Fall back to classpath
         return new ClassPathResource("static/index.html");
+    }
+
+    private String readStaticHtml(String filename) {
+        try {
+            Path external = Path.of(InstallationPathConfig.getStaticPath(), filename);
+            if (Files.exists(external) && Files.isReadable(external)) {
+                return Files.readString(external, StandardCharsets.UTF_8);
+            }
+            ClassPathResource resource = new ClassPathResource("static/" + filename);
+            if (resource.exists()) {
+                try (InputStream in = resource.getInputStream()) {
+                    return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to read static HTML {}", filename, ex);
+        }
+        return null;
+    }
+
+    private static boolean isDesktopMode() {
+        return Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
     }
 
     @GetMapping(
@@ -189,6 +218,17 @@ public class ReactRoutingController {
 
     @GetMapping(value = "/share/{token}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> serveShareLinkPage(HttpServletRequest request) {
+        return serveIndexHtml(request);
+    }
+
+    @GetMapping(value = "/mobile-scanner", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveMobileScanner(HttpServletRequest request) {
+        if (isDesktopMode() && mobileUploadHtmlExists) {
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(cachedMobileUploadHtml);
+        }
         return serveIndexHtml(request);
     }
 

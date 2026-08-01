@@ -1,4 +1,5 @@
 import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
+import ProcessorIntroSlide from "@app/components/onboarding/slides/ProcessorIntroSlide";
 import DesktopInstallSlide from "@app/components/onboarding/slides/DesktopInstallSlide";
 import SecurityCheckSlide from "@app/components/onboarding/slides/SecurityCheckSlide";
 import PlanOverviewSlide from "@app/components/onboarding/slides/PlanOverviewSlide";
@@ -7,11 +8,20 @@ import FirstLoginSlide from "@app/components/onboarding/slides/FirstLoginSlide";
 import TourOverviewSlide from "@app/components/onboarding/slides/TourOverviewSlide";
 import AnalyticsChoiceSlide from "@app/components/onboarding/slides/AnalyticsChoiceSlide";
 import MFASetupSlide from "@app/components/onboarding/slides/MFASetupSlide";
-import { SlideConfig, LicenseNotice } from "@app/types/types";
+import { LicenseNotice } from "@app/types/types";
+import type {
+  OSOption,
+  ButtonDefinition as ButtonDefinitionBase,
+  HeroDefinition as HeroDefinitionBase,
+  SlideDefinition as SlideDefinitionBase,
+} from "@app/components/onboarding/onboardingSlideTypes";
+
+export type { OSOption };
 
 export type SlideId =
   | "first-login"
   | "welcome"
+  | "processor-intro"
   | "desktop-install"
   | "security-check"
   | "admin-overview"
@@ -39,6 +49,7 @@ export type ButtonAction =
   | "launch-admin"
   | "launch-tools"
   | "launch-auto"
+  | "open-processor"
   | "see-plans"
   | "skip-to-license"
   | "skip-tour"
@@ -47,12 +58,6 @@ export type ButtonAction =
 
 export interface FlowState {
   selectedRole: "admin" | "user" | null;
-}
-
-export interface OSOption {
-  label: string;
-  url: string;
-  value: string;
 }
 
 export interface SlideFactoryParams {
@@ -73,27 +78,17 @@ export interface SlideFactoryParams {
   onMfaSetupComplete?: () => void;
 }
 
-export interface HeroDefinition {
-  type: HeroType;
-}
+export type HeroDefinition = HeroDefinitionBase<HeroType>;
 
-export interface ButtonDefinition {
-  key: string;
-  type: "button" | "icon";
-  label?: string;
-  icon?: "chevron-left";
-  variant?: "primary" | "secondary" | "default";
-  group: "left" | "right";
-  action: ButtonAction;
-  disabledWhen?: (state: FlowState) => boolean;
-}
+export type ButtonDefinition = ButtonDefinitionBase<ButtonAction, FlowState>;
 
-export interface SlideDefinition {
-  id: SlideId;
-  createSlide: (params: SlideFactoryParams) => SlideConfig;
-  hero: HeroDefinition;
-  buttons: ButtonDefinition[];
-}
+export type SlideDefinition = SlideDefinitionBase<
+  SlideId,
+  ButtonAction,
+  FlowState,
+  HeroType,
+  SlideFactoryParams
+>;
 
 export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   "first-login": {
@@ -123,6 +118,36 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
         variant: "primary",
         group: "right",
         action: "next",
+      },
+    ],
+  },
+  "processor-intro": {
+    id: "processor-intro",
+    createSlide: () => ProcessorIntroSlide(),
+    hero: { type: "diamond" },
+    buttons: [
+      {
+        key: "processor-back",
+        type: "icon",
+        icon: "chevron-left",
+        group: "left",
+        action: "prev",
+      },
+      {
+        key: "processor-skip",
+        type: "button",
+        label: "onboarding.buttons.skipForNow",
+        variant: "secondary",
+        group: "left",
+        action: "next",
+      },
+      {
+        key: "processor-open",
+        type: "button",
+        label: "onboarding.processorIntro.cta",
+        variant: "primary",
+        group: "right",
+        action: "open-processor",
       },
     ],
   },
@@ -238,6 +263,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
         type: "button",
         label: "onboarding.serverLicense.seePlans",
         variant: "primary",
+        accent: "premium",
         group: "right",
         action: "see-plans",
       },
