@@ -12,6 +12,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap; /* actions drop below the title on narrow screens */
   gap: 1rem;
 }
 
@@ -19,14 +20,14 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-pipelines__sub {
   margin: 0.25rem 0 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   max-width: 46rem;
 }
 
@@ -48,7 +49,7 @@
 .portal-pipelines__name-text strong {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-pipelines__pipe-dot {
@@ -60,25 +61,25 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
-  background: var(--color-blue-light);
-  color: var(--color-blue);
+  background: var(--c-primary-tint);
+  color: var(--c-primary);
 }
 
 .portal-pipelines__muted {
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   margin: 0;
 }
 
 .portal-pipelines__caret {
   display: inline-block;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   transition: transform var(--motion-fast);
 }
 
 .portal-pipelines__caret.is-open {
   transform: rotate(90deg);
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 /* Table skeleton */
@@ -93,7 +94,7 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-weight: 600;
 }
 
@@ -112,7 +113,7 @@
   overflow-y: auto;
   padding: 0.625rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
 }
 

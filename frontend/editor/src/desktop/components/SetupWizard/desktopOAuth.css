@@ -30,7 +30,7 @@
 }
 
 .oauth-button-vertical-desktop:hover:not(:disabled) {
-  background-color: var(--bg-raised);
+  background-color: var(--c-surface-raised);
 }
 
 .oauth-button-vertical-desktop:disabled {

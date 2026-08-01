@@ -88,7 +88,12 @@ function compressStaticCopyPlugin(): PluginOption {
 // Pages). Otherwise URLs stay root-relative, which still resolves against whatever
 // origin serves the page (correct for self-hosted Docker). Logic lives in
 // scripts/og-prerender.mjs so it can be unit-tested without a full build.
-function prerenderOgPlugin(): PluginOption {
+function prerenderOgPlugin(isSaas: boolean): PluginOption {
+  // SaaS (stirling.com) prerenders the marketing cards from a dedicated
+  // manifest; every other flavour uses the tool-registry manifest.
+  const manifestFile = isSaas
+    ? "public/og-metadata.saas.json"
+    : "public/og-metadata.json";
   return {
     name: "prerender-og",
     apply: "build" as const,
@@ -105,14 +110,11 @@ function prerenderOgPlugin(): PluginOption {
       let manifest;
       try {
         manifest = JSON.parse(
-          await fs.readFile(
-            path.resolve(__dirname, "public/og-metadata.json"),
-            "utf8",
-          ),
+          await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
         );
       } catch {
         console.warn(
-          "[prerender-og] public/og-metadata.json missing; skipping OG prerender. " +
+          `[prerender-og] ${manifestFile} missing; skipping OG prerender. ` +
             "Run `node scripts/generate-og-metadata.mjs`.",
         );
         return;
@@ -330,7 +332,7 @@ export default defineConfig(async ({ mode, command }) => {
         ],
       }),
       compressStaticCopyPlugin(),
-      prerenderOgPlugin(),
+      prerenderOgPlugin(effectiveMode === "saas"),
     ],
     server: {
       host: true,

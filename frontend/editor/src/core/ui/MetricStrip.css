@@ -9,3 +9,9 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+@media (max-width: 30rem) {
+  .sui-metric-strip {
+    grid-template-columns: 1fr;
+  }
+}

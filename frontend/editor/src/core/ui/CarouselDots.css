@@ -11,7 +11,7 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--sui-dot-color, var(--color-text-5));
+  background: var(--sui-dot-color, var(--c-text-subtle));
   opacity: 0.4;
   cursor: pointer;
   transition:
@@ -25,14 +25,14 @@
 }
 
 .sui-carousel-dots__dot:focus-visible {
-  outline: 2px solid var(--sui-dot-active-color, var(--color-blue));
+  outline: 2px solid var(--sui-dot-active-color, var(--c-primary));
   outline-offset: 2px;
 }
 
 .sui-carousel-dots__dot.is-active {
   width: 1rem;
   border-radius: var(--radius-pill);
-  background: var(--sui-dot-active-color, var(--color-blue));
+  background: var(--sui-dot-active-color, var(--c-primary));
   opacity: 1;
 }
 

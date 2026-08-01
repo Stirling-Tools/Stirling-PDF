@@ -68,6 +68,7 @@ import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
 import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.EditorSource;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -123,7 +124,7 @@ public class PolicyController {
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
-        validateAdHocOutput(definition);
+        validateAdHocRun(definition);
         PolicyInputs inputs = toInputs(files);
         PolicyRunHandle handle =
                 policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
@@ -144,7 +145,7 @@ public class PolicyController {
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
-        validateAdHocOutput(definition);
+        validateAdHocRun(definition);
         PolicyInputs inputs = toInputs(files);
 
         SseEmitter emitter =
@@ -248,6 +249,7 @@ public class PolicyController {
         requirePolicyEditingAllowed();
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         requireAccessibleSources(owned);
+        requireAccessibleOutput(owned);
         try {
             policyValidator.validate(owned);
         } catch (IllegalArgumentException e) {
@@ -291,6 +293,40 @@ public class PolicyController {
     }
 
     /**
+     * A policy's output destination is a {@link Source} used as a write target: it must resolve to
+     * a source in the caller's team, so a client can neither reference a non-existent location nor
+     * reach across teams to write to another team's. The editor is virtual and has no writable
+     * location, so it can't be a destination. The config is then validated on this (request) thread
+     * so an S3 destination's connection is authorization-checked against the caller - the async
+     * delivery worker has no principal. A policy with no reference (inline / editor / one-off) has
+     * nothing to check.
+     */
+    private void requireAccessibleOutput(Policy policy) {
+        for (String outputId : policy.outputIds()) {
+            Source destination =
+                    sourceStore
+                            .get(outputId)
+                            .filter(sourceAccessGuard::canAccess)
+                            .orElseThrow(
+                                    () ->
+                                            new ResponseStatusException(
+                                                    HttpStatus.BAD_REQUEST,
+                                                    "Unknown or inaccessible output source: "
+                                                            + outputId));
+            if (EditorSource.TYPE.equals(destination.type())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "The editor can't be used as an output destination");
+            }
+            try {
+                policyValidator.validateOutput(destination.toOutputSpec());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            }
+        }
+    }
+
+    /**
      * Assign owner + owning team server-side. Create stamps the current user and their team; update
      * preserves the existing owner and team after verifying the policy belongs to the caller's team
      * — so the client can neither forge ownership/team on create nor reach across teams on update
@@ -319,10 +355,10 @@ public class PolicyController {
                 policy.name(),
                 owner,
                 policy.enabled(),
-                policy.trigger(),
-                policy.sourceIds(),
+                policy.inputs(),
                 policy.steps(),
                 policy.output(),
+                policy.outputIds(),
                 teamId);
     }
 
@@ -358,16 +394,7 @@ public class PolicyController {
     }
 
     private static Policy withOutput(Policy policy, OutputSpec output) {
-        return new Policy(
-                policy.id(),
-                policy.name(),
-                policy.owner(),
-                policy.enabled(),
-                policy.trigger(),
-                policy.sourceIds(),
-                policy.steps(),
-                output,
-                policy.teamId());
+        return policy.withOutput(output);
     }
 
     /**
@@ -560,18 +587,23 @@ public class PolicyController {
     }
 
     /**
-     * Authorization-check an ad-hoc run's output while the caller's principal is present (this
-     * request thread). The worker thread that later delivers carries no security context, so an S3
-     * output's connection-access check would be skipped there; without this gate a caller could
-     * reference another tenant's connection by id and write to it (confused deputy). Stored
-     * policies are covered by save-time {@link PolicyValidator#validate} instead.
+     * Authorization-check an ad-hoc run's steps and output while the caller's principal is present
+     * (this request thread). The worker thread that later runs and delivers carries no security
+     * context, so a connection-access check would be skipped there; without this gate a caller
+     * could reference another tenant's connection by id and write to it, or make the server call it
+     * with its stored credentials (confused deputy). Stored policies are covered by save-time
+     * {@link PolicyValidator#validate} instead.
      */
-    private void validateAdHocOutput(PipelineDefinition definition) {
-        if (definition.output() == null) {
-            return;
-        }
+    private void validateAdHocRun(PipelineDefinition definition) {
         try {
-            policyValidator.validateOutput(definition.output());
+            // Steps get the same treatment as the output, and for the same reason: an integration
+            // step dereferences its connection by id on a principal-less worker thread, so this
+            // request thread is the only place that reference can be checked against the caller.
+            policyValidator.validateSteps(definition.steps());
+            // Every destination is checked; an ad-hoc run with no destinations validates nothing.
+            for (OutputSpec output : definition.outputs()) {
+                policyValidator.validateOutput(output);
+            }
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }

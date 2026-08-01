@@ -29,12 +29,8 @@ permissions:
   contents: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   aggregate:
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Harden Runner
@@ -66,7 +62,7 @@ jobs:
           cache-disabled: true
 
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
 
