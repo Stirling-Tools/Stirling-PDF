@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button, Card, MetricCard, MetricStrip } from "@app/ui";
 import GroupsIcon from "@mui/icons-material/GroupsRounded";
 import PersonAddIcon from "@mui/icons-material/PersonAddAltRounded";
-import { useAsync } from "@portal/hooks/useAsync";
-import { fetchFleetStats } from "@portal/api/fleetStats";
+import { useFleetStats } from "@portal/queries/infrastructure";
 
 /**
  * "Free PDF Editors" team-fleet card. Editors-deployed / active-this-month /
@@ -22,7 +21,7 @@ function fmtMetric(value: number | null | undefined, loading: boolean): string {
 export function FreePdfEditorsCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { data, loading } = useAsync((signal) => fetchFleetStats(signal), []);
+  const { data, loading } = useFleetStats();
   return (
     <Card padding="loose">
       <div className="portal-billing__fleet-row">

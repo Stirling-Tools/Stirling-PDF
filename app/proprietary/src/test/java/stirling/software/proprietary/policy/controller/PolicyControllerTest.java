@@ -27,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import stirling.software.common.cluster.JobStore;
+import stirling.software.common.cluster.inprocess.InProcessJobStore;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.service.JobOwnershipService;
@@ -78,6 +80,7 @@ class PolicyControllerTest {
     @Mock private JobOwnershipService jobOwnershipService;
 
     private ApplicationProperties applicationProperties;
+    private final JobStore jobStore = new InProcessJobStore();
     private PolicyController controller;
 
     private final java.util.List<stirling.software.proprietary.policy.trigger.PolicyTrigger>
@@ -106,7 +109,8 @@ class PolicyControllerTest {
                         policyTriggers,
                         applicationProperties,
                         tempFileManager,
-                        jobOwnershipService);
+                        jobOwnershipService,
+                        jobStore);
     }
 
     private static stirling.software.proprietary.policy.trigger.PolicyTrigger trigger(
@@ -131,11 +135,11 @@ class PolicyControllerTest {
 
     private static PipelineDefinition definitionWithStep() {
         return new PipelineDefinition(
-                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), null);
+                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), List.of());
     }
 
     private static Policy policy(String id, Long teamId) {
-        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), null, teamId);
+        return new Policy(id, "name", "owner", true, List.of(), List.of(), null, teamId);
     }
 
     private static Policy s3OutputPolicy(String id, String secret) {
@@ -146,7 +150,7 @@ class PolicyControllerTest {
                                 "bucket", "outbox",
                                 "accessKeyId", "AKIAEXAMPLE",
                                 "secretAccessKey", secret));
-        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), output, 1L);
+        return new Policy(id, "name", "owner", true, List.of(), List.of(), output, 1L);
     }
 
     private static PolicyRunHandle handle(String runId) {
@@ -186,7 +190,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmptyPipeline() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), null);
+            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.run(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
@@ -237,7 +241,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmpty() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), null);
+            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.runStream(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class);
@@ -264,6 +268,8 @@ class PolicyControllerTest {
         @DisplayName("returns 404 when run is unknown")
         void notFound() {
             when(runRegistry.get("missing")).thenReturn(null);
+            when(jobOwnershipService.extractJobId("missing")).thenReturn("missing");
+            when(jobOwnershipService.createScopedJobKey("missing")).thenReturn("missing");
 
             ResponseEntity<PolicyRunView> response = controller.status("missing");
 
@@ -395,8 +401,7 @@ class PolicyControllerTest {
         void updatePreservesOwnership() {
             applicationProperties.getSecurity().setEnableLogin(false);
             Policy existing =
-                    new Policy(
-                            "p2", "name", "origOwner", true, null, List.of(), List.of(), null, 3L);
+                    new Policy("p2", "name", "origOwner", true, List.of(), List.of(), null, 3L);
             when(policyStore.get("p2")).thenReturn(Optional.of(existing));
             when(policyAccessGuard.canAccess(existing)).thenReturn(true);
             when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -404,8 +409,7 @@ class PolicyControllerTest {
             ResponseEntity<Policy> response =
                     controller.savePolicy(
                             new Policy(
-                                    "p2", "name", "forged", true, null, List.of(), List.of(), null,
-                                    77L));
+                                    "p2", "name", "forged", true, List.of(), List.of(), null, 77L));
 
             assertThat(response.getBody().owner()).isEqualTo("origOwner");
             assertThat(response.getBody().teamId()).isEqualTo(3L);

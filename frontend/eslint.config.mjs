@@ -268,6 +268,21 @@ export default defineConfig(
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
     },
   },
+  // TEMPORARY (same rationale as procurement above): the connection/operation catalogues render
+  // bespoke preset tiles (brand mark + two-line text), and the integrations
+  // page adds the same tiles as full-width expandable rows plus filter chips.
+  // Raw-<button> rule only; migrate later.
+  {
+    files: [
+      "editor/src/portal/components/sources/ConnectionTypePicker.tsx",
+      "editor/src/portal/components/sources/SourceModal.tsx",
+      "editor/src/portal/components/policies/PolicyExternalApiConfig.tsx",
+      "editor/src/portal/views/Integrations.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
+    },
+  },
   // Stricter rules that not all sub-folders are conformant to yet.
   {
     files: srcGlobs,

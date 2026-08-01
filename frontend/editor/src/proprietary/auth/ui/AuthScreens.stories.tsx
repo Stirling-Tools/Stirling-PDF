@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
 import AuthSignupPrompt from "@app/auth/ui/AuthSignupPrompt";

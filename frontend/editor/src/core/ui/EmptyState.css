@@ -14,7 +14,7 @@
 .sui-empty__icon {
   display: inline-flex;
   margin-bottom: var(--space-2);
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .sui-empty__eyebrow {
@@ -22,14 +22,14 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 .sui-empty__title {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .sui-empty--compact .sui-empty__title {
@@ -41,7 +41,7 @@
   max-width: 32rem;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .sui-empty--compact .sui-empty__copy {

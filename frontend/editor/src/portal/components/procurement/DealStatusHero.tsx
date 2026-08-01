@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import type { ViewId } from "@portal/contexts/ViewContext";
@@ -6,6 +7,7 @@ import {
   type ProcurementSnapshot,
 } from "@portal/api/procurement";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
+import { warmCalendly } from "@portal/components/procurement/CalendlyInline";
 import "@portal/views/Procurement.css";
 
 /**
@@ -38,6 +40,13 @@ export function DealStatusHero({
   onNavigate: (view: ViewId) => void;
 }) {
   const { t } = useTranslation();
+
+  // Warm Calendly's connections + widget script as soon as the "Schedule a call" action is
+  // available, so opening the scheduler initialises quickly instead of paying a cold fetch.
+  useEffect(() => {
+    if (canSchedule) warmCalendly();
+  }, [canSchedule]);
+
   const stage = snapshot.stage ?? "trial";
   const inTrial = stage === "trial";
   const cta =

@@ -44,10 +44,13 @@ public class CredentialEncryption {
     private static volatile SecretKey key;
 
     private final String configuredKey;
+    private final boolean clusterEnabled;
 
     public CredentialEncryption(
-            @Value("${stirling.security.credentialEncryptionKey:}") String configuredKey) {
+            @Value("${stirling.security.credentialEncryptionKey:}") String configuredKey,
+            @Value("${cluster.enabled:false}") boolean clusterEnabled) {
         this.configuredKey = configuredKey;
+        this.clusterEnabled = clusterEnabled;
     }
 
     @PostConstruct
@@ -63,6 +66,14 @@ public class CredentialEncryption {
         }
         if (configured != null && !configured.isBlank()) {
             return new SecretKeySpec(Base64.getDecoder().decode(configured.trim()), ALGORITHM);
+        }
+        // Cluster nodes must share this key, so fail fast rather than generate a node-local one.
+        if (clusterEnabled) {
+            throw new IllegalStateException(
+                    "cluster.enabled=true requires a shared credential encryption key. Set"
+                            + " STIRLING_CREDENTIAL_ENCRYPTION_KEY (or"
+                            + " stirling.security.credentialEncryptionKey) to the same value on every"
+                            + " node.");
         }
         return loadOrCreateKeyFile();
     }
