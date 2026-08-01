@@ -4,20 +4,19 @@ import { useTranslation } from "react-i18next";
 import {
   Stack,
   Text,
-  Button,
   Table,
-  ActionIcon,
   Badge,
   Loader,
   Group,
   Modal,
   Select,
-  CloseButton,
   Tooltip,
   Menu,
   Avatar,
   Box,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
@@ -55,6 +54,9 @@ export default function TeamDetailsSection({
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [processing, setProcessing] = useState(false);
+  const availableUsersForTeam = team
+    ? availableUsers.filter((user) => user.team?.id !== team.id)
+    : [];
 
   // License information
   const [licenseInfo, setLicenseInfo] = useState<{
@@ -351,7 +353,7 @@ export default function TeamDetailsSection({
         <Text size="sm" c="red">
           {t("workspace.teams.teamNotFound", "Team not found")}
         </Text>
-        <Button variant="light" onClick={onBack}>
+        <Button variant="secondary" onClick={onBack}>
           {t("workspace.teams.backToTeams", "Back to Teams")}
         </Button>
       </Stack>
@@ -362,7 +364,11 @@ export default function TeamDetailsSection({
     <Stack gap="lg">
       {/* Header with back button */}
       <Group>
-        <ActionIcon variant="subtle" onClick={onBack}>
+        <ActionIcon
+          variant="tertiary"
+          onClick={onBack}
+          aria-label={t("common.back", "Back")}
+        >
           <LocalIcon icon="arrow-back" width="1.2rem" height="1.2rem" />
         </ActionIcon>
         <div style={{ flex: 1 }}>
@@ -370,8 +376,7 @@ export default function TeamDetailsSection({
             {team.name}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("workspace.teams.memberCount", { count: teamUsers.length })}{" "}
-            {teamUsers.length === 1 ? "member" : "members"}
+            {t("workspace.teams.memberCount", { count: teamUsers.length })}
           </Text>
         </div>
       </Group>
@@ -379,10 +384,9 @@ export default function TeamDetailsSection({
       {/* Add Member Button */}
       <Group justify="flex-end">
         <Tooltip
-          label={t(
-            "workspace.people.license.noSlotsAvailable",
-            "No user slots available",
-          )}
+          label={t("workspace.people.license.slotsAvailable", {
+            count: licenseInfo ? licenseInfo.availableSlots : 0,
+          })}
           disabled={!licenseInfo || licenseInfo.availableSlots > 0}
           position="bottom"
           withArrow
@@ -532,7 +536,7 @@ export default function TeamDetailsSection({
                     >
                       {(user.rolesAsString || "").includes("ROLE_ADMIN")
                         ? t("workspace.people.admin")
-                        : t("workspace.people.member")}
+                        : t("workspace.people.user")}
                     </Badge>
                   </Table.Td>
                   <Table.Td>
@@ -561,7 +565,14 @@ export default function TeamDetailsSection({
                         withArrow
                         zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                       >
-                        <ActionIcon variant="subtle" color="gray" size="sm">
+                        <ActionIcon
+                          variant="tertiary"
+                          size="sm"
+                          aria-label={t(
+                            "workspace.people.userInfo",
+                            "User info",
+                          )}
+                        >
                           <LocalIcon icon="info" width="1rem" height="1rem" />
                         </ActionIcon>
                       </Tooltip>
@@ -569,7 +580,13 @@ export default function TeamDetailsSection({
                       {/* Actions menu */}
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray">
+                          <ActionIcon
+                            variant="tertiary"
+                            aria-label={t(
+                              "workspace.people.memberActions",
+                              "Member actions",
+                            )}
+                          >
                             <LocalIcon
                               icon="more-vert"
                               width="1rem"
@@ -694,16 +711,20 @@ export default function TeamDetailsSection({
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <CloseButton
+          <ActionIcon
             onClick={() => setAddMemberModalOpened(false)}
             size="lg"
+            variant="tertiary"
+            aria-label={t("common.close", "Close")}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close-rounded" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -727,7 +748,7 @@ export default function TeamDetailsSection({
               placeholder={t(
                 "workspace.teams.addMemberToTeam.selectUserPlaceholder",
               )}
-              data={availableUsers.map((user) => ({
+              data={availableUsersForTeam.map((user) => ({
                 value: user.id.toString(),
                 label: `${user.username}${user.team ? ` (${t("workspace.teams.addMemberToTeam.currentlyIn")} ${user.team.name})` : ""}`,
               }))}
@@ -741,8 +762,9 @@ export default function TeamDetailsSection({
             />
 
             {selectedUserId &&
-              availableUsers.find((u) => u.id.toString() === selectedUserId)
-                ?.team && (
+              availableUsersForTeam.find(
+                (u) => u.id.toString() === selectedUserId,
+              )?.team && (
                 <Text size="xs" c="orange">
                   {t("workspace.teams.addMemberToTeam.willBeMoved")}
                 </Text>
@@ -753,7 +775,7 @@ export default function TeamDetailsSection({
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.teams.addMemberToTeam.submit")}
             </Button>
@@ -772,16 +794,20 @@ export default function TeamDetailsSection({
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <CloseButton
+          <ActionIcon
             onClick={() => setChangeTeamModalOpened(false)}
             size="lg"
+            variant="tertiary"
+            aria-label={t("common.close", "Close")}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close-rounded" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -826,7 +852,7 @@ export default function TeamDetailsSection({
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.teams.changeTeam.submit", "Change Team")}
             </Button>

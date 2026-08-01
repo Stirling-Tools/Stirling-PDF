@@ -6,6 +6,8 @@ import React, {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
 import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
@@ -68,6 +70,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   manualCloseOnly = false,
   showCloseButton = false,
 }) => {
+  const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const { tooltipLogo } = useLogoAssets();
@@ -380,7 +383,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
         visibility: positionReady ? "visible" : "hidden",
         opacity: positionReady ? 1 : 0,
-        color: "var(--text-primary)",
+        color: "var(--c-text)",
         ...containerStyle,
       }}
       className={`${styles["tooltip-container"]} ${isPinned ? styles.pinned : ""}`}
@@ -394,18 +397,19 @@ export const Tooltip: React.FC<TooltipProps> = ({
       }
     >
       {shouldShowCloseButton && (
-        <button
+        <ActionIcon
+          variant="tertiary"
           className={styles["tooltip-pin-button"]}
           onClick={(e) => {
             e.stopPropagation();
             setIsPinned(false);
             setOpen(false);
           }}
-          title="Close tooltip"
-          aria-label="Close tooltip"
+          title={t("tooltip.close", "Close tooltip")}
+          aria-label={t("tooltip.close", "Close tooltip")}
         >
           <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
-        </button>
+        </ActionIcon>
       )}
       {arrow && !sidebarTooltip && (
         <div

@@ -7,7 +7,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
@@ -27,7 +26,7 @@ public class ConfigInitializer {
 
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // 1) If settings file doesn't exist, create from template
-        Path destPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        Path destPath = Path.of(InstallationPathConfig.getSettingsPath());
 
         boolean settingsFileExists = Files.exists(destPath);
 
@@ -39,7 +38,7 @@ public class ConfigInitializer {
             if (settingsFileExists) {
                 // move settings.yml to settings.yml.{timestamp}.bak
                 Path backupPath =
-                        Paths.get(
+                        Path.of(
                                 InstallationPathConfig.getSettingsPath()
                                         + "."
                                         + System.currentTimeMillis()
@@ -80,6 +79,7 @@ public class ConfigInitializer {
             YamlHelper settingsFile = new YamlHelper(settingTempPath);
 
             migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);
+            migrateProFeaturesKeyCasing(settingsFile, settingsTemplateFile);
 
             boolean changesMade =
                     settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);
@@ -95,7 +95,7 @@ public class ConfigInitializer {
         }
 
         // 3) Ensure custom settings file exists
-        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
+        Path customSettingsPath = Path.of(InstallationPathConfig.getCustomSettingsPath());
         if (Files.notExists(customSettingsPath)) {
             Files.createFile(customSettingsPath);
             log.info("Created custom_settings file: {}", customSettingsPath);
@@ -116,31 +116,52 @@ public class ConfigInitializer {
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin") != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "SSOAutoLogin"),
+                    List.of("premium", "proFeatures", "ssoAutoLogin"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "autoUpdateMetadata")
                 != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "CustomMetadata", "autoUpdateMetadata"),
+                    List.of("premium", "proFeatures", "customMetadata", "autoUpdateMetadata"),
                     yaml.getValueByExactKeyPath(
                             "enterpriseEdition", "CustomMetadata", "autoUpdateMetadata"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author") != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "CustomMetadata", "author"),
+                    List.of("premium", "proFeatures", "customMetadata", "author"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator") != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "CustomMetadata", "creator"),
+                    List.of("premium", "proFeatures", "customMetadata", "creator"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer")
                 != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "CustomMetadata", "producer"),
+                    List.of("premium", "proFeatures", "customMetadata", "producer"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer"));
+        }
+    }
+
+    // TODO: Remove post migration
+    // settings.yml.template renamed the two non-camelCase proFeatures keys
+    // ("SSOAutoLogin" -> "ssoAutoLogin", "CustomMetadata" -> "customMetadata") so the whole
+    // settings pipeline is consistent camelCase. The save path (YamlHelper.updateValue) matches
+    // keys case-sensitively, so without this carry-forward an existing install's values written
+    // under the old PascalCase keys would be dropped on upgrade and reset to template defaults.
+    void migrateProFeaturesKeyCasing(YamlHelper yaml, YamlHelper template) {
+        Object ssoAutoLogin = yaml.getValueByExactKeyPath("premium", "proFeatures", "SSOAutoLogin");
+        if (ssoAutoLogin != null) {
+            template.updateValue(List.of("premium", "proFeatures", "ssoAutoLogin"), ssoAutoLogin);
+        }
+        for (String field : List.of("autoUpdateMetadata", "author", "creator", "producer")) {
+            Object value =
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", field);
+            if (value != null) {
+                template.updateValue(
+                        List.of("premium", "proFeatures", "customMetadata", field), value);
+            }
         }
     }
 }

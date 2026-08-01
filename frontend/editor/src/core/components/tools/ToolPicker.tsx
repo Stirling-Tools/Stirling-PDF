@@ -1,6 +1,7 @@
-import React, { memo, useMemo, useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import "@app/components/tools/toolPicker/ToolPicker.css";
 import { useToolSections } from "@app/hooks/useToolSections";
@@ -10,6 +11,7 @@ import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
 import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
+import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
 import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
@@ -22,16 +24,20 @@ interface ToolPickerProps {
     matchedText?: string;
   }>;
   isSearching?: boolean;
+  /** Compact "resting" view: favourites + recommended only, with a button to expand. */
+  compact?: boolean;
+  /** Called when the user clicks "View all tools" in compact mode. */
+  onShowAllTools?: () => void;
 }
 
 const EMPTY_FILTERED_TOOLS: ToolPickerProps["filteredTools"] = [];
 const HEADER_TEXT_STYLE: React.CSSProperties = {
   fontSize: "0.68rem",
   fontWeight: 600,
-  padding: "1rem 0 0.35rem 0.5rem",
+  padding: "0.25rem 0 0.35rem 0.5rem",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  color: "var(--text-muted)",
+  color: "var(--c-text-subtle)",
 };
 const SCROLLABLE_STYLE: React.CSSProperties = {
   flex: 1,
@@ -44,7 +50,7 @@ const SCROLLABLE_STYLE: React.CSSProperties = {
 const CONTAINER_STYLE: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  background: "var(--bg-toolbar)",
+  background: "var(--c-bg-raised)",
 };
 const toTitleCase = (s: string) =>
   s.replace(
@@ -57,6 +63,8 @@ const ToolPicker = ({
   onSelect,
   filteredTools,
   isSearching = false,
+  compact = false,
+  onShowAllTools,
 }: ToolPickerProps) => {
   const { t } = useTranslation();
 
@@ -72,15 +80,29 @@ const ToolPicker = ({
     [visibleSections],
   );
 
+  // Signing items needing the user's attention: requests awaiting their
+  // signature, plus their own sessions newly signed since last opened
+  // (0 when group signing is disabled).
+  const signingBadgeCount = useSigningBadgeCount();
+
   const recommendedItems = useMemo(() => {
-    if (!quickSection)
-      return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
     const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
-    quickSection.subcategories.forEach((sc: SubcategoryGroup) =>
+    quickSection?.subcategories.forEach((sc: SubcategoryGroup) =>
       sc.tools.forEach((toolEntry) => items.push(toolEntry)),
     );
+    // While signing needs the user's attention, surface Shared Signing at the
+    // top of Recommended so it's easy to find without hunting in the Signing group.
+    if (signingBadgeCount > 0) {
+      const sharedSignTool = toolRegistry["sharedSign" as ToolId];
+      if (sharedSignTool) {
+        return [
+          { id: "sharedSign", tool: sharedSignTool },
+          ...items.filter(({ id }) => id !== "sharedSign"),
+        ];
+      }
+    }
     return items;
-  }, [quickSection]);
+  }, [quickSection, signingBadgeCount, toolRegistry]);
 
   const allSection = useMemo(
     () => visibleSections.find((s) => s.key === "all"),
@@ -118,10 +140,64 @@ const ToolPicker = ({
               )
             )}
           </Stack>
+        ) : compact ? (
+          /* Resting state: flat list of pinned + recommended only. */
+          <Box className="tool-picker__compact">
+            <div style={HEADER_TEXT_STYLE}>
+              {t("toolPanel.toolsHeader", "Tools")}
+            </div>
+            {favoriteToolItems.length === 0 && recommendedItems.length === 0 ? (
+              <NoToolsFound />
+            ) : (
+              <div className="tool-picker__compact-list">
+                {favoriteToolItems.map(({ id, tool }) => (
+                  <ToolButton
+                    key={`fav-${id}`}
+                    id={id}
+                    tool={tool}
+                    isSelected={selectedToolKey === id}
+                    onSelect={onSelect}
+                    hasStars
+                    showDescription
+                  />
+                ))}
+                {recommendedItems
+                  .filter(
+                    ({ id }) => !favoriteToolItems.some((fav) => fav.id === id),
+                  )
+                  .map(({ id, tool }) => (
+                    <ToolButton
+                      key={`rec-${id}`}
+                      id={id as ToolId}
+                      tool={tool}
+                      isSelected={selectedToolKey === id}
+                      onSelect={onSelect}
+                      hasStars
+                      showDescription
+                      badgeCount={
+                        id === "sharedSign" ? signingBadgeCount : undefined
+                      }
+                    />
+                  ))}
+              </div>
+            )}
+            {onShowAllTools && (
+              <Button
+                variant="tertiary"
+                size="sm"
+                fullWidth
+                onClick={onShowAllTools}
+                className="tool-picker__view-all"
+                aria-label={t("toolPanel.viewAllTools", "View all tools")}
+              >
+                {t("toolPanel.viewAllTools", "View all tools")}
+              </Button>
+            )}
+          </Box>
         ) : (
           <>
-            {/* Flat list: favorites and recommended first, then all subcategories */}
-            <Stack p="sm" gap="xs">
+            {/* All-tools view: favourites + recommended + all subcategories. */}
+            <Stack px="sm" pb="sm" pt={4} gap="xs">
               {favoriteToolItems.length > 0 && (
                 <Box w="100%">
                   <div style={HEADER_TEXT_STYLE}>
@@ -155,6 +231,9 @@ const ToolPicker = ({
                         isSelected={selectedToolKey === id}
                         onSelect={onSelect}
                         hasStars
+                        badgeCount={
+                          id === "sharedSign" ? signingBadgeCount : undefined
+                        }
                       />
                     ))}
                   </div>
@@ -182,7 +261,6 @@ const ToolPicker = ({
 
             {!quickSection && !allSection && <NoToolsFound />}
 
-            {/* bottom spacer to allow scrolling past the last row */}
             <div aria-hidden style={{ height: 200 }} />
           </>
         )}
@@ -192,4 +270,4 @@ const ToolPicker = ({
   );
 };
 
-export default memo(ToolPicker);
+export default ToolPicker;

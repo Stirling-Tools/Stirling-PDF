@@ -1,6 +1,10 @@
 package stirling.software.common.util;
 
+import java.util.regex.Pattern;
+
 public class RequestUriUtils {
+
+    private static final Pattern SHARE_LINK_PATTERN = Pattern.compile("^/share/[^/]+/?$");
 
     public static boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);
@@ -57,6 +61,16 @@ public class RequestUriUtils {
             return true;
         }
 
+        // Admin portal SPA shell (mounted at /processor — must match the frontend
+        // PORTAL_BASENAME). Served publicly like the editor root so a direct nav /
+        // refresh to /processor loads the app (the JWT lives in localStorage, not a
+        // cookie, so the server can't authenticate the navigation itself). The
+        // portal gates access via its own auth gate + RequirePortalAccess, and its
+        // data APIs stay protected, so serving the shell pre-auth is safe.
+        if (normalizedUri.equals("/processor") || normalizedUri.startsWith("/processor/")) {
+            return true;
+        }
+
         // Treat common static file extensions as static resources
         return normalizedUri.endsWith(".svg")
                 || normalizedUri.endsWith(".png")
@@ -83,7 +97,16 @@ public class RequestUriUtils {
             return false;
         }
 
-        // Blocklist of backend/non-frontend paths that should still go through filters
+        // Blocklist of backend/non-frontend paths that should still go through filters.
+        //
+        // `/files` was historically a backend route; it is now a frontend route
+        // owned by HomePage / FileManagerView. Direct-nav or refresh on /files
+        // (or /files/<folder-uuid>) was returning the Spring auth filter's 401
+        // JSON instead of serving index.html, so the SPA never got a chance to
+        // mount and the user saw a raw error response. There are no `/files`
+        // backend mappings at the servlet root - the real storage endpoints
+        // live under `/api/v1/storage/files`, which is filtered out a few lines
+        // up by the `startsWith("/api/")` guard.
         String[] backendOnlyPrefixes = {
             "/register",
             "/pipeline",
@@ -91,7 +114,6 @@ public class RequestUriUtils {
             "/pdfjs-legacy",
             "/fonts",
             "/images",
-            "/files",
             "/css",
             "/js",
             "/swagger",
@@ -172,7 +194,7 @@ public class RequestUriUtils {
                         "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
-                // Health Endoints
+                // Health Endpoints
                 || trimmedUri.startsWith("/actuator/health")
                 || trimmedUri.startsWith("/health")
                 || trimmedUri.startsWith("/healthz")
@@ -180,11 +202,12 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/readiness")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
+                || trimmedUri.startsWith("/api/v1/webhooks/")
                 || trimmedUri.startsWith("/v1/api-docs")
-                // Workflow participant endpoints — access controlled by share tokens, not login
+                // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
                 // Share-link SPA bootstrap; data APIs remain protected
-                || trimmedUri.matches("^/share/[^/]+/?$");
+                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches();
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {

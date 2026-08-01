@@ -5,6 +5,7 @@ import {
   useAppConfig,
 } from "@app/contexts/AppConfigContext";
 import apiClient from "@app/services/apiClient";
+import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
 import { ReactNode } from "react";
 
 // Mock apiClient
@@ -92,6 +93,7 @@ describe("AppConfigContext", () => {
   });
 
   it("should handle network errors", async () => {
+    expectConsole.error(/\[AppConfig\] Failed to fetch app config/);
     const errorMessage = "Network error occurred";
     const mockError = new Error(errorMessage);
     // Network errors don't have response property
@@ -249,6 +251,10 @@ describe("AppConfigContext", () => {
   });
 
   it("should handle initial config prop", async () => {
+    // apiClient.get isn't mocked here, so the implicit "fetch fails" path
+    // exhausts retries and logs. Test only asserts the API was called, so
+    // the failure log is incidental.
+    allowConsole.error(/\[AppConfig\] Failed to fetch app config/);
     const initialConfig = {
       enableLogin: false,
       appNameNavbar: "Initial App",

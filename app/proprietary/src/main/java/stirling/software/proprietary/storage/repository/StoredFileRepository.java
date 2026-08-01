@@ -59,6 +59,13 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
 
     List<StoredFile> findAllByOwner(User owner);
 
+    /**
+     * Bulk lookup used by the folder-placement controller. Returns only files owned by {@code
+     * owner}; ids that don't exist or that belong to another user are silently dropped so the
+     * caller can compute the "skipped" set by subtraction.
+     */
+    List<StoredFile> findAllByIdInAndOwner(List<Long> ids, User owner);
+
     @Modifying
     @Transactional
     @Query(

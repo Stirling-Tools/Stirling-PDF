@@ -1,6 +1,22 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { ActionIcon } from "@mantine/core";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
+import { Group, Loader, Progress, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {
+  clearFilesPageReturnRoute,
+  getFilesPageReturnRoute,
+  subscribeFilesPageReturnRoute,
+} from "@app/components/filesPage/filesPageReturnRoute";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import {
   useFileState,
@@ -16,16 +32,27 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { downloadFile } from "@app/services/downloadService";
+import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
+import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import {
+  POLICY_IN_FLIGHT_STATUSES,
+  usePolicyRuns,
+} from "@app/components/policies/policyRunStore";
+import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { enforceExportPolicies } from "@app/services/policyExport";
+import { downloadFile as downloadRaw } from "@app/services/downloadService";
+import { alert as showAlert } from "@app/components/toast";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
 } from "@app/types/workbenchBar";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import "@app/components/shared/WorkbenchBar.css";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
@@ -66,6 +93,18 @@ export default function WorkbenchBar({
   hasFiles,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const returnRoute = useSyncExternalStore(
+    subscribeFilesPageReturnRoute,
+    getFilesPageReturnRoute,
+    () => null,
+  );
+  const handleBackToFiles = useCallback(() => {
+    if (!returnRoute) return;
+    const target = returnRoute.route;
+    clearFilesPageReturnRoute();
+    navigate(target);
+  }, [returnRoute, navigate]);
   const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
   const {
     pageEditorFunctions,
@@ -79,6 +118,7 @@ export default function WorkbenchBar({
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
+  const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
 
   const { selectors } = useFileState();
@@ -86,6 +126,60 @@ export default function WorkbenchBar({
   const { actions: fileActions } = useFileActions();
   const activeFiles = selectors.getFiles();
   const { activeFileId, setActiveFileId } = useViewer();
+  const policyFileBadges = usePolicyFileBadges();
+  // Block print/export while any file the export would touch is under active
+  // policy enforcement: the viewer exports its active file, every other view
+  // exports the selection (or all files when nothing is selected).
+  const exportTargetIds: string[] =
+    currentView === "viewer"
+      ? activeFileId
+        ? [activeFileId]
+        : []
+      : selectedFileIds.length > 0
+        ? selectedFileIds
+        : activeFiles.filter(isStirlingFile).map((f) => f.fileId);
+  const enforcingFileId = exportTargetIds.find((id) =>
+    (policyFileBadges.get(id) ?? []).some((p) => p.enforcing),
+  );
+  const policyEnforcing = enforcingFileId != null;
+  const policyRuns = usePolicyRuns();
+  const enforcingRun = policyEnforcing
+    ? policyRuns.find(
+        (r) =>
+          r.fileId === enforcingFileId &&
+          (POLICY_IN_FLIGHT_STATUSES as readonly string[]).includes(r.status),
+      )
+    : undefined;
+  const enforcingProgress =
+    enforcingRun?.currentStep != null && enforcingRun.stepCount
+      ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
+      : undefined;
+  const makeEnforcingTooltip = (action: string): React.ReactNode => (
+    <Stack gap={6} py={2} w={200}>
+      <Group gap={6} wrap="nowrap">
+        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Text size="xs" fw={600}>
+          {t(
+            "policy.blockingAction",
+            "{{action}} blocked while enforcing policy, please wait",
+            { action },
+          )}
+        </Text>
+      </Group>
+      {enforcingProgress != null ? (
+        <Progress
+          w="100%"
+          size="xs"
+          radius="xl"
+          value={enforcingProgress}
+          striped
+          animated
+        />
+      ) : (
+        <Loader size="xs" />
+      )}
+    </Stack>
+  );
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount =
     pageEditorFunctions?.selectedPageIds?.length ?? 0;
@@ -125,6 +219,7 @@ export default function WorkbenchBar({
             data: new Blob([buffer], { type: "application/pdf" }),
             filename: fileToExport.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
+            fileId: stub?.id,
           });
           if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
             fileActions.updateStirlingFileStub(stub.id, {
@@ -145,15 +240,38 @@ export default function WorkbenchBar({
 
       const filesToExport =
         selectedFiles.length > 0 ? selectedFiles : activeFiles;
-      for (const file of filesToExport) {
-        const stub = isStirlingFile(file)
+      const stubs = filesToExport.map((file) =>
+        isStirlingFile(file)
           ? selectors.getStirlingFileStub(file.fileId)
-          : undefined;
+          : undefined,
+      );
+
+      // Enforce all files in one batch so the toast shows progress across the
+      // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
+      let enforced: File[];
+      try {
+        enforced = await enforceExportPolicies(
+          filesToExport as File[],
+          stubs.map((s) => s?.id),
+        );
+      } catch {
+        enforced = filesToExport as File[];
+        showAlert({
+          alertType: "warning",
+          title: t("policies.enforcement.exportFailureTitle"),
+          body: t("policies.enforcement.exportFailureBody"),
+        });
+      }
+
+      for (let idx = 0; idx < filesToExport.length; idx++) {
+        const file = filesToExport[idx];
+        const stub = stubs[idx];
         try {
-          const result = await downloadFile({
-            data: file,
+          const result = await downloadRaw({
+            data: enforced[idx],
             filename: file.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
+            fileId: stub?.id,
           });
           if (result.cancelled) continue;
           if (!forceNewFile && stub && result.savedPath) {
@@ -261,17 +379,16 @@ export default function WorkbenchBar({
 
       const ariaLabel =
         btn.ariaLabel ||
-        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : undefined);
+        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : btn.id);
       const buttonNode = (
         <ActionIcon
-          variant={isActive ? "filled" : "subtle"}
-          color={isActive ? "blue" : undefined}
-          radius="md"
+          variant={isActive ? "primary" : "quiet"}
           className="workbench-bar-action-icon"
           onClick={triggerAction}
           disabled={disabled}
           aria-label={ariaLabel}
           aria-pressed={isActive ? true : undefined}
+          hover={isActive ? true : false}
         >
           {btn.icon}
         </ActionIcon>
@@ -286,12 +403,12 @@ export default function WorkbenchBar({
     {
       value: "viewer",
       label: t("workbenchBar.viewer", "Viewer"),
-      icon: <InsertDriveFileIcon fontSize="small" />,
+      icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
     },
     {
       value: "fileEditor",
       label: t("workbenchBar.activeFiles", "Active Files"),
-      icon: <FolderIcon fontSize="small" />,
+      icon: <FolderOutlinedIcon fontSize="small" />,
     },
     ...(selectedTool === "multiTool"
       ? [
@@ -313,7 +430,7 @@ export default function WorkbenchBar({
       .map((v) => ({
         value: v.workbenchId,
         label: v.label,
-        icon: v.icon ?? <InsertDriveFileIcon fontSize="small" />,
+        icon: v.icon ?? <InsertDriveFileOutlinedIcon fontSize="small" />,
       })),
   ];
 
@@ -356,24 +473,57 @@ export default function WorkbenchBar({
       data-wrapped="true"
       data-tour="workbench-bar"
     >
-      {/* Left: View switcher */}
+      {/* Left: optional "Back to My Files" + view switcher */}
       <div className="workbench-bar-views" data-tour="view-switcher">
-        {hasFiles &&
-          viewOptions.map((opt) => (
-            <button
-              key={opt.value}
-              className={`workbench-bar-view-btn${currentView === opt.value ? " active" : ""}`}
-              onClick={() => setCurrentView(opt.value)}
-              aria-pressed={currentView === opt.value}
-              type="button"
+        {returnRoute && hasFiles && (
+          <>
+            <Button
+              variant="tertiary"
+              className="workbench-bar-view-btn workbench-bar-back-btn"
+              onClick={handleBackToFiles}
+              aria-label={t(
+                returnRoute.label
+                  ? "filesPage.backToFolder"
+                  : "filesPage.backToMyFiles",
+                returnRoute.label
+                  ? `Back to ${returnRoute.label}`
+                  : "Back to My Files",
+                { folder: returnRoute.label ?? "" },
+              )}
+              leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
             >
-              {opt.icon}
-              <span className="workbench-bar-view-label">{opt.label}</span>
-            </button>
-          ))}
+              <span className="workbench-bar-view-label">
+                {returnRoute.label
+                  ? t("filesPage.backToFolder", "Back to {{folder}}", {
+                      folder: returnRoute.label,
+                    })
+                  : t("filesPage.backToMyFiles", "Back to My Files")}
+              </span>
+            </Button>
+            <div className="workbench-bar-divider" />
+          </>
+        )}
+        {(hasFiles || isCustomView) && (
+          <SegmentedControl<WorkbenchType>
+            className="workbench-bar-views"
+            size="sm"
+            value={currentView}
+            onChange={setCurrentView}
+            variant="secondary"
+            options={viewOptions.map((opt) => ({
+              value: opt.value,
+              label: (
+                <>
+                  {opt.icon}
+                  <span className="workbench-bar-view-label">{opt.label}</span>
+                </>
+              ),
+            }))}
+          />
+        )}
       </div>
 
-      {/* Tool buttons — second row, only rendered when buttons exist */}
+      {/* Tool buttons - second row, only rendered when buttons exist */}
       {sectionsWithButtons.length > 0 && (
         <div className="workbench-bar-center">
           {sectionsWithButtons.map(
@@ -395,57 +545,83 @@ export default function WorkbenchBar({
         </div>
       )}
 
-      {/* Right: Global buttons — export group left, close anchored right */}
+      {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
+        {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
+        {currentView === "viewer" && sharingEnabled && (
+          <ViewerShareButton
+            disabled={
+              totalItems === 0 || allButtonsDisabled || disableForFullscreen
+            }
+          />
+        )}
+
         {/* Print */}
         {currentView === "viewer" &&
           renderWithTooltip(
             <ActionIcon
-              variant="subtle"
-              radius="md"
+              variant="tertiary"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={handlePrint}
               disabled={
-                totalItems === 0 || allButtonsDisabled || disableForFullscreen
+                totalItems === 0 ||
+                allButtonsDisabled ||
+                disableForFullscreen ||
+                policyEnforcing
               }
               aria-label={t("workbenchBar.print", "Print PDF")}
             >
               <PrintIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>,
-            t("workbenchBar.print", "Print PDF"),
+            policyEnforcing
+              ? makeEnforcingTooltip(t("workbenchBar.print", "Print PDF"))
+              : t("workbenchBar.print", "Print PDF"),
           )}
 
-        {/* Download */}
-        {renderWithTooltip(
-          <ActionIcon
-            variant="subtle"
-            radius="md"
-            className="workbench-bar-action-icon"
-            onClick={() => handleExportAll()}
-            disabled={
-              disableForFullscreen || totalItems === 0 || allButtonsDisabled
-            }
-          >
-            <LocalIcon
-              icon={icons.downloadIconName}
-              width="1rem"
-              height="1rem"
-            />
-          </ActionIcon>,
-          downloadTooltip,
-        )}
-
-        {/* Save As */}
-        {icons.saveAsIconName &&
+        {/* Download (file-level action — not relevant in custom views) */}
+        {!isCustomView &&
           renderWithTooltip(
             <ActionIcon
-              variant="subtle"
-              radius="md"
+              variant="tertiary"
+              hover={false}
+              className="workbench-bar-action-icon"
+              onClick={() => handleExportAll()}
+              disabled={
+                disableForFullscreen ||
+                totalItems === 0 ||
+                allButtonsDisabled ||
+                policyEnforcing
+              }
+              aria-label={downloadTooltip}
+            >
+              <LocalIcon
+                icon={icons.downloadIconName}
+                width="1rem"
+                height="1rem"
+              />
+            </ActionIcon>,
+            policyEnforcing
+              ? makeEnforcingTooltip(downloadTooltip)
+              : downloadTooltip,
+          )}
+
+        {/* Save As */}
+        {!isCustomView &&
+          icons.saveAsIconName &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="tertiary"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll(true)}
               disabled={
-                disableForFullscreen || totalItems === 0 || allButtonsDisabled
+                disableForFullscreen ||
+                totalItems === 0 ||
+                allButtonsDisabled ||
+                policyEnforcing
               }
+              aria-label={t("workbenchBar.saveAs", "Save As")}
             >
               <LocalIcon
                 icon={icons.saveAsIconName}
@@ -453,7 +629,9 @@ export default function WorkbenchBar({
                 height="1rem"
               />
             </ActionIcon>,
-            t("workbenchBar.saveAs", "Save As"),
+            policyEnforcing
+              ? makeEnforcingTooltip(t("workbenchBar.saveAs", "Save As"))
+              : t("workbenchBar.saveAs", "Save As"),
           )}
 
         {/* Separator: export group | close */}
@@ -465,8 +643,8 @@ export default function WorkbenchBar({
         {!isCustomView &&
           renderWithTooltip(
             <ActionIcon
-              variant="subtle"
-              radius="md"
+              variant="tertiary"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={handleClose}
               disabled={

@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.configuration.ee;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
@@ -32,7 +31,10 @@ public class LicenseKeyChecker {
 
     private final UserLicenseSettingsService licenseSettingsService;
 
-    private License premiumEnabledResult = License.NORMAL;
+    // volatile: written by evaluateLicense() on the @Scheduled refresh thread, read by request
+    // threads via getPremiumLicenseEnabledResult() / requireProOrEnterprise(). Ensures readers see
+    // the latest tier rather than a stale cached value.
+    private volatile License premiumEnabledResult = License.NORMAL;
 
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService,
@@ -101,7 +103,7 @@ public class LicenseKeyChecker {
         if (keyOrFilePath.startsWith(FILE_PREFIX)) {
             String filePath = keyOrFilePath.substring(FILE_PREFIX.length());
             try {
-                Path path = Paths.get(filePath);
+                Path path = Path.of(filePath);
                 if (!Files.exists(path)) {
                     log.error("License file does not exist: {}", filePath);
                     return null;
@@ -132,5 +134,17 @@ public class LicenseKeyChecker {
 
     public License getPremiumLicenseEnabledResult() {
         return premiumEnabledResult;
+    }
+
+    /**
+     * Throws {@link IllegalStateException} if the current license is not Pro or Enterprise. Used by
+     * boot-time gates to fail fast when an operator enables a premium-only setting without a valid
+     * license. {@code configuredAs} is the human-readable property path (e.g. {@code
+     * "storage.provider=s3"}) and appears in the exception message.
+     */
+    public void requireProOrEnterprise(String configuredAs) {
+        if (premiumEnabledResult != License.SERVER && premiumEnabledResult != License.ENTERPRISE) {
+            throw new IllegalStateException(configuredAs + " requires a Pro or Enterprise license");
+        }
     }
 }

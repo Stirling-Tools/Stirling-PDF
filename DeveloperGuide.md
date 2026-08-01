@@ -52,6 +52,17 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - Rust and Cargo (required for Tauri desktop app development)
 - Tauri CLI (install with `cargo install tauri-cli`)
 
+### Optional System Dependencies
+
+These are not required to run the app but enable specific features. The app detects them at startup and disables the relevant features if they are missing.
+
+| Dependency | Feature | Install |
+|---|---|---|
+| LibreOffice | File-to-PDF conversions | `brew install libreoffice` / `apt install libreoffice` |
+| Tesseract | OCR | `brew install tesseract` / `apt install tesseract-ocr` |
+| WeasyPrint | AI document creation | `brew install weasyprint` / `apt install weasyprint` |
+| qpdf | PDF optimisation | `brew install qpdf` / `apt install qpdf` |
+
 ### Setup Steps
 
 1. Clone the repository:
@@ -81,7 +92,7 @@ Visit the [Lombok website](https://projectlombok.org/setup/) for installation in
 
 5. Add environment variable
 For local testing, you should generally be testing the full 'Security' version of Stirling PDF. To do this, you must add the environment flag DISABLE_ADDITIONAL_FEATURES=false to your system and/or IDE build/run step.
-5. **Frontend Setup (Required for Stirling 2.0)**
+6. **Frontend Setup (Required for Stirling 2.0)**
    Navigate to the frontend directory and install dependencies using npm.
 
 ### Verify Setup
@@ -264,7 +275,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 1. Set the security environment variable:
 
    ```bash
-   export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
+   export DISABLE_ADDITIONAL_FEATURES=true  # or false to enable login and security features for builds
    ```
 
 2. Build the project:
@@ -294,7 +305,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 
-Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. however to improve build times these can often be removed depending on your usecase
+Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. However, to improve build times these can often be removed depending on your use case
 
 ## 7. Testing
 
@@ -576,7 +587,7 @@ When adding a new feature or modifying existing ones in Stirling-PDF, you'll nee
 Find the existing `messages.properties` files in the `stirling-pdf/src/main/resources` directory. You'll see files like:
 
 - `messages.properties` (default, usually English)
-- `messages_en_GB.properties`
+- `messages_en_US.properties`
 - `messages_fr_FR.properties`
 - `messages_de_DE.properties`
 - etc.

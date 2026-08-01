@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.proprietary.security.model.api.Email;
 import stirling.software.proprietary.security.service.EmailService;
 
@@ -39,7 +40,10 @@ public class EmailController {
      *     attachment.
      * @return ResponseEntity with success or error message.
      */
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/send-email")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/send-email",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Send an email with an attachment",
             description =

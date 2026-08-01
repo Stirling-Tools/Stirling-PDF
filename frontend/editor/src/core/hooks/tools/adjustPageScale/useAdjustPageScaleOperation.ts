@@ -1,32 +1,36 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateAdjustPageScaleParameters,
   AdjustPageScaleParameters,
   defaultParameters,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import {
+  buildAdjustPageScaleFormData,
+  adjustPageScaleToApiParams,
+  adjustPageScaleFromApiParams,
+  ADJUST_PAGE_SCALE_ENDPOINT,
+} from "@app/hooks/tools/adjustPageScale/adjustPageScaleFormData";
 
-export const buildAdjustPageScaleFormData = (
-  parameters: AdjustPageScaleParameters,
-  file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  formData.append("scaleFactor", parameters.scaleFactor.toString());
-  formData.append("pageSize", parameters.pageSize);
-  return formData;
+export {
+  buildAdjustPageScaleFormData,
+  adjustPageScaleToApiParams,
+  adjustPageScaleFromApiParams,
 };
 
-export const adjustPageScaleOperationConfig = {
-  toolType: ToolType.singleFile,
+export const adjustPageScaleOperationConfig = defineSingleFileTool({
+  validateParams: validateAdjustPageScaleParameters,
   buildFormData: buildAdjustPageScaleFormData,
+  toApiParams: adjustPageScaleToApiParams,
+  fromApiParams: adjustPageScaleFromApiParams,
   operationType: "scalePages",
-  endpoint: "/api/v1/general/scale-pages",
+  endpoint: ADJUST_PAGE_SCALE_ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useAdjustPageScaleOperation = () => {
   const { t } = useTranslation();

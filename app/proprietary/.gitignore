@@ -123,6 +123,8 @@ SwaggerDoc.json
 *.tar.gz
 *.rar
 *.db
+# Whitelist the H2 fixtures that feed the version-migration CI smoke test.
+!src/test/resources/db-migration-fixtures/*.mv.db
 /build
 /app/proprietary/build/
 

@@ -67,7 +67,7 @@ export default function AdminFeaturesSection() {
       } = {
         serverCertificate: systemData.serverCertificate || {
           enabled: true,
-          organizationName: "Stirling-PDF",
+          organizationName: "Stirling PDF Inc",
           validity: 365,
           regenerateOnStartup: false,
         },
@@ -200,7 +200,7 @@ export default function AdminFeaturesSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.features.serverCertificate.enabled.label",
@@ -258,7 +258,8 @@ export default function AdminFeaturesSection() {
                   "Organization name for generated certificates",
                 )}
                 value={
-                  settings.serverCertificate?.organizationName || "Stirling-PDF"
+                  settings.serverCertificate?.organizationName ||
+                  "Stirling PDF Inc"
                 }
                 onChange={(e) =>
                   setSettings({
@@ -316,7 +317,7 @@ export default function AdminFeaturesSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.features.serverCertificate.regenerateOnStartup.label",

@@ -35,6 +35,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.RegexPatternUtils;
@@ -50,6 +51,7 @@ public class ConvertOfficeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final CustomHtmlSanitizer customHtmlSanitizer;
+    private final OfficeDocumentSanitizer officeDocumentSanitizer;
     private final EndpointConfiguration endpointConfiguration;
     private final TempFileManager tempFileManager;
 
@@ -83,14 +85,16 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Check if the file is HTML and apply sanitization if needed
+        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
         if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            // Read and sanitize HTML content
             String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
             String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
             Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
+            byte[] sanitized =
+                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
+            Files.write(inputPath, sanitized);
         } else {
-            // copy file content
             Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
         }
 

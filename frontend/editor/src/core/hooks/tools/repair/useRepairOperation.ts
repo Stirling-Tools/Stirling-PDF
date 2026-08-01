@@ -1,32 +1,38 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  fileOnlyMapping,
+  objectToFormData,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   RepairParameters,
   defaultParameters,
 } from "@app/hooks/tools/repair/useRepairParameters";
 
-// Static function that can be used by both the hook and automation executor
+const ENDPOINT = "/api/v1/misc/repair" satisfies ToolEndpoint;
+
+// Repair takes only a file; there are no request parameters to map.
+const { toApiParams, fromApiParams } = fileOnlyMapping();
+
 export const buildRepairFormData = (
   _parameters: RepairParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  return formData;
-};
+): FormData => objectToFormData(toApiParams(), { fileInput: file });
 
 // Static configuration object
-export const repairOperationConfig = {
-  toolType: ToolType.singleFile,
+export const repairOperationConfig = defineSingleFileTool({
   buildFormData: buildRepairFormData,
+  toApiParams,
+  fromApiParams,
   operationType: "repair",
-  endpoint: "/api/v1/misc/repair",
+  endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useRepairOperation = () => {
   const { t } = useTranslation();

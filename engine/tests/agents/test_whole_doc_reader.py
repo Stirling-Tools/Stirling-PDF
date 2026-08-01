@@ -15,8 +15,11 @@ import pytest
 from stirling.agents.shared import ChunkedReasoner, ChunkNotes, WholeDocReaderCapability
 from stirling.contracts import AiFile, PageText
 from stirling.documents import Document, DocumentService, SqliteVecStore
-from stirling.models import FileId
+from stirling.models import FileId, OwnerId, PrincipalId
 from stirling.services.runtime import AppRuntime
+
+OWNER = OwnerId("test-user")
+PRINCIPALS = [PrincipalId("test-user")]
 
 
 class StubEmbedder:
@@ -75,7 +78,9 @@ async def test_read_full_document_returns_formatted_notes_for_single_file(
         PageText(page_number=1, text="Chapter one prose."),
         PageText(page_number=2, text="Chapter two prose."),
     ]
-    await runtime_with_stub_docs.documents.ingest(FileId("doc-id"), pages, source="doc.pdf")
+    await runtime_with_stub_docs.documents.ingest(
+        FileId("doc-id"), pages, source="doc.pdf", owner_id=OWNER, read_principals=PRINCIPALS, expires_at=None
+    )
 
     reasoner = ChunkedReasoner(runtime_with_stub_docs)
     canned_notes = [ChunkNotes(pages=[1, 2], summary="overview", facts=["fact-A"])]
@@ -83,6 +88,7 @@ async def test_read_full_document_returns_formatted_notes_for_single_file(
         capability = WholeDocReaderCapability(
             runtime=runtime_with_stub_docs,
             files=[_ai_file("doc-id", "doc.pdf")],
+            principals=PRINCIPALS,
             reasoner=reasoner,
         )
         result = await capability._read_full_document("what is in the document?")
@@ -106,6 +112,9 @@ async def test_read_full_document_iterates_multiple_files(runtime_with_stub_docs
             FileId(cid),
             [PageText(page_number=1, text=f"contents of {cid}")],
             source=source,
+            owner_id=OWNER,
+            read_principals=PRINCIPALS,
+            expires_at=None,
         )
 
     reasoner = ChunkedReasoner(runtime_with_stub_docs)
@@ -121,6 +130,7 @@ async def test_read_full_document_iterates_multiple_files(runtime_with_stub_docs
         capability = WholeDocReaderCapability(
             runtime=runtime_with_stub_docs,
             files=[_ai_file("doc-a", "a.pdf"), _ai_file("doc-b", "b.pdf")],
+            principals=PRINCIPALS,
             reasoner=reasoner,
         )
         result = await capability._read_full_document("compare them")
@@ -140,6 +150,9 @@ async def test_read_full_document_skips_files_without_pages(runtime_with_stub_do
         FileId("present"),
         [PageText(page_number=1, text="real content")],
         source="present.pdf",
+        owner_id=OWNER,
+        read_principals=PRINCIPALS,
+        expires_at=None,
     )
     # 'missing' is never ingested -> read_pages returns [].
 
@@ -149,6 +162,7 @@ async def test_read_full_document_skips_files_without_pages(runtime_with_stub_do
         capability = WholeDocReaderCapability(
             runtime=runtime_with_stub_docs,
             files=[_ai_file("missing", "missing.pdf"), _ai_file("present", "present.pdf")],
+            principals=PRINCIPALS,
             reasoner=reasoner,
         )
         result = await capability._read_full_document("anything")
@@ -167,6 +181,7 @@ async def test_read_full_document_returns_empty_message_when_no_pages_anywhere(
         capability = WholeDocReaderCapability(
             runtime=runtime_with_stub_docs,
             files=[_ai_file("nope", "nope.pdf")],
+            principals=PRINCIPALS,
             reasoner=reasoner,
         )
         result = await capability._read_full_document("anything")
@@ -186,12 +201,16 @@ async def test_read_full_document_budget_hides_tool_when_exhausted(
         FileId("doc-id"),
         [PageText(page_number=1, text="content")],
         source="doc.pdf",
+        owner_id=OWNER,
+        read_principals=PRINCIPALS,
+        expires_at=None,
     )
     reasoner = ChunkedReasoner(runtime_with_stub_docs)
     with patch.object(reasoner, "gather_notes", AsyncMock(return_value=[ChunkNotes(pages=[1], summary="s")])):
         capability = WholeDocReaderCapability(
             runtime=runtime_with_stub_docs,
             files=[_ai_file("doc-id", "doc.pdf")],
+            principals=PRINCIPALS,
             reasoner=reasoner,
             max_reads=1,
         )
@@ -212,6 +231,7 @@ async def test_instructions_mention_attached_files(runtime_with_stub_docs: AppRu
     capability = WholeDocReaderCapability(
         runtime=runtime_with_stub_docs,
         files=[_ai_file("doc-a", "alpha.pdf"), _ai_file("doc-b", "beta.pdf")],
+        principals=PRINCIPALS,
     )
     text = capability.instructions
 

@@ -34,6 +34,9 @@ tasks:
     ignore_error: true
     vars:
       BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
+    # COVERAGE=1 in the calling environment attaches the JaCoCo agent to
+    # the bootRun JVM and writes to BASE_DIR/jacoco.exec on shutdown.
+    # Off by default to keep local dev runs uninstrumented; CI flips it.
     env:
       STIRLING_BASE_PATH: '{{.BASE_DIR}}'
       # Suppress the analytics opt-in modal that fires on first admin login.
@@ -58,12 +61,19 @@ tasks:
           set -e
           rm -rf "{{.BASE_DIR}}"
           mkdir -p "{{.BASE_DIR}}"
+          GRADLE_ARGS=":stirling-pdf:bootRun"
+          if [ -n "${COVERAGE:-}" ]; then
+            # copyJacocoAgent is wired as a dependency of bootRun when
+            # -PjacocoAgent=true, so we do not need to invoke it separately.
+            GRADLE_ARGS="$GRADLE_ARGS -PjacocoAgent=true -PjacocoExec={{.BASE_DIR}}/jacoco.exec"
+            echo "JaCoCo coverage enabled, writing to {{.BASE_DIR}}/jacoco.exec"
+          fi
           # Background gradle and record its PID so the runner can clean up
           # the exact process tree (wrapper + forked Spring Boot JVM) without
           # resorting to fuzzy `pkill -f` patterns. `wait` keeps this script
           # alive for the lifetime of gradle so Task'"'"'s parallel deps stay
           # synchronised.
-          bash gradlew :stirling-pdf:bootRun > "{{.BASE_DIR}}/backend.log" 2>&1 &
+          bash gradlew $GRADLE_ARGS > "{{.BASE_DIR}}/backend.log" 2>&1 &
           GRADLE_PID=$!
           echo $GRADLE_PID > "{{.BASE_DIR}}/backend.pid"
           wait $GRADLE_PID
@@ -202,3 +212,55 @@ tasks:
     desc: "Stop the SAML keycloak test environment"
     cmds:
       - docker compose -f testing/compose/docker-compose-keycloak-saml.yml down -v
+
+  mcp:up:
+    desc: "Start the MCP keycloak test environment (Stirling as OAuth resource server)"
+    summary: |
+      Brings up Keycloak (OAuth authorization server) + Stirling configured as an
+      MCP resource server, then you can exercise /mcp with real Keycloak tokens.
+      Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
+        task e2e:mcp:up LICENSE_KEY=abc123
+      Pass extra flags via -- :
+        task e2e:mcp:up -- --validate --nobuild
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-mcp-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
+
+  mcp:manual:
+    desc: "Start the MCP keycloak test env in manual mode (prints URLs + a live token for your client)"
+    summary: |
+      Brings the stack up and prints copy-paste URLs/commands plus a freshly minted
+      access token so you can drive your own MCP client (Inspector, curl, ...).
+        task e2e:mcp:manual LICENSE_KEY=<your-license-key>
+      Add --nobuild if the images are already built:
+        task e2e:mcp:manual LICENSE_KEY=<your-license-key> -- --nobuild
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-mcp-test.sh --manual {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
+
+  mcp:apikey:
+    desc: "Start the MCP test env in API-KEY manual mode (no OAuth/IdP): mints a key + prints client settings"
+    summary: |
+      Brings Stirling up in apikey auth mode and prints copy-paste client settings with a freshly
+      minted X-API-KEY - ideal for clients whose OAuth layer can't reach localhost.
+        task e2e:mcp:apikey LICENSE_KEY=<your-license-key>
+      Add --nobuild if images are already built:
+        task e2e:mcp:apikey LICENSE_KEY=<your-license-key> -- --nobuild
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-mcp-test.sh --apikey {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
+
+  mcp:validate:
+    desc: "Validate the running MCP keycloak test environment end-to-end (oauth mode + real MCP SDK client)"
+    cmds:
+      - bash testing/compose/validate-mcp-test.sh
+
+  mcp:validate-apikey:
+    desc: "Validate the MCP server in API-KEY auth mode (mints a key + real MCP SDK client), then restore oauth"
+    cmds:
+      - bash testing/compose/validate-mcp-apikey.sh
+
+  mcp:down:
+    desc: "Stop the MCP keycloak test environment"
+    cmds:
+      - docker compose -f testing/compose/docker-compose-keycloak-mcp.yml down -v

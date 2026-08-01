@@ -51,7 +51,7 @@ npm run tauri-build
 To build the DLL standalone:
 
 ```bash
-cd frontend/src-tauri/thumbnail-handler
+cd frontend/editor/src-tauri/thumbnail-handler
 cargo build --release
 # Output: target/release/stirling_thumbnail_handler.dll
 ```

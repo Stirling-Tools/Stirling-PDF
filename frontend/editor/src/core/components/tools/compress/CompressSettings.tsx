@@ -6,10 +6,10 @@ import {
   Divider,
   Checkbox,
   Slider,
-  SegmentedControl,
   Tooltip,
   Box,
 } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import SliderWithInput from "@app/components/shared/sliderWithInput/SliderWithInput";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
@@ -99,11 +99,14 @@ const CompressSettings = ({
       {parameters.compressionMethod === "filesize" && (
         <Stack gap="sm">
           <Text size="sm" fw={500}>
-            Desired File Size
+            {t("compress.settings.desiredSize", "Desired File Size")}
           </Text>
           <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
             <NumberInput
-              placeholder="Enter size"
+              placeholder={t(
+                "compress.settings.desiredSizePlaceholder",
+                "Enter size",
+              )}
               value={parameters.fileSizeValue}
               onChange={(value) =>
                 onParameterChange("fileSizeValue", value?.toString() || "")
@@ -255,14 +258,22 @@ const CompressSettings = ({
             </Text>
             <SegmentedControl
               fullWidth
-              disabled={disabled || imageMagickAvailable === false}
-              data={[
-                { value: "1", label: t("compress.lineArt.edgeLow", "Gentle") },
+              options={[
+                {
+                  value: "1",
+                  label: t("compress.lineArt.edgeLow", "Gentle"),
+                  disabled: disabled || imageMagickAvailable === false,
+                },
                 {
                   value: "2",
                   label: t("compress.lineArt.edgeMedium", "Balanced"),
+                  disabled: disabled || imageMagickAvailable === false,
                 },
-                { value: "3", label: t("compress.lineArt.edgeHigh", "Strong") },
+                {
+                  value: "3",
+                  label: t("compress.lineArt.edgeHigh", "Strong"),
+                  disabled: disabled || imageMagickAvailable === false,
+                },
               ]}
               value={parameters.lineArtEdgeLevel.toString()}
               onChange={(value) =>

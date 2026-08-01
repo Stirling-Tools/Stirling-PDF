@@ -141,7 +141,8 @@ public class AttachmentController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/extract-attachments")
+            value = "/extract-attachments",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Extract attachments from PDF",
             description =
@@ -176,7 +177,10 @@ public class AttachmentController {
         }
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/list-attachments")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/list-attachments",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "List attachments in PDF",
             description =
@@ -193,7 +197,8 @@ public class AttachmentController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/rename-attachment")
+            value = "/rename-attachment",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Rename attachment in PDF",
@@ -228,7 +233,8 @@ public class AttachmentController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/delete-attachment")
+            value = "/delete-attachment",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Delete attachment from PDF",

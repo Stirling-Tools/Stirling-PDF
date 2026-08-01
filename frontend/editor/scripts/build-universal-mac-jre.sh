@@ -11,7 +11,7 @@
 #   X64_JAVA_HOME       path to an x86_64 JDK with jmods/
 #   JLINK_MODULES       comma-separated module list (matches desktop.yml)
 #   OUTPUT_DIR          target directory (will be wiped); defaults to
-#                       frontend/src-tauri/runtime/jre
+#                       frontend/editor/src-tauri/runtime/jre
 
 set -euo pipefail
 
@@ -19,7 +19,7 @@ set -euo pipefail
 : "${X64_JAVA_HOME:?X64_JAVA_HOME must be set}"
 : "${JLINK_MODULES:?JLINK_MODULES must be set}"
 
-OUTPUT_DIR="${OUTPUT_DIR:-frontend/src-tauri/runtime/jre}"
+OUTPUT_DIR="${OUTPUT_DIR:-frontend/editor/src-tauri/runtime/jre}"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "build-universal-mac-jre.sh only runs on macOS" >&2
@@ -48,11 +48,18 @@ X64_JRE="$WORK_DIR/jre-x86_64"
 run_jlink() {
   local java_home="$1"
   local out="$2"
+  local compress
+  if "$java_home/bin/jlink" --help 2>&1 | grep -q 'zip-\[0-9\]'; then
+    compress="zip-6"
+  else
+    compress="2"
+  fi
+
   "$java_home/bin/jlink" \
     --module-path "$java_home/jmods" \
     --add-modules "$JLINK_MODULES" \
     --strip-debug \
-    --compress=zip-6 \
+    --compress="$compress" \
     --no-header-files \
     --no-man-pages \
     --output "$out"
