@@ -136,6 +136,7 @@
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitejs/plugin-react-swc": "^4.1.0",
     "@vitest/browser": "^4.1.10",
+    "@vitest/browser-playwright": "^4.1.10",
     "@vitest/coverage-v8": "^4.1.10",
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",

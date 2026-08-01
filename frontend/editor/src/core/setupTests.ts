@@ -119,29 +119,36 @@ Object.defineProperty(globalThis, "crypto", {
   configurable: true,
 });
 
-// Mock Worker for tests (Web Workers not available in test environment)
-global.Worker = vi.fn().mockImplementation(() => ({
-  postMessage: vi.fn(),
-  terminate: vi.fn(),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  onmessage: null,
-  onerror: null,
-}));
+// Mock Worker for tests (Web Workers not available in test environment).
+// Function (not arrow) implementations: vitest 4 refuses to `new` an arrow mock.
+global.Worker = vi.fn().mockImplementation(function () {
+  return {
+    postMessage: vi.fn(),
+    terminate: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    onmessage: null,
+    onerror: null,
+  };
+});
 
 // Mock ResizeObserver for Mantine components
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock IntersectionObserver for components that might use it
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.IntersectionObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock matchMedia for responsive components
 Object.defineProperty(window, "matchMedia", {

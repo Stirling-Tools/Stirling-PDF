@@ -1,6 +1,16 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
+
+// Repeated per project: vitest 4 does not inherit root-level test options into
+// project entries, so the timeouts have to be declared on each one.
+const projectDefaults = {
+  environment: "jsdom",
+  globals: true,
+  testTimeout: 10000,
+  hookTimeout: 10000,
+} as const;
+
 export default defineConfig({
   test: {
     globals: true,
@@ -31,8 +41,7 @@ export default defineConfig({
         test: {
           name: "core",
           include: ["src/core/**/*.test.{ts,tsx}"],
-          environment: "jsdom",
-          globals: true,
+          ...projectDefaults,
           setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
@@ -49,8 +58,7 @@ export default defineConfig({
         test: {
           name: "portal",
           include: ["src/portal/**/*.test.{ts,tsx}"],
-          environment: "jsdom",
-          globals: true,
+          ...projectDefaults,
           setupFiles: ["./src/portal/setupTests.ts"],
         },
         plugins: [
@@ -69,8 +77,7 @@ export default defineConfig({
         test: {
           name: "proprietary",
           include: ["src/proprietary/**/*.test.{ts,tsx}"],
-          environment: "jsdom",
-          globals: true,
+          ...projectDefaults,
           setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
@@ -87,8 +94,7 @@ export default defineConfig({
         test: {
           name: "desktop",
           include: ["src/desktop/**/*.test.{ts,tsx}"],
-          environment: "jsdom",
-          globals: true,
+          ...projectDefaults,
           setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
@@ -111,8 +117,7 @@ export default defineConfig({
             "src/saas/**/*.test.{ts,tsx}",
             "src/portal-saas/**/*.test.{ts,tsx}",
           ],
-          environment: "jsdom",
-          globals: true,
+          ...projectDefaults,
           setupFiles: ["./src/saas/setupTests.ts"],
         },
         plugins: [
@@ -129,8 +134,7 @@ export default defineConfig({
         test: {
           name: "prototypes",
           include: ["src/prototypes/**/*.test.{ts,tsx}"],
-          environment: "jsdom",
-          globals: true,
+          ...projectDefaults,
           setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
