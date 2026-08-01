@@ -20,6 +20,7 @@ services:
       - ../../../stirling/latest/data:/usr/share/tessdata:rw
       - ../../../stirling/latest/config:/configs:rw
       - ../../../stirling/latest/logs:/logs:rw
+      - ../../../stirling/latest/storage:/storage:rw
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "false"
@@ -36,5 +37,4 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
-      STORAGE_LOCAL_BASEPATH: /configs/storage
     restart: unless-stopped

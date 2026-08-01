@@ -1,20 +1,28 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import stirling.software.common.cluster.ClusterBackplane;
+import stirling.software.common.cluster.JobStore;
+import stirling.software.common.cluster.JobStoreEntry;
+import stirling.software.common.cluster.JobStoreEntry.JobState;
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.JobStats;
 import stirling.software.common.model.job.ResultFile;
@@ -22,6 +30,8 @@ import stirling.software.common.model.job.ResultFile;
 class TaskManagerTest {
 
     @Mock private FileStorage fileStorage;
+    @Mock private JobStore jobStore;
+    @Mock private ClusterBackplane clusterBackplane;
 
     @InjectMocks private TaskManager taskManager;
 
@@ -30,6 +40,10 @@ class TaskManagerTest {
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
+        // Treat the backplane as in-process so cleanupOldJobs is not short-circuited.
+        lenient().when(clusterBackplane.backplaneType()).thenReturn("inprocess");
+        lenient().when(clusterBackplane.localNodeId()).thenReturn("test-node");
+        lenient().when(clusterBackplane.shouldRunLocalCleanup()).thenReturn(true);
         ReflectionTestUtils.setField(taskManager, "jobResultExpiryMinutes", 30);
     }
 
@@ -271,6 +285,33 @@ class TaskManagerTest {
     }
 
     @Test
+    void testCleanupOldJobs_NoOpWhenBackplaneOwnsExpiry() {
+        // When the backplane reports it should NOT run local cleanup (e.g. a distributed
+        // backplane with its own TTL), the cleanup loop must leave local state untouched.
+        when(clusterBackplane.shouldRunLocalCleanup()).thenReturn(false);
+
+        // Seed an old completed job that would normally be removed.
+        String oldJobId = "old-job-distributed";
+        taskManager.createTask(oldJobId);
+        JobResult oldJob = taskManager.getJobResult(oldJobId);
+        ReflectionTestUtils.setField(oldJob, "completedAt", LocalDateTime.now().minusHours(1));
+        ReflectionTestUtils.setField(oldJob, "complete", true);
+
+        Map<String, JobResult> jobResultsMap =
+                (Map<String, JobResult>) ReflectionTestUtils.getField(taskManager, "jobResults");
+        assertNotNull(jobResultsMap);
+        assertTrue(jobResultsMap.containsKey(oldJobId));
+
+        // Act
+        taskManager.cleanupOldJobs();
+
+        // Assert: nothing was removed locally, and no jobStore.delete was issued.
+        assertTrue(jobResultsMap.containsKey(oldJobId));
+        verify(jobStore, never()).delete(anyString());
+        verify(fileStorage, never()).deleteFile(anyString());
+    }
+
+    @Test
     void testShutdown() {
         // This mainly tests that the shutdown method doesn't throw exceptions
         taskManager.shutdown();
@@ -309,5 +350,34 @@ class TaskManagerTest {
 
         // Assert
         assertFalse(result);
+    }
+
+    @Test
+    void testWriteThroughOnUpdate() {
+        // Mutating calls must write through to the injected JobStore.
+        String jobId = "write-through-job";
+        taskManager.createTask(jobId);
+        taskManager.setResult(jobId, "done");
+
+        ArgumentCaptor<JobStoreEntry> captor = ArgumentCaptor.forClass(JobStoreEntry.class);
+        verify(jobStore, atLeast(2)).put(captor.capture(), any());
+
+        JobStoreEntry last = captor.getValue();
+        assertEquals(jobId, last.jobId());
+        assertEquals(JobState.COMPLETE, last.state());
+        assertEquals("test-node", last.owningNodeId());
+    }
+
+    @Test
+    void testFindJobKeyByFileId_FallsBackToJobStore() {
+        // When the file id is not in the local map, TaskManager delegates to JobStore.
+        String fileId = "remote-file-id";
+        String expectedJobKey = "remote-job-key";
+        when(jobStore.findJobIdByFileId(fileId)).thenReturn(Optional.of(expectedJobKey));
+
+        String actual = taskManager.findJobKeyByFileId(fileId);
+
+        assertEquals(expectedJobKey, actual);
+        verify(jobStore).findJobIdByFileId(fileId);
     }
 }

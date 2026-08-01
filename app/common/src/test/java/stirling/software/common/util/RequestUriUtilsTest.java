@@ -73,6 +73,14 @@ class RequestUriUtilsTest {
         assertTrue(RequestUriUtils.isStaticResource("/mobile-scanner"));
     }
 
+    @Test
+    void testIsStaticResource_portalShell() {
+        // The admin portal SPA shell (/processor) is served pre-auth so it's directly navigable.
+        assertTrue(RequestUriUtils.isStaticResource("/processor"));
+        assertTrue(RequestUriUtils.isStaticResource("/processor/users"));
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/processor"));
+    }
+
     // --- isFrontendRoute tests ---
 
     @Test
@@ -96,6 +104,17 @@ class RequestUriUtilsTest {
     void testIsFrontendRoute_extensionlessPath() {
         assertTrue(RequestUriUtils.isFrontendRoute("", "/merge"));
         assertTrue(RequestUriUtils.isFrontendRoute("", "/split-pdf"));
+    }
+
+    @Test
+    void testIsFrontendRoute_filesRouteOwnedByFrontend() {
+        // /files and /files/<folder-uuid> are FileManagerView routes - they
+        // must fall through to the SPA index.html, not get blocked by the
+        // backend auth filter. Regression test for direct-nav/refresh on
+        // the file manager returning a 401 JSON.
+        assertTrue(RequestUriUtils.isFrontendRoute("", "/files"));
+        assertTrue(
+                RequestUriUtils.isFrontendRoute("", "/files/3331910a-4155-4f71-8111-e38c896bc458"));
     }
 
     @Test
@@ -158,6 +177,13 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicAuthEndpoint_webhookReceiver() {
+        // The webhook source receiver authenticates each delivery by HMAC signature, not a session.
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/whk_abc123", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/webhooks/whk_abc123", "/app"));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_withContextPath() {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
     }
@@ -183,7 +209,7 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareRootNotPublic() {
-        // Avoid matching bare "/share" or "/share/" — must have a token segment
+        // Avoid matching bare "/share" or "/share/" - must have a token segment
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share", ""));
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/", ""));
     }
@@ -197,7 +223,7 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareApiStillProtected() {
-        // Share-link data APIs must NOT be public — they enforce auth + access checks
+        // Share-link data APIs must NOT be public - they enforce auth + access checks
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/abc123", ""));
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint(

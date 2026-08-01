@@ -2,7 +2,7 @@
  * End-to-End Tests for Encrypted PDF Password Prompting
  *
  * Tests the EncryptedPdfUnlockModal flow when uploading password-protected PDFs.
- * All backend API calls are mocked via page.route() — no real backend required.
+ * All backend API calls are mocked via page.route() - no real backend required.
  *
  * Coverage trimmed to 5 high-value cases:
  *   1. Modal renders with the expected title/inputs/buttons.
@@ -14,15 +14,16 @@
  *
  * Removed previously: input-disabled-when-empty, input-enabled-after-fill,
  * skip-button-closes, normal-PDF-doesn't-prompt, single-file-hides-use-for-all,
- * unlock-all-wrong-password — all transitively covered or low-value.
+ * unlock-all-wrong-password - all transitively covered or low-value.
  */
 
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 
 const FAKE_UNLOCKED_PDF = Buffer.from(
@@ -63,11 +64,10 @@ function mockRemovePasswordWrongPassword(page: Page) {
 }
 
 async function uploadEncryptedFile(page: Page, filePath: string) {
+  // `files-button`'s native picker is mocked globally
+  // (suppressNativeFilePicker), so the click is safe cross-browser; set the
+  // files on the hidden input directly.
   await page.getByTestId("files-button").click();
-  await page.waitForSelector(".mantine-Modal-overlay", {
-    state: "visible",
-    timeout: 5000,
-  });
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
@@ -79,6 +79,10 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("Encrypted PDF Unlock Modal", () => {
   test.beforeEach(async ({ page }) => {
+    // Raw @playwright/test fixture: install the picker suppression directly so
+    // the files-button click is intercepted cross-browser (firefox/webkit
+    // otherwise leak the native dialog onto the host and close the page).
+    suppressNativeFilePicker(page);
     await mockAppApis(page);
     await page.goto("/?bypassOnboarding=true");
     await page.waitForSelector('[data-testid="files-button"]', {
@@ -156,11 +160,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   }) => {
     await mockRemovePasswordSuccess(page);
 
+    // `files-button`'s native picker is mocked globally; click it, then set
+    // the files on the hidden input directly.
     await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5000,
-    });
     await page.locator('[data-testid="file-input"]').setInputFiles([
       {
         name: "encrypted-a.pdf",
@@ -179,7 +181,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     // detected as encrypted. PDF.js encryption probing runs per-file and
     // can lag the modal opening (which fires as soon as the first file
     // surfaces a password prompt). A 10s timeout was occasionally too tight
-    // on heavily-loaded CI runners — bump to 20s.
+    // on heavily-loaded CI runners - bump to 20s.
     const unlockAllBtn = page.getByRole("button", { name: /Use for all/ });
     await expect(unlockAllBtn).toBeVisible({ timeout: 20000 });
 

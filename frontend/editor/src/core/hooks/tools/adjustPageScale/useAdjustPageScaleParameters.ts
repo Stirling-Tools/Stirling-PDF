@@ -17,26 +17,36 @@ export enum PageSize {
   LEGAL = "LEGAL",
 }
 
+export type Orientation = "PORTRAIT" | "LANDSCAPE";
+
 export interface AdjustPageScaleParameters extends BaseParameters {
   scaleFactor: number;
   pageSize: PageSize;
+  orientation: Orientation;
 }
 
 export const defaultParameters: AdjustPageScaleParameters = {
   scaleFactor: 1.0,
   pageSize: PageSize.KEEP,
+  orientation: "PORTRAIT",
 };
 
 export type AdjustPageScaleParametersHook =
   BaseParametersHook<AdjustPageScaleParameters>;
+
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateAdjustPageScaleParameters(
+  params: AdjustPageScaleParameters,
+): boolean {
+  return params.scaleFactor > 0;
+}
 
 export const useAdjustPageScaleParameters =
   (): AdjustPageScaleParametersHook => {
     return useBaseParameters({
       defaultParameters,
       endpointName: "scale-pages",
-      validateFn: (params) => {
-        return params.scaleFactor > 0;
-      },
+      validateFn: validateAdjustPageScaleParameters,
     });
   };

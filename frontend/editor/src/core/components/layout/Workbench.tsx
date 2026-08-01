@@ -1,6 +1,5 @@
 import { useEffect, useState, Suspense, lazy } from "react";
 import { Box, Loader, Center } from "@mantine/core";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileState } from "@app/contexts/FileContext";
@@ -11,12 +10,14 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
+import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
-import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+import { ChatFAB } from "@app/components/chat/ChatFAB";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -27,11 +28,17 @@ const PageEditorControls = lazy(
   () => import("@app/components/pageEditor/PageEditorControls"),
 );
 const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
+const FileManagerView = lazy(
+  () => import("@app/components/filesPage/FileManagerView"),
+);
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
-  const { isRainbowMode } = useRainbowThemeContext();
   const { config } = useAppConfig();
+
+  // The consent banner used to be initialised by the footer; the legal links
+  // now live in Settings → Legal, so the workbench owns the banner lifecycle.
+  useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
@@ -50,6 +57,7 @@ export default function Workbench() {
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
+  const { overlay: signingOverlay } = useSigningOverlay();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -59,6 +67,10 @@ export default function Workbench() {
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
+  // Custom workbench views (e.g. Watched Folders) manage their own content and may
+  // have no workbench files, but still need the bar's view switcher so users can
+  // navigate back out.
+  const isCustomViewActive = !isBaseWorkbench(currentView);
 
   // Enable bar transitions after first paint so the initial hidden state shows
   // without animating (landing page on load shouldn't animate the bar up).
@@ -97,6 +109,31 @@ export default function Workbench() {
         const CustomComponent = customView.component;
         return <CustomComponent data={customView.data} />;
       }
+    }
+
+    // The "My Files" workbench is available regardless of whether files are
+    // currently loaded into the workbench - it lives on top of the IDB store.
+    if (currentView === "myFiles") {
+      return <FileManagerView />;
+    }
+
+    // Shared Signing drives the main viewer from the sidebar (document + overlays
+    // via context), ahead of the empty-state landing page.
+    if (currentView === "viewer" && signingOverlay?.file) {
+      return (
+        <Viewer
+          sidebarsVisible={sidebarsVisible}
+          setSidebarsVisible={setSidebarsVisible}
+          previewFile={signingOverlay.file}
+          signaturePreviews={signingOverlay.signaturePreviews}
+          signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
+          signaturePlacementMode={signingOverlay.signaturePlacementMode}
+          signaturePlacementData={signingOverlay.signaturePlacementData}
+          signaturePlacementType={signingOverlay.signaturePlacementType}
+          onSignaturePreviewsChange={signingOverlay.onSignaturePreviewsChange}
+          signatureOverlayApiRef={signingOverlay.signatureOverlayApiRef}
+        />
+      );
     }
 
     if (activeFiles.length === 0) {
@@ -181,38 +218,43 @@ export default function Workbench() {
     <Box
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
-      style={
-        isRainbowMode
-          ? {} // No background color in rainbow mode
-          : { backgroundColor: "var(--bg-background)" }
-      }
+      style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
       {/* Workbench Bar - animates in/out based on file presence */}
-      {!customWorkbenchViews.find((v) => v.workbenchId === currentView)
-        ?.hideTopControls && (
-        <div
-          className={styles.workbenchBarWrapper}
-          data-hidden={String(!hasFiles)}
-          data-no-transition={String(!barTransitionEnabled)}
-        >
-          <div className={styles.workbenchBarInner}>
-            <WorkbenchBar
-              currentView={currentView}
-              setCurrentView={setCurrentView}
-              hasFiles={hasFiles}
-            />
+      {currentView !== "myFiles" &&
+        !customWorkbenchViews.find((v) => v.workbenchId === currentView)
+          ?.hideTopControls && (
+          <div
+            className={styles.workbenchBarWrapper}
+            data-hidden={String(!hasFiles && !isCustomViewActive)}
+            data-no-transition={String(!barTransitionEnabled)}
+          >
+            <div className={styles.workbenchBarInner}>
+              <WorkbenchBar
+                currentView={currentView}
+                setCurrentView={setCurrentView}
+                hasFiles={hasFiles}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />
+
+      {/* Floating AI chat button + panel */}
+      <ChatFAB />
 
       {/* Main content area */}
       <Box
         className={`flex-1 min-h-0 z-10 ${currentView === "pageEditor" ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
         style={{
           transition: "opacity 0.15s ease-in-out",
+          // Force min-width:0 so flex children (notably the files page
+          // toolbar with its 5 bulk-action buttons + 2 selects + view
+          // toggle) can shrink below their intrinsic content size on
+          // narrow viewports instead of overflowing horizontally.
+          minWidth: 0,
           ...(currentView === "pageEditor" && { height: 0 }),
         }}
       >
@@ -226,15 +268,6 @@ export default function Workbench() {
           {renderMainContent()}
         </Suspense>
       </Box>
-
-      <Footer
-        analyticsEnabled={config?.enableAnalytics === true}
-        termsAndConditions={config?.termsAndConditions}
-        privacyPolicy={config?.privacyPolicy}
-        cookiePolicy={config?.cookiePolicy}
-        impressum={config?.impressum}
-        accessibilityStatement={config?.accessibilityStatement}
-      />
     </Box>
   );
 }

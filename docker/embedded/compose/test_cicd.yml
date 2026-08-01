@@ -16,6 +16,7 @@ services:
       - ../../../stirling/latest/data:/usr/share/tessdata:rw
       - ../../../stirling/latest/config:/configs:rw
       - ../../../stirling/latest/logs:/logs:rw
+      - ../../../stirling/latest/storage:/storage:rw
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "true"
@@ -31,4 +32,9 @@ services:
       SYSTEM_GOOGLEVISIBILITY: "true"
       SYSTEM_ENABLEMOBILESCANNER: "true"
       SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
+      # Folder management + file-storage features the cucumber
+      # `folders_and_files.feature` suite needs to upload PDFs against.
+      # The folder endpoints and the storage upload endpoint short-circuit
+      # to 403 "Storage is disabled" when this is left at its default false.
+      STORAGE_ENABLED: "true"
     restart: on-failure:5

@@ -29,9 +29,6 @@ export function useScarfTracking() {
   // Listen to cookie consent changes and auto-fire pixel when consent is granted
   useEffect(() => {
     const handleConsentChange = () => {
-      console.warn(
-        "[useScarfTracking] Consent changed, checking scarf service acceptance",
-      );
       if (isServiceAccepted("scarf", "analytics")) {
         firePixel(window.location.pathname);
       }

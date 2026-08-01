@@ -4,7 +4,7 @@ import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
 import Signup from "@app/routes/Signup";
@@ -18,7 +18,7 @@ import Onboarding from "@app/components/onboarding/Onboarding";
 import "@app/styles/tailwind.css";
 import "@app/styles/cookieconsent.css";
 import "@app/styles/index.css";
-import "@app/styles/auth-theme.css";
+import "@app/auth/ui/auth-theme.css";
 
 // Import file ID debugging helpers (development only)
 import "@app/utils/fileIdSafety";
@@ -27,7 +27,7 @@ import "@app/utils/fileIdSafety";
 function MinimalProviders({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>{children}</RainbowThemeProvider>
+      <ThemeProvider>{children}</ThemeProvider>
     </PreferencesProvider>
   );
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Translation Analyzer for Stirling PDF Frontend
-Compares language files against en-GB golden truth file.
+Compares language files against en-US golden truth file.
 """
 
 import json
@@ -19,7 +19,7 @@ class TranslationAnalyzer:
         ignore_file: str = "scripts/ignore_translation.toml",
     ):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
         self.golden_truth = self._load_translation_file(self.golden_truth_file)
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
@@ -70,17 +70,17 @@ class TranslationAnalyzer:
         return dict(items)
 
     def get_all_language_files(self) -> List[Path]:
-        """Get all translation files except en-GB."""
+        """Get all translation files except en-US."""
         files = []
         for lang_dir in self.locales_dir.iterdir():
-            if lang_dir.is_dir() and lang_dir.name != "en-GB":
+            if lang_dir.is_dir() and lang_dir.name != "en-US":
                 toml_file = lang_dir / "translation.toml"
                 if toml_file.exists():
                     files.append(toml_file)
         return sorted(files)
 
     def find_missing_translations(self, target_file: Path) -> Set[str]:
-        """Find keys that exist in en-GB but missing in target file."""
+        """Find keys that exist in en-US but missing in target file."""
         target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
@@ -94,7 +94,7 @@ class TranslationAnalyzer:
         return missing - ignore_set
 
     def find_untranslated_entries(self, target_file: Path) -> Set[str]:
-        """Find entries that appear to be untranslated (identical to en-GB)."""
+        """Find entries that appear to be untranslated (identical to en-US)."""
         target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
@@ -109,7 +109,7 @@ class TranslationAnalyzer:
                 target_value = target_flat[key]
                 golden_value = golden_flat[key]
 
-                # Check if marked as [UNTRANSLATED] or identical to en-GB
+                # Check if marked as [UNTRANSLATED] or identical to en-US
                 if (
                     isinstance(target_value, str)
                     and target_value.startswith("[UNTRANSLATED]")
@@ -139,7 +139,7 @@ class TranslationAnalyzer:
         return False
 
     def find_extra_translations(self, target_file: Path) -> Set[str]:
-        """Find keys that exist in target file but not in en-GB."""
+        """Find keys that exist in target file but not in en-US."""
         target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
@@ -174,7 +174,7 @@ class TranslationAnalyzer:
                 if not (isinstance(value, str) and value.startswith("[UNTRANSLATED]")):
                     if (
                         key not in untranslated
-                    ):  # Not identical to en-GB (unless expected)
+                    ):  # Not identical to en-US (unless expected)
                         properly_translated += 1
 
         completion_rate = (
@@ -204,7 +204,7 @@ class TranslationAnalyzer:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyze translation files against en-GB golden truth"
+        description="Analyze translation files against en-US golden truth"
     )
     parser.add_argument(
         "--locales-dir",
@@ -260,7 +260,7 @@ def main():
         print(f"Language: {lang}")
         print(f"File: {result['file']}")
         print(f"Completion Rate: {result['completion_rate']:.1f}%")
-        print(f"Total Keys in en-GB: {result['total_keys']}")
+        print(f"Total Keys in en-US: {result['total_keys']}")
 
         if not args.summary:
             if not args.untranslated_only:
@@ -278,7 +278,7 @@ def main():
                     print(f"  ... and {len(result['untranslated_keys']) - 10} more")
 
             if result["extra_count"] > 0:
-                print(f"\nExtra Keys Not in en-GB ({result['extra_count']}):")
+                print(f"\nExtra Keys Not in en-US ({result['extra_count']}):")
                 for key in result["extra_keys"][:5]:
                     print(f"  - {key}")
                 if len(result["extra_keys"]) > 5:

@@ -15,3 +15,11 @@ export const useIsMobile = (): boolean => {
 export const useIsPhone = (): boolean => {
   return useMediaQuery("(max-width: 768px)") ?? false;
 };
+
+/**
+ * Custom hook to detect a coarse pointer (touch device)
+ * Use to gate touch-only UI hints when combined with useIsMobile
+ */
+export const useIsTouch = (): boolean => {
+  return useMediaQuery("(pointer: coarse)") ?? false;
+};

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { fileOpenService } from "@app/services/fileOpenService";
-import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 export function useOpenedFile() {
   const [openedFilePaths, setOpenedFilePaths] = useState<string[]>([]);
@@ -45,16 +45,22 @@ export function useOpenedFile() {
     // Read files on mount
     readFilesFromStorage();
 
-    // Listen for files-changed events (when new files are added to storage)
+    // Listen for files-changed events scoped to THIS window only.
+    // Rust emits via window.emit(...) / app.emit_to(label, ...) so each
+    // Tauri window sees only its own queue updates.
     let unlisten: (() => void) | undefined;
-    listen("files-changed", async () => {
-      console.log("📂 files-changed event received, re-reading storage...");
-      await readFilesFromStorage();
-    }).then((unlistenFn) => {
-      unlisten = unlistenFn;
-    });
+    const currentWindow = getCurrentWebviewWindow();
+    currentWindow
+      .listen("files-changed", async () => {
+        console.log(
+          `📂 files-changed event received on window '${currentWindow.label}', re-reading storage...`,
+        );
+        await readFilesFromStorage();
+      })
+      .then((unlistenFn) => {
+        unlisten = unlistenFn;
+      });
 
-    // Cleanup function
     return () => {
       if (unlisten) unlisten();
     };

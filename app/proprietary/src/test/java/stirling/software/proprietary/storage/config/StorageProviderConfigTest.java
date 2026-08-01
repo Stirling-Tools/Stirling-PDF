@@ -1,0 +1,186 @@
+package stirling.software.proprietary.storage.config;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Base64;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.crypto.EncryptingStorageProvider;
+import stirling.software.proprietary.storage.crypto.InMemoryKeyRepo;
+import stirling.software.proprietary.storage.crypto.StorageEncryptionState;
+import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
+
+/**
+ * Verifies the Pro/Enterprise license gates and, critically, that the encryption decorator is
+ * installed in EVERY configuration — a node whose config lags the cluster (flag off, key rows
+ * already existing elsewhere) must never serve raw ciphertext.
+ */
+class StorageProviderConfigTest {
+
+    private static final String MASTER =
+            Base64.getEncoder().encodeToString("0123456789abcdef0123456789abcdef".getBytes());
+
+    private final InMemoryKeyRepo keyRepo = new InMemoryKeyRepo();
+    private final PlatformTransactionManager txManager = mock(PlatformTransactionManager.class);
+
+    // ---- decorator installation matrix -------------------------------------------------
+
+    @Test
+    void decorator_alwaysInstalled_evenWhenEncryptionOffAndNoKeys() {
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        StorageProvider provider = cfg.storageProvider(state, Optional.empty());
+        assertThat(provider).isInstanceOf(EncryptingStorageProvider.class);
+        assertThat(state.isWriteEnabled()).isFalse();
+        // Nothing encrypted can exist -> the S3 fast path stays available.
+        assertThat(state.suppressDirectDownloads()).isFalse();
+    }
+
+    @Test
+    void decorator_writeEnabled_requiresLicenceAndSuppressesDirectDownloads() {
+        StorageProviderConfig cfg = newConfig("local", License.SERVER, true);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        StorageProvider provider = cfg.storageProvider(state, Optional.empty());
+        assertThat(provider).isInstanceOf(EncryptingStorageProvider.class);
+        assertThat(state.isWriteEnabled()).isTrue();
+        assertThat(state.suppressDirectDownloads()).isTrue();
+    }
+
+    @Test
+    void decorator_flagOffButKeysExist_decryptOnlyModeStillMaterialises() throws Exception {
+        // Simulate the drifted-node case: another node already created keys.
+        StorageProviderConfig seedCfg = newConfig("local", License.SERVER, true);
+        StorageEncryptionState seedState = seedCfg.storageEncryptionState(MASTER, false, txManager);
+        Team team = new Team();
+        team.setId(1L);
+        User owner = new User();
+        owner.setTeam(team);
+        seedState.keyService().activeKekForOwner(owner);
+
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        assertThat(cfg.storageProvider(state, Optional.empty()))
+                .isInstanceOf(EncryptingStorageProvider.class);
+        assertThat(state.isWriteEnabled()).isFalse();
+        // Encrypted content may exist -> presigned URLs must be suppressed on this node too.
+        assertThat(state.suppressDirectDownloads()).isTrue();
+        // Eager init ran (keys existed at boot), so decryption works without a licence.
+        assertThat(state.keyService()).isNotNull();
+    }
+
+    @Test
+    void encryption_enabled_normalLicense_failsStartup() {
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, true);
+        assertThatThrownBy(() -> cfg.storageEncryptionState(MASTER, false, txManager))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("storage.encryption requires a Pro or Enterprise license");
+    }
+
+    @Test
+    void encryption_enabled_wrongLengthKey_failsStartup() {
+        StorageProviderConfig cfg = newConfig("local", License.SERVER, true);
+        String shortKey = Base64.getEncoder().encodeToString("only16bytes-yes!".getBytes());
+        assertThatThrownBy(() -> cfg.storageEncryptionState(shortKey, false, txManager))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("32 bytes");
+    }
+
+    // ---- backend licence gates (unchanged behaviour) ------------------------------------
+
+    @Test
+    void provider_s3_normalLicense_throwsBeforeBuildingClient() {
+        StorageProviderConfig cfg = newConfig("s3", License.NORMAL, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        // License check must throw BEFORE S3Clients.build tries to validate endpoint / bucket.
+        assertThatThrownBy(() -> cfg.storageProvider(state, Optional.empty()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("storage.provider=s3 requires a Pro or Enterprise license");
+    }
+
+    @Test
+    void provider_database_normalLicense_throws() {
+        StorageProviderConfig cfg = newConfig("database", License.NORMAL, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        assertThatThrownBy(() -> cfg.storageProvider(state, Optional.empty()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(
+                        "storage.provider=database requires a Pro or Enterprise license");
+    }
+
+    @Test
+    void provider_database_serverLicense_builds() {
+        StorageProviderConfig cfg = newConfig("database", License.SERVER, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+        assertThatCode(() -> cfg.storageProvider(state, Optional.empty()))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void provider_s3_serverLicense_passesLicenseCheck_thenFailsOnEmptyConfig() {
+        StorageProviderConfig cfg = newConfig("s3", License.SERVER, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        // Valid license, but no bucket/endpoint configured - so we expect a CONFIG error,
+        // not a license error.
+        assertThatThrownBy(() -> cfg.storageProvider(state, Optional.empty()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageNotContaining("Pro or Enterprise license");
+    }
+
+    @Test
+    void provider_unknown_throwsUnsupportedProvider_notLicense() {
+        StorageProviderConfig cfg = newConfig("magic", License.NORMAL, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        assertThatThrownBy(() -> cfg.storageProvider(state, Optional.empty()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Storage provider not supported: magic")
+                .hasMessageNotContaining("license");
+    }
+
+    private StorageProviderConfig newConfig(
+            String provider, License license, boolean encryptionEnabled) {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getStorage().setProvider(provider);
+        props.getStorage().setEnabled(false); // local-fallback path skips dir creation
+        props.getStorage().getEncryption().setEnabled(encryptionEnabled);
+        StoredFileBlobRepository repo = mock(StoredFileBlobRepository.class);
+        LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
+        when(checker.getPremiumLicenseEnabledResult()).thenReturn(license);
+        if (license == License.SERVER || license == License.ENTERPRISE) {
+            doNothing().when(checker).requireProOrEnterprise(anyString());
+        } else {
+            // Mirror real LicenseKeyChecker.requireProOrEnterprise so message assertions match.
+            doAnswer(
+                            inv -> {
+                                throw new IllegalStateException(
+                                        inv.getArgument(0)
+                                                + " requires a Pro or Enterprise license");
+                            })
+                    .when(checker)
+                    .requireProOrEnterprise(anyString());
+        }
+        return new StorageProviderConfig(props, repo, keyRepo.mock, checker);
+    }
+}

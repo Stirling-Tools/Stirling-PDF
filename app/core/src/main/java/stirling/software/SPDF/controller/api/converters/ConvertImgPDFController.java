@@ -275,7 +275,10 @@ public class ConvertImgPDFController {
                 GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbz/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/cbz/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Convert CBZ comic book archive to PDF",
             description =
@@ -301,7 +304,10 @@ public class ConvertImgPDFController {
         return WebResponseUtils.pdfFileToWebResponse(pdfFile, filename);
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbz")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/cbz",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Convert PDF to CBZ comic book archive",
             description =
@@ -324,7 +330,10 @@ public class ConvertImgPDFController {
         return WebResponseUtils.zipFileToWebResponse(cbzFile, filename);
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbr/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/cbr/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Convert CBR comic book archive to PDF",
             description =
@@ -350,7 +359,10 @@ public class ConvertImgPDFController {
         return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbr")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/cbr",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Convert PDF to CBR comic book archive",
             description =

@@ -27,7 +27,7 @@ export function buildInputTracking(
       inputFileIds.push(fileId);
       inputStirlingFileStubs.push(record);
     } else {
-      console.warn(`No file stub found for file: ${file.name}`);
+      console.debug(`No file stub found for file: ${file.name}`);
       inputFileIds.push(fileId);
       inputStirlingFileStubs.push(createNewStirlingFileStub(file, fileId));
     }

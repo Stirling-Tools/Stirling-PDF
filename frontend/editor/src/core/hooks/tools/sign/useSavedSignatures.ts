@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { generateId } from "@app/utils/generateId";
 import {
   signatureStorageService,
   type StorageType,
@@ -27,16 +28,6 @@ export type AddSignatureResult =
 
 const isSupportedEnvironment = () =>
   typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-
-const generateId = () => {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return crypto.randomUUID();
-  }
-  return `sig_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-};
 
 export const useSavedSignatures = () => {
   const [savedSignatures, setSavedSignatures] = useState<SavedSignature[]>([]);

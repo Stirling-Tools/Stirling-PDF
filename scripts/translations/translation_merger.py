@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Translation Merger for Stirling PDF Frontend
-Merges missing translations from en-GB into target language files.
+Merges missing translations from en-US into target language files.
 Useful for AI-assisted translation workflows.
 TOML format only.
 """
@@ -22,13 +22,15 @@ import tomli_w
 class TranslationMerger:
     def __init__(
         self,
-        locales_dir: str = os.path.join(os.getcwd(), "frontend", "public", "locales"),
+        locales_dir: str = os.path.join(
+            os.getcwd(), "frontend", "editor", "public", "locales"
+        ),
         ignore_file: str = os.path.join(
             os.getcwd(), "scripts", "ignore_translation.toml"
         ),
     ):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
         self.golden_truth = self._load_translation_file(self.golden_truth_file)
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
@@ -176,7 +178,7 @@ class TranslationMerger:
         save: bool = True,
         backup: bool = False,
     ) -> dict[str, Any]:
-        """Add missing translations from en-GB to target file and optionally save."""
+        """Add missing translations from en-US to target file and optionally save."""
         if not target_file.parent.exists():
             target_file.parent.mkdir(parents=True, exist_ok=True)
             target_data = {}
@@ -208,7 +210,7 @@ class TranslationMerger:
     def extract_untranslated_entries(
         self, target_file: Path, output_file: Path | None = None
     ) -> dict[str, Any]:
-        """Extract entries marked as untranslated or identical to en-GB for AI translation."""
+        """Extract entries marked as untranslated or identical to en-US for AI translation."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
             return {}
@@ -333,7 +335,7 @@ class TranslationMerger:
 
         template = {
             "metadata": {
-                "source_language": "en-GB",
+                "source_language": "en-US",
                 "target_language": target_file.parent.name,
                 "total_entries": len(untranslated),
                 "created_at": datetime.now().isoformat(),
@@ -371,7 +373,7 @@ def main():
     )
     parser.add_argument(
         "--locales-dir",
-        default=os.path.join(os.getcwd(), "frontend", "public", "locales"),
+        default=os.path.join(os.getcwd(), "frontend", "editor", "public", "locales"),
         help="Path to locales directory",
     )
     parser.add_argument(
@@ -382,14 +384,14 @@ def main():
     parser.add_argument(
         "language",
         nargs="?",
-        help="Target language code (e.g., fr-FR). If omitted, add-missing and remove-unused run for all locales except en-GB.",
+        help="Target language code (e.g., fr-FR). If omitted, add-missing and remove-unused run for all locales except en-US.",
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Add missing command
     add_parser = subparsers.add_parser(
-        "add-missing", help="Add missing translations from en-GB"
+        "add-missing", help="Add missing translations from en-US"
     )
     add_parser.add_argument(
         "--backup", action="store_true", help="Create backup before modifying files"
@@ -422,7 +424,7 @@ def main():
 
     # Remove unused translations command
     remove_parser = subparsers.add_parser(
-        "remove-unused", help="Remove unused translations not present in en-GB"
+        "remove-unused", help="Remove unused translations not present in en-US"
     )
     remove_parser.add_argument(
         "--backup", action="store_true", help="Create backup before modifying files"
@@ -447,7 +449,7 @@ def main():
         else:
             total_added = 0
             for lang_dir in sorted(Path(args.locales_dir).iterdir()):
-                if not lang_dir.is_dir() or lang_dir.name == "en-GB":
+                if not lang_dir.is_dir() or lang_dir.name == "en-US":
                     continue
                 target_file = lang_dir / "translation.toml"
                 print(f"Processing {lang_dir.name}...")
@@ -469,7 +471,7 @@ def main():
         else:
             total_removed = 0
             for lang_dir in sorted(Path(args.locales_dir).iterdir()):
-                if not lang_dir.is_dir() or lang_dir.name == "en-GB":
+                if not lang_dir.is_dir() or lang_dir.name == "en-US":
                     continue
                 target_file = lang_dir / "translation.toml"
                 print(f"Processing {lang_dir.name}...")

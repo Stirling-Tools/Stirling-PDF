@@ -1,9 +1,9 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,7 +13,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +36,8 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfSplit;
 
 @GeneralApi
 @Slf4j
@@ -75,23 +76,27 @@ public class SplitPdfBySizeController {
                         sourceTempFile.getPath(),
                         StandardCopyOption.REPLACE_EXISTING);
 
-                try (PDDocument sourceDocument =
-                        pdfDocumentFactory.load(sourceTempFile.getFile(), true)) {
-                    boolean hasForm = sourceDocument.getDocumentCatalog().getAcroForm(null) != null;
-                    List<List<Integer>> ranges = computeRanges(request, sourceDocument);
+                boolean hasForm;
+                try (PDDocument acroDoc = pdfDocumentFactory.load(sourceTempFile.getFile(), true)) {
+                    hasForm = acroDoc.getDocumentCatalog().getAcroForm(null) != null;
+                }
+
+                try (PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
+                    List<int[]> ranges = computeRanges(request, sourceDocument);
 
                     int fileIndex = 1;
-                    for (List<Integer> range : ranges) {
-                        if (range.isEmpty()) {
+                    for (int[] range : ranges) {
+                        if (range.length == 0) {
                             continue;
                         }
-                        if (hasForm) {
-                            writeRangeViaReload(
-                                    sourceTempFile.getFile(), range, zipOut, filename, fileIndex++);
-                        } else {
-                            writeRangeViaSharedSource(
-                                    sourceDocument, range, zipOut, filename, fileIndex++);
-                        }
+                        writeRange(
+                                sourceDocument,
+                                sourceTempFile.getFile(),
+                                range,
+                                zipOut,
+                                filename,
+                                fileIndex++,
+                                hasForm);
                     }
                 }
             }
@@ -104,29 +109,54 @@ public class SplitPdfBySizeController {
         }
     }
 
-    private List<List<Integer>> computeRanges(
-            SplitPdfBySizeOrCountRequest request, PDDocument sourceDocument) throws IOException {
+    private List<int[]> computeRanges(SplitPdfBySizeOrCountRequest request, PdfDocument sourceDoc)
+            throws IOException {
         int type = request.getSplitType();
         String value = request.getSplitValue();
         if (type == 0) {
-            return computeSizeRanges(sourceDocument, GeneralUtils.convertSizeToBytes(value));
+            return computeSizeRanges(sourceDoc, GeneralUtils.convertSizeToBytes(value));
         } else if (type == 1) {
-            return computePageCountRanges(sourceDocument, Integer.parseInt(value));
+            return computePageCountRanges(sourceDoc, Integer.parseInt(value));
         } else if (type == 2) {
-            return computeDocCountRanges(sourceDocument, Integer.parseInt(value));
+            return computeDocCountRanges(sourceDoc, Integer.parseInt(value));
         }
         throw ExceptionUtils.createIllegalArgumentException(
                 "error.invalidArgument", "Invalid argument: {0}", "split type: " + type);
     }
 
-    private void writeRangeViaReload(
+    private void writeRange(
+            PdfDocument sourceDoc,
             File sourceFile,
-            List<Integer> keepIndices,
+            int[] range,
+            ZipOutputStream zipOut,
+            String baseFilename,
+            int fileIndex,
+            boolean hasForm)
+            throws IOException {
+        if (hasForm) {
+            // JPDFium's FPDF_ImportPagesByIndex drops the AcroForm dictionary, breaking form
+            // fields downstream. For form-bearing PDFs, do the extract via PDFBox so the
+            // AcroForm survives (pruneOrphanedFormFields removes references to dropped pages).
+            writeRangeViaPdfBox(sourceFile, range, zipOut, baseFilename, fileIndex);
+        } else {
+            try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
+                extractRangeToFile(sourceDoc, range, splitTemp.getPath());
+                writeEntry(zipOut, baseFilename, fileIndex, splitTemp.getPath());
+            }
+        }
+    }
+
+    private void writeRangeViaPdfBox(
+            File sourceFile,
+            int[] range,
             ZipOutputStream zipOut,
             String baseFilename,
             int fileIndex)
             throws IOException {
-        Set<Integer> keep = new HashSet<>(keepIndices);
+        Set<Integer> keep = new HashSet<>();
+        for (int p : range) {
+            keep.add(p);
+        }
         try (PDDocument doc = pdfDocumentFactory.load(sourceFile)) {
             for (int i = doc.getNumberOfPages() - 1; i >= 0; i--) {
                 if (!keep.contains(i)) {
@@ -134,50 +164,41 @@ public class SplitPdfBySizeController {
                 }
             }
             FormUtils.pruneOrphanedFormFields(doc);
-            writeEntry(zipOut, baseFilename, fileIndex, doc);
+            zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + fileIndex + ".pdf"));
+            doc.save(zipOut);
+            zipOut.closeEntry();
         }
     }
 
-    private void writeRangeViaSharedSource(
-            PDDocument sourceDocument,
-            List<Integer> keepIndices,
-            ZipOutputStream zipOut,
-            String baseFilename,
-            int fileIndex)
+    private void extractRangeToFile(PdfDocument sourceDoc, int[] range, Path outputPath)
             throws IOException {
-        try (PDDocument doc =
-                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-            for (int p : keepIndices) {
-                doc.addPage(sourceDocument.getPage(p));
-            }
-            writeEntry(zipOut, baseFilename, fileIndex, doc);
+        int from = range[0];
+        int to = range[range.length - 1];
+        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
+            split.save(outputPath);
         }
     }
 
     private void writeEntry(
-            ZipOutputStream zipOut, String baseFilename, int fileIndex, PDDocument doc)
+            ZipOutputStream zipOut, String baseFilename, int fileIndex, Path pdfPath)
             throws IOException {
         zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + fileIndex + ".pdf"));
-        doc.save(zipOut);
+        Files.copy(pdfPath, zipOut);
         zipOut.closeEntry();
     }
 
-    /** Page-index ranges each output should contain. AcroForm overhead isn't modeled. */
-    private List<List<Integer>> computeSizeRanges(PDDocument sourceDocument, long maxBytes)
-            throws IOException {
-        List<List<Integer>> ranges = new ArrayList<>();
-        List<Integer> currentRange = new ArrayList<>();
-        int totalPages = sourceDocument.getNumberOfPages();
+    /** Returns contiguous page-index ranges fitting within {@code maxBytes}. */
+    private List<int[]> computeSizeRanges(PdfDocument sourceDoc, long maxBytes) throws IOException {
+        List<int[]> ranges = new ArrayList<>();
+        int totalPages = sourceDoc.pageCount();
         int baseCheckFrequency = 5;
-
-        PDDocument scratch = new PDDocument();
-        try {
+        int rangeStart = 0;
+        int rangeEnd = -1;
+        try (TempFile probe = new TempFile(tempFileManager, ".pdf")) {
+            File probeFile = probe.getFile();
             for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                PDPage page = sourceDocument.getPage(pageIndex);
-                scratch.addPage(new PDPage(page.getCOSObject()));
-                currentRange.add(pageIndex);
-
-                int pageAdded = currentRange.size();
+                rangeEnd = pageIndex;
+                int pageAdded = rangeEnd - rangeStart + 1;
                 boolean shouldCheckSize =
                         (pageAdded % baseCheckFrequency == 0)
                                 || (pageIndex == totalPages - 1)
@@ -185,117 +206,110 @@ public class SplitPdfBySizeController {
                 if (!shouldCheckSize) {
                     continue;
                 }
-
-                long actualSize;
-                try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                    scratch.save(out);
-                    actualSize = out.size();
-                }
+                long actualSize = saveRange(sourceDoc, rangeStart, rangeEnd, probeFile);
 
                 if (actualSize > maxBytes) {
-                    if (scratch.getNumberOfPages() > 1) {
-                        scratch.removePage(scratch.getNumberOfPages() - 1);
-                        currentRange.remove(currentRange.size() - 1);
-                        pageIndex--; // retry this page in the next chunk
+                    if (pageAdded > 1) {
+                        rangeEnd = pageIndex - 1;
+                        pageIndex--;
                     }
-                    ranges.add(new ArrayList<>(currentRange));
-                    currentRange.clear();
-                    scratch.close();
-                    scratch = new PDDocument();
+                    ranges.add(buildRange(rangeStart, rangeEnd));
+                    rangeStart = rangeEnd + 1;
+                    rangeEnd = rangeStart - 1;
                 } else if (pageIndex < totalPages - 1 && actualSize < maxBytes * 0.75) {
-                    int extraPagesAdded =
-                            lookAheadFit(scratch, sourceDocument, pageIndex, maxBytes);
-                    for (int i = 0; i < extraPagesAdded; i++) {
-                        int extra = pageIndex + 1 + i;
-                        scratch.addPage(new PDPage(sourceDocument.getPage(extra).getCOSObject()));
-                        currentRange.add(extra);
-                    }
-                    pageIndex += extraPagesAdded;
+                    int extra =
+                            lookAheadFit(
+                                    sourceDoc,
+                                    rangeStart,
+                                    pageIndex,
+                                    maxBytes,
+                                    totalPages,
+                                    probeFile);
+                    pageIndex += extra;
+                    rangeEnd = pageIndex;
                 }
             }
-
-            if (!currentRange.isEmpty()) {
-                ranges.add(new ArrayList<>(currentRange));
-            }
-        } finally {
-            scratch.close();
+        }
+        if (rangeEnd >= rangeStart) {
+            ranges.add(buildRange(rangeStart, rangeEnd));
         }
         return ranges;
     }
 
-    /** Speculatively tries up to 5 next pages; returns how many fit under {@code maxBytes}. */
-    private int lookAheadFit(PDDocument scratch, PDDocument source, int pageIndex, long maxBytes)
+    private long saveRange(PdfDocument sourceDoc, int from, int to, File output)
             throws IOException {
-        int totalPages = source.getNumberOfPages();
-        int pagesToLookAhead = Math.min(5, totalPages - pageIndex - 1);
-        if (pagesToLookAhead == 0) {
-            return 0;
+        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
+            split.save(output.toPath());
         }
-
-        int extraPagesAdded = 0;
-        try (PDDocument testDoc = new PDDocument()) {
-            for (int i = 0; i < scratch.getNumberOfPages(); i++) {
-                testDoc.addPage(new PDPage(scratch.getPage(i).getCOSObject()));
-            }
-            for (int i = 0; i < pagesToLookAhead; i++) {
-                testDoc.addPage(new PDPage(source.getPage(pageIndex + 1 + i).getCOSObject()));
-                long testSize;
-                try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                    testDoc.save(out);
-                    testSize = out.size();
-                }
-                if (testSize > maxBytes) {
-                    break;
-                }
-                extraPagesAdded++;
-            }
-        }
-        return extraPagesAdded;
+        return output.length();
     }
 
-    private List<List<Integer>> computePageCountRanges(PDDocument sourceDocument, int pageCount) {
+    private int lookAheadFit(
+            PdfDocument sourceDoc,
+            int rangeStart,
+            int currentEnd,
+            long maxBytes,
+            int totalPages,
+            File probeFile)
+            throws IOException {
+        int pagesToLookAhead = Math.min(5, totalPages - currentEnd - 1);
+        int extra = 0;
+        for (int i = 0; i < pagesToLookAhead; i++) {
+            int trialEnd = currentEnd + 1 + i;
+            long size = saveRange(sourceDoc, rangeStart, trialEnd, probeFile);
+            if (size > maxBytes) {
+                break;
+            }
+            extra++;
+        }
+        return extra;
+    }
+
+    private List<int[]> computePageCountRanges(PdfDocument sourceDoc, int pageCount) {
         if (pageCount <= 0) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidArgument", "Invalid argument: {0}", "page count: " + pageCount);
         }
-        int totalPages = sourceDocument.getNumberOfPages();
-        List<List<Integer>> ranges = new ArrayList<>();
-        List<Integer> current = new ArrayList<>(pageCount);
-        for (int i = 0; i < totalPages; i++) {
-            current.add(i);
-            if (current.size() == pageCount) {
-                ranges.add(current);
-                current = new ArrayList<>(pageCount);
-            }
-        }
-        if (!current.isEmpty()) {
-            ranges.add(current);
+        int totalPages = sourceDoc.pageCount();
+        List<int[]> ranges = new ArrayList<>();
+        int start = 0;
+        while (start < totalPages) {
+            int end = Math.min(start + pageCount - 1, totalPages - 1);
+            ranges.add(buildRange(start, end));
+            start = end + 1;
         }
         return ranges;
     }
 
-    private List<List<Integer>> computeDocCountRanges(
-            PDDocument sourceDocument, int documentCount) {
+    private List<int[]> computeDocCountRanges(PdfDocument sourceDoc, int documentCount) {
         if (documentCount <= 0) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidArgument",
                     "Invalid argument: {0}",
                     "document count: " + documentCount);
         }
-        int totalPages = sourceDocument.getNumberOfPages();
+        int totalPages = sourceDoc.pageCount();
         int pagesPerDocument = totalPages / documentCount;
         int extraPages = totalPages % documentCount;
-
-        List<List<Integer>> ranges = new ArrayList<>();
+        List<int[]> ranges = new ArrayList<>();
         int cursor = 0;
         for (int i = 0; i < documentCount; i++) {
             int pagesToAdd = pagesPerDocument + (i < extraPages ? 1 : 0);
-            List<Integer> range = new ArrayList<>(pagesToAdd);
-            for (int j = 0; j < pagesToAdd; j++) {
-                range.add(cursor++);
+            if (pagesToAdd == 0) {
+                continue;
             }
-            ranges.add(range);
+            int end = cursor + pagesToAdd - 1;
+            ranges.add(buildRange(cursor, end));
+            cursor = end + 1;
         }
         return ranges;
+    }
+
+    private static int[] buildRange(int start, int end) {
+        int[] range = new int[end - start + 1];
+        for (int i = 0; i < range.length; i++) {
+            range[i] = start + i;
+        }
+        return range;
     }
 }

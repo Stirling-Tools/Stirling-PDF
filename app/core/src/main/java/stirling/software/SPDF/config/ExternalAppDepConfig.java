@@ -95,7 +95,7 @@ public class ExternalAppDepConfig {
                                                 checkDependencyAndDisableGroup(cmd);
                                                 return null;
                                             })
-                            .collect(Collectors.toList());
+                            .toList();
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
 
             // Python / OpenCV special handling

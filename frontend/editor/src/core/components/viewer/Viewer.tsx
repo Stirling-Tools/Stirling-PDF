@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import EmbedPdfViewer from "@app/components/viewer/EmbedPdfViewer";
+import type { EmbedPdfViewerProps } from "@app/components/viewer/EmbedPdfViewer";
 import {
   NonPdfViewerWrapper,
   type ViewerProps,
@@ -11,7 +12,20 @@ import { isPdfFile } from "@app/utils/fileUtils";
 
 export type { ViewerProps };
 
-const Viewer = (props: ViewerProps) => {
+// Signature-overlay props live on EmbedPdfViewerProps; Viewer passes them through
+// so callers can drive the overlay. They don't apply to the non-PDF viewer.
+type SignatureOverlayPassThrough = Pick<
+  EmbedPdfViewerProps,
+  | "signaturePreviews"
+  | "signaturePreviewsReadOnly"
+  | "signaturePlacementMode"
+  | "signaturePlacementData"
+  | "signaturePlacementType"
+  | "onSignaturePreviewsChange"
+  | "signatureOverlayApiRef"
+>;
+
+const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
   const { selectors } = useFileState();
   const activeFiles = selectors.getFiles();
   const { activeFileId } = useViewer();

@@ -3,6 +3,7 @@ import {
   isPdfFile,
   detectFileExtension,
   formatFileSize,
+  detectNonPdfFileType,
 } from "@app/utils/fileUtils";
 
 describe("fileUtils", () => {
@@ -92,6 +93,20 @@ describe("fileUtils", () => {
 
     it("should format gigabytes", () => {
       expect(formatFileSize(1024 * 1024 * 1024)).toBe("1 GB");
+    });
+  });
+
+  describe("detectNonPdfFileType", () => {
+    it("should prioritize MIME type over extension when they conflict", () => {
+      expect(
+        detectNonPdfFileType({
+          name: "financial-summary.pdf",
+          type: "text/csv",
+        }),
+      ).toBe("csv");
+      expect(
+        detectNonPdfFileType({ name: "diagram.png", type: "application/json" }),
+      ).toBe("json");
     });
   });
 });

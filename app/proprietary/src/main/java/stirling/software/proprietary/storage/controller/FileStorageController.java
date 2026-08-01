@@ -1,7 +1,11 @@
 package stirling.software.proprietary.storage.controller;
 
+import java.io.IOException;
+import java.net.URI;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -35,17 +40,22 @@ import stirling.software.proprietary.storage.model.api.ShareLinkMetadataResponse
 import stirling.software.proprietary.storage.model.api.ShareLinkResponse;
 import stirling.software.proprietary.storage.model.api.ShareWithUserRequest;
 import stirling.software.proprietary.storage.model.api.StoredFileResponse;
+import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
 @RestController
 @RequestMapping("/api/v1/storage")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(
         name = "File Storage",
         description = "Stored file management, sharing, and share link operations")
 public class FileStorageController {
 
+    private static final Duration SIGNED_URL_TTL = Duration.ofMinutes(5);
+
     private final FileStorageService fileStorageService;
+    private final StorageProvider storageProvider;
 
     @PostMapping(
             value = "/files",
@@ -91,7 +101,9 @@ public class FileStorageController {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
         fileStorageService.requireReadAccess(user, file);
-        return buildFileResponse(file, inline);
+        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
+                tryRedirectToSignedUrl(file, inline);
+        return redirect.orElseGet(() -> buildFileResponse(file, inline));
     }
 
     @DeleteMapping("/files/{fileId}")
@@ -189,7 +201,9 @@ public class FileStorageController {
         fileStorageService.requireReadAccess(share);
         fileStorageService.recordShareAccess(share, authentication, inline);
         StoredFile file = share.getFile();
-        return buildFileResponse(file, inline);
+        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
+                tryRedirectToSignedUrl(file, inline);
+        return redirect.orElseGet(() -> buildFileResponse(file, inline));
     }
 
     @GetMapping("/share-links/{token}/metadata")
@@ -271,5 +285,35 @@ public class FileStorageController {
         return authentication != null
                 && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getPrincipal());
+    }
+
+    private Optional<ResponseEntity<org.springframework.core.io.Resource>> tryRedirectToSignedUrl(
+            StoredFile file, boolean inline) {
+        if (file == null || file.getStorageKey() == null || file.getStorageKey().isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            Optional<URI> signed =
+                    storageProvider.signedDownloadUrl(
+                            file.getStorageKey(),
+                            SIGNED_URL_TTL,
+                            inline,
+                            file.getOriginalFilename());
+            if (signed.isEmpty()) {
+                return Optional.empty();
+            }
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(signed.get());
+            ResponseEntity<org.springframework.core.io.Resource> response =
+                    ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+            return Optional.of(response);
+        } catch (IOException e) {
+            log.warn(
+                    "Failed to create signed download URL for file {} (key: {}), falling back to streaming",
+                    file.getId(),
+                    file.getStorageKey(),
+                    e);
+            return Optional.empty();
+        }
     }
 }

@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -33,6 +32,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.FileShareAccess;
 import stirling.software.proprietary.storage.model.FileShareAccessType;
@@ -144,6 +144,7 @@ public class FileStorageService {
             storedFile.setContentType(mainObject.getContentType());
             storedFile.setSizeBytes(mainObject.getSizeBytes());
             storedFile.setStorageKey(mainObject.getStorageKey());
+            storedFile.setEncryptionKeyId(mainObject.getEncryptionKeyId());
             applyHistoryMetadata(storedFile, historyObject);
             applyAuditMetadata(storedFile, auditObject);
             try {
@@ -208,6 +209,7 @@ public class FileStorageService {
             existing.setContentType(mainObject.getContentType());
             existing.setSizeBytes(mainObject.getSizeBytes());
             existing.setStorageKey(mainObject.getStorageKey());
+            existing.setEncryptionKeyId(mainObject.getEncryptionKeyId());
             if (historyObject != null) {
                 applyHistoryMetadata(existing, historyObject);
             }
@@ -361,7 +363,7 @@ public class FileStorageService {
         return files.stream()
                 .sorted(Comparator.comparing(StoredFile::getCreatedAt).reversed())
                 .map(file -> buildResponse(file, user, roleByFileId.get(file.getId())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public StoredFileResponse getAccessibleFileResponse(User user, Long fileId) {
@@ -400,7 +402,7 @@ public class FileStorageService {
                                 .filter(Objects::nonNull)
                                 .map(User::getUsername)
                                 .sorted(String.CASE_INSENSITIVE_ORDER)
-                                .collect(Collectors.toList())
+                                .toList()
                         : List.of();
         List<ShareLinkResponse> shareLinks =
                 ownedByCurrentUser && isShareLinksEnabled()
@@ -419,7 +421,7 @@ public class FileStorageService {
                                                         .expiresAt(share.getExpiresAt())
                                                         .build())
                                 .sorted(Comparator.comparing(ShareLinkResponse::getCreatedAt))
-                                .collect(Collectors.toList())
+                                .toList()
                         : List.of();
         List<SharedUserResponse> sharedUsers =
                 ownedByCurrentUser
@@ -440,7 +442,7 @@ public class FileStorageService {
                                         Comparator.comparing(
                                                 SharedUserResponse::getUsername,
                                                 String.CASE_INSENSITIVE_ORDER))
-                                .collect(Collectors.toList())
+                                .toList()
                         : List.of();
         return StoredFileResponse.builder()
                 .id(file.getId())
@@ -459,6 +461,7 @@ public class FileStorageService {
                         file.getPurpose() != null
                                 ? file.getPurpose().name().toLowerCase(Locale.ROOT)
                                 : null)
+                .folderId(file.getFolder() != null ? file.getFolder().getId() : null)
                 .build();
     }
 
@@ -492,6 +495,17 @@ public class FileStorageService {
         ensureStorageEnabled();
         try {
             return storageProvider.load(file.getStorageKey());
+        } catch (StorageKeyRevokedException e) {
+            // Deliberate, reversible policy state (encryption key disabled), not a server fault —
+            // surface as forbidden so the client sees "revoked", not "internal error".
+            log.warn(
+                    "Access to stored file {} denied: {}",
+                    file != null ? file.getId() : null,
+                    e.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Access to this file has been revoked (its encryption key is disabled)",
+                    e);
         } catch (IOException e) {
             log.error(
                     "Failed to load stored file {} (key: {})",
@@ -761,7 +775,7 @@ public class FileStorageService {
                                         .accessType(access.getAccessType().name())
                                         .accessedAt(access.getAccessedAt())
                                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<FileShareAccess> listAccessedShareLinks(User user) {
@@ -817,7 +831,7 @@ public class FileStorageService {
                                     .build();
                         })
                 .filter(response -> response.getShareToken() != null)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public void ensureSharingEnabled() {
@@ -943,7 +957,7 @@ public class FileStorageService {
         long maxFileBytes = toBytes(quotas.getMaxFileMb());
         if (maxFileBytes > 0 && newBytes > maxFileBytes) {
             throw new ResponseStatusException(
-                    HttpStatus.PAYLOAD_TOO_LARGE, "Stored file exceeds the maximum size");
+                    HttpStatus.CONTENT_TOO_LARGE, "Stored file exceeds the maximum size");
         }
 
         long delta = newBytes - existingBytes;
@@ -956,7 +970,7 @@ public class FileStorageService {
             long currentBytes = storedFileRepository.sumStorageBytesByOwner(owner);
             if (currentBytes + delta > maxUserBytes) {
                 throw new ResponseStatusException(
-                        HttpStatus.PAYLOAD_TOO_LARGE, "User storage quota exceeded");
+                        HttpStatus.CONTENT_TOO_LARGE, "User storage quota exceeded");
             }
         }
 
@@ -965,7 +979,7 @@ public class FileStorageService {
             long totalBytes = storedFileRepository.sumStorageBytesTotal();
             if (totalBytes + delta > maxTotalBytes) {
                 throw new ResponseStatusException(
-                        HttpStatus.PAYLOAD_TOO_LARGE, "System storage quota exceeded");
+                        HttpStatus.CONTENT_TOO_LARGE, "System storage quota exceeded");
             }
         }
     }
@@ -1006,7 +1020,7 @@ public class FileStorageService {
                         file.getHistoryStorageKey(),
                         file.getAuditLogStorageKey())
                 .filter(value -> value != null && !value.isBlank())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private void cleanupStoredObject(StoredObject storedObject) {
