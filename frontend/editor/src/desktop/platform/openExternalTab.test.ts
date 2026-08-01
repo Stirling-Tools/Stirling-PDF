@@ -7,6 +7,7 @@ vi.mock("@tauri-apps/plugin-shell", () => ({
 }));
 
 import { openExternalTab } from "@app/platform/openExternalTab";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 describe("openExternalTab (desktop/Tauri)", () => {
   afterEach(() => {
@@ -26,4 +27,17 @@ describe("openExternalTab (desktop/Tauri)", () => {
     expect(shellOpenMock).toHaveBeenCalledWith("https://example.com/");
     expect(openSpy).not.toHaveBeenCalled();
   });
+
+  // Worse than the web case: an unvalidated scheme here reaches an OS handler
+  // rather than staying inside a browser.
+  test.each(["javascript:alert(1)", "file:///etc/passwd", "ftp://example.com"])(
+    "refuses to hand %s to the OS",
+    async (url) => {
+      expectConsole.warn(/Refused to open unsafe URL/);
+
+      await openExternalTab(url);
+
+      expect(shellOpenMock).not.toHaveBeenCalled();
+    },
+  );
 });
