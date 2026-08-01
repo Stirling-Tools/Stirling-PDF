@@ -32,7 +32,8 @@ export interface BackendOutputSpec {
 export interface BackendPipelineDefinition {
   name: string;
   steps: BackendPipelineStep[];
-  output: BackendOutputSpec;
+  /** Destinations a run's files are delivered to; a single inline entry for one-off/editor runs. */
+  outputs: BackendOutputSpec[];
 }
 
 /** How a stored policy is triggered ("manual" | "folder" | "schedule" | "s3"). */
@@ -191,7 +192,7 @@ export function buildPipelineDefinition(
     definition: {
       name: automation.name,
       steps,
-      output: { type: "inline", options: {} },
+      outputs: [{ type: "inline", options: {} }],
     },
     unresolved,
   };
