@@ -200,9 +200,18 @@ public class RuntimePathConfig {
         return Optional.empty();
     }
 
+    /**
+     * Candidate directories a bundled resource may sit in, most reliable first. The desktop bundler
+     * lays the install out as {@code <root>/libs/*.jar}, {@code <root>/runtime/jre} and {@code
+     * <root>/tesseract}, so the install root is what we are really looking for.
+     */
     private static List<Path> bundleRoots() {
         List<Path> roots = new ArrayList<>();
         roots.add(Path.of(InstallationPathConfig.getPath()));
+        // The bundled JRE is the sturdiest anchor: java.home always points at
+        // <root>/runtime/jre, whereas the JAR location is unreadable once Spring
+        // Boot's nested class loader is in play.
+        bundledJreRoot().ifPresent(roots::add);
         jarDirectory()
                 .ifPresent(
                         dir -> {
@@ -215,6 +224,21 @@ public class RuntimePathConfig {
         return roots;
     }
 
+    private static Optional<Path> bundledJreRoot() {
+        try {
+            String javaHome = java.lang.System.getProperty("java.home");
+            if (StringUtils.isBlank(javaHome)) {
+                return Optional.empty();
+            }
+            // <root>/runtime/jre -> <root>
+            Path runtimeDir = Path.of(javaHome).getParent();
+            return Optional.ofNullable(runtimeDir == null ? null : runtimeDir.getParent());
+        } catch (RuntimeException e) {
+            log.debug("Could not derive the install root from java.home", e);
+            return Optional.empty();
+        }
+    }
+
     private static Optional<Path> jarDirectory() {
         try {
             CodeSource codeSource = RuntimePathConfig.class.getProtectionDomain().getCodeSource();
@@ -224,7 +248,9 @@ public class RuntimePathConfig {
             Path location = Path.of(codeSource.getLocation().toURI());
             return Optional.ofNullable(
                     Files.isDirectory(location) ? location : location.getParent());
-        } catch (URISyntaxException | InvalidPathException | SecurityException e) {
+        } catch (URISyntaxException | RuntimeException e) {
+            // A Spring Boot fat JAR reports a "jar:file:...!/BOOT-INF/classes" URL, which has no
+            // file-system provider; fall back to the other roots rather than failing startup.
             log.debug("Could not determine JAR location for bundled resource lookup", e);
             return Optional.empty();
         }

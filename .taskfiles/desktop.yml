@@ -34,6 +34,7 @@ tasks:
       - task: ":frontend:prepare"
         vars: { MODE: desktop }
       - provisioner
+      - tesseract
 
   provisioner:
     desc: "Build installer provisioner"
@@ -41,6 +42,17 @@ tasks:
     dir: editor
     cmds:
       - node scripts/build-provisioner.mjs
+
+  tesseract:
+    desc: "Fetch the Tesseract runtime bundled into the Windows installer"
+    # Windows-only: it is the one platform with no packaged Tesseract for users
+    # to install, so the installer has to carry its own.
+    platforms: [windows]
+    dir: ..
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-tesseract-bundle.ps1
+    status:
+      - test -f frontend/editor/src-tauri/tesseract/tesseract.exe
 
   dev:
     desc: "Start Tauri desktop dev mode"

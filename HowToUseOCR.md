@@ -81,6 +81,24 @@ rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 
 For Windows:
 
+The desktop installer ships its own Tesseract runtime under `tesseract/` next to
+the application, so a fresh install can OCR without installing anything else and
+without network access. English and Spanish are included, along with the
+orientation model used by auto-rotate. Nothing below is needed in that case.
+
+The rest of this section applies when running the JAR directly, or when you want
+to use a Tesseract you installed yourself. Point Stirling-PDF at it with:
+
+```
+system:
+  customPaths:
+    operations:
+      tesseract: C:/Program Files/Tesseract-OCR/tesseract.exe
+```
+
+When left empty, Stirling-PDF uses the bundled Tesseract if there is one and
+otherwise looks the command up on `PATH`, as it always did.
+
 You must ensure tesseract is installed
 
 Additional languages must be downloaded manually:
