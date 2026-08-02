@@ -30,6 +30,7 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.WebhookInputSource;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
@@ -274,8 +275,7 @@ class SourceControllerTest {
                 name,
                 "owner",
                 true,
-                null,
-                List.of(sourceId),
+                List.of(PipelineInput.manual(sourceId)),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }
