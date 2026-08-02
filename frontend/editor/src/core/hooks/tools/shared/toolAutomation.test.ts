@@ -22,6 +22,8 @@ import { defaultParameters as compressDefaults } from "@app/hooks/tools/compress
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
+import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
+import { defaultParameters as autoRotateDefaults } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
 
 function entry(over: Partial<ToolRegistryEntry>): ToolRegistryEntry {
   return {
@@ -91,6 +93,11 @@ const dynamicRegistry: Partial<ToolRegistry> = {
     name: "Redact",
     automationSettings: NoopSettings,
     operationConfig: asRegistryConfig(redactOperationConfig),
+  }),
+  autoRotate: entry({
+    name: "Auto Rotate",
+    automationSettings: NoopSettings,
+    operationConfig: asRegistryConfig(autoRotateOperationConfig),
   }),
 };
 
@@ -169,6 +176,40 @@ describe("serialize/deserialize round-trip", () => {
     expect(serializeToolStep(step, registry)).toEqual({
       operation: "/api/v1/unknown/thing",
       parameters: { keep: true },
+    });
+  });
+
+  test("auto rotate carries its detection settings into the backend step", () => {
+    // A custom-processor tool: the browser applies the rotations, but a backend
+    // pipeline still has to receive the detection settings, which only happens
+    // because the config declares mappers.
+    const step: WorkingToolStep = {
+      toolId: "autoRotate" as ToolId,
+      operation: "/api/v1/misc/auto-rotate-pdf",
+      params: {
+        ...autoRotateDefaults,
+        detectionMode: "osd",
+        confidenceThreshold: 20,
+        inferUndetected: false,
+      },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, dynamicRegistry);
+    expect(api.operation).toBe("/api/v1/misc/auto-rotate-pdf");
+    expect(api.parameters).toEqual({
+      detectionMode: "osd",
+      confidenceThreshold: 20,
+      inferUndetected: false,
+    });
+
+    const back = deserializeToolStep(api, dynamicRegistry);
+    expect(back.toolId).toBe("autoRotate");
+    expect(back.support).toBe("editable");
+    expect(back.params).toMatchObject({
+      detectionMode: "osd",
+      confidenceThreshold: 20,
+      inferUndetected: false,
     });
   });
 

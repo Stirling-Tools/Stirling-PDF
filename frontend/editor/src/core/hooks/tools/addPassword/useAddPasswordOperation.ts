@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateAddPasswordParameters,
   AddPasswordFullParameters,
   defaultParameters,
 } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
@@ -86,6 +87,7 @@ const fullDefaultParameters: AddPasswordFullParameters = {
 
 // Static configuration object
 export const addPasswordOperationConfig = defineSingleFileTool({
+  validateParams: validateAddPasswordParameters,
   buildFormData: buildAddPasswordFormData,
   toApiParams: addPasswordToApiParams,
   fromApiParams: addPasswordFromApiParams,

@@ -138,6 +138,26 @@ export function stepRequiresUpload(step: WorkingToolStep): boolean {
 }
 
 /**
+ * True if a step still needs the user to make a choice before it can run - the tool declares some
+ * of its parameters mandatory and this step has not filled them in yet.
+ *
+ * This asks the tool the same question its own Run button asks (`validateParams` is the predicate
+ * the tool passes `useBaseParameters` as `validateFn`), so a step is "configured" in a pipeline
+ * exactly when it would be runnable in the editor. Tools that declare no predicate run happily on
+ * their defaults, and an unknown step is nobody's to judge.
+ */
+export function stepNeedsConfiguring(
+  step: WorkingToolStep,
+  registry: Partial<ToolRegistry>,
+): boolean {
+  if (step.toolId === null) return false;
+  const config = registry[step.toolId]?.operationConfig;
+  if (!config?.validateParams) return false;
+  const merged = { ...(config.defaultParameters ?? {}), ...step.params };
+  return !config.validateParams(merged);
+}
+
+/**
  * The tools that can be run as a backend operation step, sorted by name. Includes only automatable
  * tools whose endpoint resolves from defaults (so they can become a backend step); this drops
  * tools with no operationConfig and tools whose endpoint needs runtime input (e.g. convert).

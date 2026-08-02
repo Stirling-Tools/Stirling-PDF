@@ -17,10 +17,20 @@ export interface PipelineStep {
   fileParameters?: Record<string, string>;
 }
 
-/** When a policy fires automatically. `type` keys a trigger bean (e.g. "schedule"). */
+/** When a policy input fires automatically. `type` keys a trigger bean (e.g. "schedule"). */
 export interface TriggerConfig {
   type: string;
   options: Record<string, unknown>;
+}
+
+/**
+ * One input of a pipeline: a persisted source paired with the trigger that decides when that
+ * source is pulled. A `null` trigger means the input is pulled only on a manual run. Mirrors the
+ * backend `PipelineInput`.
+ */
+export interface PipelineInput {
+  sourceId: string;
+  trigger: TriggerConfig | null;
 }
 
 /** Where a run's outputs are delivered. `type` keys an output sink (e.g. "inline"). */
@@ -35,15 +45,15 @@ export type PipelineOutputMode = "folder" | "s3";
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
  * the backend returns from GET/POST. Mirrors Policy.java exactly; `owner`/`teamId`
- * are stamped server-side. A `null` trigger means manual-only.
+ * are stamped server-side. Each input pairs a source with its own trigger; an input
+ * with a `null` trigger (or a policy with no triggered inputs) runs only on demand.
  */
 export interface Policy {
   id?: string;
   name: string;
   owner?: string | null;
   enabled: boolean;
-  trigger: TriggerConfig | null;
-  sourceIds: string[];
+  inputs: PipelineInput[];
   steps: PipelineStep[];
   /**
    * Inline output, used only when no destinations are referenced (editor/one-off runs that return
