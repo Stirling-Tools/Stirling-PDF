@@ -32,6 +32,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.egress.ShareChannel;
 import stirling.software.proprietary.storage.egress.ShareEgressDecision;
 import stirling.software.proprietary.storage.egress.ShareEgressException;
@@ -148,6 +149,7 @@ public class FileStorageService {
             storedFile.setContentType(mainObject.getContentType());
             storedFile.setSizeBytes(mainObject.getSizeBytes());
             storedFile.setStorageKey(mainObject.getStorageKey());
+            storedFile.setEncryptionKeyId(mainObject.getEncryptionKeyId());
             applyHistoryMetadata(storedFile, historyObject);
             applyAuditMetadata(storedFile, auditObject);
             try {
@@ -212,6 +214,7 @@ public class FileStorageService {
             existing.setContentType(mainObject.getContentType());
             existing.setSizeBytes(mainObject.getSizeBytes());
             existing.setStorageKey(mainObject.getStorageKey());
+            existing.setEncryptionKeyId(mainObject.getEncryptionKeyId());
             if (historyObject != null) {
                 applyHistoryMetadata(existing, historyObject);
             }
@@ -497,6 +500,17 @@ public class FileStorageService {
         ensureStorageEnabled();
         try {
             return storageProvider.load(file.getStorageKey());
+        } catch (StorageKeyRevokedException e) {
+            // Deliberate, reversible policy state (encryption key disabled), not a server fault —
+            // surface as forbidden so the client sees "revoked", not "internal error".
+            log.warn(
+                    "Access to stored file {} denied: {}",
+                    file != null ? file.getId() : null,
+                    e.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Access to this file has been revoked (its encryption key is disabled)",
+                    e);
         } catch (IOException e) {
             log.error(
                     "Failed to load stored file {} (key: {})",

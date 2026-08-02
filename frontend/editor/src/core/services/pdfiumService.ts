@@ -1166,6 +1166,24 @@ export async function importPages(
 }
 
 /**
+ * Convert degrees (0, 90, 180, 270) to the PDFium rotation enum (0, 1, 2, 3).
+ * Lives here beside setPageRotation, which is the only thing that consumes it.
+ */
+export function degreesToPdfiumRotation(degrees: number): number {
+  const normalized = ((degrees % 360) + 360) % 360;
+  switch (normalized) {
+    case 90:
+      return 1;
+    case 180:
+      return 2;
+    case 270:
+      return 3;
+    default:
+      return 0;
+  }
+}
+
+/**
  * Set page rotation on a raw document.
  * @param rotation 0, 1, 2, 3 for 0°, 90°, 180°, 270°
  */
