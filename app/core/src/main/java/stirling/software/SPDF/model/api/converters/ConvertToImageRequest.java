@@ -15,7 +15,8 @@ public class ConvertToImageRequest extends PDFWithPageNums {
             description = "The output image format",
             defaultValue = "png",
             allowableValues = {
-                "png", "jpeg", "jpg", "gif", "tiff", "webp", "heic", "heif", "avif", "jxl"
+                "png", "jpeg", "jpg", "gif", "bmp", "tiff", "tif", "webp", "heic", "heif", "avif",
+                "jxl", "jp2"
             },
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String imageFormat;

@@ -88,11 +88,9 @@ public class PdfUtils {
                         }
                         TempFileManager tempFileManager =
                                 ApplicationContextProvider.getBean(TempFileManager.class);
-                        if (tempFileManager != null) {
-                            tempPdfFile = new TempFile(tempFileManager, ".pdf");
-                            document.save(tempPdfFile.getFile());
-                            actualPdfPath = tempPdfFile.getPath();
-                        }
+                        tempPdfFile = new TempFile(tempFileManager, ".pdf");
+                        document.save(tempPdfFile.getFile());
+                        actualPdfPath = tempPdfFile.getPath();
                     }
                 }
             }

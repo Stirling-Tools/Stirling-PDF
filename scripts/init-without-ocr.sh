@@ -953,11 +953,25 @@ JAVA_CMD=(
 # Setup mimalloc for Java only to avoid issues with other native tools
 MIMALLOC_PATH=""
 case "$(uname -m)" in
-  x86_64)  MIMALLOC_PATH="/usr/lib/x86_64-linux-gnu/libmimalloc.so.2" ;;
-  aarch64) MIMALLOC_PATH="/usr/lib/aarch64-linux-gnu/libmimalloc.so.2" ;;
+  x86_64)
+    for p in /usr/lib/x86_64-linux-gnu/libmimalloc.so.2 /usr/lib/x86_64-linux-gnu/libmimalloc.so /usr/lib/libmimalloc.so.2 /usr/lib/libmimalloc.so; do
+      if [ -f "$p" ]; then MIMALLOC_PATH="$p"; break; fi
+    done
+    ;;
+  aarch64)
+    for p in /usr/lib/aarch64-linux-gnu/libmimalloc.so.2 /usr/lib/aarch64-linux-gnu/libmimalloc.so /usr/lib/libmimalloc.so.2 /usr/lib/libmimalloc.so; do
+      if [ -f "$p" ]; then MIMALLOC_PATH="$p"; break; fi
+    done
+    ;;
 esac
-if [ -z "$MIMALLOC_PATH" ] || [ ! -f "$MIMALLOC_PATH" ]; then
-  MIMALLOC_PATH=""
+
+TARGET_LD_PRELOAD="${LD_PRELOAD:-}"
+if [ -n "$MIMALLOC_PATH" ]; then
+  if [ -n "$TARGET_LD_PRELOAD" ]; then
+    TARGET_LD_PRELOAD="${MIMALLOC_PATH}:${TARGET_LD_PRELOAD}"
+  else
+    TARGET_LD_PRELOAD="${MIMALLOC_PATH}"
+  fi
 fi
 
 if [ -f "/app.jar" ]; then
@@ -973,17 +987,17 @@ else
 fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
-  LD_PRELOAD="${MIMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}" "${JAVA_CMD[@]}" &
+  LD_PRELOAD="$TARGET_LD_PRELOAD" "${JAVA_CMD[@]}" &
 elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
   # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
   env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
       USER="$RUNTIME_USER" \
       LOGNAME="$RUNTIME_USER" \
-      LD_PRELOAD="${MIMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}" \
+      LD_PRELOAD="$TARGET_LD_PRELOAD" \
     setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
-  LD_PRELOAD="${MIMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}" "${JAVA_CMD[@]}" &
+  LD_PRELOAD="$TARGET_LD_PRELOAD" "${JAVA_CMD[@]}" &
 fi
 
 JAVA_PID=$!

@@ -449,7 +449,8 @@ def step_generate_image_via_api(context, format_type, param):
         img = Image.new("RGB", (200, 200), color=(73, 109, 137))
         draw = ImageDraw.Draw(img)
         draw.rectangle([50, 50, 150, 150], fill=(255, 165, 0))
-        img.save(file_name, format=format_type.upper())
+        save_format = "JPEG" if format_type.upper() == "JPG" else format_type.upper()
+        img.save(file_name, format=save_format)
         if not hasattr(context, "files"):
             context.files = {}
         context.files[param] = open(file_name, "rb")
