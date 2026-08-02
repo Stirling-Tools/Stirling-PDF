@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.*;
 
 import java.awt.Color;
@@ -114,6 +115,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("single PNG image is produced from a one-page PDF")
         void singlePng() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 try (PDDocument doc = docWithPages(1)) {
                     doc.save(tempPdf.getFile());
@@ -136,6 +138,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("single combined JPEG image is produced for multi-page PDF")
         void singleJpegMultiPage() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 try (PDDocument doc = docWithPages(2)) {
                     doc.save(tempPdf.getFile());
@@ -156,6 +159,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("single TIFF image sequence is produced for multi-page PDF")
         void singleTiffMultiPage() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 try (PDDocument doc = docWithPages(2)) {
                     doc.save(tempPdf.getFile());
@@ -212,6 +216,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("annotations excluded path still renders successfully")
         void withoutAnnotations() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 try (PDDocument doc = docWithPages(1)) {
                     doc.save(tempPdf.getFile());
@@ -236,6 +241,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("returns a new document with the same page count")
         void preservesPageCount() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             // Page size is irrelevant to the count assertion; tiny pages avoid a 300 DPI A4 raster.
             try (PDDocument source = docWithTinyPages(2, 6f, 9f);
                     PDDocument result = PdfUtils.convertPdfToPdfImage(source)) {
@@ -247,6 +253,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("preserves page dimensions of the source")
         void preservesPageSize() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             // A small non-square page still proves width/height are carried through (and not
             // swapped) without rastering a full LETTER page at 300 DPI.
             float width = 60f;
@@ -286,6 +293,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("single PNG image becomes a one-page PDF")
         void singlePngImage() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             MockMultipartFile file =
                     new MockMultipartFile(
                             "file",
@@ -304,14 +312,15 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("JPEG image uses the lossy factory path and produces a PDF")
         void jpegImage() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             MockMultipartFile file =
                     new MockMultipartFile(
                             "file",
                             "image.jpg",
                             MediaType.IMAGE_JPEG_VALUE,
-                            imageBytes("jpg", Color.BLUE));
+                            imageBytes("jpeg", Color.BLUE));
 
-            byte[] pdfOut = runImageToPdf(new MultipartFile[] {file}, "maintainAspectRatio", false);
+            byte[] pdfOut = runImageToPdf(new MultipartFile[] {file}, "fitDocumentToImage", false);
 
             assertNotNull(pdfOut);
             try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
@@ -322,6 +331,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("fitDocumentToImage sizes the page to the image")
         void fitDocumentToImage() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             MockMultipartFile file =
                     new MockMultipartFile(
                             "file",
@@ -341,6 +351,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("multiple images become multiple pages")
         void multipleImages() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             MockMultipartFile a =
                     new MockMultipartFile(
                             "file",
@@ -441,6 +452,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("overlays only the first page when everyPage is false")
         void firstPageOnly() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 try (PDDocument doc = docWithPages(3)) {
                     doc.save(tempPdf.getFile());
@@ -465,6 +477,7 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("overlays every page when everyPage is true")
         void everyPage() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 try (PDDocument doc = docWithPages(2)) {
                     doc.save(tempPdf.getFile());

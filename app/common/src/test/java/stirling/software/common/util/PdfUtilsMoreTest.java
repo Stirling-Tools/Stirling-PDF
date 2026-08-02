@@ -1,6 +1,8 @@
 package stirling.software.common.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -162,6 +164,7 @@ class PdfUtilsMoreTest {
         @Test
         @DisplayName("DPI under the configured limit renders; properties branch is taken")
         void underConfiguredLimitRenders() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             byte[] bytes = simplePdfBytes();
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
             PDDocument doc = new PDDocument();
@@ -195,7 +198,7 @@ class PdfUtilsMoreTest {
                         .thenReturn(propsWithMaxDpi(100));
 
                 // 150 exceeds the configured limit of 100, so the limit check fires before loading.
-                org.junit.jupiter.api.Assertions.assertThrows(
+                assertThrows(
                         IllegalArgumentException.class,
                         () ->
                                 PdfUtils.convertFromPdf(
@@ -212,6 +215,7 @@ class PdfUtilsMoreTest {
         @Test
         @DisplayName("combined-image mode reuses the cached size for duplicate pages")
         void combinedImageReusesDuplicatePageSize() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 try (PDDocument doc = new PDDocument()) {
                     doc.addPage(new PDPage(new PDRectangle(20f, 30f)));
@@ -229,6 +233,7 @@ class PdfUtilsMoreTest {
         @Test
         @DisplayName("combined-image mode swaps dimensions for a rotated page")
         void combinedImageRotatedPage() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 try (PDDocument doc = new PDDocument()) {
                     PDPage rotated = new PDPage(new PDRectangle(20f, 30f));
@@ -254,6 +259,7 @@ class PdfUtilsMoreTest {
         @Test
         @DisplayName("renders using the configured max DPI when properties are present")
         void usesConfiguredDpi() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (MockedStatic<ApplicationContextProvider> ctx =
                     Mockito.mockStatic(ApplicationContextProvider.class)) {
                 ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
@@ -278,6 +284,7 @@ class PdfUtilsMoreTest {
         @Test
         @DisplayName("a multi-frame TIFF produces one page per frame")
         void multiFrameTiffBecomesMultiplePages() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
             when(factory.createNewDocument()).thenReturn(new PDDocument());
 
@@ -297,6 +304,7 @@ class PdfUtilsMoreTest {
         @Test
         @DisplayName("a .tif extension is also handled by the TIFF reader path")
         void tifExtensionHandled() throws IOException {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
             when(factory.createNewDocument()).thenReturn(new PDDocument());
 

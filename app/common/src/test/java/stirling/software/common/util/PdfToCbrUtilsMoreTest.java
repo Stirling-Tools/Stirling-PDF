@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
@@ -178,6 +179,7 @@ class PdfToCbrUtilsMoreTest {
         @Test
         @DisplayName("a zero-page document raises a no-pages exception before rendering")
         void zeroPageDocument() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             try (PDDocument empty = new PDDocument()) {
                 CustomPDFDocumentFactory factory = factoryReturning(empty);
                 assertThatThrownBy(

@@ -96,54 +96,56 @@ public class PdfUtils {
             }
 
             if (singleImage) {
-                try (Arena arena = Arena.ofConfined()) {
-                    VImage combined;
-                    try {
-                        String pathStr = actualPdfPath.toAbsolutePath().toString();
-                        if ("tiff".equalsIgnoreCase(imageType)
-                                || "tif".equalsIgnoreCase(imageType)) {
-                            combined =
-                                    VImage.pdfload(
-                                            arena,
-                                            pathStr,
-                                            VipsOption.Int("n", -1),
-                                            VipsOption.Int("dpi", DPI),
-                                            VipsOption.Double("background", 0.0));
-                        } else {
-                            combined = null;
-                            int pageCount;
-                            try (PdfDocument document = PdfDocument.open(actualPdfPath)) {
-                                pageCount = document.pageCount();
-                            }
-
-                            for (int i = 0; i < pageCount; ++i) {
-                                VImage pageVips =
+                if (RenderingUtils.isLibVipsAvailable()) {
+                    try (Arena arena = Arena.ofConfined()) {
+                        VImage combined;
+                        try {
+                            String pathStr = actualPdfPath.toAbsolutePath().toString();
+                            if ("tiff".equalsIgnoreCase(imageType)
+                                    || "tif".equalsIgnoreCase(imageType)) {
+                                combined =
                                         VImage.pdfload(
                                                 arena,
                                                 pathStr,
-                                                VipsOption.Int("page", i),
+                                                VipsOption.Int("n", -1),
                                                 VipsOption.Int("dpi", DPI),
                                                 VipsOption.Double("background", 0.0));
-                                if (combined == null) {
-                                    combined = pageVips;
-                                } else {
-                                    combined =
-                                            combined.join(
-                                                    pageVips, VipsDirection.DIRECTION_VERTICAL);
+                            } else {
+                                combined = null;
+                                int pageCount;
+                                try (PdfDocument document = PdfDocument.open(actualPdfPath)) {
+                                    pageCount = document.pageCount();
+                                }
+
+                                for (int i = 0; i < pageCount; ++i) {
+                                    VImage pageVips =
+                                            VImage.pdfload(
+                                                    arena,
+                                                    pathStr,
+                                                    VipsOption.Int("page", i),
+                                                    VipsOption.Int("dpi", DPI),
+                                                    VipsOption.Double("background", 0.0));
+                                    if (combined == null) {
+                                        combined = pageVips;
+                                    } else {
+                                        combined =
+                                                combined.join(
+                                                        pageVips, VipsDirection.DIRECTION_VERTICAL);
+                                    }
                                 }
                             }
-                        }
-                        return RenderingUtils.vImageToBytes(combined, imageType);
-                    } catch (Throwable e) {
-                        log.warn(
-                                "Native libvips path-based pdfload failed, falling back to JPDFium",
-                                e);
-                        byte[] pdfBytes = Files.readAllBytes(actualPdfPath);
-                        try (PdfDocument document = PdfDocument.open(pdfBytes)) {
-                            return renderMultiPageWithJPDFium(
-                                    document, document.pageCount(), DPI, imageType);
+                            return RenderingUtils.vImageToBytes(combined, imageType);
+                        } catch (Throwable e) {
+                            log.warn(
+                                    "Native libvips path-based pdfload failed, falling back to JPDFium",
+                                    e);
                         }
                     }
+                }
+                byte[] pdfBytes = Files.readAllBytes(actualPdfPath);
+                try (PdfDocument document = PdfDocument.open(pdfBytes)) {
+                    return renderMultiPageWithJPDFium(
+                            document, document.pageCount(), DPI, imageType);
                 }
             } else {
                 try (PdfDocument document = PdfDocument.open(actualPdfPath);

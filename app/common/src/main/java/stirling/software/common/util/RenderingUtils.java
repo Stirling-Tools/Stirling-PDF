@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.foreign.Arena;
@@ -12,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +33,38 @@ import app.photofox.vipsffm.enums.VipsInterpretation;
 
 @Slf4j
 public class RenderingUtils {
+
+    static {
+        try {
+            String currentPath = System.getProperty("java.library.path", "");
+            String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+            List<String> candidatePaths = new ArrayList<>();
+            if (os.contains("mac")) {
+                candidatePaths.add("/opt/homebrew/lib");
+                candidatePaths.add("/usr/local/lib");
+                candidatePaths.add("/usr/lib");
+            } else if (os.contains("nux") || os.contains("nix")) {
+                candidatePaths.add("/usr/lib/x86_64-linux-gnu");
+                candidatePaths.add("/usr/lib/aarch64-linux-gnu");
+                candidatePaths.add("/usr/lib");
+            }
+            StringBuilder extra = new StringBuilder();
+            for (String p : candidatePaths) {
+                if (new File(p).isDirectory() && !currentPath.contains(p)) {
+                    if (extra.length() > 0) {
+                        extra.append(File.pathSeparator);
+                    }
+                    extra.append(p);
+                }
+            }
+            if (extra.length() > 0) {
+                System.setProperty(
+                        "java.library.path",
+                        extra + (currentPath.isEmpty() ? "" : File.pathSeparator + currentPath));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
 
     /**
      * Renders a PDF page to a VImage natively using libvips (PDFium) from a file path. This is the
@@ -281,7 +315,7 @@ public class RenderingUtils {
     public static byte[] vImageToBytes(VImage image, String format, VipsOption... options) {
         VImage outputImage = image;
         String f = format.toLowerCase().replace(".", "");
-        // JPEG doesn't support alpha — flatten to white background to avoid black
+        // JPEG doesn't support alpha - flatten to white background to avoid black
         if (("jpg".equals(f) || "jpeg".equals(f)) && outputImage.getInt("bands") == 4) {
             outputImage =
                     outputImage.flatten(
