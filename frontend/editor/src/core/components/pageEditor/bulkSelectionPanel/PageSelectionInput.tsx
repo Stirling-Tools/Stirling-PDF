@@ -44,7 +44,7 @@ const PageSelectionInput = ({
               icon="gpp-maybe-outline-rounded"
               width="1rem"
               height="1rem"
-              style={{ color: "var(--text-instruction)" }}
+              style={{ color: "var(--c-accent-fg)" }}
             />
             <Text>
               {t("bulkSelection.pageSelection.title", "Page Selection")}
@@ -53,7 +53,7 @@ const PageSelectionInput = ({
         </Tooltip>
         {typeof advancedOpened === "boolean" && (
           <Flex align="center" gap="xs">
-            <Text size="sm" c="var(--text-secondary)">
+            <Text size="sm" c="var(--c-text-muted)">
               {t("bulkSelection.advanced.title", "Advanced")}
             </Text>
             <Switch

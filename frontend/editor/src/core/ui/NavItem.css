@@ -6,7 +6,7 @@
   padding: 0.4375rem 0.75rem;
   margin: 0.0625rem 0.5rem;
   border-radius: var(--radius-lg);
-  color: var(--color-nav-text);
+  color: var(--c-text-subtle);
   font-size: 0.8125rem;
   font-weight: 400;
   transition:
@@ -15,16 +15,16 @@
   text-align: left;
 }
 .sui-navitem:hover {
-  background: var(--color-nav-hover);
-  color: var(--color-nav-hover-text);
+  background: var(--c-hover);
+  color: var(--c-text-muted);
 }
 .sui-navitem.is-active {
-  background: var(--color-nav-active);
-  color: var(--color-nav-active-text);
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg);
   font-weight: 500;
 }
 .sui-navitem.is-active:hover {
-  background: var(--color-nav-active);
+  background: var(--c-primary-subtle);
 }
 .sui-navitem__icon {
   width: 1rem;
@@ -43,7 +43,7 @@
   margin-left: auto;
 }
 .sui-navitem:focus-visible {
-  outline: 0.125rem solid var(--color-blue);
+  outline: 0.125rem solid var(--c-primary);
   outline-offset: 0.125rem;
 }
 
@@ -61,7 +61,7 @@
   border-radius: 3px;
 }
 .sui-navitem[data-accent="blue"]::before {
-  background: var(--color-blue);
+  background: var(--c-primary);
 }
 .sui-navitem[data-accent="purple"]::before {
   background: var(--color-purple);
@@ -76,7 +76,7 @@
   background: var(--color-red);
 }
 .sui-navitem[data-accent="blue"] .sui-navitem__icon {
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 .sui-navitem[data-accent="purple"] .sui-navitem__icon {
   color: var(--color-purple);

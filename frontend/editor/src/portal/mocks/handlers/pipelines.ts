@@ -40,11 +40,15 @@ function seedPipelines(): StoredPolicy[] {
       name: "Redaction sweep",
       owner: "security@acme.com",
       enabled: true,
-      trigger: {
-        type: "schedule",
-        options: { schedule: { type: "every", count: 6, unit: "HOURS" } },
-      },
-      sourceIds: ["src-claims"],
+      inputs: [
+        {
+          sourceId: "src-claims",
+          trigger: {
+            type: "schedule",
+            options: { schedule: { type: "every", count: 6, unit: "HOURS" } },
+          },
+        },
+      ],
       steps: [
         {
           operation: "/api/v1/security/auto-redact",
@@ -53,29 +57,30 @@ function seedPipelines(): StoredPolicy[] {
         { operation: "/api/v1/security/sanitize-pdf", parameters: {} },
       ],
       output: { type: "inline", options: {} },
+      outputIds: ["src-archive"],
     },
     {
       id: "plc-archive",
       name: "Archive compressor",
       owner: "data-eng@acme.com",
       enabled: true,
-      trigger: null,
-      sourceIds: ["src-contracts", "src-archive"],
+      inputs: [{ sourceId: "src-contracts", trigger: null }],
       steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
-      output: { type: "folder", options: { directory: "/data/archive-out" } },
+      output: { type: "inline", options: {} },
+      outputIds: ["src-contracts"],
     },
     {
       id: "plc-onboarding",
       name: "Onboarding OCR (paused)",
       owner: "ops@acme.com",
       enabled: false,
-      trigger: null,
-      sourceIds: [],
+      inputs: [],
       steps: [
         { operation: "/api/v1/misc/ocr-pdf", parameters: {} },
         { operation: "/api/v1/misc/flatten", parameters: {} },
       ],
       output: { type: "inline", options: {} },
+      outputIds: [],
     },
   ];
 }
@@ -92,19 +97,34 @@ function deriveStatus(policy: StoredPolicy): PipelineStatus {
   return policy.enabled ? "active" : "paused";
 }
 
+// Distinct trigger types across a policy's inputs, or "manual" when none is triggered.
+function triggerSummary(policy: StoredPolicy): string {
+  const types = [
+    ...new Set(
+      policy.inputs
+        .map((input) => input.trigger?.type)
+        .filter((type): type is string => type != null),
+    ),
+  ];
+  return types.length === 0 ? "manual" : types.join(", ");
+}
+
 function toView(policy: StoredPolicy): PipelineView {
   return {
     id: policy.id,
     name: policy.name,
     enabled: policy.enabled,
     status: deriveStatus(policy),
-    trigger: policy.trigger?.type ?? "manual",
-    sources: policy.sourceIds.map((id) => ({
-      id,
-      name: SOURCE_NAMES[id] ?? id,
+    trigger: triggerSummary(policy),
+    sources: policy.inputs.map((input) => ({
+      id: input.sourceId,
+      name: SOURCE_NAMES[input.sourceId] ?? input.sourceId,
     })),
     steps: policy.steps.map((s) => s.operation),
-    output: policy.output?.type ?? "inline",
+    output:
+      policy.outputIds && policy.outputIds.length > 0
+        ? policy.outputIds.map((id) => SOURCE_NAMES[id] ?? id).join(", ")
+        : (policy.output?.type ?? "inline"),
     owner: policy.owner ?? "you@acme.com",
   };
 }

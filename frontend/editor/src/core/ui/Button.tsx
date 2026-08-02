@@ -190,7 +190,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
               "--button-bg": "transparent",
               "--button-hover": "transparent",
               "--button-color": "var(--_text)",
-              "--button-hover-color": "var(--color-text-1)",
+              "--button-hover-color": "var(--c-text)",
               "--button-bd": "1px solid transparent",
             }
           : {

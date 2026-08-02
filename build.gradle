@@ -21,10 +21,10 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 ext {
     springBootVersion = "4.0.6"
-    pdfboxVersion = "3.0.7"
+    pdfboxVersion = "3.0.8"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.46"
-    bouncycastleVersion = "1.84"
+    bouncycastleVersion = "1.85"
     springSecuritySamlVersion = "7.0.5"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
@@ -37,23 +37,28 @@ ext {
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.3"
-    jackson2Version = "2.21.4"
+    jackson2Version = "2.22.1"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
     jpdfiumVersion = "1.0.2"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.44.12"
+    tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 25
 }
 
+def buildJavaMajorVersion = (project.findProperty('javaVersion') ?: ext.modernJavaVersion).toString().toInteger()
+def buildJavaLanguageVersion = JavaLanguageVersion.of(buildJavaMajorVersion)
+def buildJavaVersion = JavaVersion.toVersion(buildJavaMajorVersion.toString())
+
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = buildJavaVersion
+    targetCompatibility = buildJavaVersion
     toolchain {
-        languageVersion = JavaLanguageVersion.of(project.findProperty('javaVersion')?.toString() ?: '25')
+        languageVersion = buildJavaLanguageVersion
     }
 }
 
@@ -174,10 +179,10 @@ subprojects {
     apply from: rootProject.file('gradle/spotless.gradle')
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_25
-        targetCompatibility = JavaVersion.VERSION_25
+        sourceCompatibility = buildJavaVersion
+        targetCompatibility = buildJavaVersion
         toolchain {
-            languageVersion = JavaLanguageVersion.of(25)
+            languageVersion = buildJavaLanguageVersion
         }
     }
 
@@ -272,7 +277,7 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
-        options.release = rootProject.ext.modernJavaVersion
+        options.release = buildJavaMajorVersion
         if (!project.hasProperty("noSpotless")) {
             dependsOn "spotlessApply"
         }
@@ -672,10 +677,14 @@ tasks.register('compileRestartHelper', JavaCompile) {
     source = fileTree(dir: 'scripts', include: 'RestartHelper.java')
     classpath = files()
     destinationDirectory = layout.buildDirectory.dir("restart-helper-classes")
-    def restartMajorVersion = project.ext.modernJavaVersion
+    def restartMajorVersion = buildJavaMajorVersion
+    def restartLanguageVersion = JavaLanguageVersion.of(restartMajorVersion)
     def restartCompatibility = JavaVersion.toVersion(restartMajorVersion.toString())
     sourceCompatibility = restartCompatibility
     targetCompatibility = restartCompatibility
+    javaCompiler = javaToolchains.compilerFor {
+        languageVersion = restartLanguageVersion
+    }
     options.release.set(restartMajorVersion)
 }
 
