@@ -11,6 +11,7 @@ import {
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import { TrappedStatus, CustomMetadataEntry } from "@app/types/metadata";
 import {
+  validateChangeMetadataParameters,
   ChangeMetadataParameters,
   defaultParameters,
 } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
@@ -154,6 +155,7 @@ export const buildChangeMetadataFormData = (
 
 // Static configuration object
 export const changeMetadataOperationConfig = defineSingleFileTool({
+  validateParams: validateChangeMetadataParameters,
   buildFormData: buildChangeMetadataFormData,
   toApiParams: changeMetadataToApiParams,
   fromApiParams: changeMetadataFromApiParams,
