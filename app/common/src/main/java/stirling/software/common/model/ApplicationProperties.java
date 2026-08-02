@@ -1065,6 +1065,20 @@ public class ApplicationProperties {
         private Quotas quotas = new Quotas();
         private Sharing sharing = new Sharing();
         private Signing signing = new Signing();
+        private Encryption encryption = new Encryption();
+
+        /**
+         * Encryption at rest for stored files (Pro/Enterprise). Enabling encrypts new writes;
+         * disabling later only stops encrypting new writes — existing encrypted files keep
+         * decrypting as long as the key material is present. The master key is resolved like the
+         * credential key: {@code stirling.security.fileEncryptionKey} property, {@code
+         * STIRLING_FILE_ENCRYPTION_KEY} env var, or an auto-generated {@code file-encryption.key}
+         * in the config directory.
+         */
+        @Data
+        public static class Encryption {
+            private boolean enabled = false;
+        }
 
         @Data
         public static class Local {

@@ -6,8 +6,11 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Disposes;
+import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
@@ -16,12 +19,18 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.cluster.s3.S3Clients;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
+import stirling.software.proprietary.storage.crypto.EncryptingStorageProvider;
+import stirling.software.proprietary.storage.crypto.FileEncryptionKeyService;
+import stirling.software.proprietary.storage.crypto.FileEncryptionMasterKey;
+import stirling.software.proprietary.storage.crypto.StorageEncryptionState;
 import stirling.software.proprietary.storage.provider.DatabaseStorageProvider;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
 import stirling.software.proprietary.storage.provider.S3StorageProvider;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
 @ApplicationScoped
@@ -31,11 +40,72 @@ public class StorageProviderConfig {
 
     private final ApplicationProperties applicationProperties;
     private final StoredFileBlobRepository storedFileBlobRepository;
+    private final FileEncryptionKeyRepository fileEncryptionKeyRepository;
     private final LicenseKeyChecker licenseKeyChecker;
 
+    /**
+     * The encryption state behind the always-installed decorator. Key machinery is created eagerly
+     * when the write flag is on (licence-gated) or key rows already exist — so a wrong master key
+     * fails startup, not the first download — and lazily if encrypted content shows up later
+     * (config drift on one cluster node must fail loudly, never stream ciphertext). Turning the
+     * flag off or losing the licence only stops encrypting new writes; decryption stays available.
+     */
     @Produces
     @Singleton
-    public StorageProvider storageProvider() {
+    public StorageEncryptionState storageEncryptionState(
+            @ConfigProperty(name = "stirling.security.fileEncryptionKey", defaultValue = "")
+                    String configuredFileEncryptionKey,
+            @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
+                    boolean clusterEnabled) {
+        boolean writeEnabled = applicationProperties.getStorage().getEncryption().isEnabled();
+        if (writeEnabled) {
+            licenseKeyChecker.requireProOrEnterprise("storage.encryption");
+        }
+        // Key creation must commit independently of any caller transaction (see
+        // FileEncryptionKeyService#createActive).
+        StorageEncryptionState state =
+                new StorageEncryptionState(
+                        writeEnabled,
+                        () ->
+                                createKeyService(
+                                        configuredFileEncryptionKey,
+                                        clusterEnabled,
+                                        FileEncryptionKeyService.requiringNewTransaction()),
+                        fileEncryptionKeyRepository);
+        if (writeEnabled || fileEncryptionKeyRepository.count() > 0) {
+            state.initialiseEagerly();
+            log.info(
+                    "Storage encryption at rest active (writes {})",
+                    writeEnabled ? "encrypted" : "plaintext; decrypt-only mode");
+        }
+        return state;
+    }
+
+    private FileEncryptionKeyService createKeyService(
+            String configuredKey,
+            boolean clusterEnabled,
+            FileEncryptionKeyService.KeyCreationTx keyCreationTx) {
+        FileEncryptionMasterKey masterKey =
+                new FileEncryptionMasterKey(configuredKey, clusterEnabled);
+        FileEncryptionKeyService keyService =
+                new FileEncryptionKeyService(fileEncryptionKeyRepository, masterKey, keyCreationTx);
+        // Wrong key must fail fast, not silently start a second key hierarchy.
+        keyService.verifyMasterKey();
+        return keyService;
+    }
+
+    // Disposed by closeStorageProvider below (was Spring's @Bean(destroyMethod = "close")).
+    @Produces
+    @Singleton
+    public StorageProvider storageProvider(
+            StorageEncryptionState encryptionState, Instance<TempFileManager> tempFileManager) {
+        return new EncryptingStorageProvider(
+                innerStorageProvider(),
+                encryptionState,
+                tempFileManager.isResolvable() ? tempFileManager.get() : null);
+    }
+
+    private StorageProvider innerStorageProvider() {
         boolean storageEnabled = applicationProperties.getStorage().isEnabled();
         String providerName =
                 Optional.ofNullable(applicationProperties.getStorage().getProvider())

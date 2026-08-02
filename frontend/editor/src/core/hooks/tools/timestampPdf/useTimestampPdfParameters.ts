@@ -26,12 +26,18 @@ export const defaultParameters: TimestampPdfParameters = {
 export type TimestampPdfParametersHook =
   BaseParametersHook<TimestampPdfParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateTimestampPdfParameters(
+  params: TimestampPdfParameters,
+): boolean {
+  return params.tsaUrl.trim().length > 0;
+}
+
 export const useTimestampPdfParameters = (): TimestampPdfParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "timestamp-pdf",
-    validateFn: (params) => {
-      return params.tsaUrl.trim().length > 0;
-    },
+    validateFn: validateTimestampPdfParameters,
   });
 };

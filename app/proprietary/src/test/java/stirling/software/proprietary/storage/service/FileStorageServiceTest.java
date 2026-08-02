@@ -26,6 +26,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.crypto.StorageEncryptionException;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -570,5 +572,34 @@ class FileStorageServiceTest {
         service.deleteFile(owner, f);
 
         verify(storedFileRepository).delete(f);
+    }
+
+    // -------------------------------------------------------------------------
+    // loadFile — encryption error mapping
+    // -------------------------------------------------------------------------
+
+    @Test
+    void loadFile_revokedKey_throwsForbidden() throws IOException {
+        StoredFile f = ownedFile(user(1L));
+        f.setStorageKey("k");
+        when(storageProvider.load("k"))
+                .thenThrow(new StorageKeyRevokedException("Encryption key X is disabled"));
+
+        assertThatThrownBy(() -> service.loadFile(f))
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(403);
+    }
+
+    @Test
+    void loadFile_genericIoError_throwsInternalServerError() throws IOException {
+        StoredFile f = ownedFile(user(1L));
+        f.setStorageKey("k");
+        when(storageProvider.load("k")).thenThrow(new StorageEncryptionException("corrupt blob"));
+
+        assertThatThrownBy(() -> service.loadFile(f))
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(500);
     }
 }
