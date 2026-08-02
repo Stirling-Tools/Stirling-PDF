@@ -11,6 +11,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.examples.signature.CreateSignatureBase;
@@ -75,8 +76,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.CertificateAttribute;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.model.api.security.SignatureBox;
+import stirling.software.SPDF.service.CertificateAttributeService;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
+import stirling.software.SPDF.service.SignatureAppearanceLayout;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -125,6 +130,7 @@ public class CertSignController {
         this.hardwareKeyStoreService = hardwareKeyStoreService;
     }
 
+    /** Signs without a positioned box, keeping the historical appearance and placement. */
     public static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
             MultipartFile input,
@@ -136,6 +142,34 @@ public class CertSignController {
             String location,
             String reason,
             Boolean showLogo) {
+        sign(
+                pdfDocumentFactory,
+                input,
+                output,
+                instance,
+                showSignature,
+                pageNumber,
+                name,
+                location,
+                reason,
+                showLogo,
+                null,
+                null);
+    }
+
+    public static void sign(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            MultipartFile input,
+            OutputStream output,
+            CreateSignature instance,
+            Boolean showSignature,
+            Integer pageNumber,
+            String name,
+            String location,
+            String reason,
+            Boolean showLogo,
+            SignatureBox box,
+            List<CertificateAttribute> visibleAttributes) {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -147,7 +181,8 @@ public class CertSignController {
             if (Boolean.TRUE.equals(showSignature)) {
                 try (SignatureOptions signatureOptions = new SignatureOptions()) {
                     signatureOptions.setVisualSignature(
-                            instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
+                            instance.createVisibleSignature(
+                                    doc, signature, pageNumber, showLogo, box, visibleAttributes));
                     signatureOptions.setPage(pageNumber);
 
                     doc.addSignature(signature, instance, signatureOptions);
@@ -301,7 +336,13 @@ public class CertSignController {
                     name,
                     location,
                     reason,
-                    showLogo);
+                    showLogo,
+                    SignatureBox.from(
+                            request.getSignatureX(),
+                            request.getSignatureY(),
+                            request.getSignatureWidth(),
+                            request.getSignatureHeight()),
+                    request.getVisibleAttributes());
         } catch (IOException e) {
             signedOut.close();
             throw e;
@@ -395,7 +436,12 @@ public class CertSignController {
         }
 
         public InputStream createVisibleSignature(
-                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
+                PDDocument srcDoc,
+                PDSignature signature,
+                Integer pageNumber,
+                Boolean showLogo,
+                SignatureBox box,
+                List<CertificateAttribute> visibleAttributes)
                 throws IOException {
             // modified from org.apache.pdfbox.examples.signature.CreateVisibleSignature2
             try (PDDocument doc = new PDDocument()) {
@@ -411,7 +457,12 @@ public class CertSignController {
                 acroForm.getCOSObject().setDirect(true);
                 acroFormFields.add(signatureField);
 
-                PDRectangle rect = new PDRectangle(0, 0, 200, 50);
+                // Without a requested box, keep the historical bottom-left placement so existing
+                // callers see no change in where their signatures land.
+                PDRectangle rect =
+                        box != null
+                                ? box.toPdfRectangle(srcDoc.getPage(pageNumber).getMediaBox())
+                                : new PDRectangle(0, 0, 200, 50);
 
                 widget.setRectangle(rect);
 
@@ -447,32 +498,13 @@ public class CertSignController {
                         cs.restoreGraphicsState();
                     }
 
-                    // show text
-                    float fontSize = 10;
-                    float leading = fontSize * 1.5f;
-                    cs.beginText();
-                    cs.setFont(font, fontSize);
-                    cs.setNonStrokingColor(Color.black);
-                    cs.newLineAtOffset(fontSize, height - leading);
-                    cs.setLeading(leading);
-
                     X509Certificate cert = (X509Certificate) getCertificateChain()[0];
 
-                    // https://stackoverflow.com/questions/2914521/
-                    X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
-
-                    String date = signature.getSignDate().getTime().toString();
-                    String reason = signature.getReason();
-
-                    cs.showText("Signed by " + name);
-                    cs.newLine();
-                    cs.showText(date);
-                    cs.newLine();
-                    cs.showText(reason);
-
-                    cs.endText();
+                    if (box == null && visibleAttributes == null) {
+                        drawLegacyText(cs, font, height, cert, signature);
+                    } else {
+                        drawAttributeText(cs, font, rect, cert, signature, visibleAttributes);
+                    }
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -480,5 +512,96 @@ public class CertSignController {
                 return new ByteArrayInputStream(baos.toByteArray());
             }
         }
+
+        /**
+         * The appearance produced before the signature box was configurable. Kept byte-for-byte so
+         * callers that ask for neither a box nor a field selection get exactly what they got
+         * before.
+         */
+        private void drawLegacyText(
+                PDPageContentStream cs,
+                PDFont font,
+                float height,
+                X509Certificate cert,
+                PDSignature signature)
+                throws IOException {
+            float fontSize = 10;
+            float leading = fontSize * 1.5f;
+            cs.beginText();
+            cs.setFont(font, fontSize);
+            cs.setNonStrokingColor(Color.black);
+            cs.newLineAtOffset(fontSize, height - leading);
+            cs.setLeading(leading);
+
+            // https://stackoverflow.com/questions/2914521/
+            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+            RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
+            String name = IETFUtils.valueToString(cn.getFirst().getValue());
+
+            cs.showText("Signed by " + name);
+            cs.newLine();
+            cs.showText(signature.getSignDate().getTime().toString());
+            cs.newLine();
+            cs.showText(signature.getReason());
+            cs.endText();
+        }
+
+        /**
+         * Draws the selected certificate fields, scaled to whatever box the user drew. Falls back
+         * to the fields the legacy appearance showed when no selection was made, so asking only for
+         * a position still yields a sensible signature.
+         */
+        private void drawAttributeText(
+                PDPageContentStream cs,
+                PDFont font,
+                PDRectangle rect,
+                X509Certificate cert,
+                PDSignature signature,
+                List<CertificateAttribute> visibleAttributes)
+                throws IOException {
+            CertificateAttributeService attributeService = new CertificateAttributeService();
+            Map<CertificateAttribute, String> available =
+                    attributeService.withSignatureDetails(
+                            attributeService.extract(cert),
+                            signature.getSignDate() != null
+                                    ? signature.getSignDate().getTime()
+                                    : null,
+                            signature.getReason(),
+                            signature.getLocation());
+
+            List<CertificateAttribute> selected =
+                    visibleAttributes != null && !visibleAttributes.isEmpty()
+                            ? visibleAttributes
+                            : DEFAULT_VISIBLE_ATTRIBUTES;
+
+            Map<String, String> lines = attributeService.toDisplayLines(available, selected);
+            SignatureAppearanceLayout.Layout layout =
+                    SignatureAppearanceLayout.fit(lines, font, rect.getWidth(), rect.getHeight());
+            if (layout.lines().isEmpty()) {
+                return;
+            }
+
+            cs.beginText();
+            cs.setFont(font, layout.fontSize());
+            cs.setNonStrokingColor(Color.black);
+            // The appearance stream's own origin is its lower-left corner, so the first baseline
+            // is measured down from the top of the box.
+            cs.newLineAtOffset(layout.padding(), rect.getHeight() - layout.firstBaselineFromTop());
+            cs.setLeading(layout.leading());
+            for (int i = 0; i < layout.lines().size(); i++) {
+                if (i > 0) {
+                    cs.newLine();
+                }
+                cs.showText(layout.lines().get(i));
+            }
+            cs.endText();
+        }
     }
+
+    /** Fields shown when a box is requested without saying which fields to draw. */
+    private static final List<CertificateAttribute> DEFAULT_VISIBLE_ATTRIBUTES =
+            List.of(
+                    CertificateAttribute.SUBJECT_COMMON_NAME,
+                    CertificateAttribute.SIGNING_TIME,
+                    CertificateAttribute.REASON);
 }

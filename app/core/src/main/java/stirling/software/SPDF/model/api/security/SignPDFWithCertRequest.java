@@ -1,5 +1,7 @@
 package stirling.software.SPDF.model.api.security;
 
+import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -93,4 +95,32 @@ public class SignPDFWithCertRequest extends PDFFile {
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showLogo;
+
+    @Schema(
+            description =
+                    "Distance in PDF points from the LEFT edge of the page to the left edge of the"
+                            + " signature box. Omit to keep the legacy bottom-left placement.")
+    private Float signatureX;
+
+    @Schema(
+            description =
+                    "Distance in PDF points from the TOP edge of the page to the top edge of the"
+                            + " signature box. Measured downwards, as a user positioning a box on"
+                            + " screen expects; PDF's own y axis runs the other way and the"
+                            + " conversion is done server-side.")
+    private Float signatureY;
+
+    @Schema(description = "Width of the signature box in PDF points.", defaultValue = "200")
+    private Float signatureWidth;
+
+    @Schema(description = "Height of the signature box in PDF points.", defaultValue = "50")
+    private Float signatureHeight;
+
+    @Schema(
+            description =
+                    "Certificate fields to draw inside the signature box, in the order given. Omit"
+                            + " to keep the legacy content (signer name, date and reason). Fields"
+                            + " the certificate does not carry are skipped rather than drawn"
+                            + " blank.")
+    private List<CertificateAttribute> visibleAttributes;
 }
