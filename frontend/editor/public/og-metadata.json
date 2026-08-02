@@ -876,6 +876,10 @@
       "label": "Auto Rename PDF Files"
     },
     {
+      "path": "/auto-rotate",
+      "label": "Auto Rotate"
+    },
+    {
       "path": "/cbr-to-pdf",
       "label": "CBR to PDF Converter"
     },
