@@ -778,10 +778,14 @@ async function runPolicyOnFile(
       error: null,
       startedAt: Date.now(),
     });
-  } catch {
-    // Dispatch failed (offline / backend error). Mark dispatched so we don't hammer;
+  } catch (err) {
+    // Dispatch failed (e.g. policy deleted/404 or backend offline). Mark dispatched so we don't hammer;
     // the absent run simply won't appear in the activity feed. If the backend did
     // start a run we never recorded, reconcileServerRuns rediscovers it.
+    console.debug(
+      `[PolicyAutoRun] Failed to dispatch policy ${categoryId} (${backendId}):`,
+      err,
+    );
     markDispatched(categoryId, fileId);
   }
 }
