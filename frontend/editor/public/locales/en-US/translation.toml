@@ -8077,7 +8077,7 @@ helperText = "Multipart suits upload APIs; JSON suits APIs that want the file in
 label = "How to send the document"
 
 [portal.policies.operations.fields.bodyTemplate]
-helperText = "A JSON body sent as-is. {{document.base64}} carries the file; {{document.*}} and {{run.*}} are filled in per document; {{steps.N.body...}} pulls in an earlier step's response."
+helperText = "A JSON body sent as-is. Add variables with the button below, or by typing @ or / - use File contents to carry the document itself."
 label = "JSON body"
 
 [portal.policies.operations.fields.connection]
@@ -8113,7 +8113,7 @@ helperText = "Skip the upload if the document is larger, in MB. Discord allows 2
 label = "Maximum file size (MB)"
 
 [portal.policies.operations.fields.message]
-helperText = "Sent as the message body. {{document.*}} and {{run.*}} are filled in per document, and {{steps.N.body...}} pulls in an earlier step's response."
+helperText = "Sent as the message body. Add variables with the button below, or by typing @ or /."
 label = "Message"
 
 [portal.policies.operations.fields.method]
@@ -8129,9 +8129,9 @@ label = "Path"
 placeholder = "/v1/scan"
 
 [portal.policies.operations.fields.remotePath]
-helperText = "Where in the drive to write it. {{document.filename}} is filled in per document."
+helperText = "Where in the drive to write it. Add variables with the + button, or by typing @ or /."
 label = "Destination path"
-placeholder = "Processed/{{document.filename}}"
+placeholder = "e.g. Processed/invoice.pdf"
 
 [portal.policies.operations.fields.responseMode]
 helperText = "Report leaves the document untouched. Replace swaps it for whatever comes back."
@@ -8140,7 +8140,7 @@ label = "What to do with the reply"
 [portal.policies.operations.fields.shareRemotePath]
 helperText = "The file to share, as it is stored in Nextcloud. Match the path an earlier Upload step wrote to."
 label = "File to share"
-placeholder = "Processed/{{document.filename}}"
+placeholder = "e.g. Processed/invoice.pdf"
 
 [portal.policies.operations.fields.signerEmail]
 label = "Signer's email"
@@ -8148,10 +8148,10 @@ placeholder = "signer@acme.com"
 
 [portal.policies.operations.fields.subject]
 label = "Subject"
-placeholder = "Processed: {{document.filename}}"
+placeholder = "e.g. Processed: invoice.pdf"
 
 [portal.policies.operations.fields.text]
-helperText = "Presidio analyses this text. Use {{document.title}} or paste the text you want checked."
+helperText = "Presidio analyses this text. Add the Title variable, or paste the text you want checked."
 label = "Text to check"
 
 [portal.policies.operations.fields.to]
@@ -8190,7 +8190,7 @@ label = "Email the document (Mailgun)"
 [portal.policies.operations.nextcloudShareLink]
 description = "Creates a public link to a file already in Nextcloud, to post or email."
 label = "Create a Nextcloud share link"
-note = "Share a file that is already in Nextcloud - run an Upload step first. The link comes back as {{steps.N.body.ocs.data.url}} for a later step to use."
+note = "Share a file that is already in Nextcloud - run an Upload step first. The link comes back in this step's response, for a later step to use."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Writes the processed document into a folder."
@@ -8266,12 +8266,34 @@ policy = "Policy"
 status = "Status"
 
 [portal.policies.variables]
+add = "Add variable"
+addTitle = "Add variable"
+added = "Added {{label}}"
+changeTitle = "Change variable"
+changed = "Changed to {{label}}"
+editAsBoxes = "Back to boxes"
+editAsText = "Edit as text"
+enterToAdd = "Enter to add"
+enterToChange = "Enter to change"
 exampleTag = "Example"
-intro = "Type {{ in any text field to insert a variable. Document and run variables are filled in per document when the step runs, so one step works for every file that passes through."
-introSteps = "steps.N carries an earlier step's answer into this one - N is that step's position in the chain. Its JSON reply is parsed once, so a dotted path reaches any field of it."
-menuLabel = "Variable suggestions"
-status = "{{count}} variable suggestions available"
+fromStep = "{{label}} from step {{n}}"
+intro = "A variable is filled in per document when the step runs, so one step works for every file that passes through. Add one with the button, or by typing @ or / in any text field."
+introSteps = "A step can also use an earlier step's answer. That reply is parsed once, so a dotted path reaches any field inside it."
+menuLabel = "Variables"
+noMatches = "Nothing matches that"
+rawLabel = "Value as text"
+redo = "Redo"
+redone = "Redone"
+remove = "Remove"
+removeToken = "Remove {{label}}"
+removed = "Removed {{label}}"
+search = "Search"
 title = "Variables you can use"
+tokenLabel = "Variable: {{label}}. Press Enter to change it."
+triggerHint = "or type @ or /"
+undo = "Undo"
+undone = "Undone"
+unnamedTitle = "No name for this path. Saved as {{path}}"
 
 [portal.policies.variables.defs]
 classification = "The classifier's whole verdict, as JSON"
@@ -8321,6 +8343,34 @@ label = "Sensitivity label"
 description = "Earlier steps' answers. Replace 1 with the step's position in the chain; add a dotted path to reach into its JSON reply."
 example = "Reaches the share link inside a Nextcloud share-link step's reply - create the link in step 1, post it in step 2's message."
 label = "Earlier steps"
+
+[portal.policies.variables.labels]
+classification = "Classification verdict"
+classification_label = "Classification"
+document_author = "Author"
+document_base64 = "File contents"
+document_contentType = "File type"
+document_created = "Created date"
+document_creator = "Created with"
+document_encrypted = "Encrypted"
+document_extension = "File extension"
+document_filename = "File name"
+document_keywords = "Keywords"
+document_modified = "Modified date"
+document_pageCount = "Page count"
+document_producer = "Produced by"
+document_sha256 = "Fingerprint"
+document_sizeBytes = "File size"
+document_subject = "Subject"
+document_title = "Title"
+run_policyName = "Policy name"
+run_runId = "Run ID"
+run_timestamp = "Time run"
+sensitivityLabel_labelId = "Sensitivity label ID"
+sensitivityLabel_name = "Sensitivity label"
+sensitivityLabel_protected = "Protected"
+steps_body = "Full response"
+steps_status = "Status code"
 
 [portal.policies.wizard.actions]
 back = "Back"

@@ -13,6 +13,8 @@ const PREFIX = "portal.policies.variables";
 export interface VariableDef {
   /** The dotted path as typed inside braces, e.g. "document.filename". */
   path: string;
+  /** The name an operator reads, e.g. "File name". Use variableLabel to resolve it. */
+  labelKey: string;
   descKey: string;
   /** True when the path contains a part the operator must edit (the N in steps.N). */
   template?: boolean;
@@ -35,13 +37,15 @@ export interface VariableGroup {
 
 const v = (path: string, template = false): VariableDef => ({
   path,
+  labelKey: `${PREFIX}.labels.${path.replaceAll(".", "_")}`,
   descKey: `${PREFIX}.defs.${path.replaceAll(".", "_")}`,
   template,
 });
 
-/** A steps.N def: the description key is shared across every N, so it is set explicitly. */
+/** A steps.N def: the name and description are shared across every N, so both are set here. */
 const stepVar = (n: number | string, kind: "body" | "status"): VariableDef => ({
   path: `steps.${n}.${kind}`,
+  labelKey: `${PREFIX}.labels.steps_${kind}`,
   descKey: `${PREFIX}.defs.steps_${kind}`,
   template: typeof n === "string",
 });
@@ -200,56 +204,78 @@ function referenceValid(
   );
 }
 
+/** Translate function shape, narrowed to what this module needs. */
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+
 /**
- * The variables matching what the operator has typed after `{{`.
+ * The name to show for a variable, e.g. "File name" or "Full response from step 2".
  *
- * A plain prefix/substring match on the path: typing "file" finds document.filename, typing
- * "steps" finds the cross-step patterns. Dots count as normal characters so "document.s" narrows
- * to sha256/sizeBytes/subject.
+ * The field draws this instead of the path, because a dotted path is a location and an operator
+ * is choosing a thing. A steps.N variable carries its step number, since that is the part of the
+ * path that actually carries meaning - it is the dependency on an earlier step.
+ */
+export function variableLabel(def: VariableDef, t: Translate): string {
+  const base = t(def.labelKey);
+  const step = /^steps\.(\d+)\./.exec(def.path);
+  return step ? t(`${PREFIX}.fromStep`, { label: base, n: step[1] }) : base;
+}
+
+/** The catalogued definition for a saved path, or undefined for one we ship no name for. */
+export function defForPath(
+  path: string,
+  groups: VariableGroup[] = VARIABLE_GROUPS,
+): VariableDef | undefined {
+  return groups
+    .flatMap((group) => group.variables)
+    .find((def) => def.path === path);
+}
+
+/**
+ * The variables matching what the operator has typed after a trigger.
+ *
+ * Matches the name as well as the path, because the name is now what the list shows: typing
+ * "link" has to find the share link even though its path says "ocs.data.url". Dots count as
+ * normal characters, so "document.s" still narrows to sha256/sizeBytes/subject.
  */
 export function variableSuggestions(
   partial: string,
   groups: VariableGroup[] = VARIABLE_GROUPS,
+  t?: Translate,
 ): VariableDef[] {
   const all = groups.flatMap((group) => group.variables);
   const q = partial.trim().toLowerCase();
   if (q === "") return all;
-  return all.filter((def) => def.path.toLowerCase().includes(q));
+  return all.filter(
+    (def) =>
+      def.path.toLowerCase().includes(q) ||
+      (t !== undefined && variableLabel(def, t).toLowerCase().includes(q)),
+  );
 }
 
 /**
- * Where an open `{{` reference starts in `text` before `cursor`, or null when the cursor is not
- * inside one. Closed references ({{a}}) and a brace pair with a space don't count; the partial may
- * only be path characters, so ordinary prose with braces never opens the menu.
+ * The characters that open the variable list. `@` and `/` are the ones we teach - one unshifted
+ * key, borrowed from every chat app - and `{{` is kept so anyone who learned the old syntax keeps
+ * their habit and still never ends up with raw braces on screen.
+ */
+const TRIGGER = /(?:^|[\s\n])(@|\/|\{\{)([\w.]*)$/;
+
+/**
+ * Where an open reference starts in `text` before `cursor`, or null when the cursor is not in one.
+ *
+ * A trigger only counts at the start of a word - the beginning of the field, or straight after a
+ * space or newline - so `bob@acme.com` and `and/or` are ordinary text, which matters because these
+ * are exactly the fields people type addresses and paths into. The partial may only be path
+ * characters, so prose after a trigger closes the list rather than hijacking the sentence.
  */
 export function openReferenceAt(
   text: string,
   cursor: number,
 ): { start: number; partial: string } | null {
   const before = text.slice(0, cursor);
-  const open = before.lastIndexOf("{{");
-  if (open < 0) return null;
-  const partial = before.slice(open + 2);
-  if (partial.includes("}}")) return null;
-  if (!/^[\w.]*$/.test(partial)) return null;
-  return { start: open, partial };
-}
-
-/**
- * `text` with the open reference at `start` replaced by the chosen variable, closed. When the
- * characters right after the cursor already close the braces, they are reused rather than doubled.
- */
-export function insertVariable(
-  text: string,
-  cursor: number,
-  start: number,
-  path: string,
-): { text: string; cursor: number } {
-  const after = text.slice(cursor);
-  const closing = after.startsWith("}}") ? after.slice(2) : after;
-  const inserted = `{{${path}}}`;
+  const match = TRIGGER.exec(before);
+  if (!match) return null;
   return {
-    text: text.slice(0, start) + inserted + closing,
-    cursor: start + inserted.length,
+    start: before.length - (match[1].length + match[2].length),
+    partial: match[2],
   };
 }

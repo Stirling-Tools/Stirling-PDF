@@ -3,20 +3,39 @@ import { describe, expect, it } from "vitest";
 import {
   ALL_VARIABLES,
   VARIABLE_GROUPS,
-  insertVariable,
+  defForPath,
   openReferenceAt,
   unknownReferences,
   variableGroupsFor,
+  variableLabel,
   variableSuggestions,
 } from "@portal/components/policies/variables";
 
+/** Stands in for i18next: labels come back readable, fromStep interpolates. */
+const t = (key: string, options?: Record<string, unknown>) => {
+  if (key.endsWith(".fromStep"))
+    return `${options?.label} from step ${options?.n}`;
+  return key.split(".").pop() ?? key;
+};
+
 describe("openReferenceAt", () => {
-  it("finds the open reference the cursor is inside", () => {
-    const text = "see {{doc";
-    expect(openReferenceAt(text, text.length)).toEqual({
-      start: 4,
-      partial: "doc",
-    });
+  it.each([
+    ["@", "ping @doc", 5, "doc"],
+    ["/", "note /run", 5, "run"],
+    ["{{", "see {{doc", 4, "doc"],
+  ])("opens on %s at a word start", (_trigger, text, start, partial) => {
+    expect(openReferenceAt(text, text.length)).toEqual({ start, partial });
+  });
+
+  it("opens at the very start of the field", () => {
+    expect(openReferenceAt("@doc", 4)).toEqual({ start: 0, partial: "doc" });
+  });
+
+  it.each([
+    ["an email address", "mail bob@acme"],
+    ["a path", "and/or"],
+  ])("leaves a trigger inside %s alone", (_what, text) => {
+    expect(openReferenceAt(text, text.length)).toBeNull();
   });
 
   it("is closed the moment the braces are", () => {
@@ -24,7 +43,7 @@ describe("openReferenceAt", () => {
     expect(openReferenceAt(text, text.length)).toBeNull();
   });
 
-  it("ignores braces followed by prose - typing text is not typing a reference", () => {
+  it("ignores a trigger followed by prose - typing text is not typing a reference", () => {
     const text = "a {{ b c";
     expect(openReferenceAt(text, text.length)).toBeNull();
   });
@@ -37,23 +56,33 @@ describe("openReferenceAt", () => {
     });
   });
 
-  it("returns null with no braces at all", () => {
+  it("returns null with no trigger at all", () => {
     expect(openReferenceAt("plain text", 5)).toBeNull();
   });
 });
 
-describe("insertVariable", () => {
-  it("completes the partial reference at the cursor", () => {
-    const text = "see {{doc after";
-    const result = insertVariable(text, 9, 4, "document.filename");
-    expect(result.text).toBe("see {{document.filename}} after");
-    expect(result.cursor).toBe("see {{document.filename}}".length);
+describe("variableLabel", () => {
+  it("names a plain variable", () => {
+    expect(variableLabel(defForPath("document.filename")!, t)).toBe(
+      "document_filename",
+    );
   });
 
-  it("reuses closing braces already sitting after the cursor", () => {
-    const text = "see {{doc}}";
-    const result = insertVariable(text, 9, 4, "document.filename");
-    expect(result.text).toBe("see {{document.filename}}");
+  it("carries the step number, because that is the dependency", () => {
+    const def = variableGroupsFor(undefined, 3)
+      .find((group) => group.id === "steps")!
+      .variables.find((v) => v.path === "steps.2.body")!;
+    expect(variableLabel(def, t)).toBe("steps_body from step 2");
+  });
+});
+
+describe("defForPath", () => {
+  it("finds a catalogued variable", () => {
+    expect(defForPath("run.runId")?.path).toBe("run.runId");
+  });
+
+  it("has nothing for a path we ship no name for", () => {
+    expect(defForPath("steps.1.body.ocs.data.url")).toBeUndefined();
   });
 });
 
