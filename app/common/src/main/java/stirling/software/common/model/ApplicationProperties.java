@@ -1198,6 +1198,7 @@ public class ApplicationProperties {
             private String calibre;
             private String ocrmypdf;
             private String soffice;
+            private String tesseract;
         }
     }
 

@@ -275,7 +275,7 @@ public class AutoRotateController {
                     ImageIO.write(image, "bmp", imageFile);
 
                     List<String> command = new ArrayList<>();
-                    command.add("tesseract");
+                    command.add(runtimePathConfig.getTesseractPath());
                     command.add(imageFile.getAbsolutePath());
                     command.add("stdout");
                     command.add("--psm");

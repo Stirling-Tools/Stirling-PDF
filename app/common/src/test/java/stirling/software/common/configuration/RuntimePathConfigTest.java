@@ -280,6 +280,8 @@ class RuntimePathConfigTest {
             assertEquals("ebook-convert", config.getCalibrePath());
             assertEquals("ocrmypdf", config.getOcrMyPdfPath());
             assertEquals("soffice", config.getSOfficePath());
+            // No Tesseract is bundled in a source checkout, so the PATH lookup name is kept.
+            assertEquals("tesseract", config.getTesseractPath());
         }
 
         @Test
@@ -292,6 +294,7 @@ class RuntimePathConfigTest {
             operations.setCalibre("/opt/custom/ebook-convert");
             operations.setOcrmypdf("/opt/custom/ocrmypdf");
             operations.setSoffice("/opt/custom/soffice");
+            operations.setTesseract("/opt/custom/tesseract");
 
             RuntimePathConfig config = build(properties);
 
@@ -300,6 +303,18 @@ class RuntimePathConfigTest {
             assertEquals("/opt/custom/ebook-convert", config.getCalibrePath());
             assertEquals("/opt/custom/ocrmypdf", config.getOcrMyPdfPath());
             assertEquals("/opt/custom/soffice", config.getSOfficePath());
+            assertEquals("/opt/custom/tesseract", config.getTesseractPath());
+        }
+
+        @Test
+        @DisplayName("Blank tesseract path falls back to the PATH lookup name")
+        void blankTesseractPathFallsBack() {
+            ApplicationProperties properties = newProperties();
+            properties.getSystem().getCustomPaths().getOperations().setTesseract("  ");
+
+            RuntimePathConfig config = build(properties);
+
+            assertEquals("tesseract", config.getTesseractPath());
         }
 
         @Test
