@@ -26,6 +26,7 @@ import {
   getExecutableTools,
   newWorkingToolStep,
   serializeToolStep,
+  stepNeedsConfiguring,
   stepRequiresUpload,
   type ExecutableTool,
   type WorkingToolStep,
@@ -400,10 +401,15 @@ export function PipelineBuilder() {
   const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
   const hasUploadSteps = uploadStepLabels.length > 0;
 
-  // An integration step with no operation or no account chosen would fail at run time with a raw
-  // backend rejection, so block saving on it here where the fix is one click away.
+  // A step still missing a choice - an integration with no operation or account, a tool whose
+  // mandatory parameters are unset - would fail at run time with a raw backend rejection, so block
+  // saving on it here where the fix is one click away.
   const unconfiguredStepLabels = steps
-    .filter((step) => !integrationStepConfigured(step))
+    .filter(
+      (step) =>
+        !integrationStepConfigured(step) ||
+        stepNeedsConfiguring(step, allTools),
+    )
     .map(stepLabel);
   const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
@@ -946,6 +952,10 @@ export function PipelineBuilder() {
                       ) : stepRequiresUpload(step) ? (
                         <span className="portal-builder__step-note">
                           {t("portal.pipelines.builder.needsUpload")}
+                        </span>
+                      ) : stepNeedsConfiguring(step, allTools) ? (
+                        <span className="portal-builder__step-note">
+                          {t("portal.pipelines.builder.needsConfiguring")}
                         </span>
                       ) : step.support === "unsupported" ? (
                         <span className="portal-builder__step-note">

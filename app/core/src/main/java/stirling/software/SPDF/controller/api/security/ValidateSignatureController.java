@@ -142,11 +142,15 @@ public class ValidateSignatureController {
                     // covers the TSTInfo, which can never match.
                     boolean isDocTimeStamp = SUBFILTER_RFC3161.equals(sig.getSubFilter());
                     CMSSignedData signedData;
+                    // Parse from a stream: /Contents is zero-padded to its reserved length and the
+                    // byte[] constructors reject those trailing bytes since BC 1.85.
                     if (isDocTimeStamp) {
-                        signedData = new CMSSignedData(signatureBytes);
+                        signedData = new CMSSignedData(new ByteArrayInputStream(signatureBytes));
                     } else {
                         CMSProcessable content = new CMSProcessableByteArray(signedContent);
-                        signedData = new CMSSignedData(content, signatureBytes);
+                        signedData =
+                                new CMSSignedData(
+                                        content, new ByteArrayInputStream(signatureBytes));
                     }
 
                     // What actually binds a timestamp to this document: the TSTInfo's message

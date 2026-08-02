@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import SupabaseLoginForm from "@app/auth/ui/SupabaseLoginForm";
 import type { SupabaseLoginState } from "@app/auth/ui/useSupabaseLogin";
 import "@app/auth/ui/auth.css";

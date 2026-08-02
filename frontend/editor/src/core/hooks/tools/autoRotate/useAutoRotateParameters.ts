@@ -23,9 +23,15 @@ export const defaultParameters: AutoRotateParameters = {
 
 export type AutoRotateParametersHook = BaseParametersHook<AutoRotateParameters>;
 
+export function validateAutoRotateParameters(
+  params: AutoRotateParameters,
+): boolean {
+  return params.confidenceThreshold >= 0;
+}
+
 export const useAutoRotateParameters = (): AutoRotateParametersHook =>
   useBaseParameters({
     defaultParameters,
     endpointName: "auto-rotate-pdf",
-    validateFn: (params) => params.confidenceThreshold >= 0,
+    validateFn: validateAutoRotateParameters,
   });

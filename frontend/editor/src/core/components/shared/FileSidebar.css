@@ -447,19 +447,14 @@
 }
 
 .file-sidebar-section-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 12px 14px 6px 14px;
+  padding: 10px 14px 6px 14px;
   margin: 4px 0 0 0;
-}
-
-.file-sidebar-section-header {
-  position: relative;
   border-top: 1px solid var(--c-border-subtle);
-  padding-top: 10px;
-  margin-top: 4px;
   flex-shrink: 0;
 }
 

@@ -62,7 +62,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -110,7 +110,7 @@ jobs:
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -420,7 +420,9 @@ jobs:
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
           # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+          args: >-
+            ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+            --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
@@ -613,12 +615,19 @@ jobs:
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && needs.build.result == 'success'
+    # Fork and Dependabot pull_request runs receive a read-only GITHUB_TOKEN,
+    # so the API cannot create or update PR comments there. The artifacts are
+    # still uploaded and remain available from the Actions run page.
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.build.result == 'success' &&
+      !github.event.pull_request.head.repo.fork &&
+      github.actor != 'dependabot[bot]'
     permissions:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -709,7 +718,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
