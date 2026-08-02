@@ -187,7 +187,15 @@ public class RuntimePathConfig {
      * @return the first candidate that exists on disk, or empty when nothing is bundled
      */
     private static Optional<Path> findBundledPath(String relativePath) {
-        for (Path root : bundleRoots()) {
+        return findBundledPath(bundleRoots(), relativePath);
+    }
+
+    /**
+     * The search itself, kept separate from {@link #bundleRoots()} so it can be exercised against a
+     * simulated install layout rather than whatever directory the tests happen to run from.
+     */
+    static Optional<Path> findBundledPath(List<Path> roots, String relativePath) {
+        for (Path root : roots) {
             try {
                 Path candidate = root.resolve(relativePath);
                 if (Files.exists(candidate)) {

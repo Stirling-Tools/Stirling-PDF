@@ -6,14 +6,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Operations;
@@ -343,6 +347,98 @@ class RuntimePathConfigTest {
             assertEquals("/usr/local/soffice", config.getSOfficePath());
             assertEquals("weasyprint", config.getWeasyPrintPath());
             assertEquals("unoconvert", config.getUnoConvertPath());
+        }
+    }
+
+    @Nested
+    @DisplayName("Bundled resource lookup")
+    class BundledResources {
+
+        /** Lays out a directory the way the desktop installer does. */
+        private Path installRoot(Path base) throws IOException {
+            Files.createDirectories(base.resolve("libs"));
+            Files.createDirectories(base.resolve("runtime/jre/bin"));
+            Files.createDirectories(base.resolve("tesseract/tessdata/configs"));
+            Files.createFile(base.resolve("tesseract/tesseract.exe"));
+            Files.createFile(base.resolve("tesseract/tessdata/eng.traineddata"));
+            return base;
+        }
+
+        @Test
+        @DisplayName("Finds a resource bundled at the install root")
+        void findsBundledResource(@TempDir Path tempDir) throws IOException {
+            Path root = installRoot(tempDir);
+
+            Optional<Path> found =
+                    RuntimePathConfig.findBundledPath(List.of(root), "tesseract/tesseract.exe");
+
+            assertTrue(found.isPresent());
+            assertEquals(root.resolve("tesseract/tesseract.exe").toAbsolutePath(), found.get());
+        }
+
+        @Test
+        @DisplayName("Falls through to a later root when the first has nothing bundled")
+        void laterRootWins(@TempDir Path tempDir) throws IOException {
+            Path empty = Files.createDirectories(tempDir.resolve("empty"));
+            Path root = installRoot(Files.createDirectories(tempDir.resolve("install")));
+
+            Optional<Path> found =
+                    RuntimePathConfig.findBundledPath(
+                            List.of(empty, root), "tesseract/tesseract.exe");
+
+            assertTrue(found.isPresent());
+            assertEquals(root.resolve("tesseract/tesseract.exe").toAbsolutePath(), found.get());
+        }
+
+        @Test
+        @DisplayName("The JAR's parent is a valid root, matching the libs/ layout Tauri produces")
+        void jarParentIsProbed(@TempDir Path tempDir) throws IOException {
+            Path root = installRoot(tempDir);
+            // Tauri puts the JAR in <root>/libs, so <root> is only reachable via getParent().
+            Path libsDir = root.resolve("libs");
+
+            Optional<Path> found =
+                    RuntimePathConfig.findBundledPath(
+                            List.of(libsDir, libsDir.getParent()), "tesseract/tessdata");
+
+            assertTrue(found.isPresent());
+            assertEquals(root.resolve("tesseract/tessdata").toAbsolutePath(), found.get());
+        }
+
+        @Test
+        @DisplayName("Returns empty when nothing is bundled, so the PATH lookup still applies")
+        void nothingBundled(@TempDir Path tempDir) {
+            Optional<Path> found =
+                    RuntimePathConfig.findBundledPath(List.of(tempDir), "tesseract/tesseract.exe");
+
+            assertTrue(found.isEmpty());
+        }
+
+        @Test
+        @DisplayName("A non-existent root is skipped rather than aborting the search")
+        void missingRootIsSkipped(@TempDir Path tempDir) throws IOException {
+            Path root = installRoot(tempDir);
+
+            // Running from a loose JAR leaves libs/ absent, so a root that simply is not
+            // there must not stop the remaining roots from being tried.
+            Optional<Path> found =
+                    RuntimePathConfig.findBundledPath(
+                            List.of(tempDir.resolve("does-not-exist"), root),
+                            "tesseract/tesseract.exe");
+
+            assertTrue(found.isPresent());
+            assertEquals(root.resolve("tesseract/tesseract.exe").toAbsolutePath(), found.get());
+        }
+
+        @Test
+        @DisplayName("An unresolvable name is swallowed instead of failing startup")
+        void unresolvableNameDoesNotPropagate(@TempDir Path tempDir) {
+            // NUL is rejected by every platform's path parser, so resolve() throws. Path
+            // resolution happens while the bean is built, where an escaping exception would
+            // take the whole application down instead of merely leaving OCR unavailable.
+            assertTrue(
+                    RuntimePathConfig.findBundledPath(List.of(tempDir), "tess\u0000eract")
+                            .isEmpty());
         }
     }
 

@@ -109,6 +109,7 @@ tasks:
     dir: editor
     cmds:
       - task: jlink:clean
+      - task: tesseract:clean
       - cd src-tauri && cargo clean
       - rm -rf dist build
 
@@ -216,6 +217,12 @@ tasks:
     dir: editor/src-tauri
     cmds:
       - rm -rf libs runtime
+
+  tesseract:clean:
+    desc: "Remove the bundled Tesseract runtime"
+    dir: editor/src-tauri
+    cmds:
+      - rm -rf tesseract
 
   # macOS-only. Replaces jlink:runtime's single-arch JRE with a universal
   # (arm64 + x86_64) one for the universal Tauri shell. Runs the x86_64
