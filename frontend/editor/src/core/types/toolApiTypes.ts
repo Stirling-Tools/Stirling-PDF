@@ -201,6 +201,41 @@ export interface AddWatermarkRequest {
    */
   widthSpacer?: number;
 }
+export interface AutoRotatePdfRequest {
+  /**
+   * Minimum Tesseract OSD orientation confidence required before a correction is applied. Matches OCRmyPDF's --rotate-pages-threshold scale
+   */
+  confidenceThreshold?: number;
+  /**
+   * Detection method. 'auto' tries embedded-text direction first and falls back to Tesseract OSD for pages without usable text; 'text' uses only embedded-text direction; 'osd' forces Tesseract OSD for every page
+   */
+  detectionMode?: "auto" | "text" | "osd";
+  /**
+   * If true, no rotation is applied; returns a JSON report of the per-page detection results instead of a PDF
+   */
+  dryRun?: boolean;
+  /**
+   * When a page cannot be decided on its own but the pages that could be decided agree on a single correction for that same current rotation, apply that shared correction to the undecided page. Handles documents rotated uniformly where some pages are too sparse to detect alone
+   */
+  inferUndetected?: boolean;
+  /**
+   * Optional pre-computed corrections to apply without running detection. Pages not listed are left unchanged, and a page may only appear once
+   */
+  pageRotations?: PageRotation[];
+}
+/**
+ * Optional pre-computed corrections to apply without running detection. Pages not listed are left unchanged, and a page may only appear once
+ */
+export interface PageRotation {
+  /**
+   * 1-based page number to rotate
+   */
+  pageNumber: number;
+  /**
+   * Additional clockwise rotation to add to the page's current rotation, in degrees. Must be a multiple of 90
+   */
+  rotation: number;
+}
 export interface AutoSplitPdfRequest {
   /**
    * Flag indicating if the duplex mode is active, where the page after the divider also gets removed.
@@ -1373,6 +1408,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/add-page-numbers"
   | "/api/v1/misc/add-stamp"
   | "/api/v1/misc/auto-rename"
+  | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
   | "/api/v1/misc/compress-pdf"
   | "/api/v1/misc/decompress-pdf"
@@ -1463,6 +1499,7 @@ export interface ToolApiParams {
   "/api/v1/misc/add-page-numbers": AddPageNumbersRequest;
   "/api/v1/misc/add-stamp": AddStampRequest;
   "/api/v1/misc/auto-rename": ExtractHeaderRequest;
+  "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
@@ -1554,6 +1591,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/add-page-numbers",
   "/api/v1/misc/add-stamp",
   "/api/v1/misc/auto-rename",
+  "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
   "/api/v1/misc/compress-pdf",
   "/api/v1/misc/decompress-pdf",

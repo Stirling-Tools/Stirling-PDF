@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateBookletImpositionParameters,
   BookletImpositionParameters,
   defaultParameters,
 } from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
@@ -60,6 +61,7 @@ export const buildBookletImpositionFormData = (
 
 // Static configuration object
 export const bookletImpositionOperationConfig = defineSingleFileTool({
+  validateParams: validateBookletImpositionParameters,
   buildFormData: buildBookletImpositionFormData,
   toApiParams: bookletImpositionToApiParams,
   fromApiParams: bookletImpositionFromApiParams,

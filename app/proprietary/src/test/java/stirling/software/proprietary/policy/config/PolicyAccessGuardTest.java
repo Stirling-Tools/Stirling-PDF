@@ -90,6 +90,6 @@ class PolicyAccessGuardTest {
 
     private static Policy inTeam(Long teamId) {
         return new Policy(
-                null, "p", "owner", true, null, List.of(), List.of(), OutputSpec.inline(), teamId);
+                null, "p", "owner", true, List.of(), List.of(), OutputSpec.inline(), teamId);
     }
 }

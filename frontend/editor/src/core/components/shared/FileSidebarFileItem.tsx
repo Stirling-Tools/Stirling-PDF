@@ -34,14 +34,6 @@ export type DateGroup =
   | "thisMonth"
   | "older";
 
-export const DATE_GROUP_ORDER: DateGroup[] = [
-  "today",
-  "yesterday",
-  "thisWeek",
-  "thisMonth",
-  "older",
-];
-
 export function getDateGroup(lastModified: number | undefined): DateGroup {
   if (!lastModified) return "older";
   const now = new Date();
