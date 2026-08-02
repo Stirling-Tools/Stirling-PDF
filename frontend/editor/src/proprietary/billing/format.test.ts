@@ -54,7 +54,7 @@ describe("prepaid bundle brain", () => {
     expect(q.provisionedMonthlyVolume).toBe(10000);
     expect(q.poolCredits).toBe(576_000);
     expect(q.listMinor).toBe(576_000); // 576k credits × 1¢
-    expect(q.priceMinor).toBe(480_000); // × 10/12
+    expect(q.priceMinor).toBe(480_000); // 576,000 − round(576000×2/12)=96,000
     expect(q.savingsMinor).toBe(96_000);
     expect(q.overEnterprise).toBe(false);
   });
@@ -86,15 +86,24 @@ describe("prepaid bundle brain", () => {
   });
 
   it("applies the 12-for-10 discount at the per-run rate", () => {
-    // 120k credits × 2 minor = 240,000 list; × 10/12 = 200,000 paid.
+    // 120k credits × 2 minor = 240,000 list; minus round(240000×2/12)=40,000 = 200,000 paid.
     expect(bundleListMinor(120_000, 2)).toBe(240_000);
     expect(bundlePriceMinor(120_000, 2)).toBe(200_000);
   });
 
   it("rounds sub-cent rates to the minor unit (HALF_UP)", () => {
-    // 100k × 0.5 = 50,000 list; × 10/12 = 41,666.67 → 41,667.
+    // 100k × 0.5 = 50,000 list; minus round(50000×2/12)=round(8333.33)=8,333 = 41,667.
     expect(bundleListMinor(100_000, 0.5)).toBe(50_000);
     expect(bundlePriceMinor(100_000, 0.5)).toBe(41_667);
+  });
+
+  it("rounds the discount then subtracts, matching the edge fn on exact-half ties", () => {
+    // The mechanism that kills the coupon-rounding drift: round the DISCOUNT and subtract it, not
+    // round the discounted price. On a tie the two differ by a minor unit.
+    // subtotal 3 → discount round(0.5)=1 → 2 (round(3×10/12)=round(2.5)=3 would drift).
+    expect(bundlePriceMinor(3, 1)).toBe(2);
+    // subtotal 9 → discount round(1.5)=2 → 7 (round(9×10/12)=round(7.5)=8 would drift).
+    expect(bundlePriceMinor(9, 1)).toBe(7);
   });
 
   it("returns null money when the rate is unknown or non-positive", () => {
