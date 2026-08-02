@@ -93,38 +93,6 @@ export const useDocumentDatesTips = (): TooltipContent => {
   };
 };
 
-export const useCustomMetadataTips = (): TooltipContent => {
-  const { t } = useTranslation();
-
-  return {
-    header: {
-      title: t("changeMetadata.tooltip.customFields.title", "Custom Metadata"),
-    },
-    tips: [
-      {
-        description: t(
-          "changeMetadata.tooltip.customFields.text",
-          "Add your own custom key-value metadata pairs.",
-        ),
-        bullets: [
-          t(
-            "changeMetadata.tooltip.customFields.bullet1",
-            "Add any custom fields relevant to your document",
-          ),
-          t(
-            "changeMetadata.tooltip.customFields.bullet2",
-            "Examples: Department, Project, Version, Status",
-          ),
-          t(
-            "changeMetadata.tooltip.customFields.bullet3",
-            "Both key and value are required for each entry",
-          ),
-        ],
-      },
-    ],
-  };
-};
-
 export const useAdvancedOptionsTips = (): TooltipContent => {
   const { t } = useTranslation();
 
