@@ -156,6 +156,11 @@
   flex-shrink: 0;
   flex-wrap: wrap;
   min-height: 3rem;
+  /* Safety net - the content should always fit thanks to the shrink rules on
+     `.files-page-toolbar-actions` below, but if a future addition ever breaks
+     that, this stops the action group bleeding into sibling areas (notably the
+     details panel on the right). */
+  overflow-x: hidden;
 }
 
 .files-page-toolbar-info {
@@ -209,13 +214,6 @@
    keeps its width fixed; the rest of the row shrinks around it. */
 .files-page-toolbar-actions .mantine-SegmentedControl-root {
   flex-shrink: 0;
-}
-/* Clip overflow on the toolbar itself as a safety net - the content
-   should always fit thanks to the rules above, but if a future addition
-   ever breaks that, this prevents the action group from bleeding into
-   sibling areas (notably the details panel on the right). */
-.files-page-toolbar {
-  overflow-x: hidden;
 }
 
 .files-page-toolbar-divider {
@@ -1318,9 +1316,6 @@
     margin-left: auto;
     gap: 0.3rem;
     flex-wrap: nowrap;
-  }
-  .files-page-search {
-    flex: 1 1 100%;
   }
   .files-page-breadcrumbs {
     font-size: 0.85rem;
