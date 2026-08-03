@@ -116,6 +116,7 @@ tasks:
 
   test:force:
     desc: "Run backend tests, ignoring cached results"
+    aliases: [test:no-cache]
     cmds:
       - cmd: cmd /c ".\gradlew.bat cleanTest test --no-build-cache"
         platforms: [windows]
