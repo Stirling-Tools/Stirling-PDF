@@ -44,6 +44,9 @@ ext {
     jpdfiumVersion = "1.0.4"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.44.12"
+    jschVersion = "0.2.23"
+    commonsNetVersion = "3.11.1"
+    smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
@@ -292,6 +295,8 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        systemProperty 'java.awt.headless', 'true'
+        systemProperty 'apple.awt.UIElement', 'true'
         finalizedBy(jacocoReport)
     }
 
