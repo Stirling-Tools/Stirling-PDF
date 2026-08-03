@@ -67,6 +67,15 @@ dependencies {
     implementation "software.amazon.awssdk:s3:${rootProject.ext.awsSdkVersion}"
     implementation "software.amazon.awssdk:url-connection-client:${rootProject.ext.awsSdkVersion}"
 
+    // Network policy sources (SFTP/FTP/SMB drop folders). All permissively licensed:
+    // jsch fork BSD, commons-net Apache-2.0, smbj Apache-2.0 (BouncyCastle already on classpath).
+    implementation "com.github.mwiede:jsch:${jschVersion}"
+    implementation "commons-net:commons-net:${commonsNetVersion}"
+    implementation "com.hierynomus:smbj:${smbjVersion}"
+
+    // Streaming AEAD (AES-GCM-HKDF segments) for storage encryption at rest. Apache-2.0.
+    implementation "com.google.crypto.tink:tink:${tinkVersion}"
+
     // @DataJpaTest slice (Boot 4 ships test slices as separate starters, like webmvc-test at the
     // root) so policy.source repositories can be exercised against embedded H2.
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'

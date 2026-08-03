@@ -1254,14 +1254,6 @@ export const ENDPOINTS_BY_PATH: Record<string, Endpoint> = Object.fromEntries(
   ALL_ENDPOINTS.map((e) => [e.endpoint, e]),
 );
 
-/** Lookup a vertical by its key. */
-export const lookupVertical = (key: VerticalKey): Vertical | null =>
-  VERTICALS.find((v) => v.key === key) ?? null;
-
-/** Lookup an endpoint by its route path. */
-export const lookupEndpoint = (path: string): Endpoint | null =>
-  ENDPOINTS_BY_PATH[path] ?? null;
-
 /** Tier-availability gate used by the docs / cards / picker. */
 export function isEndpointAvailable(endpoint: Endpoint, tier: Tier): boolean {
   if (endpoint.tier === 0) return true;

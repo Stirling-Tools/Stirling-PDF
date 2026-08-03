@@ -404,9 +404,6 @@ export const PIPELINE_AGENTS: readonly PipelineAgent[] = [
   },
 ];
 
-export const lookupAgent = (id: string): PipelineAgent | null =>
-  PIPELINE_AGENTS.find((a) => a.id === id) ?? null;
-
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  OP_CATEGORIES — picker section metadata                                 */
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -1301,8 +1298,3 @@ export const DESTINATION_OPTIONS: readonly DestinationOption[] = [
     desc: "Drop output files on an SFTP server",
   },
 ];
-
-export const lookupSource = (id: string) =>
-  SOURCE_OPTIONS.find((s) => s.id === id) ?? null;
-export const lookupDestination = (id: string) =>
-  DESTINATION_OPTIONS.find((d) => d.id === id) ?? null;
