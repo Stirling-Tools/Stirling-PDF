@@ -33,9 +33,3 @@ export function ControlledDealStatusHero({
     />
   );
 }
-
-/**
- * Enterprise on-ramp shown when no deal exists yet. Only used on the dedicated
- * /procurement route — on Home the setup checklist's Enterprise rung owns the
- * on-ramp, so this doesn't render there.
- */

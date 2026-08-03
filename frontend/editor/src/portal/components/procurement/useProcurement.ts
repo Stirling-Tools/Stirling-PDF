@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePortalLinked } from "@portal/contexts/usePortalLinked";
@@ -87,7 +87,7 @@ export interface ProcurementController {
   onDownloadSignedAgreement: () => Promise<void>;
 }
 
-export function useProcurement(autoOpen = false): ProcurementController {
+export function useProcurement(): ProcurementController {
   const { t } = useTranslation();
   const isLinked = usePortalLinked();
 
@@ -280,12 +280,6 @@ export function useProcurement(autoOpen = false): ProcurementController {
       setDownloadingAgreement(false);
     }
   }
-
-  // A deep link (/procurement) opens the flow when a deal is already underway; if there's no deal
-  // yet it must NOT silently start a trial — leave the modal closed so the Start-trial CTA shows.
-  useEffect(() => {
-    if (autoOpen && started) setOpen(true);
-  }, [autoOpen, started]);
 
   return {
     isLinked,

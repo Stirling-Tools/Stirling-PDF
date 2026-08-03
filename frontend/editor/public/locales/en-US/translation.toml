@@ -8350,13 +8350,6 @@ email = "Email intake"
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
 title = "Procurement"
 
-[portal.procurement.action]
-download = "Download"
-pay = "Pay now"
-request = "Request"
-sign = "Review & sign"
-upload = "Upload"
-
 [portal.procurement.agreement]
 agreeCta = "Sign agreement"
 confidential = "Confidential"
@@ -8459,21 +8452,6 @@ volumePlaceholder = "e.g. 1,000,000"
 years_one = "{{count}} year"
 years_other = "{{count}} years"
 
-[portal.procurement.docs]
-count_one = "{{count}} doc"
-count_other = "{{count}} docs"
-done = "Done"
-here = "You're here"
-hide = "Hide"
-optional = "Optional"
-paidAddon = "Paid add-on"
-show = "Show"
-subtitle = "Everything you need at each step of the journey, surfaced as the deal moves through it."
-supportingSubtitle = "SOC 2, security reviews, tax forms and more, ready when your security or procurement team asks. Some carry a one-time fee."
-supportingTitle = "Supporting your evaluation"
-title = "Documents"
-upcoming = "Upcoming"
-
 [portal.procurement.documents]
 agreement = "Enterprise Agreement"
 agreementSub = "MSA, Order Form and DPA in one signature."
@@ -8523,13 +8501,6 @@ sentenceTrial = "set up your trial workspace"
 [portal.procurement.journey]
 daysLeft_one = "{{count}} day left"
 daysLeft_other = "{{count}} days left"
-engineerLabel = "Your solutions engineer"
-eyebrow = "Your rollout"
-live = "You're live on Stirling Enterprise"
-nextStep = "Next step: {{action}}"
-subtitle = "Your solutions engineer is on every step. One next action at a time; the full checklist is below."
-title = "From trial to live, one guided path"
-trialTitle = "Enterprise trial"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "One signature covers MSA, order form, EULA and DPA."
@@ -8578,35 +8549,8 @@ description = "Your subscription is active and your licence is issued. Your team
 eyebrow = "Live"
 title = "You're live on Stirling Enterprise"
 
-[portal.procurement.locked]
-description = "Trial keys, committed-volume quotes, the one-signature agreement, payment, and your document ledger all live here once you start an enterprise evaluation."
-eyebrow = "Enterprise only"
-talkToSales = "Talk to sales"
-title = "The procurement track opens with Enterprise"
-
 [portal.procurement.milestone]
 downloadError = "Could not download the quote PDF just yet — please try again in a moment."
-
-[portal.procurement.modal]
-cancel = "Cancel"
-chooseFile = "Choose file"
-downloadBody = "Your download will begin shortly."
-downloadCta = "Download"
-downloadTitle = "Download"
-noFile = "No file selected"
-payBody = "Pay your committed contract by card or bank transfer through Stripe. Your workspace provisions as soon as payment clears."
-payCta = "Continue to Stripe"
-payTitle = "Confirm payment"
-requestBodyFree = "We generate this on demand. Confirm and your solutions engineer will send it across shortly."
-requestBodyPaid = "This is a paid add-on. Confirm and your solutions engineer will scope it and send the paperwork."
-requestCta = "Request"
-requestTitle = "Request this document"
-signBody = "Opens the Stirling Enterprise Agreement for e-signature: one signature covers the MSA, order form, EULA and DPA. We countersign automatically and you advance to payment."
-signCta = "Open for signature"
-signTitle = "Review and sign your agreement"
-uploadBody = "Send us your PO and we invoice against it on your terms. Drag in the PDF or pick a file below."
-uploadCta = "Upload purchase order"
-uploadTitle = "Upload your purchase order"
 
 [portal.procurement.payment]
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
@@ -8661,13 +8605,6 @@ title = "Set up your trial"
 viewEula = "Read it"
 workEmail = "Work email"
 workEmailPlaceholder = "you@company.com"
-
-[portal.procurement.status]
-action = "Action needed"
-available = "Available"
-complete = "Complete"
-pending = "Pending"
-request = "On request"
 
 [portal.procurement.trial]
 body = "Extending adds 7 days and notifies your solutions engineer."
