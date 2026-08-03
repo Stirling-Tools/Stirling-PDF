@@ -3,13 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Session, User } from "@supabase/supabase-js";
 
 /**
- * Request-count tests for {@link AuthProvider}'s data loading.
- *
- * The provider used to fetch pro status, avatar metadata and the profile
- * picture from two places at once (mount-time init and the SIGNED_IN handler),
- * so a single login fetched everything twice - and Supabase re-fires SIGNED_IN
- * and TOKEN_REFRESHED on token refresh and tab-visibility wakeups, so it kept
- * happening for the life of the session. These tests pin the call counts.
+ * Request-count tests for {@link AuthProvider}'s data loading. It used to fetch
+ * pro status, avatar metadata and the picture from two places at once, and
+ * Supabase re-fires SIGNED_IN on token refresh and tab wakeups, so it kept
+ * happening. These pin the call counts.
  */
 
 type AuthCallback = (event: string, session: Session | null) => void;
@@ -109,10 +106,9 @@ function renderProvider() {
   );
 
   /**
-   * Deliver an auth event and let its work finish. The provider defers handling
-   * with setTimeout(0), so a microtask flush is not enough - without draining
-   * real macrotasks these assertions would run before any refetch and pass
-   * whatever the provider did.
+   * Deliver an auth event and let its work finish. The provider defers with
+   * setTimeout(0), so a microtask flush is not enough: without draining real
+   * macrotasks the assertions run before any refetch and prove nothing.
    */
   const fire = async (event: string, s: Session | null) => {
     await act(async () => {
@@ -200,9 +196,8 @@ describe("AuthProvider user-data loading", () => {
   });
 
   it("clears the initial spinner without waiting for the avatar upload", async () => {
-    // On a first login syncOAuthAvatar downloads, re-encodes and uploads the
-    // provider image. Gating `loading` on that would stall account creation
-    // behind an image upload, so it must settle in the background.
+    // syncOAuthAvatar re-uploads the provider image on a first login. Gating
+    // `loading` on it would stall account creation behind an image upload.
     let releaseSync = () => {};
     syncOAuthAvatar.mockImplementationOnce(
       () =>
@@ -245,9 +240,8 @@ describe("AuthProvider user-data loading", () => {
   });
 
   it("does not drop an upgrade that lands while the guest load is in flight", async () => {
-    // The guest load and the upgrade overlap on a slow connection. Coalescing
-    // on "something is in flight" alone would hand the upgrade the guest's
-    // promise and never fetch the real user's data.
+    // Coalescing on "something is in flight" alone would hand the upgrade the
+    // guest's promise and never fetch the real user's data.
     getSession.mockResolvedValue({
       data: { session: makeSession({ anonymous: true }) },
       error: null,
@@ -294,11 +288,9 @@ describe("AuthProvider user-data loading", () => {
   });
 
   it("keeps the initial spinner up when SIGNED_IN wins the race with initializeAuth", async () => {
-    // initializeAuth is invoked before the listener subscribes but yields at
-    // `await getSession()`, so Supabase can deliver SIGNED_IN first. Marking the
-    // identity loaded up front would then let initializeAuth's await resolve
-    // instantly and clear the spinner while pro status was still in flight -
-    // which is the whole thing awaiting the load is meant to prevent.
+    // initializeAuth yields at `await getSession()`, so SIGNED_IN can land
+    // first. Marking the identity loaded up front would then clear the spinner
+    // while pro status was still in flight.
     const session = makeSession();
 
     let releaseSession = () => {};
@@ -322,8 +314,7 @@ describe("AuthProvider user-data loading", () => {
     await fire("SIGNED_IN", session);
     expect(rpc).toHaveBeenCalledTimes(1);
 
-    // initializeAuth now gets its session and must adopt that in-flight load
-    // rather than short-circuiting on a key that was set before the data landed.
+    // initializeAuth must now adopt that in-flight load, not short-circuit.
     await act(async () => {
       releaseSession();
       await new Promise((resolve) => setTimeout(resolve, 0));
