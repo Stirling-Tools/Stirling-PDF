@@ -182,6 +182,16 @@ class ToolIODeclarationCoverageTest {
     }
 
     @Test
+    void pdfToTextProducesTextOnlyForTheTxtBranch() {
+        // The endpoint serves both formats, and RTF is a word-processor format: declaring the whole
+        // endpoint as TEXT would pass RTF into text tools and reject it from the Word tools that
+        // can actually open it.
+        ToolIOSpec spec = spec("/api/v1/convert/pdf/text");
+        assertEquals(ToolFormat.TEXT, spec.resolveOutput(Map.of("outputFormat", "txt")).format());
+        assertEquals(ToolFormat.WORD, spec.resolveOutput(Map.of("outputFormat", "rtf")).format());
+    }
+
+    @Test
     void onlyRemovePasswordAcceptsAnEncryptedDocument() {
         assertTrue(
                 spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));

@@ -110,7 +110,16 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.PDF_TO_PRESENTATION: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.PPT, arity=ToolArity.SISO
     ),
-    ToolEndpoint.PDF_TO_TEXT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.TEXT, arity=ToolArity.SISO),
+    ToolEndpoint.PDF_TO_TEXT: ToolIOSpec(
+        accepts=[ToolFormat.PDF],
+        produces=ToolFormat.TEXT,
+        arity=ToolArity.SISO,
+        cases=[
+            ToolIOCase(
+                when=[ToolIOWhen(param="outputFormat", matches=["rtf"])], produces=ToolFormat.WORD, arity=ToolArity.SISO
+            )
+        ],
+    ),
     ToolEndpoint.PDF_TO_VECTOR: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_WORD: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.WORD, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_XLSX: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.EXCEL, arity=ToolArity.SISO),

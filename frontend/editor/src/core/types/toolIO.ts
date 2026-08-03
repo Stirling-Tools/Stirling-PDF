@@ -189,6 +189,13 @@ export const TOOL_IO: ToolIOTable = {
     accepts: ["PDF"],
     produces: "TEXT",
     arity: "SISO",
+    cases: [
+      {
+        when: [{ param: "outputFormat", matches: ["rtf"] }],
+        produces: "WORD",
+        arity: "SISO",
+      },
+    ],
   },
   "/api/v1/convert/pdf/vector": {
     accepts: ["PDF"],
