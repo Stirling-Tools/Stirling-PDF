@@ -1,6 +1,7 @@
+import { useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { fetchGroupEnabled } from "@core/hooks/useGroupEnabled";
+import { fetchGroupEnabled } from "@app/api/config";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { qk } from "@app/query/keys";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
@@ -9,18 +10,21 @@ import type { GroupEnabledResult } from "@app/types/groupEnabled";
 const OFFLINE_REASON_FALLBACK =
   "Requires your Stirling-PDF server (currently offline)";
 
+// Selects a boolean, not the monitor's state object — that object is
+// reassigned on every poll, so useSyncExternalStore would see a new snapshot
+// each tick and re-render.
+const subscribeToMonitor = (onChange: () => void) =>
+  selfHostedServerMonitor.subscribe(onChange);
+const getIsOffline = () =>
+  selfHostedServerMonitor.getSnapshot().status === "offline";
+
 /**
  * Desktop override: skips the network request entirely when the self-hosted
  * server is confirmed offline, returning a reason string matching the tool panel.
- *
- * The monitor snapshot is read during render (as before) rather than
- * subscribed to, so a server going offline mid-session doesn't retroactively
- * disable an already-rendered panel — same behaviour as the effect-based
- * version this replaces.
  */
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { t } = useTranslation();
-  const isOffline = selfHostedServerMonitor.getSnapshot().status === "offline";
+  const isOffline = useSyncExternalStore(subscribeToMonitor, getIsOffline);
 
   const { data, isPending } = useQuery({
     queryKey: qk.groupEnabled(group),

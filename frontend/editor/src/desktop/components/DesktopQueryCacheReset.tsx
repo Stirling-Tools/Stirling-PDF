@@ -1,33 +1,47 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { connectionModeService } from "@app/services/connectionModeService";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 
 /**
- * Drops the whole query cache whenever the connection mode changes.
+ * Discards cached responses when the backend they came from stops being the one
+ * the app talks to.
  *
- * Query caches by key. On desktop a key does not pin a backend: operationRouter
- * resolves the same relative path to the local bundled backend, a self-hosted
- * server or the SaaS backend depending on the current mode. So after a mode
- * switch every cached entry may describe a backend the app is no longer talking
- * to — app-config, endpoint availability and capability flags all differ per
- * backend. Web cannot hit this; it talks to one backend for the session.
+ * Query caches by key, but on desktop a key does not pin a backend:
+ * operationRouter resolves the same relative path to the local bundled backend,
+ * a self-hosted server or the SaaS backend. Two things move that target — an
+ * explicit connection-mode switch, and the self-hosted server going up or down,
+ * which reroutes endpoints to the local fallback with no mode event.
  *
- * Clearing wholesale rather than invalidating selectively is deliberate: a mode
- * switch already remounts the SaaS provider tree (see the appKey counter in
- * AppProviders), so there is nothing to preserve, and an allowlist of
- * "mode-sensitive" keys would be a standing maintenance trap — every new query
- * would have to remember to join it.
- *
- * Must render inside the QueryClientProvider (i.e. as a child of the core
- * AppProviders), not in the desktop AppProviders body, which sits above it.
+ * resetQueries rather than clear(): clear() evicts entries without notifying
+ * mounted observers, so a panel keeps rendering the old backend's answer until
+ * something unrelated re-renders it. resetQueries notifies and refetches what is
+ * on screen.
  */
 export function DesktopQueryCacheReset() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    return connectionModeService.subscribeToModeChanges(() => {
-      queryClient.clear();
-    });
+    const reset = () => void queryClient.resetQueries();
+
+    const unsubscribeMode = connectionModeService.subscribeToModeChanges(reset);
+
+    // Only offline↔reachable matters — the monitor also emits idle and
+    // checking, and subscribe() replays current state on attach.
+    let wasOffline: boolean | null = null;
+    const unsubscribeServer = selfHostedServerMonitor.subscribe(
+      ({ status }) => {
+        const isOffline = status === "offline";
+        const flipped = wasOffline !== null && wasOffline !== isOffline;
+        wasOffline = isOffline;
+        if (flipped) reset();
+      },
+    );
+
+    return () => {
+      unsubscribeMode();
+      unsubscribeServer();
+    };
   }, [queryClient]);
 
   return null;

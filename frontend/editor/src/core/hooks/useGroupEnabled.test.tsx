@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { TestQueryProvider } from "@app/testing/TestQueryProvider";
+import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { useGroupEnabled } from "@app/hooks/useGroupEnabled";
-import apiClient from "@app/services/apiClient";
+import { fetchGroupEnabled } from "@app/api/config";
 
-vi.mock("@app/services/apiClient", () => ({
-  default: { get: vi.fn() },
-}));
+vi.mock("@app/api/config", () => ({ fetchGroupEnabled: vi.fn() }));
 
-const mockGet = vi.mocked(apiClient.get);
+const mockFetch = vi.mocked(fetchGroupEnabled);
 
 describe("useGroupEnabled", () => {
   beforeEach(() => {
@@ -16,7 +14,7 @@ describe("useGroupEnabled", () => {
   });
 
   it("reports null while loading, then the server's answer", async () => {
-    mockGet.mockResolvedValue({ data: true } as never);
+    mockFetch.mockResolvedValue(true);
 
     const { result } = renderHook(() => useGroupEnabled("ImageMagick"), {
       wrapper: TestQueryProvider,
@@ -24,13 +22,11 @@ describe("useGroupEnabled", () => {
 
     expect(result.current.enabled).toBeNull();
     await waitFor(() => expect(result.current.enabled).toBe(true));
-    expect(mockGet).toHaveBeenCalledWith(
-      "/api/v1/config/group-enabled?group=ImageMagick",
-    );
+    expect(mockFetch).toHaveBeenCalledWith("ImageMagick");
   });
 
   it("reads a failed check as disabled", async () => {
-    mockGet.mockRejectedValue(new Error("boom"));
+    mockFetch.mockRejectedValue(new Error("boom"));
 
     const { result } = renderHook(() => useGroupEnabled("ImageMagick"), {
       wrapper: TestQueryProvider,
@@ -40,7 +36,7 @@ describe("useGroupEnabled", () => {
   });
 
   it("serves a second consumer of the same group from cache", async () => {
-    mockGet.mockResolvedValue({ data: true } as never);
+    mockFetch.mockResolvedValue(true);
 
     const { result } = renderHook(
       () => ({
@@ -52,12 +48,12 @@ describe("useGroupEnabled", () => {
 
     await waitFor(() => expect(result.current.a.enabled).toBe(true));
     expect(result.current.b.enabled).toBe(true);
-    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it("keeps distinct groups on distinct keys", async () => {
-    mockGet.mockImplementation((url: string) =>
-      Promise.resolve({ data: url.endsWith("ImageMagick") } as never),
+    mockFetch.mockImplementation((group: string) =>
+      Promise.resolve(group === "ImageMagick"),
     );
 
     const { result } = renderHook(
@@ -70,6 +66,6 @@ describe("useGroupEnabled", () => {
 
     await waitFor(() => expect(result.current.magick.enabled).toBe(true));
     await waitFor(() => expect(result.current.calibre.enabled).toBe(false));
-    expect(mockGet).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,35 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import apiClient from "@app/services/apiClient";
+import { fetchFooterInfo, type FooterInfo } from "@app/api/config";
 import { qk } from "@app/query/keys";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 
-export interface FooterInfo {
-  analyticsEnabled?: boolean;
-  termsAndConditions?: string;
-  privacyPolicy?: string;
-  accessibilityStatement?: string;
-  cookiePolicy?: string;
-  impressum?: string;
-}
+export type { FooterInfo };
 
 /** Analytics off is the safe read when the server can't be asked. */
 const FALLBACK: FooterInfo = { analyticsEnabled: false };
 
-async function fetchFooterInfo(): Promise<FooterInfo> {
-  const response = await apiClient.get<FooterInfo>(
-    "/api/v1/ui-data/footer-info",
-    {
-      suppressErrorToast: true,
-    } as never,
-  );
-  return response.data;
-}
-
 /**
- * Public footer configuration. Always accessible without authentication.
- *
- * Shared between the footer and the admin legal section, so the two mount
- * sites now resolve to one request instead of two.
+ * Public footer configuration. Two mount sites (Footer, admin LegalSection)
+ * share one cache entry.
  */
 export function useFooterInfo() {
   const { data, isPending, error } = useQuery({
@@ -39,8 +20,7 @@ export function useFooterInfo() {
   });
 
   return {
-    // Callers read legal links off this, so a failure must still yield an
-    // object — preserves the previous fall-back-to-analytics-off behaviour.
+    // Callers read legal links off this, so a failure must still yield an object.
     footerInfo: data ?? (error ? FALLBACK : null),
     loading: isPending,
     error: (error as Error | null) ?? null,

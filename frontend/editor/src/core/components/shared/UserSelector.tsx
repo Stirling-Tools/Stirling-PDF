@@ -5,8 +5,7 @@ import { MultiSelect, Loader, Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { alert } from "@app/components/toast";
-import { UserSummary } from "@app/types/signingSession";
-import apiClient from "@app/services/apiClient";
+import { fetchUsers } from "@app/api/users";
 import { useAuth } from "@app/auth/UseSession";
 import { qk } from "@app/query/keys";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
@@ -22,11 +21,6 @@ interface UserSelectorProps {
 type SelectItem = { value: string; label: string };
 type GroupedData = { group: string; items: SelectItem[] };
 
-async function fetchUsers(): Promise<UserSummary[]> {
-  const response = await apiClient.get<UserSummary[]>("/api/v1/user/users");
-  return response.data || [];
-}
-
 const UserSelector = ({
   value,
   onChange,
@@ -39,8 +33,6 @@ const UserSelector = ({
   const navigate = useNavigate();
   const [stringValue, setStringValue] = useState<string[]>([]);
 
-  // Shared across every mount site (participant pickers, the policy wizard),
-  // so opening a second one reuses the roster instead of re-fetching it.
   const {
     data: users,
     isPending: loading,
@@ -49,7 +41,6 @@ const UserSelector = ({
 
   useEffect(() => {
     if (!error) return;
-    console.error("Failed to load users:", error);
     alert({
       alertType: "error",
       title: t("common.error"),
@@ -57,7 +48,6 @@ const UserSelector = ({
     });
   }, [error, t]);
 
-  // Group by team, dropping the current user and the internal team.
   const selectData = useMemo<GroupedData[]>(() => {
     const usersByTeam: Record<string, SelectItem[]> = {};
     const currentUserId = user?.id ? parseInt(user.id, 10) : null;

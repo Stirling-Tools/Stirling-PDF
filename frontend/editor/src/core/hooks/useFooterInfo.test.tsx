@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { TestQueryProvider } from "@app/testing/TestQueryProvider";
+import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { useFooterInfo } from "@app/hooks/useFooterInfo";
-import apiClient from "@app/services/apiClient";
+import { fetchFooterInfo } from "@app/api/config";
 
-vi.mock("@app/services/apiClient", () => ({
-  default: { get: vi.fn() },
-}));
+vi.mock("@app/api/config", () => ({ fetchFooterInfo: vi.fn() }));
 
-const mockGet = vi.mocked(apiClient.get);
+const mockFetch = vi.mocked(fetchFooterInfo);
 
 describe("useFooterInfo", () => {
   beforeEach(() => {
@@ -16,9 +14,10 @@ describe("useFooterInfo", () => {
   });
 
   it("returns the server's footer config", async () => {
-    mockGet.mockResolvedValue({
-      data: { analyticsEnabled: true, privacyPolicy: "/privacy" },
-    } as never);
+    mockFetch.mockResolvedValue({
+      analyticsEnabled: true,
+      privacyPolicy: "/privacy",
+    });
 
     const { result } = renderHook(() => useFooterInfo(), {
       wrapper: TestQueryProvider,
@@ -33,7 +32,7 @@ describe("useFooterInfo", () => {
   });
 
   it("falls back to analytics-off rather than null when the fetch fails", async () => {
-    mockGet.mockRejectedValue(new Error("offline"));
+    mockFetch.mockRejectedValue(new Error("offline"));
 
     const { result } = renderHook(() => useFooterInfo(), {
       wrapper: TestQueryProvider,
@@ -44,7 +43,7 @@ describe("useFooterInfo", () => {
   });
 
   it("shares one request between the footer and the legal section", async () => {
-    mockGet.mockResolvedValue({ data: { analyticsEnabled: false } } as never);
+    mockFetch.mockResolvedValue({ analyticsEnabled: false });
 
     const { result } = renderHook(
       () => ({ footer: useFooterInfo(), legal: useFooterInfo() }),
@@ -52,6 +51,6 @@ describe("useFooterInfo", () => {
     );
 
     await waitFor(() => expect(result.current.footer.loading).toBe(false));
-    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });

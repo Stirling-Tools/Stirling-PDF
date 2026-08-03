@@ -1,11 +1,11 @@
 /**
- * staleTime for server capability and config lookups — values that only change
- * when an admin changes them, so they're worth holding for a whole session.
+ * staleTime for server capability and config lookups. A web build talks to one
+ * backend for its whole life and these only change when an admin changes them,
+ * which already requires a restart to take effect.
  *
- * Web builds talk to exactly one backend for the app's lifetime, so `Infinity`
- * is safe: the only thing that can invalidate these is an auth change, and that
- * is wired explicitly rather than left to a timer.
+ * Only use this for values that are the same for every user — nothing
+ * auth-scoped. There is no invalidation on login/logout yet.
  *
- * Desktop shadows this file — see desktop/query/staleTime.ts for why.
+ * Desktop shadows this file; it cannot assume a single backend.
  */
 export const CONFIG_STALE_TIME = Infinity;

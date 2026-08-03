@@ -312,6 +312,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
           autoFetch: false,
         }}
       >
+        {/* Also mounted here: the auth check below switches connection mode
+            before authChecked flips, and those switches must not be missed. */}
+        <DesktopQueryCacheReset />
         <div style={{ minHeight: "100vh" }} />
         {updatePopupModal}
       </ProprietaryAppProviders>
@@ -337,10 +340,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
             window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
         }}
       >
+        <DesktopQueryCacheReset />
         <SaaSTeamProvider key={appKey}>
-          {/* Query cache is keyed by resource, not by backend — drop it when the
-              mode switch changes which backend those keys resolve to. */}
-          <DesktopQueryCacheReset />
           <DesktopConfigSync />
           <DesktopBannerInitializer />
           <SaveShortcutListener />
