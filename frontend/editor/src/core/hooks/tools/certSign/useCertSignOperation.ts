@@ -68,6 +68,19 @@ const withSignatureAppearance = (
     apiParams.name = parameters.name;
     apiParams.pageNumber = parameters.pageNumber;
     apiParams.showLogo = parameters.showLogo;
+
+    // Only sent when the user actually placed a box. Omitting these keeps the
+    // backend's original placement, so the tool still works without drawing one.
+    const area = parameters.signatureArea;
+    if (area) {
+      apiParams.signatureX = area.x;
+      apiParams.signatureY = area.y;
+      apiParams.signatureWidth = area.width;
+      apiParams.signatureHeight = area.height;
+    }
+    if (parameters.visibleAttributes.length > 0) {
+      apiParams.visibleAttributes = parameters.visibleAttributes;
+    }
   }
   return apiParams;
 };
@@ -122,6 +135,25 @@ export const certSignFromApiParams = (
     result.pageNumber = apiParams.pageNumber;
   }
   if (apiParams.showLogo !== undefined) result.showLogo = apiParams.showLogo;
+
+  // A stored step only carries a box if all four values are present; a partial one
+  // would silently reposition the signature somewhere the author never chose.
+  if (
+    apiParams.signatureX !== undefined &&
+    apiParams.signatureY !== undefined &&
+    apiParams.signatureWidth !== undefined &&
+    apiParams.signatureHeight !== undefined
+  ) {
+    result.signatureArea = {
+      x: apiParams.signatureX,
+      y: apiParams.signatureY,
+      width: apiParams.signatureWidth,
+      height: apiParams.signatureHeight,
+    };
+  }
+  if (apiParams.visibleAttributes !== undefined) {
+    result.visibleAttributes = apiParams.visibleAttributes;
+  }
 
   return result;
 };

@@ -1,7 +1,11 @@
-import { Stack, Text, TextInput, NumberInput } from "@mantine/core";
+import { useMemo } from "react";
+import { Stack, Text, TextInput, NumberInput, Divider } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import { useAllFiles } from "@app/contexts/FileContext";
+import SignaturePlacementPicker from "@app/components/tools/certSign/SignaturePlacementPicker";
+import SignatureAttributePicker from "@app/components/tools/certSign/SignatureAttributePicker";
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
@@ -15,6 +19,13 @@ const SignatureAppearanceSettings = ({
   disabled = false,
 }: SignatureAppearanceSettingsProps) => {
   const { t } = useTranslation();
+  const { files, fileStubs } = useAllFiles();
+
+  const selectedFile = useMemo(() => (files.length > 0 ? files[0] : null), [files]);
+  const selectedStub = useMemo(
+    () => (fileStubs.length > 0 ? fileStubs[0] : null),
+    [fileStubs],
+  );
 
   return (
     <Stack gap="md">
@@ -156,6 +167,30 @@ const SignatureAppearanceSettings = ({
               </Button>
             </div>
           </Stack>
+
+          <Divider />
+
+          <SignaturePlacementPicker
+            file={selectedFile}
+            fileStub={selectedStub}
+            thumbnailUrl={selectedStub?.thumbnailUrl ?? null}
+            pageNumber={parameters.pageNumber}
+            signatureArea={parameters.signatureArea}
+            onSignatureAreaChange={(area) =>
+              onParameterChange("signatureArea", area)
+            }
+            disabled={disabled}
+          />
+
+          <Divider />
+
+          <SignatureAttributePicker
+            selected={parameters.visibleAttributes}
+            onChange={(selected) =>
+              onParameterChange("visibleAttributes", selected)
+            }
+            disabled={disabled}
+          />
         </Stack>
       )}
     </Stack>

@@ -2255,6 +2255,32 @@ visible = "Visible"
 [certSign.appearance.options]
 title = "Detalles de la firma"
 
+[certSign.attributes]
+issuerCommonName = "Emitido por"
+issuerOrganisation = "Organización emisora"
+hint = "Los campos que no contenga tu certificado se omiten automáticamente."
+location = "Lugar"
+reason = "Motivo"
+reset = "Restablecer"
+serialNumber = "Número de serie"
+signatureAlgorithm = "Algoritmo de firma"
+signingTime = "Fecha de firma"
+subjectCommonName = "Nombre del firmante"
+subjectCountry = "País"
+subjectEmail = "Correo electrónico"
+subjectOrganisation = "Organización"
+subjectOrganisationalUnit = "Unidad organizativa"
+title = "Campos que aparecerán en la firma"
+validFrom = "Válido desde"
+validUntil = "Válido hasta"
+
+[certSign.placement]
+coordinates = "x {{x}}, y {{y}} · {{width}} × {{height}} pt"
+hint = "Arrastra sobre la página para colocar la firma. El texto se ajusta al recuadro que dibujes."
+noFile = "Selecciona un PDF para elegir dónde va la firma."
+reset = "Usar la posición predeterminada"
+title = "Posición de la firma"
+
 [certSign.appearance.tooltip.header]
 title = "Acerca de la apariencia de firma"
 

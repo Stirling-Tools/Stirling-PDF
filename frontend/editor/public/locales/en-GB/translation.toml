@@ -2255,6 +2255,32 @@ visible = "Visible"
 [certSign.appearance.options]
 title = "Signature Details"
 
+[certSign.attributes]
+issuerCommonName = "Issued by"
+issuerOrganisation = "Issuer organisation"
+hint = "Fields your certificate does not contain are skipped automatically."
+location = "Location"
+reason = "Reason"
+reset = "Reset"
+serialNumber = "Serial number"
+signatureAlgorithm = "Signature algorithm"
+signingTime = "Signing date"
+subjectCommonName = "Signer name"
+subjectCountry = "Country"
+subjectEmail = "Email"
+subjectOrganisation = "Organisation"
+subjectOrganisationalUnit = "Organisational unit"
+title = "Fields to show in the signature"
+validFrom = "Valid from"
+validUntil = "Valid until"
+
+[certSign.placement]
+coordinates = "x {{x}}, y {{y}} · {{width}} × {{height}} pt"
+hint = "Drag on the page to place the signature. The text scales to fit the box you draw."
+noFile = "Select a PDF to choose where the signature goes."
+reset = "Use the default position"
+title = "Signature position"
+
 [certSign.appearance.tooltip.header]
 title = "About Signature Appearance"
 
