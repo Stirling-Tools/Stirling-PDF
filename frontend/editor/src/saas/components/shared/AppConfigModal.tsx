@@ -31,6 +31,8 @@ interface AppConfigModalProps {
   urlSync?: boolean;
   /** Section to land on when opening (used by non-URL hosts like the portal). */
   initialSection?: NavKey | null;
+  /** Accepted for interface parity with the core shell; this shell ignores it. */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the saas registry sections. */
   extraSections?: ConfigNavSection[];
 }

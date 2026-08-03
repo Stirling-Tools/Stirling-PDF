@@ -3888,8 +3888,6 @@ openFromComputer = "Open from computer"
 openSettings = "Open settings"
 other = "Other"
 recent = "Recent"
-search = "Search"
-searchPlaceholder = "Search files..."
 viewAll = "View all {{count}} files"
 
 [fileSidebar.fileItem]
@@ -3918,7 +3916,6 @@ backToMyFiles = "Back to My Files"
 breadcrumbs = "Folder path"
 cancel = "Cancel"
 classification = "Classification"
-clearSearch = "Clear search"
 clearSelection = "Clear selection"
 closeDetails = "Close details"
 create = "Create"
@@ -3982,8 +3979,6 @@ resizeFolderTree = "Resize folder tree (arrow keys, Shift for bigger steps; doub
 save = "Save"
 saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
-search = "Search"
-searchPlaceholder = "Search this folder & subfolders"
 selectAll = "Select all"
 selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
 selectedCount = "{{count}} selected"
@@ -4042,6 +4037,10 @@ title = "No cloud files yet"
 [filesPage.empty.local]
 hint = "Files saved without uploading stay here. Drop a file to add one."
 title = "No local-only files"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Files you open or edit will appear here."
@@ -4113,6 +4112,11 @@ local = "Local"
 localHint = "Only stored in this browser"
 shared = "Shared"
 sharedHint = "Shared with you via link"
+
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
 
 [filesPage.sort]
 modifiedAsc = "Oldest first"
@@ -5001,9 +5005,6 @@ title = "Upload from Mobile"
 [multiTool]
 tags = "Multi Tool,Multi operation,UI,click drag,front end,client side,interactive,intractable,move,delete,migrate,divide"
 title = "PDF Multi Tool"
-
-[navbar]
-search = "Search"
 
 [oauth.error]
 message = "Authentication was not successful. You can close this window and try again."
@@ -7021,11 +7022,6 @@ title = "Official SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.search]
-empty = "No matching docs"
-placeholder = "Search docs"
-results = "{{count}} results"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
@@ -8631,16 +8627,6 @@ homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutab
 homeCta = "Start Trial →"
 homeHeadline = "Process millions of PDFs."
 
-[portal.search]
-ariaLabel = "Search"
-placeholder = "Search Stirling — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "Quick actions will appear here once they're available."
-noActionsTitle = "No quick actions"
-noMatches = "No matches for \"{{query}}\""
-noMatchesDescription = "Try a different keyword or browse the catalogue."
-
 [portal.settings.groups]
 admin = "Admin"
 
@@ -9872,9 +9858,6 @@ title = "Policies & Privacy"
 [settings.preferences]
 title = "Preferences"
 
-[settings.search]
-placeholder = "Search settings pages..."
-
 [settings.security]
 description = "Update your password to keep your account secure."
 title = "Security"
@@ -10516,6 +10499,23 @@ success = "Uploaded to server"
 title = "Upload to Server"
 updateButton = "Update on Server"
 uploadButton = "Upload to Server"
+
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
 
 [survey]
 title = "Stirling-PDF Survey"
@@ -11510,6 +11510,7 @@ exitRedaction = "Exit Redaction Mode"
 exportAll = "Export PDF"
 exportSelected = "Export Selected Pages"
 formFill = "Fill Form"
+hideToolbar = "Hide toolbar"
 multiTool = "Multi-Tool"
 panMode = "Pan Mode"
 print = "Print PDF"
@@ -11529,6 +11530,7 @@ selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
 selectLanguage = "Select language"
 share = "Share"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Toggle Annotations Visibility"
 toggleAttachments = "Toggle Attachments"
 toggleBookmarks = "Toggle Bookmarks"

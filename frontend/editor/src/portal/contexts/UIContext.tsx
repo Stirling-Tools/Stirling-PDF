@@ -7,11 +7,6 @@ import {
 } from "react";
 
 interface UIContextValue {
-  searchOpen: boolean;
-  openSearch: () => void;
-  closeSearch: () => void;
-  toggleSearch: () => void;
-
   /** Off-canvas sidebar drawer on small screens (no-op chrome on desktop). */
   mobileNavOpen: boolean;
   openMobileNav: () => void;
@@ -30,7 +25,8 @@ interface UIContextValue {
    * modal pick its own default. Cleared back to `null` on close.
    */
   settingsInitialSection: string | null;
-  openSettings: (section?: string) => void;
+  settingsInitialFocus: string | null;
+  openSettings: (section?: string, focus?: string) => void;
   closeSettings: () => void;
 
   /**
@@ -53,11 +49,13 @@ interface UIContextValue {
 const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
+    string | null
+  >(null);
+  const [settingsInitialFocus, setSettingsInitialFocus] = useState<
     string | null
   >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
@@ -70,16 +68,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<UIContextValue>(
     () => ({
-      // Opening any overlay (search, settings, link modal) dismisses the mobile
-      // nav drawer so overlays never stack on top of it.
-      searchOpen,
-      openSearch: () => {
-        setMobileNavOpen(false);
-        setSearchOpen(true);
-      },
-      closeSearch: () => setSearchOpen(false),
-      toggleSearch: () => setSearchOpen((o) => !o),
-
+      // Opening any overlay (settings, link modal) dismisses the mobile nav
+      // drawer so overlays never stack on top of it.
       mobileNavOpen,
       openMobileNav: () => setMobileNavOpen(true),
       closeMobileNav: () => setMobileNavOpen(false),
@@ -92,14 +82,17 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       settingsOpen,
       settingsInitialSection,
-      openSettings: (section?: string) => {
+      settingsInitialFocus,
+      openSettings: (section?: string, focus?: string) => {
         setMobileNavOpen(false);
         setSettingsInitialSection(section ?? null);
+        setSettingsInitialFocus(focus ?? null);
         setSettingsOpen(true);
       },
       closeSettings: () => {
         setSettingsOpen(false);
         setSettingsInitialSection(null);
+        setSettingsInitialFocus(null);
       },
 
       linkModalOpen,
@@ -113,6 +106,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
           setReopenSettingsAfterLink("account-link");
           setSettingsOpen(false);
           setSettingsInitialSection(null);
+          setSettingsInitialFocus(null);
         }
         setLinkModalOpen(true);
       },
@@ -121,17 +115,18 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setLinkModalMode("link");
         if (reopenSettingsAfterLink) {
           setSettingsInitialSection(reopenSettingsAfterLink);
+          setSettingsInitialFocus(null);
           setSettingsOpen(true);
           setReopenSettingsAfterLink(null);
         }
       },
     }),
     [
-      searchOpen,
       mobileNavOpen,
       assistantOpen,
       settingsOpen,
       settingsInitialSection,
+      settingsInitialFocus,
       linkModalOpen,
       linkModalMode,
       reopenSettingsAfterLink,

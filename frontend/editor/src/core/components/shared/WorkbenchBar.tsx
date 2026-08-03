@@ -1,6 +1,6 @@
 import React, {
   useCallback,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -32,6 +32,8 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
@@ -52,6 +54,7 @@ import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutl
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import "@app/components/shared/WorkbenchBar.css";
 
@@ -67,6 +70,10 @@ interface WorkbenchBarProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
   hasFiles: boolean;
+  /** Whether the viewer's tool row is currently retracted. */
+  viewerToolbarCollapsed?: boolean;
+  /** Setter for the viewer tool-row retract state (owned by Workbench). */
+  onCollapseViewerToolbar?: (collapsed: boolean) => void;
 }
 
 function renderWithTooltip(
@@ -91,9 +98,12 @@ export default function WorkbenchBar({
   currentView,
   setCurrentView,
   hasFiles,
+  viewerToolbarCollapsed = false,
+  onCollapseViewerToolbar,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const searchScopes = useEditorSearchScopes();
   const returnRoute = useSyncExternalStore(
     subscribeFilesPageReturnRoute,
     getFilesPageReturnRoute,
@@ -114,6 +124,7 @@ export default function WorkbenchBar({
   } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
+  const isViewer = currentView === "viewer";
   const disableForFullscreen =
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
@@ -434,34 +445,47 @@ export default function WorkbenchBar({
       })),
   ];
 
+  // Reflow the top row by content width: when the views + globals leave too
+  // little room for a usable search, bump the search to its own row
   const barRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     const bar = barRef.current;
     if (!bar) return;
-
+    const MIN_SEARCH_WIDTH = 320;
     const measure = () => {
       const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
       const globalsEl = bar.querySelector<HTMLElement>(
         ".workbench-bar-globals",
       );
-      const centerEl = bar.querySelector<HTMLElement>(".workbench-bar-center");
-
       const viewsWidth = viewsEl?.offsetWidth ?? 0;
       const globalsWidth = globalsEl?.offsetWidth ?? 0;
-      const centerChildren = centerEl
-        ? (Array.from(centerEl.children) as HTMLElement[])
-        : [];
-      const centerWidth =
-        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) +
-        Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
-
-      const needed = viewsWidth + centerWidth + globalsWidth + 24; // 24px bar padding
-      bar.dataset.wrapped = String(needed > bar.clientWidth);
+      // clientWidth minus the two side clusters, the bar's 16px h-padding and
+      // the two 8px column gaps flanking the search.
+      const available = bar.clientWidth - viewsWidth - globalsWidth - 16 - 16;
+      const wrapped = available < MIN_SEARCH_WIDTH;
+      bar.dataset.wrapped = String(wrapped);
+      // Centre the search on the bar rather than its slot — clamped to the
+      // slot's spare width, because the shift is a transform (no layout) and
+      // an unclamped value would paint the pill over the adjacent cluster.
+      const slotEl = bar.querySelector<HTMLElement>(".workbench-bar-search");
+      const pillEl = slotEl?.querySelector<HTMLElement>(".super-search");
+      const slack = Math.max(
+        0,
+        ((slotEl?.offsetWidth ?? 0) - (pillEl?.offsetWidth ?? 0)) / 2,
+      );
+      const centred = (globalsWidth - viewsWidth) / 2;
+      const offset = Math.min(slack, Math.max(-slack, centred));
+      bar.style.setProperty(
+        "--workbench-bar-search-offset",
+        wrapped ? "0px" : `${offset}px`,
+      );
     };
-
     const ro = new ResizeObserver(measure);
     ro.observe(bar);
+    const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
+    const globalsEl = bar.querySelector<HTMLElement>(".workbench-bar-globals");
+    if (viewsEl) ro.observe(viewsEl);
+    if (globalsEl) ro.observe(globalsEl);
     measure();
     return () => ro.disconnect();
   }, []);
@@ -470,7 +494,7 @@ export default function WorkbenchBar({
     <div
       ref={barRef}
       className="workbench-bar"
-      data-wrapped="true"
+      data-wrapped="false"
       data-tour="workbench-bar"
     >
       {/* Left: optional "Back to My Files" + view switcher */}
@@ -523,27 +547,50 @@ export default function WorkbenchBar({
         )}
       </div>
 
-      {/* Tool buttons - second row, only rendered when buttons exist */}
-      {sectionsWithButtons.length > 0 && (
-        <div className="workbench-bar-center">
-          {sectionsWithButtons.map(
-            ({ section, buttons: sectionButtons }, idx) => (
-              <React.Fragment key={section}>
-                {idx > 0 && <div className="workbench-bar-divider" />}
-                {sectionButtons.map((btn) => {
-                  const content = renderButton(btn);
-                  if (!content) return null;
-                  return (
-                    <div key={btn.id} className="workbench-bar-action-wrapper">
-                      {content}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ),
-          )}
-        </div>
-      )}
+      {/* Global super search - always present, even on the homepage */}
+      <div className="workbench-bar-search">
+        <SuperSearch scopes={searchScopes} />
+      </div>
+
+      {/* Tool buttons - second row, only rendered when buttons exist. In the
+          viewer the row is retractable: a handle on its right edge hides the
+          whole row; Workbench then shows a tab below the bar to bring it back. */}
+      {sectionsWithButtons.length > 0 &&
+        !(isViewer && viewerToolbarCollapsed) && (
+          <div className="workbench-bar-center">
+            {sectionsWithButtons.map(
+              ({ section, buttons: sectionButtons }, idx) => (
+                <React.Fragment key={section}>
+                  {idx > 0 && <div className="workbench-bar-divider" />}
+                  {sectionButtons.map((btn) => {
+                    const content = renderButton(btn);
+                    if (!content) return null;
+                    return (
+                      <div
+                        key={btn.id}
+                        className="workbench-bar-action-wrapper"
+                      >
+                        {content}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ),
+            )}
+            {isViewer && onCollapseViewerToolbar && (
+              <Button
+                type="button"
+                variant="quiet"
+                className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-retract"
+                onClick={() => onCollapseViewerToolbar(true)}
+                aria-expanded
+                aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
+                title={t("workbenchBar.hideToolbar", "Hide toolbar")}
+                leftSection={<KeyboardArrowUpIcon sx={{ fontSize: "1rem" }} />}
+              />
+            )}
+          </div>
+        )}
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">

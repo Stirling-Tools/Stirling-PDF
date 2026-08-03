@@ -72,6 +72,13 @@ interface AuthContextType {
   refreshProStatus: () => Promise<void>;
   refreshProfilePicture: () => Promise<void>;
   refreshProfilePictureMetadata: () => Promise<void>;
+  /**
+   * Session-level permission flags (see the core auth seam). Supabase
+   * sessions don't carry them — consumers treat undefined as "not granted"
+   * and fall back to app-config gates.
+   */
+  isAdmin?: boolean;
+  portalAccess?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
