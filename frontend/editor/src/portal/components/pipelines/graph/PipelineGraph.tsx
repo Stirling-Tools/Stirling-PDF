@@ -151,10 +151,18 @@ export function PipelineGraph({
     onSelect({ steps: [index] });
   }
 
-  // Delete removes every selected step. Scoped to the graph, so typing in the inspector's fields is
-  // never intercepted.
+  /**
+   * Delete removes whatever is selected: every selected step, or an end of the chain (which returns
+   * its row to a placeholder, exactly as that node's X does). Scoped to the graph, so typing in the
+   * inspector's fields is never intercepted.
+   */
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Delete" && event.key !== "Backspace") return;
+    if (selected === "input" || selected === "output") {
+      event.preventDefault();
+      onRemoveEnd(selected);
+      return;
+    }
     if (chosen.length === 0) return;
     event.preventDefault();
     onRemoveSteps(chosen);

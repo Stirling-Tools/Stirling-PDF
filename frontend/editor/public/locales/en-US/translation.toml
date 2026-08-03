@@ -7836,7 +7836,7 @@ source-mismatch = "Needs {{accepts}}, but this pipeline's input is {{produced}}"
 undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.composer]
-addTool = "Add tool"
+addTool = "Add a tool"
 cancel = "Cancel"
 create = "Create pipeline"
 editingUnsupported = "Displaying these tool params for editing is not supported yet."

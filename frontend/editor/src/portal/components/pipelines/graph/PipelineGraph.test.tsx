@@ -240,10 +240,19 @@ describe("PipelineGraph", () => {
     expect(handlers.onRemoveSteps).toHaveBeenCalledWith([0, 1]);
   });
 
-  it("ignores Delete when an end of the chain is selected", () => {
+  it("takes a selected end off the chain with the Delete key, like its X does", () => {
     const handlers = renderGraph({ selected: "input" });
     fireEvent.keyDown(screen.getByText("Claims intake"), { key: "Delete" });
+    expect(handlers.onRemoveEnd).toHaveBeenCalledWith("input");
+    // An end is not a step, so the step remover stays out of it.
     expect(handlers.onRemoveSteps).not.toHaveBeenCalled();
+  });
+
+  it("ignores Delete when nothing is selected", () => {
+    const handlers = renderGraph({ selected: null });
+    fireEvent.keyDown(screen.getByText("OCR"), { key: "Delete" });
+    expect(handlers.onRemoveSteps).not.toHaveBeenCalled();
+    expect(handlers.onRemoveEnd).not.toHaveBeenCalled();
   });
 
   describe("an end the pipeline has not asked for yet", () => {
