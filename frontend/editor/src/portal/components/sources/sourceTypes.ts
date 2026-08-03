@@ -37,6 +37,18 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
     labelKey: "portal.sources.types.s3.label",
     accent: "brand",
   },
+  sftp: {
+    labelKey: "portal.sources.types.sftp.label",
+    accent: "default",
+  },
+  ftp: {
+    labelKey: "portal.sources.types.ftp.label",
+    accent: "default",
+  },
+  network: {
+    labelKey: "portal.sources.types.network.label",
+    accent: "default",
+  },
   webhook: {
     labelKey: "portal.sources.types.webhook.label",
     accent: "warning",
@@ -56,12 +68,17 @@ export function sourceTypeMeta(type: string): SourceTypeMeta {
 export interface SourceFieldDef {
   key: string;
   labelKey: string;
-  control: "text" | "password" | "select" | "s3Connection";
+  control: "text" | "password" | "select" | "s3Connection" | "connection";
   required?: boolean;
   placeholderKey?: string;
   helperTextKey?: string;
   options?: { value: string; labelKey: string }[];
   defaultValue?: string;
+  /**
+   * For `control: "connection"` - the connection-catalogue entry id this slot accepts (e.g.
+   * "sftp"). Filters the picker to matching connections and pins the inline "new connection" form.
+   */
+  connectionTypeId?: string;
 }
 
 /** A source type the wizard can create, with the fields its config needs. */
@@ -70,6 +87,64 @@ export interface CreatableSourceType {
   labelKey: string;
   descriptionKey: string;
   fields: SourceFieldDef[];
+}
+
+/**
+ * The config a network source (SFTP/FTP/SMB) needs: a stored connection of the matching protocol,
+ * the folder to poll, and the same consume/snapshot + recursion choices as a folder source. Shared
+ * copy across the three protocols, since only the connection type differs.
+ */
+function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
+  return [
+    {
+      key: "connectionId",
+      labelKey: "portal.sources.networkFields.connection.label",
+      control: "connection",
+      connectionTypeId,
+      required: true,
+      helperTextKey: "portal.sources.networkFields.connection.helperText",
+    },
+    {
+      key: "directory",
+      labelKey: "portal.sources.networkFields.directory.label",
+      control: "text",
+      placeholderKey: "portal.sources.networkFields.directory.placeholder",
+      helperTextKey: "portal.sources.networkFields.directory.helperText",
+    },
+    {
+      key: "mode",
+      labelKey: "portal.sources.networkFields.mode.label",
+      control: "select",
+      defaultValue: "consume",
+      helperTextKey: "portal.sources.networkFields.mode.helperText",
+      options: [
+        {
+          value: "consume",
+          labelKey: "portal.sources.networkFields.mode.options.consume",
+        },
+        {
+          value: "snapshot",
+          labelKey: "portal.sources.networkFields.mode.options.snapshot",
+        },
+      ],
+    },
+    {
+      key: "recursive",
+      labelKey: "portal.sources.networkFields.recursive.label",
+      control: "select",
+      defaultValue: "false",
+      options: [
+        {
+          value: "false",
+          labelKey: "portal.sources.networkFields.recursive.options.top",
+        },
+        {
+          value: "true",
+          labelKey: "portal.sources.networkFields.recursive.options.all",
+        },
+      ],
+    },
+  ];
 }
 
 export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
@@ -183,6 +258,24 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     ],
   },
   {
+    type: "sftp",
+    labelKey: "portal.sources.types.sftp.label",
+    descriptionKey: "portal.sources.types.sftp.description",
+    fields: networkSourceFields("sftp"),
+  },
+  {
+    type: "ftp",
+    labelKey: "portal.sources.types.ftp.label",
+    descriptionKey: "portal.sources.types.ftp.description",
+    fields: networkSourceFields("ftp"),
+  },
+  {
+    type: "network",
+    labelKey: "portal.sources.types.network.label",
+    descriptionKey: "portal.sources.types.network.description",
+    fields: networkSourceFields("smb"),
+  },
+  {
     type: WEBHOOK_SOURCE_TYPE,
     labelKey: "portal.sources.types.webhook.label",
     descriptionKey: "portal.sources.types.webhook.description",
@@ -208,8 +301,6 @@ export const COMING_SOON_SOURCE_TYPES: ComingSoonSourceType[] = [
   "googledrive",
   "dropbox",
   "box",
-  "network",
-  "sftp",
   "email",
 ].map((type) => ({
   type,
