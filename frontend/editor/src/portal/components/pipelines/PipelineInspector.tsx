@@ -64,12 +64,16 @@ export function PipelineInspector({
 
   return (
     <aside className="portal-inspector">
+      {/* The title stays put while the settings scroll: it names the node being edited, which is
+          what makes a long form legible. */}
       <div className="portal-inspector__title">
         {icon ?? <TuneRoundedIcon style={{ fontSize: "1.125rem" }} />}
         <span>{title}</span>
       </div>
-      {error && <Banner tone="danger">{error}</Banner>}
-      {children}
+      <div className="portal-inspector__body">
+        {error && <Banner tone="danger">{error}</Banner>}
+        {children}
+      </div>
     </aside>
   );
 }

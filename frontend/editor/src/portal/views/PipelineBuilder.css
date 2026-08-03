@@ -1,3 +1,13 @@
+/**
+ * The builder claims the shell's view rather than lengthening it, so a long chain scrolls *inside*
+ * the graph while the header and the inspector stay put. A chain grows 112px per step, so it passes
+ * a typical viewport at around five steps - and if the page scrolled instead, clicking a node near
+ * the bottom would put the inspector (and Save) off-screen, which is the one interaction this whole
+ * layout exists to serve.
+ *
+ * The shell already makes .portal-shell__view the scroll container, so height here resolves against
+ * a definite box; capping the columns is what stops that view scrolling at all.
+ */
 .portal-builder {
   display: flex;
   flex-direction: column;
@@ -5,6 +15,14 @@
   padding: 1.5rem;
   max-width: 84rem;
   margin: 0 auto;
+  height: 100%;
+  min-height: 0;
+}
+
+/* The header and any banners keep their own size; only the grid absorbs (or gives up) space. Left
+   to the flex default they would all shrink together and squash on a short viewport. */
+.portal-builder > *:not(.portal-builder__grid) {
+  flex: none;
 }
 
 .portal-builder__loading {
@@ -18,12 +36,29 @@
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 1.25rem;
+  /* Takes whatever the header leaves, and pins the row to exactly that. `minmax(0, 1fr)` rather
+     than the implicit `auto` row is what makes the columns' `max-height: 100%` mean anything: an
+     auto row is sized BY its tallest item, so a long settings form would size the row to itself and
+     then resolve its own 100% against it - capping nothing, and clipping the form with no scrollbar.
+     `align-items: start` still lets a short column hug its content inside the bounded row. */
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
   align-items: start;
 }
 
+/* Stacked, the inspector sits below the graph, so there is nothing to hold in view - and capping
+   here would nest a scroll region inside a scrolling page, which is worse than a long page. Let the
+   builder grow and hand scrolling back to the shell. */
 @media (max-width: 60rem) {
+  .portal-builder {
+    height: auto;
+  }
+
   .portal-builder__grid {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    flex: none;
   }
 }
 

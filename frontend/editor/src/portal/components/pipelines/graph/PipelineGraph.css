@@ -9,6 +9,9 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1.5rem 1rem;
+  /* Grows with the chain up to whatever the page gives it, then scrolls rather than pushing the
+     inspector out of reach. A short chain still hugs its content, so there is no empty canvas. */
+  max-height: 100%;
   overflow: auto;
   /* The canvas must sit below the node cards on the surface ladder so they read as raised off it in
      both themes. --c-surface-sunken is the only rung darker than --c-surface in light *and* dark;
