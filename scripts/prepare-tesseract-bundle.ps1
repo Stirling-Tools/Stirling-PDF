@@ -83,11 +83,16 @@ if (-not $OutputDir) {
     $OutputDir = Join-Path $repoRoot 'frontend/editor/src-tauri/tesseract'
 }
 
-# A bundle is only usable with the executable, every DLL, and the config files
-# Tesseract reads to select an output format, so check for all three.
+# A bundle is only usable with the executable, every DLL, the config files Tesseract
+# reads to select an output format, and every language that was asked for. Leaving the
+# languages out of this check made -Languages silently useless once a bundle existed:
+# adding a language to an existing build exited early and downloaded nothing.
 $alreadyBuilt = (Test-Path (Join-Path $OutputDir 'tesseract.exe')) -and
                 (Test-Path (Join-Path $OutputDir 'tessdata/configs/pdf')) -and
-                -not ($REQUIRED_DLLS | Where-Object { -not (Test-Path (Join-Path $OutputDir $_)) })
+                -not ($REQUIRED_DLLS | Where-Object { -not (Test-Path (Join-Path $OutputDir $_)) }) -and
+                -not ($Languages | Where-Object {
+                    -not (Test-Path (Join-Path $OutputDir "tessdata/$_.traineddata"))
+                })
 if ($alreadyBuilt -and -not $Force) {
     Write-Host "Tesseract bundle already present at $OutputDir (use -Force to rebuild)."
     exit 0
