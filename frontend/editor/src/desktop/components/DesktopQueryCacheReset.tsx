@@ -17,10 +17,12 @@ export function DesktopQueryCacheReset() {
     const reset = () => void queryClient.resetQueries();
     const unsubscribeMode = connectionModeService.subscribeToModeChanges(reset);
 
-    // Ignore idle/checking, and the state replayed on subscribe.
+    // idle/checking say nothing about reachability — treating them as "not
+    // offline" would reset on offline→checking and then skip the real recovery.
     let wasOffline: boolean | null = null;
     const unsubscribeServer = selfHostedServerMonitor.subscribe(
       ({ status }) => {
+        if (status !== "online" && status !== "offline") return;
         const isOffline = status === "offline";
         if (wasOffline !== null && wasOffline !== isOffline) reset();
         wasOffline = isOffline;

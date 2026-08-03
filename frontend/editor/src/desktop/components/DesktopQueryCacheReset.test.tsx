@@ -97,4 +97,38 @@ describe("DesktopQueryCacheReset", () => {
 
     expect(queryFn).toHaveBeenCalledTimes(1);
   });
+
+  it("resets on recovery, not on the checking state in between", async () => {
+    const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("x");
+
+    renderWithConsumer(queryFn);
+    await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(1));
+
+    const emit = (status: string) =>
+      serverListeners.forEach((l) => l({ status }));
+
+    emit("offline");
+    await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(2));
+
+    // A monitor restart while still down must not read as recovery — otherwise
+    // the reset lands here and the real online transition is skipped.
+    emit("checking");
+    expect(queryFn).toHaveBeenCalledTimes(2);
+
+    emit("online");
+    await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(3));
+  });
+
+  it("does not reset when the monitor stops while offline", async () => {
+    const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("cached");
+
+    renderWithConsumer(queryFn);
+    await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(1));
+
+    serverListeners.forEach((l) => l({ status: "offline" }));
+    await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(2));
+
+    serverListeners.forEach((l) => l({ status: "idle" }));
+    expect(queryFn).toHaveBeenCalledTimes(2);
+  });
 });
