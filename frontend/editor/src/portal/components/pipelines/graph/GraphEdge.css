@@ -1,6 +1,6 @@
 /**
  * One wire between two nodes, plus its insert affordance. The graph positions it; the wire is a
- * 1px rule centred on the column with a chevron at the arriving end.
+ * 1px rule centred on the column with a filled arrowhead at the arriving end.
  */
 
 .portal-graph-edge {
@@ -11,6 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  --edge-color: var(--c-border-strong);
 }
 
 .portal-graph-edge__line {
@@ -20,22 +21,23 @@
   left: 50%;
   width: 1px;
   transform: translateX(-50%);
-  background: var(--c-border-strong);
+  background: var(--edge-color);
 }
 
-/* Arrowhead at the arriving end, so the chain reads as directed. Rotating the square throws its
-   corner ~1px past the box, so it is lifted by the same amount: the tip then lands exactly on the
-   node's border instead of under it. */
+/**
+ * Arrowhead at the arriving end, so the chain reads as directed.
+ */
 .portal-graph-edge__line::after {
   content: "";
   position: absolute;
-  bottom: 1px;
+  bottom: 0;
   left: 50%;
-  width: 0.3125rem;
-  height: 0.3125rem;
-  transform: translate(-50%, 0) rotate(45deg);
-  border-right: 1px solid var(--c-border-strong);
-  border-bottom: 1px solid var(--c-border-strong);
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 0.1875rem solid transparent;
+  border-right: 0.1875rem solid transparent;
+  border-top: 0.3125rem solid var(--edge-color);
 }
 
 /* Insert: the shared ActionIcon restyled to a small dot on the wire - quiet enough not to shout on
@@ -64,8 +66,8 @@
 }
 
 /* A wire with no slot of its own (either side of the placeholder): line only. */
-.portal-graph-edge.is-plain .portal-graph-edge__line {
-  background: var(--c-border-subtle);
+.portal-graph-edge.is-plain {
+  --edge-color: var(--c-border-subtle);
 }
 
 /* The pairing does not make much sense. Advisory: the wire still accepts drops and the chain still
@@ -73,15 +75,7 @@
 .portal-graph-edge.has-warning {
   width: auto;
   min-width: 2.5rem;
-}
-
-.portal-graph-edge.has-warning .portal-graph-edge__line {
-  background: var(--c-warning);
-}
-
-.portal-graph-edge.has-warning .portal-graph-edge__line::after {
-  border-right-color: var(--c-warning);
-  border-bottom-color: var(--c-warning);
+  --edge-color: var(--c-warning);
 }
 
 .portal-graph-edge__warning {
@@ -114,8 +108,8 @@
 }
 
 /* A step is in flight and this wire would accept it. */
-.portal-graph-edge.is-available .portal-graph-edge__line {
-  background: var(--c-primary);
+.portal-graph-edge.is-available {
+  --edge-color: var(--c-primary);
 }
 
 .portal-graph-edge.is-available .portal-graph-edge__insert.sui-ai {
