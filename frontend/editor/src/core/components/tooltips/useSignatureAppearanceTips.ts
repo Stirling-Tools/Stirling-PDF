@@ -71,20 +71,48 @@ export const useSignatureAppearanceTips = (): TooltipContent => {
         ),
         description: t(
           "certSign.appearance.tooltip.placement.text",
-          "Drag a box on the page preview to say where the signature should appear, the same way you would draw a crop area. Useful when a document has a printed line or box meant for the signature.",
+          "Draw a box straight onto the document to say where the signature should appear. Useful when a form has a printed line or box meant for the signature.",
         ),
         bullets: [
           t(
             "certSign.appearance.tooltip.placement.bullet1",
-            "Drag to draw the box, then drag its corners to resize it",
+            "Drag across the page, or click one corner and then the opposite one",
           ),
           t(
             "certSign.appearance.tooltip.placement.bullet2",
-            "The text shrinks to fit, so it never spills over the page",
+            "The page you draw on becomes the page that gets signed",
           ),
           t(
             "certSign.appearance.tooltip.placement.bullet3",
-            "Leave it alone and the signature goes in its usual place",
+            "The text shrinks to fit, so it never spills out of the box",
+          ),
+          t(
+            "certSign.appearance.tooltip.placement.bullet4",
+            "Draw nothing and the signature goes in its usual place",
+          ),
+        ],
+      },
+      {
+        title: t(
+          "certSign.appearance.tooltip.markAllPages.title",
+          "Showing It on Every Page",
+        ),
+        description: t(
+          "certSign.appearance.tooltip.markAllPages.text",
+          "Long documents are often initialled on every page so a reader can see the whole thing was signed. A PDF can only be signed in one place, so the other pages get a matching mark instead.",
+        ),
+        bullets: [
+          t(
+            "certSign.appearance.tooltip.markAllPages.bullet1",
+            "Only the page you drew on carries the real signature",
+          ),
+          t(
+            "certSign.appearance.tooltip.markAllPages.bullet2",
+            "Clicking a mark jumps to that page, where you can check the signature",
+          ),
+          t(
+            "certSign.appearance.tooltip.markAllPages.bullet3",
+            "Draw the box first — there has to be a shape to repeat",
           ),
         ],
       },

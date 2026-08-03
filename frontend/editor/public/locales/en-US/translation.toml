@@ -2533,11 +2533,19 @@ bullet4 = "Optional logo can be included"
 text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
 title = "Visible Signatures"
 
+[certSign.appearance.tooltip.markAllPages]
+bullet1 = "Only the page you drew on carries the real signature"
+bullet2 = "Clicking a mark jumps to that page, where you can check the signature"
+bullet3 = "Draw the box first - there has to be a shape to repeat"
+text = "Long documents are often initialled on every page so a reader can see the whole thing was signed. A PDF can only be signed in one place, so the other pages get a matching mark instead."
+title = "Showing It on Every Page"
+
 [certSign.appearance.tooltip.placement]
-bullet1 = "Drag to draw the box, then drag its corners to resize it"
-bullet2 = "The text shrinks to fit, so it never spills over the page"
-bullet3 = "Leave it alone and the signature goes in its usual place"
-text = "Drag a box on the page preview to say where the signature should appear, the same way you would draw a crop area. Useful when a document has a printed line or box meant for the signature."
+bullet1 = "Drag across the page, or click one corner and then the opposite one"
+bullet2 = "The page you draw on becomes the page that gets signed"
+bullet3 = "The text shrinks to fit, so it never spills out of the box"
+bullet4 = "Draw nothing and the signature goes in its usual place"
+text = "Draw a box straight onto the document to say where the signature should appear. Useful when a form has a printed line or box meant for the signature."
 title = "Choosing Where the Signature Goes"
 
 [certSign.appearance.tooltip.attributes]
