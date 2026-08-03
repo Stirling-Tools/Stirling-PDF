@@ -70,11 +70,12 @@
   --edge-color: var(--c-border-subtle);
 }
 
-/* The pairing does not make much sense. Advisory: the wire still accepts drops and the chain still
-   runs - the order stays the user's choice. */
+/**
+ * The pairing does not make much sense. Advisory: the wire still accepts drops and the chain still
+ * runs - the order stays the user's choice.
+ */
 .portal-graph-edge.has-warning {
-  width: auto;
-  min-width: 2.5rem;
+  width: max-content;
   --edge-color: var(--c-warning);
 }
 
@@ -83,7 +84,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  max-width: 15rem;
   padding: 0.0625rem 0.375rem;
   border-radius: var(--radius-pill);
   border: 1px solid var(--c-warning);
@@ -101,9 +101,23 @@
   flex: none;
 }
 
+/* A blocking pairing: the chain cannot run in this order, so it must not read as the same gentle
+   advice as an odd-but-workable one. Same shape, danger tone - including the wire and its head,
+   which follow --edge-color. */
+.portal-graph-edge.is-blocking {
+  --edge-color: var(--c-danger);
+}
+
+.portal-graph-edge.is-blocking .portal-graph-edge__warning {
+  border-color: var(--c-danger);
+  background: color-mix(in srgb, var(--c-danger) 12%, var(--c-surface));
+}
+
+.portal-graph-edge.is-blocking .portal-graph-edge__warning svg {
+  color: var(--c-danger);
+}
+
 .portal-graph-edge__warning-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

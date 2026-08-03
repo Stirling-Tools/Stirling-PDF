@@ -72,6 +72,7 @@ import {
   PipelineGraph,
   selectedSteps,
   type ChainEnd,
+  type ChainWarning,
   type GraphSelection,
   type GraphStepContent,
 } from "@portal/components/pipelines/graph/PipelineGraph";
@@ -505,16 +506,22 @@ export function PipelineBuilder() {
     .map((d) => stepLabel(steps[d.stepIndex]));
   const hasIncompatibleSteps = hasBlockingDiagnostics(chainDiagnostics);
 
-  // What a newly added step would be handed, so the picker can flag tools that cannot take it.
-  const chainOutput = useMemo(
+  /**
+   * What a step added at the open slot would be handed, so the picker can flag tools that cannot
+   * take it. Scoped to the steps *before* that slot rather than the whole chain: the graph inserts
+   * anywhere, so what precedes the new step is not necessarily the chain's final output.
+   */
+  const precedingOutput = useMemo(
     () =>
-      chainOutputFormat(
-        steps.map((step) => ({
-          operation: step.operation,
-          parameters: step.params,
-        })),
-      ),
-    [steps],
+      pickerAt === null
+        ? undefined
+        : chainOutputFormat(
+            steps.slice(0, pickerAt).map((step) => ({
+              operation: step.operation,
+              parameters: step.params,
+            })),
+          ),
+    [steps, pickerAt],
   );
 
   function diagnosticNote(diagnostic: ToolDiagnostic): string {
@@ -525,26 +532,21 @@ export function PipelineBuilder() {
     });
   }
 
-  /** The most severe diagnostic for a step, rendered as its note. */
-  function renderStepDiagnostic(index: number) {
+  /**
+   * The step's most severe diagnostic, for the wire arriving at it - which is where a note about
+   * what the step is being handed belongs, rather than on the step itself.
+   */
+  function stepInputWarning(index: number): ChainWarning | undefined {
     const forStep = diagnosticsForStep(chainDiagnostics, index);
     const diagnostic =
       forStep.find((d) => d.severity === "ERROR") ??
       forStep.find((d) => d.severity === "WARN") ??
       forStep[0];
-    if (!diagnostic) return null;
-    return (
-      <span
-        className={
-          "portal-builder__step-note" +
-          (diagnostic.severity === "ERROR"
-            ? " portal-builder__step-note--danger"
-            : "")
-        }
-      >
-        {diagnosticNote(diagnostic)}
-      </span>
-    );
+    if (!diagnostic) return undefined;
+    return {
+      text: diagnosticNote(diagnostic),
+      blocking: diagnostic.severity === "ERROR",
+    };
   }
 
   // Track unsaved edits: snapshot the form and compare against the state captured just after
@@ -848,6 +850,7 @@ export function PipelineBuilder() {
     label: stepLabel(step),
     detail: stepDetail(step),
     warning: stepWarning(step),
+    inputWarning: stepInputWarning(i),
     runState: stepRunState(i),
   }));
 
@@ -1137,6 +1140,7 @@ export function PipelineBuilder() {
           onPick={addStep}
           operations={STEP_OPERATIONS}
           onPickOperation={addOperationStep}
+          precedingOutput={precedingOutput}
           onClose={() => setPickerAt(null)}
         />
       </Modal>

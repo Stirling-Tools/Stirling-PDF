@@ -155,7 +155,7 @@ export const OddOrdering: Story = {
         {
           label: "OCR",
           detail: "eng",
-          inputWarning: "OCR cannot read an encrypted file",
+          inputWarning: { text: "OCR cannot read an encrypted file" },
         },
       ]}
     />

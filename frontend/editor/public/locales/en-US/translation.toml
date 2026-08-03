@@ -7828,11 +7828,11 @@ usesDefaults = "Runs with default settings"
 viewDefinition = "View definition"
 
 [portal.pipelines.builder.diagnostic]
-fan-in = "Combines every file from the previous step"
-fan-out = "Runs once per file from the previous step"
-format-mismatch = "Needs {{accepts}}, but the previous step produces {{produced}}"
-output-uncertain = "May not run: the previous step's output depends on how it's set up"
-source-mismatch = "Needs {{accepts}}, but this pipeline's input is {{produced}}"
+fan-in = "Combines every incoming file"
+fan-out = "Runs once per incoming file"
+format-mismatch = "Sends {{produced}}, needs {{accepts}}"
+output-uncertain = "May not run: output depends on setup"
+source-mismatch = "Input is {{produced}}, needs {{accepts}}"
 undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.composer]

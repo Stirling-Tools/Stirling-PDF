@@ -175,7 +175,10 @@ describe("PipelineGraph", () => {
     renderGraph({
       steps: [
         { label: "Add Password" },
-        { label: "OCR", inputWarning: "OCR cannot read an encrypted file" },
+        {
+          label: "OCR",
+          inputWarning: { text: "OCR cannot read an encrypted file" },
+        },
       ],
     });
     expect(
@@ -188,7 +191,10 @@ describe("PipelineGraph", () => {
     const handlers = renderGraph({
       steps: [
         { label: "Add Password" },
-        { label: "OCR", inputWarning: "OCR cannot read an encrypted file" },
+        {
+          label: "OCR",
+          inputWarning: { text: "OCR cannot read an encrypted file" },
+        },
       ],
     });
     // The warned wire trades its plus for the note, so the two unwarned wires keep theirs.
@@ -200,11 +206,41 @@ describe("PipelineGraph", () => {
     expect(handlers.onInsertStep).toHaveBeenCalledWith(2);
   });
 
+  it("marks a blocking pairing apart from a merely odd one", () => {
+    // Both sit on the wire and neither refuses the edit, but one means the chain cannot run at
+    // all - so it must not read as the same gentle advice.
+    renderGraph({
+      steps: [
+        { label: "Extract images" },
+        {
+          label: "Compress",
+          inputWarning: { text: "Compress needs a PDF", blocking: true },
+        },
+      ],
+    });
+    const wire = screen
+      .getByText("Compress needs a PDF")
+      .closest(".portal-graph-edge");
+    expect(wire).toHaveClass("is-blocking");
+  });
+
+  it("leaves an advisory pairing unblocked", () => {
+    renderGraph({
+      steps: [
+        { label: "Add Password" },
+        { label: "OCR", inputWarning: { text: "OCR cannot read this" } },
+      ],
+    });
+    expect(
+      screen.getByText("OCR cannot read this").closest(".portal-graph-edge"),
+    ).not.toHaveClass("is-blocking");
+  });
+
   it("warns on the wire into the output too", () => {
     renderGraph({
       output: {
         label: "Archive",
-        inputWarning: "Nothing writes a folder here",
+        inputWarning: { text: "Nothing writes a folder here" },
       },
     });
     expect(

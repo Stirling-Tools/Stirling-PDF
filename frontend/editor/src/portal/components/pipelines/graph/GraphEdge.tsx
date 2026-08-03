@@ -6,6 +6,18 @@ import type { LaidOutEdge } from "@portal/components/pipelines/graph/pipelineLay
 import { useEdgeDrop } from "@portal/components/pipelines/graph/useChainDragDrop";
 import "@portal/components/pipelines/graph/GraphEdge.css";
 
+/**
+ * A note on the wire arriving at a node: why what flows in will not suit it.
+ *
+ * `blocking` separates "this cannot run in this order" from "this is probably not what you meant".
+ * Both are shown on the wire and neither refuses the edit - the order stays the user's to choose -
+ * but only a blocking one stops the pipeline being saved, so it must not read as mere advice.
+ */
+export interface ChainWarning {
+  text: string;
+  blocking?: boolean;
+}
+
 export interface GraphEdgeProps {
   edge: LaidOutEdge;
   /** Add a new step in the slot this wire opens. */
@@ -17,10 +29,10 @@ export interface GraphEdgeProps {
   dragActive: boolean;
   /**
    * Why what flows along this wire will not be much use to the node it arrives at (encrypting
-   * before an OCR, say). Advisory only - the chain still runs and the order is still the user's
-   * to choose.
+   * before an OCR, say). Never refuses the edit - the order stays the user's to choose - but a
+   * blocking one means the chain cannot run at all, and is coloured apart from mere advice.
    */
-  warning?: string;
+  warning?: ChainWarning;
 }
 
 /**
@@ -53,6 +65,7 @@ export function GraphEdge({
         dragActive && open ? "is-available" : "",
         over ? "is-over" : "",
         warning ? "has-warning" : "",
+        warning?.blocking ? "is-blocking" : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -64,9 +77,11 @@ export function GraphEdge({
     >
       <span className="portal-graph-edge__line" aria-hidden />
       {warning ? (
-        <span className="portal-graph-edge__warning" title={warning}>
+        <span className="portal-graph-edge__warning" title={warning.text}>
           <WarningAmberRoundedIcon style={{ fontSize: "0.875rem" }} />
-          <span className="portal-graph-edge__warning-label">{warning}</span>
+          <span className="portal-graph-edge__warning-label">
+            {warning.text}
+          </span>
         </span>
       ) : (
         open && (

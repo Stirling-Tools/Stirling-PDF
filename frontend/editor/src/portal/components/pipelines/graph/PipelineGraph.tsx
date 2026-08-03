@@ -9,7 +9,10 @@ import {
   GraphNode,
   type NodeRunState,
 } from "@portal/components/pipelines/graph/GraphNode";
-import { GraphEdge } from "@portal/components/pipelines/graph/GraphEdge";
+import {
+  GraphEdge,
+  type ChainWarning,
+} from "@portal/components/pipelines/graph/GraphEdge";
 import { GraphPlaceholderNode } from "@portal/components/pipelines/graph/GraphPlaceholderNode";
 import {
   NODE_HEIGHT,
@@ -19,6 +22,9 @@ import {
 } from "@portal/components/pipelines/graph/pipelineLayout";
 import { useStepDraggable } from "@portal/components/pipelines/graph/useChainDragDrop";
 import "@portal/components/pipelines/graph/PipelineGraph.css";
+
+// The wire renders it, but callers build it, so it is re-exported from the graph they talk to.
+export type { ChainWarning };
 
 /**
  * What is selected: an end of the chain, one or more steps, or nothing. Only steps come in sets -
@@ -41,7 +47,7 @@ export interface GraphNodeContent {
   /** Why this node blocks saving, shown in place of the detail. */
   warning?: string;
   /** Why the input will not be much use. */
-  inputWarning?: string;
+  inputWarning?: ChainWarning;
 }
 
 export interface GraphStepContent extends GraphNodeContent {
@@ -104,7 +110,7 @@ export function PipelineGraph({
   });
 
   // A wire carries the warning belonging to the node it arrives at.
-  const arrivalWarning = (nodeId: string): string | undefined => {
+  const arrivalWarning = (nodeId: string): ChainWarning | undefined => {
     if (nodeId === "output") return output?.inputWarning;
     const index = stepIndexOf(nodeId);
     return index === null ? undefined : steps[index]?.inputWarning;

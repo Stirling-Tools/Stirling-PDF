@@ -347,9 +347,12 @@ describe("PipelineBuilder", () => {
     if (placeholder) {
       fireEvent.click(placeholder);
     } else {
-      fireEvent.click(
-        screen.getAllByLabelText("portal.pipelines.graph.insertHere")[0],
+      // The LAST wire, so repeated calls append. Taking the first would insert each new tool ahead
+      // of the ones already there, silently reversing the order a caller asked for.
+      const inserts = screen.getAllByLabelText(
+        "portal.pipelines.graph.insertHere",
       );
+      fireEvent.click(inserts[inserts.length - 1]);
     }
     fireEvent.click(await screen.findByText(toolName));
   }
@@ -521,13 +524,11 @@ describe("PipelineBuilder", () => {
       { target: { value: "Broken chain" } },
     );
     await pickInputSource("Claims intake");
-    fireEvent.click(screen.getByText("pick output"));
+    await pickDestination();
 
     // Extract images emits images; compress only takes a PDF, so it can never run.
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
-    fireEvent.click(await screen.findByText("Extract images"));
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
-    fireEvent.click(await screen.findByText("Compress"));
+    await addTool("Extract images");
+    await addTool("Compress");
 
     expect(
       await screen.findByText("portal.pipelines.builder.stepsIncompatible"),
@@ -535,6 +536,21 @@ describe("PipelineBuilder", () => {
     expect(
       screen.getByText("portal.pipelines.composer.create").closest("button"),
     ).toBeDisabled();
+  });
+
+  it("says why on the wire arriving at the step that cannot run", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await pickInputSource("Claims intake");
+    await pickDestination();
+
+    await addTool("Extract images");
+    await addTool("Compress");
+
+    // The banner names which steps are at fault; the wire explains what is wrong where it happens.
+    const note = await screen.findByText(
+      /portal\.pipelines\.builder\.diagnostic\./,
+    );
+    expect(note.closest(".portal-graph-edge")).toHaveClass("is-blocking");
   });
 
   it("allows a chain whose steps line up", async () => {
@@ -547,10 +563,9 @@ describe("PipelineBuilder", () => {
       { target: { value: "Fine chain" } },
     );
     await pickInputSource("Claims intake");
-    fireEvent.click(screen.getByText("pick output"));
+    await pickDestination();
 
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
-    fireEvent.click(await screen.findByText("Compress"));
+    await addTool("Compress");
 
     expect(
       screen.queryByText("portal.pipelines.builder.stepsIncompatible"),
