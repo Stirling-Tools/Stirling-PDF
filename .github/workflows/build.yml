@@ -48,14 +48,14 @@ jobs:
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: changes
         with:
           filters: .github/config/.files.yaml
@@ -97,6 +97,17 @@ jobs:
       contents: read
       pull-requests: write
     uses: ./.github/workflows/frontend-validation.yml
+    secrets: inherit
+
+  # Advisory: deliberately NOT in all-checks-passed. It reports on the stories a
+  # branch touches so a regression is visible in review, but a browser scan is
+  # too new here to block merges on. Promote it once its pass/fail proves stable.
+  frontend-a11y:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/frontend-a11y.yml
     secrets: inherit
 
   playwright-e2e:
@@ -149,7 +160,6 @@ jobs:
     permissions:
       contents: read
       packages: read
-      id-token: write
     uses: ./.github/workflows/test-build-docker.yml
     secrets: inherit
     with:
@@ -164,13 +174,14 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
-    # PR smoke build: Linux only (fastest + cheapest to compile), unsigned,
-    # deb-only, no AppImage. The full signed multi-OS matrix runs on release;
+    # PR smoke build: macOS + Windows (the platforms our developers use).
+    # sign: true only reaches macOS - tauri-build's per-platform gate keeps
+    # Windows/Linux signing on main, and an unsigned .dmg cannot be opened.
+    # The full signed multi-OS matrix runs on release;
     # nightly still warms the Rust cache with all-OS defaults.
     with:
-      platform: linux
-      sign: false
-      minimal: true
+      platform: windows-macos
+      sign: true
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
@@ -258,7 +269,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 

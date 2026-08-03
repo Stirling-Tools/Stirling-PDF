@@ -24,7 +24,7 @@ const meta: Meta<typeof Drawer> = {
         style={{
           minHeight: "100vh",
           padding: 24,
-          background: "var(--color-bg)",
+          background: "var(--c-bg)",
         }}
       >
         <S />
@@ -38,7 +38,7 @@ const meta: Meta<typeof Drawer> = {
         <>
           <Button onClick={() => setOpen(true)}>Open drawer</Button>
           <Drawer {...args} open={open} onClose={() => setOpen(false)}>
-            <p style={{ color: "var(--color-text-3)" }}>
+            <p style={{ color: "var(--c-text-subtle)" }}>
               The drawer body scrolls when its content overflows. The header and
               footer (when present) are sticky.
             </p>
@@ -79,7 +79,7 @@ export const WithFooter: Story = {
               </>
             }
           >
-            <p style={{ color: "var(--color-text-3)" }}>
+            <p style={{ color: "var(--c-text-subtle)" }}>
               Sticky footer demo — scroll the body, footer stays anchored.
             </p>
           </Drawer>

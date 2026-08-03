@@ -12,7 +12,7 @@ on:
   workflow_call:
     inputs:
       platform:
-        description: "Platform to build (windows, macos, linux, or all)."
+        description: "Platform to build (windows, macos, linux, windows-macos, or all)."
         required: false
         type: string
         default: "all"
@@ -29,7 +29,7 @@ on:
   workflow_dispatch:
     inputs:
       platform:
-        description: "Platform to build (windows, macos, linux, or all)"
+        description: "Platform to build (windows, macos, linux, windows-macos, or all)"
         required: true
         default: "all"
         type: choice
@@ -38,6 +38,7 @@ on:
           - windows
           - macos
           - linux
+          - windows-macos
       sign:
         description: "Sign and notarize the bundles."
         required: false
@@ -61,7 +62,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -76,10 +77,11 @@ jobs:
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
 
           case "$PLATFORM" in
-            windows) ENTRIES=("$WINDOWS") ;;
-            macos)   ENTRIES=("$MACOS") ;;
-            linux)   ENTRIES=("$LINUX") ;;
-            *)       ENTRIES=("$WINDOWS" "$MACOS" "$LINUX") ;;
+            windows)       ENTRIES=("$WINDOWS") ;;
+            macos)         ENTRIES=("$MACOS") ;;
+            linux)         ENTRIES=("$LINUX") ;;
+            windows-macos) ENTRIES=("$WINDOWS" "$MACOS") ;;
+            *)             ENTRIES=("$WINDOWS" "$MACOS" "$LINUX") ;;
           esac
 
           # Drop macOS entries when Apple certificate secret is unavailable
@@ -106,10 +108,14 @@ jobs:
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+      # Per-platform sign gate. macOS signs on any run with the cert available,
+      # PRs included: Gatekeeper blocks an unsigned .dmg, so an unsigned macOS
+      # PR build is not testable. Windows and Linux stay main-only, matching the
+      # gates on their own signing steps below.
+      SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -123,7 +129,7 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
 
       - name: Setup Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: "npm"
@@ -273,7 +279,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: inputs.sign && matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -294,7 +300,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: inputs.sign && matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -367,7 +373,7 @@ jobs:
           fi
 
       - name: Build Tauri app (signed)
-        if: inputs.sign
+        if: env.SIGN_BUNDLE == 'true'
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -402,7 +408,7 @@ jobs:
           args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
 
       - name: Build Tauri app (unsigned)
-        if: ${{ !inputs.sign }}
+        if: env.SIGN_BUNDLE != 'true'
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -419,7 +425,9 @@ jobs:
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
           # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+          args: >-
+            ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+            --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
@@ -455,7 +463,7 @@ jobs:
           fi
 
       - name: Verify notarization (macOS only)
-        if: inputs.sign && matrix.platform == 'macos-15'
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
         run: |
           echo "🔍 Verifying notarization status..."
           cd ./frontend/editor/src-tauri/target
@@ -612,12 +620,19 @@ jobs:
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && needs.build.result == 'success'
+    # Fork and Dependabot pull_request runs receive a read-only GITHUB_TOKEN,
+    # so the API cannot create or update PR comments there. The artifacts are
+    # still uploaded and remain available from the Actions run page.
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.build.result == 'success' &&
+      !github.event.pull_request.head.repo.fork &&
+      github.actor != 'dependabot[bot]'
     permissions:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -708,7 +723,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
