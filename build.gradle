@@ -8,7 +8,7 @@ plugins {
     id "com.diffplug.spotless" version "8.8.0"
     id "com.github.jk1.dependency-license-report" version "3.1.2"
     //id "nebula.lint" version "19.0.3"
-    id "org.sonarqube" version "7.2.3.7755"
+    id "org.sonarqube" version "7.3.1.8318"
 }
 
 import com.github.jk1.license.render.*
