@@ -271,8 +271,12 @@ public class ProcurementService {
 
         ProcurementQuote quote = new ProcurementQuote();
         quote.setDealId(deal.getDealId());
-        quote.setQuoteNumber(nextQuoteNumber(deal.getDealId()));
-        // Priced but not yet issued: the edge fn creates the Stripe Quote and flips this to SENT.
+        // No quote number here: the deal's one reference is Stripe's, and Stripe does not assign it
+        // until the quote is finalised. The edge fn creates the Stripe Quote, flips this to SENT,
+        // and
+        // writes the number back. Nothing displays a reference in between — the builder only shows
+        // one
+        // for an issued quote, and the agreement is not assembled until after issue.
         quote.setStatus(ProcurementQuote.STATUS_DRAFT);
         quote.setCurrency(cfg.currency());
         quote.setVolume(cfg.volume());
@@ -301,10 +305,11 @@ public class ProcurementService {
         quote.setLineItemsJson(writeLineItems(breakdown));
         quote.setValidUntil(LocalDate.now().plusDays(30));
         quote = quoteRepo.save(quote);
+        // Logged by id, not reference: a draft has no reference until Stripe issues it.
         log.info(
                 "[procurement] quote built team={} quote={} annualNet={} tcv={}",
                 teamId,
-                quote.getQuoteNumber(),
+                quote.getQuoteId(),
                 quote.getAnnualNetMinor(),
                 quote.getTcvMinor());
         return quote;
@@ -575,28 +580,6 @@ public class ProcurementService {
     public void resetDeal(Long teamId) {
         dealRepo.deleteByTeamId(teamId);
         log.info("[procurement] deal reset team={}", teamId);
-    }
-
-    private String nextQuoteNumber(Long dealId) {
-        // Quotes are only ever added to a deal, never deleted, so the count is a stable revision.
-        return quoteNumber(dealId, quoteRepo.countByDealId(dealId) + 1);
-    }
-
-    /**
-     * The buyer-facing quote reference, printed on the quote, carried onto the Stripe quote and
-     * invoice, and cited by the signed agreement — so it has to be unique by construction rather
-     * than probably-unique. Deal id plus revision is exactly that, since a deal id identifies one
-     * deal.
-     *
-     * <p>This was four hex characters of a random UUID: 65k possibilities for a reference that
-     * almost always ended "-0001", so by the birthday bound a collision was likely within a few
-     * hundred quotes — on a document someone signs.
-     *
-     * <p>Package-private and static so the property can be tested without the service's
-     * dependencies.
-     */
-    static String quoteNumber(long dealId, long revision) {
-        return String.format(Locale.ROOT, "QT-%05d-%02d", dealId, revision);
     }
 
     private String writeLineItems(QuoteBreakdown breakdown) {

@@ -162,9 +162,9 @@ export function priceQuote(cfg: Cfg) {
   seq += 1;
   return {
     quoteId: seq,
-    // Same shape the server mints, QT-{deal}-{revision}. The mock runs one deal, so seq is the
-    // revision. Worth matching: this reference is what the agreement and the invoice both cite.
-    quoteNumber: `QT-00001-${String(seq).padStart(2, "0")}`,
+    // A draft has no reference: Stripe assigns the quote number at finalisation, so the mock leaves
+    // it null here and fills it when the quote is issued, exactly as the real flow does.
+    quoteNumber: null,
     status: "draft",
     currency: "USD",
     annualNetMinor,
@@ -406,6 +406,9 @@ export const procurementSaasHandlers = [
     if (q) {
       q.status = "sent";
       q.stripeQuoteId = `qt_mock_${q.quoteId}`;
+      // Issuing is what mints the reference. Stripe's shape is
+      // QT-{customer invoice prefix}-{quote seq}-{revision}.
+      q.quoteNumber = `QT-MOCKPFX-${String(q.quoteId).padStart(4, "0")}-1`;
     }
     return HttpResponse.json(q);
   }),

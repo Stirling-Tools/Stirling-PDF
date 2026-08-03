@@ -282,7 +282,11 @@ export interface QuoteLineItem {
 
 export interface QuoteResult {
   quoteId: number;
-  quoteNumber: string;
+  /**
+   * Stripe's quote number — the deal's one reference, shown on the quote, the agreement and the
+   * invoice. Null while the quote is a local draft: Stripe assigns it only at finalisation.
+   */
+  quoteNumber: string | null;
   /** draft (priced, editable) | sent (issued Stripe quote — PDF + shareable) | accepted | expired. */
   status: string;
   currency: string;
