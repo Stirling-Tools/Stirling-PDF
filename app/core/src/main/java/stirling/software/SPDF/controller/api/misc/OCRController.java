@@ -41,6 +41,11 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -88,13 +93,20 @@ public class OCRController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/ocr-pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(
+            produces = ToolFormat.PDF,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "sidecar", matches = "true"),
+                            produces = ToolFormat.ZIP,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Process a PDF file with OCR",
             description =
-                    "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can"
-                            + " specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType,"
-                            + " and removeImagesAfter options. Uses OCRmyPDF if available, falls back to"
-                            + " Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
+                    "This endpoint processes a PDF file using OCR (Optical Character Recognition)."
+                            + " Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType,"
+                            + " ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if available,"
+                            + " falls back to Tesseract.")
     public ResponseEntity<Resource> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
