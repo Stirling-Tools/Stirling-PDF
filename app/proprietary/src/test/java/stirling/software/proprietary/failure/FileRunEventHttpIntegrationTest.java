@@ -14,12 +14,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.ManagementWebSecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
-import org.springframework.security.web.SecurityFilterChain;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
@@ -291,20 +293,21 @@ class FileRunEventHttpIntegrationTest {
         }
     }
 
+    /**
+     * Spring Security is excluded rather than configured to permit everything: the auto-configured
+     * chain would answer 401 before the handler runs, and this test is about routing, body binding,
+     * serialisation and status mapping. Authorisation and team scoping have their own tests.
+     */
     @SpringBootConfiguration
-    @EnableAutoConfiguration
+    @EnableAutoConfiguration(
+            exclude = {
+                SecurityAutoConfiguration.class,
+                ServletWebSecurityAutoConfiguration.class,
+                ManagementWebSecurityAutoConfiguration.class,
+                SecurityFilterAutoConfiguration.class,
+                UserDetailsServiceAutoConfiguration.class
+            })
     static class TestApp {
-
-        /**
-         * Permit everything, since the auto-configured chain would answer 401 before the handler
-         * runs. Authorisation has its own tests; this one is about routing and serialisation.
-         */
-        @Bean
-        SecurityFilterChain permitAll(HttpSecurity http) throws Exception {
-            return http.csrf(CsrfConfigurer::disable)
-                    .authorizeHttpRequests(requests -> requests.anyRequest().permitAll())
-                    .build();
-        }
 
         /**
          * Backed by the shared in-memory repository, since this test is about the HTTP layer and
