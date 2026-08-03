@@ -12,6 +12,10 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitWidthDestination;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,14 +30,19 @@ import stirling.software.SPDF.model.api.security.SignatureBox;
  * flipping through a long document can see at a glance that it was signed, the same way a
  * hand-signed contract is often initialled on every page.
  *
+ * <p>The mark is drawn to match the real signature, since a repeated signature that looks different
+ * on each page reads as a rendering fault. What keeps it honest instead is a link annotation:
+ * clicking a mark jumps to the page carrying the actual signature, where a reader can open its
+ * properties and see who signed and whether it validates.
+ *
  * <p>Kept apart from the signing code on purpose. Nothing here may touch the signature dictionary,
  * and separating them makes it hard to blur that line by accident.
  */
 @Slf4j
 public class SignatureMarkStamper {
 
-    /** Drawn in grey rather than black so a mark does not read as the real signature. */
-    private static final Color TEXT_COLOUR = new Color(90, 90, 90);
+    /** Matches the visible signature, which draws its text in black. */
+    private static final Color TEXT_COLOUR = Color.BLACK;
 
     private static final Color BORDER_COLOUR = new Color(150, 150, 150);
 
@@ -57,8 +66,14 @@ public class SignatureMarkStamper {
             return 0;
         }
 
-        PDFont font = new PDType1Font(FontName.HELVETICA);
+        // Same face the visible signature uses, so a mark is not distinguishable from it
+        // by its typography.
+        PDFont font = new PDType1Font(FontName.TIMES_BOLD);
         int stamped = 0;
+        PDPage signedPage =
+                signedPageIndex >= 0 && signedPageIndex < document.getNumberOfPages()
+                        ? document.getPage(signedPageIndex)
+                        : null;
 
         for (int pageIndex = 0; pageIndex < document.getNumberOfPages(); pageIndex++) {
             if (pageIndex == signedPageIndex) {
@@ -82,9 +97,40 @@ public class SignatureMarkStamper {
                 drawBorder(cs, rect);
                 drawLines(cs, font, rect, layout);
             }
+            if (signedPage != null) {
+                addLinkToSignature(page, rect, signedPage);
+            }
             stamped++;
         }
         return stamped;
+    }
+
+    /**
+     * Makes the mark clickable, jumping to the page that holds the real signature.
+     *
+     * <p>Without this a reader has no way to tell a mark from the signature, nor to reach the
+     * signature's properties from the page they happen to be on. A link is used rather than
+     * anything signature-shaped precisely because it is inert: it navigates and nothing else.
+     */
+    private static void addLinkToSignature(PDPage page, PDRectangle rect, PDPage signedPage)
+            throws IOException {
+        PDAnnotationLink link = new PDAnnotationLink();
+        link.setRectangle(rect);
+
+        // No visible border: the mark already draws its own, and the default link border
+        // would double it.
+        PDBorderStyleDictionary borderStyle = new PDBorderStyleDictionary();
+        borderStyle.setWidth(0);
+        link.setBorderStyle(borderStyle);
+
+        PDPageFitWidthDestination destination = new PDPageFitWidthDestination();
+        destination.setPage(signedPage);
+
+        PDActionGoTo action = new PDActionGoTo();
+        action.setDestination(destination);
+        link.setAction(action);
+
+        page.getAnnotations().add(link);
     }
 
     private static void drawBorder(PDPageContentStream cs, PDRectangle rect) throws IOException {

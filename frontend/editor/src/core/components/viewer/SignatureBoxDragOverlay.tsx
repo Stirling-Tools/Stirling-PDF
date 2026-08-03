@@ -21,10 +21,15 @@ interface DragState {
   startY: number;
   currentX: number;
   currentY: number;
+  /** True once the pointer has moved far enough to read the gesture as a drag. */
+  moved: boolean;
 }
 
-/** Ignore a stray click that drags almost nothing, which is a click, not a box. */
-const MIN_DRAG_PX = 8;
+/** A box smaller than this is a misfire rather than an intended area. */
+const MIN_BOX_PX = 8;
+
+/** Movement below this still counts as a click, so a shaky hand does not lose the corner. */
+const DRAG_THRESHOLD_PX = 4;
 
 /**
  * Lets the user drag a signature box directly on the page, the way Acrobat does.
@@ -47,6 +52,9 @@ export const SignatureBoxDragOverlay: React.FC<SignatureBoxDragOverlayProps> = (
 }) => {
   const [isActive, setIsActive] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
+  /** First corner of a two-click placement, once the user has clicked it. */
+  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
+  const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Page size in PDF points. Read lazily: pages are only measured once placement
   // starts, so viewing a document costs nothing.
@@ -57,6 +65,8 @@ export const SignatureBoxDragOverlay: React.FC<SignatureBoxDragOverlayProps> = (
     const cancel = () => {
       setIsActive(false);
       setDrag(null);
+      setAnchor(null);
+      setHover(null);
     };
     window.addEventListener(SIGNATURE_PLACEMENT_START_EVENT, start);
     window.addEventListener(SIGNATURE_PLACEMENT_CANCEL_EVENT, cancel);
@@ -113,38 +123,13 @@ export const SignatureBoxDragOverlay: React.FC<SignatureBoxDragOverlayProps> = (
     };
   };
 
-  const handleMouseDown = (event: React.MouseEvent) => {
-    if (!isActive) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const { x, y } = pointIn(event);
-    setDrag({ startX: x, startY: y, currentX: x, currentY: y });
-  };
-
-  useEffect(() => {
-    if (!drag) return;
-
-    const move = (event: MouseEvent) => {
-      const { x, y } = pointIn(event);
-      setDrag((prev) => (prev ? { ...prev, currentX: x, currentY: y } : prev));
-    };
-
-    const up = async () => {
-      const current = drag;
-      setDrag(null);
-      if (!current) return;
-
-      const left = Math.min(current.startX, current.currentX);
-      const top = Math.min(current.startY, current.currentY);
-      const width = Math.abs(current.currentX - current.startX);
-      const height = Math.abs(current.currentY - current.startY);
-
-      if (width < MIN_DRAG_PX || height < MIN_DRAG_PX) {
-        return;
-      }
+  /** Turns a finished rectangle in CSS pixels into the request's PDF points. */
+  const emit = useCallback(
+    async (left: number, top: number, width: number, height: number) => {
+      if (width < MIN_BOX_PX || height < MIN_BOX_PX) return false;
 
       const size = await readPageSize();
-      if (!size) return;
+      if (!size) return false;
 
       // CSS pixels to PDF points, then flip: the viewer measures y downwards from the
       // top of the page, PDF upwards from the bottom.
@@ -167,43 +152,128 @@ export const SignatureBoxDragOverlay: React.FC<SignatureBoxDragOverlayProps> = (
         ),
       );
       setIsActive(false);
-    };
+      setAnchor(null);
+      return true;
+    },
+    [pageWidth, pageHeight, pageIndex, readPageSize],
+  );
 
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
-    return () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
-  }, [drag, pageWidth, pageHeight, pageIndex, readPageSize]);
+  /**
+   * Pointer capture is what stops the viewer from panning mid-gesture: without it the
+   * viewer keeps receiving the move events and scrolls the page out from under the
+   * box being drawn.
+   */
+  const handlePointerDown = (event: React.PointerEvent) => {
+    if (!isActive || event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    const { x, y } = pointIn(event);
+
+    // Second click of a two-click placement closes the box.
+    if (anchor) {
+      void emit(
+        Math.min(anchor.x, x),
+        Math.min(anchor.y, y),
+        Math.abs(x - anchor.x),
+        Math.abs(y - anchor.y),
+      );
+      return;
+    }
+
+    setDrag({ startX: x, startY: y, currentX: x, currentY: y, moved: false });
+  };
+
+  const handlePointerMove = (event: React.PointerEvent) => {
+    if (!isActive) return;
+    const { x, y } = pointIn(event);
+
+    // With an anchor set, the box follows the pointer so the user sees the shape the
+    // second click will produce.
+    if (anchor && !drag) {
+      setHover({ x, y });
+      return;
+    }
+    if (!drag) return;
+
+    event.preventDefault();
+    const moved =
+      drag.moved ||
+      Math.abs(x - drag.startX) > DRAG_THRESHOLD_PX ||
+      Math.abs(y - drag.startY) > DRAG_THRESHOLD_PX;
+    setDrag({ ...drag, currentX: x, currentY: y, moved });
+  };
+
+  const handlePointerUp = (event: React.PointerEvent) => {
+    if (!isActive || !drag) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    const current = drag;
+    setDrag(null);
+
+    // Released without really moving: treat it as the first of two clicks rather than
+    // discarding it, so both gestures work and a stalled drag is not a dead end.
+    if (!current.moved) {
+      setAnchor({ x: current.startX, y: current.startY });
+      setHover({ x: current.startX, y: current.startY });
+      return;
+    }
+
+    void emit(
+      Math.min(current.startX, current.currentX),
+      Math.min(current.startY, current.currentY),
+      Math.abs(current.currentX - current.startX),
+      Math.abs(current.currentY - current.startY),
+    );
+  };
 
   if (!isActive) return null;
 
-  const box = drag
+  // While dragging the box follows the pointer; after the first of two clicks it
+  // follows the hover position, so both gestures preview the same way.
+  const corners = drag
+    ? { a: { x: drag.startX, y: drag.startY }, b: { x: drag.currentX, y: drag.currentY } }
+    : anchor && hover
+      ? { a: anchor, b: hover }
+      : null;
+
+  const box = corners
     ? {
-        left: Math.min(drag.startX, drag.currentX),
-        top: Math.min(drag.startY, drag.currentY),
-        width: Math.abs(drag.currentX - drag.startX),
-        height: Math.abs(drag.currentY - drag.startY),
+        left: Math.min(corners.a.x, corners.b.x),
+        top: Math.min(corners.a.y, corners.b.y),
+        width: Math.abs(corners.b.x - corners.a.x),
+        height: Math.abs(corners.b.y - corners.a.y),
       }
     : null;
 
   return (
     <div
       ref={containerRef}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       style={{
         position: "absolute",
         inset: 0,
         zIndex: 12,
         cursor: "crosshair",
+        // Stops the viewer treating the gesture as a pan, and stops the browser
+        // selecting page text while the box is being drawn.
+        touchAction: "none",
+        userSelect: "none",
         // A faint wash marks which pages are drawable without hiding the content
         // the user is aiming at.
         backgroundColor: "rgba(59, 130, 246, 0.06)",
       }}
       data-signature-drag-page={pageIndex}
     >
-      {box && (
+      {box && (box.width > 0 || box.height > 0) && (
         <div
           style={{
             position: "absolute",
@@ -213,6 +283,22 @@ export const SignatureBoxDragOverlay: React.FC<SignatureBoxDragOverlayProps> = (
             height: box.height,
             border: "2px solid var(--mantine-color-blue-6, #228be6)",
             backgroundColor: "rgba(34, 139, 230, 0.15)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      {/* The first corner stays visible so it is obvious a second click is expected. */}
+      {anchor && !drag && (
+        <div
+          style={{
+            position: "absolute",
+            left: anchor.x - 4,
+            top: anchor.y - 4,
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            backgroundColor: "var(--mantine-color-blue-6, #228be6)",
             pointerEvents: "none",
           }}
         />

@@ -133,6 +133,65 @@ class SignatureMarkStamperTest {
     }
 
     @Nested
+    @DisplayName("Link back to the signature")
+    class LinkToSignature {
+
+        @Test
+        @DisplayName("Each mark is clickable and jumps to the signed page")
+        void marksLinkToSignedPage() throws IOException {
+            try (PDDocument doc = document(3)) {
+                SignatureMarkStamper.stampOtherPages(doc, 2, BOX, lines());
+
+                for (int page : new int[] {0, 1}) {
+                    var annotations = doc.getPage(page).getAnnotations();
+                    assertEquals(1, annotations.size(), "page " + page + " should carry one link");
+
+                    var link =
+                            (org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink)
+                                    annotations.get(0);
+                    var action =
+                            (org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo)
+                                    link.getAction();
+                    var destination =
+                            (org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination
+                                            .PDPageDestination)
+                                    action.getDestination();
+
+                    // Without this a reader has no way to reach the signature's properties
+                    // from the page they are looking at.
+                    assertEquals(doc.getPage(2), destination.getPage());
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("The signed page gets no link, since it holds the signature itself")
+        void signedPageHasNoLink() throws IOException {
+            try (PDDocument doc = document(3)) {
+                SignatureMarkStamper.stampOtherPages(doc, 0, BOX, lines());
+
+                assertTrue(doc.getPage(0).getAnnotations().isEmpty());
+            }
+        }
+
+        @Test
+        @DisplayName("The link covers the mark exactly, so the whole box is clickable")
+        void linkCoversTheMark() throws IOException {
+            try (PDDocument doc = document(2)) {
+                SignatureMarkStamper.stampOtherPages(doc, 0, BOX, lines());
+
+                var link = doc.getPage(1).getAnnotations().get(0);
+                PDRectangle rect = link.getRectangle();
+
+                assertEquals(BOX.x(), rect.getLowerLeftX(), 0.01f);
+                assertEquals(BOX.y(), rect.getLowerLeftY(), 0.01f);
+                assertEquals(BOX.width(), rect.getWidth(), 0.01f);
+                assertEquals(BOX.height(), rect.getHeight(), 0.01f);
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("Degenerate input")
     class Degenerate {
 
