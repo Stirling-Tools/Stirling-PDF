@@ -292,6 +292,8 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        systemProperty 'java.awt.headless', 'true'
+        systemProperty 'apple.awt.UIElement', 'true'
         finalizedBy(jacocoReport)
     }
 
