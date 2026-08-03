@@ -297,15 +297,22 @@ public class ProcurementController {
         // Body is optional so an older client (no setup step) still starts a cloud trial.
         String deployment = request != null ? request.deployment() : null;
         int seats = request != null ? request.users() : 0;
-        var deal =
-                procurement.startTrial(
-                        teamId,
-                        deployment,
-                        seats,
-                        request != null ? request.businessName() : null,
-                        request != null ? request.contactName() : null,
-                        request != null ? request.contactEmail() : null,
-                        request != null ? request.inviteEmails() : null);
+        ProcurementDeal deal;
+        try {
+            deal =
+                    procurement.startTrial(
+                            teamId,
+                            deployment,
+                            seats,
+                            request != null ? request.businessName() : null,
+                            request != null ? request.contactName() : null,
+                            request != null ? request.contactEmail() : null,
+                            request != null ? request.inviteEmails() : null);
+        } catch (IllegalStateException e) {
+            // Past the trial the deal holds a committed licence; restarting would replace it.
+            log.warn("[procurement] trial start rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
         // After the trial exists, so a rejected invite can never stop it starting.
         if (request != null) {
             procurement.sendTrialInvites(
@@ -334,8 +341,17 @@ public class ProcurementController {
             @RequestBody QuoteRequest request, Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        return ResponseEntity.ok(
-                toQuote(procurement.buildQuote(teamId, request.toConfig(), request.toDetails())));
+        try {
+            return ResponseEntity.ok(
+                    toQuote(
+                            procurement.buildQuote(
+                                    teamId, request.toConfig(), request.toDetails())));
+        } catch (IllegalStateException e) {
+            // Below the minimum deal size, or the deal is already live. A client error, not a
+            // fault.
+            log.warn("[procurement] quote rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
 
     // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a

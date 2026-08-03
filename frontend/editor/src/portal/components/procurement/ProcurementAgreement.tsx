@@ -105,6 +105,10 @@ export function ProcurementAgreement({
       onAgree(); // proceed into the committed subscription
     } catch {
       setError(true);
+    } finally {
+      // In `finally`, not only on failure: accepting can fail after the signature is recorded, and
+      // the controller deliberately keeps this dialog open on failure so the error is readable. With
+      // the flag left set, the button span the rest of the session and there was no way to retry.
       setSigning(false);
     }
   };

@@ -120,7 +120,9 @@ export function QuoteBuilder({
   );
   // A seeded quote carries a volume but no user count, so treat it as manually set.
   const [manualVolume, setManualVolume] = useState(initial != null);
-  const [eula, setEula] = useState(initial != null);
+  // Never pre-ticked, even when re-editing a quote: a consent the buyer did not tick in this session
+  // is not a consent, and recordLegalConsent would have logged one as though they had.
+  const [eula, setEula] = useState(false);
   const [legalDoc, setLegalDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // Only surface field errors once the buyer tries to generate — no red fields on first sight.

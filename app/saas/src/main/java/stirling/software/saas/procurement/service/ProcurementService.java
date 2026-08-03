@@ -35,6 +35,7 @@ import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.repository.ProcurementAgreementSignatureRepository;
 import stirling.software.saas.procurement.repository.ProcurementDealRepository;
 import stirling.software.saas.procurement.repository.ProcurementQuoteRepository;
+import stirling.software.saas.util.LogRedactionUtils;
 
 /**
  * Orchestrates a linked team's procurement journey: start a (mock-licensed) trial, build a
@@ -108,6 +109,19 @@ public class ProcurementService {
         return dealRepo.findByTeamId(teamId);
     }
 
+    /**
+     * Starting a trial is only legitimate before one exists, while the buyer is still exploring, or
+     * to restart within the trial itself. A null stage is a deal that has just been constructed.
+     *
+     * <p>Package-private so the policy can be tested without the service's ten dependencies. Adding
+     * a later stage here would let a leader replace a paying customer's committed licence.
+     */
+    static boolean canStartTrial(String stage) {
+        return stage == null
+                || ProcurementDeal.STAGE_EXPLORING.equals(stage)
+                || ProcurementDeal.STAGE_TRIAL.equals(stage);
+    }
+
     @Transactional(readOnly = true)
     public List<ProcurementQuote> quotesForDeal(Long dealId) {
         return quoteRepo.findByDealIdOrderByCreatedAtDesc(dealId);
@@ -141,7 +155,6 @@ public class ProcurementService {
      * ({@code cloud}/{@code selfhost}/{@code airgap}) and seat count are captured here so the quote
      * builder opens seeded to their environment; both are still editable when the quote is built.
      */
-    @Transactional
     public ProcurementDeal startTrial(Long teamId, String deployment, int seats) {
         return startTrial(teamId, deployment, seats, null, null, null, null);
     }
@@ -149,7 +162,19 @@ public class ProcurementService {
     /**
      * Start (or restart) the trial, capturing the buying entity if the setup step collected it.
      * Blank details are ignored rather than written, so a re-run without them keeps what is there.
+     *
+     * <p>Only from before the trial or during it. Past that, {@code licenseRef} points at the
+     * committed annual licence, and this method would replace it with a fresh 14-day trial key
+     * while Stripe kept billing — the same hazard {@link #extendTrial} guards against, one step
+     * worse because it re-issues rather than re-dates. It would also rewind the stage and reset the
+     * extension counter.
+     *
+     * <p>The transaction is declared here rather than on the 3-arg overload: that one only
+     * delegates, and Spring's proxy cannot intercept a self-invocation, so an annotation there does
+     * nothing for either path. This is the method the controller calls, and it reaches out to
+     * Keygen between the read and the write.
      */
+    @Transactional
     public ProcurementDeal startTrial(
             Long teamId,
             String deployment,
@@ -160,6 +185,10 @@ public class ProcurementService {
             String inviteEmails) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId).orElseGet(() -> new ProcurementDeal(teamId));
+        if (!canStartTrial(deal.getStage())) {
+            throw new IllegalStateException(
+                    "Trial cannot be started from stage " + deal.getStage());
+        }
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime ends = now.plusDays(config.getTrialDurationDays());
         deal.setStage(ProcurementDeal.STAGE_TRIAL);
@@ -204,12 +233,19 @@ public class ProcurementService {
             if (email.isEmpty()) continue;
             try {
                 teams.inviteUserToTeam(teamId, email, inviter);
-                log.info("[procurement] trial invite sent team={} to={}", teamId, email);
+                // Redacted: an invitee list is third-party PII, and these logs are the one place it
+                // would otherwise be written in full. LogRedactionUtils is what the rest of the
+                // SaaS
+                // module uses for the same reason.
+                log.info(
+                        "[procurement] trial invite sent team={} to={}",
+                        teamId,
+                        LogRedactionUtils.redactEmail(email));
             } catch (Exception e) {
                 log.warn(
                         "[procurement] trial invite skipped team={} to={}: {}",
                         teamId,
-                        email,
+                        LogRedactionUtils.redactEmail(email),
                         e.getMessage());
             }
         }
@@ -263,11 +299,23 @@ public class ProcurementService {
         }
         // (Re)building a quote returns the deal to the quote stage and drops any prior acceptance,
         // so a rebuild from security/payment can't leave a stale stage or accepted-quote pointer.
+        QuoteBreakdown breakdown = pricing.price(cfg);
+        // Enforced before anything is persisted, and server-side rather than in the builder: the
+        // pricing curve has no natural floor (a small enough committed volume rounds the meter to
+        // zero) and every registered user leads their own team, so without this any signup could
+        // price a $0 enterprise quote, accept it, and be provisioned a committed licence.
+        long floor = config.getMinAnnualNetMinor();
+        if (floor > 0 && breakdown.annualNetMinor() < floor) {
+            throw new IllegalStateException(
+                    "Quoted annual fee "
+                            + breakdown.annualNetMinor()
+                            + " is below the minimum enterprise deal size "
+                            + floor);
+        }
+
         deal.setStage(ProcurementDeal.STAGE_QUOTE);
         deal.setAcceptedQuoteId(null);
         deal = dealRepo.save(deal);
-
-        QuoteBreakdown breakdown = pricing.price(cfg);
 
         ProcurementQuote quote = new ProcurementQuote();
         quote.setDealId(deal.getDealId());
@@ -570,13 +618,32 @@ public class ProcurementService {
      * before paying — that's bounded: the trial licence carries {@code expiry = trialEndsAt}, so
      * the file the verifier accepts self-expires at trial end. The buyer must re-download after
      * provisioning to get the committed-term file (the portal warns about this).
+     *
+     * <p>Once a quote exists, the quote's deployment decides — not the deal's. They are two
+     * different values: the deal's is chosen free at trial setup, the quote's is the one carrying
+     * the air-gap deploy fee. Reading the deal's here meant selecting air-gapped in the trial and
+     * then buying a cloud quote still yielded the offline file, and after provisioning it was
+     * checked out against the committed annual licence — so the self-expiry above no longer bounded
+     * it.
      */
     @Transactional(readOnly = true)
     public Optional<String> offlineLicenseFile(Long teamId) {
         ProcurementDeal deal = dealRepo.findByTeamId(teamId).orElse(null);
         if (deal == null || deal.getLicenseRef() == null) return Optional.empty();
-        if (!"airgap".equalsIgnoreCase(deal.getDeployment())) return Optional.empty();
+        if (!"airgap".equalsIgnoreCase(entitledDeployment(deal))) return Optional.empty();
         return Optional.of(licenses.checkOutLicenseFile(deal.getLicenseRef()));
+    }
+
+    /**
+     * The deployment the team is actually entitled to: the priced quote's once one exists,
+     * otherwise the trial's self-selected target. Paid entitlements must follow what was quoted.
+     */
+    private String entitledDeployment(ProcurementDeal deal) {
+        ProcurementQuote quote = currentQuote(deal.getTeamId()).orElse(null);
+        if (quote != null && quote.getDeployment() != null && !quote.getDeployment().isBlank()) {
+            return quote.getDeployment();
+        }
+        return deal.getDeployment();
     }
 
     /**

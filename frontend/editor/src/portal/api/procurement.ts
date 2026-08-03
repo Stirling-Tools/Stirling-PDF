@@ -1,4 +1,6 @@
 import { apiClient } from "@portal/api/http";
+import { resolveDemoResponse } from "@portal/api/demoData";
+import { saasApiBase } from "@portal/api/saasApiBase";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import type { Tier } from "@portal/contexts/TierContext";
 
@@ -527,7 +529,33 @@ export function recordLegalConsent(
 // that own Stripe; they persist results back through SECURITY DEFINER RPCs. The portal invokes them
 // directly (same pattern the PAYG checkout uses).
 
+/**
+ * Fixture response for an edge function while demo data is on.
+ *
+ * These calls go out through the Supabase client rather than {@code apiClient}, which is where demo
+ * data is normally intercepted — so until this existed they were never mocked. The portal has no
+ * service worker: the MSW handlers are matched by URL inside {@link resolveDemoResponse}, so the URL
+ * has to be reconstructed here to match what mocks/handlers/procurementSaas.ts registers.
+ *
+ * This mattered rather more than a missing fixture: issue and accept create a real Stripe Quote and a
+ * real committed subscription. With a live session — the normal state when developing against the
+ * shared project — pressing "Generate quote" in dev billed nothing but left real objects behind.
+ */
+async function demoEdgeResponse(
+  fn: string,
+  quoteId: number,
+): Promise<Response | undefined> {
+  const base = saasApiBase();
+  if (!base) return undefined;
+  return resolveDemoResponse(new URL(`${base}/functions/v1/${fn}`), {
+    method: "POST",
+    body: { quote_id: quoteId },
+  });
+}
+
 async function invokeEdge<T>(fn: string, quoteId: number): Promise<T> {
+  const demo = await demoEdgeResponse(fn, quoteId);
+  if (demo) return (await demo.json()) as T;
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error("No SaaS session");
   const { data, error } = await supabase.functions.invoke<T>(fn, {
@@ -550,6 +578,8 @@ export function acceptQuote(quoteId: number): Promise<AcceptResult> {
 
 /** Fetch the Stripe-generated quote PDF as a blob (for download / share). */
 export async function fetchQuotePdf(quoteId: number): Promise<Blob> {
+  const demo = await demoEdgeResponse("get-procurement-quote-pdf", quoteId);
+  if (demo) return await demo.blob();
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error("No SaaS session");
   const { data, error } = await supabase.functions.invoke<Blob>(
