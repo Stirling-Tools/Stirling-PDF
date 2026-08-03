@@ -14,6 +14,7 @@ import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
 import { LicensePanel } from "@portal/components/procurement/ProcurementStages";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import { useAsync } from "@portal/hooks/useAsync";
+import { openApiUrl } from "@portal/api/externalUrl";
 import "@portal/views/Procurement.css";
 
 /**
@@ -200,7 +201,7 @@ export function DocumentsModal({
               invoice
                 ? {
                     label: t("portal.procurement.documents.view"),
-                    onClick: () => window.open(invoice, "_blank", "noopener"),
+                    onClick: () => openApiUrl(invoice),
                   }
                 : {
                     unavailable: t("portal.procurement.documents.laterInvoice"),

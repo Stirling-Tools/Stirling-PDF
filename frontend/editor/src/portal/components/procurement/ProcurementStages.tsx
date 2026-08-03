@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
+import { openApiUrl } from "@portal/api/externalUrl";
 import "@portal/views/Procurement.css";
 
 /**
@@ -56,16 +57,13 @@ export function PaymentStageCard({
             {invoicePdf && (
               <Button
                 variant="secondary"
-                onClick={() => window.open(invoicePdf, "_blank", "noopener")}
+                onClick={() => openApiUrl(invoicePdf)}
               >
                 {t("portal.procurement.payment.downloadInvoice")}
               </Button>
             )}
             {invoiceUrl && (
-              <Button
-                variant="primary"
-                onClick={() => window.open(invoiceUrl, "_blank", "noopener")}
-              >
+              <Button variant="primary" onClick={() => openApiUrl(invoiceUrl)}>
                 {t("portal.procurement.payment.viewInvoice")}
               </Button>
             )}

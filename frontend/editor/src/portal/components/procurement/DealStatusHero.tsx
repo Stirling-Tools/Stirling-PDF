@@ -13,6 +13,7 @@ import {
   UserPlusIcon,
 } from "@portal/components/icons";
 import { warmCalendly } from "@portal/components/procurement/CalendlyInline";
+import { openApiUrl } from "@portal/api/externalUrl";
 import "@portal/views/Procurement.css";
 
 /** What each stage asks of the buyer, read out in the stage sentence. */
@@ -191,10 +192,7 @@ export function DealStatusHero({
             </Button>
           </>
         ) : invoiceUrl ? (
-          <Button
-            variant="primary"
-            onClick={() => window.open(invoiceUrl, "_blank", "noopener")}
-          >
+          <Button variant="primary" onClick={() => openApiUrl(invoiceUrl)}>
             {t("portal.procurement.payment.viewInvoice")}
           </Button>
         ) : (
