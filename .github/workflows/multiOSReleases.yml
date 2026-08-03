@@ -803,7 +803,7 @@ jobs:
       # instead of silently shipping a broken auto-update.
       - name: Upload binaries to Release
         if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true' && github.event.inputs.platform == 'all') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           # Don't regenerate/append notes on re-runs, and don't force this into the
