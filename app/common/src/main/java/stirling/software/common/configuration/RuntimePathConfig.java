@@ -1,10 +1,9 @@
 package stirling.software.common.configuration;
 
-import java.net.URISyntaxException;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -14,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.context.annotation.Configuration;
 
 import lombok.Getter;
@@ -180,9 +180,7 @@ public class RuntimePathConfig {
     }
 
     /**
-     * Locates a file or directory bundled alongside the application. Desktop builds place bundled
-     * resources next to the executable while the JAR itself lives one level down in {@code libs/},
-     * so both roots are probed.
+     * Locates a file or directory bundled alongside the application.
      *
      * @return the first candidate that exists on disk, or empty when nothing is bundled
      */
@@ -209,18 +207,18 @@ public class RuntimePathConfig {
     }
 
     /**
-     * Candidate directories a bundled resource may sit in, most reliable first. The desktop bundler
-     * lays the install out as {@code <root>/libs/*.jar}, {@code <root>/runtime/jre} and {@code
-     * <root>/tesseract}, so the install root is what we are really looking for.
+     * Candidate directories a bundled resource may sit in.
+     *
+     * <p>Spring Boot's {@link ApplicationHome} does the hard part: for an executable JAR it reports
+     * the directory holding that JAR, handling the nested class loader that makes {@code
+     * getCodeSource()} unusable here. The desktop bundler puts the JAR in {@code <root>/libs} and
+     * the bundled tools in {@code <root>}, so the home directory's parent is probed as well.
      */
     private static List<Path> bundleRoots() {
         List<Path> roots = new ArrayList<>();
+        // Explicit configuration first: an operator who set a base path meant it.
         roots.add(Path.of(InstallationPathConfig.getPath()));
-        // The bundled JRE is the sturdiest anchor: java.home always points at
-        // <root>/runtime/jre, whereas the JAR location is unreadable once Spring
-        // Boot's nested class loader is in play.
-        bundledJreRoot().ifPresent(roots::add);
-        jarDirectory()
+        applicationHome()
                 .ifPresent(
                         dir -> {
                             roots.add(dir);
@@ -232,34 +230,14 @@ public class RuntimePathConfig {
         return roots;
     }
 
-    private static Optional<Path> bundledJreRoot() {
+    private static Optional<Path> applicationHome() {
         try {
-            String javaHome = java.lang.System.getProperty("java.home");
-            if (StringUtils.isBlank(javaHome)) {
-                return Optional.empty();
-            }
-            // <root>/runtime/jre -> <root>
-            Path runtimeDir = Path.of(javaHome).getParent();
-            return Optional.ofNullable(runtimeDir == null ? null : runtimeDir.getParent());
+            File dir = new ApplicationHome(RuntimePathConfig.class).getDir();
+            return Optional.ofNullable(dir).map(File::toPath);
         } catch (RuntimeException e) {
-            log.debug("Could not derive the install root from java.home", e);
-            return Optional.empty();
-        }
-    }
-
-    private static Optional<Path> jarDirectory() {
-        try {
-            CodeSource codeSource = RuntimePathConfig.class.getProtectionDomain().getCodeSource();
-            if (codeSource == null || codeSource.getLocation() == null) {
-                return Optional.empty();
-            }
-            Path location = Path.of(codeSource.getLocation().toURI());
-            return Optional.ofNullable(
-                    Files.isDirectory(location) ? location : location.getParent());
-        } catch (URISyntaxException | RuntimeException e) {
-            // A Spring Boot fat JAR reports a "jar:file:...!/BOOT-INF/classes" URL, which has no
-            // file-system provider; fall back to the other roots rather than failing startup.
-            log.debug("Could not determine JAR location for bundled resource lookup", e);
+            // Never worth failing startup over: without a home directory the lookup simply falls
+            // through to the configured base path and then to a PATH lookup.
+            log.debug("Could not determine the application home directory", e);
             return Optional.empty();
         }
     }
