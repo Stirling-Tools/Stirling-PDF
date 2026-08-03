@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
+import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
@@ -337,6 +338,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <SaaSTeamProvider key={appKey}>
+          {/* Query cache is keyed by resource, not by backend — drop it when the
+              mode switch changes which backend those keys resolve to. */}
+          <DesktopQueryCacheReset />
           <DesktopConfigSync />
           <DesktopBannerInitializer />
           <SaveShortcutListener />

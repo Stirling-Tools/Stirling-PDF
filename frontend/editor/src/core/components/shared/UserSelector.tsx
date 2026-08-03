@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { MultiSelect, Loader, Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +8,7 @@ import { alert } from "@app/components/toast";
 import { UserSummary } from "@app/types/signingSession";
 import apiClient from "@app/services/apiClient";
 import { useAuth } from "@app/auth/UseSession";
+import { qk } from "@app/query/keys";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 interface UserSelectorProps {
@@ -20,6 +22,11 @@ interface UserSelectorProps {
 type SelectItem = { value: string; label: string };
 type GroupedData = { group: string; items: SelectItem[] };
 
+async function fetchUsers(): Promise<UserSummary[]> {
+  const response = await apiClient.get<UserSummary[]>("/api/v1/user/users");
+  return response.data || [];
+}
+
 const UserSelector = ({
   value,
   onChange,
@@ -30,71 +37,55 @@ const UserSelector = ({
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectData, setSelectData] = useState<GroupedData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [stringValue, setStringValue] = useState<string[]>([]);
 
+  // Shared across every mount site (participant pickers, the policy wizard),
+  // so opening a second one reuses the roster instead of re-fetching it.
+  const {
+    data: users,
+    isPending: loading,
+    error,
+  } = useQuery({ queryKey: qk.users(), queryFn: fetchUsers });
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await apiClient.get("/api/v1/user/users");
-        console.log("Users API response:", response.data);
-        const fetchedUsers = response.data || [];
+    if (!error) return;
+    console.error("Failed to load users:", error);
+    alert({
+      alertType: "error",
+      title: t("common.error"),
+      body: t("certSign.collab.userSelector.loadError", "Failed to load users"),
+    });
+  }, [error, t]);
 
-        // Process selectData inside useEffect - group by team
-        const usersByTeam: Record<string, SelectItem[]> = {};
-        const currentUserId = user?.id ? parseInt(user.id, 10) : null;
+  // Group by team, dropping the current user and the internal team.
+  const selectData = useMemo<GroupedData[]>(() => {
+    const usersByTeam: Record<string, SelectItem[]> = {};
+    const currentUserId = user?.id ? parseInt(user.id, 10) : null;
 
-        fetchedUsers
-          .filter((u: UserSummary) => u && u.userId && u.username)
-          .filter((u: UserSummary) => u.userId !== currentUserId) // Exclude current user
-          .filter((u: UserSummary) => u.teamName?.toLowerCase() !== "internal") // Exclude internal users
-          .forEach((user: UserSummary) => {
-            const teamName =
-              user.teamName ||
-              t("certSign.collab.userSelector.noTeam", "No Team");
-            if (!usersByTeam[teamName]) {
-              usersByTeam[teamName] = [];
-            }
-            const displayName = user.displayName || user.username || "Unknown";
-            const username = user.username || "unknown";
-            const label =
-              displayName !== username
-                ? `${displayName} (@${username})`
-                : displayName;
-            usersByTeam[teamName].push({
-              value: String(user.userId),
-              label,
-            });
-          });
+    (users ?? [])
+      .filter((u) => u && u.userId && u.username)
+      .filter((u) => u.userId !== currentUserId)
+      .filter((u) => u.teamName?.toLowerCase() !== "internal")
+      .forEach((u) => {
+        const teamName =
+          u.teamName || t("certSign.collab.userSelector.noTeam", "No Team");
+        if (!usersByTeam[teamName]) {
+          usersByTeam[teamName] = [];
+        }
+        const displayName = u.displayName || u.username || "Unknown";
+        const username = u.username || "unknown";
+        const label =
+          displayName !== username
+            ? `${displayName} (@${username})`
+            : displayName;
+        usersByTeam[teamName].push({ value: String(u.userId), label });
+      });
 
-        // Convert to Mantine's grouped format
-        const processed: GroupedData[] = Object.entries(usersByTeam).map(
-          ([teamName, items]) => ({
-            group: teamName,
-            items: items.sort((a, b) => a.label.localeCompare(b.label)),
-          }),
-        );
-
-        console.log("Processed selectData:", processed);
-        setSelectData(processed);
-      } catch (error) {
-        console.error("Failed to load users:", error);
-        alert({
-          alertType: "error",
-          title: t("common.error"),
-          body: t(
-            "certSign.collab.userSelector.loadError",
-            "Failed to load users",
-          ),
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, [t, user]);
+    return Object.entries(usersByTeam).map(([teamName, items]) => ({
+      group: teamName,
+      items: items.sort((a, b) => a.label.localeCompare(b.label)),
+    }));
+  }, [users, user, t]);
 
   // Process stringValue when value prop changes
   useEffect(() => {
@@ -102,7 +93,6 @@ const UserSelector = ({
     const result = safeValue
       .map((id) => (id != null ? id.toString() : ""))
       .filter(Boolean);
-    console.log("stringValue for MultiSelect:", result);
     setStringValue(result);
   }, [value]);
 

@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import apiClient from "@app/services/apiClient";
+import { qk } from "@app/query/keys";
+import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 
 export interface FooterInfo {
   analyticsEnabled?: boolean;
@@ -10,41 +12,37 @@ export interface FooterInfo {
   impressum?: string;
 }
 
+/** Analytics off is the safe read when the server can't be asked. */
+const FALLBACK: FooterInfo = { analyticsEnabled: false };
+
+async function fetchFooterInfo(): Promise<FooterInfo> {
+  const response = await apiClient.get<FooterInfo>(
+    "/api/v1/ui-data/footer-info",
+    {
+      suppressErrorToast: true,
+    } as never,
+  );
+  return response.data;
+}
+
 /**
- * Hook to fetch public footer configuration data.
- * This endpoint is always accessible without authentication.
+ * Public footer configuration. Always accessible without authentication.
+ *
+ * Shared between the footer and the admin legal section, so the two mount
+ * sites now resolve to one request instead of two.
  */
 export function useFooterInfo() {
-  const [footerInfo, setFooterInfo] = useState<FooterInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { data, isPending, error } = useQuery({
+    queryKey: qk.footerInfo(),
+    queryFn: fetchFooterInfo,
+    staleTime: CONFIG_STALE_TIME,
+  });
 
-  useEffect(() => {
-    const fetchFooterInfo = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.get<FooterInfo>(
-          "/api/v1/ui-data/footer-info",
-          {
-            suppressErrorToast: true,
-          } as any,
-        );
-        setFooterInfo(response.data);
-        setError(null);
-      } catch (err) {
-        console.error("[useFooterInfo] Failed to fetch footer info:", err);
-        setError(err as Error);
-        // Set defaults on error
-        setFooterInfo({
-          analyticsEnabled: false,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFooterInfo();
-  }, []);
-
-  return { footerInfo, loading, error };
+  return {
+    // Callers read legal links off this, so a failure must still yield an
+    // object — preserves the previous fall-back-to-analytics-off behaviour.
+    footerInfo: data ?? (error ? FALLBACK : null),
+    loading: isPending,
+    error: (error as Error | null) ?? null,
+  };
 }

@@ -7,6 +7,7 @@ import Login from "@app/routes/Login";
 import { useAuth } from "@app/auth/UseSession";
 import { springAuth } from "@app/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import { TestQueryProvider } from "@app/testing/TestQueryProvider";
 import apiClient from "@app/services/apiClient";
 import { configureSpringAuth } from "@app/auth/config";
 import type { AxiosInstance } from "axios";
@@ -92,11 +93,15 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-// Test wrapper with MantineProvider
+// Test wrapper with MantineProvider. TestQueryProvider stands in for the one
+// AppProviders mounts around /login in the real router — AuthLayout's <Footer>
+// reads useFooterInfo, which needs a client.
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <MantineProvider>
-    <PreferencesProvider>{children}</PreferencesProvider>
-  </MantineProvider>
+  <TestQueryProvider>
+    <MantineProvider>
+      <PreferencesProvider>{children}</PreferencesProvider>
+    </MantineProvider>
+  </TestQueryProvider>
 );
 
 describe("Login", () => {
