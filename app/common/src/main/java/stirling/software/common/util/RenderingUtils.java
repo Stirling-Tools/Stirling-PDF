@@ -24,7 +24,6 @@ import stirling.software.jpdfium.transform.PageOps;
 
 import app.photofox.vipsffm.VBlob;
 import app.photofox.vipsffm.VImage;
-import app.photofox.vipsffm.VSource;
 import app.photofox.vipsffm.VipsOption;
 import app.photofox.vipsffm.enums.VipsAccess;
 import app.photofox.vipsffm.enums.VipsBandFormat;
@@ -213,37 +212,8 @@ public class RenderingUtils {
 
     /** Loads an image from an InputStream, utilizing native loaders and ImageMagick fallback. */
     public static VImage loadAnyImage(Arena arena, InputStream inputStream) throws IOException {
-        try {
-            VSource source = VSource.newFromInputStream(arena, inputStream);
-            try {
-                // Try high-fidelity loaders with sequential access
-                return VImage.newFromSource(arena, source, "access=sequential,n=-1,fail=true");
-            } catch (Exception e) {
-                try {
-                    // Retry without 'n' parameter if the format doesn't support it (e.g. JXL, PNG,
-                    // JPG)
-                    return VImage.newFromSource(arena, source, "access=sequential,fail=true");
-                } catch (Exception ex) {
-                    log.debug(
-                            "Standard native loader failed, trying ImageMagick fallback: {}",
-                            ex.getMessage());
-                    try {
-                        return VImage.magickloadSource(arena, source, VipsOption.Int("n", -1));
-                    } catch (Exception ex2) {
-                        try {
-                            return VImage.magickloadSource(arena, source);
-                        } catch (Exception ex3) {
-                            throw ex3;
-                        }
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            log.error("Failed to load image with any available native loader", ex);
-            throw new IOException(
-                    "Failed to load image with any available native loader: " + ex.getMessage(),
-                    ex);
-        }
+        byte[] bytes = inputStream.readAllBytes();
+        return loadAnyImage(arena, bytes);
     }
 
     /** Loads an image from bytes, utilizing native loaders and ImageMagick fallback. */
