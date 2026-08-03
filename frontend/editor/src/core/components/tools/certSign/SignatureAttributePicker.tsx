@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
-import { Checkbox, Stack, Text, Group, Button } from "@mantine/core";
+import { Checkbox, Stack, Text, Group } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import {
   CERTIFICATE_ATTRIBUTES,
@@ -50,8 +51,8 @@ const SignatureAttributePicker: React.FC<SignatureAttributePickerProps> = ({
           {t("certSign.attributes.title", "Fields to show in the signature")}
         </Text>
         <Button
-          variant="subtle"
-          size="compact-xs"
+          variant="tertiary"
+          accent="neutral"
           disabled={disabled}
           onClick={() => onChange([...DEFAULT_VISIBLE_ATTRIBUTES])}
         >
