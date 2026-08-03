@@ -114,6 +114,14 @@ tasks:
       - cmd: ./gradlew test
         platforms: [linux, darwin]
 
+  test:force:
+    desc: "Run backend tests, ignoring cached results"
+    cmds:
+      - cmd: cmd /c ".\gradlew.bat cleanTest test --no-build-cache"
+        platforms: [windows]
+      - cmd: ./gradlew cleanTest test --no-build-cache
+        platforms: [linux, darwin]
+
   format:
     desc: "Auto-fix code formatting"
     cmds:
