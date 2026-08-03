@@ -374,7 +374,7 @@ jobs:
 
       - name: Build Tauri app (signed)
         if: env.SIGN_BUNDLE == 'true'
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -409,7 +409,7 @@ jobs:
 
       - name: Build Tauri app (unsigned)
         if: env.SIGN_BUNDLE != 'true'
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGN: "0"
@@ -435,7 +435,7 @@ jobs:
       - name: Build Tauri app (Linux AppImage)
         if: matrix.platform == 'ubuntu-22.04' && !inputs.minimal
         continue-on-error: true
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGN: ${{ (inputs.sign && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
