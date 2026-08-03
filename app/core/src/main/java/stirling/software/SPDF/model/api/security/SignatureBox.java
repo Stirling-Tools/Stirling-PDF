@@ -3,21 +3,19 @@ package stirling.software.SPDF.model.api.security;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 
 /**
- * Where the visible signature sits on the page, expressed the way someone dragging a box on screen
- * thinks about it: {@code y} is measured downwards from the top edge.
+ * Where the visible signature sits on the page, in PDF user-space points.
  *
- * <p>PDF's own coordinate system runs the other way - the origin is the bottom-left corner and y
- * grows upwards - so every value that reaches PDFBox has to be flipped. Doing that conversion in
- * one place keeps the off-by-a-page-height mistake out of the drawing code.
+ * <p>The origin is the bottom-left corner of the page and y grows upwards, matching PDF itself and
+ * the crop endpoint, so a client can feed both from the same coordinate helpers.
  *
  * @param x distance in points from the left edge of the page to the left edge of the box
- * @param y distance in points from the top edge of the page to the top edge of the box
+ * @param y distance in points from the bottom edge of the page to the bottom edge of the box
  * @param width box width in points
  * @param height box height in points
  */
 public record SignatureBox(float x, float y, float width, float height) {
 
-    /** Size used when a request asks for a visible signature without saying how big. */
+    /** Size used when a request asks for a positioned signature without saying how big. */
     public static final float DEFAULT_WIDTH = 200f;
 
     public static final float DEFAULT_HEIGHT = 50f;
@@ -40,11 +38,11 @@ public record SignatureBox(float x, float y, float width, float height) {
     }
 
     /**
-     * Converts to PDF coordinates and clamps the result inside the page.
+     * Places the box on a page, clamped so it stays inside it.
      *
      * <p>A box dragged past the edge of the page would otherwise produce a signature that is partly
-     * or entirely invisible, which looks to the user like the signature failed. Clamping moves it
-     * back inside instead, shrinking it only if it is larger than the page itself.
+     * or entirely invisible, which reads to the user as the signature having failed. Clamping moves
+     * it back inside instead, shrinking it only when it is larger than the page itself.
      *
      * @param mediaBox the page the signature is going on
      */
@@ -56,11 +54,10 @@ public record SignatureBox(float x, float y, float width, float height) {
         float boxHeight = Math.min(height, pageHeight);
 
         float left = clamp(x, 0f, pageWidth - boxWidth);
-        float topDown = clamp(y, 0f, pageHeight - boxHeight);
+        float bottom = clamp(y, 0f, pageHeight - boxHeight);
 
-        // Flip: distance from the top becomes distance from the bottom to the box's lower edge.
-        float bottom = pageHeight - topDown - boxHeight;
-
+        // Pages that are cropped or imposed have a media box that does not start at the origin,
+        // so the offset has to be carried through or the signature lands in the wrong place.
         return new PDRectangle(
                 mediaBox.getLowerLeftX() + left,
                 mediaBox.getLowerLeftY() + bottom,

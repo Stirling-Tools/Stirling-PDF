@@ -98,16 +98,16 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Distance in PDF points from the LEFT edge of the page to the left edge of the"
+                    "Distance in PDF points from the left edge of the page to the left edge of the"
                             + " signature box. Omit to keep the legacy bottom-left placement.")
     private Float signatureX;
 
     @Schema(
             description =
-                    "Distance in PDF points from the TOP edge of the page to the top edge of the"
-                            + " signature box. Measured downwards, as a user positioning a box on"
-                            + " screen expects; PDF's own y axis runs the other way and the"
-                            + " conversion is done server-side.")
+                    "Distance in PDF points from the bottom edge of the page to the bottom edge of"
+                            + " the signature box. PDF user space, same convention as the crop"
+                            + " endpoint: the origin is the bottom-left corner and y grows"
+                            + " upwards.")
     private Float signatureY;
 
     @Schema(description = "Width of the signature box in PDF points.", defaultValue = "200")

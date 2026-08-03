@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link SignatureBox}. The y-axis flip is the kind of arithmetic that looks right and is
- * wrong by exactly one page height, so each case pins the resulting PDF rectangle rather than just
+ * Tests for {@link SignatureBox}. Placement is the kind of arithmetic that looks right and is wrong
+ * by exactly one page height, so each case pins the resulting PDF rectangle rather than just
  * asserting it is "somewhere sensible".
  */
 class SignatureBoxTest {
@@ -53,7 +53,7 @@ class SignatureBoxTest {
         }
 
         @Test
-        @DisplayName("A size without a position anchors at the top-left corner")
+        @DisplayName("A size without a position anchors at the page origin")
         void sizeWithoutPosition() {
             SignatureBox box = SignatureBox.from(null, null, 300f, 80f);
 
@@ -64,31 +64,29 @@ class SignatureBoxTest {
     }
 
     @Nested
-    @DisplayName("Converting to PDF coordinates")
-    class Conversion {
+    @DisplayName("Placing the box on a page")
+    class Placement {
 
         @Test
-        @DisplayName("y is measured from the top, so the flip lands the box below the top edge")
-        void flipsYAxis() {
-            // 50pt down from the top, 40pt tall: its bottom edge sits 90pt below the top.
-            SignatureBox box = new SignatureBox(30f, 50f, 200f, 40f);
+        @DisplayName("Coordinates are PDF user space, so they land where they say")
+        void placesAtGivenCoordinates() {
+            SignatureBox box = new SignatureBox(30f, 700f, 200f, 40f);
 
             PDRectangle rect = box.toPdfRectangle(A4);
 
             assertEquals(30f, rect.getLowerLeftX(), 0.01f);
-            assertEquals(A4.getHeight() - 90f, rect.getLowerLeftY(), 0.01f);
+            assertEquals(700f, rect.getLowerLeftY(), 0.01f);
             assertEquals(200f, rect.getWidth(), 0.01f);
             assertEquals(40f, rect.getHeight(), 0.01f);
         }
 
         @Test
-        @DisplayName("A box at the top-left corner touches the top of the page")
-        void topLeftCorner() {
+        @DisplayName("A box at the origin sits on the bottom-left corner")
+        void originCorner() {
             PDRectangle rect = new SignatureBox(0f, 0f, 100f, 50f).toPdfRectangle(A4);
 
             assertEquals(0f, rect.getLowerLeftX(), 0.01f);
-            // Its upper edge is the page's upper edge.
-            assertEquals(A4.getHeight(), rect.getUpperRightY(), 0.01f);
+            assertEquals(0f, rect.getLowerLeftY(), 0.01f);
         }
 
         @Test
@@ -104,12 +102,15 @@ class SignatureBoxTest {
         }
 
         @Test
-        @DisplayName("A box dragged past the bottom edge is pulled back inside")
+        @DisplayName("A box dragged past the top edge is pulled back inside")
         void clampsVertically() {
+            // 830pt up on an 841pt-tall page, with a 50pt box: 39pt would overflow the top.
             PDRectangle rect = new SignatureBox(50f, 830f, 200f, 50f).toPdfRectangle(A4);
 
-            assertTrue(rect.getLowerLeftY() >= -0.01f, "box must not extend below the page");
-            assertEquals(0f, rect.getLowerLeftY(), 0.01f);
+            assertEquals(A4.getHeight() - 50f, rect.getLowerLeftY(), 0.01f);
+            assertTrue(
+                    rect.getUpperRightY() <= A4.getHeight() + 0.01f,
+                    "box must not extend past the top edge");
         }
 
         @Test
@@ -118,7 +119,7 @@ class SignatureBoxTest {
             PDRectangle rect = new SignatureBox(-100f, -100f, 200f, 50f).toPdfRectangle(A4);
 
             assertEquals(0f, rect.getLowerLeftX(), 0.01f);
-            assertEquals(A4.getHeight(), rect.getUpperRightY(), 0.01f);
+            assertEquals(0f, rect.getLowerLeftY(), 0.01f);
         }
 
         @Test
@@ -138,9 +139,9 @@ class SignatureBoxTest {
 
             PDRectangle rect = new SignatureBox(10f, 10f, 100f, 50f).toPdfRectangle(offset);
 
-            assertEquals(30f, rect.getLowerLeftX(), 0.01f);
-            // 10pt down from the top of a 600pt-tall box that starts at y=30.
-            assertEquals(30f + 600f - 10f - 50f, rect.getLowerLeftY(), 0.01f);
+            // The media box's own origin has to be carried through, not assumed to be (0,0).
+            assertEquals(20f + 10f, rect.getLowerLeftX(), 0.01f);
+            assertEquals(30f + 10f, rect.getLowerLeftY(), 0.01f);
         }
     }
 }
