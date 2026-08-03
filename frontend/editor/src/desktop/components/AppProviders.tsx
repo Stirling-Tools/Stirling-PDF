@@ -312,8 +312,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           autoFetch: false,
         }}
       >
-        {/* Also here: the auth check below switches mode before authChecked
-            flips, and those switches must not be missed. */}
+        {/* Also here: the auth check below switches mode pre-authChecked. */}
         <DesktopQueryCacheReset />
         <div style={{ minHeight: "100vh" }} />
         {updatePopupModal}

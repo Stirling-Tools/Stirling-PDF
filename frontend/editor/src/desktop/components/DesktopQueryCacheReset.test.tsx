@@ -70,8 +70,7 @@ describe("DesktopQueryCacheReset", () => {
 
     modeListeners.forEach((l) => l({ mode: "selfhosted" }));
 
-    // The mounted observer must be notified and refetch — evicting the entry
-    // without notifying would leave the stale value on screen.
+    // Must refetch, not just evict — this is what clear() got wrong.
     await waitFor(() => expect(seen).toContain("self-hosted-backend"));
     expect(queryFn).toHaveBeenCalledTimes(2);
   });
@@ -96,7 +95,6 @@ describe("DesktopQueryCacheReset", () => {
     renderWithConsumer(queryFn);
     await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(1));
 
-    // No transition happened, so nothing should have been reset.
     expect(queryFn).toHaveBeenCalledTimes(1);
   });
 });

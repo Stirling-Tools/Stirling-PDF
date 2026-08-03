@@ -10,17 +10,13 @@ import type { GroupEnabledResult } from "@app/types/groupEnabled";
 const OFFLINE_REASON_FALLBACK =
   "Requires your Stirling-PDF server (currently offline)";
 
-// Selects a boolean, not the monitor's state object — that object is
-// reassigned on every poll, so the store would look changed each tick.
+// A boolean, not the monitor's state object — that is reassigned every poll.
 const subscribeToMonitor = (onChange: () => void) =>
   selfHostedServerMonitor.subscribe(onChange);
 const getIsOffline = () =>
   selfHostedServerMonitor.getSnapshot().status === "offline";
 
-/**
- * Desktop override: skips the request entirely when the self-hosted server is
- * confirmed offline, with a reason matching the tool panel.
- */
+/** Desktop override: skips the request when the self-hosted server is offline. */
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { t } = useTranslation();
   const isOffline = useSyncExternalStore(subscribeToMonitor, getIsOffline);
@@ -32,8 +28,7 @@ export function useGroupEnabled(group: string): GroupEnabledResult {
     enabled: !isOffline,
   });
 
-  // Before the query result: a disabled query stays isPending, which would
-  // otherwise read as "still loading" forever.
+  // Before the query: a disabled query stays isPending, which would read as loading forever.
   if (isOffline) {
     return {
       enabled: false,

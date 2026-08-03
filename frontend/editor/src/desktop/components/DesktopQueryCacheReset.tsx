@@ -4,26 +4,20 @@ import { connectionModeService } from "@app/services/connectionModeService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 
 /**
- * Discards cached responses when the backend they came from stops being the one
- * the app talks to.
- *
- * A key does not pin a backend on desktop: operationRouter resolves the same
- * path to the bundled backend, a self-hosted server or the SaaS backend. Two
- * things move that target — a connection-mode switch, and the self-hosted
- * server going up or down, which reroutes with no mode event.
- *
- * resetQueries, not clear(): clear() evicts without notifying mounted
- * observers, so a panel keeps rendering the old backend's answer.
+ * Drops cached responses when the backend behind them changes. operationRouter
+ * resolves the same path to the bundled backend, a self-hosted server or SaaS,
+ * so a mode switch or the server going up/down invalidates every key.
  */
 export function DesktopQueryCacheReset() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    // resetQueries, not clear(): clear() evicts without notifying mounted
+    // observers, so a panel keeps rendering the old backend's answer.
     const reset = () => void queryClient.resetQueries();
     const unsubscribeMode = connectionModeService.subscribeToModeChanges(reset);
 
-    // Only offline<->reachable matters; the monitor also emits idle and
-    // checking, and replays current state on subscribe.
+    // Ignore idle/checking, and the state replayed on subscribe.
     let wasOffline: boolean | null = null;
     const unsubscribeServer = selfHostedServerMonitor.subscribe(
       ({ status }) => {

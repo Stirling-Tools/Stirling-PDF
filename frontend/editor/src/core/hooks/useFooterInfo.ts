@@ -5,10 +5,9 @@ import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 
 export type { FooterInfo };
 
-/** Analytics off is the safe read when the server can't be asked. */
 const FALLBACK: FooterInfo = { analyticsEnabled: false };
 
-/** Public footer configuration. Shared by Footer and the admin legal section. */
+/** Public footer config, shared by Footer and the admin legal section. */
 export function useFooterInfo() {
   const { data, isPending, error } = useQuery({
     queryKey: qk.footerInfo(),
@@ -17,7 +16,7 @@ export function useFooterInfo() {
   });
 
   return {
-    // Callers read legal links off this, so a failure must still yield an object.
+    // Callers render legal links off this, so a failure must still yield an object.
     footerInfo: data ?? (error ? FALLBACK : null),
     loading: isPending,
     error: (error as Error | null) ?? null,
