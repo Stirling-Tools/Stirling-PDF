@@ -172,9 +172,41 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
       fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
     },
   } as unknown as ToolRegistryEntry;
+  // A tool that will not run on its defaults: its validateParams is the same predicate its own Run
+  // button uses, so a step for it is "unconfigured" until a language is chosen.
+  const ocr = {
+    name: "OCR",
+    icon: null,
+    component: null,
+    description: "",
+    categoryId: "recommendedTools",
+    subcategoryId: "general",
+    automationSettings: (props: {
+      onParameterChange: (key: string, value: unknown) => void;
+    }) => (
+      <button
+        type="button"
+        onClick={() => props.onParameterChange("languages", ["eng"])}
+      >
+        pick language
+      </button>
+    ),
+    operationConfig: {
+      operationType: "ocr",
+      toolType: 0,
+      endpoint: "/api/v1/misc/ocr-pdf",
+      defaultParameters: { languages: [] },
+      validateParams: (params: { languages?: string[] }) =>
+        (params.languages ?? []).length > 0,
+      buildFormData: () => new FormData(),
+      toApiParams: (params: Record<string, unknown>) => ({ ...params }),
+      fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
+    },
+  } as unknown as ToolRegistryEntry;
   const allTools = {
     compress,
     extractImages,
+    ocr,
   } as unknown as ToolRegistryCatalog["allTools"];
   const catalog: ToolRegistryCatalog = {
     regularTools: allTools,
@@ -354,6 +386,47 @@ describe("PipelineBuilder", () => {
     // Nothing is on the chain, so there is nothing to remove either.
     expect(
       screen.queryByLabelText(/portal.pipelines.graph.removeNode/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("warns on a step whose tool cannot run on its defaults", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await addTool("OCR");
+
+    // The tool declares its own mandatory parameters, so the node says so without the builder
+    // knowing anything about OCR.
+    expect(
+      await screen.findByText("portal.pipelines.builder.needsConfiguring"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("clears the warning once the step is configured", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await addTool("OCR");
+    await screen.findByText("portal.pipelines.builder.needsConfiguring");
+
+    // Adding a step selects it, so its settings are already open.
+    fireEvent.click(screen.getByText("pick language"));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText("portal.pipelines.builder.needsConfiguring"),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("leaves a tool that runs happily on its defaults unwarned", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await addTool("Compress");
+
+    expect(
+      await screen.findByText("portal.pipelines.graph.add.input"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.pipelines.builder.needsConfiguring"),
     ).not.toBeInTheDocument();
   });
 
