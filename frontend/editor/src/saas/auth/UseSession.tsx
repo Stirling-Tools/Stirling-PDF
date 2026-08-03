@@ -287,14 +287,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!opts?.force && loadedForRef.current === key)
         return Promise.resolve();
 
-      // Coalesce only a duplicate load of the same identity. A different
-      // identity - or a forced reload - must start its own: adopting the
-      // in-flight promise would silently drop it, which is exactly what the
-      // guest upgrade does when it lands mid-load.
+      // Coalesce a duplicate load of the same identity: whichever of
+      // initializeAuth / the SIGNED_IN handler arrives second adopts this
+      // promise and awaits it, so the initial spinner still waits on pro status
+      // no matter which of them won the race. A different identity - or a
+      // forced reload - must start its own: adopting the in-flight promise
+      // would silently drop it, which is exactly what the guest upgrade does
+      // when it lands mid-load.
       if (!opts?.force && inFlightRef.current?.key === key)
         return inFlightRef.current.promise;
 
-      loadedForRef.current = key;
       const run = (async () => {
         // Deliberately off the awaited path: on a first login this downloads,
         // re-encodes and uploads the provider avatar, and initializeAuth gates
@@ -315,10 +317,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fetchProStatus(sessionToLoad),
           fetchProfilePictureMetadata(sessionToLoad),
         ]);
+        // Marked loaded only once the data is in. Setting it up front would let
+        // a concurrent caller short-circuit on it and return to a still-empty
+        // state - which is how the initial spinner could clear before pro
+        // status was known when the SIGNED_IN handler won the race.
+        loadedForRef.current = key;
       })()
         .catch((err) => {
-          // Release the key so a later auth event can retry.
-          if (loadedForRef.current === key) loadedForRef.current = null;
+          // Nothing to release: the key is only set on success, so a failed
+          // load leaves the identity unmarked and a later auth event retries.
           console.debug("[Auth Debug] Failed to load user data:", err);
         })
         .finally(() => {

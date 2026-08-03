@@ -292,4 +292,57 @@ describe("AuthProvider user-data loading", () => {
 
     await waitFor(() => expect(rpc).toHaveBeenCalledTimes(2));
   });
+
+  it("keeps the initial spinner up when SIGNED_IN wins the race with initializeAuth", async () => {
+    // initializeAuth is invoked before the listener subscribes but yields at
+    // `await getSession()`, so Supabase can deliver SIGNED_IN first. Marking the
+    // identity loaded up front would then let initializeAuth's await resolve
+    // instantly and clear the spinner while pro status was still in flight -
+    // which is the whole thing awaiting the load is meant to prevent.
+    const session = makeSession();
+
+    let releaseSession = () => {};
+    getSession.mockReturnValueOnce(
+      new Promise<{ data: { session: Session }; error: null }>((resolve) => {
+        releaseSession = () => resolve({ data: { session }, error: null });
+      }),
+    );
+
+    let releaseProStatus = () => {};
+    rpc.mockImplementationOnce(
+      () =>
+        new Promise<{ data: boolean; error: null }>((resolve) => {
+          releaseProStatus = () => resolve({ data: true, error: null });
+        }),
+    );
+
+    const { getByTestId, fire } = renderProvider();
+
+    // SIGNED_IN lands first and starts the load; pro status stays unsettled.
+    await fire("SIGNED_IN", session);
+    expect(rpc).toHaveBeenCalledTimes(1);
+
+    // initializeAuth now gets its session and must adopt that in-flight load
+    // rather than short-circuiting on a key that was set before the data landed.
+    await act(async () => {
+      releaseSession();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(getByTestId("loading").textContent).toBe("true");
+    // Adopted, not restarted.
+    expect(rpc).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      releaseProStatus();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() =>
+      expect(getByTestId("loading").textContent).toBe("false"),
+    );
+    expect(rpc).toHaveBeenCalledTimes(1);
+  });
 });
