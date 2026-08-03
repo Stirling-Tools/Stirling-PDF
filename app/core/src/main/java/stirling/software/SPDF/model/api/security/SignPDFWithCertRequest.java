@@ -123,4 +123,14 @@ public class SignPDFWithCertRequest extends PDFFile {
                             + " the certificate does not carry are skipped rather than drawn"
                             + " blank.")
     private List<CertificateAttribute> visibleAttributes;
+
+    @Schema(
+            description =
+                    "Repeat the signature's appearance on every page. A PDF signature has one"
+                            + " widget on one page, so only the page given by pageNumber carries"
+                            + " the actual signature; the other pages get a visual mark with the"
+                            + " same content that is NOT a signature. Tell the user that, or the"
+                            + " document looks signed in more places than it is.",
+            defaultValue = "false")
+    private Boolean markAllPages;
 }

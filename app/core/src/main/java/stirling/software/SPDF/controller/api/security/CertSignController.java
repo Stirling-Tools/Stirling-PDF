@@ -82,6 +82,7 @@ import stirling.software.SPDF.model.api.security.SignatureBox;
 import stirling.software.SPDF.service.CertificateAttributeService;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.SPDF.service.SignatureAppearanceLayout;
+import stirling.software.SPDF.service.SignatureMarkStamper;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -154,7 +155,8 @@ public class CertSignController {
                 reason,
                 showLogo,
                 null,
-                null);
+                null,
+                false);
     }
 
     public static void sign(
@@ -169,7 +171,8 @@ public class CertSignController {
             String reason,
             Boolean showLogo,
             SignatureBox box,
-            List<CertificateAttribute> visibleAttributes) {
+            List<CertificateAttribute> visibleAttributes,
+            Boolean markAllPages) {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -178,6 +181,25 @@ public class CertSignController {
             signature.setLocation(location);
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
+
+            // Marks go on before signing so the signature covers them. Stamping afterwards would
+            // modify the document the signature attests to, and every validator would flag it.
+            if (Boolean.TRUE.equals(markAllPages)
+                    && Boolean.TRUE.equals(showSignature)
+                    && box != null) {
+                int stamped =
+                        SignatureMarkStamper.stampOtherPages(
+                                doc,
+                                pageNumber != null ? pageNumber : 0,
+                                box,
+                                instance.displayLines(signature, visibleAttributes));
+                log.info(
+                        "Stamped the signature mark on {} page(s); only page {} carries the"
+                                + " signature itself",
+                        stamped,
+                        (pageNumber != null ? pageNumber : 0) + 1);
+            }
+
             if (Boolean.TRUE.equals(showSignature)) {
                 try (SignatureOptions signatureOptions = new SignatureOptions()) {
                     signatureOptions.setVisualSignature(
@@ -342,7 +364,8 @@ public class CertSignController {
                             request.getSignatureY(),
                             request.getSignatureWidth(),
                             request.getSignatureHeight()),
-                    request.getVisibleAttributes());
+                    request.getVisibleAttributes(),
+                    request.getMarkAllPages());
         } catch (IOException e) {
             signedOut.close();
             throw e;
@@ -551,14 +574,14 @@ public class CertSignController {
          * to the fields the legacy appearance showed when no selection was made, so asking only for
          * a position still yields a sensible signature.
          */
-        private void drawAttributeText(
-                PDPageContentStream cs,
-                PDFont font,
-                PDRectangle rect,
-                X509Certificate cert,
-                PDSignature signature,
-                List<CertificateAttribute> visibleAttributes)
+        /**
+         * The label/value pairs the visible signature shows, so the mark stamped on other pages can
+         * render identical content without duplicating the selection rules.
+         */
+        public Map<String, String> displayLines(
+                PDSignature signature, List<CertificateAttribute> visibleAttributes)
                 throws IOException {
+            X509Certificate cert = (X509Certificate) getCertificateChain()[0];
             CertificateAttributeService attributeService = new CertificateAttributeService();
             Map<CertificateAttribute, String> available =
                     attributeService.withSignatureDetails(
@@ -574,7 +597,18 @@ public class CertSignController {
                             ? visibleAttributes
                             : DEFAULT_VISIBLE_ATTRIBUTES;
 
-            Map<String, String> lines = attributeService.toDisplayLines(available, selected);
+            return attributeService.toDisplayLines(available, selected);
+        }
+
+        private void drawAttributeText(
+                PDPageContentStream cs,
+                PDFont font,
+                PDRectangle rect,
+                X509Certificate cert,
+                PDSignature signature,
+                List<CertificateAttribute> visibleAttributes)
+                throws IOException {
+            Map<String, String> lines = displayLines(signature, visibleAttributes);
             SignatureAppearanceLayout.Layout layout =
                     SignatureAppearanceLayout.fit(lines, font, rect.getWidth(), rect.getHeight());
             if (layout.lines().isEmpty()) {
