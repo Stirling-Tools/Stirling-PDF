@@ -329,6 +329,7 @@
    ========================= */
 
 .addFileCard {
+
   /* Fill the same slot a portrait page thumbnail does. Height: the 310px
      .thumbWrap minus the always-reserved 26px toolchain bar (22px + 4px) that
      sits above the page. Width: the file card's 260px minus its 10px side

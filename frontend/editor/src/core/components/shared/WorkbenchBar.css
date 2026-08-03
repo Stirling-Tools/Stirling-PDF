@@ -9,6 +9,7 @@
   align-content: flex-start;
   min-height: 40px;
   padding: 0 8px;
+
   /* No left margin: the file sidebar's own 0.5rem padding already provides the
      gutter on that side, so adding one here would double it and leave the bar
      further from the sidebar than it is from the tool panel. */

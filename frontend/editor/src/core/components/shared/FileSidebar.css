@@ -81,33 +81,6 @@
   padding: 0.25rem 0;
   overflow: hidden;
 }
-.file-sidebar-footer-box {
-  padding: 0.25rem 0;
-  flex-shrink: 0;
-}
-
-/* Collapsed rail: the file tree isn't rendered, so hide its (empty) box and
-   let the boxes stack at the top — controls, then the settings footer right
-   after — instead of the files box stretching to fill. */
-.file-sidebar[data-collapsed="true"] .file-sidebar-controls,
-.file-sidebar[data-collapsed="true"] .file-sidebar-footer-box {
-  padding: 0.25rem;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-files-box {
-  display: none;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-inner {
-  flex: 0 0 auto;
-}
-/* Centre each row's icon in the narrow rail (no side padding/margin to shove
-   it off the edge). */
-.file-sidebar[data-collapsed="true"] .file-sidebar-search-row,
-.file-sidebar[data-collapsed="true"] .file-sidebar-action-row,
-.file-sidebar[data-collapsed="true"] .file-sidebar-cloud-row {
-  justify-content: center;
-  padding-inline: 0;
-  margin: 0;
-}
 
 .file-sidebar-footer-box {
   padding: 0.25rem 0;

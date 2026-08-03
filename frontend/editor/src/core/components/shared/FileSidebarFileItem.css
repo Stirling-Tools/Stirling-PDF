@@ -170,6 +170,7 @@
 .file-sidebar-file-info {
   flex: 1;
   min-width: 0;
+
   /* Always reserve space for action buttons so file name truncation dots (...)
      never bleed under action buttons or overlap their outline/focus box. */
   padding-right: 3.75rem;

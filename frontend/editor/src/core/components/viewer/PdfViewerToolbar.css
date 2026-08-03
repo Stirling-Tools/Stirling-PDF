@@ -17,11 +17,13 @@
 
 @keyframes pdf-viewer-toolbar-in {
   from {
+
     /* The bar's own height plus its gutter, so it starts fully off-screen
        however tall the controls wrap. */
     transform: translateY(calc(100% + var(--nav-gutter)));
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;

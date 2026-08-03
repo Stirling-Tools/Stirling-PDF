@@ -35,6 +35,7 @@
   padding-right: 1.25rem;
   border-right: 1px solid var(--c-border-subtle);
   align-self: stretch;
+
   /* Neutral (ink) tint for a currentColor icon in the leading slot. */
   color: var(--c-text);
 }
@@ -48,6 +49,7 @@
   border: none;
   box-shadow: none;
 }
+
 .sui-metric-strip--row .sui-metric__label {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -55,10 +57,12 @@
   letter-spacing: 0.05em;
   color: var(--c-text-subtle);
 }
+
 .sui-metric-strip--row .sui-metric__value {
   font-size: 1.0625rem;
   font-weight: 600;
 }
+
 .sui-metric-strip--row .sui-metric__footer {
   font-size: 0.6875rem;
 }
@@ -68,11 +72,13 @@
     flex-wrap: wrap;
     gap: 1.25rem 2rem;
   }
+
   .sui-metric-strip__leading {
     border-right: none;
     padding-right: 0;
     flex-basis: 100%;
   }
+
   .sui-metric-strip--row .sui-metric {
     flex-basis: 40%;
   }
