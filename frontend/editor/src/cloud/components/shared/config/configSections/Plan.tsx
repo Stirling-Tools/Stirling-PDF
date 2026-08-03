@@ -1,53 +1,41 @@
 /**
- * SaaS "Plan" page — the single entry point for billing, plan state, and
- * usage. Branches on the team's wallet state and the viewer's role:
+ * SaaS "Plan" page — a read-only mirror of the team's plan and usage that
+ * deep-links to the PDF Processor (portal), where billing, spend limits, and
+ * plan changes are now managed. Branches its figures on the wallet's free vs
+ * subscribed state; the "Manage in Usage & Billing" CTA is enabled only for
+ * team leaders (members get the read-only hint).
  *
- *   - free + leader → {@link PaygFreeLeader} (upgrade CTA + manual-tools
- *     framing)
- *   - free + member → {@link PaygFreeMember} (ask-the-owner note)
- *   - subscribed + leader → {@link PaygLeader} (full dashboard, editable cap)
- *   - subscribed + member → {@link PaygMember} (member dashboard)
- *
- * <p>The hook handles loading + error states locally so the four view
- * components stay focused on rendering the data they own. {@code Plan} is
- * intentionally tiny (under 60 lines) so future "Plan-level" affordances —
- * a top-level error toast, a subscription confirmation card, etc — have
- * obvious places to land.
+ * <p>Plan management used to live here (the wallet-driven PAYG dashboard +
+ * spend-cap editor); that surface moved into the portal, so this page is
+ * intentionally a thin snapshot.
  */
 import React, { useCallback } from "react";
 import { Alert, Center, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useWallet } from "@app/hooks/useWallet";
 import { useRenderCount } from "@app/hooks/useRenderCount";
-import {
-  PaygLeader,
-  PaygMember,
-} from "@app/components/shared/config/configSections/Payg";
-import {
-  PaygFreeLeader,
-  PaygFreeMember,
-} from "@app/components/shared/config/configSections/PaygFree";
+import WorkspacePlanSnapshot from "@app/components/shared/config/WorkspacePlanSnapshot";
+import { buildPlanSnapshotRows } from "@app/components/shared/config/planSnapshotRows";
+import { useSourcesCount } from "@app/hooks/useSourcesCount";
+import { PORTAL_USAGE_PATH } from "@app/routes/portalBasename";
 
-const Plan: React.FC = () => {
+interface PlanProps {
+  /** Closes the settings modal before deep-linking to the portal. */
+  onRequestClose?: () => void;
+}
+
+const Plan: React.FC<PlanProps> = ({ onRequestClose }) => {
   useRenderCount("Plan");
   const { t } = useTranslation();
-  const { wallet, loading, error, markSubscribed, updateCap, openPortal } =
-    useWallet();
+  const navigate = useNavigate();
+  const { wallet, loading, error } = useWallet();
+  const { count: sourcesCount } = useSourcesCount();
 
-  // Stable callback so PaygFreeLeader's React.memo doesn't see a new prop
-  // identity on every Plan render (e.g. loading flips false→true→false on
-  // a refetch). Closing over the stable markSubscribed from useWallet
-  // means we don't need to add wallet state to deps.
-  const onUpgraded = useCallback(
-    ({ capUsd }: { capUsd: number | null }) => {
-      // Bridges the modal's local success → backend mock → refetch loop.
-      // Real Stripe flow: the customer.subscription.created webhook is
-      // what flips status; we still call markSubscribed locally so the
-      // optimistic refetch hits immediately.
-      void markSubscribed(capUsd);
-    },
-    [markSubscribed],
-  );
+  const handleManage = useCallback(() => {
+    onRequestClose?.();
+    navigate(PORTAL_USAGE_PATH);
+  }, [navigate, onRequestClose]);
 
   if (loading && !wallet) {
     return (
@@ -72,23 +60,26 @@ const Plan: React.FC = () => {
     );
   }
 
-  if (wallet.status === "subscribed") {
-    return wallet.role === "leader" ? (
-      <PaygLeader
-        wallet={wallet}
-        onSaveCap={updateCap}
-        onOpenPortal={openPortal}
-      />
-    ) : (
-      <PaygMember wallet={wallet} />
-    );
-  }
+  const tierLabel =
+    wallet.status === "subscribed"
+      ? t("plan.tier.processor", "Processor")
+      : t("plan.tier.editor", "Editor");
 
-  // Free tier — only the leader sees the upgrade CTA.
-  if (wallet.role === "leader") {
-    return <PaygFreeLeader onUpgraded={onUpgraded} />;
-  }
-  return <PaygFreeMember />;
+  return (
+    <WorkspacePlanSnapshot
+      currentPlanLabel={t("plan.snapshot.currentPlan", "Current plan")}
+      tierLabel={tierLabel}
+      statusLabel={t("plan.snapshot.active", "Active")}
+      rows={buildPlanSnapshotRows(wallet, t, { sourcesCount })}
+      ctaLabel={t("plan.snapshot.manageCta", "Manage in Usage & Billing")}
+      canManage={wallet.role === "leader"}
+      onManage={handleManage}
+      cannotManageHint={t(
+        "plan.snapshot.readOnlyHint",
+        "This is read-only, ask a workspace admin to make changes.",
+      )}
+    />
+  );
 };
 
 export default Plan;

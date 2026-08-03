@@ -1,141 +1,79 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { Divider, Loader, Alert } from "@mantine/core";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Center, Divider, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { usePlans } from "@app/hooks/usePlans";
-import licenseService, {
-  PlanTierGroup,
-  mapLicenseToTier,
-} from "@app/services/licenseService";
-import { useCheckout } from "@app/contexts/CheckoutContext";
+import { useNavigate } from "react-router-dom";
 import { useLicense } from "@app/contexts/LicenseContext";
-import AvailablePlansSection from "@app/components/shared/config/configSections/plan/AvailablePlansSection";
-import StaticPlanSection from "@app/components/shared/config/configSections/plan/StaticPlanSection";
+import { useAuth } from "@app/auth/context";
+import WorkspacePlanSnapshot from "@app/components/shared/config/WorkspacePlanSnapshot";
+import { buildPlanSnapshotRows } from "@app/components/shared/config/planSnapshotRows";
+import PlanLinkPrompt from "@app/components/shared/config/PlanLinkPrompt";
+import { useSourcesCount } from "@app/hooks/useSourcesCount";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
-import { alert } from "@app/components/toast";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
-import {
-  getPreferredCurrency,
-  setCachedCurrency,
-} from "@app/utils/currencyDetection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@core/components/shared/config/LoginRequiredBanner";
-import { isSupabaseConfigured } from "@app/services/supabaseClient";
+import { PORTAL_USAGE_PATH } from "@app/routes/portalBasename";
+import { fetchWallet } from "@portal/api/billing";
+import type { Wallet } from "@app/billing";
 
-const AdminPlanSection: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
-  const { openCheckout } = useCheckout();
+interface AdminPlanSectionProps {
+  /** Closes the settings modal before deep-linking to the portal. */
+  onRequestClose?: () => void;
+}
+
+/** Wallet load outcome: showing the card, or prompting the admin to link. */
+type WalletState =
+  | { status: "loading" }
+  | { status: "linked"; wallet: Wallet }
+  | { status: "unlinked" };
+
+/**
+ * "Plan & Usage" settings page. Plan management and billing live in the PDF
+ * Processor (portal); this page mirrors the linked account's plan and usage and
+ * deep-links out to the portal's Usage & Billing view. When the instance isn't
+ * linked to a Stirling account yet, it shows a link CTA instead (metered usage
+ * and billing only exist once linked). The self-hosted license key still lives
+ * here so admins can activate/rotate keys.
+ */
+const AdminPlanSection: React.FC<AdminPlanSectionProps> = ({
+  onRequestClose,
+}) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { loginEnabled } = useLoginRequired();
   const { licenseInfo } = useLicense();
-  const [currency, setCurrency] = useState<string>(() => {
-    // Initialize with auto-detected currency on first render
-    return getPreferredCurrency(i18n.language);
-  });
-  const [useStaticVersion, setUseStaticVersion] = useState(false);
-  const { plans, loading, error, refetch } = usePlans(currency);
+  const { portalAccess } = useAuth();
   const licenseAlert = useLicenseAlert();
+  const { count: sourcesCount } = useSourcesCount();
 
-  // Check if we should use static version
+  // The wallet lives on the linked SaaS account; apiClient.saas throws when the
+  // instance isn't linked (or SaaS isn't configured), which we treat as unlinked.
+  const [walletState, setWalletState] = useState<WalletState>({
+    status: "loading",
+  });
+
   useEffect(() => {
-    // Only use static version if Supabase is not configured or there's an error
-    // Stripe key is not required - hosted checkout works without it
-    if (!isSupabaseConfigured || error) {
-      setUseStaticVersion(true);
-    }
-  }, [error]);
-
-  const currencyOptions = [
-    { value: "gbp", label: "British pound (GBP, £)" },
-    { value: "usd", label: "US dollar (USD, $)" },
-    { value: "eur", label: "Euro (EUR, €)" },
-    { value: "cny", label: "Chinese yuan (CNY, ¥)" },
-    { value: "inr", label: "Indian rupee (INR, ₹)" },
-    { value: "brl", label: "Brazilian real (BRL, R$)" },
-    { value: "idr", label: "Indonesian rupiah (IDR, Rp)" },
-  ];
-
-  const handleManageClick = useCallback(async () => {
-    // Block access if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      // Only allow PRO or ENTERPRISE licenses to access billing portal
-      if (!licenseInfo?.licenseType || licenseInfo.licenseType === "NORMAL") {
-        throw new Error(
-          "No valid license found. Please purchase a license before accessing the billing portal.",
-        );
-      }
-
-      if (!licenseInfo?.licenseKey) {
-        throw new Error("License key missing. Please contact support.");
-      }
-
-      // Create billing portal session with license key
-      const response = await licenseService.createBillingPortalSession(
-        window.location.href,
-        licenseInfo.licenseKey,
-      );
-
-      // Open billing portal in new tab
-      window.open(response.url, "_blank");
-    } catch (error: unknown) {
-      console.error("Failed to open billing portal:", error);
-      alert({
-        alertType: "error",
-        title: t("billing.portal.error", "Failed to open billing portal"),
-        body:
-          (error instanceof Error ? error.message : undefined) ||
-          "Please try again or contact support.",
+    let cancelled = false;
+    setWalletState({ status: "loading" });
+    fetchWallet()
+      .then((wallet) => {
+        if (!cancelled) setWalletState({ status: "linked", wallet });
+      })
+      .catch(() => {
+        // SaasNotLinkedError / SaasUnconfiguredError / transient — all resolve to
+        // "no billing to show here yet", so prompt the admin to link.
+        if (!cancelled) setWalletState({ status: "unlinked" });
       });
-    }
-  }, [licenseInfo, t, validateLoginEnabled]);
-
-  const handleCurrencyChange = useCallback((newCurrency: string) => {
-    setCurrency(newCurrency);
-    // Persist user's manual selection to localStorage
-    setCachedCurrency(newCurrency);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleUpgradeClick = useCallback(
-    (planGroup: PlanTierGroup) => {
-      // Block access if login is disabled
-      if (!validateLoginEnabled()) {
-        return;
-      }
-
-      // Only allow upgrades for server and enterprise tiers
-      if (planGroup.tier === "free") {
-        return;
-      }
-
-      // Prevent free tier users from directly accessing enterprise (must have server first)
-      const currentTier = mapLicenseToTier(licenseInfo);
-      if (currentTier === "free" && planGroup.tier === "enterprise") {
-        alert({
-          alertType: "warning",
-          title: t("plan.enterprise.requiresServer", "Server Plan Required"),
-          body: t(
-            "plan.enterprise.requiresServerMessage",
-            "Please upgrade to the Server plan first before upgrading to Enterprise.",
-          ),
-        });
-        return;
-      }
-
-      // Use checkout context to open checkout modal
-      openCheckout(planGroup.tier, {
-        currency,
-        onSuccess: () => {
-          // Refetch plans after successful payment
-          // License context will auto-update
-          refetch();
-        },
-      });
-    },
-    [openCheckout, currency, refetch, licenseInfo, t, validateLoginEnabled],
-  );
+  const handleManage = useCallback(() => {
+    onRequestClose?.();
+    navigate(PORTAL_USAGE_PATH);
+  }, [navigate, onRequestClose]);
 
   const shouldShowLicenseWarning =
     licenseAlert.active && licenseAlert.audience === "admin";
@@ -147,53 +85,6 @@ const AdminPlanSection: React.FC = () => {
     }
     return licenseAlert.totalUsers.toLocaleString();
   }, [licenseAlert.totalUsers, licenseAlert.freeTierLimit, t]);
-
-  const scrollToPlans = useCallback(() => {
-    const el = document.getElementById("available-plans-section");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, []);
-
-  // Show static version if Stripe is not configured or there's an error
-  if (useStaticVersion) {
-    return <StaticPlanSection currentLicenseInfo={licenseInfo ?? undefined} />;
-  }
-
-  // Early returns after all hooks are called
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "2rem 0",
-        }}
-      >
-        <Loader size="lg" />
-      </div>
-    );
-  }
-
-  if (error) {
-    // Fallback to static version on error
-    return <StaticPlanSection currentLicenseInfo={licenseInfo ?? undefined} />;
-  }
-
-  if (!plans || plans.length === 0) {
-    return (
-      <Alert
-        color="yellow"
-        title={t("admin.settings.plan.noData.title", "No data available")}
-      >
-        {t(
-          "admin.settings.plan.noData.message",
-          "Plans data is not available at the moment.",
-        )}
-      </Alert>
-    );
-  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
@@ -211,9 +102,13 @@ const AdminPlanSection: React.FC = () => {
             total: formattedUserCount,
             limit: licenseAlert.freeTierLimit,
           })}
-          buttonText={t("plan.licenseWarning.cta", "See plans")}
+          // Only offer the CTA when there's a portal to send them to; without
+          // portal access /processor/usage doesn't resolve.
+          buttonText={
+            portalAccess ? t("plan.licenseWarning.cta", "See plans") : undefined
+          }
           buttonIcon="upgrade-rounded"
-          onButtonClick={scrollToPlans}
+          onButtonClick={portalAccess ? handleManage : undefined}
           dismissible={false}
           minHeight={68}
           background="#FFF4E6"
@@ -225,16 +120,43 @@ const AdminPlanSection: React.FC = () => {
         />
       )}
 
-      <AvailablePlansSection
-        plans={plans}
-        currentLicenseInfo={licenseInfo}
-        onUpgradeClick={handleUpgradeClick}
-        onManageClick={handleManageClick}
-        currency={currency}
-        onCurrencyChange={handleCurrencyChange}
-        currencyOptions={currencyOptions}
-        loginEnabled={loginEnabled}
-      />
+      {walletState.status === "loading" && (
+        <Center mih={160}>
+          <Loader />
+        </Center>
+      )}
+
+      {walletState.status === "linked" && (
+        <WorkspacePlanSnapshot
+          currentPlanLabel={t("plan.snapshot.currentPlan", "Current plan")}
+          tierLabel={
+            walletState.wallet.status === "subscribed"
+              ? t("plan.tier.processor", "Processor")
+              : t("plan.tier.editor", "Editor")
+          }
+          statusLabel={t("plan.snapshot.active", "Active")}
+          rows={buildPlanSnapshotRows(walletState.wallet, t, { sourcesCount })}
+          ctaLabel={t("plan.snapshot.manageCta", "Manage in Usage & Billing")}
+          canManage={portalAccess}
+          onManage={handleManage}
+          cannotManageHint={t(
+            "plan.snapshot.readOnlyHint",
+            "This is read-only, ask a workspace admin to make changes.",
+          )}
+        />
+      )}
+
+      {walletState.status === "unlinked" && (
+        <PlanLinkPrompt
+          title={t("plan.link.title", "Link your Stirling account")}
+          body={t(
+            "plan.link.body",
+            "Manual PDF editing is always free. Link this instance to a Stirling account to see metered usage and billing, and to claim your free processing allowance.",
+          )}
+          ctaLabel={t("plan.link.cta", "Link Stirling account")}
+          onLink={handleManage}
+        />
+      )}
 
       <Divider />
 

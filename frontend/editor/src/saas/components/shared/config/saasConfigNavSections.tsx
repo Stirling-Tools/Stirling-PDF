@@ -92,6 +92,7 @@ function appendDeveloperSection(
 function appendBillingSection(
   sections: ConfigNavSection[],
   t: TFunction<"translation", undefined>,
+  onRequestClose: () => void,
 ): ConfigNavSection[] {
   const hasPlan = sections.some((section) =>
     section.items.some((item) => item.key === "plan"),
@@ -101,9 +102,10 @@ function appendBillingSection(
     return sections;
   }
 
-  // The Plan/Billing section is the shared cloud surface (wallet-driven PAYG
-  // dashboard + spend cap), so both saas and desktop reference one source.
-  return [...sections, createCloudBillingSection(t)];
+  // The Plan/Billing section is the shared cloud surface (read-only plan/usage
+  // snapshot deep-linking to the portal), so both saas and desktop reference
+  // one source.
+  return [...sections, createCloudBillingSection(t, onRequestClose)];
 }
 
 // Add an "MCP Server" tab in the Developer section. Always shown in SaaS;
@@ -266,7 +268,7 @@ export function createSaasConfigNavSections(
     // The Plan tab is now the single billing surface — it internally branches
     // free vs subscribed × leader vs member via useWallet(). The old separate
     // "Pay-as-you-go" tab and paygEnabled / isLeader options were removed.
-    sections = appendBillingSection(sections, t);
+    sections = appendBillingSection(sections, t, onRequestClose);
   }
 
   sections = appendHelpSection(sections, t, onRequestClose);

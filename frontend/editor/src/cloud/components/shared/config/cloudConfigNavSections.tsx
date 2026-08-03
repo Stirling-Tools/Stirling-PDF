@@ -9,20 +9,28 @@ import TeamSection from "@app/components/shared/config/configSections/TeamSectio
 
 /**
  * Shared cloud config nav-section builders, composed by both the saas (web) and
- * desktop (Tauri) nav wrappers. The Plan (wallet-driven PAYG dashboard + spend
- * cap) and Team sections are identical across platforms; each leaf owns its own
- * modal chrome and appends its leaf-only sections around these.
+ * desktop (Tauri) nav wrappers. The Plan (read-only plan/usage snapshot that
+ * deep-links to the portal) and Team sections are identical across platforms;
+ * each leaf owns its own modal chrome and appends its leaf-only sections around
+ * these.
  */
 
 type Translate = TFunction<"translation", undefined>;
 
-/** The Plan (billing) nav item — wallet-driven PAYG dashboard + spend cap. */
-export function createCloudPlanNavItem(t: Translate): ConfigNavItem {
+/**
+ * The Plan (billing) nav item — a read-only plan/usage snapshot that deep-links
+ * to the portal's Usage & Billing surface. {@code onRequestClose} lets the CTA
+ * dismiss the settings modal before navigating.
+ */
+export function createCloudPlanNavItem(
+  t: Translate,
+  onRequestClose?: () => void,
+): ConfigNavItem {
   return {
     key: "plan",
-    label: t("config.plan", "Plan"),
+    label: t("config.plan", "Plan & Usage"),
     icon: "credit-card",
-    component: <Plan />,
+    component: <Plan onRequestClose={onRequestClose} />,
   };
 }
 
@@ -37,9 +45,12 @@ export function createCloudTeamNavItem(t: Translate): ConfigNavItem {
 }
 
 /** Billing nav section wrapping the Plan item, for leaves that group it (saas). */
-export function createCloudBillingSection(t: Translate): ConfigNavSection {
+export function createCloudBillingSection(
+  t: Translate,
+  onRequestClose?: () => void,
+): ConfigNavSection {
   return {
     title: "Billing",
-    items: [createCloudPlanNavItem(t)],
+    items: [createCloudPlanNavItem(t, onRequestClose)],
   };
 }
