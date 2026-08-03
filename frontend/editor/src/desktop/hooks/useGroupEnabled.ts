@@ -11,16 +11,15 @@ const OFFLINE_REASON_FALLBACK =
   "Requires your Stirling-PDF server (currently offline)";
 
 // Selects a boolean, not the monitor's state object — that object is
-// reassigned on every poll, so useSyncExternalStore would see a new snapshot
-// each tick and re-render.
+// reassigned on every poll, so the store would look changed each tick.
 const subscribeToMonitor = (onChange: () => void) =>
   selfHostedServerMonitor.subscribe(onChange);
 const getIsOffline = () =>
   selfHostedServerMonitor.getSnapshot().status === "offline";
 
 /**
- * Desktop override: skips the network request entirely when the self-hosted
- * server is confirmed offline, returning a reason string matching the tool panel.
+ * Desktop override: skips the request entirely when the self-hosted server is
+ * confirmed offline, with a reason matching the tool panel.
  */
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { t } = useTranslation();
@@ -33,8 +32,8 @@ export function useGroupEnabled(group: string): GroupEnabledResult {
     enabled: !isOffline,
   });
 
-  // Checked before the query result: a disabled query stays `isPending`, which
-  // would otherwise read as "still loading" forever.
+  // Before the query result: a disabled query stays isPending, which would
+  // otherwise read as "still loading" forever.
   if (isOffline) {
     return {
       enabled: false,

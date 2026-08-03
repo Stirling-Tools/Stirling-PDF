@@ -7,8 +7,8 @@ import type { GroupEnabledResult } from "@app/types/groupEnabled";
 export type { GroupEnabledResult };
 
 /**
- * Checks whether a named feature group is enabled on the backend.
- * Returns { enabled: null } while loading, then true/false with an optional reason.
+ * Whether a named feature group is enabled on the backend.
+ * `enabled` is null while loading; a failed check reads as disabled.
  */
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { data, isPending } = useQuery({

@@ -8,10 +8,7 @@ export type { FooterInfo };
 /** Analytics off is the safe read when the server can't be asked. */
 const FALLBACK: FooterInfo = { analyticsEnabled: false };
 
-/**
- * Public footer configuration. Two mount sites (Footer, admin LegalSection)
- * share one cache entry.
- */
+/** Public footer configuration. Shared by Footer and the admin legal section. */
 export function useFooterInfo() {
   const { data, isPending, error } = useQuery({
     queryKey: qk.footerInfo(),

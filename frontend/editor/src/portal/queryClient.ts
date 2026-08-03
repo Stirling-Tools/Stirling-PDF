@@ -1,34 +1,22 @@
 import { QueryClient } from "@tanstack/react-query";
+import { baseQueryOptions } from "@app/query/queryClient";
 
-/**
- * The portal's TanStack Query client, mounted once at the portal root
- * (PortalApp) so its cache lives above the router — data survives navigating
- * away and back. staleTime 30s: a return visit within 30s serves cache with no
- * network call, then revalidates in the background. Focus refetch is off — admin
- * screens don't need polling.
- */
 let current: QueryClient | null = null;
 
+/**
+ * The portal's client, mounted at PortalApp. Separate instance from the
+ * editor's — the two mount as sibling routes, never in one tree — but the same
+ * defaults, so behaviour can't drift between the products.
+ */
 export function createPortalQueryClient(): QueryClient {
-  current = new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 30_000,
-        gcTime: 5 * 60_000,
-        retry: 1,
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
+  current = new QueryClient({ defaultOptions: { queries: baseQueryOptions } });
   return current;
 }
 
 /**
- * The client created by {@link createPortalQueryClient}, or null if none has
- * been mounted yet. Lets a non-hook module (the SaaS usersBackend's resolveTeam)
- * read/populate the shared cache via ensureQueryData when the portal is mounted,
- * while still working — via a direct fetch — when it isn't (e.g. a unit test
- * that exercises the adapter without the provider).
+ * Null until the portal has mounted. Lets the SaaS usersBackend's resolveTeam
+ * share the cache when it can, and fall back to a direct fetch when there is no
+ * portal (e.g. a unit test exercising the adapter without the provider).
  */
 export function tryGetPortalQueryClient(): QueryClient | null {
   return current;

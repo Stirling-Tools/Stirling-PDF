@@ -18,13 +18,13 @@ export async function fetchFooterInfo(): Promise<FooterInfo> {
     );
     return response.data;
   } catch (error) {
-    // Toasts are suppressed for this one, so log it or the failure is silent.
+    // Toasts are suppressed here, so without this the failure is silent.
     console.error("[api/config] footer-info failed:", error);
     throw error;
   }
 }
 
-/** Whether a named backend feature group (ImageMagick, Calibre, …) is available. */
+/** Whether a named backend feature group (ImageMagick, Calibre, ...) is available. */
 export async function fetchGroupEnabled(group: string): Promise<boolean> {
   const response = await apiClient.get<boolean>(
     `/api/v1/config/group-enabled?group=${encodeURIComponent(group)}`,

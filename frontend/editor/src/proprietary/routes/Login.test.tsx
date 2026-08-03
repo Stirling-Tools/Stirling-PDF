@@ -93,9 +93,8 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-// Test wrapper with MantineProvider. TestQueryProvider stands in for the one
-// AppProviders mounts around /login in the real router — AuthLayout's <Footer>
-// reads useFooterInfo, which needs a client.
+// AuthLayout renders <Footer>, which reads useFooterInfo. In the real router
+// /login sits inside AppProviders, which supplies the client.
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <TestQueryProvider>
     <MantineProvider>

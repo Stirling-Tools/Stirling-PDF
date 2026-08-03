@@ -121,8 +121,6 @@ export function AppProviders({
   appConfigRetryOptions,
   appConfigProviderProps,
 }: AppProvidersProps) {
-  // One client for the app's lifetime, above everything else so the cache
-  // survives navigation and any provider below can be a query consumer.
   const [queryClient] = useState(createAppQueryClient);
   return (
     <QueryClientProvider client={queryClient}>
