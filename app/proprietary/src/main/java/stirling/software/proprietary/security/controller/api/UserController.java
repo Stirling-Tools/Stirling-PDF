@@ -255,9 +255,6 @@ public class UserController {
                         .build();
             }
         }
-        // TODO: Migration required - Spring's SecurityContextLogoutHandler has no Quarkus
-        // equivalent. Session/logout handling must be re-implemented via the migrated session
-        // registry (expire the current session) and/or quarkus auth config.
         return Response.ok(
                         Map.of(
                                 "message",
@@ -343,8 +340,6 @@ public class UserController {
         user.setForcePasswordChange(false);
         userService.changePassword(user, newPassword);
         userService.changeFirstUse(user, false);
-        // TODO: Migration required - Spring's SecurityContextLogoutHandler has no Quarkus
-        // equivalent. Re-implement logout via the migrated session registry / quarkus auth config.
         return Response.ok(
                         Map.of(
                                 "message",
@@ -388,8 +383,6 @@ public class UserController {
                     .build();
         }
         userService.changePassword(user, newPassword);
-        // TODO: Migration required - Spring's SecurityContextLogoutHandler has no Quarkus
-        // equivalent. Re-implement logout via the migrated session registry / quarkus auth config.
         return Response.ok(
                         Map.of(
                                 "message",

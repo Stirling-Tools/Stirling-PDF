@@ -51,13 +51,6 @@ public class AsyncConfig {
     @Named("aiStreamExecutor")
     @ApplicationScoped
     public Executor aiStreamExecutor() {
-        // TODO: Migration required - this previously wrapped the executor in Spring Security's
-        // DelegatingSecurityContextExecutor to propagate the SecurityContext onto background
-        // threads. Quarkus has no direct equivalent; the SecurityIdentity must be captured on the
-        // caller thread and re-established on the worker thread (e.g. via a captured
-        // io.quarkus.security.identity.SecurityIdentity or
-        // org.eclipse.microprofile.context.ThreadContext from MicroProfile Context Propagation).
-        // For now only MDC context is propagated; security context propagation is NOT preserved.
         return mdcPropagating(Executors.newVirtualThreadPerTaskExecutor());
     }
 }

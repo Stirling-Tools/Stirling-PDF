@@ -29,6 +29,8 @@ import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.ExceptionUtils;
 
 @SecurityApi
@@ -40,13 +42,13 @@ public class VerifyPDFController {
 
     private final VeraPDFService veraPDFService;
 
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Verify PDF Standards Compliance",
             description =
-                    "Validates PDF files against the standards declared in their metadata. "
-                            + "Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards "
-                            + "from the document's XMP metadata and validates compliance. "
-                            + "Input:PDF Output:JSON Type:SISO")
+                    "Validates PDF files against the standards declared in their metadata."
+                            + " Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards from the"
+                            + " document's XMP metadata and validates compliance.")
     @POST
     @Path("/verify-pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)

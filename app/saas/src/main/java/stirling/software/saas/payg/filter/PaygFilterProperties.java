@@ -21,8 +21,6 @@ import lombok.Setter;
  *       OUTPUT recording in {@code afterCompletion}. {@code null} = unbounded.
  * </ul>
  */
-// TODO: Migration required - @ConfigurationProperties(prefix="payg.filter"); bind via
-// @ConfigProperty or @ConfigMapping
 @ApplicationScoped
 @IfBuildProfile("saas")
 @Getter

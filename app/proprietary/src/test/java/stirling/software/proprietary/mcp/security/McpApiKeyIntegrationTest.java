@@ -33,7 +33,7 @@ import stirling.software.proprietary.security.service.UserService;
 /**
  * End-to-end test of {@code mcp.auth.mode=apikey} against the real security chain on live Jetty.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 @SpringBootTest(
         classes = McpApiKeyIntegrationTest.TestApp.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

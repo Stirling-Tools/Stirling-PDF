@@ -36,6 +36,8 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -66,10 +68,10 @@ public class AttachmentController {
             value = "/add-attachments",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add attachments to PDF",
-            description =
-                    "This endpoint adds attachments to a PDF. Input:PDF, Output:PDF Type:MISO")
+            description = "This endpoint adds attachments to a PDF.")
     public Response addAttachments(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,
@@ -176,11 +178,11 @@ public class AttachmentController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/extract-attachments",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.ZIP)
     @Operation(
             summary = "Extract attachments from PDF",
             description =
-                    "This endpoint extracts all embedded attachments from a PDF into a ZIP archive."
-                            + " Input:PDF Output:ZIP Type:SISO")
+                    "This endpoint extracts all embedded attachments from a PDF into a ZIP archive.")
     public Response extractAttachments(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
             throws IOException {
@@ -221,10 +223,10 @@ public class AttachmentController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/list-attachments",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "List attachments in PDF",
-            description =
-                    "This endpoint lists all embedded attachments in a PDF. Input:PDF Output:JSON Type:SISO")
+            description = "This endpoint lists all embedded attachments in a PDF.")
     public Response listAttachments(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
             throws IOException {
@@ -247,10 +249,10 @@ public class AttachmentController {
             value = "/rename-attachment",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Rename attachment in PDF",
-            description =
-                    "This endpoint renames an embedded attachment in a PDF. Input:PDF Output:PDF Type:MISO")
+            description = "This endpoint renames an embedded attachment in a PDF.")
     public Response renameAttachment(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,
@@ -296,10 +298,10 @@ public class AttachmentController {
             value = "/delete-attachment",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Delete attachment from PDF",
-            description =
-                    "This endpoint deletes an embedded attachment from a PDF. Input:PDF Output:PDF Type:MISO")
+            description = "This endpoint deletes an embedded attachment from a PDF.")
     public Response deleteAttachment(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

@@ -27,13 +27,6 @@ public record JobInput(MultipartFile multipart, Path path) {
         }
     }
 
-    // TODO: Migration required - Part/MultipartFile bridge. The ingress interceptor
-    // (PaygChargeInterceptor) is now servlet-native and constructs inputs from
-    // jakarta.servlet.http.Part rather than Spring's MultipartFile. The downstream classifier still
-    // consumes the stirling.software.common.model.MultipartFile abstraction (size + content-type +
-    // input stream). This constructor adapts a Part into that abstraction so both the untouched
-    // interceptor and the classifier compile/run. Longer term, JobInput should carry a neutral
-    // metadata holder and drop the MultipartFile shim entirely.
     public JobInput(Part part, Path path) {
         this(new PartMultipartFile(part), path);
     }

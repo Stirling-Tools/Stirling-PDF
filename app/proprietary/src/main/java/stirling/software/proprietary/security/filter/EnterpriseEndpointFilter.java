@@ -18,8 +18,6 @@ import jakarta.ws.rs.core.Response;
 // Spring's OncePerRequestFilter has no Quarkus equivalent; implementing jakarta.servlet.Filter
 // directly. Registered via @WebFilter (quarkus-undertow). The single-execution-per-request
 // guarantee OncePerRequestFilter provided is effectively given for top-level servlet filters here.
-// TODO: Migration required - if this filter must run before/after other filters, ordering is not
-// expressed by @WebFilter; configure quarkus.http.filter.* or a ServletExtension if order matters.
 @ApplicationScoped
 @WebFilter(urlPatterns = "/*")
 public class EnterpriseEndpointFilter implements Filter {

@@ -60,16 +60,6 @@ public class WebMvcConfig implements ContainerResponseFilter {
                     + ", public, stale-while-revalidate="
                     + Duration.ofDays(7).toSeconds();
 
-    // TODO: Migration required - in Spring, addResourceHandlers also registered the physical
-    // resource locations (InstallationPathConfig.getStaticPath() + "classpath:/static/") and an
-    // EncodedResourceResolver (gzip/brotli pre-compressed asset serving). In Quarkus, static
-    // file serving is handled by quarkus.http via configuration:
-    //   quarkus.http.static-resources... and/or a Servlet/RouteFilter mapping
-    //   InstallationPathConfig.getStaticPath() as an external static root.
-    // The EncodedResourceResolver behavior (serving *.gz/*.br variants) has no direct WebMvc
-    // equivalent; enable quarkus.http.enable-compression or pre-compressed static handling.
-    // This filter only reproduces the per-path Cache-Control headers below.
-
     @Override
     public void filter(
             ContainerRequestContext requestContext, ContainerResponseContext responseContext)
@@ -148,17 +138,6 @@ public class WebMvcConfig implements ContainerResponseFilter {
                 || path.startsWith("/Login/")
                 || path.equals("/manifest-classic.json");
     }
-
-    // TODO: Migration required - Quarkus has built-in CORS handling via quarkus.http.cors.*
-    // config properties (quarkus.http.cors.origins, .methods, .headers, .exposed-headers,
-    // .access-control-allow-credentials, .access-control-max-age). However, the original logic is
-    // *dynamic* (Tauri-mode detection + ApplicationProperties-driven origins + always-on Tauri
-    // origins), which static config cannot express. The logic is preserved below and applied via
-    // this response filter. Note: a ContainerResponseFilter cannot short-circuit/answer the CORS
-    // preflight (OPTIONS) request the way Spring's CorsRegistry does; for full preflight handling,
-    // enable quarkus.http.cors=true and reconcile with these dynamic rules, or add a
-    // ContainerRequestFilter that handles OPTIONS. Reflecting the requesting Origin is used here
-    // since Access-Control-Allow-Origin does not support patterns/wildcards-with-credentials.
 
     /**
      * Reproduces the dynamic CORS configuration from the original {@code addCorsMappings}: Tauri

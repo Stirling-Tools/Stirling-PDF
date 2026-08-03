@@ -68,12 +68,6 @@ import stirling.software.saas.util.AuthenticationUtils;
  * cap is enforced application-side via the entitlement guard) and invalidates the team's snapshot
  * cache. Only leaders may call this; the team is derived from the caller, so we authorise inside
  * the method — the team id never appears on the path or query string.
- *
- * <p>// TODO: Migration required - was a Spring {@code @RestController} with method-injected {@code
- * Authentication} and {@code @PreAuthorize("isAuthenticated()")}. Now JAX-RS: auth comes from the
- * {@link SecurityContextHolder} thread-local shim (populated by the SaaS auth filter), and the
- * unauthenticated case maps to 401 via {@link AuthenticationUtils#getCurrentUser}'s {@link
- * SecurityException}.
  */
 @Slf4j
 @Hidden

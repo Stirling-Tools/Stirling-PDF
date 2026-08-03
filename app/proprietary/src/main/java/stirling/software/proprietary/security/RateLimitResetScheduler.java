@@ -9,11 +9,6 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 
-// TODO: Migration required - Spring @Profile("!saas") gated this scheduler so it never ran in the
-// "saas" profile. @io.quarkus.arc.profile.UnlessBuildProfile("saas") reproduces this when "saas" is
-// a Quarkus BUILD profile; if "saas" is only a runtime profile, this annotation has no effect and
-// the body of resetRateLimit() must instead short-circuit on a runtime profile check
-// (org.eclipse.microprofile.config Config "quarkus.profile" / ProfileManager.getActiveProfile()).
 @ApplicationScoped
 @UnlessBuildProfile("saas")
 @RequiredArgsConstructor

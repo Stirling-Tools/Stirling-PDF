@@ -16,12 +16,6 @@ import jakarta.ws.rs.core.Response;
  * {@code @Around}/{@code ProceedingJoinPoint} became {@code @AroundInvoke}/{@link
  * InvocationContext}. The Spring {@code ResponseStatusException(HttpStatus.FORBIDDEN, ...)} became
  * a JAX-RS {@link WebApplicationException} with {@link Response.Status#FORBIDDEN}.
- *
- * <p>TODO: Migration required - the {@code @PremiumEndpoint} annotation (collaborator file
- * stirling.software.proprietary.security.config.PremiumEndpoint) must be annotated with
- * {@code @jakarta.interceptor.InterceptorBinding} (and target METHOD + TYPE, retention RUNTIME) for
- * this CDI interceptor to bind. Both method-level ({@code @annotation}) and type-level
- * ({@code @within}) placement are already supported by CDI when the binding targets METHOD/TYPE.
  */
 @Interceptor
 @PremiumEndpoint

@@ -32,13 +32,13 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.FileToPdf;

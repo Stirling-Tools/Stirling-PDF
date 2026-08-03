@@ -39,18 +39,6 @@ import stirling.software.common.util.ExceptionUtils;
 @Slf4j
 public class PrintFileController {
 
-    // TODO: Migration required - endpoint mapping was commented out in the original Spring source
-    // (the @PostMapping/@Operation were disabled), so this route remains intentionally inactive.
-    // The conversion below preserves the disabled state: routing annotations are kept commented.
-    // To enable, uncomment the JAX-RS annotations and provide a multipart-bound request.
-    // @POST
-    // @jakarta.ws.rs.Path("/print-file")
-    // @jakarta.ws.rs.Consumes(MediaType.MULTIPART_FORM_DATA)
-    // @io.swagger.v3.oas.annotations.Operation(
-    //        summary = "Prints PDF/Image file to a set printer",
-    //        description =
-    //                "Input of PDF or Image along with a printer name/URL/IP to match against to
-    // send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
     public Response printFile(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("printerName") String printerName)

@@ -36,10 +36,6 @@ public class AiCreateSessionService {
     // resolve it where used (isResolvable()/get()), mirroring the former Optional semantics.
     private final Instance<UserServiceInterface> userService;
 
-    // TODO: Migration required - Spring MVC RequestContextHolder/ServletRequestAttributes replaced
-    // with a CDI-injected request-scoped HttpServletRequest (quarkus-undertow). Wrapped in Instance
-    // so resolution outside an active HTTP request (e.g. scheduled/startup contexts) is a safe
-    // no-op.
     @jakarta.inject.Inject Instance<HttpServletRequest> currentRequest;
 
     public AiCreateSession createSession(

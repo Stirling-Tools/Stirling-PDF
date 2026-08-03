@@ -44,11 +44,6 @@ public class LineagePruneScheduler {
         this.retention = retention;
     }
 
-    // TODO: Migration required - Spring 6-field cron "0 0 * * * *" (top of every hour) translated
-    // to
-    // Quartz cron "0 0 * ? * *" (day-of-month set to ? per Quartz day-of-week/day-of-month
-    // mutual-exclusion). Configurability is preserved via the {payg.lineage.prune-cron} config
-    // expression; set that property to a Quartz-syntax cron (default below) to override.
     @Scheduled(cron = "{payg.lineage.prune-cron:0 0 * ? * *}", timeZone = "UTC")
     public void prune() {
         Instant cutoff = Instant.now().minus(retention);

@@ -4,11 +4,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,7 +78,7 @@ public class UsageMeterService {
                 signatureRepo.saveAndFlush(
                         new MeteredInputSignature(periodStart, opSignature, now));
                 return true; // first sighting this period
-            } catch (DataIntegrityViolationException raced) {
+            } catch (PersistenceException raced) {
                 return false; // a concurrent op just claimed it — within window → chaining
             } catch (RuntimeException e) {
                 log.debug("Signature claim failed for {}: {}", periodStart, e.getMessage());
@@ -104,7 +104,7 @@ public class UsageMeterService {
             }
             try {
                 repo.saveAndFlush(new UsageCounter(periodStart, category, units, now));
-            } catch (DataIntegrityViolationException raceLostInsert) {
+            } catch (PersistenceException raceLostInsert) {
                 // A concurrent request inserted the row first — increment the now-existing row.
                 repo.increment(periodStart, category, units, now);
             }

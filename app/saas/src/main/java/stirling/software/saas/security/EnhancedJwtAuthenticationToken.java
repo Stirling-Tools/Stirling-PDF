@@ -11,11 +11,6 @@ import stirling.software.proprietary.security.model.User;
 /**
  * JWT auth token that exposes the Supabase subject UUID and email alongside the standard claims, so
  * downstream code (audit, credit accounting) can avoid re-parsing the JWT every request.
- *
- * <p>// TODO: Migration required - originally extended {@code
- * org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken}. That
- * Spring type has no Quarkus equivalent; it now extends the {@link AbstractAuthenticationToken}
- * common shim and carries the {@link JsonWebToken} as token/principal. The name is the email.
  */
 public class EnhancedJwtAuthenticationToken extends AbstractAuthenticationToken {
 

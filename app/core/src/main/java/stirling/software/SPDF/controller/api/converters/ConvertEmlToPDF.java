@@ -29,6 +29,8 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.EmlToPdf;
@@ -58,13 +60,14 @@ public class ConvertEmlToPDF {
     @Path("/eml/pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @StandardPdfResponse
+    @ToolIO(accepts = ToolFormat.EMAIL, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert EML/MSG to PDF",
             description =
-                    "This endpoint converts EML (email) and MSG (Outlook) files to PDF format"
-                            + " with extensive customization options. Features include font settings,"
-                            + " image constraints, display modes, attachment handling, and HTML debug"
-                            + " output. Input: EML or MSG file, Output: PDF or HTML file. Type: SISO")
+                    "This endpoint converts EML (email) and MSG (Outlook) files to PDF format with"
+                            + " extensive customization options. Features include font settings, image"
+                            + " constraints, display modes, attachment handling, and HTML debug output. or MSG"
+                            + " file, or HTML file.")
     public Response convertEmlToPdf(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

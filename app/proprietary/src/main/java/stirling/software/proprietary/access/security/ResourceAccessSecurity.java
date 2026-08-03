@@ -1,13 +1,12 @@
 package stirling.software.proprietary.access.security;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;

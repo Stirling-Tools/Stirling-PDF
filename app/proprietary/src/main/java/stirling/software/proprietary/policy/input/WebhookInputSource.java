@@ -10,14 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;

@@ -65,12 +65,6 @@ public class AuditDashboardController {
     @Operation(summary = "Get audit events data")
     public AuditDataResponse getAuditData(@BeanParam AuditDataRequest request) {
 
-        // TODO: Migration required - PersistentAuditEventRepository is a collaborator that must be
-        // migrated to io.quarkus.hibernate.orm.panache.PanacheRepositoryBase<PersistentAuditEvent,
-        // Long>. Its paged finders should return io.quarkus.panache.common.PanacheQuery (or apply
-        // the Page/Sort built here) instead of org.springframework.data.domain.Page. The pagination
-        // request below is expressed with Panache Page/Sort; once the repository accepts these the
-        // .page(...)/.list()/.count()/.pageCount() calls used here will resolve.
         Page page = Page.of(request.getPage(), request.getSize());
         Sort sort = Sort.by("timestamp", Sort.Direction.Descending);
         io.quarkus.hibernate.orm.panache.PanacheQuery<PersistentAuditEvent> query;

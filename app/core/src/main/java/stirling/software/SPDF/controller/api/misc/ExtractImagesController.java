@@ -41,6 +41,9 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -66,12 +69,12 @@ public class ExtractImagesController {
             value = "/extract-images",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.IMAGE, arity = ToolArity.SIMO)
     @Operation(
             summary = "Extract images from a PDF file",
             description =
                     "This endpoint extracts images from a given PDF file and returns them in a zip"
-                            + " file. Users can specify the output image format. Input:PDF"
-                            + " Output:IMAGE/ZIP Type:SIMO")
+                            + " file. Users can specify the output image format.")
     public Response extractImages(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

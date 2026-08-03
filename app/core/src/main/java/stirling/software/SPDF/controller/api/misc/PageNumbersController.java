@@ -33,6 +33,8 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -56,11 +58,10 @@ public class PageNumbersController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add page numbers to a PDF document",
-            description =
-                    "This operation takes an input PDF file and adds page numbers to it. Input:PDF"
-                            + " Output:PDF Type:SISO")
+            description = "This operation takes an input PDF file and adds page numbers to it.")
     public Response addPageNumbers(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

@@ -35,10 +35,6 @@ import tools.jackson.databind.node.ObjectNode;
  */
 @Slf4j
 @ApplicationScoped
-// TODO: Migration required - the Spring @ConditionalOnProperty(name = "mcp.enabled",
-// havingValue = "true") guard is not directly portable. For a build-time toggle use
-// @io.quarkus.arc.lookup.LookupIfProperty(name = "mcp.enabled", stringValue = "true") on the
-// injection points, or gate the call sites at runtime; this bean is otherwise always created.
 public class McpOperationExecutor {
 
     private final ObjectMapper mapper;

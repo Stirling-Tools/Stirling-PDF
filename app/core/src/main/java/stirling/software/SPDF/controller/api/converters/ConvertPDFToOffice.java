@@ -29,6 +29,11 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
@@ -53,11 +58,10 @@ public class ConvertPDFToOffice {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/presentation",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PPT)
     @Operation(
             summary = "Convert PDF to Presentation format",
-            description =
-                    "This endpoint converts a given PDF file to a Presentation format. Input:PDF"
-                            + " Output:PPT Type:SISO")
+            description = "This endpoint converts a given PDF file to a Presentation format.")
     public Response processPdfToPresentation(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("outputFormat") String outputFormat)
@@ -77,11 +81,16 @@ public class ConvertPDFToOffice {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/text",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(
+            produces = ToolFormat.TEXT,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "outputFormat", matches = "rtf"),
+                            produces = ToolFormat.WORD,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Convert PDF to Text or RTF format",
-            description =
-                    "This endpoint converts a given PDF file to Text or RTF format. Input:PDF"
-                            + " Output:TXT Type:SISO")
+            description = "This endpoint converts a given PDF file to Text or RTF format.")
     public Response processPdfToRTForTXT(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("outputFormat") String outputFormat)
@@ -118,11 +127,10 @@ public class ConvertPDFToOffice {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/word",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.WORD)
     @Operation(
             summary = "Convert PDF to Word document",
-            description =
-                    "This endpoint converts a given PDF file to a Word document format. Input:PDF"
-                            + " Output:WORD Type:SISO")
+            description = "This endpoint converts a given PDF file to a Word document format.")
     public Response processPdfToWord(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("outputFormat") String outputFormat)
@@ -142,11 +150,10 @@ public class ConvertPDFToOffice {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/xml",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.XML)
     @Operation(
             summary = "Convert PDF to XML",
-            description =
-                    "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML"
-                            + " Type:SISO")
+            description = "This endpoint converts a PDF file to an XML file.")
     public Response processPdfToXML(@RestForm("fileInput") FileUpload fileInput) throws Exception {
         PDFFile file = new PDFFile();
         file.setFileInput(FileUploadMultipartFile.of(fileInput));

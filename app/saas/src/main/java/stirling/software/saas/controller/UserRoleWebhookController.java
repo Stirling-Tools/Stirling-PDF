@@ -192,10 +192,6 @@ public class UserRoleWebhookController {
      * @param authMethod the authentication method used (e.g., "email", "google", "github")
      * @return ResponseEntity with success or error message
      */
-    // TODO: Migration required - @PreAuthorize("isAuthenticated()") complex SpEL; enforce
-    // authenticated access via JAX-RS SecurityContext / filter.
-    // TODO: Migration required - inject Principal via @jakarta.ws.rs.core.Context SecurityContext
-    // (JAX-RS does not bind a bare java.security.Principal parameter like Spring MVC).
     @POST
     @Path("/promptToAuthUser")
     public Response promptToAuthUser(

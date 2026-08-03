@@ -68,12 +68,6 @@ public class ParticipantRateLimitInterceptor implements ContainerRequestFilter {
         // Operators who deploy behind a trusted reverse proxy should configure Quarkus'
         // quarkus.http.proxy.* (proxy-address-forwarding / trusted-proxies) at the framework
         // level instead.
-        // TODO: Migration required - ContainerRequestContext does not expose the remote
-        // address. Inject quarkus' RoutingContext (io.vertx.ext.web.RoutingContext) or
-        // jakarta.servlet.http.HttpServletRequest (quarkus-undertow) to obtain
-        // request.remoteAddress()/getRemoteAddr(); the previous Spring code used
-        // HttpServletRequest.getRemoteAddr(). Falling back to a header-derived key here would
-        // reintroduce the spoofing risk documented above.
         Object remoteAddr = requestContext.getProperty("org.eclipse.jetty.server.remoteAddress");
         return remoteAddr != null ? remoteAddr.toString() : "unknown";
     }

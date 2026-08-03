@@ -13,8 +13,6 @@ dependencies {
     // ---- Spring -> Quarkus extension mapping (full native migration) ----
     // spring-jdbc -> Agroal datasource (transitive via hibernate-orm). JdbcTemplate usage, if any,
     //   must be rewritten to plain JDBC / Panache.
-    // TODO: Migration required - replace any org.springframework.jdbc.core.JdbcTemplate usage.
-    // spring-webmvc -> quarkus-rest (inherited api-scoped from :common).
     api 'io.quarkus:quarkus-security'
     // spring-boot-starter-data-jpa -> Hibernate ORM with Panache.
     api 'io.quarkus:quarkus-hibernate-orm-panache'
@@ -27,13 +25,11 @@ dependencies {
     api 'io.quarkus:quarkus-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
     // spring-boot-starter-data-redis -> quarkus-redis-client (used by the optional Valkey backplane).
-    // TODO: Migration required - rewrite RedisTemplate/Lettuce usage on the Quarkus Redis client API.
     implementation 'io.quarkus:quarkus-redis-client'
 
     // REMOVED: spring-session-core - Quarkus has no Spring Session. Server-side session state
     //   (SessionPersistentRegistry, SessionRegistry) must be rewritten on Quarkus' HTTP session
     //   (quarkus-undertow servlet session) or a custom store.
-    // TODO: Migration required - port Spring Session usage (session registry / persistence).
 
     // REMOVED: spring-boot-starter-jetty - Quarkus uses its own Vert.x HTTP server.
 
@@ -41,7 +37,6 @@ dependencies {
     //      openSamlVersion) following the dnulnets/quarkus-saml example. spring-security-saml2-
     //      service-provider and spring-security-core are removed; the SAML wiring is reimplemented
     //      on a Jakarta servlet + OpenSAML 5 (quarkus-undertow provides the servlet runtime).
-    // TODO: Migration required - reimplement Saml2Configuration / CustomSaml2* on OpenSAML 5. ----
     api "org.opensaml:opensaml-core-api:$openSamlVersion"
     api "org.opensaml:opensaml-core-impl:$openSamlVersion"
     api "org.opensaml:opensaml-saml-api:$openSamlVersion"
@@ -93,7 +88,6 @@ dependencies {
     // NOTE: H2 is pinned to 2.3.232 because the on-disk file format is incompatible with 2.4.x and
     //   upgrading would break existing user databases. quarkus-jdbc-h2's BOM-managed H2 version may
     //   differ, so the explicit pin is forced below to preserve file compatibility.
-    // TODO: Migration required - verify the H2 version Quarkus resolves still reads 2.3.232 files.
     runtimeOnly 'io.quarkus:quarkus-jdbc-h2'
     runtimeOnly 'com.h2database:h2:2.3.232'
     runtimeOnly 'io.quarkus:quarkus-jdbc-postgresql'
@@ -103,6 +97,12 @@ dependencies {
 
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:url-connection-client:${awsSdkVersion}"
+
+    // Network policy sources (SFTP/FTP/SMB drop folders). All permissively licensed:
+    // jsch fork BSD, commons-net Apache-2.0, smbj Apache-2.0 (BouncyCastle already on classpath).
+    implementation "com.github.mwiede:jsch:${jschVersion}"
+    implementation "commons-net:commons-net:${commonsNetVersion}"
+    implementation "com.hierynomus:smbj:${smbjVersion}"
 
     // Streaming AEAD (AES-GCM-HKDF segments) for storage encryption at rest. Apache-2.0.
     implementation "com.google.crypto.tink:tink:${tinkVersion}"

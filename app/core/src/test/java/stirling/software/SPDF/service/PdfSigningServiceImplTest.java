@@ -17,10 +17,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.controller.api.security.CertSignController;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 class PdfSigningServiceImplTest {

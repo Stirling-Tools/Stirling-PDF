@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /** Supabase configuration ({@code app.supabase.*}) for saas mode. */
-// TODO: Migration required - @ConfigurationProperties(prefix="app.supabase"); bind via
-// @ConfigProperty or @ConfigMapping
 @Slf4j
 @Data
 @ApplicationScoped

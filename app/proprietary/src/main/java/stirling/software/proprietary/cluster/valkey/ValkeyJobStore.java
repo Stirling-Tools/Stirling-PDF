@@ -38,17 +38,6 @@ import stirling.software.common.cluster.JobStoreEntry;
  * issued inside a single Redis transaction (MULTI/EXEC). A partial failure cannot leave the hash
  * without a TTL or with half the file->job index entries written.
  */
-// TODO: Migration required - @ConditionalOnValkeyBackplane (Spring @ConditionalOnExpression) is a
-// runtime toggle on cluster.enabled + cluster.backplane=valkey. Quarkus has no direct equivalent
-// for the composite expression; either reimplement ConditionalOnValkeyBackplane as a Quarkus
-// build-time condition (@io.quarkus.arc.profile.IfBuildProfile /
-// @io.quarkus.arc.lookup.LookupIfProperty) or guard bean activation at runtime. Annotation left in
-// place pending that collaborator change.
-// Build-time gating: included in the build only when cluster.backplane=valkey; otherwise this bean
-// (and its RedisDataSource dependency) is removed so no eager Redis startup observer is generated
-// and the in-process @DefaultBean JobStore satisfies the interface. @ConditionalOnValkeyBackplane
-// is
-// kept for documentation only (it does not propagate guards through Arc).
 @io.quarkus.arc.properties.IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
 @ApplicationScoped
 @ConditionalOnValkeyBackplane

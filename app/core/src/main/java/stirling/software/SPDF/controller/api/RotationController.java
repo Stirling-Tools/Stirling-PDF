@@ -26,6 +26,8 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -49,11 +51,12 @@ public class RotationController {
             value = "/rotate-pdf",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Rotate a PDF file",
             description =
                     "This endpoint rotates a given PDF file by a specified angle. The angle must be"
-                            + " a multiple of 90. Input:PDF Output:PDF Type:SISO")
+                            + " a multiple of 90.")
     public Response rotatePDF(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

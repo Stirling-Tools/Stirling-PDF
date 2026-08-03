@@ -52,7 +52,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
  * Every uploaded key is tracked and removed in {@link #cleanUp} so re-running against the same
  * bucket leaves no residue.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 @EnabledIfEnvironmentVariable(named = "S3_SMOKE_ENDPOINT", matches = ".+")
 class S3VendorComprehensiveTest {
 

@@ -30,16 +30,6 @@ import stirling.software.common.util.TempFileManager;
  * deferred to an {@link AsyncListener} so the wrapper survives the async window. Close is
  * idempotent so a defensive call by the interceptor's {@code afterCompletion} is harmless.
  */
-// TODO: Migration required - this was a Spring {@code OncePerRequestFilter}
-// ({@code @Component @Profile("saas")}). It must be re-registered as a {@code
-// jakarta.servlet.Filter}
-// (or a JAX-RS {@code @jakarta.ws.rs.ext.Provider} ContainerResponse filter pair) and ordered ahead
-// of the PAYG interceptor so the response wrapper is available in afterCompletion. The Spring base
-// class provided once-per-request dispatch and the {@code doFilterInternal} hook; that hook's
-// servlet signature is retained below and must be wired into the chosen registration mechanism
-// (e.g. a {@code doFilter(ServletRequest, ServletResponse, FilterChain)} delegating here) during
-// the
-// conversion. The Servlet-native request/response/async handling itself is unchanged.
 @Slf4j
 @ApplicationScoped
 @IfBuildProfile("saas")
@@ -58,8 +48,6 @@ public class PaygResponseBodyWrapperFilter {
         this.properties = properties;
     }
 
-    // TODO: Migration required - was @Override of Spring OncePerRequestFilter#doFilterInternal.
-    // Retains the servlet signature; invoke from the filter registration's doFilter once converted.
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {

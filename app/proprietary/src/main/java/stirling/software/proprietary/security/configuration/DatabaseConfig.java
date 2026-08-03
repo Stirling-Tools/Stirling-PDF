@@ -46,15 +46,6 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
  *       opened until {@link DataSource#getConnection()} is called); the driver class-name strings
  *       are the same literals {@code DatabaseDriver.H2/POSTGRESQL.getDriverClassName()} returned.
  * </ul>
- *
- * <p>TODO: Migration required - the idiomatic Quarkus approach is to drop this programmatic
- * producer entirely and configure the datasource via {@code quarkus.datasource.*} (jdbc-url /
- * username / password / db-kind), letting Agroal own the connection pool. This producer is retained
- * to preserve the runtime "custom database" toggle (premium + {@code
- * datasource.enableCustomDatabase}) that selects between the bundled H2 file DB and a user-supplied
- * URL at startup - static config cannot express that branch on its own. The {@code DriverManager}
- * datasource below is intentionally unpooled; if connection pooling is required it should be
- * obtained from the Agroal-managed default datasource instead.
  */
 @Slf4j
 @Getter
@@ -126,12 +117,6 @@ public class DatabaseConfig {
         return new SimpleDriverDataSource(H2_DRIVER_CLASS_NAME, url, DEFAULT_USERNAME, null);
     }
 
-    // TODO: Migration required - the Spring @ConditionalOnBooleanProperty(name = "premium.enabled")
-    // gate is not expressible on a private helper under CDI. The custom-database path is already
-    // guarded at runtime by the runningProOrHigher + datasource.enableCustomDatabase checks in
-    // dataSource(); if a separate premium.enabled toggle is still required, read it via
-    // org.eclipse.microprofile.config.Config (e.g. premium.enabled) inside dataSource() before
-    // calling this method.
     private DataSource useCustomDataSource() throws UnsupportedProviderException {
         log.info("Using custom database configuration");
 

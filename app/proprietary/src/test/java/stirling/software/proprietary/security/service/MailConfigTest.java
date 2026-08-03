@@ -15,7 +15,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.configuration.MailConfig;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 class MailConfigTest {
 
     private ApplicationProperties.Mail mailProps;

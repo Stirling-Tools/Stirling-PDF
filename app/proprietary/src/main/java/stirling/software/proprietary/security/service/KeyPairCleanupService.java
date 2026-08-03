@@ -26,10 +26,6 @@ import stirling.software.proprietary.security.model.JwtVerificationKey;
 
 @Slf4j
 @ApplicationScoped
-// TODO: Migration required - Spring @ConditionalOnBooleanProperty("v2") dropped; the "v2"
-// runtime toggle has no direct CDI equivalent. Guard activation via a runtime check or
-// @io.quarkus.arc.lookup.LookupIfProperty / quarkus.scheduler config if this bean should be
-// conditionally enabled.
 public class KeyPairCleanupService {
 
     // Cluster-wide single-writer: keys live in the shared DB, so only one node may prune + rotate

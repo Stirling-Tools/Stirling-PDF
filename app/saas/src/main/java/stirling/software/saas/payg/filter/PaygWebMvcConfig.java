@@ -9,11 +9,6 @@ import jakarta.enterprise.context.ApplicationScoped;
  * PaygChargeInterceptor} and the entitlement guard as ordered interceptors; under Quarkus the
  * interceptor/guard are JAX-RS filters that self-order via {@code @Priority}. The order constants
  * remain the single source of truth for that relative ordering.
- *
- * <p>// TODO: Migration required - the Spring {@code WebMvcConfigurer#addInterceptors} registration
- * was removed. Re-express it as JAX-RS {@code @Provider} ContainerRequest/ResponseFilters annotated
- * with {@code @Priority(ENTITLEMENT_GUARD_ORDER)} / {@code @Priority(INTERCEPTOR_ORDER)} (and a
- * {@code @WebFilter} for {@link PaygResponseBodyWrapperFilter}) once the interceptor is converted.
  */
 @ApplicationScoped
 @IfBuildProfile("saas")

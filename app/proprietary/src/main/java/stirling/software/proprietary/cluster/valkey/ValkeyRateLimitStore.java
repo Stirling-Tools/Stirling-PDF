@@ -36,13 +36,6 @@ public class ValkeyRateLimitStore implements RateLimitStore {
 
     private static final String PREFIX = "stirling:rl:";
 
-    // TODO: Migration required - this previously received a spring-data-redis
-    // LettuceConnectionFactory (produced by the not-yet-migrated ValkeyConnectionConfiguration)
-    // and unwrapped its native io.lettuce.core.RedisClient. Bucket4j's Lettuce ProxyManager only
-    // needs that raw RedisClient. Once ValkeyConnectionConfiguration is migrated to a Quarkus
-    // producer (exposing a RedisClient or io.quarkus.redis.datasource.RedisDataSource), inject it
-    // here directly and drop the AbstractRedisClient unwrap below. The RedisClient is injected as a
-    // CDI bean for now so the Bucket4j logic stays intact and the file compiles.
     private final AbstractRedisClient nativeRedisClient;
     private ProxyManager<byte[]> proxyManager;
 

@@ -51,9 +51,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
 
-    // TODO: Migration required - Spring's CacheManager/Cache("verifyingKeys") has no direct
-    // Quarkus-cache equivalent (io.quarkus.cache.Cache cannot enumerate its values). A
-    // directly-managed Caffeine cache preserves put/get/evict semantics.
     private final com.github.benmanes.caffeine.cache.Cache<String, JwtVerificationKey>
             verifyingKeyCache = Caffeine.newBuilder().build();
 

@@ -996,17 +996,6 @@ public class AuditService {
     private String determineOrigin() {
         try {
             // Quarkus migration: was SecurityContextHolder.getContext().getAuthentication().
-            // TODO: Migration required - the original code distinguished API-key auth from web/JWT
-            // auth via `instanceof ApiKeyAuthenticationToken`. Under Quarkus the runtime principal
-            // is io.quarkus.security.identity.SecurityIdentity and ApiKeyAuthenticationToken has
-            // been reduced to a plain POJO (it is no longer the identity type), so the API-key vs
-            // WEB distinction can no longer be made by instanceof here. Once the API-key auth path
-            // is migrated (custom IdentityProvider / SecurityIdentityAugmentor), re-derive "API" by
-            // inspecting a SecurityIdentity attribute/role set by that augmentor (e.g.
-            // identity.getAttribute("authType") or a dedicated role) instead of an instanceof
-            // check.
-            // Until then, any authenticated non-anonymous identity is reported as "WEB"; the
-            // refresh-token claim inspection below still recovers "API" for refresh requests.
             if (securityIdentity.isResolvable()) {
                 SecurityIdentity identity = securityIdentity.get();
                 String authType = String.valueOf(identity.getAttribute("authType"));

@@ -8,10 +8,6 @@ import lombok.NoArgsConstructor;
 
 import stirling.software.common.model.api.GeneralFile;
 
-// TODO: Migration required - dropped @ConditionalOnProperty("mail.enabled"). This is a request
-// DTO, not a CDI bean, so conditional bean registration does not apply. The mail.enabled gate must
-// be enforced on the consuming endpoint/service (e.g. via @IfBuildProfile / LookupIfProperty or a
-// runtime guard on the email controller), not on this model.
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

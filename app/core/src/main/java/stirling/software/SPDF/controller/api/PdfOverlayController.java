@@ -32,6 +32,9 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -56,11 +59,12 @@ public class PdfOverlayController {
     @jakarta.ws.rs.Path("/overlay-pdfs")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Overlay PDF files in various modes",
             description =
                     "Overlay PDF files onto a base PDF with different modes: Sequential,"
-                            + " Interleaved, or Fixed Repeat. Input:PDF Output:PDF Type:MIMO")
+                            + " Interleaved, or Fixed Repeat.")
     public Response overlayPdfs(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("overlayFiles") List<FileUpload> overlayFileUploads,

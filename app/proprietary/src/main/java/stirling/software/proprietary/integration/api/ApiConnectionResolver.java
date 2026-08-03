@@ -3,15 +3,14 @@ package stirling.software.proprietary.integration.api;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.integration.model.IntegrationConfig;

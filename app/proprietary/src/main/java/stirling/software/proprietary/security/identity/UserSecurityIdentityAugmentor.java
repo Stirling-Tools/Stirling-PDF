@@ -22,8 +22,7 @@ import stirling.software.proprietary.security.service.UserService;
  * the Quarkus auth paths (JWT Bearer, X-API-KEY, and later OIDC/SAML): it re-loads the user by name
  * and rebuilds the identity with the {@code User} as principal, preserving the roles the {@link
  * JwtTokenIdentityProvider} / {@link ApiKeyIdentityProvider} already assigned. This is the
- * augmentor the {@code // TODO: Migration required} comments across the security/storage code ask
- * for.
+ * augmentor the {@code //
  */
 @ApplicationScoped
 public class UserSecurityIdentityAugmentor implements SecurityIdentityAugmentor {

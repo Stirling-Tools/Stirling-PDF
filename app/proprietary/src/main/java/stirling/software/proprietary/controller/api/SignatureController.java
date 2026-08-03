@@ -32,14 +32,6 @@ import stirling.software.proprietary.service.SignatureService;
 /**
  * Controller for managing user signatures in proprietary/authenticated mode only. Requires user
  * authentication and enforces per-user storage limits.
- *
- * <p>TODO: Migration required - the original endpoints were guarded by Spring Security SpEL
- * expressions ({@code @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")} and
- * {@code @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")}). These are not simple role checks, so
- * they cannot be expressed with {@code @RolesAllowed}. Authentication should be enforced via
- * Quarkus (e.g. inject {@code io.quarkus.security.identity.SecurityIdentity} or add an HTTP auth
- * policy in application.properties), and the DEMO_USER exclusion needs to be re-implemented as a
- * runtime check against the current identity's roles.
  */
 @Slf4j
 @ApplicationScoped

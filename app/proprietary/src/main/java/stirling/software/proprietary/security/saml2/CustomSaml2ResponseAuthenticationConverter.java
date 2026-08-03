@@ -20,31 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
-// TODO: Migration required - there is NO Quarkus SAML extension. This class
-// previously implemented Spring Security's
-// org.springframework.security.core.convert.converter.Converter<
-//     OpenSaml5AuthenticationProvider.ResponseToken, Saml2Authentication>
-// to plug into Spring's SAML2 OpenSaml5AuthenticationProvider pipeline.
-//
-// The OpenSAML 5 (org.opensaml.*) assertion/attribute extraction logic below is
-// preserved unchanged. The Spring SAML2 glue has been removed:
-//   - org.springframework.security.saml2.provider.service.authentication
-//         .OpenSaml5AuthenticationProvider.ResponseToken (input token)
-//   - org.springframework.security.saml2.provider.service.authentication
-//         .Saml2Authentication (output Authentication)
-//   - org.springframework.security.core.authority.SimpleGrantedAuthority
-//   - org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-//         (gated on security.saml2.enabled=true)
-//
-// The SAML SP must be rehosted on a Jakarta @WebServlet using OpenSAML 5
-// (dnulnets/quarkus-saml pattern). When that is in place:
-//   - convert(...) should accept the parsed OpenSAML Response/ResponseToken
-//     equivalent and produce a Quarkus SecurityIdentity (via a
-//     SecurityIdentityAugmentor / custom IdentityProvider) instead of a
-//     Saml2Authentication.
-//   - the "ROLE_USER"/user-role authority should map to SecurityIdentity roles.
-//   - re-gate this bean on security.saml2.enabled (runtime config guard) since
-//     @ConditionalOnProperty has no direct CDI equivalent here.
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -80,14 +55,6 @@ public class CustomSaml2ResponseAuthenticationConverter {
         return attributes;
     }
 
-    // TODO: Migration required - signature changed from
-    // convert(OpenSaml5AuthenticationProvider.ResponseToken) returning
-    // Saml2Authentication. Re-wire the input to the OpenSAML 5 Assertion obtained
-    // from the rehosted SAML SP and the output to a Quarkus SecurityIdentity. The
-    // OpenSAML attribute/identifier/session-index extraction logic below is the
-    // reusable part and is preserved. The returned CustomSaml2AuthenticatedPrincipal
-    // plus the resolved role (ROLE_USER or the user's role) carry the data the new
-    // SecurityIdentity must be built from.
     public CustomSaml2AuthenticatedPrincipal convert(Assertion assertion) {
         Map<String, List<Object>> attributes = extractAttributes(assertion);
 
@@ -112,10 +79,6 @@ public class CustomSaml2ResponseAuthenticationConverter {
 
         // Rest of your existing code...
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(userIdentifier);
-        // TODO: Migration required - resolved authority was previously wrapped in a
-        // Spring SimpleGrantedAuthority("ROLE_USER" / userService.findRole(user)).
-        // Map this role String onto a Quarkus SecurityIdentity role when wiring the
-        // SAML SP / SecurityIdentityAugmentor.
         String authority = "ROLE_USER";
         if (userOpt.isPresent()) {
             User user = userOpt.get();

@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.Resource;
 
 /**
  * Tests for {@link ZipExtractionUtils} that build real in-memory ZIP byte streams and exercise

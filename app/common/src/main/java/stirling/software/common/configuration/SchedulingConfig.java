@@ -11,9 +11,5 @@ package stirling.software.common.configuration;
  * the individual {@code @io.quarkus.scheduler.Scheduled} methods with
  * {@code @io.smallrye.common.annotation.RunOnVirtualThread} (or configure {@code
  * quarkus.scheduler.use-virtual-threads=true} where supported).
- *
- * <p>TODO: Migration required - any injection point that received the former Spring {@code
- * TaskScheduler} bean must be rewritten to use the Quarkus scheduler API or a CDI-managed {@code
- * java.util.concurrent.ScheduledExecutorService}.
  */
 public class SchedulingConfig {}

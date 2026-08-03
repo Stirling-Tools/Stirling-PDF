@@ -40,8 +40,6 @@ public class SaasTeamService {
     private final TeamInvitationRepository invitationRepository;
     private final UserRepository userRepository;
     private final BillingSubscriptionRepository billingSubscriptionRepository;
-    // TODO: Migration required - Spring RestTemplate replaced with JDK java.net.http.HttpClient for
-    // the Supabase edge-function email POST (see sendInvitationEmail).
     private final RateLimitService rateLimitService;
     private final SupabaseConfigurationProperties supabaseConfig;
     private final UserRoleService userRoleService;
@@ -702,9 +700,6 @@ public class SaasTeamService {
                             invitation.getInviter().getEmail(),
                             invitation.getInvitationToken());
 
-            // TODO: Migration required - Spring RestTemplate (HttpHeaders/MediaType/HttpEntity +
-            // postForEntity) replaced with JDK HttpClient. Preserves the JSON POST with the bearer
-            // Authorization header to the Supabase edge function.
             String requestJson =
                     new com.fasterxml.jackson.databind.ObjectMapper()
                             .writeValueAsString(requestBody);

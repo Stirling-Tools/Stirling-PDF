@@ -22,11 +22,11 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;

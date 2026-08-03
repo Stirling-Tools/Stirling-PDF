@@ -51,16 +51,6 @@ import stirling.software.saas.util.LogRedactionUtils;
 
 /**
  * Stateless JWT authentication filter for the saas profile.
- *
- * <p>// TODO: Migration required - this was a Spring {@code OncePerRequestFilter}. It must be
- * re-registered as a JAX-RS {@code @jakarta.ws.rs.container.ContainerRequestFilter} with
- * {@code @jakarta.ws.rs.ext.Provider} (or a {@code jakarta.servlet.Filter}) and ordered before the
- * Quarkus OIDC/auth processing. The {@code doFilterInternal}/{@code shouldNotFilter} servlet
- * signatures are retained here; the request/response handling and entry-point error path
- * (previously Spring's {@code BearerTokenAuthenticationEntryPoint}) must be reattached during that
- * conversion. JWT decoding/validation (previously Spring {@code JwtDecoder}/{@code
- * NimbusJwtDecoder}) must move to Quarkus OIDC; the {@link JwtDecoder} functional interface below
- * is a placeholder so the decode call site keeps compiling.
  */
 @Slf4j
 public class SupabaseAuthenticationFilter {
@@ -68,11 +58,6 @@ public class SupabaseAuthenticationFilter {
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String ANON_PREFIX = "anon_";
 
-    /**
-     * // TODO: Migration required - placeholder for Spring's {@code
-     * org.springframework.security.oauth2.jwt.JwtDecoder}. Replace with Quarkus OIDC token parsing
-     * that yields a verified {@link JsonWebToken} (or throws on invalid token).
-     */
     @FunctionalInterface
     public interface JwtDecoder {
         JsonWebToken decode(String token);
@@ -85,10 +70,6 @@ public class SupabaseAuthenticationFilter {
     private final JwtDecoder jwtDecoder;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
-    // TODO: Migration required - the Spring AuthenticationEntryPoint
-    // (BearerTokenAuthenticationEntryPoint) that wrote the 401 challenge has no Quarkus equivalent
-    // here. When converting to a JAX-RS @Provider filter, emit the 401 / WWW-Authenticate response
-    // directly (or delegate to Quarkus OIDC) in place of authenticationEntryPoint.commence(...).
 
     public SupabaseAuthenticationFilter(
             TeamService teamService,
@@ -105,10 +86,6 @@ public class SupabaseAuthenticationFilter {
         this.apiKeyAuthenticationService = apiKeyAuthenticationService;
     }
 
-    // TODO: Migration required - this retains the original OncePerRequestFilter.doFilterInternal
-    // behavior. Wire it into a JAX-RS ContainerRequestFilter / servlet Filter. The error branch
-    // previously called authenticationEntryPoint.commence(request, response, e); emit the 401
-    // response directly during that conversion.
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -140,11 +117,6 @@ public class SupabaseAuthenticationFilter {
             processJwtAuthentication(request);
         } catch (AuthenticationException e) {
             SecurityContextHolder.clearContext();
-            // TODO: Migration required - was authenticationEntryPoint.commence(request, response,
-            // e)
-            // (Spring BearerTokenAuthenticationEntryPoint). Emit the 401 challenge response here
-            // when
-            // converting to a JAX-RS @Provider filter.
             log.debug("JWT authentication failed: {}", e.getMessage());
             return;
         }
@@ -216,9 +188,6 @@ public class SupabaseAuthenticationFilter {
         } catch (AuthenticationException e) {
             throw e;
         } catch (RuntimeException e) {
-            // TODO: Migration required - previously caught Spring's JwtException and rethrew
-            // InvalidBearerTokenException("Invalid JWT", e). Adjust to the exception type thrown by
-            // the Quarkus OIDC token parser.
             throw new AuthenticationFailureException("Invalid JWT", e);
         }
     }
@@ -310,10 +279,6 @@ public class SupabaseAuthenticationFilter {
             // Give the account its own team rather than the shared Default team.
             return saasTeamService.saveUserWithPersonalTeam(user);
         } catch (PersistenceException e) {
-            // TODO: Migration required - was Spring's DataIntegrityViolationException
-            // (email-collision race). jakarta.persistence.PersistenceException is broader; narrow
-            // to the Hibernate/JPA constraint-violation type once the persistence layer is
-            // finalized.
             log.warn(
                     "Email collision upgrading anonymous user {} to {}: {}",
                     user.getId(),
@@ -406,9 +371,6 @@ public class SupabaseAuthenticationFilter {
             supabaseUserService.createSupabaseUser(supabaseId, isAnon ? null : email, isAnon);
         } catch (PersistenceException ignored) {
             // Concurrent creation; fall through, the row exists.
-            // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to
-            // the
-            // Hibernate/JPA constraint-violation type once the persistence layer is finalized.
         } catch (Exception e) {
             throw new AuthenticationFailureException("Failed to create SupabaseUser", e);
         }
@@ -421,8 +383,6 @@ public class SupabaseAuthenticationFilter {
                     : saasTeamService.saveUserWithPersonalTeam(newUser);
         } catch (PersistenceException dup) {
             // Parallel filter won the race; fetch the winning row.
-            // TODO: Migration required - was Spring's DataIntegrityViolationException. Narrow to
-            // the Hibernate/JPA constraint-violation type once the persistence layer is finalized.
             return userService
                     .findBySupabaseId(supabaseId)
                     .orElseThrow(
@@ -454,10 +414,6 @@ public class SupabaseAuthenticationFilter {
 
         userService.trackApiKeyFirstUse(user);
 
-        // TODO: Migration required - ApiKeyAuthenticationToken is a plain POJO that does not
-        // implement the Authentication shim. Wrap the principal/credentials/authorities in a
-        // UsernamePasswordAuthenticationToken (which does) so it can be set on the SecurityContext.
-        // Re-wire to a Quarkus SecurityIdentity when the API-key auth path is migrated.
         java.util.Collection<stirling.software.common.security.GrantedAuthority> mappedAuthorities =
                 user.getAuthorities().stream()
                         .map(
@@ -479,12 +435,6 @@ public class SupabaseAuthenticationFilter {
         return Boolean.TRUE.equals(jwt.<Boolean>getClaim("is_anonymous"));
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // TODO: Migration required - claim accessor adapters. Spring's Jwt exposed typed claim getters
-    // (getClaimAsString/getClaimAsStringList/getClaimAsInstant/getClaimAsBoolean). MicroProfile
-    // JsonWebToken only exposes a generic getClaim(name); these helpers reproduce the original
-    // typed
-    // semantics so the validation/user-creation logic is preserved unchanged.
     // ---------------------------------------------------------------------------------------------
 
     private static String claimAsString(JsonWebToken jwt, String name) {

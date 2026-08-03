@@ -46,11 +46,6 @@ import stirling.software.common.model.ApplicationProperties;
  *
  * @since 2.2.x
  */
-// TODO: Migration required - the original class was guarded by Spring's
-// @ConditionalOnProperty(prefix="telegram", name="enabled", havingValue="true"). Migrated to a
-// runtime guard: the bean is always created, but register() (the @PostConstruct startup hook)
-// short-circuits when the bot token/username are not configured, so an unconfigured Telegram
-// integration stays inert. This is a true runtime toggle (no build-time pinning required).
 @Slf4j
 @ApplicationScoped
 public class TelegramPipelineBot extends TelegramLongPollingBot {

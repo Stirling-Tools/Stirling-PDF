@@ -26,9 +26,6 @@ public final class AiToolRoutes {
     /** Trailing slash so it matches the tool sub-paths, not a bare {@code /api/v1/ai/tools}. */
     public static final String PREFIX = "/api/v1/ai/tools/";
 
-    // TODO: Migration required - literal value of the former Spring constant
-    // HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE. Replace with the JAX-RS route template
-    // (UriInfo / ResourceInfo) once the interceptor is converted to a @Provider filter.
     private static final String BEST_MATCHING_PATTERN_ATTRIBUTE =
             "org.springframework.web.servlet.HandlerMapping.bestMatchingPattern";
 

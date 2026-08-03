@@ -29,17 +29,6 @@ public class EndpointInspector {
 
     private void discoverEndpoints() {
         try {
-            // TODO: Migration required - this previously used Spring MVC's
-            // RequestMappingHandlerMapping (org.springframework.web.servlet.mvc.method.*) to
-            // enumerate all registered GET handler mappings via the ApplicationContext at
-            // ContextRefreshedEvent. Quarkus/JAX-RS (RESTEasy Reactive) has no equivalent
-            // runtime-queryable handler-mapping registry. Options for porting:
-            //   - Build-time scan of @jakarta.ws.rs.Path + @jakarta.ws.rs.GET via a Quarkus
-            //     build step / Jandex index, or
-            //   - Query the OpenAPI model (quarkus-smallrye-openapi) for GET paths, or
-            //   - Maintain an explicit allow-list.
-            // Until one of the above is implemented, no endpoints are discovered and we fall
-            // back to the common wildcard endpoints below (preserving prior fallback behavior).
 
             if (validGetEndpoints.isEmpty()) {
                 log.warn("No endpoints discovered. Adding common endpoints as fallback.");

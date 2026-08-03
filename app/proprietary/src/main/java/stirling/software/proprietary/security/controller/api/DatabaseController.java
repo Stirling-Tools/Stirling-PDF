@@ -41,11 +41,6 @@ import stirling.software.proprietary.security.service.DatabaseService;
 // path must be declared explicitly here.
 @jakarta.ws.rs.Path("/api/v1/database")
 @RolesAllowed("ADMIN")
-// TODO: Migration required - @Conditional(H2SQLCondition.class) gated this controller on the
-// datasource being H2 (driver/url inspection of the Spring Environment). Quarkus has no
-// @Conditional equivalent; this must be re-expressed either as a build-time @IfBuildProfile, a
-// runtime @LookupIfProperty on a datasource property, or a runtime guard inside DatabaseService
-// that no-ops/returns 404 when the active datasource is not H2.
 @RequiredArgsConstructor
 public class DatabaseController {
 

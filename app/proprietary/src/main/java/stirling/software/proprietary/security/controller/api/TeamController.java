@@ -243,10 +243,4 @@ public class TeamController {
 
         return Response.ok(Map.of("message", "User added to team successfully")).build();
     }
-
-    // TODO: Migration required - teamRepository/userRepository still extend Spring Data
-    // JpaRepository. Once they are migrated to Panache, findById(...) returns the entity
-    // directly (not Optional); update the Optional handling above accordingly. Likewise
-    // save(...) -> persist(...), delete(...) -> delete(...)/deleteById(...). Derived finders
-    // existsByNameIgnoreCase / countByTeam must be reimplemented as Panache default methods.
 }

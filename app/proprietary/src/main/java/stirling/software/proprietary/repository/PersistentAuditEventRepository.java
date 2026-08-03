@@ -20,22 +20,6 @@ import stirling.software.proprietary.model.security.PersistentAuditEvent;
  * <p>Migrated from a Spring Data {@code JpaRepository}. The original {@code @Query} JPQL strings
  * are preserved verbatim and executed through Panache's {@link #find(String, Object...)} / {@link
  * #find(String, io.quarkus.panache.common.Sort, java.util.Map)} APIs.
- *
- * <p>TODO: Migration required - the previous Spring Data signatures returned {@code
- * org.springframework.data.domain.Page<T>} and accepted {@code
- * org.springframework.data.domain.Pageable}. Those Spring types are gone in Quarkus; the paged
- * finders below now return a Panache {@link PanacheQuery} and accept an {@code
- * io.quarkus.panache.common.Page}. Collaborators that still consume the old Spring API
- * (AuditRestController, AuditCleanupService, CustomAuditEventRepository) must be updated:
- *
- * <ul>
- *   <li>{@code page.getContent()} -> {@code query.page(page).list()}
- *   <li>{@code page.getTotalElements()} -> {@code query.count()}
- *   <li>{@code page.getTotalPages()} -> {@code query.pageCount()}
- *   <li>{@code page.getNumber()}/{@code getSize()} -> read from the requested {@code
- *       io.quarkus.panache.common.Page}
- *   <li>build the {@code io.quarkus.panache.common.Page} from the request's page index + size
- * </ul>
  */
 @ApplicationScoped
 public class PersistentAuditEventRepository
@@ -43,9 +27,6 @@ public class PersistentAuditEventRepository
 
     // ---------------------------------------------------------------------
     // Basic paged queries
-    // TODO: Migration required - callers must adapt to the PanacheQuery return type (see class
-    // doc).
-    // ---------------------------------------------------------------------
 
     public PanacheQuery<PersistentAuditEvent> findByPrincipal(String principal) {
         return find(
@@ -191,12 +172,7 @@ public class PersistentAuditEventRepository
         return (int) delete("timestamp < ?1", cutoffDate);
     }
 
-    /**
-     * Find IDs for batch deletion - using JPQL with paging instead of a native query.
-     *
-     * <p>TODO: Migration required - originally accepted a Spring {@code Pageable}; callers must
-     * pass an {@code io.quarkus.panache.common.Page} instead (see class doc).
-     */
+    /** Find IDs for batch deletion - using JPQL with paging instead of a native query. */
     public List<Long> findIdsForBatchDeletion(
             Instant cutoffDate, io.quarkus.panache.common.Page page) {
         return getEntityManager()
@@ -330,9 +306,6 @@ public class PersistentAuditEventRepository
 
     // ---------------------------------------------------------------------
     // Multi-value queries for filtering by multiple types and/or principals
-    // TODO: Migration required - callers must adapt to the PanacheQuery return type (see class
-    // doc).
-    // ---------------------------------------------------------------------
 
     public PanacheQuery<PersistentAuditEvent> findByTypeIn(List<String> types) {
         return find("type IN ?1", Sort.descending("timestamp"), types);

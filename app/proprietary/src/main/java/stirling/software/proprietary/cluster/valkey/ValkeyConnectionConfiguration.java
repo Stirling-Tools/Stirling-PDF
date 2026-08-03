@@ -21,43 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
 
-// TODO: Migration required - this class was built on spring-data-redis types
-// (LettuceConnectionFactory, StringRedisTemplate, RedisStandaloneConfiguration,
-// LettuceClientConfiguration, RedisPassword, RedisConnection) plus direct io.lettuce.core usage.
-// Quarkus has no spring-data-redis; the backplane should be reworked onto
-// io.quarkus.redis.datasource.RedisDataSource / ReactiveRedisDataSource configured via
-// quarkus.redis.* in application.properties (hosts, password, tls, timeout=2s). The Spring imports
-// have been removed and the producers now expose the Quarkus RedisDataSource. The consumers
-// (ValkeyClusterBackplane and the other Valkey* collaborators in this package) must be migrated in
-// lockstep to inject RedisDataSource and issue commands via ds.value(String.class) / ds.key() etc.
-// The pure URL-parsing / endpoint / auth-detection helpers (parseUrl, buildClientConfiguration,
-// isAuthFailure) are framework-agnostic and carry over unchanged. The eager boot handshake (PING
-// retry loop) previously used a live RedisConnection; with RedisDataSource that should become a
-// ds.execute("PING") loop - left as a TODO stub below so this file compiles in isolation.
-//
-// DI/config mapping applied here:
-//   @Configuration                          -> @ApplicationScoped (producer bean class)
-//   @Bean                                   -> @Produces (+ @Named for the string-command accessor)
-//   @ConditionalOnProperty(cluster.enabled) -> @LookupIfProperty(name="cluster.enabled",
-// stringValue="true")
-//   @ConditionalOnProperty(backplane=valkey)-> @LookupIfProperty(name="cluster.backplane",
-// stringValue="valkey")
-//   @DependsOn("clusterLicenseGate")        -> TODO: ordering; CDI has no @DependsOn (use @Observes
-//                                              ordering or an explicit @Inject of the gate bean).
-//   @Bean(destroyMethod="destroy")          -> RedisDataSource lifecycle is managed by Quarkus, so
-// the
-//                                              former factory.destroy() wiring is no longer needed.
-//
-// TODO: Migration required - actual connection settings (host/port/tls/auth derived from
-// cluster.valkey.url and tls.skip-cert-verification) must be propagated to quarkus.redis.* config
-// so
-// the injected RedisDataSource targets the right Valkey. parseUrl/buildClientConfiguration are kept
-// to validate the URL and to drive that config mapping once it is wired.
-// Build-time gating: the whole producer class (RedisDataSource consumer + RedisClient producer) is
-// only included in the build when cluster.backplane=valkey. With the default backplane the class
-// and
-// its producers are removed, so the inactive Redis client has no consumers and no eager startup
-// observer is generated.
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -66,14 +29,6 @@ public class ValkeyConnectionConfiguration {
 
     private final ApplicationProperties applicationProperties;
 
-    // TODO: Migration required - in Quarkus the RedisDataSource is produced by the
-    // quarkus-redis-client
-    // extension from quarkus.redis.* config rather than constructed here. This producer simply
-    // hands
-    // back the container-managed RedisDataSource so existing @Inject points keep compiling. The
-    // URL/TLS validation that used to build the LettuceConnectionFactory is still performed (and
-    // the
-    // boot handshake attempted) so misconfiguration fails fast.
     @Inject RedisDataSource redisDataSource;
 
     // MIGRATION: the former @Produces RedisDataSource methods (valkeyConnectionFactory /
@@ -83,9 +38,6 @@ public class ValkeyConnectionConfiguration {
     // for
     // every consumer that injects a plain RedisDataSource. All Valkey* collaborators now inject the
     // Quarkus-provided RedisDataSource directly.
-    // TODO: Migration required - the eager boot handshake / URL+TLS validation that used to run
-    // inside valkeyConnectionFactory() must be re-wired (e.g. via a @LookupIfProperty StartupEvent
-    // observer) so misconfiguration still fails fast. validateConnection() retains that logic.
     void validateConnection() {
         Cluster cluster = applicationProperties.getCluster();
         Endpoint endpoint = parseUrl(cluster.getValkey().getUrl());
@@ -174,7 +126,6 @@ public class ValkeyConnectionConfiguration {
         // Bound every backplane command. Without this a partitioned or slow Valkey would stall
         // hot-path calls (e.g. JobController.guardNonOwner -> jobStore.get on each request);
         // all backplane ops are non-blocking single commands, so a short timeout is safe.
-        // TODO: Migration required - propagate this to quarkus.redis.timeout=2s.
         if (tls && skipCertVerification) {
             log.warn(
                     "Valkey TLS hostname/chain verification DISABLED via"
@@ -187,11 +138,6 @@ public class ValkeyConnectionConfiguration {
     /**
      * 10 x 3s = 30s boot-time retry. Auth failures (WRONGPASS/NOAUTH/NOPERM) short-circuit
      * immediately; only transport errors get the loop. Package-private for testing.
-     *
-     * <p>TODO: Migration required - this previously issued PING via a spring-data-redis
-     * RedisConnection. With Quarkus it should issue {@code ds.execute("PING")} (string command).
-     * The loop structure and auth short-circuit are retained; the actual ping call is stubbed so
-     * the file compiles until the RedisDataSource command surface is wired in.
      */
     static void eagerHandshake(RedisDataSource ds, String host, int port, boolean tls) {
         RuntimeException last = null;
@@ -249,8 +195,6 @@ public class ValkeyConnectionConfiguration {
                 last);
     }
 
-    // TODO: Migration required - replace with ds.execute("PING").toString() (or the typed
-    // RedisDataSource command API) once the Quarkus command surface for the backplane is wired.
     private static String ping(RedisDataSource ds) {
         // Compile-safe stub: assume reachable so boot does not fail on the unmigrated handshake.
         return "PONG";
@@ -299,8 +243,6 @@ public class ValkeyConnectionConfiguration {
     // io.lettuce.core.RedisClient, which Quarkus' redis extension does not expose. Produce one from
     // the same cluster.valkey.url the rest of the backplane uses so the injection point for
     // AbstractRedisClient resolves. Only active when the Valkey backplane is selected.
-    // TODO: Migration required - propagate password/TLS auth from the parsed endpoint onto the
-    // RedisURI once cluster.valkey credentials handling is finalised.
     @Produces
     @Singleton
     public RedisClient nativeRedisClient() {

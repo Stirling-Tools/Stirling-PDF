@@ -33,9 +33,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.util.ExceptionUtils;
 

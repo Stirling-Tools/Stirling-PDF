@@ -26,11 +26,6 @@ import stirling.software.common.util.SpringContextHolder;
  * Manages a queue of jobs with dynamic sizing based on system resources. Used when system resources
  * are limited to prevent overloading.
  */
-// TODO: Migration required - the original class implemented Spring's SmartLifecycle, which has no
-// direct Quarkus equivalent. start() is now driven by a StartupEvent observer and stop() by
-// @PreDestroy. The SmartLifecycle phase/auto-startup ordering semantics (getPhase()==10) cannot be
-// expressed in CDI; if precise startup/shutdown ordering relative to other beans is required,
-// revisit using @Priority on the observer or @io.quarkus.runtime.Startup with an ordering strategy.
 @ApplicationScoped
 @Slf4j
 public class JobQueue {

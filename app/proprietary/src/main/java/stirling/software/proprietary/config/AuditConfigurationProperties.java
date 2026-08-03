@@ -13,9 +13,6 @@ import stirling.software.proprietary.audit.AuditLevel;
  * Configuration properties for the audit system. Reads values from the ApplicationProperties under
  * premium.enterpriseFeatures.audit
  */
-// TODO: Migration required - Spring @Order(HIGHEST_PRECEDENCE + 10) had no direct CDI
-// equivalent; bean ordering/precedence must be handled via @Priority or explicit ordering at
-// injection points if it was relied upon.
 @Slf4j
 @Getter
 @ApplicationScoped

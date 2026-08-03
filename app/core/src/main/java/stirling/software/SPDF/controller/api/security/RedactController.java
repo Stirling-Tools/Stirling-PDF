@@ -37,6 +37,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -92,13 +94,14 @@ public class RedactController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             operationId = "redactPdfManual",
             summary = "Redacts areas and pages in a PDF document",
             description =
-                    "This endpoint redacts content from a PDF file based on manually specified areas. "
-                            + "Users can specify areas to redact and optionally convert the PDF to an image. "
-                            + "Input:PDF Output:PDF Type:SISO")
+                    "This endpoint redacts content from a PDF file based on manually specified"
+                            + " areas. Users can specify areas to redact and optionally convert the PDF to an"
+                            + " image.")
     public Response redactPDF(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("fileId") String fileId,
@@ -156,13 +159,14 @@ public class RedactController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Redact PDF automatically",
             operationId = "redactPdfAuto",
             description =
-                    "This endpoint automatically redacts text from a PDF file based on specified patterns. "
-                            + "Users can provide text patterns to redact, with options for regex and whole word matching. "
-                            + "Input:PDF Output:PDF Type:SISO")
+                    "This endpoint automatically redacts text from a PDF file based on specified"
+                            + " patterns. Users can provide text patterns to redact, with options for regex"
+                            + " and whole word matching.")
     public Response redactPdf(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("fileId") String fileId,
@@ -321,13 +325,13 @@ public class RedactController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             operationId = "redactExecute",
             summary = "Execute a unified redaction plan on a PDF",
             description =
-                    "Unified redaction endpoint that accepts exact strings, regex patterns, and "
-                            + "page numbers in a single request. Supports execution strategy hints. "
-                            + "Input:PDF Output:PDF Type:SISO")
+                    "Unified redaction endpoint that accepts exact strings, regex patterns, and"
+                            + " page numbers in a single request. Supports execution strategy hints.")
     public Response executeRedaction(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("fileId") String fileId,

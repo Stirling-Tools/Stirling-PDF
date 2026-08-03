@@ -18,11 +18,6 @@ import stirling.software.SPDF.service.WeeklyActiveUsersService;
  * Filter to track browser IDs for Weekly Active Users (WAU) counting. Only active when security is
  * disabled (no-login mode).
  */
-// TODO: Migration required - Spring @ConditionalOnProperty(name="security.enableLogin",
-// havingValue="false") had no direct CDI equivalent for conditional bean registration. The filter
-// is now always registered (@Provider) and the condition is enforced at request time by reading the
-// 'security.enableLogin' config property below. Verify the property key matches Quarkus config
-// (originally bound from ApplicationProperties.security.enableLogin).
 @Provider
 @ApplicationScoped
 @RequiredArgsConstructor

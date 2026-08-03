@@ -28,11 +28,6 @@ import stirling.software.proprietary.security.service.EmailService;
  * Controller for handling email-related API requests. This controller exposes an endpoint for
  * sending emails with attachments.
  */
-// TODO: Migration required - Spring @ConditionalOnProperty(mail.enabled) gated bean creation. CDI
-// has no direct runtime-toggle equivalent; this controller is always registered and instead guards
-// at request time via the injected mail.enabled config below. If the endpoint must be fully absent
-// when mail is disabled, wire this with @io.quarkus.arc.lookup.LookupIfProperty or a build-time
-// @io.quarkus.arc.profile.IfBuildProfile once a build/runtime decision is made.
 @GeneralApi
 @Path("/api/v1/general")
 @ApplicationScoped
@@ -60,9 +55,7 @@ public class EmailController {
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Send an email with an attachment",
-            description =
-                    "This endpoint sends an email with an attachment. Input:PDF"
-                            + " Output:Success/Failure Type:MISO")
+            description = "This endpoint sends an email with an attachment.")
     public Response sendEmailWithAttachment(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("to") String to,
@@ -91,11 +84,6 @@ public class EmailController {
             return Response.ok("Email sent successfully").build();
         } catch (MessagingException e) {
             // Catches any messaging exception (e.g., invalid email address, SMTP server issues).
-            // TODO: Migration required - the Spring-specific
-            // org.springframework.mail.MailSendException
-            // ("Invalid Addresses" case) was previously handled separately. Once EmailService is
-            // migrated off Spring's JavaMailSender that branch can be reintroduced with the
-            // replacement exception type.
             String errorMsg = "Failed to send email: " + e.getMessage();
             log.error(errorMsg, e); // Logging the detailed error
             // Returns an error response with status 500 (Internal Server Error)

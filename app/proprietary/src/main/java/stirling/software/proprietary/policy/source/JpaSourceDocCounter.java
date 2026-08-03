@@ -9,12 +9,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-import org.springframework.dao.DataIntegrityViolationException;
-
 import io.quarkus.scheduler.Scheduled;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 
 /**
  * Durable {@link SourceDocCounter}; the runtime bean. {@code record} keeps two things in step: an
@@ -76,7 +75,7 @@ public class JpaSourceDocCounter implements SourceDocCounter {
         }
         try {
             insert.run();
-        } catch (DataIntegrityViolationException concurrentInsert) {
+        } catch (PersistenceException concurrentInsert) {
             increment.getAsInt();
         }
     }

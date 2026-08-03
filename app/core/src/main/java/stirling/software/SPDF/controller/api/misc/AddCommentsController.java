@@ -30,6 +30,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.comments.AnnotationLocation;
 import stirling.software.common.model.api.comments.StickyNoteSpec;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfAnnotationService;
 import stirling.software.common.util.GeneralUtils;
@@ -81,14 +83,14 @@ public class AddCommentsController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add sticky-note comments to a PDF at specified positions or anchored text",
             description =
-                    "Attaches PDF Text (sticky-note) annotations to the document."
-                            + " Each CommentSpec can either supply absolute coordinates or an"
-                            + " `anchorText` hint; when provided, the tool locates the first matching"
-                            + " line on the target page and anchors the icon there (falling back to"
-                            + " the coordinates if no match). Input:PDF Output:PDF Type:SISO")
+                    "Attaches PDF Text (sticky-note) annotations to the document. Each CommentSpec"
+                            + " can either supply absolute coordinates or an `anchorText` hint; when provided,"
+                            + " the tool locates the first matching line on the target page and anchors the"
+                            + " icon there (falling back to the coordinates if no match).")
     public Response addComments(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("comments") String comments)
             throws IOException {

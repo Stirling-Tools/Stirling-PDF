@@ -12,7 +12,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 class TauriAuthorizationRequestResolverTest {
 
     private TauriAuthorizationRequestResolver buildResolver() {

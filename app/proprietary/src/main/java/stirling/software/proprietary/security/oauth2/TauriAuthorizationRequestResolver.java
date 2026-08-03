@@ -3,22 +3,6 @@ package stirling.software.proprietary.security.oauth2;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 
-// TODO: Migration required - this class implemented Spring Security's
-// org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver SPI,
-// wrapping DefaultOAuth2AuthorizationRequestResolver (built from a
-// ClientRegistrationRepository) to inject a custom "tauri:" state value before the
-// authorization request is sent to the OAuth2 provider. quarkus-oidc has no equivalent
-// pluggable AuthorizationRequestResolver SPI. The Spring glue
-// (OAuth2AuthorizationRequestResolver, DefaultOAuth2AuthorizationRequestResolver,
-// ClientRegistrationRepository, OAuth2AuthorizationRequest) has been removed.
-//
-// To re-wire on quarkus-oidc, the Tauri state customization below must be applied during
-// the authorization-code redirect. Options:
-//   - Use quarkus.oidc.authentication.extra-params / state cookie customization, or
-//   - Implement a io.quarkus.oidc.runtime.OidcTenantConfigResolver /
-//     io.quarkus.oidc.TenantConfigResolver, or a jakarta.ws.rs.container.ContainerRequestFilter
-//     that intercepts the /oauth2/authorization redirect and rewrites the "state" param.
-// The state-prefixing/nonce logic in customizeState(...) below is preserved and reusable.
 @ApplicationScoped
 public class TauriAuthorizationRequestResolver {
 

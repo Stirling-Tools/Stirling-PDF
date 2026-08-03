@@ -38,7 +38,7 @@ import stirling.software.common.model.ApplicationProperties;
  *
  * <p>Skips unless the env var is set, so it never runs in normal CI. No secrets are committed.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 @EnabledIfEnvironmentVariable(named = "STIRLING_TEST_VALKEY_URL", matches = "rediss?://.+")
 class LiveExternalClusterTest {
 

@@ -55,6 +55,8 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.util.ExceptionUtils;
@@ -937,11 +939,12 @@ public class CompressController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/compress-pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Optimize PDF file",
             description =
                     "This endpoint accepts a PDF file and optimizes it based on the provided"
-                            + " parameters. Input:PDF Output:PDF Type:SISO")
+                            + " parameters.")
     public Response optimizePdf(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

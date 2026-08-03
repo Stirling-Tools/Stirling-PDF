@@ -40,7 +40,7 @@ import stirling.software.common.model.ApplicationProperties;
  * unavailable - without that guard, {@code @Testcontainers} would throw {@code initializationError}
  * (test FAILURE, not skip) on CI runners without Docker.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 @Testcontainers
 @EnabledIf("isDockerAvailable")
 class LiveValkeyIntegrationTest {

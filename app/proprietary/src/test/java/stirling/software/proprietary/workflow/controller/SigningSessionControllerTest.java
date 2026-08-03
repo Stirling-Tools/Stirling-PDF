@@ -26,9 +26,9 @@ import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.workflow.dto.CertificateInfo;

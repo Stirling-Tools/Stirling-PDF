@@ -62,7 +62,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get PDF page count",
-            description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
+            description = "Returns total number of pages in PDF.")
     public Response getPageCount(
             @RestForm("fileInput") FileUpload fileInput, @RestForm("fileId") String fileId)
             throws IOException {
@@ -82,7 +82,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get basic PDF information",
-            description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
+            description = "Returns page count, version, file size.")
     public Response getBasicInfo(
             @RestForm("fileInput") FileUpload fileInput, @RestForm("fileId") String fileId)
             throws IOException {
@@ -106,7 +106,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get PDF document properties",
-            description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
+            description = "Returns title, author, subject, etc.")
     public Response getDocumentProperties(
             @RestForm("fileInput") FileUpload fileInput, @RestForm("fileId") String fileId)
             throws IOException {
@@ -144,7 +144,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get page dimensions for all pages",
-            description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
+            description = "Returns width and height of each page.")
     public Response getPageDimensions(
             @RestForm("fileInput") FileUpload fileInput, @RestForm("fileId") String fileId)
             throws IOException {
@@ -173,8 +173,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get form field information",
-            description =
-                    "Returns count and details of form fields. Input:PDF Output:JSON Type:SISO")
+            description = "Returns count and details of form fields.")
     public Response getFormFields(
             @RestForm("fileInput") FileUpload fileInput, @RestForm("fileId") String fileId)
             throws IOException {
@@ -206,7 +205,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get annotation information",
-            description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
+            description = "Returns count and types of annotations.")
     public Response getAnnotationInfo(
             @RestForm("fileInput") FileUpload fileInput, @RestForm("fileId") String fileId)
             throws IOException {
@@ -240,8 +239,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get font information",
-            description =
-                    "Returns list of fonts used in the document. Input:PDF Output:JSON Type:SISO")
+            description = "Returns list of fonts used in the document.")
     public Response getFontInfo(
             @RestForm("fileInput") FileUpload fileInput, @RestForm("fileId") String fileId)
             throws IOException {
@@ -275,8 +273,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get security information",
-            description =
-                    "Returns encryption and permission details. Input:PDF Output:JSON Type:SISO")
+            description = "Returns encryption and permission details.")
     public Response getSecurityInfo(
             @RestForm("fileInput") FileUpload fileInput, @RestForm("fileId") String fileId)
             throws IOException {

@@ -277,11 +277,6 @@ public class AuthController {
     @Path("/me")
     public Response getCurrentUser() {
         try {
-            // TODO: Migration required - was
-            // SecurityContextHolder.getContext().getAuthentication().
-            // Quarkus SecurityIdentity has no Spring UserDetails principal; loading the full User
-            // here requires a SecurityIdentityAugmentor that attaches the User (or re-loading via
-            // userDetailsService by name). Until then we re-load the user from the identity name.
             if (securityIdentity == null
                     || securityIdentity.isAnonymous()
                     || securityIdentity.getPrincipal() == null) {
@@ -325,9 +320,6 @@ public class AuthController {
                     (token != null && !token.isBlank())
                             ? jwtService.extractUsernameAllowExpired(token)
                             : null;
-            // TODO: Migration required - SecurityContextHolder.clearContext() has no Quarkus
-            // equivalent; SecurityIdentity is request-scoped and not cleared imperatively. Cookie/
-            // token invalidation is handled by the JWT cookie being dropped by the client/filter.
             aiUserDataService.purgeUserDocuments(username);
 
             log.debug("User logged out successfully (username={})", username);

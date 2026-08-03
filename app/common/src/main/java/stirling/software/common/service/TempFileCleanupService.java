@@ -126,16 +126,7 @@ public class TempFileCleanupService {
         }
     }
 
-    /**
-     * Scheduled task to clean up old temporary files. Runs at the configured interval.
-     *
-     * <p>TODO: Migration required - the Spring form used a SpEL expression ({@code
-     * fixedDelayString="#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}"}).
-     * Quarkus {@code @Scheduled} cannot reference an arbitrary bean property; {@code every} only
-     * resolves a MicroProfile Config placeholder. The cleanup interval must therefore be exposed as
-     * a config key (e.g. {@code stirling.temp.cleanup-interval}) bound to the same value, and the
-     * minutes->duration mapping handled in config. Default below is 30m.
-     */
+    /** Scheduled task to clean up old temporary files. Runs at the configured interval. */
     @Scheduled(every = "{stirling.temp.cleanup-interval:30m}")
     public void scheduledCleanup() {
         log.info("Running scheduled temporary file cleanup");

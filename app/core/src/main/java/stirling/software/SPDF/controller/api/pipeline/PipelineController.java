@@ -76,8 +76,7 @@ public class PipelineController {
             summary = "Execute automated PDF processing pipeline",
             description =
                     "This endpoint processes multiple PDF files through a configurable pipeline of operations. "
-                            + "Users provide files and a JSON configuration defining the sequence of operations to perform. "
-                            + "Input:PDF Output:PDF/ZIP Type:MIMO")
+                            + "Users provide files and a JSON configuration defining the sequence of operations to perform.")
     public Response handleData(
             @RestForm("fileInput") List<FileUpload> fileInput, @RestForm("json") String jsonString)
             throws DatabindException, JacksonException {
@@ -86,14 +85,6 @@ public class PipelineController {
         }
         // MIGRATION (Spring -> JAX-RS): adapt the inbound multipart uploads to the migration shim
         // MultipartFile so they can be passed to the existing service layer.
-        // TODO: Migration required - PipelineProcessor.generateInputFiles still declares the Spring
-        // org.springframework.web.multipart.MultipartFile[] parameter type. When that collaborator
-        // is
-        // migrated to stirling.software.common.model.MultipartFile[], this array type lines up.
-        // Until
-        // then this controller will not compile against the processor; the adapter call below
-        // targets
-        // the migrated shim type.
         stirling.software.common.model.MultipartFile[] files =
                 new stirling.software.common.model.MultipartFile[fileInput.size()];
         for (int i = 0; i < fileInput.size(); i++) {

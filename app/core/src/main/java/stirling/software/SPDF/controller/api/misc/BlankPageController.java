@@ -38,6 +38,9 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
@@ -96,12 +99,12 @@ public class BlankPageController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/remove-blanks",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Remove blank pages from a PDF file",
             description =
                     "This endpoint removes blank pages from a given PDF file. Users can specify the"
-                            + " threshold and white percentage to tune the detection of blank pages."
-                            + " Input:PDF Output:PDF Type:SISO")
+                            + " threshold and white percentage to tune the detection of blank pages.")
     public Response removeBlankPages(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

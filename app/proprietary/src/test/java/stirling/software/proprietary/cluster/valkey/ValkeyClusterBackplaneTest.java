@@ -22,7 +22,7 @@ import stirling.software.common.model.ApplicationProperties;
  * getConnectionFactory().getConnection()} directly would leak the connection on every k8s liveness
  * probe tick and exhaust the pool under monitoring load.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 class ValkeyClusterBackplaneTest {
 
     @Test

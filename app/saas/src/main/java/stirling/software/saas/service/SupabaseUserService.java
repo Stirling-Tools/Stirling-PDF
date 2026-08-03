@@ -42,9 +42,6 @@ public class SupabaseUserService {
     }
 
     public SupabaseUser save(SupabaseUser supabaseUser) {
-        // TODO: Migration required - Spring Data save() did an upsert (merge); SupabaseUser uses an
-        // assigned UUID id and this path updates an existing row, so use EntityManager.merge to
-        // preserve update-or-insert semantics rather than Panache persist (INSERT-only).
         return supabaseUserRepository.getEntityManager().merge(supabaseUser);
     }
 }

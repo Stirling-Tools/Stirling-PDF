@@ -8,10 +8,10 @@ import java.util.function.Supplier;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,7 +88,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
                                 ProcessedFileStatus.PROCESSING,
                                 now));
                 return true;
-            } catch (DataIntegrityViolationException concurrentClaim) {
+            } catch (PersistenceException concurrentClaim) {
                 return false;
             }
         }
@@ -164,7 +164,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
                     new ProcessedFileEntity(
                             policyId, identityHash, identity, gate, contentHash, status, now);
             repository.saveAndFlush(row);
-        } catch (DataIntegrityViolationException concurrentInsert) {
+        } catch (PersistenceException concurrentInsert) {
             repository.settle(policyId, identityHash, gate, contentHash, status, now);
         }
     }

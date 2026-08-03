@@ -30,6 +30,11 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -58,19 +63,17 @@ public class PdfVectorExportController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/vector/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(accepts = ToolFormat.POSTSCRIPT, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert PostScript formats to PDF",
             description =
-                    "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript."
-                            + " Input:PS/EPS Output:PDF Type:SISO")
+                    "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript.")
     public Response convertGhostscriptInputsToPdf(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("prepress") Boolean prepressParam)
             throws Exception {
 
-        // TODO: Migration - PdfVectorExportRequest (@ModelAttribute) is not yet migrated to a
-        // multipart @BeanParam, so the request model is rebuilt here from individual @RestForm
-        // fields. Once the model carries @RestForm annotations, switch to @BeanParam binding.
+        // The request model is rebuilt here from the individual multipart @RestForm fields.
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileUpload));
         request.setPrepress(prepressParam);
@@ -120,19 +123,32 @@ public class PdfVectorExportController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/vector",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    // One case per non-default value of outputFormat; the base covers the default, eps.
+    @ToolIO(
+            produces = ToolFormat.IMAGE,
+            cases = {
+                @ToolIOCase(
+                        when = @ToolIOWhen(param = "outputFormat", matches = "ps"),
+                        produces = ToolFormat.POSTSCRIPT,
+                        arity = ToolArity.SISO),
+                @ToolIOCase(
+                        when = @ToolIOWhen(param = "outputFormat", matches = "pcl"),
+                        produces = ToolFormat.PCL,
+                        arity = ToolArity.SISO),
+                @ToolIOCase(
+                        when = @ToolIOWhen(param = "outputFormat", matches = "xps"),
+                        produces = ToolFormat.XPS,
+                        arity = ToolArity.SISO)
+            })
     @Operation(
             summary = "Convert PDF to vector format",
-            description =
-                    "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS)."
-                            + " Input:PDF Output:VECTOR Type:SISO")
+            description = "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS).")
     public Response convertPdfToVector(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("outputFormat") String outputFormatParam)
             throws Exception {
 
-        // TODO: Migration - PdfVectorExportRequest (@ModelAttribute) is not yet migrated to a
-        // multipart @BeanParam, so the request model is rebuilt here from individual @RestForm
-        // fields. Once the model carries @RestForm annotations, switch to @BeanParam binding.
+        // The request model is rebuilt here from the individual multipart @RestForm fields.
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileUpload));
         if (outputFormatParam != null) {

@@ -20,6 +20,8 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -39,10 +41,10 @@ public class ConvertPDFToHtml {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/html",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.ZIP)
     @Operation(
             summary = "Convert PDF to HTML",
-            description =
-                    "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML Type:SISO")
+            description = "This endpoint converts a PDF file to HTML format.")
     public Response processPdfToHTML(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
             throws Exception {

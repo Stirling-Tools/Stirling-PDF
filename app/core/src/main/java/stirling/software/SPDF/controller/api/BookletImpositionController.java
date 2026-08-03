@@ -32,6 +32,8 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
@@ -53,12 +55,13 @@ public class BookletImpositionController {
             value = "/booklet-imposition",
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Create a booklet with proper page imposition",
             description =
-                    "This operation combines page reordering for booklet printing with multi-page layout. "
-                            + "It rearranges pages in the correct order for booklet printing and places multiple pages "
-                            + "on each sheet for proper folding and binding. Input:PDF Output:PDF Type:SISO")
+                    "This operation combines page reordering for booklet printing with multi-page"
+                            + " layout. It rearranges pages in the correct order for booklet printing and"
+                            + " places multiple pages on each sheet for proper folding and binding.")
     public Response createBookletImposition(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

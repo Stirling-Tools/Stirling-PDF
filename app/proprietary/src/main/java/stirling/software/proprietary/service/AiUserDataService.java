@@ -30,12 +30,6 @@ public class AiUserDataService {
      * logout handler) returns immediately; engine errors are logged on the worker thread and never
      * propagated. The engine's TTL reaper backstops any miss within ~24h.
      */
-    // TODO: Migration required - Spring's @Async ran this fire-and-forget on a managed executor so
-    // an unavailable engine never delayed the logout response. Quarkus has no @Async; the method
-    // now runs synchronously on the caller's thread. To restore off-thread dispatch, inject a
-    // jakarta.enterprise.concurrent.ManagedExecutorService (or annotate the calling REST endpoint
-    // with @io.smallrye.common.annotation.RunOnVirtualThread). Errors are still swallowed, so the
-    // only behavioural change is that the caller now blocks on the engine call.
     public void purgeUserDocuments(String userId) {
         if (userId == null || userId.isBlank()) {
             log.debug("Skipping user document purge: no user id");

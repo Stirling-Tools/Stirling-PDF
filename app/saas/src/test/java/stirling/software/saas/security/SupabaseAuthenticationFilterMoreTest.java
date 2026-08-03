@@ -25,12 +25,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
+import jakarta.persistence.PersistenceException;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import stirling.software.common.security.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
@@ -365,7 +365,7 @@ class SupabaseAuthenticationFilterMoreTest {
             local.setAuthenticationType(AuthenticationType.ANONYMOUS);
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
-                    .thenThrow(new DataIntegrityViolationException("email exists"));
+                    .thenThrow(new PersistenceException("email exists"));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
@@ -485,7 +485,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "race@example.com", false));
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-            org.mockito.Mockito.doThrow(new DataIntegrityViolationException("dup"))
+            org.mockito.Mockito.doThrow(new PersistenceException("dup"))
                     .when(supabaseUserService)
                     .createSupabaseUser(eq(supabaseId), any(), eq(false));
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
@@ -534,7 +534,7 @@ class SupabaseAuthenticationFilterMoreTest {
                     .thenReturn(Optional.empty())
                     .thenReturn(Optional.of(winner));
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
-                    .thenThrow(new DataIntegrityViolationException("dup user"));
+                    .thenThrow(new PersistenceException("dup user"));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
@@ -555,7 +555,7 @@ class SupabaseAuthenticationFilterMoreTest {
                     .thenReturn(supabaseUser(supabaseId, "lost@example.com", false));
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
-                    .thenThrow(new DataIntegrityViolationException("dup user"));
+                    .thenThrow(new PersistenceException("dup user"));
 
             bearer("tok");
             filter.doFilter(request, response, chain);

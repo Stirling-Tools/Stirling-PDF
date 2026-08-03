@@ -14,9 +14,6 @@ import stirling.software.common.model.MultipartFile;
  * hashes to the same id, so re-uploads dedupe naturally in RAG. Suitable for session and SaaS
  * deployments; a folder-watch deployment would use a different strategy keyed by path.
  */
-// TODO: Migration required - the FileIdStrategy interface (collaborator file) still imports
-// org.springframework.web.multipart.MultipartFile; it must be switched to
-// stirling.software.common.model.MultipartFile so this implementation's signature matches.
 @ApplicationScoped
 public class ByteHashFileIdStrategy implements FileIdStrategy {
 

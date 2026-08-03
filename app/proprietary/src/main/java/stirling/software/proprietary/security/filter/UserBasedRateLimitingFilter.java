@@ -29,12 +29,6 @@ import stirling.software.common.util.RegexPatternUtils;
 // jakarta.servlet.Filter registered as a CDI bean via @WebFilter so it covers all requests; the
 // rate-limiting logic operates on the raw HttpServletRequest/HttpServletResponse which a JAX-RS
 // ContainerRequestFilter does not expose as conveniently.
-// TODO: Migration required - Spring's @Profile("!saas") gated this filter so it was NOT registered
-// in the "saas" profile. Quarkus has no per-profile bean exclusion on @WebFilter; gate registration
-// with @io.quarkus.arc.profile.UnlessBuildProfile("saas") if "saas" is a build profile, or guard
-// the
-// body with a runtime check on the active profile (org.eclipse.microprofile.config Config /
-// io.quarkus.runtime.LaunchMode) if it must be a runtime toggle.
 @ApplicationScoped
 @WebFilter("/*")
 public class UserBasedRateLimitingFilter implements jakarta.servlet.Filter {
@@ -45,10 +39,6 @@ public class UserBasedRateLimitingFilter implements jakarta.servlet.Filter {
 
     private final boolean rateLimit;
 
-    // TODO: Migration required - SecurityContextHolder replaced by injected SecurityIdentity.
-    // SecurityIdentity is request-scoped and is populated by Quarkus security extensions
-    // (quarkus-elytron-security / quarkus-oidc / etc.) once authentication is migrated. Until then
-    // it will be anonymous and getRoleFromIdentity will fall through to the IllegalStateException.
     private final SecurityIdentity securityIdentity;
 
     @Inject

@@ -29,7 +29,7 @@ import stirling.software.common.model.ApplicationProperties;
  * to reproduce a partition rather than {@code stop} (which would fail fast with
  * connection-refused).
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 @Testcontainers
 @EnabledIf("isDockerAvailable")
 class LiveValkeyChaosTest {

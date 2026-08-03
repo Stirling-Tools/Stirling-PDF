@@ -13,15 +13,6 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 
-// TODO: Migration required - this class implemented
-// org.springframework.security.core.userdetails.UserDetailsService and returned a
-// org.springframework.security.core.userdetails.UserDetails. Quarkus has no UserDetailsService
-// contract; the user-loading logic below should be invoked from a Quarkus IdentityProvider
-// (or SecurityIdentityAugmentor) that turns the returned User into a SecurityIdentity. The method
-// is retained as a plain service returning the User entity. Former Spring exceptions are mapped to
-// the migration shim runtime exceptions: UsernameNotFoundException (user not found) and
-// LockedException -> IllegalStateException (account locked); the IdentityProvider / AuthController
-// translate these into the appropriate unauthorized responses.
 @ApplicationScoped
 @RequiredArgsConstructor
 public class CustomUserDetailsService {

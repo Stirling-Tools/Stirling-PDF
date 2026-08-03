@@ -4,13 +4,12 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
 
-import org.springframework.security.core.GrantedAuthority;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.security.GrantedAuthority;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
 import stirling.software.proprietary.security.model.User;

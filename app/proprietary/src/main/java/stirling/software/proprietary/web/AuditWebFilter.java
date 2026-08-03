@@ -22,10 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 /** Filter that stores additional request information for audit purposes */
 // Servlet filter retained (quarkus-undertow). Spring's OncePerRequestFilter replaced by a plain
 // jakarta.servlet.Filter registered as a CDI bean via @WebFilter so it covers all requests.
-// TODO: Migration required - Spring's @Order(Ordered.HIGHEST_PRECEDENCE + 10) ordering has no
-// direct @WebFilter equivalent; if this filter must run before other servlet filters, configure
-// ordering explicitly (e.g. via a FilterRegistrationBean equivalent / quarkus.http.filter.* in
-// application.properties).
 @Slf4j
 @ApplicationScoped
 @WebFilter("/*")

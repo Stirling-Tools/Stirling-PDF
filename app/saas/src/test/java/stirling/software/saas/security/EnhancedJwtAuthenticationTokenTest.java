@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import stirling.software.proprietary.security.model.User;

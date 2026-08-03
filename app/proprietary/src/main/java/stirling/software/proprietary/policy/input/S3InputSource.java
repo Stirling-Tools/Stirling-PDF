@@ -7,13 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.io.AbstractResource;
-import org.springframework.core.io.Resource;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.s3.S3Config;

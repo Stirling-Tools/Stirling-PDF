@@ -34,6 +34,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.*;
 
@@ -58,11 +60,15 @@ public class ConvertMarkdownToPdf {
             value = "/markdown/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    // A ZIP of Markdown plus its images is a first-class input here, not just a bare .md file.
+    @ToolIO(
+            accepts = {ToolFormat.MARKDOWN, ToolFormat.ZIP},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =
-                    "This endpoint takes a Markdown file or ZIP (containing Markdown + images) input, converts it to HTML, and then to"
-                            + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
+                    "This endpoint takes a Markdown file or ZIP (containing Markdown + images)"
+                            + " input, converts it to HTML, and then to PDF format.")
     public Response markdownToPdf(@RestForm("fileInput") FileUpload fileUpload) throws Exception {
         GeneralFile generalFile = new GeneralFile();
         generalFile.setFileInput(FileUploadMultipartFile.of(fileUpload));

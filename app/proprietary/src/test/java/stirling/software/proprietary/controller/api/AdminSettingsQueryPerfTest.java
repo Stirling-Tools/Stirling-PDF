@@ -17,13 +17,13 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.security.core.Authentication;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContext;
 
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.controller.api.AdminSettingsPerfHarness.Measure;
 import stirling.software.proprietary.model.Team;

@@ -17,7 +17,7 @@ import stirling.software.common.model.ApplicationProperties;
  * cluster mode is off or {@code backplane=inprocess}, and are skipped when {@code
  * backplane=valkey}.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 class InProcessConfigurationConditionalTest {
 
     private final ApplicationContextRunner runner =

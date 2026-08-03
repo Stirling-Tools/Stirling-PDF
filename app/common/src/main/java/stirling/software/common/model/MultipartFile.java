@@ -20,9 +20,6 @@ import stirling.software.common.model.io.Resource;
  * the implementations ({@link stirling.software.common.model.multipart.ByteArrayMultipartFile},
  * {@link stirling.software.common.model.multipart.FileUploadMultipartFile}) and pass it down
  * unchanged.
- *
- * <p>TODO: Migration required - longer term, the REST boundary should standardise on {@code
- * FileUpload}/{@code @RestForm} and this shim can be retired.
  */
 public interface MultipartFile {
 

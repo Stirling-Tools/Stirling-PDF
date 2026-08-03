@@ -14,9 +14,6 @@ public interface JwtServiceInterface {
      * @param identity Quarkus security identity for the authenticated user
      * @return JWT token as a string
      */
-    // TODO: Migration required - the implementation must derive the username/claims from
-    // SecurityIdentity (getPrincipal()/getRoles()) instead of the former Spring
-    // Authentication.getName()/getAuthorities().
     String generateToken(SecurityIdentity identity, Map<String, Object> claims);
 
     /**

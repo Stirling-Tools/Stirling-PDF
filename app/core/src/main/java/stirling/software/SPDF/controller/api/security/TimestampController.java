@@ -51,6 +51,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -95,13 +97,13 @@ public class TimestampController {
             value = "/timestamp-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add RFC 3161 document timestamp to a PDF",
             description =
                     "Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161"
-                            + " document timestamp into the PDF. Only a SHA-256 hash of the"
-                            + " document is sent to the TSA - the PDF itself never leaves the"
-                            + " server. Input:PDF Output:PDF Type:SISO")
+                            + " document timestamp into the PDF. Only a SHA-256 hash of the document is sent"
+                            + " to the TSA - the PDF itself never leaves the server.")
     public Response timestampPdf(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

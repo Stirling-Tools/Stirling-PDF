@@ -26,8 +26,24 @@ export function ConnectionForm({
   onChange,
 }: ConnectionFormProps) {
   const { t } = useTranslation();
-  const set = (key: string, value: string) =>
-    onChange({ ...values, [key]: value });
+  const set = (key: string, value: string) => {
+    const next = { ...values, [key]: value };
+    const sync = type.fields.find((f) => f.key === key)?.syncsDefault;
+    if (sync) {
+      const target = next[sync.targetKey] ?? "";
+      const targetDefault =
+        type.fields.find((f) => f.key === sync.targetKey)?.defaultValue ?? "";
+      const untouched =
+        target === "" ||
+        target === targetDefault ||
+        Object.values(sync.map).includes(target);
+      const mapped = sync.map[value];
+      if (untouched && mapped !== undefined) {
+        next[sync.targetKey] = mapped;
+      }
+    }
+    onChange(next);
+  };
 
   return (
     <div className="portal-sources__connection-form">

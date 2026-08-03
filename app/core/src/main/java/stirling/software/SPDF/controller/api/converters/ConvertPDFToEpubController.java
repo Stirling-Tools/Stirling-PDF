@@ -32,6 +32,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -95,11 +97,10 @@ public class ConvertPDFToEpubController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/epub",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.EBOOK)
     @Operation(
             summary = "Convert PDF to EPUB/AZW3",
-            description =
-                    "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre. Input:PDF"
-                            + " Output:EPUB/AZW3 Type:SISO")
+            description = "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre.")
     public Response convertPdfToEpub(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("detectChapters") Boolean detectChaptersParam,
@@ -107,9 +108,7 @@ public class ConvertPDFToEpubController {
             @RestForm("outputFormat") OutputFormat outputFormatParam)
             throws Exception {
 
-        // TODO: Migration - ConvertPdfToEpubRequest (@ModelAttribute) is not yet migrated to a
-        // multipart @BeanParam, so the request model is rebuilt here from individual @RestForm
-        // fields. Once the model carries @RestForm annotations, switch to @BeanParam binding.
+        // The request model is rebuilt here from the individual multipart @RestForm fields.
         ConvertPdfToEpubRequest request = new ConvertPdfToEpubRequest();
         request.setFileInput(FileUploadMultipartFile.of(fileUpload));
         if (detectChaptersParam != null) {

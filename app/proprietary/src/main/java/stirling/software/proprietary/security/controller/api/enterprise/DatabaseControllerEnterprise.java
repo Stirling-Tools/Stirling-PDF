@@ -21,13 +21,6 @@ import stirling.software.common.model.FileInfo;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.service.DatabaseService;
 
-// TODO: Migration required - @Conditional(H2SQLCondition.class) had no direct Quarkus equivalent.
-// H2SQLCondition is an org.springframework.context.annotation.Condition that inspects active
-// profiles and datasource URL/type at bean-registration time. Quarkus has no equivalent for an
-// arbitrary runtime Condition deciding whether to register a JAX-RS resource. Options: gate the
-// endpoints with @io.quarkus.arc.lookup.LookupIfProperty / @io.quarkus.arc.profile.IfBuildProfile
-// if the H2 check can be reduced to a build/config property, or add a runtime guard in each method
-// that returns 404/disabled when the active datasource is not H2.
 @Slf4j
 @ApplicationScoped
 // Drives the concrete DatabaseService (@UnlessBuildProfile("saas")), so it shares the same gating:

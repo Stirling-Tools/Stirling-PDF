@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.MobileScannerService.FileMetadata;
 import stirling.software.common.service.MobileScannerService.SessionInfo;
 

@@ -30,6 +30,7 @@ import stirling.software.common.model.io.FileSystemResource;
 import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 
@@ -39,15 +40,19 @@ public class PipelineProcessor {
 
     private final ApiDocService apiDocService;
 
+    private final ToolMetadataService toolMetadataService;
+
     private final InternalApiClient internalApiClient;
 
     private final TempFileManager tempFileManager;
 
     public PipelineProcessor(
             ApiDocService apiDocService,
+            ToolMetadataService toolMetadataService,
             InternalApiClient internalApiClient,
             TempFileManager tempFileManager) {
         this.apiDocService = apiDocService;
+        this.toolMetadataService = toolMetadataService;
         this.internalApiClient = internalApiClient;
         this.tempFileManager = tempFileManager;
     }
@@ -101,13 +106,13 @@ public class PipelineProcessor {
         boolean filtersApplied = false;
         for (PipelineOperation pipelineOperation : config.getOperations()) {
             String operation = pipelineOperation.getOperation();
-            boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
+            boolean isMultiInputOperation = toolMetadataService.isMultiInput(operation);
             log.info(
                     "Running operation: {} isMultiInputOperation {}",
                     operation,
                     isMultiInputOperation);
             Map<String, Object> parameters = pipelineOperation.getParameters();
-            List<String> inputFileTypes = apiDocService.getExtensionTypes(false, operation);
+            List<String> inputFileTypes = toolMetadataService.getExtensionTypes(false, operation);
             if (inputFileTypes == null) {
                 inputFileTypes = new ArrayList<>(List.of("ALL"));
             }

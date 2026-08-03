@@ -9,10 +9,6 @@ package stirling.software.saas.payg.policy;
  * <p>{@code payload} is informational only ({@code "create:42"}, {@code "setDefault:7"}, etc.) —
  * the invalidation strategy is "blow the whole cache" regardless of what changed.
  */
-// TODO: Migration required - was a Spring ApplicationEvent subclass. Converted to a plain POJO CDI
-// event (no `extends ApplicationEvent`, no super(source) call). The `source` is retained as a plain
-// field so the existing (Object source, String payload) constructor used by PricingPolicyService
-// stays source-compatible.
 public class PolicyChangedEvent {
 
     private final transient Object source;

@@ -2,10 +2,10 @@ package stirling.software.proprietary.security.service;
 
 import java.time.Instant;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Propagation;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,7 @@ class ApiKeyUsageWriter {
         try {
             usageRepository.saveAndFlush(new ApiKeyDailyUsage(apiKeyId, epochDay, 1));
             return true;
-        } catch (DataIntegrityViolationException raced) {
+        } catch (PersistenceException raced) {
             return false;
         }
     }

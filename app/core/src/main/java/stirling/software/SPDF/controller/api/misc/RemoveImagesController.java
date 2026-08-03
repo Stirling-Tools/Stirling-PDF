@@ -33,6 +33,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -57,11 +59,12 @@ public class RemoveImagesController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/remove-image-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove images from PDF",
             description =
                     "This endpoint removes all embedded images from a PDF file and returns the"
-                            + " modified document. Input:PDF Output:PDF Type:SISO")
+                            + " modified document.")
     public Response removeImages(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
             throws IOException {

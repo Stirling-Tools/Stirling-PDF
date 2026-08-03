@@ -1,8 +1,8 @@
 package stirling.software.saas.payg.charge;
 
 import io.quarkus.arc.profile.IfBuildProfile;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;

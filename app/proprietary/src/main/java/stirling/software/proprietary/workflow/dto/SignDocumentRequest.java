@@ -77,9 +77,6 @@ public class SignDocumentRequest {
     @RestForm("wetSignaturesData")
     private String wetSignaturesData;
 
-    // TODO: Migration required - wetSignatures is a parsed list of POJOs populated by the
-    // controller/service from wetSignaturesData, not bound directly from the form; RESTEasy has no
-    // converter for WetSignatureMetadata, so it is intentionally left without @RestForm.
     private List<WetSignatureMetadata> wetSignatures;
 
     /**

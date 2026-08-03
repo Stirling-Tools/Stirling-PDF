@@ -62,33 +62,6 @@ import tools.jackson.databind.ObjectMapper;
  *       </ul>
  * </ol>
  *
- * <p>TODO: Migration required - the Spring-MVC-specific framework exceptions that used to be
- * handled here are never thrown under Quarkus/RESTEasy Reactive and their types cannot be
- * referenced without Spring on the classpath. A collaborator should add JAX-RS equivalents (likely
- * as separate {@code @Provider ExceptionMapper}s or additional {@code instanceof} branches once the
- * Quarkus exception types are confirmed):
- *
- * <ul>
- *   <li>{@code MethodArgumentNotValidException} -> {@code
- *       jakarta.validation.ConstraintViolationException} (400, build the {@code errors} list from
- *       {@code getConstraintViolations()})
- *   <li>{@code MissingServletRequestParameterException} / {@code
- *       MissingServletRequestPartException} -> RESTEasy missing
- *       {@code @QueryParam}/{@code @RestForm} handling (400)
- *   <li>{@code MaxUploadSizeExceededException} -> quarkus.http.limits.max-body-size rejection (413)
- *   <li>{@code HttpRequestMethodNotSupportedException} -> {@code jakarta.ws.rs.NotAllowedException}
- *       (405)
- *   <li>{@code HttpMediaTypeNotSupportedException} -> {@code jakarta.ws.rs.NotSupportedException}
- *       (415)
- *   <li>{@code HttpMediaTypeNotAcceptableException} -> {@code jakarta.ws.rs.NotAcceptableException}
- *       (406)
- *   <li>{@code HttpMessageNotReadableException} -> JSON deserialization failure (400)
- *   <li>{@code NoHandlerFoundException} / {@code NoResourceFoundException} -> {@code
- *       jakarta.ws.rs.NotFoundException} (404)
- *   <li>{@code ResponseStatusException} -> {@code jakarta.ws.rs.WebApplicationException} (carry
- *       through {@code getResponse().getStatus()})
- * </ul>
- *
  * <p>Their full body-building logic is preserved below in private {@code build*} helper methods so
  * the collaborator can reuse it once the JAX-RS exception types are wired in.
  *
@@ -103,20 +76,8 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
 
     private static final String PROBLEM_JSON = "application/problem+json";
 
-    // TODO: Migration required - the per-request locale used to come from Spring's
-    // LocaleContextHolder (populated by the MVC LocaleChangeInterceptor). Until the equivalent
-    // ContainerRequestFilter described in LocaleConfiguration is in place, fall back to the JVM
-    // default locale. Localized messages are read from the shared messages.properties bundle (the
-    // same bundle ExceptionUtils uses) instead of a Spring MessageSource bean, which no longer
-    // exists under Quarkus.
     private static final String MESSAGES_BUNDLE = "messages";
 
-    // TODO: Migration required - development mode used to be derived from Spring active profiles
-    // via
-    // org.springframework.core.env.Environment. Quarkus exposes the profile through
-    // io.quarkus.runtime.LaunchMode / quarkus.profile; this is read here from the standard config
-    // so
-    // no Spring Environment is needed.
     private Boolean isDevelopmentMode;
 
     @Context UriInfo uriInfo;
@@ -550,11 +511,6 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
     /**
      * Build the JSON body previously written directly to the servlet response when the client's
      * Accept header could not be satisfied (Spring's {@code HttpMediaTypeNotAcceptableException}).
-     *
-     * <p>TODO: Migration required - this path was triggered by Spring MVC content negotiation.
-     * Under Quarkus/JAX-RS the equivalent is {@code jakarta.ws.rs.NotAcceptableException}; a
-     * collaborator should register a mapper that returns this body with status 406 and Content-Type
-     * application/problem+json. The body-building logic is preserved here for reuse.
      */
     private String buildNotAcceptableJson(String requestUri) {
         // Use ObjectMapper to properly escape JSON values and prevent XSS
@@ -803,13 +759,6 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
     public Response handleGenericException(Exception ex, String requestUri) {
         log.error("Unexpected error at {}: {}", requestUri, ex.getMessage(), ex);
 
-        // TODO: Migration required - the original Spring handler checked
-        // HttpServletResponse.isCommitted() and returned null to let Spring write nothing when the
-        // response was already committed (e.g. during streaming). JAX-RS ExceptionMapper has no
-        // direct access to commit state; returning a Response here is the closest equivalent. If
-        // streaming endpoints need the old "do nothing when committed" behavior, a collaborator
-        // should detect that condition (e.g. via a ContainerResponseFilter) and short-circuit.
-
         String userMessage =
                 getLocalizedMessage(
                         "error.unexpected",
@@ -870,9 +819,6 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      * @return the localized message or the default message
      */
     private String getLocalizedMessage(String key, String defaultMessage, Object... args) {
-        // TODO: Migration required - locale is the JVM default until the per-request locale
-        // ContainerRequestFilter described in LocaleConfiguration replaces Spring's
-        // LocaleContextHolder.getLocale().
         String template = defaultMessage;
         try {
             ResourceBundle bundle = ResourceBundle.getBundle(MESSAGES_BUNDLE, Locale.getDefault());
@@ -899,10 +845,6 @@ public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
      */
     private boolean isDevelopmentMode() {
         if (isDevelopmentMode == null) {
-            // TODO: Migration required - this replaces Spring's Environment.getActiveProfiles()
-            // ("dev"/"development") check. Quarkus exposes the active profile via
-            // io.quarkus.runtime.LaunchMode and the "quarkus.profile" config key; read it from the
-            // standard config so no Spring Environment bean is required.
             String profile =
                     org.eclipse.microprofile.config.ConfigProvider.getConfig()
                             .getOptionalValue("quarkus.profile", String.class)

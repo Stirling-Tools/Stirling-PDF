@@ -7,11 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -182,7 +182,7 @@ public class ApiKeyManagementService {
                             .enabled(true)
                             .createdAt(Instant.now())
                             .build());
-        } catch (DataIntegrityViolationException alreadyMigrated) {
+        } catch (PersistenceException alreadyMigrated) {
             // A concurrent first-load won the race and inserted the same hash; that's fine.
             log.debug("Legacy key already migrated concurrently for user {}", user.getId());
         }

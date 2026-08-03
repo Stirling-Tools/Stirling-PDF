@@ -7,8 +7,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 

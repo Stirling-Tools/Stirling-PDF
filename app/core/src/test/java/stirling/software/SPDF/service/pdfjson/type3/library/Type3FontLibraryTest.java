@@ -22,11 +22,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 import stirling.software.SPDF.service.pdfjson.type3.Type3FontSignatureCalculator;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.Resource;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;

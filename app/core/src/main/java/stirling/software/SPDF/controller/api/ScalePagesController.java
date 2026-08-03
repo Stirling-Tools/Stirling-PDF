@@ -31,6 +31,8 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -97,11 +99,12 @@ public class ScalePagesController {
             value = "/scale-pages",
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Change the size of a PDF page/document",
             description =
                     "This operation takes an input PDF file and the size to scale the pages to in"
-                            + " the output PDF file. Input:PDF Output:PDF Type:SISO")
+                            + " the output PDF file.")
     public Response scalePages(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

@@ -17,11 +17,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-// TODO: Migration required - this entity previously implemented Spring Security's
-// org.springframework.security.core.GrantedAuthority. That interface only required
-// String getAuthority(), which the Lombok @Getter on the 'authority' field still
-// provides. Quarkus uses its own role model (SecurityIdentity roles); when wiring the
-// IdentityProvider that loads users, map this 'authority' value into the granted roles.
 @Entity
 @Table(
         name = "authorities",

@@ -34,6 +34,9 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
@@ -62,14 +65,14 @@ public class SplitPdfBySizeController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Auto split PDF pages into separate documents based on size or count",
             description =
                     "split PDF into multiple paged documents based on size/count, ie if 20 pages"
-                            + " and split into 5, it does 5 documents each 4 pages\r\n"
-                            + " if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB"
-                            + " (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF"
-                            + " Output:ZIP-PDF Type:SISO")
+                            + " and split into 5, it does 5 documents each 4 pages\r\n if 10MB and each page"
+                            + " is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts"
+                            + " 1.9MB but not 2.1MB)")
     public Response autoSplitPdf(
             @RestForm("fileInput") List<FileUpload> fileUpload,
             @RestForm("fileId") String fileId,

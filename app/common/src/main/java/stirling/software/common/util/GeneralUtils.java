@@ -254,10 +254,6 @@ public class GeneralUtils {
      * {@code file:} patterns are resolved with {@link java.nio.file.Files#list}; {@code classpath:}
      * patterns are resolved via the classloader and only support directory resources that live on
      * the filesystem.
-     *
-     * <p>TODO: Migration required - {@code classpath:} resolution does not enumerate entries inside
-     * a packaged JAR. For uber-jar deployments, prefer serving these assets from {@code
-     * META-INF/resources/} or build a Jandex/build-time index of the matching files.
      */
     public static Resource[] getResourcesFromLocationPattern(String locationPattern)
             throws Exception {

@@ -63,9 +63,6 @@ public class SpringContextHolder {
         }
 
         try {
-            // TODO: Migration required - Spring looked up by bean name across all types; here we
-            // resolve a @Named CDI bean of Object.class. Verify named beans are registered with a
-            // matching @jakarta.inject.Named qualifier so this lookup resolves the intended bean.
             Instance<Object> instance = container.select(Object.class, NamedLiteral.of(beanName));
             if (!instance.isResolvable()) {
                 log.error("Error getting bean '{}': bean is not resolvable", beanName);

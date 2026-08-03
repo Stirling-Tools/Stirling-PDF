@@ -67,20 +67,6 @@ public class SPDFApplication implements QuarkusApplication {
                     customSettingsPath.toString());
         }
 
-        // TODO: Migration required - the Spring "spring.config.additional-location" property used
-        // to
-        // load the external settings/customSettings YAML files into the environment. Quarkus uses
-        // SmallRye Config; wire these files via a config source instead, e.g. set the system
-        // property
-        // "smallrye.config.locations" to the (comma-separated) file: URLs before this point, or
-        // register a custom ConfigSourceFactory. The directories/log lines above are preserved.
-
-        // TODO: Migration required - profile auto-detection (former getActiveProfile / Spring
-        // setAdditionalProfiles) must be expressed via "quarkus.profile". The classpath-shape
-        // detection logic is retained below in getActiveProfile(); translate its result into the
-        // "quarkus.profile" system property (e.g. System.setProperty("quarkus.profile", ...))
-        // before
-        // Quarkus.run if profile-based config layering is required.
         getActiveProfile(args);
 
         Quarkus.run(SPDFApplication.class, args);
@@ -168,10 +154,6 @@ public class SPDFApplication implements QuarkusApplication {
 
         // Former @EventListener(ApplicationReadyEvent) onApplicationReady().
         private void onApplicationReady() {
-            // TODO: Migration required - the Spring "local.server.port" property exposed the actual
-            // runtime port (relevant for server.port=0 / "auto" port assignment). In Quarkus read
-            // the resolved port from config "quarkus.http.port" (or observe an HTTP-started event)
-            // and update serverPortStatic here. Falling back to the configured value for now.
             String port = config.getOptionalValue("quarkus.http.port", String.class).orElse(null);
             if (port != null) {
                 serverPortStatic = port;

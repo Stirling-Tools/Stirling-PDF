@@ -25,6 +25,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.*;
 
@@ -50,11 +52,14 @@ public class ConvertHtmlToPDF {
     @Path("/html/pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @StandardPdfResponse
+    // A ZIP of HTML plus its CSS is a first-class input here, and is what convert/pdf/html emits.
+    @ToolIO(
+            accepts = {ToolFormat.HTML, ToolFormat.ZIP},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =
-                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format."
-                            + " Input:HTML Output:PDF Type:SISO")
+                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format.")
     public Response HtmlToPdf(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

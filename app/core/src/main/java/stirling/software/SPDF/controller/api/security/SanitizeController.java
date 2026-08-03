@@ -46,6 +46,8 @@ import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
@@ -69,11 +71,12 @@ public class SanitizeController {
             value = "/sanitize-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Sanitize a PDF file",
             description =
                     "This endpoint processes a PDF file and removes specific elements based on the"
-                            + " provided options. Input:PDF Output:PDF Type:SISO")
+                            + " provided options.")
     public Response sanitizePDF(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

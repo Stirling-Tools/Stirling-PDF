@@ -30,7 +30,7 @@ import stirling.software.proprietary.cluster.valkey.ValkeyConnectionConfiguratio
  * Verifies auth-fast-fail on WRONGPASS/NOAUTH/NOPERM: these are unrecoverable so the handshake must
  * short-circuit after one attempt, not burn the 30 s retry loop.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 class ValkeyConnectionConfigurationTest {
 
     @Test

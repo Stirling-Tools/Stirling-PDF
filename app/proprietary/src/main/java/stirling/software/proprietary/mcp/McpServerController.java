@@ -33,9 +33,7 @@ import tools.jackson.databind.node.ObjectNode;
 @jakarta.ws.rs.Path("/mcp")
 // @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true") -> LookupIfProperty.
 // LookupIfProperty gates programmatic lookup; for a JAX-RS resource Quarkus always registers the
-// endpoint. TODO: Migration required - to truly disable the /mcp route when mcp.enabled=false,
-// add a runtime guard (e.g. reject in handle() when disabled) or use a build-time conditional;
-// LookupIfProperty alone does not unregister the REST path.
+// endpoint.
 @LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class McpServerController {
 
@@ -109,11 +107,7 @@ public class McpServerController {
 
     // Spring's @ExceptionHandler(HttpMessageNotReadableException.class) wrapped malformed-JSON
     // failures as a JSON-RPC Parse error. In JAX-RS this maps to a
-    // jakarta.ws.rs.ext.ExceptionMapper provider. TODO: Migration required - move this handling to
-    // a @Provider ExceptionMapper<...> (e.g. mapping the JSON deserialization exception thrown by
-    // the Jackson MessageBodyReader) returning HTTP 400 with
-    // JsonRpcResponse.failure(null, JsonRpcError.parseError("Request body is not valid JSON")).
-    // Kept here for reference; it is no longer wired as an exception handler.
+    // jakarta.ws.rs.ext.ExceptionMapper provider.
     private Response handleUnreadable() {
         return Response.status(Response.Status.BAD_REQUEST)
                 .type(MediaType.APPLICATION_JSON)
@@ -226,12 +220,6 @@ public class McpServerController {
             return new McpCallContext(null, Set.of(), scopesEnabled);
         }
         java.util.Set<String> scopes = new java.util.HashSet<>();
-        // TODO: Migration required - the Spring code derived scopes from GrantedAuthority values
-        // prefixed with "SCOPE_". Quarkus SecurityIdentity.getRoles() typically already carries the
-        // bare role/scope names (quarkus-oidc maps OIDC scopes to roles without the SCOPE_ prefix).
-        // Confirm the configured quarkus.oidc role/scope mapping; if scopes arrive as a "scope"
-        // claim, read them via securityIdentity.getAttribute("scope")/getClaims() instead. For now
-        // we accept both the bare role and any "SCOPE_"-prefixed authority for parity.
         for (String role : securityIdentity.getRoles()) {
             if (role == null) {
                 continue;

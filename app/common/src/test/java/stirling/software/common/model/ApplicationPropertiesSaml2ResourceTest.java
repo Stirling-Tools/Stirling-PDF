@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import stirling.software.common.model.io.Resource;
 
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 class ApplicationPropertiesSaml2ResourceTest {
 
     @Test

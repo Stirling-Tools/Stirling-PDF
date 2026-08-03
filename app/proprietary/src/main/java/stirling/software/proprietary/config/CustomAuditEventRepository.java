@@ -19,14 +19,6 @@ import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.util.SecretMasker;
 
-// TODO: Migration required - this class implemented Spring Boot Actuator's
-// org.springframework.boot.actuate.audit.AuditEventRepository (with @Primary). Quarkus has no
-// Actuator equivalent, so the interface and the org.springframework.boot.actuate.audit.AuditEvent
-// type are gone. The write side has been ported to a plain CDI bean that accepts the audit data
-// directly (see add(...) below). Whatever Spring code previously published AuditEvents to this
-// repository must be updated to call this bean's add(...) method (or an equivalent producer) once
-// the audit-publishing pipeline is migrated. The read-side find(...) was intentionally inert
-// (endpoint disabled) and has been dropped.
 @ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
@@ -43,11 +35,6 @@ public class CustomAuditEventRepository {
     private final PersistentAuditEventRepository repo;
 
     /* ── WRITE side ───────────────────────────────────────── */
-    // TODO: Migration required - was @Async("auditExecutor") (Spring async executor). Quarkus has
-    // no @Async; run this off the request thread via a managed executor (e.g. inject
-    // org.eclipse.microprofile.context.ManagedExecutor and submit, or annotate with
-    // @io.smallrye.common.annotation.Blocking on a reactive path). Logic is kept synchronous for
-    // now to avoid changing behavior incorrectly.
     public void add(String principal, String type, Instant timestamp, Map<String, Object> data) {
         try {
             Map<String, Object> clean =
@@ -87,10 +74,6 @@ public class CustomAuditEventRepository {
                             .data(auditEventData)
                             .timestamp(timestamp)
                             .build();
-            // TODO: Migration required - repo.persist(...) depends on
-            // PersistentAuditEventRepository
-            // being migrated to a Quarkus PanacheRepository (save -> persist). Update this call
-            // once that collaborator is converted.
             repo.persist(ent);
         } catch (Exception e) {
             log.error("Failed to persist audit event (fail-open); type={}", type, e);

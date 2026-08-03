@@ -51,6 +51,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
@@ -572,10 +574,12 @@ public class ScannerEffectController {
             value = "/scanner-effect",
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =
-                    "Applies various effects to simulate a scanned document, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
+                    "Applies various effects to simulate a scanned document, including rotation,"
+                            + " noise, and edge softening.")
     public Response scannerEffect(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("quality") ScannerEffectRequest.Quality quality,

@@ -16,21 +16,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.io.Resource;
 
-// TODO: Migration required - there is NO Quarkus SAML extension. The original class was a Spring
-// @Configuration that exposed two @Bean factory methods producing Spring Security SAML2 types
-// (org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository
-// and ...web.authentication.OpenSaml5AuthenticationRequestResolver). Those builder/glue types have
-// no Quarkus equivalent, so the Spring Security SAML2 imports and @Configuration/@Bean wiring have
-// been removed. The SAML Service Provider must be rehosted on a Jakarta @WebServlet driving
-// OpenSAML
-// 5 directly (see the dnulnets/quarkus-saml pattern). The OpenSAML 5 logic and the credential /
-// metadata-location preparation below are PRESERVED so the rehost can reuse them.
-//
-// TODO: Migration required - @ConditionalOnProperty(value = "security.saml2.enabled",
-// havingValue = "true") gated this whole class on a runtime property. Quarkus has no runtime
-// @ConditionalOnProperty for beans; enforce the security.saml2.enabled runtime toggle at the SAML
-// SP
-// entry point (e.g. a guard in the @WebServlet, or skip SP registration when disabled).
 @ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
@@ -38,13 +23,6 @@ public class Saml2Configuration {
 
     private final ApplicationProperties applicationProperties;
 
-    // TODO: Migration required - originally a @Bean returning Spring Security's
-    // RelyingPartyRegistrationRepository built via RelyingPartyRegistration.withRegistrationId(...)
-    // (InMemoryRelyingPartyRegistrationRepository, Saml2X509Credential, Saml2MessageBinding). Those
-    // Spring Security SAML2 builder types are unavailable in Quarkus. The credential loading
-    // (CertificateUtils via the common Resource shim) and the entityId / ACS / SLO location strings
-    // are kept verbatim so the OpenSAML-5-based SP rehost can consume them; the actual
-    // RelyingPartyRegistration assembly must be re-implemented against OpenSAML 5 metadata APIs.
     public void prepareRelyingPartyRegistration() throws Exception {
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
 
@@ -72,9 +50,6 @@ public class Saml2Configuration {
             throw new IllegalStateException("Failed to load SAML2 IdP certificate", e);
         }
 
-        // TODO: Migration required - was Saml2X509Credential.verification(idpCert). Re-create the
-        // IdP verification credential from idpCert using OpenSAML 5 (BasicX509Credential).
-
         // Load SP private key and certificate
         Resource privateKeyResource = samlConf.getPrivateKey();
         Resource certificateResource = samlConf.getSpCert();
@@ -95,9 +70,6 @@ public class Saml2Configuration {
                             + certificateResource.getFilename());
         }
 
-        // TODO: Migration required - was new Saml2X509Credential(privateKey, cert,
-        // Saml2X509CredentialType.SIGNING). Build the SP signing credential from the key/cert below
-        // using OpenSAML 5 (BasicX509Credential) instead of Spring Security's Saml2X509Credential.
         try {
             CertificateUtils.readPrivateKey(privateKeyResource);
             CertificateUtils.readCertificate(certificateResource);
@@ -122,14 +94,6 @@ public class Saml2Configuration {
         String acsLocation = backendUrl + "/login/saml2/sso/{registrationId}";
         String sloResponseLocation = backendUrl + "/login";
 
-        // TODO: Migration required - the following Spring Security RelyingPartyRegistration was
-        // built
-        // here and stored in an InMemoryRelyingPartyRegistrationRepository. Re-implement against
-        // the
-        // OpenSAML-5-based SP using entityId / acsLocation / sloResponseLocation, the IdP issuer
-        // (samlConf.getIdpIssuer()), SSO/SLO bindings (POST) and locations
-        // (samlConf.getIdpSingleLoginUrl() / samlConf.getIdpSingleLogoutUrl()), authnRequestsSigned
-        // and wantAuthnRequestsSigned both true, and the signing/verification credentials above.
         log.info(
                 "SAML2 configuration prepared. Registration ID: {}, IdP: {}, entityId: {}, acs: {}, slo: {}",
                 samlConf.getRegistrationId(),
@@ -138,13 +102,6 @@ public class Saml2Configuration {
                 acsLocation,
                 sloResponseLocation);
     }
-
-    // TODO: Migration required - originally a @Bean returning Spring Security's
-    // OpenSaml5AuthenticationRequestResolver, configured with a RelayState resolver and an
-    // AuthnRequest customizer. That resolver type is Spring-Security-specific and has no Quarkus
-    // equivalent. The RelayState logic (Tauri detection -> TauriSamlUtils.buildRelayState(nonce))
-    // and the AuthnRequest customization (unique ARQ id + logging) are PRESERVED below as helper
-    // methods so the OpenSAML-5-based SP rehost can invoke them when building the AuthnRequest.
 
     /**
      * Resolves the SAML RelayState for a request, preserving the original Tauri-aware behavior:

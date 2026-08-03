@@ -152,8 +152,6 @@ public class AiProxyController {
         return proxy("POST", "/api/pdf-editor/upload", request, false);
     }
 
-    // TODO: Migration required - Spring's "/output/**" wildcard mapping has no direct JAX-RS
-    // equivalent; using a {path:.*} regex template to capture the trailing path segments.
     @GET
     @Path("/output/{path:.*}")
     public Response output(HttpServletRequest request) {

@@ -55,7 +55,7 @@ import okhttp3.mockwebserver.RecordedRequest;
  * JWTs; the public key is served as JWKS over HTTP (mockwebserver) and the resource server fetches
  * and validates against it. The JDK HttpClient drives a live Jetty instance on a random port.
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 @SpringBootTest(
         classes = McpOAuthIntegrationTest.TestApp.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

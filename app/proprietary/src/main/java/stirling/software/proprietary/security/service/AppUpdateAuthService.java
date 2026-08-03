@@ -21,10 +21,6 @@ class AppUpdateAuthService implements ShowAdminInterface {
 
     private final ApplicationProperties applicationProperties;
 
-    // TODO: Migration required - SecurityIdentity is request-scoped; injecting it into an
-    // @ApplicationScoped bean relies on Quarkus' client proxy resolving the current request's
-    // identity. Verify this resolves correctly when invoked outside an active HTTP request
-    // (e.g. scheduled/background contexts), where the identity may be anonymous/null.
     private final SecurityIdentity securityIdentity;
 
     @Override

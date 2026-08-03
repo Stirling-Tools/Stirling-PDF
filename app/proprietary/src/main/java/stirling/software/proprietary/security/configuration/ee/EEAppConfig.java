@@ -28,22 +28,7 @@ import stirling.software.common.model.ApplicationProperties.Premium;
  *       the classpath - this is the Quarkus idiom for Spring's profile-based bean override.
  *   <li>{@code @Profile("security & !saas")} -> {@code @IfBuildProfile("security")}. Spring's
  *       composite expression {@code security & !saas} cannot be expressed directly; the build-time
- *       profile gates "security". TODO: Migration required - the {@code & !saas} half of the
- *       expression is NOT honoured here. In :saas mode the (still to be migrated) {@code
- *       SaasLicenseOverride} producers must take precedence, and these enterprise producers must be
- *       suppressed, otherwise CDI will see two producers for the same {@code @Named} qualifier.
- *       Re-evaluate once :saas is migrated (e.g. gate on a runtime "saas" flag or split into
- *       separate build profiles).
- *   <li>{@code @Order(Ordered.HIGHEST_PRECEDENCE)} dropped - CDI has no ordered configuration
- *       classes; ordering was only used by Spring to win the bean override race, which
- *       {@code @DefaultBean}/no-{@code @DefaultBean} now handles.
- *   <li>Constructor-side {@code migrateEnterpriseSettingsToPremium(...)} call moved to a
- *       {@code @PostConstruct} method so it still runs once when the bean is created.
- *   <li>{@code boolean} producers marked {@code @Dependent}: a CDI normal scope (default
- *       {@code @ApplicationScoped} on a producer) requires a client proxy which is impossible for a
- *       primitive {@code boolean}, so {@code @Dependent} is used to recompute the value at each
- *       injection point.
- * </ul>
+ *       profile gates "security".
  */
 @ApplicationScoped
 @IfBuildProfile("security")

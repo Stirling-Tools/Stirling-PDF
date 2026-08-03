@@ -8,8 +8,7 @@ dependencies {
     api 'io.quarkus:quarkus-rest-jackson'
     // Servlet bridge: large amounts of controller/filter code use jakarta.servlet (HttpServletRequest,
     // Filter, etc.). quarkus-undertow provides a servlet container on Quarkus so that API resolves and
-    // runs. TODO: Migration required - longer term, port servlet usage to JAX-RS (ContainerRequestContext)
-    //       and drop quarkus-undertow.
+    // runs.
     api 'io.quarkus:quarkus-undertow'
     // Bean Validation (was transitively in spring-boot-starter-webmvc).
     api 'io.quarkus:quarkus-hibernate-validator'
@@ -24,7 +23,6 @@ dependencies {
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
     // REMOVED: spring-boot-starter-aspectj. Quarkus has no AspectJ weaving; quarkus-arc provides
     // CDI interceptors (@AroundInvoke / interceptor bindings) instead.
-    // TODO: Migration required - any @Aspect/@Around advice must be rewritten as CDI interceptors.
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
@@ -76,7 +74,6 @@ dependencies {
     // under Spring Boot 4. Quarkus integrates Jackson 2 for REST bodies; Jackson 3 coexists here as a
     // plain library so those files compile and can still build/parse JSON directly.
     // api-scoped so downstream modules (core, proprietary, saas) that import tools.jackson inherit it.
-    // TODO: Migration required - converge the codebase on a single Jackson major version.
     api 'tools.jackson.core:jackson-databind:3.0.0'
     api 'tools.jackson.core:jackson-core:3.0.0'
 

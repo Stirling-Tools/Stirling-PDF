@@ -79,14 +79,6 @@ public class UserService implements UserServiceInterface {
 
     private final PasswordEncoder passwordEncoder;
 
-    // TODO: Migration required - org.springframework.context.MessageSource and
-    // LocaleContextHolder (Spring i18n) have no Quarkus equivalent on the classpath. Rebind to a
-    // Quarkus message bundle (io.quarkus.qute / @org.eclipse.microprofile.config or a
-    // jakarta.enterprise localization helper) and an explicit Locale source. The injected field is
-    // removed for now and getInvalidUsernameMessage() returns a constant fallback so the bean can
-    // be
-    // constructed; localization must be restored when the i18n layer is ported.
-
     private final SessionPersistentRegistry sessionRegistry;
 
     private final DatabaseServiceInterface databaseService;
@@ -164,8 +156,6 @@ public class UserService implements UserServiceInterface {
     public Authentication getAuthentication(String apiKey) {
         // Resolve through the shared service (multi-key table, then the legacy per-user column).
         // The key runs as its owner with the owner's authorities.
-        // TODO: Migration required - emits a Spring-shaped Authentication consumed by the auth
-        // filters; replace with a SecurityIdentity construction once the filter layer is ported.
         var resolved =
                 apiKeyAuthenticationService
                         .authenticate(apiKey)
@@ -629,11 +619,6 @@ public class UserService implements UserServiceInterface {
     }
 
     private String getInvalidUsernameMessage() {
-        // TODO: Migration required - was messageSource.getMessage("invalidUsernameMessage", null,
-        // LocaleContextHolder.getLocale()). Spring's MessageSource / LocaleContextHolder are not on
-        // the Quarkus classpath; rebind to a Quarkus localization mechanism (message bundle +
-        // request Locale) and restore the localized lookup. Returning the message key as a fallback
-        // preserves behavior shape until i18n is ported.
         return "invalidUsernameMessage";
     }
 
@@ -681,10 +666,6 @@ public class UserService implements UserServiceInterface {
     }
 
     public void invalidateUserSessions(String username) {
-        // TODO: Migration required - SessionPersistentRegistry still exposes Spring Security types
-        // (SessionInformation, UserDetails, OAuth2User). Once that collaborator is ported to a
-        // Quarkus session store, drop these Spring Security imports and adjust the principal type
-        // checks accordingly.
         String usernameP = "";
 
         for (Object principal : sessionRegistry.getAllPrincipals()) {

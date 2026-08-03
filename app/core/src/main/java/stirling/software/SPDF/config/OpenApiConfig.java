@@ -34,10 +34,6 @@ import stirling.software.common.model.ApplicationProperties;
  *   <li>the {@code apiKey} security scheme + requirement when login is enabled;
  *   <li>the {@code PDFFile} {@code oneOf} (upload vs. server-side file id) schema.
  * </ul>
- *
- * <p>TODO: Migration required - register this filter by setting {@code mp.openapi.filter=
- * stirling.software.SPDF.config.OpenApiConfig} in application.properties (collaborator edit; not
- * the assigned file). Without that key smallrye-openapi will not invoke this filter.
  */
 public class OpenApiConfig implements OASFilter {
 

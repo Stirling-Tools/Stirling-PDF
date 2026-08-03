@@ -9,24 +9,24 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import jakarta.inject.Inject;
+import jakarta.enterprise.inject.Instance;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
@@ -87,7 +87,7 @@ public class ClassifyLabelController {
             AiFeatureGate aiFeatureGate,
             ObjectMapper objectMapper,
             ClassificationLabelProvider labelProvider,
-            @Inject(required = false) UserServiceInterface userService) {
+            Instance<UserServiceInterface> userService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.tempFileManager = tempFileManager;
         this.pdfContentExtractor = pdfContentExtractor;
@@ -96,7 +96,7 @@ public class ClassifyLabelController {
         this.aiFeatureGate = aiFeatureGate;
         this.objectMapper = objectMapper;
         this.labelProvider = labelProvider;
-        this.userService = userService;
+        this.userService = userService.isResolvable() ? userService.get() : null;
     }
 
     @PostMapping(value = "/classify-and-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

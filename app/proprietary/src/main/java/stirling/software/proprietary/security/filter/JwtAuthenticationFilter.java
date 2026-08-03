@@ -44,13 +44,6 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
-// TODO: Migration required - registration/ordering. As a Spring OncePerRequestFilter
-// this ran once per request at a Spring-defined position in the security filter chain.
-// On Quarkus (quarkus-undertow) a jakarta.servlet.Filter needs explicit registration
-// and ordering (e.g. a @WebFilter with urlPatterns, or a FilterRegistrationBean-style
-// producer). Confirm this filter is registered ahead of the resource layer and that the
-// once-per-request semantics are preserved (Undertow does not re-enter servlet filters
-// per forward by default, so the OncePerRequestFilter base is not strictly required).
 @Slf4j
 @ApplicationScoped
 public class JwtAuthenticationFilter implements Filter {
@@ -147,10 +140,6 @@ public class JwtAuthenticationFilter implements Filter {
 
     private boolean apiKeyExists(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
-        // TODO: Migration required - SecurityContextHolder has no Quarkus equivalent.
-        // This reads/writes the Spring thread-local security context. On Quarkus, the
-        // identity should come from SecurityIdentity (injected) and API-key auth should be
-        // handled by a custom IdentityProvider rather than imperatively setting the context.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -173,13 +162,6 @@ public class JwtAuthenticationFilter implements Filter {
                         return false;
                     }
 
-                    // TODO: Migration required - the previous ApiKeyAuthenticationToken
-                    // extended Spring Security's AbstractAuthenticationToken. It is now a
-                    // plain POJO that does not implement the security-compat Authentication
-                    // contract, so it cannot be stored in the SecurityContext. Build a
-                    // compat UsernamePasswordAuthenticationToken from the user's authorities
-                    // to keep the API-key authentication intent; in Quarkus this should be a
-                    // SecurityIdentity produced by a custom IdentityProvider for the API key.
                     List<GrantedAuthority> authorities =
                             resolved.get().user().getAuthorities().stream()
                                     .map(
@@ -217,11 +199,6 @@ public class JwtAuthenticationFilter implements Filter {
             throws SQLException, UnsupportedProviderException {
         String username = claims.get("sub").toString();
 
-        // TODO: Migration required - SecurityContextHolder/UsernamePasswordAuthenticationToken.
-        // Building a Spring authentication token and pushing it into the thread-local context
-        // must be replaced by producing a Quarkus SecurityIdentity (via IdentityProvider/
-        // SecurityIdentityAugmentor) from the validated JWT claims. The user-loading logic
-        // (userDetailsService.loadUserByUsername) can be kept as a plain service call.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             processUserAuthenticationType(claims, username);
             // loadUserByUsername now returns the User entity directly (the former
@@ -240,10 +217,6 @@ public class JwtAuthenticationFilter implements Filter {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
-                // TODO: Migration required - Spring's WebAuthenticationDetailsSource
-                // (remote address + session id) has no Quarkus equivalent. Storing the
-                // request as the details object keeps the call compile-safe; in Quarkus
-                // this metadata is available from the RoutingContext / SecurityIdentity.
                 authToken.setDetails(request);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             } else {

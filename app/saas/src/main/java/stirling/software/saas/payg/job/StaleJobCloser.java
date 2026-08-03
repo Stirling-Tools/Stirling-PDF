@@ -46,10 +46,6 @@ public class StaleJobCloser {
         this.chargeService = chargeService;
     }
 
-    // TODO: Migration required - was configurable via property payg.job.stale-close-interval-ms
-    // (default 60000ms). io.quarkus.scheduler.Scheduled#every is a fixed string; restore
-    // configurability with @Scheduled(every = "{payg.job.stale-close-interval}") + a Duration
-    // config property if the interval must stay tunable.
     @Scheduled(every = "60s")
     public void closeStale() {
         List<ProcessingJob> stale = jobService.findStale();

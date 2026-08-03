@@ -27,6 +27,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -63,12 +65,13 @@ public class RepairController {
             value = "/repair",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Repair a PDF file",
             description =
-                    "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf (fallback), or PDFBox (if no external tools available). The PDF is"
-                            + " first saved to a temporary location, repaired, read back, and then"
-                            + " returned as a response. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf"
+                            + " (fallback), or PDFBox (if no external tools available). The PDF is first saved"
+                            + " to a temporary location, repaired, read back, and then returned as a response.")
     public Response repairPdf(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
             throws IOException, InterruptedException {

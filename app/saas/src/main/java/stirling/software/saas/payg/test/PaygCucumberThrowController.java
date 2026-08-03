@@ -62,9 +62,6 @@ import stirling.software.common.enumeration.ResourceWeight;
 @Hidden
 public class PaygCucumberThrowController {
 
-    // TODO: Migration required - declared return type was ResponseEntity<Void> so the AutoJobAspect
-    // @Around 500 reached the wire (see class javadoc). Verify the JAX-RS return-value handling of
-    // Response preserves the advice's 500 status under Quarkus.
     @POST
     @Path("/throw-500")
     @Consumes(MediaType.MULTIPART_FORM_DATA)

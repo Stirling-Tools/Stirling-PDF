@@ -265,9 +265,6 @@ public class FolderService {
                                                 "File not found or not owned by current user",
                                                 Response.Status.NOT_FOUND));
         file.setFolder(resolveOwnedFolder(folderId, user));
-        // TODO: Migration required - StoredFileRepository is still a Spring Data JpaRepository;
-        // save()/saveAll()/flush() resolve against it for now. When that repository is ported to
-        // a Panache repository, map these to persist()/flush() accordingly.
         storedFileRepository.save(file);
     }
 
@@ -296,7 +293,7 @@ public class FolderService {
             ownedIds.add(f.getId());
         }
         // If the target folder was deleted concurrently between resolveOwnedFolder and the
-        // flush, the FK constraint fires. Spring surfaced this as DataIntegrityViolationException;
+        // flush, the FK constraint fires. Spring surfaced this as PersistenceException;
         // under Hibernate ORM the JPA equivalent is jakarta.persistence.PersistenceException (the
         // root of constraint-violation exceptions). Surface as 409 Conflict so the caller sees an
         // actionable error instead of a 500 stack.
@@ -432,12 +429,6 @@ public class FolderService {
                     "Authentication required", Response.Status.UNAUTHORIZED);
         }
         Principal principal = securityIdentity.getPrincipal();
-        // TODO: Migration required - a Quarkus SecurityIdentityAugmentor/IdentityProvider must
-        // attach the stirling.software.proprietary.security.model.User entity as the
-        // SecurityIdentity principal (Spring exposed it directly via Authentication#getPrincipal,
-        // since User used to implement UserDetails). Until that augmentor exists, this only
-        // resolves when the principal IS the User entity; otherwise it rejects as 401 rather than
-        // guessing at a username->User lookup.
         if (principal instanceof User user) {
             return user;
         }

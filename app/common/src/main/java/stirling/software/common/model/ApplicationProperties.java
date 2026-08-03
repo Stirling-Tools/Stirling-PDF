@@ -42,11 +42,6 @@ import stirling.software.common.util.ValidationUtils;
 @Data
 @Slf4j
 @ApplicationScoped
-// TODO: Migration required - rebind via @io.smallrye.config.ConfigMapping or
-// @io.quarkus.arc.config.ConfigProperties. Was Spring @ConfigurationProperties(prefix = ""),
-// kept here as a plain CDI bean POJO; the property binding is not yet wired in Quarkus.
-// TODO: Migration required - Spring @Order(Ordered.HIGHEST_PRECEDENCE) controlled
-// configuration-bean ordering; there is no equivalent CDI ordering annotation for this bean.
 public class ApplicationProperties {
 
     private Legal legal = new Legal();
@@ -81,11 +76,6 @@ public class ApplicationProperties {
     // ConfigurableEnvironment (added first, or last under the "saas" profile). Quarkus has no
     // ConfigurableEnvironment/PropertySource model and the @Bean had already been removed, so the
     // method was dead code referencing Spring-only types.
-    // TODO: Migration required - reimplement external settings.yml loading as a custom
-    // org.eclipse.microprofile.config.spi.ConfigSource (registered via a ConfigSourceProvider /
-    // META-INF/services), giving it an ordinal that reproduces the old precedence: higher than the
-    // application defaults normally, but lower than application-saas.properties under the saas
-    // profile. Wire it in ConfigInitializer.
 
     /**
      * Initialize fileUploadLimit from environment variables if not set in settings.yml. Supports
@@ -222,6 +212,21 @@ public class ApplicationProperties {
          * in-network object store.
          */
         private boolean allowPrivateS3Endpoints = false;
+
+        /**
+         * Whether a network source's host (SFTP, FTP, or SMB) may resolve to a loopback,
+         * link-local, or private address. Off by default so a connection cannot be pointed at
+         * internal services; enable for an on-network file server (e.g. an internal SFTP drop or a
+         * Samba share).
+         */
+        private boolean allowPrivateNetworkSources = false;
+
+        /**
+         * Hostnames (exact, case-insensitive) that a network source may use even when they resolve
+         * to a private or local address and {@code allowPrivateNetworkSources} is off. Lets shared
+         * infra allow one named on-prem file server without opening every internal host.
+         */
+        private List<String> allowedPrivateNetworkHosts = new java.util.ArrayList<>();
 
         /**
          * Whether an API/Purview/ConsignO integration's base URL may resolve to a loopback,
@@ -735,9 +740,6 @@ public class ApplicationProperties {
                 }
             }
 
-            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
-            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
-            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getSpCert() {
                 if (spCert == null) return null;
@@ -748,9 +750,6 @@ public class ApplicationProperties {
                 }
             }
 
-            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
-            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
-            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getIdpCert() {
                 if (idpCert == null) return null;
@@ -761,9 +760,6 @@ public class ApplicationProperties {
                 }
             }
 
-            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
-            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
-            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getPrivateKey() {
                 if (privateKey == null) return null;

@@ -19,15 +19,6 @@ import stirling.software.common.model.ApplicationProperties;
  * Default cluster backplane wiring: every interface gets an {@code InProcess*} bean. Active when
  * cluster mode is off or {@code cluster.backplane=inprocess}.
  */
-// TODO: Migration required - the original @ConditionalOnExpression
-// ("!${cluster.enabled:false} || '${cluster.backplane:inprocess}'.equalsIgnoreCase('inprocess')")
-// gated activation of this whole configuration on a SpEL expression over two config properties.
-// Quarkus/CDI has no direct equivalent for conditionally registering a producer set based on a
-// SpEL boolean. The @DefaultBean producers below now always provide the in-process implementations
-// unless another bean of the same type is present. If a non-inprocess backplane is added, ensure
-// it is NOT a @DefaultBean so it wins, and consider gating with
-// @io.quarkus.arc.lookup.LookupIfProperty
-// / @io.quarkus.arc.lookup.LookupUnlessProperty or a build-time @IfBuildProperty per producer.
 @Slf4j
 @ApplicationScoped
 public class InProcessClusterConfiguration {

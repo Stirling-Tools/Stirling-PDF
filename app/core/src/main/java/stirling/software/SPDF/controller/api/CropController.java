@@ -33,6 +33,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -142,11 +144,12 @@ public class CropController {
             value = "/crop",
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Crops a PDF document",
             description =
                     "This operation takes an input PDF file and crops it according to the given"
-                            + " coordinates. Input:PDF Output:PDF Type:SISO")
+                            + " coordinates.")
     public Response cropPdf(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

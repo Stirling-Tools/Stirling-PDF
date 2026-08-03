@@ -29,6 +29,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -51,9 +53,10 @@ public class ShowJavascript {
             value = "/show-javascript",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JavaScriptResponse
+    @ToolIO(produces = ToolFormat.JAVASCRIPT)
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
-            description = "desc. Input:PDF Output:JS Type:SISO")
+            description = "desc.")
     public Response extractHeader(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
             throws Exception {

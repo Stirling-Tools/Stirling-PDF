@@ -444,12 +444,6 @@ public class ProprietaryUIDataController {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
-        // TODO: Migration required - Spring distinguished UserDetails / OAuth2User /
-        // CustomSaml2AuthenticatedPrincipal off authentication.getPrincipal() to set the
-        // oAuth2Login / saml2Login flags. Under Quarkus the auth mechanism is exposed via
-        // SecurityIdentity attributes (e.g. quarkus-oidc IdToken / SAML augmentor). Until OAuth2/
-        // SAML are wired to quarkus-oidc, only the username is resolved and the login-type flags
-        // default to false.
         String username = securityIdentity.getPrincipal().getName();
         boolean isOAuth2Login = false;
         boolean isSaml2Login = false;

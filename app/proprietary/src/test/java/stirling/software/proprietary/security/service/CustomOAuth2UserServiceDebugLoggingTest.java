@@ -43,7 +43,7 @@ import ch.qos.logback.core.read.ListAppender;
  * CustomOAuth2UserService} for troubleshooting provider misconfiguration (e.g. ADFS not emitting an
  * {@code email} claim).
  */
-@Disabled("TODO: Migration required - Spring Boot test framework not available in Quarkus")
+@Disabled("Spring Boot test framework not available in Quarkus")
 @ExtendWith(MockitoExtension.class)
 class CustomOAuth2UserServiceDebugLoggingTest {
 

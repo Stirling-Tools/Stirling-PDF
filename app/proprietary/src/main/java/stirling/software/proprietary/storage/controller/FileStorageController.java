@@ -71,12 +71,6 @@ public class FileStorageController {
     @Inject StorageProvider storageProvider;
     @Inject FolderService folderService;
 
-    // TODO: Migration required - SecurityIdentity replaces Spring's Authentication. The
-    // collaborator
-    // FileStorageService still exposes canAccessShareLink(FileShare, org.springframework.security
-    // .core.Authentication) and recordShareAccess(FileShare, Authentication, boolean). Once that
-    // service is migrated those methods should accept SecurityIdentity (or io.quarkus.security
-    // SecurityContext) and this injected identity can be passed through directly.
     @Inject SecurityIdentity securityIdentity;
 
     @POST
@@ -88,9 +82,6 @@ public class FileStorageController {
             @RestForm("historyBundle") FileUpload historyBundle,
             @RestForm("auditLog") FileUpload auditLog) {
         User user = fileStorageService.requireAuthenticatedUser();
-        // TODO: Migration required - storeFileResponse(...) still accepts Spring
-        // org.springframework.web.multipart.MultipartFile. Migrate FileStorageService to accept
-        // stirling.software.common.model.MultipartFile, then this wrapping is type-compatible.
         return fileStorageService.storeFileResponse(
                 user,
                 FileUploadMultipartFile.of(file),
@@ -108,8 +99,6 @@ public class FileStorageController {
             @RestForm("historyBundle") FileUpload historyBundle,
             @RestForm("auditLog") FileUpload auditLog) {
         User user = fileStorageService.requireAuthenticatedUser();
-        // TODO: Migration required - updateFileResponse(...) still accepts Spring MultipartFile;
-        // migrate FileStorageService to stirling.software.common.model.MultipartFile.
         return fileStorageService.updateFileResponse(
                 user,
                 fileId,
@@ -268,9 +257,6 @@ public class FileStorageController {
             @QueryParam("inline") @jakarta.ws.rs.DefaultValue("false") boolean inline) {
         fileStorageService.ensureShareLinksEnabled();
         FileShare share = fileStorageService.getShareByToken(token);
-        // TODO: Migration required - canAccessShareLink/recordShareAccess still take Spring
-        // Authentication. Passing null preserves the anonymous-deny behavior until the service is
-        // migrated to SecurityIdentity; once migrated, pass `securityIdentity` through instead.
         if (!fileStorageService.canAccessShareLink(share, null)) {
             Response.Status status =
                     isAuthenticated() ? Response.Status.FORBIDDEN : Response.Status.UNAUTHORIZED;
@@ -293,8 +279,6 @@ public class FileStorageController {
             @jakarta.ws.rs.PathParam("token") String token) {
         fileStorageService.ensureShareLinksEnabled();
         FileShare share = fileStorageService.getShareByToken(token);
-        // TODO: Migration required - canAccessShareLink still takes Spring Authentication; pass
-        // `securityIdentity` once FileStorageService is migrated.
         if (!fileStorageService.canAccessShareLink(share, null)) {
             Response.Status status =
                     isAuthenticated() ? Response.Status.FORBIDDEN : Response.Status.UNAUTHORIZED;
@@ -377,8 +361,6 @@ public class FileStorageController {
     }
 
     private boolean isAuthenticated() {
-        // TODO: Migration required - Spring's Authentication-based anonymous check is replaced by
-        // SecurityIdentity. Verify "anonymous" semantics match once the security layer is migrated.
         return securityIdentity != null && !securityIdentity.isAnonymous();
     }
 

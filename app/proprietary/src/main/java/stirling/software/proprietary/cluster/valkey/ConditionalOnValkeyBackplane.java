@@ -19,17 +19,6 @@ import io.quarkus.arc.lookup.LookupIfProperty;
  * (repeatable) {@link LookupIfProperty} annotations, which are evaluated with AND semantics. The
  * Valkey producer beans are looked up only when both properties hold; otherwise the
  * {@code @DefaultBean} in-process implementations win.
- *
- * <p>TODO: Migration required - in Spring this was a composite meta-annotation: placing
- * {@code @ConditionalOnValkeyBackplane} on a bean transitively applied the underlying
- * {@code @ConditionalOnExpression}. Quarkus does NOT transitively propagate {@link
- * LookupIfProperty} through a custom meta-annotation, so the two {@code @LookupIfProperty} guards
- * below are documentary only - each consumer of this annotation (ValkeyClusterBackplane,
- * ValkeyJobStore, ValkeyRateLimitStore, ValkeyDistributedLock, ValkeyKeyValueCache,
- * ValkeyInstanceRegistry) must also carry the two {@code @LookupIfProperty} guards directly (or be
- * produced via a producer method carrying them). Defaults: cluster.enabled defaults to false and
- * cluster.backplane defaults to inprocess, so absent both properties the Valkey beans stay
- * disabled.
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

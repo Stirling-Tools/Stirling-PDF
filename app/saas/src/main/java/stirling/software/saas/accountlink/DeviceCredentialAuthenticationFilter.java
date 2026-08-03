@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import io.quarkus.arc.profile.IfBuildProfile;
-import org.springframework.security.core.context.SecurityContextHolder;
+import stirling.software.common.security.SecurityContextHolder;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.web.filter.OncePerRequestFilter;
 

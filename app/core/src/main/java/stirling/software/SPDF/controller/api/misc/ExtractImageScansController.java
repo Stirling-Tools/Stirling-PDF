@@ -38,6 +38,9 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.CheckProgramInstall;
@@ -69,13 +72,13 @@ public class ExtractImageScansController {
     @jakarta.ws.rs.Path("/extract-image-scans")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.IMAGE, arity = ToolArity.SIMO)
     @Operation(
             summary = "Extract image scans from an input file",
             description =
                     "This endpoint extracts image scans from a given file based on certain"
                             + " parameters. Users can specify angle threshold, tolerance, minimum area,"
-                            + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
-                            + " Type:SIMO")
+                            + " minimum contour area, and border size.")
     public Response extractImageScans(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("angleThreshold") int angleThreshold,

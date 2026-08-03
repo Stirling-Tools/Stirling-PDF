@@ -42,11 +42,7 @@ import stirling.software.common.model.ApplicationProperties;
  *       scopes (e.g. {@code @RequestScoped}) require a client proxy, which is impossible for
  *       primitives/finals, so Spring's request-scoped primitive beans cannot be reproduced
  *       directly. {@code @Dependent} recomputes the value at each injection point, which is the
- *       closest behaviour. TODO: Migration required - if true per-HTTP-request semantics are
- *       needed, wrap the value in a {@code @RequestScoped} holder object instead of producing a
- *       bare boolean.
- *   <li>{@code @Lazy} dropped - CDI beans are initialised lazily by default.
- * </ul>
+ *       closest behaviour.
  */
 @Slf4j
 @ApplicationScoped
@@ -98,7 +94,6 @@ public class AppConfig {
     // way the codebase builds them ad hoc (JsonMapper.builder().build()). REST bodies still go
     // through Quarkus' Jackson 2 mapper; this is only for code that uses the Jackson 3 API
     // directly.
-    // TODO: Migration required - converge the codebase on one Jackson line (drop Jackson 3) later.
     @Produces
     @ApplicationScoped
     public tools.jackson.databind.ObjectMapper jackson3ObjectMapper() {

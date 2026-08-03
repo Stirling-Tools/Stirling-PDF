@@ -20,8 +20,6 @@ public class PasswordEncoderConfig {
     @Produces
     @ApplicationScoped
     public PasswordEncoder passwordEncoder() {
-        // TODO: Migration required - replace BCryptPasswordEncoder once a Quarkus-compatible
-        // BCrypt implementation is wired in (see class-level note).
         return new BCryptPasswordEncoder();
     }
 }

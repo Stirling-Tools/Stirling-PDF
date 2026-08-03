@@ -7,7 +7,7 @@ import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import jakarta.annotation.security.RolesAllowed;
-import org.springframework.security.core.Authentication;
+import stirling.software.common.security.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;

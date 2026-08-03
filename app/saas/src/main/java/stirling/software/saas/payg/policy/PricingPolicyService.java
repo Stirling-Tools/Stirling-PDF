@@ -195,11 +195,6 @@ public class PricingPolicyService {
      * changed — cache hit rate is already team-scoped so the cost of a clear is bounded by how many
      * active teams there are.
      */
-    // TODO: Migration required - after-commit delivery is now expressed on the observer side via
-    // CDI's TransactionPhase.AFTER_SUCCESS (replacing the firing-side
-    // TransactionSynchronizationManager.registerSynchronization afterCommit hook). When no
-    // transaction is active (e.g. test paths calling write methods without a tx), CDI delivers the
-    // event immediately, matching the former else-branch behavior.
     public void onPolicyChanged(
             @Observes(during = TransactionPhase.AFTER_SUCCESS) PolicyChangedEvent event) {
         long evicted = byTeamCache.estimatedSize();
@@ -224,9 +219,6 @@ public class PricingPolicyService {
      * safe — the listener still only clears caches once the row change is committed and visible.
      */
     private void publishOnCommit(String payload) {
-        // TODO: Migration required - was TransactionSynchronizationManager-driven after-commit
-        // dispatch; now a plain Event.fire() whose after-commit timing is enforced by the
-        // AFTER_SUCCESS observer phase on onPolicyChanged.
         eventPublisher.fire(new PolicyChangedEvent(this, payload));
     }
 

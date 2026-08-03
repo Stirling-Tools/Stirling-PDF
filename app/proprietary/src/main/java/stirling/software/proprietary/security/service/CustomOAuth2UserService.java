@@ -15,23 +15,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.UsernameAttribute;
 import stirling.software.proprietary.security.model.User;
 
-// TODO: Migration required - quarkus-oidc has no equivalent of Spring's
-// OAuth2UserService<OidcUserRequest, OidcUser> / OidcUserService delegate. Under quarkus-oidc the
-// OIDC flow is handled by the extension (quarkus.oidc.* config); per-login user mapping and the
-// "useAsUsername" claim selection should be re-implemented in a
-// io.quarkus.security.identity.SecurityIdentityAugmentor (inject the @io.quarkus.oidc.IdToken
-// JsonWebToken / OidcSession), and the blocked-account / hasPassword checks below should run there
-// before the SecurityIdentity is finalized. The claim-dump diagnostics (logClaimDump,
-// appendClaims, suggestUsernameClaims) and the username-resolution + LockedException logic are
-// preserved unchanged so they can be reused by the augmentor.
-// The previous Spring types map roughly to:
-//   OidcUserRequest.getClientRegistration().getRegistrationId() -> the OIDC tenant id
-//   OidcUserService.loadUser(...)        -> handled by quarkus-oidc (UserInfo via
-//                                           quarkus.oidc.authentication.user-info-required=true)
-//   OidcUser.getAttribute(key)/getSubject()/getIdToken()/getUserInfo() -> JsonWebToken claims +
-//                                           io.quarkus.oidc.UserInfo
-//   DefaultOidcUser(...)                 -> the augmented SecurityIdentity
-//   OAuth2AuthenticationException        -> io.quarkus.security.AuthenticationFailedException
 @Slf4j
 @ApplicationScoped
 public class CustomOAuth2UserService {
@@ -54,13 +37,6 @@ public class CustomOAuth2UserService {
 
     /**
      * Resolves and validates the local user for an OIDC login.
-     *
-     * <p>TODO: Migration required - this method previously implemented Spring's {@code
-     * OAuth2UserService<OidcUserRequest, OidcUser>.loadUser}. Under quarkus-oidc there is no
-     * user-request object handed to application code; instead call this logic from a {@code
-     * SecurityIdentityAugmentor} once quarkus-oidc has produced the {@code SecurityIdentity}.
-     * Provide the registration/tenant id, the merged claim map and the ID-token claim map from the
-     * augmentor's {@code AuthenticationRequestContext} / injected {@code JsonWebToken}.
      *
      * @param registrationId the OIDC tenant/registration id
      * @param subject the standard OIDC {@code sub} claim
@@ -111,10 +87,6 @@ public class CustomOAuth2UserService {
             if (internalUser.isPresent()) {
                 String internalUsername = internalUser.get().getUsername();
                 if (loginAttemptService.isBlocked(internalUsername)) {
-                    // TODO: Migration required - was org.springframework.security.authentication
-                    // .LockedException; surface this as
-                    // io.quarkus.security.AuthenticationFailedException
-                    // (or a custom locked-account exception) from the SecurityIdentityAugmentor.
                     throw new IllegalStateException(
                             "The account "
                                     + internalUsername
@@ -144,9 +116,6 @@ public class CustomOAuth2UserService {
                         idTokenClaims == null ? Collections.emptyMap() : idTokenClaims,
                         true);
             }
-            // TODO: Migration required - was wrapped as
-            // org.springframework.security.oauth2.core.OAuth2AuthenticationException(OAuth2Error);
-            // rethrow as io.quarkus.security.AuthenticationFailedException from the augmentor.
             throw e;
         } catch (Exception e) {
             log.error("Unexpected error loading OIDC user", e);
@@ -160,8 +129,6 @@ public class CustomOAuth2UserService {
                         idTokenClaims,
                         true);
             }
-            // TODO: Migration required - was OAuth2AuthenticationException("Unexpected error during
-            // authentication"); rethrow as io.quarkus.security.AuthenticationFailedException.
             throw new IllegalStateException("Unexpected error during authentication", e);
         }
     }

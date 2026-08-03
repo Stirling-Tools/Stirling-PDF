@@ -13,7 +13,6 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 
@@ -22,6 +21,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;

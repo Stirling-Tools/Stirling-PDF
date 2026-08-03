@@ -72,7 +72,10 @@ public class StorageProviderConfig {
                                         clusterEnabled,
                                         FileEncryptionKeyService.requiringNewTransaction()),
                         fileEncryptionKeyRepository);
-        if (writeEnabled || fileEncryptionKeyRepository.count() > 0) {
+        // The registry table may not exist when storage is unused, so only probe if it is on.
+        boolean probeForExistingKeys =
+                !writeEnabled && applicationProperties.getStorage().isEnabled();
+        if (writeEnabled || (probeForExistingKeys && state.encryptedContentMayExist())) {
             state.initialiseEagerly();
             log.info(
                     "Storage encryption at rest active (writes {})",

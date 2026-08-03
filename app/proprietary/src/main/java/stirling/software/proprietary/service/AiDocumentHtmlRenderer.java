@@ -9,13 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.springframework.core.io.ClassPathResource;
-
 import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.JinjavaConfig;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.proprietary.model.api.ai.create.AiDocument;
 
 /** Renders an {@link AiDocument} to HTML using a Jinja template loaded from the classpath. */

@@ -49,7 +49,6 @@ public class ReactRoutingController {
     // quarkus.http.root-path
     // at build time). Kept as a configurable property so the index.html base href rewrite still
     // works.
-    // TODO: Migration required - consider sourcing this from quarkus.http.root-path instead.
     @ConfigProperty(name = "server.servlet.context-path", defaultValue = "/")
     String contextPath;
 

@@ -92,8 +92,6 @@ public class AuthenticationUtils {
         }
 
         // JsonWebToken principal from the Quarkus OIDC/JWT resource server
-        // TODO: Migration required - was Spring's org.springframework.security.oauth2.jwt.Jwt;
-        // getClaimAsString("email") replaced with MicroProfile JsonWebToken.getClaim("email").
         if (principal instanceof JsonWebToken jwt) {
             Object emailClaim = jwt.getClaim("email");
             String email = emailClaim != null ? emailClaim.toString() : null;

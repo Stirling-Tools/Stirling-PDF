@@ -13,14 +13,6 @@ import lombok.extern.slf4j.Slf4j;
  * Emits 401 + {@code WWW-Authenticate: Bearer resource_metadata="..."} (RFC 9728) from
  * X-Forwarded-* headers. A rejected token also logs the reason and echoes it as {@code
  * error_description}.
- *
- * <p>TODO: Migration required - this was a Spring Security {@code AuthenticationEntryPoint}
- * (commence(...) invoked by the SecurityFilterChain on authentication failure). Quarkus has no
- * SecurityFilterChain equivalent. The 401 response must instead be produced by a Quarkus auth
- * mechanism / failure handler (e.g. an {@link io.quarkus.security.AuthenticationFailedException}
- * mapper, or a custom HttpAuthenticationMechanism sendChallenge). The reusable header-building
- * logic below has been preserved; wire {@link #commence(HttpServletRequest, HttpServletResponse,
- * String)} into that handler, passing the rejection reason when a token was supplied and rejected.
  */
 @Slf4j
 @ApplicationScoped

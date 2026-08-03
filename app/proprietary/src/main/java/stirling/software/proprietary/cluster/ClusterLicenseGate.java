@@ -16,11 +16,6 @@ import lombok.extern.slf4j.Slf4j;
  * Runtime license gate for cluster mode. Cluster mode requires a SERVER or ENTERPRISE license; the
  * SaaS flavor bypasses (no {@code runningProOrHigher} bean is published). The Valkey connection
  * config {@code @DependsOn} this bean, so it runs before any Valkey bean is constructed.
- *
- * <p>TODO: Migration required - Spring @DependsOn ordering relative to the Valkey connection config
- * has no direct Quarkus equivalent. Ensure the Valkey/Redis bean either @Inject's this gate or that
- * this verification still runs before any Valkey bean is constructed (e.g. via a Startup observer
- * ordering or an explicit dependency).
  */
 @ApplicationScoped
 @Slf4j

@@ -28,6 +28,8 @@ import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.model.io.InputStreamResource;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -49,11 +51,13 @@ public class ReplaceAndInvertColorController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/replace-invert-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Replace-Invert Color PDF",
             description =
-                    "This endpoint accepts a PDF file and provides options to invert all colors, replace"
-                            + " text and background colors, or convert to CMYK color space for printing. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file and provides options to invert all colors,"
+                            + " replace text and background colors, or convert to CMYK color space for"
+                            + " printing.")
     public Response replaceAndInvertColor(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

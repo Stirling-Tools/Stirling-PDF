@@ -80,6 +80,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
@@ -161,12 +163,13 @@ public class CertSignController {
     @Path("/cert-sign")
     @Consumes({MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =
                     "This endpoint accepts a PDF file, a digital certificate and related"
                             + " information to sign the PDF. It then returns the digitally signed PDF"
-                            + " file. Input:PDF Output:PDF Type:SISO")
+                            + " file.")
     public Response signPDFWithCert(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("fileId") String fileId,

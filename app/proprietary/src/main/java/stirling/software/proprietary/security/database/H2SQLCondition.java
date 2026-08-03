@@ -7,13 +7,6 @@ import org.eclipse.microprofile.config.Config;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-// TODO: Migration required - this was an org.springframework.context.annotation.Condition used via
-// @Conditional(H2SQLCondition.class) to gate bean/controller registration at startup. Quarkus has
-// no
-// runtime @Conditional equivalent (@io.quarkus.arc.profile.IfBuildProfile / @LookupIfProperty are
-// build-time/property-name based and cannot replicate this composite logic). The decision logic has
-// been preserved as a runtime-evaluable CDI bean; callers that previously used @Conditional must
-// inject this bean and guard their behavior at runtime via matches() instead.
 /** Returns {@code true} when the active deployment is genuinely on H2. */
 @ApplicationScoped
 public class H2SQLCondition {

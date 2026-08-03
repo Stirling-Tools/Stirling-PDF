@@ -130,8 +130,6 @@ public class AiCreateController {
         return Response.noContent().build();
     }
 
-    // TODO: Migration required - @Transactional(readOnly = true): jakarta.transaction.Transactional
-    // has no readOnly attribute; using a plain transaction.
     @GET
     @Path("/sessions/{sessionId}")
     @Transactional
@@ -140,8 +138,6 @@ public class AiCreateController {
         return Response.ok(toResponse(session)).build();
     }
 
-    // TODO: Migration required - @Transactional(readOnly = true): jakarta.transaction.Transactional
-    // has no readOnly attribute; using a plain transaction.
     @GET
     @Path("/sessions")
     @Transactional

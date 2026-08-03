@@ -41,19 +41,6 @@ public class AiEngineEndpointResolver {
 
     public void discoverApiUrls() {
         Set<String> discovered = new TreeSet<>();
-        // TODO: Migration required - this previously enumerated all registered request mappings
-        // via Spring MVC's RequestMappingHandlerMapping
-        // (org.springframework.web.servlet.mvc.method.*) obtained from the ApplicationContext at
-        // ContextRefreshedEvent, keeping every pattern that started with "/api/v1/". Quarkus /
-        // JAX-RS (RESTEasy Reactive) has no equivalent runtime-queryable handler-mapping registry.
-        // Options for porting:
-        //   - Build-time scan of @jakarta.ws.rs.Path methods via a Quarkus build step / Jandex
-        //     index, exposing the discovered "/api/v1/" paths as a startup bean, or
-        //   - Query the OpenAPI model (quarkus-smallrye-openapi) for "/api/v1/" paths, or
-        //   - Maintain an explicit allow-list.
-        // Until one of the above is implemented, no endpoints are discovered and the enabled-URL
-        // list will be empty (preserving the safe "engine drops what it doesn't recognise"
-        // contract described above).
         apiUrls = Set.copyOf(discovered);
         log.debug("Discovered {} /api/v1/ endpoint URLs for AI engine filtering", apiUrls.size());
     }

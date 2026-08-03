@@ -28,8 +28,6 @@ class AppUpdateService {
     // ("Producer method for a normal scoped bean must not have a primitive type"). @Dependent
     // recomputes the value at each injection point, the closest behaviour to per-request
     // evaluation.
-    // TODO: Migration required - if true per-HTTP-request semantics are needed, wrap the value in a
-    // @RequestScoped holder object instead of producing a bare boolean.
     @Produces
     @Named("shouldShow")
     @Dependent

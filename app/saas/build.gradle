@@ -11,7 +11,6 @@ dependencies {
     api 'io.quarkus:quarkus-oidc'                      // spring-boot-starter-oauth2-resource-server (bearer)
     // spring-boot-starter-webmvc -> quarkus-rest (inherited api-scoped from :common).
     // REMOVED: spring-boot-starter-aspectj - no AspectJ in Quarkus; use quarkus-arc CDI interceptors.
-    // TODO: Migration required - rewrite any @Aspect advice (e.g. CreditSuccessAdvice) as CDI interceptors.
 
     // flyway-core -> quarkus-flyway (runs migrations at startup; see quarkus.flyway.* config).
     api 'io.quarkus:quarkus-flyway'

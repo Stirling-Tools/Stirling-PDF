@@ -11,11 +11,6 @@ import jakarta.inject.Singleton;
 
 /**
  * HTTP client for talking to Supabase Edge Functions, with a bounded connect timeout.
- *
- * <p>TODO: Migration required - replaced Spring RestTemplate with java.net.http.HttpClient.
- * Consider a typed {@code @RegisterRestClient} client instead. Note: the per-request read timeout
- * previously set on RestTemplate must now be applied per HttpRequest via {@code
- * HttpRequest.Builder#timeout}.
  */
 @ApplicationScoped
 @IfBuildProfile("saas")

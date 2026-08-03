@@ -22,9 +22,6 @@ import stirling.software.common.service.UserServiceInterface;
 // JobOwnershipService bean exists and callers can inject it directly (no Instance<> needed).
 // A previous @LookupIfProperty here left both impls registered at build time and caused an
 // ambiguous dependency.
-// TODO: Migration required - this trades runtime toggling for a build-time decision; if
-// security.enable-login must be switched without a rebuild, reintroduce @LookupIfProperty on both
-// impls and switch every JobOwnershipService injection point to Instance<>.
 @Slf4j
 @ApplicationScoped
 @io.quarkus.arc.properties.IfBuildProperty(name = "security.enable-login", stringValue = "true")

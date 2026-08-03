@@ -33,6 +33,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -56,11 +58,10 @@ public class UnlockPDFFormsController {
             value = "/unlock-pdf-forms",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove read-only property from form fields",
-            description =
-                    "Removing read-only property from form fields making them fillable"
-                            + "Input:PDF, Output:PDF. Type:SISO")
+            description = "Removing read-only property from form fields making them fillable")
     public Response unlockPDFForms(
             @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId) {
         PDFFile file = new PDFFile();

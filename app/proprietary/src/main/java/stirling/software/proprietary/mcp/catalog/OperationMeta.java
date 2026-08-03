@@ -13,11 +13,6 @@ public record OperationMeta(
         String requiredScope,
         Target target,
         String endpointPath,
-        // TODO: Migration required - was org.springframework.web.method.HandlerMethod (Spring MVC,
-        // no Quarkus equivalent). Replaced with the underlying java.lang.reflect.Method. The
-        // collaborator McpToolCatalog must be updated to discover JAX-RS resource methods (e.g. via
-        // RESTEasy Reactive ResourceScanningSupport / jakarta.ws.rs annotations) instead of
-        // Spring's RequestMappingHandlerMapping, and pass a reflect.Method here.
         Method handlerMethod) {
 
     public enum Target {

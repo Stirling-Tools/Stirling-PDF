@@ -44,6 +44,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
@@ -68,12 +70,13 @@ public class WatermarkController {
             value = "/add-watermark",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add watermark to a PDF file",
             description =
                     "This endpoint adds a watermark to a given PDF file. Users can specify the"
-                            + " watermark type (text or image), rotation, opacity, width spacer, and"
-                            + " height spacer. Input:PDF Output:PDF Type:SISO")
+                            + " watermark type (text or image), rotation, opacity, width spacer, and height"
+                            + " spacer.")
     public Response addWatermark(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

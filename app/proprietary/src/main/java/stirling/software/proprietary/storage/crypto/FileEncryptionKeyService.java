@@ -6,15 +6,14 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.UUID;
-
 import java.util.function.Supplier;
-
-import io.quarkus.narayana.jta.QuarkusTransaction;
-
-import org.springframework.dao.DataIntegrityViolationException;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.quarkus.narayana.jta.QuarkusTransaction;
+
+import jakarta.persistence.PersistenceException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -211,7 +210,7 @@ public class FileEncryptionKeyService {
                     scopeId);
             unwrapCache.put(saved.getKeyId(), kek);
             return saved;
-        } catch (DataIntegrityViolationException raced) {
+        } catch (PersistenceException raced) {
             // Another node created the scope key concurrently; use theirs.
             return repository
                     .findFirstByScopeTypeAndScopeIdAndStatus(

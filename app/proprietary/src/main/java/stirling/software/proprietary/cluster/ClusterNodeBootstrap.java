@@ -31,22 +31,11 @@ import stirling.software.common.model.ApplicationProperties.Cluster;
  * <p>Originally implemented Spring's {@code SmartLifecycle} with {@code getPhase() ==
  * Integer.MAX_VALUE} so Spring tore this bean down before {@code LettuceConnectionFactory} -
  * deregister therefore ran while the Valkey connection was still alive.
- *
- * <p>TODO: Migration required - Quarkus has no SmartLifecycle/getPhase shutdown-ordering
- * equivalent. Startup now runs via @Observes StartupEvent and shutdown via @PreDestroy. If the
- * Quarkus Redis/Valkey client is torn down before this bean's @PreDestroy, the deregister call may
- * fail (it already tolerates that via TTL expiry). If strict ordering is required, observe
- * io.quarkus.runtime.ShutdownEvent on a bean ordered ahead of the Redis client, or rely on the
- * heartbeat TTL to clean up the stale entry.
  */
 @ApplicationScoped
 @Slf4j
 public class ClusterNodeBootstrap {
 
-    // TODO: Migration required - Spring @ConditionalOnProperty(name = "cluster.enabled",
-    // havingValue = "true") was a runtime toggle. Quarkus build-time conditionals
-    // (@IfBuildProfile / @LookupIfProperty) cannot gate a StartupEvent observer at runtime, so the
-    // bean is always instantiated and the toggle is enforced at runtime via clusterEnabled below.
     @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
     boolean clusterEnabled;
 
@@ -91,12 +80,6 @@ public class ClusterNodeBootstrap {
         registerSelf("register");
     }
 
-    // TODO: Migration required - Spring @Scheduled(fixedDelayString =
-    // "${cluster.node.heartbeat-interval-ms:5000}") drove the interval directly from config in
-    // milliseconds. Quarkus @Scheduled "every" expects a Duration string, so the config reference
-    // "{cluster.node.heartbeat-interval-ms}" cannot be reused as-is (it resolves to a bare number).
-    // Hard-coded to 5s to match the model default; if the interval is operator-tunable, expose a
-    // duration-formatted property (e.g. cluster.node.heartbeat-interval=5s) and reference it here.
     @Scheduled(every = "5s")
     public void heartbeat() {
         if (!clusterEnabled) {

@@ -3,13 +3,12 @@ package stirling.software.proprietary.classification;
 import java.io.InputStream;
 import java.util.List;
 
-import org.springframework.core.io.ClassPathResource;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.classification.model.ClassificationLabels;
 

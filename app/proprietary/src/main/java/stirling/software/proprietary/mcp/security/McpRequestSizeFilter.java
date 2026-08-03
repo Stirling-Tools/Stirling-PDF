@@ -24,10 +24,6 @@ import jakarta.servlet.http.HttpServletResponse;
  * Caps MCP request body size (via Content-Length and by buffering up to the cap) and rejects
  * oversized bodies with a clean 413 before JSON parsing.
  */
-// TODO: Migration required - this filter was a Spring OncePerRequestFilter; under Quarkus
-// (quarkus-undertow) register it as a jakarta.servlet.Filter via @WebFilter or a programmatic
-// FilterRegistrationBean equivalent, and ensure it runs once per request and before the MCP
-// endpoint. Registration ordering must be verified by the collaborator wiring the servlet filters.
 public class McpRequestSizeFilter implements Filter {
 
     private final long maxBodyBytes;

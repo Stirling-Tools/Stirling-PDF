@@ -28,8 +28,8 @@ import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepo
 @ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-// TODO: Migration note - jakarta.transaction.Transactional has no readOnly attribute;
-// mapped to SUPPORTS so read methods join an existing tx without forcing a new one.
+// jakarta.transaction.Transactional has no readOnly attribute, so read methods use SUPPORTS to
+// join an existing transaction rather than force a new one.
 @Transactional(Transactional.TxType.SUPPORTS)
 public class UnifiedAccessControlService {
 

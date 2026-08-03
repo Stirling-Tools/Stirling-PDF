@@ -47,6 +47,11 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -85,6 +90,13 @@ public class AutoRotateController {
             consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/auto-rotate-pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(
+            produces = ToolFormat.PDF,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "dryRun", matches = "true"),
+                            produces = ToolFormat.JSON,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Detect and fix the orientation of every page",
             description =
@@ -92,8 +104,7 @@ public class AutoRotateController {
                             + " for scanned pages) and sets the page rotation so the content"
                             + " displays upright. With dryRun=true, returns a JSON per-page report"
                             + " instead of the PDF. With pageRotations set, applies the given"
-                            + " corrections without running detection."
-                            + " Input:PDF Output:PDF Type:SISO")
+                            + " corrections without running detection.")
     public Response autoRotatePdf(
             @RestForm("fileInput") FileUpload fileInput,
             @RestForm("fileId") String fileId,

@@ -5,7 +5,8 @@ import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+
+import stirling.software.common.model.MultipartFile;
 
 @DisplayName("MultiplePDFFiles")
 class MultiplePDFFilesTest {

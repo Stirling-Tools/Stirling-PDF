@@ -24,8 +24,6 @@ import stirling.software.proprietary.security.service.UserService;
  * EnhancedJwtAuthenticationToken} from a Supabase JWT, or our existing API-key path) and looks the
  * local {@link User} row up via {@link UserService#findBySupabaseId(UUID)}.
  */
-// TODO: Migration required - @Profile("saas") had no Quarkus equivalent here; gate bean
-// availability via build profile / @IfBuildProfile if saas-only activation is required.
 @ApplicationScoped
 @Named("teamSecurity")
 @RequiredArgsConstructor

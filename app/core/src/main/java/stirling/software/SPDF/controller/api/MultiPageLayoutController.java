@@ -31,6 +31,8 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralFormCopyUtils;
@@ -55,11 +57,12 @@ public class MultiPageLayoutController {
             value = "/multi-page-layout",
             consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =
                     "This operation takes an input PDF file and the number of pages to merge into a"
-                            + " single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
+                            + " single sheet in the output PDF file.")
     public Response mergeMultiplePagesIntoOne(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,

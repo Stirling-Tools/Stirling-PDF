@@ -19,11 +19,6 @@ import stirling.software.common.model.ApplicationProperties;
  * Cluster operation metrics exposed via {@code /actuator/prometheus}. Registered only when cluster
  * mode is on.
  */
-// TODO: Migration required - original @ConditionalOnProperty(name = "cluster.enabled",
-// havingValue = "true") was a runtime toggle. Quarkus @IfBuildProfile/@LookupIfProperty are
-// build-time only. Either gate registration with a runtime guard on
-// applicationProperties.getCluster().isEnabled() (e.g. skip meter registration when disabled),
-// or use @io.quarkus.arc.lookup.LookupIfProperty if a build-time switch is acceptable.
 @ApplicationScoped
 public class ClusterMetrics implements StickyMissRecorder {
 

@@ -10,13 +10,6 @@ import java.util.Set;
  * of the explicitly accepted additional audiences) in its {@code aud} claim. The additional list
  * exists for IdPs that cannot mint resource-specific audiences - e.g. Supabase's OAuth server
  * always issues {@code aud=authenticated}. Fails closed when nothing is configured.
- *
- * <p>TODO: Migration required - this was a Spring Security {@code OAuth2TokenValidator<Jwt>}.
- * Quarkus-oidc has no equivalent validator SPI; the standard way to enforce audience binding is
- * configuration: {@code quarkus.oidc.token.audience=<resource-id>} (combined with {@code
- * mp.jwt.verify.audiences} for smallrye-jwt). The pure audience-check logic below is preserved so
- * it can be invoked from a {@code SecurityIdentityAugmentor} or a custom {@code
- * jakarta.ws.rs.container.ContainerRequestFilter}.
  */
 public class McpAudienceValidator {
 

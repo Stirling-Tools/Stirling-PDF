@@ -34,33 +34,6 @@ import stirling.software.proprietary.service.AuditService;
  * {@code @Order(0)} (highest precedence, runs before {@code AutoJobAspect}) maps to
  * {@code @Priority} with a value lower than {@code AutoJobAspect}'s {@code @Priority(20)} so this
  * interceptor still populates MDC first.
- *
- * <p>TODO: Migration required - CDI interceptors are bound by an {@code @InterceptorBinding}
- * annotation declared on the target class/method; there is NO CDI equivalent for AspectJ's broad,
- * expression-based pointcuts. The original advices fired for every Spring-MVC mapping annotation
- * and for the static-resource handler, none of which exist on JAX-RS controllers. To retain "audit
- * every HTTP endpoint" behaviour in Quarkus, do ONE of:
- *
- * <ul>
- *   <li>register a JAX-RS {@code @Provider} pair of {@code ContainerRequestFilter}/{@code
- *       ContainerResponseFilter} (or RESTEasy Reactive
- *       {@code @ServerRequestFilter}/{@code @ServerResponseFilter}) that calls this same {@code
- *       AuditService} logic around every resource method (preferred - covers all endpoints without
- *       per-method annotations); OR
- *   <li>introduce an explicit {@code @InterceptorBinding} (e.g. {@code @AuditedHttp}) and stamp it
- *       on the controller classes/methods that should be audited, then bind this interceptor with
- *       it.
- * </ul>
- *
- * As an interim binding this interceptor is bound by the existing {@link AutoJobPostMapping}
- * {@code @InterceptorBinding} (one of the six original pointcuts) so the class is valid CDI and
- * still audits auto-job POST endpoints. <b>This does NOT cover plain GET/POST/PUT/DELETE/PATCH or
- * static-resource requests</b> the way the Spring aspect did - that requires the JAX-RS filter or
- * dedicated binding described above. NOTE: it must NOT be bound to {@link Audited}, because the
- * body deliberately skips {@code @Audited} methods (those are handled by {@code AuditAspect}). The
- * {@code auditController(...)} body below is preserved verbatim; the static-resource and
- * static-GET-skip handling (originally driven by the {@code ResourceHttpRequestHandler} pointcut)
- * still works via {@link AuditService#isStaticResourceRequest(HttpServletRequest)}.
  */
 @Interceptor
 @AutoJobPostMapping
@@ -85,14 +58,6 @@ public class ControllerAuditAspect {
         this.response = response;
     }
 
-    /**
-     * TODO: Migration required - this single {@code @AroundInvoke} replaces the five Spring
-     * {@code @Around} advices (GET/POST/PUT/DELETE/PATCH + AutoJobPostMapping) and the
-     * static-resource {@code execution(...)} advice. Because CDI cannot inspect Spring/JAX-RS
-     * mapping annotations to derive the HTTP verb at bind time, the verb is resolved from the live
-     * request ({@link HttpServletRequest#getMethod()}); if the request is unavailable (non-web
-     * invocation) it falls back to POST to mirror the most common audited mapping.
-     */
     @AroundInvoke
     public Object auditEndpoint(InvocationContext ctx) throws Throwable {
         // Reactive-safe: the injected HttpServletRequest proxy is never null but throws UT000048
@@ -201,14 +166,6 @@ public class ControllerAuditAspect {
 
             long start = System.currentTimeMillis();
 
-            // TODO: Migration required (collaborator) -
-            // AuditService.createBaseAuditData/addFileData/
-            // addMethodArguments/resolveEventType still take org.aspectj.lang.ProceedingJoinPoint
-            // (AuditService is not yet migrated). Once AuditService is converted, change those
-            // signatures to accept jakarta.interceptor.InvocationContext (getMethod/getParameters/
-            // getTarget cover the data used). These calls pass the InvocationContext and will only
-            // typecheck after that collaborator change.
-            // Use auditService to create the base audit data
             Map<String, Object> data = auditService.createBaseAuditData(joinPoint, level);
 
             // Add HTTP-specific information
@@ -312,8 +269,6 @@ public class ControllerAuditAspect {
             return current.getRequestURI();
         }
         // Fallback: try JAX-RS @Path annotation on method/class; return empty string if not present
-        // TODO: Migration required - resolve path from jakarta.ws.rs.@Path on the declaring class
-        // and method once all controllers are fully on JAX-RS. The Spring fallback was removed.
         jakarta.ws.rs.Path classPath =
                 method.getDeclaringClass().getAnnotation(jakarta.ws.rs.Path.class);
         jakarta.ws.rs.Path methodPath = method.getAnnotation(jakarta.ws.rs.Path.class);

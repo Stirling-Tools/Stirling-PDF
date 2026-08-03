@@ -30,10 +30,6 @@ public class AiWorkflowRequest {
     @Schema(description = "The user message to orchestrate", example = "Summarise these documents")
     private String userMessage;
 
-    // TODO: Migration required - conversationHistory is a list of POJOs; RESTEasy has no form
-    // converter for AiConversationMessage. It must be received as a JSON form part (e.g. a String
-    // field parsed with ObjectMapper, or a @RestForm @PartType(APPLICATION_JSON) field) once the
-    // multipart contract for this endpoint is finalised.
     @Schema(
             description =
                     "Prior chat messages exchanged between the user and the assistant, ordered"

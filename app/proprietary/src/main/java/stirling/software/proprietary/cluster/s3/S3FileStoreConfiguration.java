@@ -15,16 +15,6 @@ import stirling.software.common.cluster.FileStore;
 import stirling.software.common.model.ApplicationProperties;
 
 /** Activates the S3-backed transient {@link FileStore} when {@code cluster.artifactStore=s3}. */
-// TODO: Migration required - the original Spring class was guarded by
-// @ConditionalOnProperty(prefix="cluster", name="artifactStore", havingValue="s3") and
-// @ConditionalOnMissingBean on the @Bean. The S3 producer below is gated with
-// @io.quarkus.arc.lookup.LookupIfProperty(name="cluster.artifactStore", stringValue="s3"), which
-// only contributes this FileStore when the property is "s3"; the always-on @DefaultBean producer in
-// common's LocalDiskFileStoreConfiguration covers the "local"/default case, so S3 here wins (a
-// non-default producer beats @DefaultBean) only when the property selects it - preserving the
-// original @ConditionalOnMissingBean intent. Note: @LookupIfProperty is evaluated at build time, so
-// the artifact store cannot be switched at runtime. If a true runtime toggle is required, drop the
-// annotation and gate the producer body on the config value instead.
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor

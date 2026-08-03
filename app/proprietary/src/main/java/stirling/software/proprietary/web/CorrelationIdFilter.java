@@ -19,9 +19,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /** Guarantees every request carries a stable X-Request-Id; propagates to MDC. */
-// TODO: Migration required - quarkus-undertow provides jakarta.servlet support. Register this
-// filter and its URL mapping/ordering via a @WebFilter annotation or a ServletExtension if order
-// matters (Spring auto-registered @Component filters; Quarkus does not).
 @Slf4j
 @ApplicationScoped
 public class CorrelationIdFilter implements Filter {

@@ -25,7 +25,7 @@ import { LoginLandingRedirect } from "@app/components/LoginLandingRedirect";
 
 // Import global styles
 import "@app/styles/tailwind.css";
-import "@app/styles/saas-theme.css";
+import "@app/auth/ui/auth-theme.css";
 import "@app/styles/cookieconsent.css";
 import "@app/styles/index.css";
 

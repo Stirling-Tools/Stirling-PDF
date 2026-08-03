@@ -26,14 +26,14 @@ import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.proprietary.audit.AuditContext;

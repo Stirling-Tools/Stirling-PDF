@@ -27,9 +27,6 @@ public class ConvertPdfToCbzRequest {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private int dpi = 150;
 
-    // TODO: Migration required - controller binds this model via @BeanParam multipart.
-    // The 'fileInput' field is a raw FileUpload for form binding; the controller must adapt it
-    // to a stirling.software.common.model.MultipartFile via FileUploadMultipartFile.of(fileInput).
     public MultipartFile getFileInputAsMultipartFile() {
         return stirling.software.common.model.multipart.FileUploadMultipartFile.of(fileInput);
     }

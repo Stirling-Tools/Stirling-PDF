@@ -36,10 +36,6 @@ import tools.jackson.databind.node.ObjectNode;
  */
 @Slf4j
 @ApplicationScoped
-// TODO: Migration required - @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
-// has no direct CDI equivalent. The onReady() observer below guards on a runtime config toggle
-// instead; consider @io.quarkus.arc.lookup.LookupIfProperty / a build-time profile if the bean
-// itself should be excluded.
 public class EngineCapabilityClient {
 
     private final ApplicationProperties applicationProperties;

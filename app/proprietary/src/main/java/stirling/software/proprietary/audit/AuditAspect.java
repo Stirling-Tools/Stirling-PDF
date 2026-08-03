@@ -30,20 +30,6 @@ import stirling.software.proprietary.service.AuditService;
  * {@code @Priority(20)}, so this audit interceptor uses {@code @Priority(10)} which runs FIRST and
  * populates MDC before the job interceptor - matching the original ordering intent (audit captures
  * principal/origin/IP on the request thread before the job is dispatched).
- *
- * <p>TODO: Migration required - the {@code @Audited} annotation ({@code
- * stirling.software.proprietary.audit.Audited}) must be made a CDI
- * {@code @jakarta.interceptor.InterceptorBinding} (and its members marked
- * {@code @jakarta.enterprise.util.Nonbinding}) for this {@code @Interceptor} to bind to it; see the
- * already-migrated {@code AutoJobPostMapping}. That is a separate file and is intentionally left
- * untouched here.
- *
- * <p>TODO: Migration required - {@code AuditService}'s helper methods ({@code createBaseAuditData},
- * {@code addFileData}, {@code addMethodArguments}, {@code resolveEventType}) currently accept an
- * AspectJ {@code ProceedingJoinPoint} / {@code joinPoint.getTarget()} / {@code
- * joinPoint.getArgs()}. They must be migrated to accept a CDI {@link InvocationContext} (use {@code
- * ctx.getTarget()}, {@code ctx.getParameters()}, {@code ctx.getMethod()}). The call sites below
- * pass {@code ctx} on that assumption.
  */
 @Interceptor
 @Audited
@@ -111,8 +97,6 @@ public class AuditAspect {
         }
 
         // Only create the map once we know we'll use it
-        // TODO: Migration required - createBaseAuditData must accept InvocationContext (ctx) once
-        // AuditService is migrated off ProceedingJoinPoint.
         Map<String, Object> auditData =
                 auditService.createBaseAuditData(ctx, auditedAnnotation.level());
 
@@ -121,7 +105,6 @@ public class AuditAspect {
             String path = req.getRequestURI();
             String httpMethod = req.getMethod();
             auditService.addHttpData(auditData, httpMethod, path, auditedAnnotation.level());
-            // TODO: Migration required - addFileData must accept InvocationContext (ctx).
             auditService.addFileData(auditData, ctx, auditedAnnotation.level());
 
             // File operation details logged at DEBUG level for verification
@@ -145,7 +128,6 @@ public class AuditAspect {
 
         // Add method arguments if requested (captured at all audit levels for operational context)
         if (auditedAnnotation.includeArgs()) {
-            // TODO: Migration required - addMethodArguments must accept InvocationContext (ctx).
             auditService.addMethodArguments(auditData, ctx, auditedAnnotation.level());
         }
 
@@ -196,8 +178,6 @@ public class AuditAspect {
                 path = req.getRequestURI();
             }
 
-            // TODO: Migration required - resolveEventType reads joinPoint.getTarget(); once
-            // AuditService is migrated it should use ctx.getTarget().getClass() instead.
             AuditEventType eventType =
                     auditService.resolveEventType(
                             method,

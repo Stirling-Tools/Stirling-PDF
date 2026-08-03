@@ -270,9 +270,6 @@ public class InternalApiClient {
 
     private String getBaseUrl() {
         // Resolve the port lazily so desktop mode dispatches to the actual bound port.
-        // TODO: Migration required - verify Quarkus exposes the bound port via config. Quarkus uses
-        // "quarkus.http.port" and, for random-port test/dev runs, "quarkus.http.test-port"; the old
-        // "local.server.port"/"server.port" keys came from Spring Boot's WebServerInitializedEvent.
         String port = config.getOptionalValue("quarkus.http.port", String.class).orElse(null);
         if (port == null) {
             port = config.getOptionalValue("server.port", String.class).orElse("8080");

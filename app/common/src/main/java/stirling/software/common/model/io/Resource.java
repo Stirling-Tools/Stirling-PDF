@@ -13,9 +13,6 @@ import java.io.InputStream;
  * getInputStream/exists/getFile/getFilename/contentLength/isFile}) together with the {@link
  * FileSystemResource}, {@link InputStreamResource} and {@link ClassPathResource} implementations.
  * Converting a file is then just an import swap.
- *
- * <p>TODO: Migration required - longer term, prefer {@code java.nio.file.Path} / {@code
- * InputStream} directly at the boundaries and retire this shim.
  */
 public interface Resource {
 

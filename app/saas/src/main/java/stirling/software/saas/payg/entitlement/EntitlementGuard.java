@@ -60,11 +60,6 @@ import stirling.software.saas.util.AuthenticationUtils;
  *
  * <p>Fail-open: any unexpected exception is logged at WARN and the request passes through. The cap
  * pipeline must never block a customer because the guard tripped on a transient DB error.
- *
- * <p>// TODO: Migration required - was a Spring {@code @Component} implementing {@code
- * HandlerInterceptor}. Convert to a JAX-RS {@code @Provider} ContainerRequestFilter (priority
- * {@code PaygWebMvcConfig.ENTITLEMENT_GUARD_ORDER}). Handler-annotation introspection now uses a
- * reflective {@link Method} fallback; HTTP status/header/media-type constants are inlined literals.
  */
 @Slf4j
 @ApplicationScoped
@@ -362,12 +357,6 @@ public class EntitlementGuard {
         }
     }
 
-    /**
-     * // TODO: Migration required - resolves the resource {@link Method} the original code read
-     * from Spring's {@code HandlerMethod}. Until wired to JAX-RS {@code ResourceInfo}, supports a
-     * handler that is already a {@link Method} or exposes a no-arg {@code getMethod()} returning
-     * one.
-     */
     private Method resolveResourceMethod(Object handler) {
         return resolveResourceMethodStatic(handler);
     }

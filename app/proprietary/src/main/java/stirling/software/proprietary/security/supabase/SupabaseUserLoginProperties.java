@@ -5,10 +5,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.Data;
 
 /** Config for the optional Supabase login on proprietary deployments. */
-// TODO: Migration required - this was a Spring @ConfigurationProperties(prefix =
-// "security.supabase.user-login") POJO. Rebind the prefixed properties via
-// @io.smallrye.config.ConfigMapping(prefix = "security.supabase.user-login") (interface-based)
-// so the fields are populated from configuration; until then this bean holds defaults only.
 @Data
 @ApplicationScoped
 public class SupabaseUserLoginProperties {

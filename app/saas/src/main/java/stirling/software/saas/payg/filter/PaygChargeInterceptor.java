@@ -65,13 +65,6 @@ import stirling.software.saas.util.AuthenticationUtils;
  *
  * <p>Fail-open everywhere: any unexpected {@link RuntimeException} is swallowed, logged at WARN,
  * and counted on {@code payg.filter.errors}. The customer's tool call always proceeds.
- *
- * <p>// TODO: Migration required - was a Spring {@code @Component} ({@code @Profile("saas")})
- * implementing {@code AsyncHandlerInterceptor}. Convert to a JAX-RS {@code @Provider}
- * request/response filter pair. Handler-annotation introspection now uses a reflective {@link
- * Method} fallback (see {@link #resolveResourceMethod}); multipart access uses the servlet-native
- * {@link Part} API ({@code request.getParts()}); the best-matching-pattern attribute uses a literal
- * key constant ({@link #BEST_MATCHING_PATTERN_ATTRIBUTE}).
  */
 @Slf4j
 @ApplicationScoped
@@ -87,11 +80,6 @@ public class PaygChargeInterceptor {
 
     private static final String AUTOMATION_HEADER = "X-Stirling-Automation";
 
-    /**
-     * // TODO: Migration required - literal value of the former Spring constant {@code
-     * HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE}. Replace with the JAX-RS route template
-     * obtained from {@code @Context UriInfo} / {@code ResourceInfo} during the filter conversion.
-     */
     private static final String BEST_MATCHING_PATTERN_ATTRIBUTE =
             "org.springframework.web.servlet.HandlerMapping.bestMatchingPattern";
 
@@ -178,8 +166,6 @@ public class PaygChargeInterceptor {
                         .register(meterRegistry);
     }
 
-    // TODO: Migration required - was @Override AsyncHandlerInterceptor#preHandle(request, response,
-    // handler). Convert to a JAX-RS ContainerRequestFilter.
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler) {
         Timer.Sample sample = Timer.start();
@@ -239,9 +225,6 @@ public class PaygChargeInterceptor {
             return;
         }
 
-        // TODO: Migration required - was `request instanceof MultipartHttpServletRequest mreq` +
-        // mreq.getMultiFileMap(). Now uses servlet-native request.getParts(). A non-multipart
-        // request yields no file parts and short-circuits, preserving the original behavior.
         List<Part> nonEmpty = new ArrayList<>();
         try {
             Collection<Part> parts = request.getParts();
@@ -328,20 +311,10 @@ public class PaygChargeInterceptor {
         }
     }
 
-    /**
-     * // TODO: Migration required - the {@link JobInput} record's first component is still Spring's
-     * {@code MultipartFile} (owned by another module). This interceptor now sources inputs from the
-     * servlet {@link Part} API. Once {@code JobInput} is migrated to carry a {@link Part} (or a
-     * neutral size+content-type holder), construct it directly here: {@code return new
-     * JobInput(part, path);}. Kept as a single adaptation seam so the rest of the charge flow is
-     * untouched.
-     */
     private JobInput buildJobInput(Part part, Path path) {
         return new JobInput(part, path);
     }
 
-    // TODO: Migration required - was @Override AsyncHandlerInterceptor#afterCompletion(request,
-    // response, handler, Exception). Convert to a JAX-RS ContainerResponseFilter.
     public void afterCompletion(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -485,9 +458,6 @@ public class PaygChargeInterceptor {
         }
     }
 
-    // TODO: Migration required - was @Override
-    // AsyncHandlerInterceptor#afterConcurrentHandlingStarted. JAX-RS handles async dispatch
-    // differently; no direct equivalent required.
     public void afterConcurrentHandlingStarted(
             HttpServletRequest request, HttpServletResponse response, Object handler) {
         // Async handoff: don't touch state. afterCompletion will fire when the async work resolves.
@@ -559,12 +529,6 @@ public class PaygChargeInterceptor {
         return JobSource.WEB;
     }
 
-    /**
-     * // TODO: Migration required - resolves the resource {@link Method} the original code read
-     * from Spring's {@code HandlerMethod} (via {@code hm.getMethod()}). Until wired to JAX-RS
-     * {@code ResourceInfo}, supports a handler that is already a {@link Method} or exposes a no-arg
-     * {@code getMethod()} returning one, preserving the {@code @AutoJobPostMapping} gating.
-     */
     private Method resolveResourceMethod(Object handler) {
         if (handler instanceof Method m) {
             return m;

@@ -24,21 +24,6 @@ import stirling.software.common.model.oauth2.Provider;
 import stirling.software.proprietary.security.model.exception.NoProviderFoundException;
 import stirling.software.proprietary.security.service.UserService;
 
-// TODO: Migration required - OAuth2 client/login is a Spring Security feature
-// (org.springframework.security.oauth2.client.*) with NO direct Quarkus equivalent. In Quarkus the
-// OIDC/OAuth2 client is configured declaratively via quarkus-oidc (quarkus.oidc.* and named tenants
-// quarkus.oidc.<tenant>.* in application.properties), not by programmatically building a
-// ClientRegistrationRepository. This class previously @Produces'd a ClientRegistrationRepository
-// and
-// a GrantedAuthoritiesMapper. Those producer beans have been removed because the Spring types they
-// returned do not exist on the Quarkus classpath. The provider-resolution logic (reading
-// ApplicationProperties and validating each provider via validateProvider/isStringEmpty) is
-// preserved below so the migration to quarkus-oidc can reuse it to emit per-tenant config. The
-// authorities mapping (database role lookup via UserService) must be re-implemented as a
-// io.quarkus.security.identity.SecurityIdentityAugmentor. The original
-// @ConditionalOnProperty(security.oauth2.enabled=true) guard maps to quarkus.oidc.enabled /
-// build-profile gating; the bean is now always created and callers must consult
-// applicationProperties.getSecurity().getOauth2().getEnabled() at runtime.
 @Slf4j
 @ApplicationScoped
 public class OAuth2Configuration {
@@ -47,9 +32,6 @@ public class OAuth2Configuration {
 
     private final ApplicationProperties applicationProperties;
 
-    // TODO: Migration required - @Lazy has no Quarkus equivalent; CDI proxies break the original
-    // lazy cycle. UserService is injected eagerly. If a genuine lazy/circular dependency exists,
-    // switch to jakarta.enterprise.inject.Instance<UserService> and resolve at call time.
     private final UserService userService;
 
     @Inject
@@ -66,15 +48,6 @@ public class OAuth2Configuration {
      * Resolves the set of configured OAuth2 providers from ApplicationProperties and validates each
      * one. The original implementation built a Spring Security ClientRegistrationRepository from
      * these providers.
-     *
-     * <p>TODO: Migration required - the return type was
-     * org.springframework.security.oauth2.client.registration.ClientRegistrationRepository,
-     * produced via Spring @Bean. quarkus-oidc does not consume a ClientRegistrationRepository;
-     * instead each validated Provider below must be emitted as a named OIDC tenant config
-     * (quarkus.oidc.&lt;name&gt;.auth-server-url / client-id / credentials.secret /
-     * authentication.scopes / authentication.redirect-path, etc.). The validated providers are
-     * returned here so the wiring layer can register them; this method no longer produces a CDI
-     * bean.
      */
     public List<Provider> resolveValidatedProviders() throws NoProviderFoundException {
         List<Provider> providers = new ArrayList<>();
@@ -113,10 +86,6 @@ public class OAuth2Configuration {
                         keycloakClient.getScopes(),
                         keycloakClient.getUseAsUsername());
 
-        // TODO: Migration required - the original built a ClientRegistration via
-        // ClientRegistrations.fromIssuerLocation(issuer) (OIDC discovery). Under quarkus-oidc this
-        // maps to quarkus.oidc.<name>.auth-server-url=<issuer> with discovery enabled, plus
-        // client-id/credentials.secret/authentication.scopes/token-state username attribute.
         return validateProvider(keycloak) ? Optional.of(keycloak) : Optional.empty();
     }
 
@@ -136,12 +105,6 @@ public class OAuth2Configuration {
                         googleClient.getScopes(),
                         googleClient.getUseAsUsername());
 
-        // TODO: Migration required - the original built a ClientRegistration with explicit
-        // authorizationUri/tokenUri/userInfoUri + redirectUri(REDIRECT_URI_PATH + name) +
-        // AUTHORIZATION_CODE grant. Under quarkus-oidc this maps to a named tenant
-        // quarkus.oidc.google.* (authorization-path/token-path/user-info-path or auth-server-url,
-        // authentication.redirect-path, application-type=web-app). Google's endpoints come from the
-        // GoogleProvider getters below.
         return validateProvider(google) ? Optional.of(google) : Optional.empty();
     }
 
@@ -172,11 +135,6 @@ public class OAuth2Configuration {
                         githubClient.getScopes(),
                         githubClient.getUseAsUsername());
 
-        // TODO: Migration required - the original built a ClientRegistration with explicit
-        // authorizationUri/tokenUri/userInfoUri + redirectUri(REDIRECT_URI_PATH + name) +
-        // AUTHORIZATION_CODE grant. Map to quarkus.oidc.github.* tenant config (GitHub is a plain
-        // OAuth2, not OIDC, provider - quarkus-oidc may require provider=github or explicit
-        // *-path settings).
         return validateProvider(github) ? Optional.of(github) : Optional.empty();
     }
 
@@ -217,11 +175,6 @@ public class OAuth2Configuration {
             log.warn("OIDC OAuth2 provider validation failed - provider will not be registered");
         }
 
-        // TODO: Migration required - the original built a ClientRegistration via
-        // ClientRegistrations.fromIssuerLocation(issuer) (OIDC discovery) with
-        // redirectUri(REDIRECT_URI_PATH + name) + AUTHORIZATION_CODE grant. Map to a named tenant
-        // quarkus.oidc.<name>.auth-server-url=<issuer> (discovery on),
-        // client-id/credentials.secret/authentication.scopes, authentication.redirect-path.
         return isValid ? Optional.of(oidcProvider) : Optional.empty();
     }
 
@@ -233,28 +186,4 @@ public class OAuth2Configuration {
         Client client = oauth2.getClient();
         return client == null;
     }
-
-    /*
-    This following function granted Authorities to the OAUTH2 user from the values stored in the
-    database. This was required for the internal 'hasRole()' function to give out the correct role.
-
-    TODO: Migration required - this was a Spring Security
-    org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper @Bean (guarded by
-    @ConditionalOnProperty security.oauth2.enabled=true). Quarkus has no GrantedAuthoritiesMapper.
-    Re-implement as an io.quarkus.security.identity.SecurityIdentityAugmentor (a CDI
-    @ApplicationScoped bean): after quarkus-oidc authenticates, read the configured username claim
-    (applicationProperties.getSecurity().getOauth2().getUseAsUsername()) from the SecurityIdentity
-    attributes, load the User via userService.findByUsernameIgnoreCase(...), and add
-    userService.findRole(user).getAuthority() as a role on the augmented identity. The preserved
-    logic to port:
-
-        String useAsUsername = applicationProperties.getSecurity().getOauth2().getUseAsUsername();
-        Optional<User> userOpt =
-                userService.findByUsernameIgnoreCase((String) attributes.get(useAsUsername));
-        userOpt.ifPresent(user -> addRole(userService.findRole(user).getAuthority()));
-
-    The original also re-added the existing OAuth2 authorities (SimpleGrantedAuthority) untouched;
-    under quarkus-oidc the token roles are already present on the SecurityIdentity, so only the
-    database-derived role needs to be added.
-    */
 }

@@ -39,22 +39,10 @@ public class McpApiKeyAuthFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
 
-        // TODO: Migration required - Spring Security removed. This filter previously read the
-        // current Authentication from SecurityContextHolder to decide whether to process the API
-        // key. Quarkus has no SecurityContextHolder; the current identity is exposed via
-        // io.quarkus.security.identity.SecurityIdentity. With the binding below not yet wired, we
-        // always attempt to validate the presented key so the lookup logic is preserved.
         String apiKey = extractKey(request);
         if (apiKey != null && !apiKey.isBlank()) {
             Optional<User> user = userService.getUserByApiKey(apiKey);
             if (user.isPresent() && user.get().isEnabled()) {
-                // TODO: Migration required - bind the resolved user + MCP_SCOPES to the request
-                // identity. Spring's UsernamePasswordAuthenticationToken /
-                // SecurityContextHolder.setContext(...) has no servlet-filter equivalent in
-                // Quarkus. Implement an io.quarkus.security.identity.SecurityIdentityAugmentor (or
-                // a custom io.quarkus.vertx.http.runtime.security.HttpAuthenticationMechanism /
-                // IdentityProvider keyed off the X-API-KEY / Bearer credential) that produces a
-                // SecurityIdentity with principal=user.getUsername() and roles=MCP_SCOPES.
                 log.debug(
                         "MCP API key matched active account '{}' (identity binding pending Quarkus"
                                 + " SecurityIdentity migration)",

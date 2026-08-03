@@ -73,11 +73,6 @@ public class AiEngineController {
     /**
      * SSE stream timeout (ms), long enough for multi-gigabyte PDF workflows without completing out
      * from under the executor. Derived from {@code aiEngine.streamTimeoutSeconds}.
-     *
-     * <p>TODO: Migration required - the JAX-RS SSE API has no per-emitter timeout equivalent to
-     * Spring's {@code SseEmitter} constructor argument. Enforce this timeout against the background
-     * orchestration task (e.g. a scheduled cancellation / Future.get with timeout) if a hard cap is
-     * required; for now it only drives the timeout error frame's wording.
      */
     private final long streamTimeoutMs;
 

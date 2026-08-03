@@ -56,8 +56,6 @@ public class SaasTeamController {
     private final UserService userService;
     private final TeamSecurityExpressions teamSecurityExpressions;
 
-    // TODO: Migration required - replaces Spring TransactionAspectSupport. Used to mark the current
-    // jakarta @Transactional transaction rollback-only without propagating the exception.
     @jakarta.inject.Inject
     jakarta.transaction.TransactionSynchronizationRegistry transactionSynchronizationRegistry;
 
@@ -72,8 +70,6 @@ public class SaasTeamController {
     // ========== NEW TEAM INVITATION ENDPOINTS ==========
 
     /** Invite user to team (team leader only) */
-    // TODO: Migration required - @PreAuthorize("isAuthenticated()") complex SpEL; enforce
-    // authenticated access via JAX-RS SecurityContext / filter.
     @POST
     @Path("/invite")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -106,8 +102,6 @@ public class SaasTeamController {
     }
 
     /** Accept team invitation */
-    // TODO: Migration required - @PreAuthorize("isAuthenticated()") complex SpEL; enforce
-    // authenticated access via JAX-RS SecurityContext / filter.
     @POST
     @Path("/invitations/{token}/accept")
     @Transactional
@@ -120,16 +114,12 @@ public class SaasTeamController {
             // Caller-fixable failures (already-accepted, expired, email mismatch, etc.).
             // Mark the transaction for rollback so anything the service did is reversed even
             // though we don't propagate the exception out of the @Transactional method.
-            // TODO: Migration required - replace Spring TransactionAspectSupport rollback-only with
-            // jakarta TransactionSynchronizationRegistry.setRollbackOnly() (injected).
             markRollbackOnly();
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         } catch (Exception e) {
             log.error("Error accepting invitation", e);
-            // TODO: Migration required - replace Spring TransactionAspectSupport rollback-only with
-            // jakarta TransactionSynchronizationRegistry.setRollbackOnly() (injected).
             markRollbackOnly();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(Map.of("error", "Failed to accept invitation"))
@@ -138,8 +128,6 @@ public class SaasTeamController {
     }
 
     /** Reject team invitation */
-    // TODO: Migration required - @PreAuthorize("isAuthenticated()") complex SpEL; enforce
-    // authenticated access via JAX-RS SecurityContext / filter.
     @POST
     @Path("/invitations/{token}/reject")
     public Response rejectInvitation(@PathParam("token") String token) {
@@ -186,8 +174,6 @@ public class SaasTeamController {
     }
 
     /** Cancel team invitation (team leader only) */
-    // TODO: Migration required - @PreAuthorize("isAuthenticated()") complex SpEL; enforce
-    // authenticated access via JAX-RS SecurityContext / filter.
     @DELETE
     @Path("/invitations/{invitationId}")
     public Response cancelInvitation(@PathParam("invitationId") Long invitationId) {
@@ -241,8 +227,6 @@ public class SaasTeamController {
     }
 
     /** Get pending invitations for current user */
-    // TODO: Migration required - @PreAuthorize("isAuthenticated()") complex SpEL; enforce
-    // authenticated access via JAX-RS SecurityContext / filter.
     @GET
     @Path("/invitations/pending")
     public Response getPendingInvitations() {
@@ -265,8 +249,6 @@ public class SaasTeamController {
     }
 
     /** Get all teams for current user */
-    // TODO: Migration required - @PreAuthorize("isAuthenticated()") complex SpEL; enforce
-    // authenticated access via JAX-RS SecurityContext / filter.
     @GET
     @Path("/my")
     public Response getMyTeams() {
@@ -341,8 +323,6 @@ public class SaasTeamController {
     }
 
     /** Get team members (team members only) */
-    // TODO: Migration required - @PreAuthorize("@teamSecurity.isTeamMember(#teamId)") complex SpEL;
-    // enforce team-membership check programmatically or via a JAX-RS filter.
     @GET
     @Path("/{teamId}/members")
     public Response getTeamMembers(@PathParam("teamId") Long teamId) {
@@ -360,8 +340,6 @@ public class SaasTeamController {
     }
 
     /** Get team invitations (team leaders only) */
-    // TODO: Migration required - @PreAuthorize("@teamSecurity.isTeamLeader(#teamId)") complex SpEL;
-    // enforce team-leader check programmatically or via a JAX-RS filter.
     @GET
     @Path("/{teamId}/invitations")
     public Response getTeamInvitations(@PathParam("teamId") Long teamId) {
@@ -379,8 +357,6 @@ public class SaasTeamController {
     }
 
     /** Remove team member (team leader only) */
-    // TODO: Migration required - @PreAuthorize("@teamSecurity.isTeamLeader(#teamId)") complex SpEL;
-    // enforce team-leader check programmatically or via a JAX-RS filter.
     @DELETE
     @Path("/{teamId}/members/{memberId}")
     @Transactional
@@ -415,16 +391,12 @@ public class SaasTeamController {
 
             return Response.ok(Map.of("message", "Member removed successfully")).build();
         } catch (SecurityException | IllegalArgumentException | IllegalStateException e) {
-            // TODO: Migration required - replace Spring TransactionAspectSupport rollback-only with
-            // jakarta TransactionSynchronizationRegistry.setRollbackOnly() (injected).
             markRollbackOnly();
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         } catch (Exception e) {
             log.error("Error removing team member", e);
-            // TODO: Migration required - replace Spring TransactionAspectSupport rollback-only with
-            // jakarta TransactionSynchronizationRegistry.setRollbackOnly() (injected).
             markRollbackOnly();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(Map.of("error", "Failed to remove member"))
@@ -433,8 +405,6 @@ public class SaasTeamController {
     }
 
     /** Leave team (self-removal) */
-    // TODO: Migration required - @PreAuthorize("@teamSecurity.isTeamMember(#teamId)") complex SpEL;
-    // enforce team-membership check programmatically or via a JAX-RS filter.
     @POST
     @Path("/{teamId}/leave")
     @Transactional
@@ -464,16 +434,12 @@ public class SaasTeamController {
 
             return Response.ok(Map.of("message", "Left team successfully")).build();
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // TODO: Migration required - replace Spring TransactionAspectSupport rollback-only with
-            // jakarta TransactionSynchronizationRegistry.setRollbackOnly() (injected).
             markRollbackOnly();
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         } catch (Exception e) {
             log.error("Error leaving team", e);
-            // TODO: Migration required - replace Spring TransactionAspectSupport rollback-only with
-            // jakarta TransactionSynchronizationRegistry.setRollbackOnly() (injected).
             markRollbackOnly();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(Map.of("error", "Failed to leave team"))
@@ -482,8 +448,6 @@ public class SaasTeamController {
     }
 
     /** Rename team (team leader only) */
-    // TODO: Migration required - @PreAuthorize("@teamSecurity.isTeamLeader(#teamId)") complex SpEL;
-    // enforce team-leader check programmatically or via a JAX-RS filter.
     @POST
     @Path("/{teamId}/rename")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -724,9 +688,6 @@ public class SaasTeamController {
      *
      * <p>Requires team membership or admin role
      */
-    // TODO: Migration required - @PreAuthorize("@teamSecurity.isTeamMember(#teamId) or
-    // hasRole('ADMIN')") complex SpEL; enforce team-membership-or-admin check programmatically or
-    // via a JAX-RS filter.
     @GET
     @Path("/{teamId}")
     public Response getTeamInfo(@PathParam("teamId") Long teamId) {

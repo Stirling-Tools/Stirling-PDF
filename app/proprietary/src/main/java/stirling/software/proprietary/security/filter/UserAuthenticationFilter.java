@@ -37,12 +37,6 @@ import stirling.software.proprietary.security.service.ApiKeyAuthenticationServic
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
-// TODO: Migration required - @Profile("!saas") had no direct annotation equivalent here. Gate this
-// filter's activation on the "saas" build profile (e.g. via
-// @io.quarkus.arc.profile.UnlessBuildProfile
-// or a runtime check) and register it through Quarkus (quarkus-undertow @WebFilter or a
-// jakarta.ws.rs.container.ContainerRequestFilter @Provider). Registration ordering relative to the
-// other security filters (JwtAuthenticationFilter, *RateLimitingFilter) must be preserved.
 @Slf4j
 @ApplicationScoped
 public class UserAuthenticationFilter implements Filter {
@@ -80,16 +74,13 @@ public class UserAuthenticationFilter implements Filter {
 
         // Start each request clean so a pooled thread can't inherit a prior request's key label -
         // but keep a label an upstream filter (JwtAuthenticationFilter) already set for a request
-        // it API-key-authenticated. TODO: Migration required - ApiKeyAuthenticationToken is a
-        // plain POJO here, so "already authenticated upstream" is the closest available test.
+        // it API-key-authenticated.
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             MDC.remove(API_KEY_LABEL_MDC);
         }
 
         // Spring's OncePerRequestFilter#shouldNotFilter behavior: skip the filter body for static
-        // resources, SPA routes and public API endpoints. TODO: Migration required - ensure the
-        // Quarkus filter registration does not run this filter more than once per request (the
-        // OncePerRequestFilter guarantee).
+        // resources, SPA routes and public API endpoints.
         if (shouldNotFilter(request)) {
             filterChain.doFilter(request, response);
             return;
@@ -316,8 +307,7 @@ public class UserAuthenticationFilter implements Filter {
     }
 
     // Was Spring's OncePerRequestFilter#shouldNotFilter; now called explicitly at the top of
-    // doFilter. TODO: Migration required - if registered as a ContainerRequestFilter instead of a
-    // servlet Filter, fold this skip logic into the request filter using UriInfo.
+    // doFilter.
     private boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
