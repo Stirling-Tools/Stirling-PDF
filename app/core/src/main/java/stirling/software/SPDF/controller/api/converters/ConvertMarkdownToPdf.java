@@ -49,7 +49,10 @@ public class ConvertMarkdownToPdf {
             value = "/markdown/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
-    @ToolIO(accepts = ToolFormat.MARKDOWN, produces = ToolFormat.PDF)
+    // A ZIP of Markdown plus its images is a first-class input here, not just a bare .md file.
+    @ToolIO(
+            accepts = {ToolFormat.MARKDOWN, ToolFormat.ZIP},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =

@@ -119,7 +119,7 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/convert/html/pdf": {
-    accepts: ["HTML"],
+    accepts: ["HTML", "ZIP"],
     produces: "PDF",
     arity: "SISO",
   },
@@ -129,7 +129,7 @@ export const TOOL_IO: ToolIOTable = {
     arity: "MISO",
   },
   "/api/v1/convert/markdown/pdf": {
-    accepts: ["MARKDOWN"],
+    accepts: ["MARKDOWN", "ZIP"],
     produces: "PDF",
     arity: "SISO",
   },

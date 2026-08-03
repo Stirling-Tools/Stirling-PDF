@@ -192,6 +192,21 @@ class ToolIODeclarationCoverageTest {
     }
 
     @Test
+    void theHtmlRoundTripIsAValidChain() {
+        // convert/pdf/html emits a ZIP of the page plus its assets, and convert/html/pdf takes one
+        // back. Declaring only HTML would reject the round trip the two endpoints exist to support.
+        assertEquals(ToolFormat.ZIP, spec("/api/v1/convert/pdf/html").resolveOutput().format());
+        assertTrue(spec("/api/v1/convert/html/pdf").acceptsFormat(ToolFormat.ZIP));
+        assertTrue(spec("/api/v1/convert/html/pdf").acceptsFormat(ToolFormat.HTML));
+    }
+
+    @Test
+    void markdownToPdfTakesAZipOfMarkdownAndImages() {
+        assertTrue(spec("/api/v1/convert/markdown/pdf").acceptsFormat(ToolFormat.ZIP));
+        assertTrue(spec("/api/v1/convert/markdown/pdf").acceptsFormat(ToolFormat.MARKDOWN));
+    }
+
+    @Test
     void onlyRemovePasswordAcceptsAnEncryptedDocument() {
         assertTrue(
                 spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));

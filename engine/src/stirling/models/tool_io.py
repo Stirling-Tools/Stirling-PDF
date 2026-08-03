@@ -81,10 +81,12 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.EBOOK_TO_PDF: ToolIOSpec(accepts=[ToolFormat.EBOOK], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.EML_TO_PDF: ToolIOSpec(accepts=[ToolFormat.EMAIL], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.FILE_TO_PDF: ToolIOSpec(accepts=[ToolFormat.ANY], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.HTML_TO_PDF: ToolIOSpec(accepts=[ToolFormat.HTML], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.HTML_TO_PDF: ToolIOSpec(
+        accepts=[ToolFormat.HTML, ToolFormat.ZIP], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
     ToolEndpoint.IMG_TO_PDF: ToolIOSpec(accepts=[ToolFormat.IMAGE], produces=ToolFormat.PDF, arity=ToolArity.MISO),
     ToolEndpoint.MARKDOWN_TO_PDF: ToolIOSpec(
-        accepts=[ToolFormat.MARKDOWN], produces=ToolFormat.PDF, arity=ToolArity.SISO
+        accepts=[ToolFormat.MARKDOWN, ToolFormat.ZIP], produces=ToolFormat.PDF, arity=ToolArity.SISO
     ),
     ToolEndpoint.PDF_TO_CBR: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.CBR, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_CBZ: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.CBZ, arity=ToolArity.SISO),
