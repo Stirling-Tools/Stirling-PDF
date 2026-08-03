@@ -1286,6 +1286,10 @@ export interface SignPDFWithCertRequest {
   /**
    * Certificate fields to draw inside the signature box, in the order given. Omit to keep the legacy content. Fields the certificate does not carry are skipped rather than drawn blank.
    */
+  /**
+   * Repeat the signature's appearance on every page. Only the page given by pageNumber carries the actual signature; the other pages get a visual mark that is NOT a signature.
+   */
+  markAllPages?: boolean;
   visibleAttributes?: (
     | "SUBJECT_COMMON_NAME"
     | "SUBJECT_ORGANISATION"

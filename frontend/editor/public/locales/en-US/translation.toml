@@ -2498,10 +2498,20 @@ title = "Fields to show in the signature"
 validFrom = "Valid from"
 validUntil = "Valid until"
 
+[certSign.markAllPages]
+label = "Repeat it on every page"
+needsBox = "Draw the box first, so there is a shape to repeat."
+warning = "A PDF can only be signed in one place. The other pages get a matching mark that looks the same but is not a signature."
+
 [certSign.placement]
+cancel = "Cancel — press Esc"
 coordinates = "x {{x}}, y {{y}} · {{width}} × {{height}} pt"
+default = "Not placed — the signature goes where it always has, on the page above."
+draw = "Draw the box on the document"
+dragging = "Drag a box on the page where the signature should go."
 hint = "Drag on the page to place the signature. The text scales to fit the box you draw."
 noFile = "Select a PDF to choose where the signature goes."
+placed = "Placed on page {{page}} · {{width}} × {{height}} pt"
 reset = "Use the default position"
 title = "Signature position"
 

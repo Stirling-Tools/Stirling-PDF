@@ -81,6 +81,10 @@ const withSignatureAppearance = (
     if (parameters.visibleAttributes.length > 0) {
       apiParams.visibleAttributes = parameters.visibleAttributes;
     }
+    // Only meaningful alongside a box: without one there is no shape to repeat.
+    if (parameters.markAllPages && area) {
+      apiParams.markAllPages = true;
+    }
   }
   return apiParams;
 };
@@ -153,6 +157,9 @@ export const certSignFromApiParams = (
   }
   if (apiParams.visibleAttributes !== undefined) {
     result.visibleAttributes = apiParams.visibleAttributes;
+  }
+  if (apiParams.markAllPages !== undefined) {
+    result.markAllPages = apiParams.markAllPages;
   }
 
   return result;

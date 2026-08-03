@@ -14,6 +14,7 @@ const baseParameters: CertSignParameters = {
   pageNumber: 1,
   showLogo: true,
   visibleAttributes: [],
+  markAllPages: false,
 };
 
 const meta = {

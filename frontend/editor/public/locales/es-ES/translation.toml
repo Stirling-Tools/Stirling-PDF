@@ -2274,10 +2274,20 @@ title = "Campos que aparecerán en la firma"
 validFrom = "Válido desde"
 validUntil = "Válido hasta"
 
+[certSign.markAllPages]
+label = "Repetirla en todas las páginas"
+needsBox = "Dibuja primero el recuadro, para que haya una forma que repetir."
+warning = "Un PDF solo se puede firmar en un sitio. Las demás páginas llevan una marca con el mismo aspecto que no es una firma."
+
 [certSign.placement]
+cancel = "Cancelar — pulsa Esc"
 coordinates = "x {{x}}, y {{y}} · {{width}} × {{height}} pt"
+default = "Sin colocar: la firma irá donde siempre, en la página indicada arriba."
+draw = "Dibujar el recuadro sobre el documento"
+dragging = "Arrastra un recuadro sobre la página donde deba ir la firma."
 hint = "Arrastra sobre la página para colocar la firma. El texto se ajusta al recuadro que dibujes."
 noFile = "Selecciona un PDF para elegir dónde va la firma."
+placed = "Colocada en la página {{page}} · {{width}} × {{height}} pt"
 reset = "Usar la posición predeterminada"
 title = "Posición de la firma"
 
