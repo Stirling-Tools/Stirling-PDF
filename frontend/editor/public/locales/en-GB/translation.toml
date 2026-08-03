@@ -1,4 +1,4 @@
-﻿alphabet = "Alphabet"
+alphabet = "Alphabet"
 apply = "Apply"
 applyAndContinue = "Save & Leave"
 areYouSure = "Are you sure you want to leave?"
@@ -291,8 +291,8 @@ previewDisclaimer = "Preview is approximate. Final output may vary due to PDF fo
 submit = "Add Page Numbers"
 tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
-zeroPad = "Zeroâ€‘pad Width (Bates Stamping)"
-zeroPadTooltip = "Zeroâ€‘pad (Bates Stamp) page numbers to this width (e.g., 3 â‡’ 001). Set 0 to disable."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.error]
 failed = "Add page numbers operation failed"
@@ -712,9 +712,9 @@ mobileScannerPageFormat = "Page Format"
 mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
 mobileScannerStretchToFit = "Stretch to Fit"
 mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centred with preserved aspect ratio."
-pageFormatA4 = "A4 (210Ã—297mm)"
+pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Original Dimensions)"
-pageFormatLetter = "Letter (8.5Ã—11in)"
+pageFormatLetter = "Letter (8.5×11in)"
 title = "Connections"
 unlinkedServices = "Unlinked Services"
 
@@ -734,9 +734,9 @@ mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses
 mobileScannerStretchToFit = "Stretch to Fit"
 mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centred with preserved aspect ratio."
 note = "Note: Requires Frontend URL to be configured. "
-pageFormatA4 = "A4 (210Ã—297mm)"
+pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Original Dimensions)"
-pageFormatLetter = "Letter (8.5Ã—11in)"
+pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.connections.oauth2]
 label = "OAuth2"
@@ -1079,7 +1079,7 @@ description = "URL or filename to impressum (required in some jurisdictions)"
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "â€” used as the fallback when a language has no file."
+defaultLocaleHint = "— used as the fallback when a language has no file."
 defaultLocaleLink = "Configure the default locale"
 description = "Show a disclaimer users must accept after logging in. The text follows each user's language."
 discardConfirm = "You have unsaved changes that will be lost. Switch language anyway?"
@@ -1264,7 +1264,7 @@ successMessage = "Your licence key has been activated successfully. No restart r
 line1 = "Overwriting your current licence key cannot be undone."
 line2 = "Your previous licence will be permanently lost unless you have backed it up elsewhere."
 line3 = "Important: Keep licence keys private and secure. Never share them publicly."
-title = "âš ï¸ Warning: Existing Licence Detected"
+title = "⚠️ Warning: Existing Licence Detected"
 
 [admin.settings.premium.licenseKey]
 info = "If you have a licence key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features."
@@ -1944,7 +1944,7 @@ opCount_one = "{{count}} operation"
 opCount_other = "{{count}} operations"
 parseError = "Could not parse: {{message}}"
 pasteLabel = "Or paste JSON"
-pastePlaceholder = "Paste your automation JSON hereâ€¦"
+pastePlaceholder = "Paste your automation JSON here…"
 title = "Import automation"
 unresolved = "Unmapped: {{ops}}"
 
@@ -2054,10 +2054,10 @@ tooltip = "Creates both front and back sides for proper booklet printing"
 
 [bookletImposition.duplexPass]
 first = "1st Pass"
-firstInstructions = "Prints front sides â†’ stack face-down â†’ run again with 2nd Pass"
+firstInstructions = "Prints front sides → stack face-down → run again with 2nd Pass"
 label = "Print Pass"
 second = "2nd Pass"
-secondInstructions = "Load printed stack face-down â†’ prints back sides"
+secondInstructions = "Load printed stack face-down → prints back sides"
 
 [bookletImposition.error]
 failed = "An error occurred while creating the booklet imposition."
@@ -2093,7 +2093,7 @@ title = "What is Booklet Imposition?"
 [bookletImposition.tooltip.example]
 bullet1 = "Sheet 1 Front: Pages 8, 1  |  Back: Pages 2, 7"
 bullet2 = "Sheet 2 Front: Pages 6, 3  |  Back: Pages 4, 5"
-bullet3 = "When folded & stacked: Reads 1â†’2â†’3â†’4â†’5â†’6â†’7â†’8"
+bullet3 = "When folded & stacked: Reads 1→2→3→4→5→6→7→8"
 text = "Your 8-page document becomes 2 sheets:"
 title = "Example: 8-Page Booklet"
 
@@ -2102,8 +2102,8 @@ title = "Booklet Creation Guide"
 
 [bookletImposition.tooltip.manualDuplex]
 bullet1 = "Turn OFF 'Double-sided printing'"
-bullet2 = "Select '1st Pass' â†’ Print â†’ Stack face-down"
-bullet3 = "Select '2nd Pass' â†’ Load stack â†’ Print backs"
+bullet2 = "Select '1st Pass' → Print → Stack face-down"
+bullet3 = "Select '2nd Pass' → Load stack → Print backs"
 bullet4 = "Fold and assemble as normal"
 text = "For printers without automatic duplex:"
 title = "Manual Duplex (Single-sided Printers)"
@@ -2281,13 +2281,13 @@ warning = "A PDF can only be signed in one place. The other pages get a matching
 
 [certSign.placement]
 cancel = "Cancel — press Esc"
+coordinates = "x {{x}}, y {{y}} · {{width}} × {{height}} pt"
 default = "Not placed — the signature goes where it always has, on the page above."
 draw = "Draw the box on the document"
 dragging = "Drag a box on the page where the signature should go."
-placed = "Placed on page {{page}} · {{width}} × {{height}} pt"
-coordinates = "x {{x}}, y {{y}} Â· {{width}} Ã— {{height}} pt"
 hint = "Drag on the page to place the signature. The text scales to fit the box you draw."
 noFile = "Select a PDF to choose where the signature goes."
+placed = "Placed on page {{page}} · {{width}} × {{height}} pt"
 reset = "Use the default position"
 title = "Signature position"
 
@@ -2300,14 +2300,6 @@ bullet2 = "Meets legal requirements for digital signing"
 bullet3 = "Doesn't affect document layout or design"
 text = "The signature is added to the PDF for security but won't be visible when viewing the document. Perfect for legal requirements without changing the document's appearance."
 title = "Invisible Signatures"
-
-[certSign.appearance.tooltip.visible]
-bullet1 = "Shows signer name and date on the document"
-bullet2 = "Can include reason and location for signing"
-bullet3 = "Choose exactly where on the page it goes"
-bullet4 = "Optional logo can be included"
-text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
-title = "Visible Signatures"
 
 [certSign.appearance.tooltip.markAllPages]
 bullet1 = "Only the page you drew on carries the real signature"
@@ -2324,12 +2316,13 @@ bullet4 = "Draw nothing and the signature goes in its usual place"
 text = "Draw a box straight onto the document to say where the signature should appear. Useful when a form has a printed line or box meant for the signature."
 title = "Choosing Where the Signature Goes"
 
-[certSign.appearance.tooltip.attributes]
-bullet1 = "Show only what matters, such as your name and the date"
-bullet2 = "Add the issuing authority when the reader needs to trust the source"
-bullet3 = "Details your certificate does not contain are simply left out"
-text = "Your certificate holds details such as your name, who issued it and how long it is valid. Tick the ones you want printed inside the signature box."
-title = "Choosing What the Signature Shows"
+[certSign.appearance.tooltip.visible]
+bullet1 = "Shows signer name and date on the document"
+bullet2 = "Can include reason and location for signing"
+bullet3 = "Choose exactly where on the page it goes"
+bullet4 = "Optional logo can be included"
+text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
+title = "Visible Signatures"
 
 [certSign.certFiles]
 stepTitle = "Certificate Files"
@@ -2346,10 +2339,10 @@ text = "It's a secure ID for your signature that proves you signed. Unless you'r
 title = "What's a certificate?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) â€“ one combined file (most common)"
-bullet2 = "PFX (.pfx) â€“ Microsoft's version of PKCS12"
-bullet3 = "PEM â€“ separate private-key and certificate .pem files"
-bullet4 = "JKS â€“ Java .jks keystore for dev / CI-CD workflows"
+bullet1 = "PKCS#12 (.p12 / .pfx) – one combined file (most common)"
+bullet2 = "PFX (.pfx) – Microsoft's version of PKCS12"
+bullet3 = "PEM – separate private-key and certificate .pem files"
+bullet4 = "JKS – Java .jks keystore for dev / CI-CD workflows"
 text = "Choose the format that matches your certificate file:"
 title = "Which option should I use?"
 
@@ -2367,10 +2360,10 @@ button = "Finalise and Load Signed PDF"
 early = "Finalise with Current Signatures"
 
 [certSign.collab.participant]
-certInvalid = "âœ— {{error}}"
+certInvalid = "✗ {{error}}"
 certInvalidFallback = "Invalid certificate"
 certNetworkError = "Could not validate certificate"
-certValid = "âœ“ Certificate valid"
+certValid = "✓ Certificate valid"
 certValidating = "Validating certificate..."
 certValidUntil = " until {{date}}"
 
@@ -2539,14 +2532,14 @@ windowsStore = "Windows certificate store"
 
 [certSign.hardware]
 certificate = "Certificate"
-customLibrary = "Custom driver pathâ€¦"
+customLibrary = "Custom driver path…"
 driver = "PKCS#11 driver"
 driverPath = "Driver library path"
 driverPathPlaceholder = "Full path to your PKCS#11 driver (.dll, .so or .dylib)"
 expired = "expired"
 expires = "expires"
 listCerts = "List certificates"
-loading = "Reading certificatesâ€¦"
+loading = "Reading certificates…"
 noCerts = "No signing certificates found"
 noDriver = "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC), then reopen this - or enter the driver path manually below."
 notYetValid = "not yet valid"
@@ -3158,7 +3151,7 @@ confirmCta = "Refresh Keys"
 confirmPrompt = "Are you sure you want to continue?"
 impact = "Any applications or services currently using these keys will stop working until you update them with the new keys."
 title = "Refresh API Keys"
-warning = "âš ï¸ Warning: This action will generate new API keys and make your previous keys invalid."
+warning = "⚠️ Warning: This action will generate new API keys and make your previous keys invalid."
 
 [config.mcp]
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
@@ -3204,11 +3197,11 @@ blackwhite = "Black & White"
 cbrDpi = "DPI for image rendering"
 cbrOptions = "CBR Options"
 cbrOutputOptions = "PDF to CBR Options"
-cbrToPdf = "CBR â†’ PDF"
+cbrToPdf = "CBR → PDF"
 cbzDpi = "DPI for image rendering"
 cbzOptions = "CBZ to PDF Options"
 cbzOutputOptions = "PDF to CBZ Options"
-cbzToPdf = "CBZ â†’ PDF"
+cbzToPdf = "CBZ → PDF"
 color = "Colour"
 colorType = "Colour Type"
 combineImages = "Combine Images"
@@ -3223,11 +3216,11 @@ convertTo = "Convert to"
 desc = "Convert files between different formats"
 downloadHtml = "Download HTML intermediate file instead of PDF"
 dpi = "DPI"
-ebookToPdf = "eBook â†’ PDF"
+ebookToPdf = "eBook → PDF"
 emailOptions = "Email to PDF Options"
-emlToPdf = "Email â†’ PDF"
+emlToPdf = "Email → PDF"
 errorConversion = "An error occurred while converting the file."
-fileToPdf = "Office/Document â†’ PDF"
+fileToPdf = "Office/Document → PDF"
 fillPage = "Fill Page"
 fitDocumentToPage = "Fit Document to Page"
 fitOption = "Fit Option"
@@ -3245,9 +3238,9 @@ pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will b
 pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
 pdfaOptions = "PDF/A Options"
 pdfOptions = "PDF Options"
-pdfToCbr = "PDF â†’ CBR"
-pdfToCbz = "PDF â†’ CBZ"
-pdfToEpub = "PDF â†’ EPUB"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
 selectSourceFormatFirst = "Choose a source format first"
 settings = "Settings"
 single = "Single"
@@ -3255,7 +3248,7 @@ sourceFormatPlaceholder = "Source format"
 strictMode = "Strict Mode"
 strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 svgPdfOptions = "SVG to PDF Options"
-svgToPdf = "SVG â†’ PDF"
+svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Target format"
@@ -3349,7 +3342,7 @@ title = "Crop"
 
 [crop.automation]
 info = "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation."
-reference = "Reference: A4 page is 595.28 Ã— 841.89 points (210mm Ã— 297mm). 1 inch = 72 points."
+reference = "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 inch = 72 points."
 
 [crop.coordinates]
 title = "Position and Size"
@@ -3730,7 +3723,7 @@ uploadFiles = "Upload Files"
 [fileSelectorPicker]
 empty = "No files available"
 placeholder = "Select file"
-search = "Filter filesâ€¦"
+search = "Filter files…"
 tabListLabel = "Saved files, workbench, upload"
 upload = "Upload from computer"
 
@@ -3740,7 +3733,7 @@ dateDesc = "Newest first"
 dateLabel = "Latest"
 nameAsc = "A to Z"
 nameDesc = "Z to A"
-nameLabel = "Aâ€“Z"
+nameLabel = "A–Z"
 
 [fileSelectorPicker.tabs]
 saved = "Saved files"
@@ -3749,7 +3742,7 @@ workbench = "Workbench"
 
 [fileSidebar]
 addFiles = "Add files"
-addingFiles = "Adding filesâ€¦"
+addingFiles = "Adding files…"
 collapse = "Collapse sidebar"
 customizeGroups = "Customise groups"
 dropHint = "Open files to get started"
@@ -3782,19 +3775,19 @@ versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
 add = "Add"
-addLabel = "Add a labelâ€¦"
+addLabel = "Add a label…"
 categoryIconAria = "Choose an icon for {{name}}"
 createCategory = "Create category"
 delete = "Delete category"
 done = "Done"
 hide = "Hide category"
-newCategory = "New category nameâ€¦"
+newCategory = "New category name…"
 removeLabel = "Remove {{name}}"
 rename = "Rename"
 reset = "Reset to defaults"
-search = "Search labelsâ€¦"
+search = "Search labels…"
 show = "Show category"
-subtitle = "Group your files into parent categories. Add existing or new labels to a category, rename it, or create your own. Files in none of your categories appear under â€œOtherâ€."
+subtitle = "Group your files into parent categories. Add existing or new labels to a category, rename it, or create your own. Files in none of your categories appear under “Other”."
 title = "Sidebar categories"
 
 [filesPage]
@@ -3849,11 +3842,11 @@ folderMenu = "Folder actions"
 inPath = "in {{path}}"
 inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
-loading = "Loadingâ€¦"
+loading = "Loading…"
 localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organise it."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
-moveTo = "Move toâ€¦"
+moveTo = "Move to…"
 myFiles = "My Files"
 newFolder = "New folder"
 newFolderStorageDisabled = "Server folder storage isn't enabled. Ask your admin to turn it on."
@@ -3991,7 +3984,7 @@ newFolderCreate = "Create"
 newFolderError = "Could not create folder. Try again."
 newFolderLabel = "New folder name"
 newFolderPlaceholder = "Folder name"
-newFolderToggle = "Create new folderâ€¦"
+newFolderToggle = "Create new folder…"
 title = "Move to folder"
 
 [filesPage.origin]
@@ -4006,8 +3999,8 @@ sharedHint = "Shared with you via link"
 [filesPage.sort]
 modifiedAsc = "Oldest first"
 modifiedDesc = "Recent first"
-nameAsc = "Name Aâ†’Z"
-nameDesc = "Name Zâ†’A"
+nameAsc = "Name A→Z"
+nameDesc = "Name Z→A"
 sizeAsc = "Smallest first"
 sizeDesc = "Largest first"
 
@@ -4763,7 +4756,7 @@ pleaseEnterBoth = "Please enter both email and password"
 pleaseEnterEmail = "Please enter your email address"
 resetHelp = "Enter your email to receive a secure link to reset your password. If the link has expired, please request a new one."
 resetYourPassword = "Reset your password"
-sending = "Sendingâ€¦"
+sending = "Sending…"
 sendMagicLink = "Send Magic Link"
 sendResetLink = "Send reset link"
 sessionExpired = "Your session has expired. Please sign in again."
@@ -4944,7 +4937,7 @@ failed = "OCR operation failed"
 [ocr.languagePicker]
 additionalLanguages = "Looking for additional languages?"
 loading = "Loading available languages..."
-viewSetupGuide = "View setup guide â†’"
+viewSetupGuide = "View setup guide →"
 
 [ocr.operation]
 submit = "Process OCR and Review"
@@ -5040,8 +5033,8 @@ wrapUp = "You're all set! You can replay this tour anytime - just open <strong>S
 
 [onboarding.buttons]
 back = "Back"
-download = "Download â†’"
-next = "Next â†’"
+download = "Download →"
+next = "Next →"
 showMeAround = "Show me around"
 skipForNow = "Skip for now"
 skipTheTour = "Skip the tour"
@@ -5054,7 +5047,7 @@ titleWithOs = "Download for {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Authentication code"
-qrCodeLoading = "Generating your QR codeâ€¦"
+qrCodeLoading = "Generating your QR code…"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
@@ -5090,8 +5083,8 @@ freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{fre
 freeTitle = "Server Licence"
 overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
 overLimitTitle = "Server Licence Needed"
-seePlans = "See Plans â†’"
-upgrade = "Upgrade now â†’"
+seePlans = "See Plans →"
+upgrade = "Upgrade now →"
 
 [onboarding.tourOverview]
 body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
@@ -5235,10 +5228,10 @@ byRows = "By Rows"
 label = "Page arrangement:"
 
 [pageLayout.desc]
-16 = "Place 16 pages on a single sheet (4 Ã— 4 grid)."
+16 = "Place 16 pages on a single sheet (4 × 4 grid)."
 2 = "Place 2 pages side-by-side on a single sheet."
-4 = "Place 4 pages on a single sheet (2 Ã— 2 grid)."
-9 = "Place 9 pages on a single sheet (3 Ã— 3 grid)."
+4 = "Place 4 pages on a single sheet (2 × 2 grid)."
+9 = "Place 9 pages on a single sheet (3 × 3 grid)."
 
 [pageLayout.error]
 failed = "An error occurred while creating the multi-page layout."
@@ -5302,11 +5295,11 @@ text = "Fit multiple pages onto a single sheet for handouts or to save paper."
 title = "What is Page Layout?"
 
 [pageLayout.tooltip.pagesPerSheet]
-text = "Choose how many pages per sheet (e.g. 4 â†’ 2Ã—2, 9 â†’ 3Ã—3)."
+text = "Choose how many pages per sheet (e.g. 4 → 2×2, 9 → 3×3)."
 title = "Pages per Sheet (Default Mode)"
 
 [pageLayout.tooltip.rowsCols]
-text = "Set exact grid dimensions. Total pages per sheet = rows Ã— columns."
+text = "Set exact grid dimensions. Total pages per sheet = rows × columns."
 title = "Rows & Columns (Custom Mode)"
 
 [pageRemover]
@@ -5316,8 +5309,8 @@ title = "Page Remover"
 description = "Choose which pages to use for the operation. Supports single pages, ranges, formulas, and the all keyword."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> â†’ pages 1, 3â€“5, 8, plus evens"
-bullet2 = "<strong>10-,2n-1</strong> â†’ from page 10 to end + odd pages"
+bullet1 = "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus evens"
+bullet2 = "<strong>10-,2n-1</strong> → from page 10 to end + odd pages"
 description = "Mix different types."
 title = "Complex Combinations"
 
@@ -5325,28 +5318,28 @@ title = "Complex Combinations"
 title = "Page Selection Guide"
 
 [pageSelection.tooltip.individual]
-bullet1 = "<strong>1,3,5</strong> â†’ selects pages 1, 3, 5"
-bullet2 = "<strong>2,7,12</strong> â†’ selects pages 2, 7, 12"
+bullet1 = "<strong>1,3,5</strong> → selects pages 1, 3, 5"
+bullet2 = "<strong>2,7,12</strong> → selects pages 2, 7, 12"
 description = "Enter numbers separated by commas."
 title = "Individual Pages"
 
 [pageSelection.tooltip.mathematical]
-bullet1 = "<strong>2n</strong> â†’ all even pages (2, 4, 6â€¦)"
-bullet2 = "<strong>2n-1</strong> â†’ all odd pages (1, 3, 5â€¦)"
-bullet3 = "<strong>3n</strong> â†’ every 3rd page (3, 6, 9â€¦)"
-bullet4 = "<strong>4n-1</strong> â†’ pages 3, 7, 11, 15â€¦"
+bullet1 = "<strong>2n</strong> → all even pages (2, 4, 6…)"
+bullet2 = "<strong>2n-1</strong> → all odd pages (1, 3, 5…)"
+bullet3 = "<strong>3n</strong> → every 3rd page (3, 6, 9…)"
+bullet4 = "<strong>4n-1</strong> → pages 3, 7, 11, 15…"
 description = "Use n in formulas for patterns."
 title = "Mathematical Functions"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> â†’ selects pages 3â€“6"
-bullet2 = "<strong>10-15</strong> â†’ selects pages 10â€“15"
-bullet3 = "<strong>5-</strong> â†’ selects pages 5 to end"
+bullet1 = "<strong>3-6</strong> → selects pages 3–6"
+bullet2 = "<strong>10-15</strong> → selects pages 10–15"
+bullet3 = "<strong>5-</strong> → selects pages 5 to end"
 description = "Use - for consecutive pages."
 title = "Page Ranges"
 
 [pageSelection.tooltip.special]
-bullet1 = "<strong>all</strong> â†’ selects all pages"
+bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
 
 [payg.activity]
@@ -5358,7 +5351,7 @@ title = "Recent billable activity"
 [payg.cap]
 amount = "Cap amount"
 custom = "Custom"
-docsEstimate = "â‰ˆ {{docs}} processed PDFs / month"
+docsEstimate = "≈ {{docs}} processed PDFs / month"
 docsRate = "at {{rate}} / PDF"
 noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
 noCapLabel = "No cap"
@@ -5369,7 +5362,7 @@ subtitle = "Set your maximum spend. We convert this to PDFs using the current pr
 title = "Monthly spending cap"
 
 [payg.checkout]
-connecting = "Connecting to Stripeâ€¦"
+connecting = "Connecting to Stripe…"
 errorTitle = "Stripe error"
 
 [payg.checkout.error]
@@ -5407,27 +5400,27 @@ benefit2Body = "summarise, classify, redact, AI-OCR"
 benefit2Title = "AI tools"
 benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
-button = "Turn on Processor â†’"
-reassurance = "No minimum Â· Set a $0 cap to test Â· Cancel anytime"
+button = "Turn on Processor →"
+reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
 subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
-eyebrow = "Editor plan Â· Always free"
+eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR â€” as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
 capSuffix = "/ {{limit}} free PDFs"
-metaCategories = "Automation Â· AI Â· API requests"
+metaCategories = "Automation · AI · API requests"
 
 [payg.free.member]
 ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
 
 [payg.free.proc]
-eyebrow = "Processor plan Â· metered"
+eyebrow = "Processor plan · metered"
 
 [payg.free.state]
 approachingLimit = "Approaching limit"
@@ -5438,18 +5431,18 @@ plentyLeft = "Plenty left"
 ai = "AI tools (AI Create, suggestions, AI-OCR)"
 automation = "Automations & pipelines"
 client = "Browser-only tools (viewer, page editor, file management)"
-offsite = "Server tools (compress, OCR, convert, watermarkâ€¦)"
+offsite = "Server tools (compress, OCR, convert, watermark…)"
 pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan Â· {{start}} â€“ {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR â€” as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} – {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
 meterLabel = "Metered"
-meterTitle = "Automation Â· AI Â· API"
+meterTitle = "Automation · AI · API"
 
 [payg.member]
 askLeader = "Only your team owner can change the cap."
@@ -5478,7 +5471,7 @@ default = "this feature"
 
 [payg.spendCapMeter]
 capSuffix = "/ {{amount}} cap"
-metaCategories = "Automation Â· AI Â· API spend"
+metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
 
 [payg.state]
@@ -5501,7 +5494,7 @@ closeAria = "Close"
 
 [payg.upgrade.button]
 cancel = "Cancel"
-continue = "Continue â†’"
+continue = "Continue →"
 finish = "Finish"
 
 [payg.upgrade.cap]
@@ -5513,7 +5506,7 @@ usdNote = "Estimated in USD. You can adjust your cap any time after subscribing,
 capValue = "{{symbol}}{{amount}} / month"
 edit = "Edit"
 help = "Stripe handles your card details. Stirling never sees them."
-loading = "Loading checkoutâ€¦"
+loading = "Loading checkout…"
 noCap = "No cap"
 title = "Add your payment method"
 
@@ -5540,9 +5533,9 @@ confirm = "You're subscribed"
 default = "Upgrade to Processor plan"
 
 [payg.usage]
-breakdown = "AI {{ai}} â€¢ Automation {{automation}} â€¢ API {{api}}"
+breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
 capLine = "{{cap}}/mo cap"
-estBill = "â‰ˆ {{amount}} so far this period"
+estBill = "≈ {{amount}} so far this period"
 firstFree = "First {{free}} free"
 noCap = "No monthly cap"
 ofLimitProcessed = "/ {{limit}} PDFs processed"
@@ -5634,17 +5627,17 @@ title = "Page Organiser"
 _value = "Organisation mode"
 
 [pdfOrganiser.mode.desc]
-BOOKLET_SORT = "Arrange pages for booklet printing (last, first, second, second last, â€¦)."
+BOOKLET_SORT = "Arrange pages for booklet printing (last, first, second, second last, …)."
 CUSTOM = "Use a custom sequence of page numbers or expressions to define a new order."
-DUPLEX_SORT = "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, â€¦)."
-DUPLICATE = "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4Ã—)."
+DUPLEX_SORT = "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …)."
+DUPLICATE = "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×)."
 ODD_EVEN_MERGE = "Merge two PDFs by alternating pages: odd from the first, even from the second."
 ODD_EVEN_SPLIT = "Split the document into two outputs: all odd pages and all even pages."
 REMOVE_FIRST = "Remove the first page from the document."
 REMOVE_FIRST_AND_LAST = "Remove both the first and last pages from the document."
 REMOVE_LAST = "Remove the last page from the document."
 REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
-SIDE_STITCH_BOOKLET_SORT = "Arrange pages for sideâ€‘stitch booklet printing (optimised for binding on the side)."
+SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimised for binding on the side)."
 
 [pdfTextEditor]
 conversionFailed = "Failed to convert PDF. Please try again."
@@ -6025,7 +6018,7 @@ managedByOrg = "Managed by your organisation. Contact a team leader to change th
 noActivityDescription = "Documents will appear here once this policy runs."
 noActivityTitle = "No activity yet"
 onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched â€¢ Enforced version saved alongside"
+originalsNote = "Originals stay untouched • Enforced version saved alongside"
 pause = "Pause"
 recentActivity = "Recent Activity"
 resume = "Resume"
@@ -6078,7 +6071,7 @@ selectedCount = "{{count}} selected"
 
 [policies.labels]
 add = "Add"
-addPlaceholder = "Add a labelâ€¦"
+addPlaceholder = "Add a label…"
 customNote = "Customised for your team."
 defaultNote = "Using the built-in default, shared with your team."
 duplicate = "\"{{name}}\" already exists."
@@ -6095,7 +6088,7 @@ pickIcon = "Use {{label}} icon"
 removeAria = "Remove {{name}}"
 resetToDefault = "Reset to default"
 saveForTeam = "Save for team"
-saving = "Savingâ€¦"
+saving = "Saving…"
 sectionLabel = "Classification labels"
 startFromScratch = "Start from scratch"
 teamCount = "team labels"
@@ -6120,16 +6113,16 @@ noneUpload = "No policies currently run on upload."
 onExport = "On export"
 onUpload = "On upload"
 reorderHandle = "Drag to reorder"
-runOrderDesc = "When more than one policy runs on the same trigger, they run in this order â€” each on the previous policy's output. Drag to reorder."
+runOrderDesc = "When more than one policy runs on the same trigger, they run in this order — each on the previous policy's output. Drag to reorder."
 title = "Policy settings"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered â€” for example when a new document arrives â€” enforcing rules like redacting PII with no manual steps."
-loading = "Loadingâ€¦"
+infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
+loading = "Loading…"
 optionsAriaLabel = "Policy options"
 policySettings = "Policy settings"
-railAriaLabel = "{{label}} policy â€” {{status}}"
+railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
 retryFailed = "Retry failed policies ({{count}})"
@@ -6149,7 +6142,7 @@ enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
 
 [policies.toolConfig.info]
-redact = "Automatically finds and blacks out sensitive details â€” like Social Security and card numbers â€” so they can't be read in the document."
+redact = "Automatically finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read in the document."
 sanitize = "Removes hidden JavaScript from the file, so nothing can run automatically when someone opens it."
 watermark = "Stamps a visible mark (e.g. \"Confidential\") across every page."
 
@@ -6301,7 +6294,7 @@ never = "never"
 [portal.accountLink.modal]
 linkSubtitle = "Sign in to the account this server should bill against."
 linkTitle = "Link your Stirling account"
-reauthSubtitle = "Your session expired â€” sign back in to your Stirling account. Your instance stays linked."
+reauthSubtitle = "Your session expired — sign back in to your Stirling account. Your instance stays linked."
 reauthTitle = "Sign in again"
 simulateSignIn = "Simulate sign-in (dev)"
 
@@ -6412,7 +6405,7 @@ close = "Close assistant"
 error = "Couldn't reach the assistant."
 errorWithDetail = "Couldn't reach the assistant: {{detail}}"
 inputAriaLabel = "Ask the assistant"
-inputPlaceholder = "Ask about Stirlingâ€¦"
+inputPlaceholder = "Ask about Stirling…"
 open = "Open assistant"
 send = "Send"
 title = "Assistant"
@@ -6449,7 +6442,7 @@ title = "Stripe not configured"
 [portal.billing.enterpriseUpsell]
 cta = "Build your Enterprise quote"
 description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and third-party distributor partnerships."
-eyebrow = "Volume discount Â· 1M+ PDFs"
+eyebrow = "Volume discount · 1M+ PDFs"
 title = "Stirling Enterprise"
 
 [portal.billing.freeEditors]
@@ -6465,11 +6458,11 @@ title = "Free PDF Editors"
 checkoutErrorTitle = "Couldn't start checkout"
 currentPlan = "Current plan"
 freeForever = "Free forever"
-noTeamResolved = "No team is resolved on your wallet yet â€” refresh and try again."
+noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
 ownerOnly = "Only the team owner can switch on the Processor plan."
 planName = "Editor"
 ssoIncluded = "SSO included"
-switchOnProcessor = "Switch on the Processor â†’"
+switchOnProcessor = "Switch on the Processor →"
 unlimitedUsers = "Unlimited users"
 
 [portal.billing.invoices]
@@ -6485,7 +6478,7 @@ emptyTitle = "No invoices yet"
 fetchLimitNote_one = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
 fetchLimitNote_other = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
 loadError = "Couldn't load invoices: {{error}}"
-pdfLink = "PDF â†“"
+pdfLink = "PDF ↓"
 showAll_one = "Show all {{count}}"
 showAll_other = "Show all {{count}}"
 showFewer_one = "Show fewer (top {{count}})"
@@ -6494,18 +6487,18 @@ showMostRecent_one = "Show {{count}} most recent"
 showMostRecent_other = "Show {{count}} most recent"
 title = "Invoice history"
 viewAriaLabel = "View invoice {{number}} in Stripe"
-viewLink = "View â†—"
+viewLink = "View ↗"
 
 [portal.billing.linkPrompt]
 cta = "Link Stirling account"
-description = "Manual PDF editing â€” view, sign, merge, split, watermark, compress, convert, manual OCR â€” is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use."
+description = "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use."
 title = "Link your Stirling account"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Billed monthly"
 cardEnding = "{{brand}} ending {{last4}}"
 cardFallback = "Card"
-expiresBilledMonthly = "Expires {{expiry}} Â· billed monthly"
+expiresBilledMonthly = "Expires {{expiry}} · billed monthly"
 eyebrow = "Payment method"
 managedSub = "Your card and billing details are kept securely in Stripe's customer portal."
 managedTitle = "Managed in Stripe"
@@ -6528,22 +6521,22 @@ unit = "metered PDFs"
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
 cancel = "Cancel"
-capControlNote = "Changes apply immediately â€” raise or lower the ceiling any time."
+capControlNote = "Changes apply immediately — raise or lower the ceiling any time."
 capSuffix = "/ month"
-capSuffixWithDocs = "/ month Â· â‰ˆ {{documents}} documents"
-displaySub = "You're only billed for what you process automatically â€” never past the ceiling."
+capSuffixWithDocs = "/ month · ≈ {{documents}} documents"
+displaySub = "You're only billed for what you process automatically — never past the ceiling."
 editTitle = "Set your monthly ceiling"
 eyebrow = "Spend limit"
-guardrailBody = "a hard ceiling â€” you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost."
+guardrailBody = "a hard ceiling — you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost."
 guardrailLabel = "Your guardrail:"
 noCap = "no cap"
 pctUsed = "{{pct}}% used"
 remaining = "{{amount}} remaining"
 save = "Save limit"
 saveError = "Couldn't save limit"
-thisPeriodUncapped = "{{amount}} this period Â· uncapped"
+thisPeriodUncapped = "{{amount}} this period · uncapped"
 usedThisMonth = "{{amount}} used this month"
-useSuggested = "Use suggested Â· {{amount}} / month"
+useSuggested = "Use suggested · {{amount}} / month"
 
 [portal.billing.spendLimit.projection]
 body_one = "At {{rate}}/day you reach the cap in ~{{count}} day (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
@@ -6600,8 +6593,8 @@ viewSource = "View source on GitHub"
 codeCaption = "every request"
 eyebrow = "GETTING STARTED"
 lead = "All requests authenticate with a bearer token. Keys are scoped per environment and never expire unless rotated."
-liveKey = "Production keys â€” billed, rate-limited per your plan."
-testKey = "Sandbox keys â€” free, return synthetic fixtures."
+liveKey = "Production keys — billed, rate-limited per your plan."
+testKey = "Sandbox keys — free, return synthetic fixtures."
 title = "Authentication"
 
 [portal.docs.components]
@@ -6639,7 +6632,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "for copy-paste recipes."
-bodyBeforeLink = "wire the same call into a pipeline to chain validation, redaction, and delivery â€” or expose it to an agent over MCP. See"
+bodyBeforeLink = "wire the same call into a pipeline to chain validation, redaction, and delivery — or expose it to an agent over MCP. See"
 label = "Next:"
 link = "Playbooks"
 
@@ -6648,7 +6641,7 @@ body = "Create a scoped key from the Infrastructure tab. Keys carry rate limits 
 title = "Issue an API key"
 
 [portal.docs.quickstart.step2]
-body = "POST a file to any typed endpoint. The endpoint determines the schema you get back â€” here, the invoice extractor."
+body = "POST a file to any typed endpoint. The endpoint determines the schema you get back — here, the invoice extractor."
 snippetCaption = "extract an invoice"
 title = "Send a document"
 
@@ -6733,8 +6726,8 @@ overview = "Overview"
 requestAccess = "Request access"
 
 [portal.documents.elevation.active]
-description = "Temporary grant â€” access is logged and time-boxed."
-descriptionFourEyes = "Temporary grant â€” a peer reviewer was notified (four-eyes)."
+description = "Temporary grant — access is logged and time-boxed."
+descriptionFourEyes = "Temporary grant — a peer reviewer was notified (four-eyes)."
 title = "Access expires in {{time}}"
 
 [portal.documents.elevation.gated]
@@ -6782,7 +6775,7 @@ editorAction = "Editor"
 empty = "No documents match this filter."
 rowActions = "Row actions"
 sensitiveLabel = "Sensitive"
-sensitiveTitle = "Sensitive â€” access required"
+sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
@@ -6793,7 +6786,7 @@ time = "Time"
 user = "User"
 
 [portal.editorAdmin]
-subtitle = "Deploy the Stirling PDF Editor, pair self-hosted instances to your org, and operate the running fleet â€” targets, health, credentials, and offline activation in one place."
+subtitle = "Deploy the Stirling PDF Editor, pair self-hosted instances to your org, and operate the running fleet — targets, health, credentials, and offline activation in one place."
 title = "Editor deployment"
 
 [portal.editorAdmin.health.columns]
@@ -6821,14 +6814,14 @@ description = "{{file}} is signed and ready to transfer. It activates one instan
 title = "Bundle ready"
 
 [portal.editorAdmin.pairing]
-generated = "Generated âœ“"
+generated = "Generated ✓"
 generateNewCode = "Generate new code"
 lockCopy = "IaC provisioning is part of Enterprise."
 rotate = "Rotate"
 talkToSales = "Talk to sales"
 
 [portal.editorAdmin.sections.health]
-sub = "Every Editor instance reporting in â€” version, region, status, last seen, and active users."
+sub = "Every Editor instance reporting in — version, region, status, last seen, and active users."
 title = "Instance health"
 
 [portal.editorAdmin.sections.pairing]
@@ -6885,8 +6878,8 @@ updated = "updated {{time}}"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
-docker = "Self-hosted Â· Docker"
-kubernetes = "Self-hosted Â· Kubernetes"
+docker = "Self-hosted · Docker"
+kubernetes = "Self-hosted · Kubernetes"
 
 [portal.home.greeting]
 afternoon = "Good afternoon"
@@ -6911,12 +6904,12 @@ blurb = "Deploy the desktop app, free forever."
 title = "Download the PDF Editor"
 
 [portal.home.onboarding.steps.policies]
-blurb = "{{active}} active Â· {{recommended}} recommended"
+blurb = "{{active}} active · {{recommended}} recommended"
 chip = "{{active}} active"
 title = "Turn on policies"
 
 [portal.home.onboarding.steps.sources]
-blurb = "{{connected}} connected Â· every PDF governed where it lands"
+blurb = "{{connected}} connected · every PDF governed where it lands"
 chip = "{{connected}} connected"
 title = "Connect your sources"
 
@@ -6990,7 +6983,7 @@ title = "No audit events"
 cancel = "Cancel"
 error = "Export failed. Please try again."
 exportButton = "Export"
-exporting = "Exportingâ€¦"
+exporting = "Exporting…"
 fieldsLegend = "Columns"
 format = "Format"
 open = "Export"
@@ -7021,7 +7014,7 @@ title = "You don't have access"
 config = "Config"
 elevation = "Elevation"
 processing = "Processing"
-totalEvents = "Total events Â· 24h"
+totalEvents = "Total events · 24h"
 
 [portal.infrastructure.createKey]
 cancel = "Cancel"
@@ -7032,7 +7025,7 @@ keyNamePlaceholder = "e.g. Production ingest"
 secretKeyCaption = "Secret key"
 secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash, so there is no way to recover it later."
 subtitle = "Give the key a name so you can recognise it later. You can revoke it at any time."
-subtitleCreated = "Copy this secret now â€” it won't be shown again."
+subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
 
@@ -7065,7 +7058,7 @@ version = "Version"
 
 [portal.infrastructure.deployments.regions]
 heading = "Regions"
-subheading = "Live health for every deployed Stirling region â€” latency, load, and rollout version."
+subheading = "Live health for every deployed Stirling region — latency, load, and rollout version."
 
 [portal.infrastructure.deployments.regions.empty]
 description = "Deployed regions appear here once your workspace is provisioned."
@@ -7083,7 +7076,7 @@ title = "Bring your own model"
 [portal.infrastructure.models.catalogue]
 heading = "Catalogue"
 sub = "Managed models available to your workspace, with live latency and cost."
-subEnterprise = "Managed, bring-your-own, and on-prem models â€” with per-region pinning available."
+subEnterprise = "Managed, bring-your-own, and on-prem models — with per-region pinning available."
 
 [portal.infrastructure.models.catalogue.empty]
 description = "Models in your workspace's catalogue appear here."
@@ -7108,7 +7101,7 @@ monthlySpend = "Monthly model spend"
 empty = "No routing rules configured."
 heading = "Routing rules"
 sub = "Which model handles each operation. The default applies when no narrower rule matches."
-subLocked = "Route operations to specific models â€” available on paid plans."
+subLocked = "Route operations to specific models — available on paid plans."
 
 [portal.infrastructure.models.routing.lockedBanner]
 description = "Upgrade to Pro to control which model handles each operation and document type."
@@ -7130,7 +7123,7 @@ description = "Keys never leave your KMS. Stirling holds only ciphertext."
 label = "Hold your own key (HYOK)"
 
 [portal.infrastructure.security.access.stirling]
-description = "Stirling manages encryption keys. Simplest â€” zero key ops on your side."
+description = "Stirling manages encryption keys. Simplest — zero key ops on your side."
 label = "Stirling-held keys"
 
 [portal.infrastructure.security.accessPolicy]
@@ -7141,7 +7134,7 @@ subheading = "Controls who can decrypt processed documents at rest."
 heading = "Compliance attestations"
 noReport = "No report available"
 subheading = "Framework-by-framework audit posture, with reports available on attested controls."
-viewReport = "View report â†’"
+viewReport = "View report →"
 
 [portal.infrastructure.security.compliance]
 heading = "Compliance"
@@ -7156,10 +7149,10 @@ description = "With HYOK, encryption keys never leave your KMS. Stirling stores 
 title = "Stirling cannot decrypt your documents"
 
 [portal.infrastructure.security.ipAllowlist]
-empty = "No IP ranges configured â€” all IPs allowed."
+empty = "No IP ranges configured — all IPs allowed."
 heading = "IP allowlist"
 sub = "API access is restricted to these CIDR ranges."
-subLocked = "Restrict API access to known IP ranges â€” available on paid plans."
+subLocked = "Restrict API access to known IP ranges — available on paid plans."
 
 [portal.infrastructure.security.ipAllowlist.lockedBanner]
 description = "Upgrade to Pro to restrict API access to specific networks."
@@ -7178,7 +7171,7 @@ keyId = "Key identifier"
 lastRotated = "Last rotated"
 rotateKey = "Rotate key"
 rotationPolicy = "Rotation policy"
-subheading = "Custody of the keys that encrypt documents at rest â€” who can decrypt, and how keys rotate."
+subheading = "Custody of the keys that encrypt documents at rest — who can decrypt, and how keys rotate."
 
 [portal.infrastructure.security.managedBanner]
 description = "Bring-your-own-key (BYOK) and hold-your-own-key (HYOK) custody are available on Enterprise. Upgrade to supply keys from your own KMS."
@@ -7189,11 +7182,11 @@ description = "ap-southeast-1"
 label = "Asia Pacific"
 
 [portal.infrastructure.security.residency.eu]
-description = "eu-west-1 Â· GDPR data boundary"
+description = "eu-west-1 · GDPR data boundary"
 label = "European Union"
 
 [portal.infrastructure.security.residency.us]
-description = "us-east-1 Â· us-west-2"
+description = "us-east-1 · us-west-2"
 label = "United States"
 
 [portal.infrastructure.security.residencyHeader]
@@ -7210,7 +7203,7 @@ title = "No storage configured"
 
 [portal.infrastructure.storage.lifecycle]
 active = "Active"
-activeRange = "0â€“{{value}}d"
+activeRange = "0–{{value}}d"
 archived = "Archived"
 coldStorage = "cold storage"
 deleted = "Deleted"
@@ -7569,7 +7562,7 @@ desc = "Runs OCR so scanned pages become selectable, searchable text."
 label = "Make text searchable"
 
 [portal.policies.wizard.capability.redact]
-desc = "Finds and blacks out sensitive details â€” like National Insurance and card numbers â€” so they can't be read."
+desc = "Finds and blacks out sensitive details — like National Insurance and card numbers — so they can't be read."
 label = "Redact sensitive information"
 
 [portal.policies.wizard.capability.sanitize]
@@ -7577,7 +7570,7 @@ desc = "Removes hidden JavaScript so nothing can run automatically when the docu
 label = "Strip active content"
 
 [portal.policies.wizard.capability.watermark]
-desc = "Stamps a visible mark (e.g. â€œConfidentialâ€) across every page."
+desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
 label = "Apply a watermark"
 
 [portal.policies.wizard.errors]
@@ -7610,7 +7603,7 @@ heading = "Settings"
 
 [portal.policies.wizard.sources]
 heading = "Sources"
-loading = "Loading sourcesâ€¦"
+loading = "Loading sources…"
 
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"
@@ -7651,7 +7644,7 @@ soon = "Soon"
 
 [portal.processingStatus]
 managePlan = "Manage plan"
-volumeSuffix = "PDFs processed Â· last 30 days"
+volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.procurement]
 reset = "Reset procurement (demo)"
@@ -7679,8 +7672,8 @@ businessName = "Business name"
 businessNamePlaceholder = "Your company"
 continue = "Continue"
 country = "Country"
-countryEuro = "Eurozone (EUR â‚¬)"
-countryUK = "United Kingdom (GBP Â£)"
+countryEuro = "Eurozone (EUR €)"
+countryUK = "United Kingdom (GBP £)"
 countryUS = "United States (USD $)"
 eula = "I have read and agree to the Stirling Enterprise EULA. It governs the agreement generated from this quote."
 generate = "Generate quote"
@@ -7691,7 +7684,7 @@ offlineLicense = "Offline / air-gapped licence"
 offlineLicenseSub = "A downloadable licence file for an air-gapped self-hosted instance"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
-running = "{{annual}} / yr Â· {{years}}-yr {{tcv}}"
+running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
 s1Sub = "Your team, and the PDFs you expect to run each year."
 s1Title = "How much will you process?"
 s2Sub = "Longer terms discount the rate; your service level sets support."
@@ -7700,11 +7693,11 @@ s3Sub = "For the quote and the agreement it generates."
 s3Title = "Your details"
 serviceLevel = "Service level"
 slDedicated = "Dedicated"
-slDedicatedSub = "4 business hours Â· dedicated account manager Â· +30%"
+slDedicatedSub = "4 business hours · dedicated account manager · +30%"
 slPriority = "Priority"
-slPrioritySub = "Same business day Â· named CSM Â· +15%"
+slPrioritySub = "Same business day · named CSM · +15%"
 slStandard = "Standard"
-slStandardSub = "Next business day Â· shared CSM Â· included"
+slStandardSub = "Next business day · shared CSM · included"
 stepOf = "Step {{n}} of {{total}}"
 term = "Term"
 termDiscount = "{{pct}}% multi-year commitment discount applied"
@@ -7799,7 +7792,7 @@ label = "Trial"
 [portal.procurement.license]
 copied = "Copied"
 copy = "Copy key"
-downloadError = "Could not generate the offline licence file just yet â€” please try again in a moment."
+downloadError = "Could not generate the offline licence file just yet — please try again in a moment."
 downloadOffline = "Download offline licence (.lic)"
 hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
 label = "Your licence key"
@@ -7825,7 +7818,7 @@ title = "The procurement track opens with Enterprise"
 accept = "Accept & continue"
 description = "Download the PDF to share it with your team, come back to accept when you're ready or make changes."
 download = "Download PDF"
-downloadError = "Could not download the quote PDF just yet â€” please try again in a moment."
+downloadError = "Could not download the quote PDF just yet — please try again in a moment."
 edit = "Edit quote"
 eyebrow = "Quote {{number}}"
 perYear = " / yr"
@@ -7856,7 +7849,7 @@ uploadCta = "Upload purchase order"
 uploadTitle = "Upload your purchase order"
 
 [portal.procurement.payment]
-description = "Your quote is accepted and your licence is already active â€” your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
+description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadInvoice = "Download invoice"
 simulate = "Simulate payment received (demo)"
 title = "Subscription created"
@@ -7877,7 +7870,7 @@ request = "On request"
 
 [portal.procurement.trial]
 body = "Extending adds 7 days and notifies your solutions engineer."
-bodyMaxed = "You have used all your extensions â€” talk to your solutions engineer if you need more time."
+bodyMaxed = "You have used all your extensions — talk to your solutions engineer if you need more time."
 cancel = "Cancel trial"
 extend = "Extend 7 days"
 maxed = "Maxed out"
@@ -7887,7 +7880,7 @@ title = "Enterprise trial"
 [portal.procurement.upsell]
 homeBadge = "Enterprise"
 homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutable audit and a dedicated SE."
-homeCta = "Start Trial â†’"
+homeCta = "Start Trial →"
 homeHeadline = "Process millions of PDFs."
 
 [portal.recentActivity]
@@ -7900,7 +7893,7 @@ title = "Nothing here yet"
 
 [portal.search]
 ariaLabel = "Search"
-placeholder = "Search Stirling â€” endpoints, pipelines, docsâ€¦"
+placeholder = "Search Stirling — endpoints, pipelines, docs…"
 
 [portal.search.empty]
 noActionsDescription = "Quick actions will appear here once they're available."
@@ -7920,7 +7913,7 @@ accountMenu = "Account menu"
 darkMode = "Dark mode"
 lightMode = "Light mode"
 search = "Search"
-searchPlaceholder = "Searchâ€¦"
+searchPlaceholder = "Search…"
 signOut = "Sign out"
 switchToDark = "Switch to dark theme"
 switchToLight = "Switch to light theme"
@@ -7963,7 +7956,7 @@ edit = "Edit"
 notReferenced = "Not referenced by any policy, so it's safe to delete."
 pause = "Pause"
 resume = "Resume"
-subtitle = "{{type}} Â· {{status}}"
+subtitle = "{{type}} · {{status}}"
 usedBy = "Used by"
 
 [portal.sources.empty]
@@ -8030,7 +8023,7 @@ editTitle = "Edit source"
 name = "Name"
 namePlaceholder = "e.g. Claims intake"
 save = "Save changes"
-subtitle = "Step {{current}} of {{total}} Â· {{label}}"
+subtitle = "Step {{current}} of {{total}} · {{label}}"
 title = "Connect a source"
 type = "Type"
 
@@ -8051,7 +8044,7 @@ walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Sign in again"
-body = "Your Stirling account session has expired. Sign in again to view billing â€” your instance stays linked."
+body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
 title = "Session expired"
 
 [portal.users]
@@ -8079,7 +8072,7 @@ summary = "Limited or web-only access; cannot hold personal configs."
 
 [portal.users.roles.member]
 label = "Member"
-summary = "Regular user â€” works with shared resources and their own configs."
+summary = "Regular user — works with shared resources and their own configs."
 
 [portal.users.roles.member.permissions]
 0 = "Use the editor and shared integrations"
@@ -8089,7 +8082,7 @@ summary = "Regular user â€” works with shared resources and their own confi
 
 [portal.users.roles.team_owner]
 label = "Team owner"
-summary = "Owns a team â€” manages its members' resources and shared configs."
+summary = "Owns a team — manages its members' resources and shared configs."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Create & manage the team's S3 connections"
@@ -8103,7 +8096,7 @@ badge = "Open-source"
 installEditor = "Install the Editor"
 inviteTeammates = "Invite teammates"
 openInBrowser = "Open in browser"
-perks = "Free forever Â· Self-hostable"
+perks = "Free forever · Self-hostable"
 subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
 title = "Welcome to"
 titleAccent = "Stirling PDF"
@@ -8348,7 +8341,7 @@ failed = "An error occurred while redacting the PDF."
 
 [redact.manual]
 apply = "Apply"
-applyWarning = "âš ï¸ Permanent application, cannot be undone and the data underneath will be deleted"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
 colorLabel = "Redaction Colour"
 controlsTitle = "Manual Redaction Controls"
 instructions = "Select text or draw areas on the PDF to mark content for redaction."
@@ -8414,7 +8407,7 @@ title = "Manual Redaction"
 [redact.tooltip.words]
 bullet1 = "Add one word at a time"
 bullet2 = "Press Enter or click 'Add Another' to add"
-bullet3 = "Click Ã— to remove words"
+bullet3 = "Click × to remove words"
 
 [redact.tooltip.words.description]
 text = "Enter words or phrases to find and redact in your document. Each word will be searched for separately."
@@ -8750,7 +8743,7 @@ tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look sca
 3 = "Tolerance:"
 4 = "How closely a colour must match the page background to count as background. Higher = looser, lower = stricter."
 5 = "Minimum Area:"
-6 = "Smallest photo size (in pixelsÂ²) we'll keep to avoid tiny fragments."
+6 = "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments."
 7 = "Minimum Contour Area:"
 8 = "Smallest edge/shape we consider when finding photos (filters dust and specks)."
 9 = "Border Size:"
@@ -8766,15 +8759,15 @@ failed = "An error occurred while extracting image scans."
 [scannerImageSplit.tooltip]
 headsUp = "Heads-up"
 headsUpDesc = "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy-try a lighter or darker background and leave more space."
-problem1 = "Photos not detected â†’ increase Tolerance to 30-50"
-problem2 = "Too many false detections â†’ increase Minimum Area to 15,000-20,000"
-problem3 = "Crops are too tight â†’ increase Border Size to 5-10"
-problem4 = "Tilted photos not straightened â†’ lower Angle Threshold to ~5Â°"
-problem5 = "Dust/noise boxes â†’ increase Minimum Contour Area to 1000-2000"
+problem1 = "Photos not detected → increase Tolerance to 30-50"
+problem2 = "Too many false detections → increase Minimum Area to 15,000-20,000"
+problem3 = "Crops are too tight → increase Border Size to 5-10"
+problem4 = "Tilted photos not straightened → lower Angle Threshold to ~5°"
+problem5 = "Dust/noise boxes → increase Minimum Contour Area to 1000-2000"
 quickFixes = "Quick fixes"
 setupTips = "Setup tips"
 tip1 = "Use a plain, light background"
-tip2 = "Leave a small gap (â‰ˆ1 cm) between photos"
+tip2 = "Leave a small gap (≈1 cm) between photos"
 tip3 = "Scan at 300-600 DPI"
 tip4 = "Clean the scanner glass"
 title = "Photo Splitter"
@@ -8793,10 +8786,10 @@ searching = "Searching..."
 title = "Search PDF"
 
 [selfHosted.offline]
-hideTools = "Hide unavailable tools â–´"
+hideTools = "Hide unavailable tools ▴"
 messageNoFallback = "Tools are unavailable until your server comes back online."
 messageWithFallback = "Some tools require a server connection."
-showTools = "View unavailable tools â–¾"
+showTools = "View unavailable tools ▾"
 title = "Your Stirling-PDF server is unreachable"
 toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
 
@@ -8965,7 +8958,7 @@ start = "Start"
 title = "Tools Tour"
 
 [settings.hotkeys]
-capturing = "Press keysâ€¦ (Esc to cancel)"
+capturing = "Press keys… (Esc to cancel)"
 change = "Change shortcut"
 customBadge = "Custom"
 defaultLabel = "Default: {{shortcut}}"
@@ -8979,7 +8972,7 @@ shortcut = "Shortcut"
 title = "Keyboard Shortcuts"
 
 [settings.hotkeys.errorModifier]
-mac = "Include âŒ˜ (Command), âŒ¥ (Option), or another modifier in your shortcut."
+mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
 
 [settings.legal]
@@ -10313,7 +10306,7 @@ moreActions = "More actions"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Page {{page}}"
-placingHint = "Click a page to placeâ€¦ (cancel)"
+placingHint = "Click a page to place… (cancel)"
 removeCommentOnly = "Remove comment only"
 saveReply = "Save reply"
 title = "Comments"
@@ -10345,16 +10338,16 @@ delete = "Delete link"
 [viewer.nonPdf]
 columnDefault = "Column {{index}}"
 convertToPdf = "Convert to PDF"
-csvStats = "{{rows}} rows Â· {{columns}} columns Â· {{size}}"
+csvStats = "{{rows}} rows · {{columns}} columns · {{size}}"
 emptyFile = "Empty file"
 htmlPreview = "HTML preview"
-htmlPreviewWarning = "HTML preview - external resources may not load Â· {{size}}"
+htmlPreviewWarning = "HTML preview - external resources may not load · {{size}}"
 invalidJson = "Invalid JSON - showing raw content"
 lineNumbers = "Line numbers"
 loading = "Loading..."
 renderMarkdown = "Render markdown"
 sortedBy = "Sorted by: {{column}}"
-textStats = "{{lines}} lines Â· {{size}}"
+textStats = "{{lines}} lines · {{size}}"
 
 [viewer.redaction]
 removeMark = "Remove this mark"
@@ -10411,7 +10404,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged â€” whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -10419,7 +10412,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card â€” or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -10433,7 +10426,7 @@ automation = "Automation"
 automationNameFallback = "Watched Folder automation"
 automationRequired = "Add at least one configured step before saving."
 autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf â†’ document (1).pdf"
+autoNumberExample = "e.g. document.pdf → document (1).pdf"
 autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
 changeFolder = "Change"
 chooseFolder = "Choose"
@@ -10443,18 +10436,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen â€” required for auto-scan"
+inputFolderNotChosen = "No folder chosen — required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser â€” drop files here"
+inputSourceBrowser = "Browser — drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) â€” Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set â€” outputs stay in app"
+outputFolderNotSet = "Not set — outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -10514,9 +10507,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet â€” drop a PDF to start"
+noActivity = "No activity yet — drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder â€” edit to configure"
+noInputFolder = "No input folder — edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -10524,20 +10517,20 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued â€” waiting to run"
+queuedWaiting = "Queued — waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
 resume = "Resume"
 retryAll = "Retry all"
 retryIn = "retry in {{count}}m"
-retryingSoon = "retryingâ€¦"
+retryingSoon = "retrying…"
 retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
 running = "Running"
-search = "Searchâ€¦"
+search = "Search…"
 selectAll = "Select all {{count}}"
-sortNameAsc = "A â†’ Z"
-sortNameDesc = "Z â†’ A"
+sortNameAsc = "A → Z"
+sortNameDesc = "Z → A"
 sortNewest = "Newest"
 sortOldest = "Oldest"
 watching = "Watching: {{name}}"
@@ -10582,7 +10575,7 @@ type = "Watermark Type"
 wording = "Wording"
 
 [watermark.tooltip.appearance]
-bullet1 = "Rotation: -360Â° to 360Â° for angled watermarks"
+bullet1 = "Rotation: -360° to 360° for angled watermarks"
 bullet2 = "Opacity: 0-100% for transparency control"
 bullet3 = "Lower opacity creates subtle watermarks"
 text = "Control how your watermark looks and blends with the document."
