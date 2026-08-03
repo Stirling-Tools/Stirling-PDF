@@ -49,11 +49,7 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         key: "status",
         header: t("portal.pipelines.table.status"),
         render: (p) => (
-          <StatusBadge
-            tone={STATUS_TONE[p.status]}
-            size="sm"
-            pulse={p.status === "active"}
-          >
+          <StatusBadge tone={STATUS_TONE[p.status]} size="sm">
             {t(`portal.pipelines.status.${p.status}`)}
           </StatusBadge>
         ),
