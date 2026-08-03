@@ -8,6 +8,8 @@ import {
   type ReviewDocument,
 } from "@portal/api/documents";
 import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
+import { FileRunEventList } from "@portal/components/failures/FileRunEventList";
+import "@portal/components/failures/failures.css";
 import "@portal/views/Documents.css";
 
 function DownloadIcon() {
@@ -104,6 +106,10 @@ export function Documents() {
       </header>
 
       <ReviewQueue documents={documents} loading={state.loading} />
+
+      {/* Recorded policy-run failures. Renders its own heading, and nothing at all
+          when there is nothing to show, so it is safe to mount unconditionally. */}
+      <FileRunEventList />
     </div>
   );
 }

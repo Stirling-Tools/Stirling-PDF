@@ -30,6 +30,8 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
+import stirling.software.proprietary.failure.FailureKind;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -70,6 +72,8 @@ public class PolicyEngine {
     private final PolicyExecutor stepExecutor;
     private final TaskManager taskManager;
     private final PolicyRunRegistry registry;
+    // Durable record of why a run failed. Best-effort by contract: see PolicyFailureRecorder.
+    private final PolicyFailureRecorder failureRecorder;
     private final FileStorage fileStorage;
     private final JobOwnershipService jobOwnershipService;
     private final List<PolicyOutputSink> outputSinks;
@@ -254,6 +258,7 @@ public class PolicyEngine {
                         e.getMessage());
                 run.fail(message);
                 taskManager.setError(runId, message);
+                recordFailure(run, message, e);
             } catch (RestClientResponseException e) {
                 // A downstream tool call returned an error status. When it's a structured
                 // entitlement
@@ -277,17 +282,20 @@ public class PolicyEngine {
                     run.failWithCode(
                             message, code, DownstreamEntitlementError.extractSubscribed(e));
                     taskManager.setError(runId, message);
+                    recordFailure(run, message, e);
                 } else {
                     String message = "Policy run failed: " + e.getMessage();
                     log.error("Policy run {} failed (downstream HTTP error)", runId, e);
                     run.fail(message);
                     taskManager.setError(runId, message);
+                    recordFailure(run, message, e);
                 }
             } catch (Exception e) {
                 String message = "Policy run failed: " + e.getMessage();
                 log.error("Policy run {} failed", runId, e);
                 run.fail(message);
                 taskManager.setError(runId, message);
+                recordFailure(run, message, e);
             } finally {
                 // Always resolve so stream/await callers unblock.
                 completion.complete(run);
@@ -305,9 +313,26 @@ public class PolicyEngine {
             // Transient admission rejection, not a processing failure (see QUEUE_FULL_CODE).
             run.failWithCode(message, QUEUE_FULL_CODE, null);
             taskManager.setError(run.getRunId(), message);
+            // No exception to classify here: nothing was thrown by a tool, the run simply was not
+            // admitted. Record it explicitly so a run lost to load pressure is still accounted for.
+            failureRecorder.recordRunFailureAs(
+                    FailureKind.UNKNOWN, run.getRunId(), run.getPolicyId(), null, message);
             completion.complete(run);
         }
         return null;
+    }
+
+    /**
+     * Record why a run failed. Called after the run's own state transition and task-manager update,
+     * so a recording problem cannot change the outcome the caller observes.
+     */
+    private void recordFailure(PolicyRun run, String message, Throwable cause) {
+        failureRecorder.recordRunFailure(
+                run.getRunId(),
+                run.getPolicyId(),
+                MDC.get(AUDIT_PRINCIPAL_MDC_KEY),
+                message,
+                cause);
     }
 
     private WaitState suspend(PolicyInputRequiredException e) {

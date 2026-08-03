@@ -16,6 +16,7 @@ export const qk = {
   pipelines: () => ["portal", "pipelines"] as const,
   fleetStats: () => ["portal", "fleetStats"] as const,
   appConfig: () => ["portal", "appConfig"] as const,
+  fileRunEvents: () => ["portal", "fileRunEvents"] as const,
 
   // Tier-dependent
   documents: (tier: Tier) => ["portal", "documents", tier] as const,
