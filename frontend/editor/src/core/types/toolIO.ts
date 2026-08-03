@@ -29,6 +29,8 @@ export type ToolFormat =
   | "EBOOK"
   | "EMAIL"
   | "POSTSCRIPT"
+  | "PCL"
+  | "XPS"
   | "VIDEO"
   | "CBZ"
   | "CBR"
@@ -54,6 +56,8 @@ export const TOOL_FORMATS = [
   "EBOOK",
   "EMAIL",
   "POSTSCRIPT",
+  "PCL",
+  "XPS",
   "VIDEO",
   "CBZ",
   "CBR",
@@ -201,6 +205,23 @@ export const TOOL_IO: ToolIOTable = {
     accepts: ["PDF"],
     produces: "IMAGE",
     arity: "SISO",
+    cases: [
+      {
+        when: [{ param: "outputFormat", matches: ["ps"] }],
+        produces: "POSTSCRIPT",
+        arity: "SISO",
+      },
+      {
+        when: [{ param: "outputFormat", matches: ["pcl"] }],
+        produces: "PCL",
+        arity: "SISO",
+      },
+      {
+        when: [{ param: "outputFormat", matches: ["xps"] }],
+        produces: "XPS",
+        arity: "SISO",
+      },
+    ],
   },
   "/api/v1/convert/pdf/word": {
     accepts: ["PDF"],

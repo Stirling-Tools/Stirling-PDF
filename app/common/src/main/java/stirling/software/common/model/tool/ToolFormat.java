@@ -40,6 +40,10 @@ public enum ToolFormat {
     EBOOK("epub", "mobi", "azw3", "fb2", "txt", "docx"),
     EMAIL("eml", "msg"),
     POSTSCRIPT("ps", "eps"),
+
+    PCL("pcl", "pxl"),
+    XPS("xps", "oxps"),
+
     VIDEO("mp4", "webm", "avi", "mov", "mkv"),
     CBZ("cbz"),
     CBR("cbr"),

@@ -34,6 +34,8 @@ class ToolFormat(StrEnum):
     EBOOK = "EBOOK"
     EMAIL = "EMAIL"
     POSTSCRIPT = "POSTSCRIPT"
+    PCL = "PCL"
+    XPS = "XPS"
     VIDEO = "VIDEO"
     CBZ = "CBZ"
     CBR = "CBR"
@@ -122,7 +124,24 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
             )
         ],
     ),
-    ToolEndpoint.PDF_TO_VECTOR: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SISO),
+    ToolEndpoint.PDF_TO_VECTOR: ToolIOSpec(
+        accepts=[ToolFormat.PDF],
+        produces=ToolFormat.IMAGE,
+        arity=ToolArity.SISO,
+        cases=[
+            ToolIOCase(
+                when=[ToolIOWhen(param="outputFormat", matches=["ps"])],
+                produces=ToolFormat.POSTSCRIPT,
+                arity=ToolArity.SISO,
+            ),
+            ToolIOCase(
+                when=[ToolIOWhen(param="outputFormat", matches=["pcl"])], produces=ToolFormat.PCL, arity=ToolArity.SISO
+            ),
+            ToolIOCase(
+                when=[ToolIOWhen(param="outputFormat", matches=["xps"])], produces=ToolFormat.XPS, arity=ToolArity.SISO
+            ),
+        ],
+    ),
     ToolEndpoint.PDF_TO_WORD: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.WORD, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_XLSX: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.EXCEL, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_XML: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.XML, arity=ToolArity.SISO),

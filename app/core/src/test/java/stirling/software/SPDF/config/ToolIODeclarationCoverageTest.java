@@ -207,6 +207,33 @@ class ToolIODeclarationCoverageTest {
     }
 
     @Test
+    void vectorExportDeclaresEveryOutputFormat() {
+        // Every value the request permits must resolve to what it actually emits. "eps" is the
+        // default and is an image extension; the other three are not, and would otherwise fall
+        // through to IMAGE and pass a chain that fails at run time.
+        ToolIOSpec spec = spec("/api/v1/convert/pdf/vector");
+        assertEquals(ToolFormat.IMAGE, spec.resolveOutput(Map.of("outputFormat", "eps")).format());
+        assertEquals(
+                ToolFormat.POSTSCRIPT, spec.resolveOutput(Map.of("outputFormat", "ps")).format());
+        assertEquals(ToolFormat.PCL, spec.resolveOutput(Map.of("outputFormat", "pcl")).format());
+        assertEquals(ToolFormat.XPS, spec.resolveOutput(Map.of("outputFormat", "xps")).format());
+        // The request pattern accepts any casing, so the declaration must too.
+        assertEquals(
+                ToolFormat.POSTSCRIPT, spec.resolveOutput(Map.of("outputFormat", "PS")).format());
+    }
+
+    @Test
+    void everyVectorOutputFormatHasACase() {
+        // Guards the list above against a new allowableValue being added without a declaration.
+        Set<String> declared =
+                spec("/api/v1/convert/pdf/vector").cases().stream()
+                        .flatMap(rule -> rule.when().stream())
+                        .flatMap(when -> when.matches().stream())
+                        .collect(java.util.stream.Collectors.toSet());
+        assertEquals(Set.of("ps", "pcl", "xps"), declared);
+    }
+
+    @Test
     void onlyRemovePasswordAcceptsAnEncryptedDocument() {
         assertTrue(
                 spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));
