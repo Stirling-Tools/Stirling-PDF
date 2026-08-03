@@ -2294,10 +2294,24 @@ title = "Firmas invisibles"
 [certSign.appearance.tooltip.visible]
 bullet1 = "Muestra nombre del firmante y fecha en el documento"
 bullet2 = "Puede incluir motivo y ubicación de la firma"
-bullet3 = "Elija en qué página colocar la firma"
+bullet3 = "Elija el lugar exacto de la página donde va la firma"
 bullet4 = "Se puede incluir un logotipo opcional"
 text = "Muestra un bloque de firma en el PDF con su nombre, fecha y detalles opcionales. Útil cuando desea que los lectores vean claramente que el documento está firmado."
 title = "Firmas visibles"
+
+[certSign.appearance.tooltip.placement]
+bullet1 = "Arrastre para dibujar el recuadro y use las esquinas para redimensionarlo"
+bullet2 = "El texto se reduce para caber, así que nunca se sale del recuadro"
+bullet3 = "Si no lo toca, la firma va a su sitio de siempre"
+text = "Arrastre un recuadro sobre la vista previa de la página para indicar dónde debe aparecer la firma, igual que al recortar. Útil cuando el documento ya trae una línea o un cuadro impreso para firmar."
+title = "Dónde colocar la firma"
+
+[certSign.appearance.tooltip.attributes]
+bullet1 = "Muestre solo lo importante, como su nombre y la fecha"
+bullet2 = "Añada la autoridad emisora cuando el lector necesite confiar en el origen"
+bullet3 = "Los datos que no contenga su certificado simplemente no aparecen"
+text = "Su certificado contiene datos como su nombre, quién lo emitió y hasta cuándo es válido. Marque los que quiera que aparezcan dentro del recuadro de firma."
+title = "Qué datos muestra la firma"
 
 [certSign.certFiles]
 stepTitle = "Archivos de certificado"
