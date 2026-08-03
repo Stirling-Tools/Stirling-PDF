@@ -32,7 +32,9 @@ const STAGE_CTA: Record<DealStage, string> = {
   trial: "portal.procurement.hero.ctaTrial",
   quote: "portal.procurement.hero.ctaQuote",
   security: "portal.procurement.hero.ctaAgreement",
-  procurement: "portal.procurement.hero.ctaPayment",
+  // Same label whether it links straight to Stripe or, lacking an invoice URL, opens the stage dialog
+  // where the invoice actions live — the buyer is being sent to the invoice either way.
+  procurement: "portal.procurement.payment.viewInvoice",
   active: "portal.procurement.hero.open",
 };
 
@@ -89,6 +91,11 @@ export function DealStatusHero({
     stage === "quote" &&
     (snapshot.latestQuote?.status === "sent" ||
       snapshot.latestQuote?.status === "open");
+  // Paying happens on Stripe, so the card links straight there rather than opening a dialog whose only
+  // real action was the same link. Without an invoice URL there is nothing to link to, so the stage
+  // falls back to its dialog, where the signed agreement is still reachable.
+  const invoiceUrl =
+    stage === "procurement" ? snapshot.latestQuote?.invoiceUrl : null;
   // Known from trial setup onward. The quote's own copy wins when present, since the buyer may have
   // corrected it there; before either exists the eyebrow stands alone rather than inventing a name.
   const company =
@@ -183,6 +190,13 @@ export function DealStatusHero({
               {t("portal.procurement.hero.ctaReviewQuote")}
             </Button>
           </>
+        ) : invoiceUrl ? (
+          <Button
+            variant="primary"
+            onClick={() => window.open(invoiceUrl, "_blank", "noopener")}
+          >
+            {t("portal.procurement.payment.viewInvoice")}
+          </Button>
         ) : (
           <Button variant="primary" loading={busy} onClick={onExpand}>
             {t(STAGE_CTA[stage])}

@@ -1416,13 +1416,36 @@
    window: flush to the footer while there is more to read, and revealing the tray's bottom padding
    only at the end. Scrolling the paper instead left a permanent grey band under it, which read as a
    box with contents rather than a document. */
+/* `scroll`, not `auto`, and an explicitly styled bar: signing is gated on reaching the end of the
+   document, so the buyer has to be able to see there is more of it and how far through they are.
+   Overlay scrollbars fade out when idle, which hid both. Styling the bar also opts Chromium out of
+   overlay behaviour, so it stays put. Matches the treatment on the files page. */
 .portal-agreement__tray {
   background: var(--c-surface-sunken);
   padding: 14px var(--flowmodal-inset);
   margin: 0 calc(-1 * var(--flowmodal-inset));
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-text-subtle) var(--c-border-subtle);
+}
+.portal-agreement__tray::-webkit-scrollbar {
+  width: 0.625rem;
+}
+.portal-agreement__tray::-webkit-scrollbar-track {
+  background: var(--c-border-subtle);
+  border-radius: 999px;
+}
+.portal-agreement__tray::-webkit-scrollbar-thumb {
+  background: var(--c-text-subtle);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.portal-agreement__tray::-webkit-scrollbar-thumb:hover {
+  background: var(--c-text-muted);
+  background-clip: content-box;
 }
 .portal-agreement__doc {
   /* A floor so a short document still reads as a page; no ceiling, so a long one runs on and the tray
