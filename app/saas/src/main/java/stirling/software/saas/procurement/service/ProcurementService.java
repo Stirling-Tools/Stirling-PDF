@@ -496,15 +496,22 @@ public class ProcurementService {
     }
 
     /**
-     * Mark the deal fully live (advance to the active stage) once payment settles. In production
-     * this is the {@code invoice.paid} webhook; here it's the demo/manual stand-in. Re-affirms the
+     * Mark the deal fully live (advance to the active stage) once payment settles — driven by the
+     * {@code invoice.paid} webhook, and by the demo control when those are enabled. Re-affirms the
      * annual licence in case provisioning didn't run at accept.
+     *
+     * <p>Idempotent, and it has to be: {@code invoice.paid} fires again on every renewal and Stripe
+     * redelivers events, so a deal already live short-circuits rather than reissuing its licence.
      */
     @Transactional
     public ProcurementDeal markLive(Long teamId) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        if (ProcurementDeal.STAGE_LIVE.equals(deal.getStage())) {
+            log.debug("[procurement] deal already live team={} deal={}", teamId, deal.getDealId());
+            return deal;
+        }
         deal.setLicenseRef(issueOrUpgradeAnnual(deal));
         deal.setStage(ProcurementDeal.STAGE_LIVE);
         deal = dealRepo.save(deal);

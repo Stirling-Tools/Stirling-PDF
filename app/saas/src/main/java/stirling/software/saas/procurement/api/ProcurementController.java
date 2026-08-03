@@ -481,8 +481,32 @@ public class ProcurementController {
     }
 
     /**
+     * Go live once payment settles: advance the deal to active and re-affirm the annual licence.
+     * Called server-side by the {@code invoice.paid} webhook (ROLE_ADMIN via X-API-Key), alongside
+     * {@code /provision}, which runs earlier at accept and deliberately leaves the stage alone.
+     *
+     * <p>Answers 200 when the team has no deal at all, rather than erroring: a committed
+     * subscription can be closed directly in Stripe by sales with no portal deal behind it, and a
+     * non-2xx would have Stripe retry a webhook that can never succeed. Idempotent for the same
+     * reason — the event repeats on every renewal.
+     */
+    @PostMapping("/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activate(@RequestParam("teamId") long teamId) {
+        try {
+            procurement.markLive(teamId);
+        } catch (IllegalStateException e) {
+            log.info(
+                    "[procurement] activate skipped, no deal for team={}: {}",
+                    teamId,
+                    e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * Demo/manual stand-in for the {@code invoice.paid} webhook: mark the deal live (issue the
-     * annual licence, advance to active). The real go-live is webhook-driven once payment settles.
+     * annual licence, advance to active). Production go-live runs through {@code /activate}.
      */
     @PostMapping("/go-live")
     @PreAuthorize("isAuthenticated()")
