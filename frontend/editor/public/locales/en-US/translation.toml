@@ -7884,6 +7884,10 @@ insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
 [portal.pipelines.graph.run]
 done = "Done"
 failed = "Failed"

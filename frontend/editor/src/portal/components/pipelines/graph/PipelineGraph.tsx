@@ -49,12 +49,24 @@ export interface GraphStepContent extends GraphNodeContent {
   runState?: NodeRunState;
 }
 
+/** Which end of the chain: the two nodes every finished pipeline has, one of each. */
+export type ChainEnd = "input" | "output";
+
 export interface PipelineGraphProps {
-  input: GraphNodeContent;
-  output: GraphNodeContent;
+  /**
+   * The chain's ends, or null while a new pipeline has yet to ask for one. Null renders the row as a
+   * placeholder to fill rather than a node owing a choice, which is what keeps a brand new pipeline
+   * from opening on a pair of warnings about decisions its author has not been offered yet.
+   */
+  input: GraphNodeContent | null;
+  output: GraphNodeContent | null;
   steps: GraphStepContent[];
   selected: GraphSelection;
   onSelect: (selection: GraphSelection) => void;
+  /** Put an end on the chain, ready to be configured. */
+  onAddEnd: (end: ChainEnd) => void;
+  /** Take an end back off, returning its row to a placeholder. */
+  onRemoveEnd: (end: ChainEnd) => void;
   /** Add a step in the slot the clicked wire opens. */
   onInsertStep: (index: number) => void;
   /** Remove every step given, in one go. */
@@ -78,6 +90,8 @@ export function PipelineGraph({
   steps,
   selected,
   onSelect,
+  onAddEnd,
+  onRemoveEnd,
   onInsertStep,
   onRemoveSteps,
   onReorderSteps,
@@ -91,7 +105,7 @@ export function PipelineGraph({
 
   // A wire carries the warning belonging to the node it arrives at.
   const arrivalWarning = (nodeId: string): string | undefined => {
-    if (nodeId === "output") return output.inputWarning;
+    if (nodeId === "output") return output?.inputWarning;
     const index = stepIndexOf(nodeId);
     return index === null ? undefined : steps[index]?.inputWarning;
   };
@@ -191,7 +205,10 @@ export function PipelineGraph({
           if (node.kind === "placeholder") {
             return (
               <div className="portal-graph__slot" key={node.id} style={style}>
-                <GraphPlaceholderNode onAdd={() => onInsertStep(0)} />
+                <GraphPlaceholderNode
+                  label={t("portal.pipelines.graph.addFirstTool")}
+                  onAdd={() => onInsertStep(0)}
+                />
               </div>
             );
           }
@@ -200,14 +217,22 @@ export function PipelineGraph({
             const content = kind === "input" ? input : output;
             return (
               <div className="portal-graph__slot" key={node.id} style={style}>
-                <GraphNode
-                  kind={kind}
-                  title={content.label}
-                  detail={content.detail}
-                  warning={content.warning}
-                  selected={selected === kind}
-                  onSelect={() => onSelect(kind)}
-                />
+                {content === null ? (
+                  <GraphPlaceholderNode
+                    label={t(`portal.pipelines.graph.add.${kind}`)}
+                    onAdd={() => onAddEnd(kind)}
+                  />
+                ) : (
+                  <GraphNode
+                    kind={kind}
+                    title={content.label}
+                    detail={content.detail}
+                    warning={content.warning}
+                    selected={selected === kind}
+                    onSelect={() => onSelect(kind)}
+                    onRemove={() => onRemoveEnd(kind)}
+                  />
+                )}
               </div>
             );
           }

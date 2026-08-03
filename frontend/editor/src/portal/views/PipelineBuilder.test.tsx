@@ -269,16 +269,29 @@ describe("PipelineBuilder", () => {
       .filter((b) => b.hasAttribute("aria-pressed"));
   }
 
-  async function openInput() {
-    await screen.findByText("portal.pipelines.builder.chooseSource", {
-      exact: false,
+  /**
+   * The control that opens an end of the chain, once the graph has rendered. A new pipeline has not
+   * placed its ends yet, so that control is the "add" placeholder and clicking it both puts the node
+   * on the chain and selects it; a loaded pipeline already has the node, so it is a plain select.
+   */
+  function endOpener(end: "input" | "output"): Promise<HTMLElement> {
+    return waitFor(() => {
+      const placeholder = screen.queryByText(
+        `portal.pipelines.graph.add.${end}`,
+      );
+      if (placeholder) return placeholder;
+      const nodes = graphNodes();
+      if (nodes.length === 0) throw new Error("the graph has not rendered yet");
+      return end === "input" ? nodes[0] : nodes[nodes.length - 1];
     });
-    fireEvent.click(graphNodes()[0]);
   }
 
-  function openOutput() {
-    const nodes = graphNodes();
-    fireEvent.click(nodes[nodes.length - 1]);
+  async function openInput() {
+    fireEvent.click(await endOpener("input"));
+  }
+
+  async function openOutput() {
+    fireEvent.click(await endOpener("output"));
   }
 
   async function pickInputSource(sourceName: string) {
@@ -310,7 +323,7 @@ describe("PipelineBuilder", () => {
   }
 
   async function pickDestination() {
-    openOutput();
+    await openOutput();
     fireEvent.click(await screen.findByText("pick output"));
   }
 
@@ -321,25 +334,61 @@ describe("PipelineBuilder", () => {
     );
   }
 
-  it("shows one input and one output, neither of which can be removed", async () => {
+  it("greets a new pipeline with places to fill, not problems to fix", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    // The ends of the chain are part of every pipeline: they are always present, and only steps
-    // carry a remove control.
+    // Both ends offer to be added rather than complaining about being empty: the user has not been
+    // asked for a source or a destination yet, so there is nothing yet to warn them about.
     expect(
-      await screen.findByText("portal.pipelines.builder.chooseSource"),
+      await screen.findByText("portal.pipelines.graph.add.input"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("portal.pipelines.builder.chooseDestination"),
+      screen.getByText("portal.pipelines.graph.add.output"),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.pipelines.builder.needsSource"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.pipelines.builder.needsDestination"),
+    ).not.toBeInTheDocument();
+    // Nothing is on the chain, so there is nothing to remove either.
     expect(
       screen.queryByLabelText(/portal.pipelines.graph.removeNode/),
     ).not.toBeInTheDocument();
   });
 
+  it("only asks for a source once the user has asked for the node", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await openInput();
+
+    // Placing the node is what turns it into an outstanding choice.
+    expect(
+      await screen.findByText("portal.pipelines.builder.needsSource"),
+    ).toBeInTheDocument();
+    // Still nothing chosen, so the pipeline cannot be saved.
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("puts an end back to a placeholder when it is removed", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await openInput();
+    await screen.findByText("portal.pipelines.builder.needsSource");
+
+    fireEvent.click(screen.getByLabelText("portal.pipelines.graph.removeNode"));
+
+    expect(
+      await screen.findByText("portal.pipelines.graph.add.input"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.pipelines.builder.needsSource"),
+    ).not.toBeInTheDocument();
+  });
+
   it("edits a node's settings only once it is selected", async () => {
     renderBuilder("/processor/pipelines/new");
-    await screen.findByText("portal.pipelines.builder.chooseSource");
+    await screen.findByText("portal.pipelines.graph.add.input");
 
     // Nothing selected: the inspector says so rather than showing a form.
     expect(

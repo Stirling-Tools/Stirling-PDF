@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   PipelineGraph,
   selectedSteps,
+  type ChainEnd,
+  type GraphNodeContent,
   type GraphSelection,
   type GraphStepContent,
 } from "@portal/components/pipelines/graph/PipelineGraph";
@@ -33,13 +35,42 @@ const OUTPUT = {
 function Playground({
   initialSteps,
   output = OUTPUT,
+  /** Start with neither end on the chain, the way a brand new pipeline opens. */
+  unplacedEnds = false,
 }: {
   initialSteps: GraphStepContent[];
   output?: { label: string; detail?: string; warning?: string };
+  unplacedEnds?: boolean;
 }) {
   const [steps, setSteps] = useState<GraphStepContent[]>(initialSteps);
   const [selected, setSelected] = useState<GraphSelection>(null);
   const [added, setAdded] = useState(0);
+  const [inputEnd, setInputEnd] = useState<GraphNodeContent | null>(
+    unplacedEnds ? null : INPUT,
+  );
+  const [outputEnd, setOutputEnd] = useState<GraphNodeContent | null>(
+    unplacedEnds ? null : output,
+  );
+
+  // Placing an end leaves it owing a choice, which is the warning state the builder shows until the
+  // user picks a source or destination.
+  function addEnd(end: ChainEnd) {
+    if (end === "input") {
+      setInputEnd({ label: "Choose a source", warning: "No source chosen" });
+    } else {
+      setOutputEnd({
+        label: "Choose a destination",
+        warning: "No destination chosen",
+      });
+    }
+    setSelected(end);
+  }
+
+  function removeEnd(end: ChainEnd) {
+    if (end === "input") setInputEnd(null);
+    else setOutputEnd(null);
+    setSelected((current) => (current === end ? null : current));
+  }
 
   function insert(at: number) {
     const label = `New tool ${added + 1}`;
@@ -70,11 +101,13 @@ function Playground({
 
   return (
     <PipelineGraph
-      input={INPUT}
-      output={output}
+      input={inputEnd}
+      output={outputEnd}
       steps={steps}
       selected={selected}
       onSelect={setSelected}
+      onAddEnd={addEnd}
+      onRemoveEnd={removeEnd}
       onInsertStep={insert}
       onRemoveSteps={remove}
       onReorderSteps={reorder}
@@ -95,9 +128,18 @@ export const Default: Story = {
   ),
 };
 
-/** A new pipeline: the placeholder holds the first step's place and is the thing you click. */
+/** A pipeline with its ends settled but no steps yet: the placeholder holds the first step's place. */
 export const Empty: Story = {
   render: () => <Playground initialSteps={[]} />,
+};
+
+/**
+ * A brand new pipeline, before anything has been chosen. Every row is an invitation rather than a
+ * complaint - nothing is wrong yet, because nothing has been asked of the user. Click an end to
+ * place it (it then owes a choice, and says so), and its X puts it back.
+ */
+export const NewPipeline: Story = {
+  render: () => <Playground initialSteps={[]} unplacedEnds />,
 };
 
 /**

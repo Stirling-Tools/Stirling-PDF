@@ -46,7 +46,7 @@ export interface GraphNodeProps {
   runState?: NodeRunState;
   onOpenRunState?: () => void;
   onSelect: (event: MouseEvent) => void;
-  /** Steps only - the input and output nodes are part of every pipeline and cannot be removed. */
+  /** Takes the node off the chain. For an end, that returns its row to a placeholder. */
   onRemove?: () => void;
   /** True while this node is being dragged to another place in the chain. */
   dragging?: boolean;

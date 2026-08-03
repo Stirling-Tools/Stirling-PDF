@@ -71,6 +71,7 @@ import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDe
 import {
   PipelineGraph,
   selectedSteps,
+  type ChainEnd,
   type GraphSelection,
   type GraphStepContent,
 } from "@portal/components/pipelines/graph/PipelineGraph";
@@ -241,6 +242,14 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
+  /**
+   * Whether the user has asked for each end of the chain yet, distinguishing "not offered" from
+   * "offered and still owed a choice" - the two states an empty sourceId cannot tell apart. Only a
+   * brand new pipeline starts with either false; anything loaded arrives with both ends set, and
+   * choosing one places it, so these are just the "clicked add, chosen nothing" window.
+   */
+  const [inputAsked, setInputAsked] = useState(false);
+  const [outputAsked, setOutputAsked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -377,6 +386,25 @@ export function PipelineBuilder() {
         triggerType: keepTrigger ? current.triggerType : MANUAL,
       };
     });
+  }
+
+  /** Put an end on the chain and open it, so the click that asks for it also offers the choice. */
+  function addEnd(end: ChainEnd) {
+    if (end === "input") setInputAsked(true);
+    else setOutputAsked(true);
+    setSelected(end);
+  }
+
+  /** Take an end back off, discarding whatever it held so its row reads as unfilled again. */
+  function removeEnd(end: ChainEnd) {
+    if (end === "input") {
+      setInputAsked(false);
+      setInput(blankInput());
+    } else {
+      setOutputAsked(false);
+      setOutputIds([]);
+    }
+    setSelected((current) => (current === end ? null : current));
   }
 
   /** Drop a new step into the slot the picker was opened on, and select it to be configured. */
@@ -1030,25 +1058,38 @@ export function PipelineBuilder() {
 
       <div className="portal-builder__grid">
         <PipelineGraph
-          input={{
-            label:
-              chosenSource?.name ?? t("portal.pipelines.builder.chooseSource"),
-            detail: chosenSource ? triggerSummary() : undefined,
-            warning: inputValid
-              ? undefined
-              : t("portal.pipelines.builder.needsSource"),
-          }}
-          output={{
-            label:
-              chosenDestination?.name ??
-              t("portal.pipelines.builder.chooseDestination"),
-            warning: outputValid
-              ? undefined
-              : t("portal.pipelines.builder.needsDestination"),
-          }}
+          // An end is on the chain once it has been asked for or already holds a value, so a
+          // loaded pipeline needs no seeding: its source and destination place themselves.
+          input={
+            inputAsked || inputValid
+              ? {
+                  label:
+                    chosenSource?.name ??
+                    t("portal.pipelines.builder.chooseSource"),
+                  detail: chosenSource ? triggerSummary() : undefined,
+                  warning: inputValid
+                    ? undefined
+                    : t("portal.pipelines.builder.needsSource"),
+                }
+              : null
+          }
+          output={
+            outputAsked || outputValid
+              ? {
+                  label:
+                    chosenDestination?.name ??
+                    t("portal.pipelines.builder.chooseDestination"),
+                  warning: outputValid
+                    ? undefined
+                    : t("portal.pipelines.builder.needsDestination"),
+                }
+              : null
+          }
           steps={graphSteps}
           selected={selected}
           onSelect={setSelected}
+          onAddEnd={addEnd}
+          onRemoveEnd={removeEnd}
           onInsertStep={setPickerAt}
           onRemoveSteps={removeSteps}
           onReorderSteps={reorderSteps}

@@ -1,19 +1,22 @@
-import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { Button } from "@app/ui";
 import "@portal/components/pipelines/graph/GraphPlaceholderNode.css";
 
 export interface GraphPlaceholderNodeProps {
+  label: string;
   onAdd: () => void;
 }
 
 /**
- * The stand-in shown while a pipeline has no steps. It sits in the row the first step will occupy,
- * so the chain reads as input -> something -> output straight away, and it is the thing you click
- * to add that step - a full-width target, rather than a caption pointing at a small plus on a wire.
+ * The stand-in for a row the pipeline has not filled yet - the first step, or either end of the
+ * chain on a new pipeline. It sits in the row that thing will occupy, so the chain reads as
+ * input -> something -> output straight away, and it is the thing you click to fill it: a full-width
+ * target, rather than a caption pointing at a small plus on a wire.
  */
-export function GraphPlaceholderNode({ onAdd }: GraphPlaceholderNodeProps) {
-  const { t } = useTranslation();
+export function GraphPlaceholderNode({
+  label,
+  onAdd,
+}: GraphPlaceholderNodeProps) {
   return (
     <Button
       variant="quiet"
@@ -21,9 +24,7 @@ export function GraphPlaceholderNode({ onAdd }: GraphPlaceholderNodeProps) {
       onClick={onAdd}
       leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
     >
-      <span className="portal-graph-placeholder__title">
-        {t("portal.pipelines.graph.addFirstTool")}
-      </span>
+      <span className="portal-graph-placeholder__title">{label}</span>
     </Button>
   );
 }

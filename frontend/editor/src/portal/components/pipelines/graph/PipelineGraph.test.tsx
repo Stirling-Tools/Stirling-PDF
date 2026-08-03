@@ -25,6 +25,8 @@ vi.mock("react-i18next", () => ({
 function renderGraph(overrides: Partial<PipelineGraphProps> = {}) {
   const handlers = {
     onSelect: vi.fn(),
+    onAddEnd: vi.fn(),
+    onRemoveEnd: vi.fn(),
     onInsertStep: vi.fn(),
     onRemoveSteps: vi.fn(),
     onReorderSteps: vi.fn(),
@@ -210,15 +212,26 @@ describe("PipelineGraph", () => {
     ).toBeInTheDocument();
   });
 
-  it("removes a step from the node itself, and not the chain's ends", () => {
+  it("removes a step from the node itself", () => {
     const handlers = renderGraph();
-    const removes = screen.getAllByLabelText(/graph.removeNode/);
-    // Only the two steps carry a remove; input and output are part of every pipeline.
-    expect(removes).toHaveLength(2);
     fireEvent.click(
       screen.getByLabelText("portal.pipelines.graph.removeNode:Redact"),
     );
     expect(handlers.onRemoveSteps).toHaveBeenCalledWith([1]);
+  });
+
+  it("every node on the chain carries its own remove, ends included", () => {
+    renderGraph();
+    // Two steps plus both ends: an end can be taken back off to its placeholder.
+    expect(screen.getAllByLabelText(/graph.removeNode/)).toHaveLength(4);
+  });
+
+  it("takes an end back off the chain", () => {
+    const handlers = renderGraph();
+    fireEvent.click(
+      screen.getByLabelText("portal.pipelines.graph.removeNode:Claims intake"),
+    );
+    expect(handlers.onRemoveEnd).toHaveBeenCalledWith("input");
   });
 
   it("deletes every selected step with the Delete key", () => {
@@ -231,6 +244,47 @@ describe("PipelineGraph", () => {
     const handlers = renderGraph({ selected: "input" });
     fireEvent.keyDown(screen.getByText("Claims intake"), { key: "Delete" });
     expect(handlers.onRemoveSteps).not.toHaveBeenCalled();
+  });
+
+  describe("an end the pipeline has not asked for yet", () => {
+    it("offers to add it instead of naming it", () => {
+      renderGraph({ input: null });
+      expect(
+        screen.getByText("portal.pipelines.graph.add.input"),
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Claims intake")).not.toBeInTheDocument();
+    });
+
+    it("greets a brand new pipeline with no warnings at all", () => {
+      // The whole point: an end nobody has been offered yet is not a problem to report.
+      renderGraph({
+        input: null,
+        output: null,
+        steps: [],
+      });
+      expect(screen.queryByText(/warning|chosen/i)).not.toBeInTheDocument();
+      expect(screen.getAllByText(/graph.add\./)).toHaveLength(2);
+    });
+
+    it("asks for the end when its placeholder is clicked", () => {
+      const handlers = renderGraph({ output: null });
+      fireEvent.click(screen.getByText("portal.pipelines.graph.add.output"));
+      expect(handlers.onAddEnd).toHaveBeenCalledWith("output");
+    });
+
+    it("has nothing to remove until it is placed", () => {
+      renderGraph({ input: null, output: null, steps: [] });
+      expect(
+        screen.queryByLabelText(/graph.removeNode/),
+      ).not.toBeInTheDocument();
+    });
+
+    it("carries no warning onto the wire that arrives at it", () => {
+      renderGraph({ output: null });
+      expect(
+        screen.queryByText("Nothing writes a folder here"),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("shows a node's warning in place of its detail", () => {
