@@ -774,12 +774,6 @@
   min-height: 0;
 }
 
-.oauth-container-fullwidth {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 .oauth-button-fullwidth {
   width: 100%;
   display: flex;

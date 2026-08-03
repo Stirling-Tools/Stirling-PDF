@@ -324,23 +324,24 @@
   color: var(--c-text-muted); /* subtitle text */
 }
 
-/* Light mode selected header stroke override */
-:global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: var(--c-primary);
-}
-
 /* =========================
    Add File Card Styles
    ========================= */
 
 .addFileCard {
-  width: 260px;
-  max-width: 260px;
-  height: calc(310px - 0.5rem);
-  margin: 0.5rem auto 0;
-  background: var(--c-bg);
-  border: 1.5px solid var(--c-border);
-  border-radius: 12px;
+  /* Fill the same slot a portrait page thumbnail does. Height: the 310px
+     .thumbWrap minus the always-reserved 26px toolchain bar (22px + 4px) that
+     sits above the page. Width: the file card's 260px minus its 10px side
+     padding. Offset 36px down (that padding-top + the bar) so the two line up.
+     A fixed size rather than an aspect-ratio, because each thumbnail derives
+     --thumb-aspect from its own PDF's page dimensions. */
+  height: calc(310px - 26px);
+  width: calc(260px - 20px);
+  max-width: 100%;
+  margin: 36px auto auto;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.625rem;
   box-shadow: var(--shadow-md);
   cursor: pointer;
   transition:

@@ -59,12 +59,6 @@
   pointer-events: auto;
 }
 
-/* Always reserve space for action buttons so file name truncation dots (...)
-   never bleed under action buttons or overlap their outline/focus box. */
-.file-sidebar-file-info {
-  padding-right: 3.75rem;
-}
-
 .file-sidebar-file-item:hover:not(.selected) {
   background-color: color-mix(in srgb, var(--c-primary) 6%, transparent);
 }
@@ -176,6 +170,9 @@
 .file-sidebar-file-info {
   flex: 1;
   min-width: 0;
+  /* Always reserve space for action buttons so file name truncation dots (...)
+     never bleed under action buttons or overlap their outline/focus box. */
+  padding-right: 3.75rem;
 }
 
 .file-sidebar-file-name {

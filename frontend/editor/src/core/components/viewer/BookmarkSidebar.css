@@ -108,6 +108,7 @@
   flex-direction: column;
   gap: 0.25rem;
   margin-top: 0.25rem;
+  animation: bookmark-fade-in 0.2s ease;
 }
 
 /* Smooth expand/collapse animation */
@@ -121,10 +122,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.bookmark-item__children {
-  animation: bookmark-fade-in 0.2s ease;
 }
 
 /* Accessibility & Reduced Motion */

@@ -3,11 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { ActionIcon } from "@app/ui";
 import { Sidebar } from "@portal/components/Sidebar";
-import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
-import wordmarkLight from "@app/assets/brand/modern-logo/StirlingProcessorLogoBlackText.svg";
-import wordmarkDark from "@app/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
+import { Logo } from "@app/ui/Logo";
 import "@portal/components/AppShell.css";
 
 /**
@@ -17,7 +15,6 @@ import "@portal/components/AppShell.css";
  */
 function MobileTopbar() {
   const { t } = useTranslation();
-  const { theme } = useTheme();
   const { mobileNavOpen, toggleMobileNav, openSearch } = useUI();
   return (
     <header className="portal-shell__topbar">
@@ -30,10 +27,11 @@ function MobileTopbar() {
       >
         <MenuIcon size={20} />
       </ActionIcon>
-      <img
+      <Logo
+        variant="iconAndText"
+        iconHeight="1.6rem"
+        textHeight="1.3rem"
         className="portal-shell__topbar-wordmark"
-        src={theme === "dark" ? wordmarkDark : wordmarkLight}
-        alt={t("portal.shell.sidebar.brandSuffix")}
       />
       <ActionIcon
         variant="tertiary"

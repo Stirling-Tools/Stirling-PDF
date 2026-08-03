@@ -50,7 +50,7 @@ const SCROLLABLE_STYLE: React.CSSProperties = {
 const CONTAINER_STYLE: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  background: "var(--c-bg-raised)",
+  background: "var(--c-surface)",
 };
 const toTitleCase = (s: string) =>
   s.replace(
