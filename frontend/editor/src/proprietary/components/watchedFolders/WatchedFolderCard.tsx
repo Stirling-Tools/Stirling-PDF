@@ -78,7 +78,8 @@ export function WatchedFolderCard({
       style={
         isDragOver
           ? {
-              backgroundColor: "rgba(59,130,246,0.10)",
+              backgroundColor:
+                "color-mix(in srgb, var(--c-primary) 10%, transparent)",
               borderRadius: "var(--mantine-radius-sm)",
             }
           : undefined

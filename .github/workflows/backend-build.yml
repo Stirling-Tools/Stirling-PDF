@@ -19,14 +19,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   build:
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-8' || 'ubuntu-latest' }}
-    env:
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -34,7 +28,7 @@ jobs:
         flavor: [core, proprietary, saas]
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -247,7 +241,7 @@ jobs:
         # so skip it for merge_group runs and workflow_dispatch.
         if: github.event_name == 'pull_request'
         id: jacoco
-        uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
+        uses: madrapps/jacoco-report@e51ce1f46f7f8b5331593f935e59cbaf44b84920 # v1.8.0
         with:
           paths: |
             ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml

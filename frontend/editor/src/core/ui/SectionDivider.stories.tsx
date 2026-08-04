@@ -13,9 +13,9 @@ type Story = StoryObj<typeof SectionDivider>;
 export const Default: Story = {
   render: () => (
     <div style={{ width: "24rem" }}>
-      <p style={{ color: "var(--color-text-3)" }}>Section above</p>
+      <p style={{ color: "var(--c-text-subtle)" }}>Section above</p>
       <SectionDivider />
-      <p style={{ color: "var(--color-text-3)" }}>Section below</p>
+      <p style={{ color: "var(--c-text-subtle)" }}>Section below</p>
     </div>
   ),
 };
@@ -25,11 +25,11 @@ export const InContext_SidebarGroups: Story = {
     <div
       style={{
         width: "15rem",
-        background: "var(--color-sidebar-bg)",
+        background: "var(--c-bg-raised)",
         padding: 10,
-        border: "1px solid var(--color-sidebar-border)",
+        border: "1px solid var(--c-border)",
         borderRadius: 6,
-        color: "var(--color-text-2)",
+        color: "var(--c-text-muted)",
         fontSize: 13,
       }}
     >
