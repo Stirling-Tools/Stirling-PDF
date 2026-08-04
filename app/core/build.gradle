@@ -49,15 +49,15 @@ dependencies {
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
+    implementation "org.apache.pdfbox:pdfbox-examples:$pdfboxVersion"
 
     implementation 'org.verapdf:validation-model:1.30.2'
     // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
     implementation "org.mozilla:rhino:${rhinoVersion}"
 
-    // veraPDF still uses javax.xml.bind, not the new jakarta namespace
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
-    implementation 'com.sun.xml.bind:jaxb-core:4.0.7'
+    // JAXB runtime for veraPDF and other javax.xml.bind consumers (aligned to Jakarta EE 10)
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
+    runtimeOnly 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
 
     // CVE-2022-25647: Explicit gson to prevent unsafe deserialization (tabula would pull 2.8.7)
     implementation "com.google.code.gson:gson:${gsonVersion}"
@@ -83,7 +83,7 @@ dependencies {
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
@@ -105,7 +105,6 @@ sourceSets {
     }
 
 }
-
 
 // Disable regular jar
 jar {
@@ -243,7 +242,7 @@ tasks.register('npmInstall', Exec) {
         def packageJson = new File(frontendDir, 'package.json')
         def packageLock = new File(frontendDir, 'package-lock.json')
         def isOutdated = nodeModules.lastModified() < packageJson.lastModified() ||
-                        nodeModules.lastModified() < packageLock.lastModified()
+                         nodeModules.lastModified() < packageLock.lastModified()
         if (isOutdated) {
             println "package.json or package-lock.json changed, will reinstall..."
         } else {
@@ -292,11 +291,11 @@ tasks.register('copyFrontendAssets', Copy) {
     dependsOn cleanFrontendAssets
     from(frontendEditorDistDir) {
         // Exclude files that conflict with backend static resources
-        exclude 'robots.txt'  // Backend already has this
+        exclude 'robots.txt' // Backend already has this
         exclude 'favicon.ico' // Backend already has this
     }
     into resourcesStaticDir
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE // Let frontend overwrite when needed
     doFirst {
         println "Copying frontend build from ${frontendEditorDistDir} to ${resourcesStaticDir}..."
         println "Backend static resources will be preserved"

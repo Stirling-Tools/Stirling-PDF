@@ -55,8 +55,8 @@ public class SPDFApplication {
     private final WorkspaceManager workspaceManager;
 
     public SPDFApplication(
-            AppConfig appConfig, 
-            Environment env, 
+            AppConfig appConfig,
+            Environment env,
             ApplicationProperties applicationProperties,
             WorkspaceManager workspaceManager) {
         this.appConfig = appConfig;
@@ -193,9 +193,7 @@ public class SPDFApplication {
         log.info("Stirling-PDF running on port: {}", serverPortStatic);
     }
 
-    /**
-     * Cleans up resources when the application is shutting down.
-     */
+    /** Cleans up resources when the application is shutting down. */
     @PreDestroy
     public void onShutdown() {
         log.info("Shutting down Stirling-PDF application...");

@@ -1,8 +1,6 @@
 package stirling.software.SPDF.model.domain;
 
-/**
- * Enumeration of all domain object types in the document model.
- */
+/** Enumeration of all domain object types in the document model. */
 public enum DomainObjectType {
     PAGE,
     TEXT_OBJECT,

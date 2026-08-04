@@ -80,7 +80,7 @@ public class ReplaceImageController {
                 }
 
                 PDPage currentPage = pdfDoc.getPage(pageIndex);
-                
+
                 if (imageIndex == null) {
                     // Replace all images on this page
                     imagesReplaced += replaceAllImagesOnPage(currentPage, pdfDoc, replacementBytes);
@@ -88,13 +88,14 @@ public class ReplaceImageController {
                     // Replace specific image index on this page
                     int localImageIndex = imageIndex - globalImageCounter;
                     if (localImageIndex >= 0) {
-                        imagesReplaced += replaceSpecificImageOnPage(
-                                currentPage, pdfDoc, replacementBytes, localImageIndex);
+                        imagesReplaced +=
+                                replaceSpecificImageOnPage(
+                                        currentPage, pdfDoc, replacementBytes, localImageIndex);
                     }
                 }
-                
+
                 globalImageCounter += countImagesInPage(currentPage);
-                
+
                 // If replacing a specific image and we found it, we can stop
                 if (imageIndex != null && imagesReplaced > 0) {
                     break;
@@ -174,7 +175,9 @@ public class ReplaceImageController {
             try {
                 PDXObject xObject = resources.getXObject(name);
                 if (xObject instanceof PDImageXObject) {
-                    PDImageXObject newImage = PDImageXObject.createFromByteArray(doc, replacementBytes, "replacement");
+                    PDImageXObject newImage =
+                            PDImageXObject.createFromByteArray(
+                                    doc, replacementBytes, "replacement");
                     xObjects.setItem(name, newImage.getCOSObject());
                     imagesReplaced++;
                     log.debug("Replaced image: {}", name.getName());
@@ -189,8 +192,8 @@ public class ReplaceImageController {
         return imagesReplaced;
     }
 
-    private int replaceAllImagesInFormXObject(PDFormXObject formXObject, PDDocument doc, byte[] replacementBytes)
-            throws IOException {
+    private int replaceAllImagesInFormXObject(
+            PDFormXObject formXObject, PDDocument doc, byte[] replacementBytes) throws IOException {
         PDResources resources = formXObject.getResources();
         if (resources == null) {
             return 0;
@@ -198,8 +201,8 @@ public class ReplaceImageController {
         return replaceAllImagesOnResources(resources, doc, replacementBytes);
     }
 
-    private int replaceAllImagesOnResources(PDResources resources, PDDocument doc, byte[] replacementBytes)
-            throws IOException {
+    private int replaceAllImagesOnResources(
+            PDResources resources, PDDocument doc, byte[] replacementBytes) throws IOException {
         if (resources == null) {
             return 0;
         }
@@ -215,7 +218,9 @@ public class ReplaceImageController {
             try {
                 PDXObject xObject = resources.getXObject(name);
                 if (xObject instanceof PDImageXObject) {
-                    PDImageXObject newImage = PDImageXObject.createFromByteArray(doc, replacementBytes, "replacement");
+                    PDImageXObject newImage =
+                            PDImageXObject.createFromByteArray(
+                                    doc, replacementBytes, "replacement");
                     xObjects.setItem(name, newImage.getCOSObject());
                     imagesReplaced++;
                 } else if (xObject instanceof PDFormXObject form) {
@@ -228,7 +233,8 @@ public class ReplaceImageController {
         return imagesReplaced;
     }
 
-    private int replaceSpecificImageOnPage(PDPage page, PDDocument doc, byte[] replacementBytes, int targetIndex)
+    private int replaceSpecificImageOnPage(
+            PDPage page, PDDocument doc, byte[] replacementBytes, int targetIndex)
             throws IOException {
         int currentImageIndex = 0;
         int imagesReplaced = 0;
@@ -249,7 +255,9 @@ public class ReplaceImageController {
                 PDXObject xObject = resources.getXObject(name);
                 if (xObject instanceof PDImageXObject) {
                     if (currentImageIndex == targetIndex) {
-                        PDImageXObject newImage = PDImageXObject.createFromByteArray(doc, replacementBytes, "replacement");
+                        PDImageXObject newImage =
+                                PDImageXObject.createFromByteArray(
+                                        doc, replacementBytes, "replacement");
                         xObjects.setItem(name, newImage.getCOSObject());
                         imagesReplaced++;
                         log.debug("Replaced image at index {}: {}", targetIndex, name.getName());
@@ -257,7 +265,9 @@ public class ReplaceImageController {
                     }
                     currentImageIndex++;
                 } else if (xObject instanceof PDFormXObject form) {
-                    int result = replaceSpecificImageInFormXObject(form, doc, replacementBytes, targetIndex - currentImageIndex);
+                    int result =
+                            replaceSpecificImageInFormXObject(
+                                    form, doc, replacementBytes, targetIndex - currentImageIndex);
                     if (result > 0) {
                         return imagesReplaced + result;
                     }
@@ -271,7 +281,8 @@ public class ReplaceImageController {
         return imagesReplaced;
     }
 
-    private int replaceSpecificImageInFormXObject(PDFormXObject formXObject, PDDocument doc, byte[] replacementBytes, int targetIndex)
+    private int replaceSpecificImageInFormXObject(
+            PDFormXObject formXObject, PDDocument doc, byte[] replacementBytes, int targetIndex)
             throws IOException {
         PDResources resources = formXObject.getResources();
         if (resources == null || targetIndex < 0) {
@@ -280,7 +291,8 @@ public class ReplaceImageController {
         return replaceSpecificImageOnResources(resources, doc, replacementBytes, targetIndex);
     }
 
-    private int replaceSpecificImageOnResources(PDResources resources, PDDocument doc, byte[] replacementBytes, int targetIndex)
+    private int replaceSpecificImageOnResources(
+            PDResources resources, PDDocument doc, byte[] replacementBytes, int targetIndex)
             throws IOException {
         if (resources == null || targetIndex < 0) {
             return 0;
@@ -298,13 +310,17 @@ public class ReplaceImageController {
                 PDXObject xObject = resources.getXObject(name);
                 if (xObject instanceof PDImageXObject) {
                     if (currentImageIndex == targetIndex) {
-                        PDImageXObject newImage = PDImageXObject.createFromByteArray(doc, replacementBytes, "replacement");
+                        PDImageXObject newImage =
+                                PDImageXObject.createFromByteArray(
+                                        doc, replacementBytes, "replacement");
                         xObjects.setItem(name, newImage.getCOSObject());
                         return 1;
                     }
                     currentImageIndex++;
                 } else if (xObject instanceof PDFormXObject form) {
-                    int result = replaceSpecificImageInFormXObject(form, doc, replacementBytes, targetIndex - currentImageIndex);
+                    int result =
+                            replaceSpecificImageInFormXObject(
+                                    form, doc, replacementBytes, targetIndex - currentImageIndex);
                     if (result > 0) {
                         return result;
                     }

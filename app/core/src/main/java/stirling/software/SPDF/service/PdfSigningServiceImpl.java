@@ -2,14 +2,19 @@ package stirling.software.SPDF.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.KeyStore;
 
 import org.apache.pdfbox.examples.signature.CreateSignatureBase;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.appearance.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.appearance.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
@@ -44,7 +49,7 @@ public class PdfSigningServiceImpl implements PdfSigningService {
         CreateSignatureBase createSignature = new CreateSignatureImpl(keystore, password);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        
+
         try (PDDocument document = pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes))) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
             if (acroForm == null) {
@@ -62,63 +67,73 @@ public class PdfSigningServiceImpl implements PdfSigningService {
                 } else {
                     signatureField = (PDSignatureField) field;
                 }
-                
+
                 // Set signature field properties
                 signatureField.setPartialName("Signature");
                 signatureField.setAlternateFieldName("Signature");
-                
+
                 // Set signature appearance
-                org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget widget = 
-                    signatureField.getWidgets().get(0);
-                
+                PDAnnotationWidget widget = signatureField.getWidgets().get(0);
+
                 // Position on specified page (0-indexed)
                 int pageIndex = Math.max(0, Math.min(pageNumber, document.getNumberOfPages() - 1));
                 org.apache.pdfbox.pdmodel.PDPage page = document.getPage(pageIndex);
-                
+
                 // Default rectangle for signature (adjustable)
-                org.apache.pdfbox.pdmodel.common.PDRectangle rect = 
-                    new org.apache.pdfbox.pdmodel.common.PDRectangle(50, 700, 200, 50);
+                PDRectangle rect = new PDRectangle(50, 700, 200, 50);
                 widget.setRectangle(rect);
                 widget.setPage(page);
-                
+
                 // Add appearance with signer info
-                org.apache.pdfbox.pdmodel.interactive.appearance.PDAppearanceDictionary appearance = 
-                    new org.apache.pdfbox.pdmodel.interactive.appearance.PDAppearanceDictionary();
-                org.apache.pdfbox.pdmodel.interactive.appearance.PDAppearanceStream appearanceStream = 
-                    new org.apache.pdfbox.pdmodel.interactive.appearance.PDAppearanceStream(document);
-                
+                PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+                PDAppearanceStream appearanceStream = new PDAppearanceStream(document);
+
                 StringBuilder appearanceText = new StringBuilder();
                 appearanceText.append("Sig: ").append(name != null ? name : "").append("\n");
-                appearanceText.append("Location: ").append(location != null ? location : "").append("\n");
+                appearanceText
+                        .append("Location: ")
+                        .append(location != null ? location : "")
+                        .append("\n");
                 appearanceText.append("Reason: ").append(reason != null ? reason : "");
                 if (showLogo) {
                     appearanceText.append("\n[Stirling-PDF]");
                 }
-                
-                appearanceStream.setResources(new org.apache.pdfbox.pdmodel.PDResources());
-                appearanceStream.addAppearance("BDC", appearanceText.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                appearanceStream.setResources(new PDResources());
+                try (PDPageContentStream contentStream =
+                        new PDPageContentStream(document, appearanceStream)) {
+                    contentStream.beginText();
+                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+                    contentStream.newLineAtOffset(10, 10);
+                    contentStream.showText(appearanceText.toString());
+                    contentStream.endText();
+                }
                 appearance.setNormalAppearance(appearanceStream);
                 widget.setAppearance(appearance);
             }
 
             // Prepare signature
-            PDDocument.CryptoFilter cf = new PDDocument.CryptoFilter() {};
             SignatureOptions signatureOptions = new SignatureOptions();
             signatureOptions.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE * 2);
-            
+
+            PDSignature signature = new PDSignature();
+            signature.setName("Signature");
+            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+
             // Sign the document
-            document.addSignature("Signature", createSignature, signatureOptions);
+            document.addSignature(signature, createSignature, signatureOptions);
             document.save(outputStream);
             document.close();
         }
 
         return outputStream.toByteArray();
     }
-    
+
     /** Inner class extending CreateSignatureBase for PDF signing. */
     private static class CreateSignatureImpl extends CreateSignatureBase {
-        CreateSignatureImpl(KeyStore keystore, char[] pin) throws Exception {
-            super(keystore, pin);
+        CreateSignatureImpl(KeyStore keystore, char[] password) throws Exception {
+            super(keystore, password);
         }
     }
 }
