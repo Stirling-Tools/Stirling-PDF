@@ -20,9 +20,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import io.github.pixee.security.SystemCommand;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.workspace.WorkspaceManager;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
@@ -50,12 +52,17 @@ public class SPDFApplication {
     private final AppConfig appConfig;
     private final Environment env;
     private final ApplicationProperties applicationProperties;
+    private final WorkspaceManager workspaceManager;
 
     public SPDFApplication(
-            AppConfig appConfig, Environment env, ApplicationProperties applicationProperties) {
+            AppConfig appConfig, 
+            Environment env, 
+            ApplicationProperties applicationProperties,
+            WorkspaceManager workspaceManager) {
         this.appConfig = appConfig;
         this.env = env;
         this.applicationProperties = applicationProperties;
+        this.workspaceManager = workspaceManager;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -184,6 +191,18 @@ public class SPDFApplication {
         }
         // Log the actual runtime port for Tauri to parse
         log.info("Stirling-PDF running on port: {}", serverPortStatic);
+    }
+
+    /**
+     * Cleans up resources when the application is shutting down.
+     */
+    @PreDestroy
+    public void onShutdown() {
+        log.info("Shutting down Stirling-PDF application...");
+        if (workspaceManager != null) {
+            workspaceManager.shutdown();
+        }
+        log.info("Application shutdown complete");
     }
 
     private static void printStartupLogs() {
