@@ -337,7 +337,7 @@ function WidgetInputInner({
     case "checkbox": {
       // Checkbox is checked when value matches exportValue if present, or is non-empty and not 'Off'
       const isChecked = widget.exportValue
-        ? value === widget.exportValue
+        ? value === widget.exportValue || value === "Yes"
         : !!value && value !== "Off";
       // When toggling on, use the widget's exportValue (e.g. 'Red', 'Blue', 'Pass') or fall back to 'Yes'
       const onValue = widget.exportValue || "Yes";
