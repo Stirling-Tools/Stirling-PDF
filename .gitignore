@@ -1,96 +1,41 @@
 ```
-# Java/Maven build artifacts
-target/
-*.class
-*.jar
-*.war
-*.ear
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
 
 # Dependencies
 node_modules/
-**/node_modules/
-
-# Python artifacts (if any Python components)
+.venv/
+venv/
 __pycache__/
+.mypy_cache/
+.pytest_cache/
+pip-log.txt
+pip-selfcheck.json
+
+# Build artifacts
+dist/
+build/
 *.pyc
 *.pyo
 *.pyd
-.Python
-env/
-venv/
-.venv/
-.venv.bak/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
+*.so
+*.egg-info/
 .coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-*.tmp
-
-# IDE specific files
-.idea/
-*.swp
-*.swo
-*~
-.vscode/
+coverage/
+htmlcov/
 
 # OS generated files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Environment variables
-.env
-.env.local
-.env.*
-
-# Backup files
-*.backup
-*.bak
-*.orig
-*.tmp
-
-# Test reports
-test-results/
-*.xml
-*.html
-
-# Frontend build artifacts
-frontend/**/dist/
-frontend/**/build/
-frontend/**/node_modules/
-frontend/**/*.map
-
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
 ```
