@@ -208,6 +208,3 @@ if (typeof globalThis.DOMMatrix === "undefined") {
     configurable: true,
   });
 }
-
-// Set global test timeout to prevent hangs
-vi.setConfig({ testTimeout: 5000, hookTimeout: 5000 });
