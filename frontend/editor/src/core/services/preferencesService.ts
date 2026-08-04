@@ -2,7 +2,7 @@ import {
   type ToolPanelMode,
   DEFAULT_TOOL_PANEL_MODE,
 } from "@app/constants/toolPanel";
-import { type ThemeMode } from "@app/constants/theme";
+import { type ThemeMode, type ReadingMode } from "@app/constants/theme";
 
 export type LogoVariant = "modern" | "classic";
 
@@ -44,6 +44,8 @@ export interface UserPreferences {
   hideUnavailableConversions: boolean;
   logoVariant: LogoVariant | null;
   pdfRenderMode: PdfRenderMode;
+  readingMode: ReadingMode;
+  customBackgroundColor: string;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -64,6 +66,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hideUnavailableConversions: false,
   logoVariant: null,
   pdfRenderMode: "normal",
+  readingMode: "normal",
+  customBackgroundColor: "#ffffff",
 };
 
 const STORAGE_KEY = "stirlingpdf_preferences";

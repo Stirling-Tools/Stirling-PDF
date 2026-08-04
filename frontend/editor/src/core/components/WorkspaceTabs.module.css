@@ -1,0 +1,57 @@
+.tabsScrollArea {
+  max-height: 100%;
+}
+
+.tabItem {
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: 1px solid transparent;
+
+  &:hover {
+    background-color: var(--mantine-color-gray-light-hover);
+  }
+
+  &.activeTab {
+    background-color: var(--mantine-color-blue-light);
+    border-color: var(--mantine-color-blue);
+  }
+}
+
+.dragHandle {
+  cursor: grab;
+  color: var(--mantine-color-dimmed);
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.fileIcon {
+  color: var(--mantine-color-blue);
+  flex-shrink: 0;
+}
+
+.fileName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.closeButton {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  .tabItem:hover & {
+    opacity: 1;
+  }
+}
+
+.emptyWorkspace {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--mantine-spacing-lg);
+}

@@ -9,11 +9,11 @@ target/
 
 # Dependencies
 node_modules/
-venv/
-.venv/
 __pycache__/
 .mypy_cache/
 .pytest_cache/
+.venv/
+venv/
 .gradle/
 
 # Logs and temp files
@@ -39,7 +39,7 @@ coverage/
 htmlcov/
 .coverage
 
-# Compressed files
+# Archives
 *.zip
 *.gz
 *.tar
