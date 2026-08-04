@@ -135,8 +135,36 @@
   display: block;
 }
 
+/* Name over its optional note - a two-line item, so the note reads as a sub-line rather than
+   running straight on from the name. */
+.portal-pipelines__picker-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+
 .portal-pipelines__picker-name {
   font-size: 0.8125rem;
+}
+
+/* Why this tool cannot follow the step before it. Advisory: the item is still pickable, just dimmed
+   and captioned so the reason is clear without shouting. */
+.portal-pipelines__picker-note {
+  font-size: 0.6875rem;
+  color: var(--c-text-muted);
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* Muted via a token, not opacity: opacity on text drops the contrast below the floor. The name
+   still reads as de-emphasised, and the icon (not text) can take the opacity. */
+.portal-pipelines__picker-item.is-incompatible .portal-pipelines__picker-name {
+  color: var(--c-text-muted);
+}
+
+.portal-pipelines__picker-item.is-incompatible .portal-pipelines__picker-icon {
+  opacity: 0.55;
 }
 
 .portal-pipelines__picker-empty {

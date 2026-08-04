@@ -104,36 +104,48 @@ export function ToolPicker({
               <div className="portal-pipelines__picker-group-label">
                 {group.label}
               </div>
-              {group.tools.map((tool) => (
-                <Button
-                  key={tool.toolId}
-                  variant="quiet"
-                  justify="start"
-                  fullWidth
-                  className="portal-pipelines__picker-item"
-                  onClick={() => onPick(tool)}
-                  leftSection={
-                    <span
-                      className="portal-pipelines__picker-icon"
-                      aria-hidden="true"
-                    >
-                      {tool.icon}
+              {group.tools.map((tool) => {
+                const incompatible = Boolean(
+                  precedingOutput &&
+                  !toolAcceptsFormat(tool.endpoint, precedingOutput),
+                );
+                return (
+                  <Button
+                    key={tool.toolId}
+                    variant="quiet"
+                    justify="start"
+                    fullWidth
+                    className={[
+                      "portal-pipelines__picker-item",
+                      incompatible ? "is-incompatible" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    onClick={() => onPick(tool)}
+                    leftSection={
+                      <span
+                        className="portal-pipelines__picker-icon"
+                        aria-hidden="true"
+                      >
+                        {tool.icon}
+                      </span>
+                    }
+                  >
+                    <span className="portal-pipelines__picker-text">
+                      <span className="portal-pipelines__picker-name">
+                        {tool.name}
+                      </span>
+                      {incompatible && precedingOutput && (
+                        <span className="portal-pipelines__picker-note">
+                          {t("portal.pipelines.builder.cannotFollow", {
+                            produced: getToolFormatLabel(t, precedingOutput),
+                          })}
+                        </span>
+                      )}
                     </span>
-                  }
-                >
-                  <span className="portal-pipelines__picker-name">
-                    {tool.name}
-                  </span>
-                  {precedingOutput &&
-                  !toolAcceptsFormat(tool.endpoint, precedingOutput) ? (
-                    <span className="portal-pipelines__picker-note">
-                      {t("portal.pipelines.builder.cannotFollow", {
-                        produced: getToolFormatLabel(t, precedingOutput),
-                      })}
-                    </span>
-                  ) : null}
-                </Button>
-              ))}
+                  </Button>
+                );
+              })}
             </div>
           ))
         )}

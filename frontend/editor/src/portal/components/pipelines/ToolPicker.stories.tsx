@@ -85,3 +85,14 @@ export const NoMatches: Story = {
     tools: [],
   },
 };
+
+/**
+ * The step before this one produces an encrypted PDF, so tools that only take a plain PDF are
+ * flagged (dimmed, with a sub-line reason) rather than hidden - the order stays the user's choice.
+ * Remove password still takes it, so it is not flagged.
+ */
+export const IncompatiblePrecedingOutput: Story = {
+  args: {
+    precedingOutput: "PDF_ENCRYPTED",
+  },
+};
