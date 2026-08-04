@@ -2,6 +2,7 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 
 mod utils;
 pub mod commands;
+mod menu;
 mod state;
 
 use commands::{
@@ -74,6 +75,12 @@ fn parse_launch_files(args: &[String]) -> Vec<String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .menu(menu::build_app_menu)
+    .on_menu_event(|app, event| {
+      if event.id() == menu::GRACEFUL_QUIT_MENU_ID {
+        menu::request_graceful_quit(app);
+      }
+    })
     .plugin(
       tauri_plugin_log::Builder::new()
         .level(log::LevelFilter::Info)
@@ -208,6 +215,10 @@ pub fn run() {
           cleanup_backend();
           // Use Tauri's built-in cleanup
           app_handle.cleanup_before_exit();
+        }
+        RunEvent::Exit => {
+          add_log("🔄 App exiting, ensuring backend cleanup...".to_string());
+          cleanup_backend();
         }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, .. } => {
           add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
