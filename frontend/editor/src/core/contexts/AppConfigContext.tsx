@@ -121,9 +121,10 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         data ??
         initialConfig ??
         (isAuthPage || error ? DEFAULT_APP_CONFIG : null),
-      // isFetching, not isPending: consumers key effects on the true→false
-      // flip, and a pre-login 401 resolves to the default config, so isPending
-      // is already false by the time the post-sign-in fetch runs.
+      // "Config not settled yet": in flight, or never going to be fetched at
+      // all. isFetching rather than isPending because a pre-login 401 resolves
+      // to the default config, so isPending is already false by the time the
+      // post-sign-in fetch runs — and consumers key effects on the flip.
       loading: seeded
         ? false
         : !autoFetch

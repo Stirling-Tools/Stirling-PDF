@@ -463,6 +463,25 @@ describe("AppConfigContext", () => {
     expect(apiClient.get).toHaveBeenCalledTimes(1);
   });
 
+  it("stays loading when autoFetch is off and nothing seeds a config", async () => {
+    // Unresolved, not in-flight. Matches the pre-migration provider, which
+    // seeded loading from !hasResolvedConfig and never cleared it without a
+    // fetch. Reporting false here would tell consumers a null config is final.
+    const offWrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider autoFetch={false}>{children}</AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: offWrapper,
+    });
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.config).toBeNull();
+    expect(apiClient.get).not.toHaveBeenCalled();
+  });
+
   it("does not fetch when autoFetch is off", async () => {
     const offWrapper = ({ children }: { children: ReactNode }) => (
       <TestQueryProvider>
