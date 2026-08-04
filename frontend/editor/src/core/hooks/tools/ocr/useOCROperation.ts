@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   OCRParameters,
   defaultParameters,
+  validateOCRParameters,
 } from "@app/hooks/tools/ocr/useOCRParameters";
 import {
   useToolOperation,
@@ -152,6 +153,7 @@ export const ocrResponseHandler = async (
 
 // Static configuration object (without t function dependencies)
 export const ocrOperationConfig = defineSingleFileTool({
+  validateParams: validateOCRParameters,
   buildFormData: buildOCRFormData,
   toApiParams: ocrToApiParams,
   fromApiParams: ocrFromApiParams,

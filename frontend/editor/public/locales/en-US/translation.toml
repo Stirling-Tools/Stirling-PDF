@@ -46,10 +46,8 @@ filesSelected = "{{count}} files"
 font = "Font"
 fontSizeTooltip = "Size of the page number text in points. Larger numbers create bigger text."
 fontTypeTooltip = "Font family for the page numbers. Choose based on your document style."
-genericSubmit = "Submit"
 green = "Green"
 help = "Help"
-imgPrompt = "Select Image(s)"
 incorrectPasswordMessage = "Current password is incorrect."
 info = "Info"
 invalidUndoData = "Cannot undo: invalid operation data"
@@ -62,7 +60,6 @@ loginAgreementTitle = "Login Agreement"
 logOut = "Log out"
 marginTooltip = "Distance between the page number and the edge of the page."
 moreOptions = "More Options"
-multiPdfPrompt = "Select PDFs (2+)"
 never = "Never"
 no = "No"
 noFileSelected = "No file loaded. Please upload one."
@@ -80,7 +77,6 @@ pageOrderPrompt = "Custom Page Order (Enter a comma-separated list of page numbe
 pages = "Pages"
 pageSelectionPrompt = "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)"
 password = "Password"
-pdfPrompt = "Select PDF(s)"
 pin = "Pin File (keep active after tool run)"
 pro = "Pro"
 processingComplete = "Your file is ready."
@@ -2175,6 +2171,73 @@ secureWorkflowDesc = "Secures PDF documents by removing potentially malicious co
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
+[autoRotate]
+submit = "Auto Rotate"
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Confidence threshold"
+
+[autoRotate.detectionMode]
+auto = "Auto"
+osd = "OCR only"
+text = "Text only"
+title = "Detection method"
+
+[autoRotate.error]
+failed = "An error occurred while auto-rotating the PDF."
+
+[autoRotate.inferUndetected]
+title = "Rotate low confidence pages to match"
+
+[autoRotate.report]
+applied = "{{degrees}}° CW"
+confidenceValue = "Confidence {{value}}"
+noChange = "No change"
+pageLabel = "Page {{number}}"
+summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
+title = "Detection report"
+
+[autoRotate.report.method]
+inferred = "Matched"
+none = "Skipped"
+osd = "OCR"
+text = "Text"
+
+[autoRotate.report.note]
+belowThreshold = "Below threshold"
+blankPage = "Page is blank"
+inferredFromDocument = "Same as the other pages"
+noDominantDirection = "Mixed text directions"
+osdFailed = "No readable text found"
+osdNoVerdict = "Could not tell which way up"
+tesseractUnavailable = "OCR not installed"
+tooFewGlyphs = "Too little text"
+
+[autoRotate.results]
+title = "Auto Rotate Results"
+
+[autoRotate.settings]
+title = "Settings"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "How certain the check has to be before a page is turned. Lower it to rotate more pages, raise it to leave more pages untouched."
+title = "Confidence threshold"
+
+[autoRotate.tooltip.description]
+text = "Works out which way up each page should be and turns it the right way round. Pages that are already upright are left alone."
+
+[autoRotate.tooltip.detectionMode]
+text = "Auto reads the text on the page first, then looks at the page as an image if that is not enough. Text only skips the image check, which is quickest for documents that were never scanned. OCR only treats every page as an image."
+title = "Detection method"
+
+[autoRotate.tooltip.header]
+title = "Auto Rotate"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Blank or nearly blank pages cannot be checked on their own. When every page that could be read needs the same turn, these pages are turned to match them."
+title = "Rotate low confidence pages to match"
+
 [autoSizeSplitPDF]
 tags = "pdf,split,document,organization"
 
@@ -2376,33 +2439,6 @@ title = "Syntax Basics"
 keywords = "Keywords: odd, even"
 numbers = "Numbers/ranges: 5, 10-20"
 progressions = "Progressions: 3n, 4n+1"
-
-[certificateChoice.tooltip]
-header = "Certificate Types"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Managed by system administrators"
-bullet2 = "Shared across authorized users"
-bullet3 = "Represents company identity, not individual"
-bullet4 = "Best for: Official documents, team signatures"
-description = "A shared certificate provided by your organization. Used for company-wide signing authority."
-title = "Organization Certificate"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "Generated automatically on first use"
-bullet2 = "Tied to your user account"
-bullet3 = "Cannot be shared with other users"
-bullet4 = "Best for: Personal documents, individual accountability"
-description = "An auto-generated certificate unique to your user account. Suitable for individual signatures."
-title = "Personal Certificate"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "Requires P12/PFX file and password"
-bullet2 = "Can be issued by external Certificate Authorities"
-bullet3 = "Higher trust level for legal documents"
-bullet4 = "Best for: Legally binding contracts, external validation"
-description = "Use your own PKCS#12 certificate file. Provides full control over certificate properties."
-title = "Upload Custom P12"
 
 [certSign]
 awaitingSignatures = "Awaiting signatures"
@@ -2729,34 +2765,6 @@ noOtherSources = "No other certificate sources are available."
 server = "Server"
 stepTitle = "Certificate source"
 upload = "Upload"
-
-[certSign.tooltip.header]
-title = "About Managing Signatures"
-
-[certSign.tooltip.overview]
-bullet1 = "Check existing signatures and their validity"
-bullet2 = "View detailed information about signers and certificates"
-bullet3 = "Add new digital signatures to secure your documents"
-bullet4 = "Multiple files supported with easy navigation"
-text = "This tool lets you check if your PDFs are digitally signed and add new digital signatures. Digital signatures prove who created or approved a document and show if it has been changed since signing."
-title = "What can this tool do?"
-
-[certSign.tooltip.signing]
-bullet1 = "Supports PEM, PKCS12, JKS, and server certificate formats"
-bullet2 = "Option to show or hide signature on the PDF"
-bullet3 = "Add reason, location, and signer name"
-bullet4 = "Choose which page to place visible signatures"
-bullet5 = "Use server certificate for simple 'Sign with Stirling-PDF' option"
-text = "To sign a PDF, you need a digital certificate (like PEM, PKCS12, or JKS). You can choose to make the signature visible on the document or keep it invisible for security only."
-title = "Adding Signatures"
-
-[certSign.tooltip.validation]
-bullet1 = "Shows if signatures are valid or invalid"
-bullet2 = "Displays signer information and signing date"
-bullet3 = "Checks if the document was modified after signing"
-bullet4 = "Can use custom certificates for verification"
-text = "When you check signatures, the tool tells you if they're valid, who signed the document, when it was signed, and whether the document has been changed since signing."
-title = "Checking Signatures"
 
 [changeCreds]
 changeUsername = "Update your username. You will be logged out after updating."
@@ -3453,24 +3461,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "Advanced monitoring"
-allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
-apiSandbox = "API sandbox"
-dedicatedSupportSlas = "Dedicated support & SLAs"
-fasterThroughput = "10x faster throughput"
-fullyPrivateFiles = "Fully private files"
-largeFileProcessing = "Large file processing"
-orgWideAccess = "Org-wide access controls"
-premiumAiModels = "Premium AI models"
-prioritySupport = "Priority support"
-privateDocCloud = "Private Document Cloud"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "Secure API access"
-standardThroughput = "Standard throughput"
-unlimitedApiAccess = "Unlimited API access"
-unlimitedSeats = "Unlimited seats"
-
 [crop]
 autoCrop = "Auto-crop whitespace"
 noFileSelected = "Add a PDF file to begin cropping"
@@ -3535,6 +3525,7 @@ message = "Failed to set default PDF handler"
 title = "Error"
 
 [defaultApp.prompt]
+dontRemind = "Don't remind me again"
 message = "Make Stirling PDF your default application for opening PDF files."
 
 [defaultApp.settingsOpened]
@@ -3886,10 +3877,10 @@ customizeGroups = "Customize groups"
 dropHint = "Open files to get started"
 dropToAdd = "Drop files to add"
 expand = "Expand sidebar"
-files = "Files"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive is not configured"
 leaveMyFiles = "Leave My Files"
+library = "PDF Library"
 myFiles = "My Files"
 noFiles = "No files yet"
 openFileManager = "Browse all files & folders"
@@ -4494,6 +4485,11 @@ desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
 
+[home.autoRotate]
+desc = "Detect each page's orientation and rotate it upright automatically."
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+title = "Auto Rotate"
+
 [home.autoSizeSplitPDF]
 tags = "auto,split,size"
 title = "Auto Split by Size/Count"
@@ -4834,8 +4830,7 @@ welcomeTitle = "You've been invited!"
 addFiles = "Add Files"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
-uploadFromComputer = "Upload from computer"
-workbenchEmptyStateHero = "Drop a PDF anywhere"
+uploadFromComputer = "Browse files"
 
 [language]
 direction = "ltr"
@@ -4900,7 +4895,6 @@ signInWith = "Sign in with"
 title = "Sign in"
 unexpectedError = "Unexpected error: {{message}}"
 updatePassword = "Update password"
-useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
@@ -6705,8 +6699,14 @@ label = "Server URL"
 [portal.connections.commonFields.email]
 label = "Email"
 
+[portal.connections.commonFields.host]
+label = "Host"
+
 [portal.connections.commonFields.password]
 label = "Password"
+
+[portal.connections.commonFields.port]
+label = "Port"
 
 [portal.connections.commonFields.username]
 label = "Username"
@@ -6840,6 +6840,27 @@ baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Index an audit event in Elasticsearch each time a policy handles a document."
 label = "Elasticsearch"
 
+[portal.connections.types.ftp]
+description = "Poll an FTP or FTPS server for new documents."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Connection mode"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Active"
+passive = "Passive (recommended)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "Plain FTP sends credentials and files unencrypted; choose FTPS if the server supports it."
+label = "Encryption"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explicit / AUTH TLS)"
+implicit = "FTPS (implicit)"
+none = "None (plain FTP)"
+
 [portal.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Post a message to a Google Chat space when a policy runs."
@@ -6907,9 +6928,42 @@ label = "Secret access key"
 description = "Email a document or a notification when a policy runs."
 label = "SendGrid"
 
+[portal.connections.types.sftp]
+description = "Poll an SFTP (SSH) server for new documents."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Optional. The server's SHA-256 host key fingerprint (from `ssh-keyscan host | ssh-keygen -lf -`). When set, only a server presenting this key is accepted; when blank, the key seen on first connect is pinned and later changes are refused."
+label = "Host key fingerprint"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key passphrase"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Leave blank if you authenticate with a private key instead."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Optional. Paste an OpenSSH private key to authenticate with a key instead of a password."
+label = "Private key"
+
 [portal.connections.types.slack]
 description = "Post a message to Slack when a policy processes a document."
 label = "Slack"
+
+[portal.connections.types.smb]
+description = "Watch an SMB / CIFS network share (Windows or Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Network share"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Optional. The Windows domain or workgroup, if your server uses one."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
 
 [portal.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
@@ -7744,25 +7798,42 @@ newPipeline = "New pipeline"
 [portal.pipelines.builder]
 addStep = "Add tool"
 back = "Back to pipelines"
+cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
+chooseDestination = "Choose a destination"
 chooseOperation = "Choose what this step does"
+chooseSource = "Choose a source"
 discard = "Discard changes"
 enabled = "Enabled"
+inputs = "Input"
+inputSource = "Input source"
+inputTrigger = "Trigger"
 keepEditing = "Keep editing"
+needsConfiguring = "Needs setting up"
 needsUpload = "Needs an uploaded file"
+noSources = "No sources connected yet. Create one to use it as an input."
 noToolMatches = "No tools match your search."
 pipelineSettings = "Pipeline settings"
 searchTools = "Search tools"
 selectToolBody = "Add a tool to build your pipeline."
 selectToolTitle = "No tools yet"
 sendToSystem = "Send to another system"
-stepsNeedSetup = "These steps still need an operation and an account chosen before saving: {{tools}}."
+stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
+stepsNeedSetup = "These steps still need setting up before saving: {{tools}}."
 toolSettings = "Tool settings"
 unknownStep = "Unrecognized operation, kept as-is."
 unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
 unsavedTitle = "Unsaved changes"
 uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
+
+[portal.pipelines.builder.diagnostic]
+fan-in = "Combines every file from the previous step"
+fan-out = "Runs once per file from the previous step"
+format-mismatch = "Needs {{accepts}}, but the previous step produces {{produced}}"
+output-uncertain = "May not run: the previous step's output depends on how it's set up"
+source-mismatch = "Needs {{accepts}}, but this pipeline's input is {{produced}}"
+undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.composer]
 addTool = "Add tool"
@@ -7777,7 +7848,7 @@ namePlaceholder = "e.g. Redaction sweep"
 noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
-output = "Destinations"
+output = "Destination"
 removeStep = "Remove operation"
 save = "Save changes"
 scheduleEvery = "Run every"
@@ -8647,7 +8718,6 @@ account-link = "Account link"
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
-brandSuffix = "Stirling Processor"
 linkAccount = "Link Stirling account"
 primaryNav = "Primary navigation"
 switchApp = "Switch app"
@@ -8697,6 +8767,30 @@ title = "No sources connected yet"
 inUse = "In use"
 total = "Connections"
 unused = "Unused"
+
+[portal.sources.networkFields.connection]
+helperText = "The stored connection with the server address and credentials. Reused by every source that references it."
+label = "Connection"
+
+[portal.sources.networkFields.directory]
+helperText = "Folder on the server to poll, relative to the login home or share root. Leave blank for the root."
+label = "Folder"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume removes each file from the server once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: process each file once"
+snapshot = "Snapshot: re-read the folder every run"
+
+[portal.sources.networkFields.recursive]
+label = "Folder depth"
+
+[portal.sources.networkFields.recursive.options]
+all = "Include subfolders"
+top = "Top level only"
 
 [portal.sources.status]
 active = "Active"
@@ -8756,6 +8850,10 @@ label = "Folder depth"
 [portal.sources.types.folder.fields.recursive.options]
 all = "Include subfolders"
 top = "Top level only"
+
+[portal.sources.types.ftp]
+description = "Poll an FTP or FTPS server folder for new documents."
+label = "FTP"
 
 [portal.sources.types.googledrive]
 description = "Pull documents from shared Google Drive folders."
@@ -8824,11 +8922,6 @@ usage = "POST each document as the raw request body to the delivery URL with a b
 name = "Name"
 namePlaceholder = "e.g. Claims intake"
 type = "Type"
-
-[portal.tier]
-enterprise = "Enterprise plan"
-free = "Editor plan"
-pro = "Processor plan"
 
 [portal.usage]
 managePayment = "Manage Payment"
@@ -9595,38 +9688,6 @@ toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}
 [session]
 expired = "Your session has expired. Please refresh the page and try again."
 
-[sessionManagement.tooltip]
-header = "Managing Signing Sessions"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "New participants added to the end of signing order"
-bullet2 = "Cannot add participants after session is finalized"
-bullet3 = "Each participant receives a notification when it's their turn"
-description = "You can add more participants to an active session at any time before finalization."
-title = "Adding Participants"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>Full finalization</b>: All participants have signed"
-bullet2 = "<b>Partial finalization</b>: Some participants haven't signed yet"
-bullet3 = "Unsigned participants will be excluded from the final document"
-bullet4 = "Once finalized, you can load the signed PDF into active files"
-description = "Finalization combines all signatures into a single signed PDF. This action cannot be undone."
-title = "Session Finalization"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "Cannot remove participants who have already signed"
-bullet2 = "Removed participants no longer receive notifications"
-bullet3 = "Signing order adjusts automatically"
-description = "Participants can be removed from sessions before they sign."
-title = "Removing Participants"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "Each signature is applied sequentially to the PDF"
-bullet2 = "Later signers can see earlier signatures"
-bullet3 = "Critical for approval workflows and legal chains of custody"
-description = "The order you specify when creating the session determines who signs first."
-title = "Signature Order"
-
 [settings]
 close = "Close"
 
@@ -9676,6 +9737,8 @@ defaultPdfEditor = "Default PDF editor"
 defaultPdfEditorActive = "Stirling PDF is your default PDF editor"
 defaultPdfEditorChecking = "Checking..."
 defaultPdfEditorInactive = "Another application is set as default"
+defaultPdfEditorRemind = "Remind me to set as default"
+defaultPdfEditorRemindDescription = "Show a banner when Stirling PDF is not your default PDF application."
 defaultPdfEditorSet = "Already Default"
 defaultStartupView = "Default view on launch"
 defaultStartupViewDescription = "Choose which view is active when the app starts"
@@ -10663,14 +10726,42 @@ selectFilesHint = "Select files in Active Files to run this tool"
 singleFileScope = "Only applying to: {{fileName}}"
 viewerMode = "Switch to the file editor to add multiple files."
 
+[toolFormat]
+ANY = "any file"
+CBR = "a comic book archive (CBR)"
+CBZ = "a comic book archive (CBZ)"
+CSV = "a CSV file"
+EBOOK = "an ebook"
+EMAIL = "an email"
+EXCEL = "a spreadsheet"
+HTML = "a web page"
+IMAGE = "images"
+JAVASCRIPT = "a JavaScript file"
+JSON = "a JSON file"
+MARKDOWN = "a Markdown file"
+NONE = "no file"
+PCL = "a PCL print file"
+PDF = "a PDF"
+PDF_ENCRYPTED = "a password-protected PDF"
+POSTSCRIPT = "a PostScript file"
+PPT = "a presentation"
+TEXT = "a text file"
+VIDEO = "a video"
+WORD = "a Word document"
+XML = "an XML file"
+XPS = "an XPS document"
+ZIP = "a ZIP archive"
+
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Back to all tools"
 collapse = "Collapse panel"
 expand = "Expand panel"
 goBack = "Go back"
+pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
 premiumFeature = "Premium feature:"
+searchTools = "Search tools"
 toolsHeader = "Tools"
 viewAllTools = "View all tools"
 
@@ -10704,11 +10795,6 @@ allTools = "ALL TOOLS"
 noToolsFound = "No tools found"
 quickAccess = "QUICK ACCESS"
 searchPlaceholder = "Search tools..."
-
-[toolPicker.categories]
-advancedTools = "Advanced Tools"
-recommendedTools = "Recommended Tools"
-standardTools = "Standard Tools"
 
 [toolPicker.subcategories]
 advancedFormatting = "Advanced Formatting"
@@ -11533,30 +11619,6 @@ title = "Watermark Text"
 [watermark.watermarkType]
 image = "Image"
 text = "Text"
-
-[wetSignature.tooltip]
-header = "Signature Creation Methods"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Customize pen color and thickness"
-bullet2 = "Clear and redraw until satisfied"
-bullet3 = "Works on touch devices (tablets, phones)"
-description = "Create a handwritten signature using your mouse or touchscreen. Best for personal, authentic signatures."
-title = "Draw Signature"
-
-[wetSignature.tooltip.type]
-bullet1 = "Choose from multiple fonts"
-bullet2 = "Customize text size and color"
-bullet3 = "Perfect for standardized signatures"
-description = "Generate a signature from typed text. Fast and consistent, suitable for business documents."
-title = "Type Signature"
-
-[wetSignature.tooltip.upload]
-bullet1 = "Supports PNG, JPG, and other image formats"
-bullet2 = "Transparent backgrounds recommended for best results"
-bullet3 = "Image will be resized to fit signature area"
-description = "Upload a pre-created signature image. Ideal if you have a scanned signature or company logo."
-title = "Upload Signature Image"
 
 [workbenchBar]
 activeFiles = "Active Files"

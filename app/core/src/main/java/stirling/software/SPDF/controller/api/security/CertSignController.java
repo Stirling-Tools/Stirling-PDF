@@ -79,6 +79,8 @@ import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
@@ -170,12 +172,13 @@ public class CertSignController {
             value = "/cert-sign",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =
                     "This endpoint accepts a PDF file, a digital certificate and related"
                             + " information to sign the PDF. It then returns the digitally signed PDF"
-                            + " file. Input:PDF Output:PDF Type:SISO")
+                            + " file.")
     public ResponseEntity<Resource> signPDFWithCert(
             @ModelAttribute SignPDFWithCertRequest request, HttpServletRequest httpRequest)
             throws Exception {

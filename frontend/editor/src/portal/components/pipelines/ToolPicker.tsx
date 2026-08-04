@@ -7,6 +7,9 @@ import {
   type SubcategoryId,
 } from "@app/data/toolsTaxonomy";
 import { type ExecutableTool } from "@app/hooks/tools/shared/toolAutomation";
+import { toolAcceptsFormat } from "@app/utils/toolIOCompat";
+import { getToolFormatLabel } from "@app/utils/toolIOLabels";
+import { type ToolFormat } from "@app/types/toolIO";
 import {
   searchOperations,
   type StepOperation,
@@ -24,6 +27,12 @@ interface ToolPickerProps {
    */
   operations?: StepOperation[];
   onPickOperation?: (operation: StepOperation) => void;
+  /**
+   * What the step before this one produces, when known. Tools that cannot run on it are marked
+   * rather than hidden: the chain is still editable in any order, and the builder explains the
+   * problem once the step is added.
+   */
+  precedingOutput?: ToolFormat;
 }
 
 /**
@@ -36,6 +45,7 @@ export function ToolPicker({
   onClose,
   operations = [],
   onPickOperation,
+  precedingOutput,
 }: ToolPickerProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -114,6 +124,14 @@ export function ToolPicker({
                   <span className="portal-pipelines__picker-name">
                     {tool.name}
                   </span>
+                  {precedingOutput &&
+                  !toolAcceptsFormat(tool.endpoint, precedingOutput) ? (
+                    <span className="portal-pipelines__picker-note">
+                      {t("portal.pipelines.builder.cannotFollow", {
+                        produced: getToolFormatLabel(t, precedingOutput),
+                      })}
+                    </span>
+                  ) : null}
                 </Button>
               ))}
             </div>
