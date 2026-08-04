@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Stack,
   Text,
@@ -12,7 +12,10 @@ import {
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
-import { useAllFiles } from "@app/contexts/FileContext";
+import {
+  useViewScopedFiles,
+  useViewScopedFileStubs,
+} from "@app/hooks/tools/shared/useViewScopedFiles";
 import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
 import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
 import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
@@ -34,31 +37,19 @@ const CONTAINER_SIZE = 250; // Fit within actual pane width
 
 const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const { t } = useTranslation();
-  const { files, fileStubs } = useAllFiles();
+  // Preview and measure the document the crop will actually apply to, so both
+  // follow the viewer when the user switches files with the tool open.
+  const [selectedStub = null] = useViewScopedFileStubs();
+  const [selectedFile = null] = useViewScopedFiles();
 
-  // Get the first file for preview
-  const selectedStub = useMemo(() => {
-    return fileStubs.length > 0 ? fileStubs[0] : null;
-  }, [fileStubs]);
-
-  // Get the first file for PDF processing
-  const selectedFile = useMemo(() => {
-    return files.length > 0 ? files[0] : null;
-  }, [files]);
-
-  // Get thumbnail for the selected file
-  const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [pdfBounds, setPdfBounds] = useState<PDFBounds | null>(null);
 
   useEffect(() => {
     const loadPDFDimensions = async () => {
       if (!selectedStub || !selectedFile) {
         setPdfBounds(null);
-        setThumbnail(null);
         return;
       }
-
-      setThumbnail(selectedStub.thumbnailUrl || null);
 
       try {
         // Get PDF dimensions from the actual file
@@ -223,7 +214,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               >
                 <DocumentThumbnail
                   file={selectedStub}
-                  thumbnail={thumbnail}
+                  thumbnail={selectedStub?.thumbnailUrl ?? null}
                   style={{
                     width: pdfBounds.thumbnailWidth,
                     height: pdfBounds.thumbnailHeight,
