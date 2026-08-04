@@ -4,13 +4,16 @@
 *.o
 *.obj
 *.out
-*.dll
-*.so
-*.a
-*.exe
+build/
+target/
 
 # Dependencies
-target/
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
 .gradle/
 
 # Logs and temp files
@@ -18,23 +21,45 @@ target/
 *.tmp
 *.swp
 
-# Editors
-.vscode/
-.idea/
-
 # Environment
 .env
 .env.local
 *.env.*
 
-# Coverage reports
+# Editors
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage
 coverage/
 htmlcov/
-*.coverage
+.coverage
 
-# Package manager caches
-node_modules/
-__pycache__/
-.mypy_cache/
-.pytest_cache/
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 ```
