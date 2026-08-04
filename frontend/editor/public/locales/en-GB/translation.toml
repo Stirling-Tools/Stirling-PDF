@@ -10956,3 +10956,15 @@ confirm = "Extract"
 message_one = "This ZIP contains {{count}} file. Extract anyway?"
 message_other = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
+
+[workspace.readingMode]
+title = "Reading Mode"
+normal = "Normal"
+sepia = "Sepia"
+invert = "Invert Colors"
+hint = "Adjust the viewing mode for comfortable reading"
+
+[workspace.customBackground]
+title = "Custom Background Color"
+select = "Choose background color"
+reset = "Reset to default"

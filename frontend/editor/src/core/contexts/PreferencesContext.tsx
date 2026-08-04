@@ -10,6 +10,7 @@ interface PreferencesContextValue {
     key: K,
     value: UserPreferences[K],
   ) => void;
+  updatePreferences: (updates: Partial<UserPreferences>) => void;
   resetPreferences: () => void;
   updateServerDefaults: (defaults: Partial<UserPreferences>) => void;
 }

@@ -59,6 +59,7 @@ import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale
 import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
 import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
+import { insertBlankPagesOperationConfig } from "@app/hooks/tools/insertBlankPages/useInsertBlankPagesOperation";
 import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from "@app/constants/splitConstants";
 import { ToolId } from "@app/types/toolId";
 import { CONVERT_SUPPORTED_FORMATS } from "@app/constants/convertSupportedFornats";
@@ -849,6 +850,27 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         operationConfig: asRegistryConfig(extractPagesOperationConfig),
         endpoints: ["rearrange-pages"],
+      },
+      insertBlankPages: {
+        icon: (
+          <LocalIcon icon="add-box-outline-rounded" width="1.5rem" height="1.5rem" />
+        ),
+        name: t("home.insertBlankPages.title", "Insert Blank Pages"),
+        component: lazy(() => import("@app/tools/InsertBlankPages")),
+        description: t(
+          "home.insertBlankPages.desc",
+          "Insert blank pages at a specific position in your PDF",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: 1,
+        endpoints: ["insert-blank-pages"],
+        operationConfig: asRegistryConfig(insertBlankPagesOperationConfig),
+        automationSettings: lazySettings(
+          () =>
+            import("@app/components/tools/insertBlankPages/InsertBlankPagesSettings"),
+        ),
+        synonyms: getSynonyms(t, "insertBlankPages"),
       },
       extractImages: {
         icon: (
