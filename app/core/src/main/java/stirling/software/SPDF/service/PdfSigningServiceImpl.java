@@ -10,9 +10,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
-import org.apache.pdfbox.pdmodel.interactive.appearance.PDAppearanceDictionary;
-import org.apache.pdfbox.pdmodel.interactive.appearance.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -60,10 +61,10 @@ public class PdfSigningServiceImpl implements PdfSigningService {
             PDSignatureField signatureField;
             if (showSignature && pageNumber != null) {
                 // Create visible signature field
-                signatureField = new PDSignatureField(document);
+                signatureField = new PDSignatureField(acroForm);
                 PDField field = acroForm.getField("Signature");
                 if (field == null) {
-                    acroForm.addField(signatureField);
+                    acroForm.getFields().add(signatureField);
                 } else {
                     signatureField = (PDSignatureField) field;
                 }
@@ -99,11 +100,13 @@ public class PdfSigningServiceImpl implements PdfSigningService {
                     appearanceText.append("\n[Stirling-PDF]");
                 }
 
+                appearanceStream.setBBox(rect);
                 appearanceStream.setResources(new PDResources());
                 try (PDPageContentStream contentStream =
                         new PDPageContentStream(document, appearanceStream)) {
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+                    contentStream.setFont(
+                            new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 10);
                     contentStream.newLineAtOffset(10, 10);
                     contentStream.showText(appearanceText.toString());
                     contentStream.endText();

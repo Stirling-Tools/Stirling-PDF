@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class RearrangePagesPDFController {
             return ResponseEntity.badRequest().body(null);
         }
 
-        try (PDDocument document = PDDocument.load(file.getInputStream())) {
+        try (PDDocument document = Loader.loadPDF(file.getInputStream())) {
             int totalPages = document.getNumberOfPages();
             List<Integer> newPageIndices = parsePageOrder(pageOrder, totalPages);
 
@@ -39,14 +40,14 @@ public class RearrangePagesPDFController {
                 }
             }
 
-            document.removeRange(0, totalPages);
-
+            PDDocument newDocument = new PDDocument();
             for (PDPage page : orderedPages) {
-                document.addPage(page);
+                newDocument.addPage(page);
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
+            newDocument.save(baos);
+            newDocument.close();
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=rearranged_pages.pdf")
                     .body(baos.toByteArray());
@@ -63,7 +64,7 @@ public class RearrangePagesPDFController {
         String[] parts = pageOrder.split(",");
         for (String part : parts) {
             part = part.trim();
-            if (part.matches("\\d+")) {
+            if (part.matches("\d+")) {
                 indices.add(Integer.parseInt(part) - 1);
             }
         }

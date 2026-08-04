@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class DuplicatePagesController {
             return ResponseEntity.badRequest().body(null);
         }
 
-        try (PDDocument document = PDDocument.load(file.getInputStream())) {
+        try (PDDocument document = Loader.loadPDF(file.getInputStream())) {
             int pageCount = document.getNumberOfPages();
 
             List<PDPage> originalPages = new ArrayList<>();
@@ -33,15 +34,15 @@ public class DuplicatePagesController {
                 originalPages.add(document.getPage(i));
             }
 
-            document.removeRange(0, pageCount);
-
+            PDDocument newDocument = new PDDocument();
             for (PDPage page : originalPages) {
-                document.addPage(page);
-                document.addPage(page);
+                newDocument.addPage(page);
+                newDocument.addPage(page);
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
+            newDocument.save(baos);
+            newDocument.close();
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=duplicated_pages.pdf")
                     .body(baos.toByteArray());
