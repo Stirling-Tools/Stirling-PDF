@@ -4,10 +4,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.runtime.StartupEvent;
+
+import jakarta.annotation.Priority;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.interceptor.Interceptor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +36,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * can at worst create a redundant (unreferenced) source row, never corrupt a policy.
  */
 @Slf4j
-@Component
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class PolicyInlineOutputMigration {
 
@@ -55,13 +59,18 @@ public class PolicyInlineOutputMigration {
     private final SourceStore sourceStore;
     private final CompletedMigrations completedMigrations;
 
-    // Runs after EmbeddedS3CredentialMigration (@Order(1)) so any legacy S3 output has already had
-    // its embedded credentials extracted into a connection; the Source created here then references
-    // that connection rather than copying credentials into source_json. Not wrapped in a single
-    // transaction: each store write is its own (idempotent) commit, so a crash mid-run just re-runs
-    // next boot, and the marker below is written only once the whole pass succeeds.
-    @Order(2)
-    @EventListener(ApplicationReadyEvent.class)
+    // Ordered above the CDI default (APPLICATION+500) so startup reaches this only after
+    // EmbeddedS3CredentialMigration, the way Spring's @Order(1)/@Order(2) pair did.
+    void onStart(@Observes @Priority(Interceptor.Priority.APPLICATION + 600) StartupEvent event) {
+        migrate();
+    }
+
+    // Runs after EmbeddedS3CredentialMigration (see the observer priority above) so any legacy S3
+    // output has already had its embedded credentials extracted into a connection; the Source
+    // created here then references that connection rather than copying credentials into
+    // source_json. Not wrapped in a single transaction: each store write is its own (idempotent)
+    // commit, so a crash mid-run just re-runs next boot, and the marker below is written only once
+    // the whole pass succeeds.
     public void migrate() {
         if (completedMigrations.isDone(MIGRATION_ID)) {
             return;

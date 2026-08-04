@@ -5,9 +5,9 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,10 +20,11 @@ import lombok.extern.slf4j.Slf4j;
  * authoritative deny ({@link AccountLinkClient.RevokedException}) does not: the snapshot is
  * replaced with a {@link EntitlementState#REVOKED} entitlement so the gate blocks immediately.
  */
+// Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
+// bean; it stays inert until something asks, and an unlinked instance yields an empty snapshot.
 @Slf4j
-@Service
-@Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ApplicationScoped
+@IfBuildProfile("!saas")
 public class EntitlementCache {
 
     private final DeviceCredentialStore credentialStore;

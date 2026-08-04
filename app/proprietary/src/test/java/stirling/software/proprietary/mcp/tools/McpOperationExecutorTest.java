@@ -10,19 +10,23 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
+
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
@@ -31,6 +35,11 @@ import stirling.software.proprietary.mcp.catalog.OperationMeta;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
+/**
+ * MIGRATION (Spring -> Quarkus): {@link InternalApiClient} now returns a {@link Response} (was
+ * {@code ResponseEntity<Resource>}) carrying the {@link Resource} shim, and accepts a {@code
+ * Map<String,List<Object>>} body (was Spring {@code MultiValueMap}).
+ */
 class McpOperationExecutorTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -47,21 +56,12 @@ class McpOperationExecutorTest {
                 null);
     }
 
-    private ResponseEntity<Resource> pdfResponse(byte[] bytes) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        Resource body =
-                new ByteArrayResource(bytes) {
-                    @Override
-                    public String getFilename() {
-                        return "out.pdf";
-                    }
-                };
-        return ResponseEntity.ok().headers(headers).body(body);
+    private Response pdfResponse(byte[] bytes) {
+        Resource body = new ByteArrayBackedResource(bytes, "out.pdf");
+        return Response.ok(body, MediaType.valueOf("application/pdf")).build();
     }
 
     @Test
-    @SuppressWarnings({"unchecked", "rawtypes"})
     void inlineBase64Input_runsAndReturnsResultInline() throws Exception {
         InternalApiClient api = mock(InternalApiClient.class);
         FileStorage storage = mock(FileStorage.class);
@@ -84,11 +84,11 @@ class McpOperationExecutorTest {
 
         assertFalse(result.path("isError").asBoolean(false));
 
-        ArgumentCaptor<MultiValueMap> bodyCap = ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<Map<String, List<Object>>> bodyCap = bodyCaptor();
         verify(api).post(eq("/api/v1/misc/compress-pdf"), bodyCap.capture());
-        MultiValueMap captured = bodyCap.getValue();
+        Map<String, List<Object>> captured = bodyCap.getValue();
         assertTrue(captured.containsKey("fileInput"), "must send fileInput");
-        assertEquals("2", String.valueOf(captured.getFirst("optimizeLevel")), "must pass params");
+        assertEquals("2", String.valueOf(captured.get("optimizeLevel").get(0)), "must pass params");
 
         String text = result.get("content").get(0).get("text").asText();
         assertTrue(text.contains("result-123"), "must report the result fileId: " + text);
@@ -142,5 +142,50 @@ class McpOperationExecutorTest {
 
         assertFalse(result.path("isError").asBoolean(false));
         verify(storage).retrieveBytes("abc");
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static ArgumentCaptor<Map<String, List<Object>>> bodyCaptor() {
+        return (ArgumentCaptor) ArgumentCaptor.forClass(Map.class);
+    }
+
+    /**
+     * In-memory {@link Resource} with a stable filename, repeatable reads, and a real {@code
+     * contentLength()} so the executor's inline-vs-streamed decision works (replaces Spring's
+     * {@code ByteArrayResource}).
+     */
+    private static final class ByteArrayBackedResource implements Resource {
+        private final byte[] bytes;
+        private final String filename;
+
+        ByteArrayBackedResource(byte[] bytes, String filename) {
+            this.bytes = bytes;
+            this.filename = filename;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+
+        @Override
+        public long contentLength() {
+            return bytes.length;
+        }
+
+        @Override
+        public File getFile() throws IOException {
+            throw new IOException("not file-backed");
+        }
     }
 }

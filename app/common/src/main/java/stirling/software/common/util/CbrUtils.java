@@ -14,7 +14,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.github.junrar.Archive;
 import com.github.junrar.exception.CorruptHeaderException;
@@ -24,6 +23,7 @@ import com.github.junrar.rarfile.FileHeader;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j

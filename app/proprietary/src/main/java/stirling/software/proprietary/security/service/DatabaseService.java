@@ -26,10 +26,11 @@ import java.util.regex.Pattern;
 import javax.sql.DataSource;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.context.annotation.Profile;
-import org.springframework.jdbc.datasource.init.CannotReadScriptException;
-import org.springframework.jdbc.datasource.init.ScriptException;
-import org.springframework.stereotype.Service;
+
+import io.quarkus.arc.profile.UnlessBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,8 +41,8 @@ import stirling.software.proprietary.security.database.DatabaseNotificationServi
 import stirling.software.proprietary.security.model.exception.BackupNotFoundException;
 
 @Slf4j
-@Service
-@Profile("!saas")
+@ApplicationScoped
+@UnlessBuildProfile("saas")
 public class DatabaseService implements DatabaseServiceInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
@@ -113,7 +114,11 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     public DatabaseService(
             ApplicationProperties.Datasource datasourceProps,
-            DataSource dataSource,
+            // MIGRATION: qualify the app's custom DataSource (DatabaseConfig @Produces
+            // @Named("dataSource")) to disambiguate from the @Default DataSource that Quarkus
+            // auto-provides from quarkus.datasource.* config. This DataSource carries the
+            // settings.yml-driven H2/Postgres selection that DatabaseService backups depend on.
+            @Named("dataSource") DataSource dataSource,
             DatabaseNotificationServiceInterface backupNotificationService) {
         this.BACKUP_DIR = Path.of(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;
@@ -308,14 +313,6 @@ public class DatabaseService implements DatabaseServiceInterface {
                                 + insertOutputFilePath.getFileName()
                                 + " Message: "
                                 + e.getMessage());
-            } catch (CannotReadScriptException e) {
-                log.error("Error during database export: File {} not found", insertOutputFilePath);
-                backupNotificationService.notifyBackupsFailure(
-                        "Database backup export failed",
-                        "Error during database export: File "
-                                + insertOutputFilePath.getFileName()
-                                + " not found. Message: "
-                                + e.getMessage());
             }
 
             log.info("Database export completed: {}", insertOutputFilePath);
@@ -505,8 +502,6 @@ public class DatabaseService implements DatabaseServiceInterface {
                 stmt.execute();
             } catch (SQLException e) {
                 log.error("Error during database import: {}", e.getMessage(), e);
-            } catch (ScriptException e) {
-                log.error("Error: File {} not found", scriptPath.toString(), e);
             }
         }
 

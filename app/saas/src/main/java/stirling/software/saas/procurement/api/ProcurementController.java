@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
+import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
+import jakarta.annotation.security.RolesAllowed;
+import stirling.software.common.security.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,7 +50,7 @@ import stirling.software.saas.util.AuthenticationUtils;
 @Hidden
 @RestController
 @RequestMapping("/api/v1/procurement")
-@Profile("saas")
+@IfBuildProfile("saas")
 public class ProcurementController {
 
     // Local mapper to parse the stored line-items JSON; the saas context exposes no injectable
@@ -300,7 +300,7 @@ public class ProcurementController {
      * stays in the payment step until the invoice settles. Idempotent.
      */
     @PostMapping("/provision")
-    @PreAuthorize("hasRole('ADMIN')")
+    @RolesAllowed("ADMIN")
     public ResponseEntity<Void> provision(@RequestParam("teamId") long teamId) {
         try {
             procurement.provisionLicense(teamId);

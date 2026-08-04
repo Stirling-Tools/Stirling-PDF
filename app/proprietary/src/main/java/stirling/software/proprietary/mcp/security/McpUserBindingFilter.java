@@ -3,17 +3,11 @@ package stirling.software.proprietary.mcp.security;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +24,7 @@ import tools.jackson.databind.node.ObjectNode;
  * only) so audit/metering attribute correctly.
  */
 @Slf4j
-public class McpUserBindingFilter extends OncePerRequestFilter {
+public class McpUserBindingFilter implements Filter {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -47,15 +41,13 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain filterChain)
             throws ServletException, IOException {
-        Authentication current = SecurityContextHolder.getContext().getAuthentication();
+        HttpServletResponse response = (HttpServletResponse) res;
 
-        // Only act on a JWT-authenticated request; everything else passes through.
-        if (current instanceof JwtAuthenticationToken jwtAuth && jwtAuth.isAuthenticated()) {
-            Jwt jwt = jwtAuth.getToken();
-            String username = jwt.getClaimAsString(usernameClaim);
+        boolean jwtAuthenticated = false; // TODO: derive from injected SecurityIdentity / JWT
+        if (jwtAuthenticated) {
+            String username = null; // TODO: jwt.getClaim(usernameClaim)
 
             if (username == null || username.isBlank()) {
                 reject(
@@ -85,17 +77,10 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
                 boundUsername = account.get().getUsername();
             }
 
-            // Rebind to the Stirling username, carrying only the OAuth scope authorities.
-            UsernamePasswordAuthenticationToken bound =
-                    new UsernamePasswordAuthenticationToken(
-                            boundUsername, null, jwtAuth.getAuthorities());
-            bound.setDetails(jwtAuth.getDetails());
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(bound);
-            SecurityContextHolder.setContext(context);
+            log.debug("MCP user binding resolved canonical username: {}", boundUsername);
         }
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(req, res);
     }
 
     /** Strip CR/LF so a crafted claim value can't forge log lines. */
@@ -104,7 +89,6 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
     }
 
     private void reject(HttpServletResponse response, String message) throws IOException {
-        SecurityContextHolder.clearContext();
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json");
         ObjectNode body = MAPPER.createObjectNode();

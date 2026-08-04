@@ -9,12 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.slf4j.MDC;
-import org.springframework.boot.actuate.audit.AuditEvent;
-import org.springframework.boot.actuate.audit.AuditEventRepository;
-import org.springframework.context.annotation.Primary;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,32 +19,26 @@ import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.util.SecretMasker;
 
-import tools.jackson.databind.ObjectMapper;
-
-@Component
-@Primary
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-public class CustomAuditEventRepository implements AuditEventRepository {
+public class CustomAuditEventRepository {
+
+    // Jackson 3 ObjectMapper as a static field - Quarkus CDI only produces com.fasterxml (Jackson
+    // 2) beans; Jackson 3 is used as a plain library here for JSON serialization of audit data.
+    private static final tools.jackson.databind.ObjectMapper MAPPER =
+            new tools.jackson.databind.ObjectMapper();
+
+    /** Width of the {@code principal} column; longer values are hashed so the insert can't fail. */
+    private static final int PRINCIPAL_MAX_LENGTH = 255;
 
     private final PersistentAuditEventRepository repo;
-    private final ObjectMapper mapper;
 
-    /* ── READ side intentionally inert (endpoint disabled) ── */
-    @Override
-    public List<AuditEvent> find(String p, Instant after, String type) {
-        return List.of();
-    }
-
-    /* ── WRITE side (async) ───────────────────────────────── */
-    @Async("auditExecutor")
-    @Override
-    public void add(AuditEvent ev) {
+    /* ── WRITE side ───────────────────────────────────────── */
+    public void add(String principal, String type, Instant timestamp, Map<String, Object> data) {
         try {
             Map<String, Object> clean =
-                    CollectionUtils.isEmpty(ev.getData())
-                            ? Map.of()
-                            : SecretMasker.mask(ev.getData());
+                    (data == null || data.isEmpty()) ? Map.of() : SecretMasker.mask(data);
 
             if (clean.isEmpty() || (clean.size() == 1 && clean.containsKey("details"))) {
                 return;
@@ -73,25 +63,22 @@ public class CustomAuditEventRepository implements AuditEventRepository {
 
             String source = MDC.get("auditSource");
 
-            String auditEventData = mapper.writeValueAsString(clean);
+            String auditEventData = MAPPER.writeValueAsString(clean);
             log.debug("AuditEvent data (JSON): {}", auditEventData);
 
             PersistentAuditEvent ent =
                     PersistentAuditEvent.builder()
-                            .principal(safePrincipal(ev.getPrincipal()))
-                            .type(ev.getType())
+                            .principal(safePrincipal(principal))
+                            .type(type)
                             .source(source)
                             .data(auditEventData)
-                            .timestamp(ev.getTimestamp())
+                            .timestamp(timestamp)
                             .build();
-            repo.save(ent);
+            repo.persist(ent);
         } catch (Exception e) {
-            log.error("Failed to persist audit event (fail-open); type={}", ev.getType(), e);
+            log.error("Failed to persist audit event (fail-open); type={}", type, e);
         }
     }
-
-    /** Width of the {@code principal} column; longer values are hashed so the insert can't fail. */
-    private static final int PRINCIPAL_MAX_LENGTH = 255;
 
     /**
      * Hash JWT-shaped or over-long principals so the insert fits the column and stores no secret.
@@ -117,5 +104,12 @@ public class CustomAuditEventRepository implements AuditEventRepository {
         } catch (NoSuchAlgorithmException e) {
             return "unhashable";
         }
+    }
+
+    /* ── READ side intentionally inert (endpoint disabled) ──
+     * Original find(String, Instant, String) returned List.of(); the Actuator read endpoint was
+     * disabled. Re-add a typed read method here if an audit-query endpoint is reintroduced. */
+    public List<PersistentAuditEvent> find() {
+        return List.of();
     }
 }

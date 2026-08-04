@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
+import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,8 +26,8 @@ import lombok.extern.slf4j.Slf4j;
  * Stripe's hosted portal; this never writes.
  */
 @Slf4j
-@Repository
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class StripePaymentMethodDao {
 
     /** Card brand (e.g. "visa"), last 4 digits, and numeric expiry; any field may be null. */

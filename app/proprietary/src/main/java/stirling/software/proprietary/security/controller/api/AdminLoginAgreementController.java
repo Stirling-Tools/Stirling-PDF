@@ -4,18 +4,20 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +29,9 @@ import stirling.software.common.service.LoginAgreementService;
  * (customFiles/disclaimer/&lt;locale&gt;.md). The enable/visibility flags are managed through the
  * normal admin settings endpoints; only the live-edited text is handled here.
  */
-@RestController
-@RequestMapping("/api/v1/admin/login-agreement")
-@PreAuthorize("hasRole('ADMIN')")
+@ApplicationScoped
+@Path("/api/v1/admin/login-agreement")
+@RolesAllowed("ADMIN")
 @RequiredArgsConstructor
 @Tag(name = "Admin Settings", description = "Login agreement text management")
 @Hidden
@@ -38,35 +40,39 @@ public class AdminLoginAgreementController {
 
     private final LoginAgreementService loginAgreementService;
 
-    @GetMapping
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List locales that currently have login agreement text")
     public Set<String> listLocales() {
         return loginAgreementService.listLocalesWithContent();
     }
 
-    @GetMapping("/{locale}")
+    @GET
+    @Path("/{locale}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Read the login agreement markdown for a locale")
-    public ResponseEntity<Map<String, String>> read(@PathVariable String locale) {
+    public Response read(@PathParam("locale") String locale) {
         String content = loginAgreementService.readRawForLocale(locale);
         if (content == null) {
-            return ResponseEntity.badRequest().build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
-        return ResponseEntity.ok(Map.of("locale", locale, "content", content));
+        return Response.ok(Map.of("locale", locale, "content", content)).build();
     }
 
-    @PutMapping("/{locale}")
+    @PUT
+    @Path("/{locale}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(summary = "Write the login agreement markdown for a locale (blank clears it)")
-    public ResponseEntity<Void> write(
-            @PathVariable String locale, @RequestBody DisclaimerContentRequest request) {
+    public Response write(@PathParam("locale") String locale, DisclaimerContentRequest request) {
         try {
             loginAgreementService.writeForLocale(
                     locale, request == null ? null : request.content());
-            return ResponseEntity.noContent().build();
+            return Response.noContent().build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         } catch (IOException e) {
             log.error("Failed writing login agreement for locale {}", locale, e);
-            return ResponseEntity.internalServerError().build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 

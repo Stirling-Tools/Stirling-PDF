@@ -3,23 +3,22 @@ package stirling.software.saas.payg.policy.admin;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,98 +39,109 @@ import stirling.software.saas.payg.policy.admin.PolicyDtos.TeamOverrideRequest;
  * (cap-setting, cohort migration). Every endpoint requires {@code ROLE_ADMIN}.
  */
 @Hidden
-@RestController
-@RequestMapping("/api/v1/admin/payg")
-@Profile("saas")
-@Tag(name = "PAYG Admin — Pricing Policy", description = "Admin CRUD for pricing policies")
+@ApplicationScoped
+@Path("/api/v1/admin/payg")
+@IfBuildProfile("saas")
+@Tag(name = "PAYG Admin - Pricing Policy", description = "Admin CRUD for pricing policies")
 @RequiredArgsConstructor
 @Slf4j
 public class PricingPolicyAdminController {
 
     private final PricingPolicyService policyService;
 
-    @GetMapping("/policies")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/policies")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "List all pricing policies (admin)")
-    public ResponseEntity<List<PolicyResponse>> listPolicies() {
-        return ResponseEntity.ok(
-                policyService.listAll().stream().map(PolicyResponse::from).toList());
+    public Response listPolicies() {
+        return Response.ok(policyService.listAll().stream().map(PolicyResponse::from).toList())
+                .build();
     }
 
-    @GetMapping("/policies/{policyId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/policies/{policyId}")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get a single pricing policy by id (admin)")
-    public ResponseEntity<PolicyResponse> getPolicy(@PathVariable Long policyId) {
+    public Response getPolicy(@PathParam("policyId") Long policyId) {
         return policyService
                 .findById(policyId)
-                .map(p -> ResponseEntity.ok(PolicyResponse.from(p)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .map(p -> Response.ok(PolicyResponse.from(p)).build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
-    @PostMapping("/policies")
-    @PreAuthorize("hasRole('ADMIN')")
+    @POST
+    @Path("/policies")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ADMIN")
     @Operation(
             summary = "Create a new pricing policy (admin)",
             description =
                     "Creates a non-default policy. To promote to default, call set-default after"
                             + " creation.")
-    public ResponseEntity<?> createPolicy(@RequestBody CreatePolicyRequest req) {
+    public Response createPolicy(CreatePolicyRequest req) {
         try {
             PricingPolicy draft = mapCreateRequest(req);
             PricingPolicy saved = policyService.create(draft);
-            return ResponseEntity.status(HttpStatus.CREATED).body(PolicyResponse.from(saved));
+            return Response.status(Response.Status.CREATED)
+                    .entity(PolicyResponse.from(saved))
+                    .build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(error(e.getMessage()));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(error(e.getMessage()))
+                    .build();
         }
     }
 
-    @PostMapping("/policies/{policyId}/set-default")
-    @PreAuthorize("hasRole('ADMIN')")
+    @POST
+    @Path("/policies/{policyId}/set-default")
+    @RolesAllowed("ADMIN")
     @Operation(
             summary = "Promote a policy to default (admin)",
             description =
                     "Atomically clears the existing default flag and sets this row's flag."
                             + " Teams without an override use the default.")
-    public ResponseEntity<?> setDefault(@PathVariable Long policyId) {
+    public Response setDefault(@PathParam("policyId") Long policyId) {
         try {
             PricingPolicy promoted = policyService.setDefault(policyId);
-            return ResponseEntity.ok(PolicyResponse.from(promoted));
+            return Response.ok(PolicyResponse.from(promoted)).build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error(e.getMessage()));
+            return Response.status(Response.Status.NOT_FOUND).entity(error(e.getMessage())).build();
         }
     }
 
-    @PutMapping("/teams/{teamId}/policy-override")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PUT
+    @Path("/teams/{teamId}/policy-override")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ADMIN")
     @Operation(
             summary = "Set or clear a team's per-team pricing-policy override (admin)",
             description =
                     "Payload {policyId: <id>} sets the override; {policyId: null} clears it"
                             + " (team falls back to default).")
-    public ResponseEntity<?> setTeamOverride(
-            @PathVariable Long teamId, @RequestBody TeamOverrideRequest req) {
+    public Response setTeamOverride(@PathParam("teamId") Long teamId, TeamOverrideRequest req) {
         try {
             policyService.setTeamOverride(teamId, req == null ? null : req.policyId());
-            return ResponseEntity.noContent().build();
+            return Response.noContent().build();
         } catch (IllegalArgumentException | IllegalStateException e) {
-            HttpStatus status =
+            Response.Status status =
                     e instanceof IllegalStateException
-                            ? HttpStatus.NOT_FOUND
-                            : HttpStatus.BAD_REQUEST;
-            return ResponseEntity.status(status).body(error(e.getMessage()));
+                            ? Response.Status.NOT_FOUND
+                            : Response.Status.BAD_REQUEST;
+            return Response.status(status).entity(error(e.getMessage())).build();
         }
     }
 
-    @GetMapping("/teams/{teamId}/effective-policy")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/teams/{teamId}/effective-policy")
+    @RolesAllowed("ADMIN")
     @Operation(
             summary = "Read the effective policy for a team (admin)",
             description =
                     "Returns the override if set, else the default. Bypasses the read cache so"
                             + " admins always see the latest state.")
-    public ResponseEntity<PolicyResponse> getEffectivePolicy(@PathVariable Long teamId) {
-        return ResponseEntity.ok(
-                PolicyResponse.from(policyService.getEffectivePolicyUncached(teamId)));
+    public Response getEffectivePolicy(@PathParam("teamId") Long teamId) {
+        return Response.ok(PolicyResponse.from(policyService.getEffectivePolicyUncached(teamId)))
+                .build();
     }
 
     private static PricingPolicy mapCreateRequest(CreatePolicyRequest req) {

@@ -1,7 +1,6 @@
 package stirling.software.proprietary.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,7 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.beans.factory.ObjectProvider;
+
+import jakarta.enterprise.inject.Instance;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.UserLicenseSettings;
@@ -35,7 +35,7 @@ class UserLicenseSettingsServiceTest {
     @Mock private ApplicationProperties.Premium premium;
     @Mock private ApplicationProperties.AutomaticallyGenerated automaticallyGenerated;
     @Mock private LicenseKeyChecker licenseKeyChecker;
-    @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
+    @Mock private Instance<LicenseKeyChecker> licenseKeyCheckerProvider;
 
     private UserLicenseSettingsService service;
     private UserLicenseSettings mockSettings;
@@ -55,10 +55,10 @@ class UserLicenseSettingsServiceTest {
                 .thenReturn(false); // Default: not a new server
         when(settingsRepository.findSettings()).thenReturn(Optional.of(mockSettings));
         when(userService.getTotalUsersCount()).thenReturn(80L);
-        when(settingsRepository.save(any(UserLicenseSettings.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        // settingsRepository.persist(...) is a void Panache call - no stub needed.
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
-        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(licenseKeyChecker);
+        when(licenseKeyCheckerProvider.isResolvable()).thenReturn(true);
+        when(licenseKeyCheckerProvider.get()).thenReturn(licenseKeyChecker);
 
         // Create service with overridden validateSettingsIntegrity to bypass signature validation
         service =
@@ -365,7 +365,7 @@ class UserLicenseSettingsServiceTest {
     @Test
     void isOAuthEligible_licenseCheckerUnavailable_returnsFalse() {
         // If LicenseKeyChecker is unavailable, OAuth should be blocked
-        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(null);
+        when(licenseKeyCheckerProvider.isResolvable()).thenReturn(false);
 
         stirling.software.proprietary.security.model.User user =
                 new stirling.software.proprietary.security.model.User();
@@ -478,7 +478,7 @@ class UserLicenseSettingsServiceTest {
     @Test
     void isSamlEligible_licenseCheckerUnavailable_returnsFalse() {
         // If LicenseKeyChecker is unavailable, SAML should be blocked
-        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(null);
+        when(licenseKeyCheckerProvider.isResolvable()).thenReturn(false);
 
         stirling.software.proprietary.security.model.User user =
                 new stirling.software.proprietary.security.model.User();

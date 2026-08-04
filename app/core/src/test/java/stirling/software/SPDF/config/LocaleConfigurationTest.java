@@ -2,70 +2,71 @@ package stirling.software.SPDF.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Locale;
+
 import org.junit.jupiter.api.Test;
-import org.springframework.web.servlet.LocaleResolver;
-import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
-import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 import stirling.software.common.model.ApplicationProperties;
 
+/**
+ * MIGRATION: LocaleConfiguration was a Spring MVC {@code WebMvcConfigurer} exposing {@code
+ * localeChangeInterceptor()} and {@code localeResolver()} (SessionLocaleResolver). Quarkus/JAX-RS
+ * has no WebMvcConfigurer, LocaleChangeInterceptor or SessionLocaleResolver, so those beans are
+ * gone. The default-locale resolution logic is preserved as a CDI-produced {@link Locale} via
+ * {@link LocaleConfiguration#defaultLocale()}; these tests now exercise that producer directly.
+ */
 class LocaleConfigurationTest {
 
     @Test
-    void localeChangeInterceptorUsesLangParam() {
+    void defaultLocaleFallsBackToUSWhenNoLocaleConfigured() {
         LocaleConfiguration config = createConfig(null);
-        LocaleChangeInterceptor lci = config.localeChangeInterceptor();
-        assertEquals("lang", lci.getParamName());
+        assertEquals(Locale.US, config.defaultLocale());
     }
 
     @Test
-    void localeResolverDefaultsToUKWhenNoLocaleConfigured() {
-        LocaleConfiguration config = createConfig(null);
-        LocaleResolver resolver = config.localeResolver();
-        assertNotNull(resolver);
-        assertTrue(resolver instanceof SessionLocaleResolver);
-    }
-
-    @Test
-    void localeResolverDefaultsToUKWhenEmptyLocale() {
+    void defaultLocaleFallsBackToUSWhenEmptyLocale() {
         LocaleConfiguration config = createConfig("");
-        LocaleResolver resolver = config.localeResolver();
-        assertNotNull(resolver);
+        assertEquals(Locale.US, config.defaultLocale());
     }
 
     @Test
-    void localeResolverAcceptsValidLocale() {
+    void defaultLocaleAcceptsValidLocale() {
         LocaleConfiguration config = createConfig("de-DE");
-        LocaleResolver resolver = config.localeResolver();
-        assertNotNull(resolver);
+        Locale resolved = config.defaultLocale();
+        assertNotNull(resolved);
+        assertEquals("de-DE", resolved.toLanguageTag());
     }
 
     @Test
-    void localeResolverHandlesUnderscoreLocale() {
+    void defaultLocaleHandlesUnderscoreLocale() {
+        // The configured value is compared (case-insensitively) against the resolved language tag.
+        // An underscore form like "fr_FR" never equals the hyphenated tag "fr-FR" under
+        // equalsIgnoreCase ('_' != '-'), so it falls back to US rather than throwing.
         LocaleConfiguration config = createConfig("fr_FR");
-        LocaleResolver resolver = config.localeResolver();
-        assertNotNull(resolver);
+        Locale resolved = config.defaultLocale();
+        assertNotNull(resolved);
+        assertEquals(Locale.US, resolved);
     }
 
     @Test
-    void localeResolverFallsBackForInvalidLocale() {
-        // An invalid tag that doesn't round-trip
+    void defaultLocaleFallsBackForInvalidLocale() {
+        // An invalid tag that doesn't round-trip falls back to US.
         LocaleConfiguration config = createConfig("invalid!!locale");
-        LocaleResolver resolver = config.localeResolver();
-        assertNotNull(resolver);
+        assertEquals(Locale.US, config.defaultLocale());
     }
 
     @Test
-    void localeChangeInterceptorIsNotNull() {
+    void defaultLocaleIsNotNull() {
         LocaleConfiguration config = createConfig("en-US");
-        assertNotNull(config.localeChangeInterceptor());
+        assertNotNull(config.defaultLocale());
     }
 
     @Test
-    void localeResolverHandlesJapaneseLocale() {
+    void defaultLocaleHandlesJapaneseLocale() {
         LocaleConfiguration config = createConfig("ja-JP");
-        LocaleResolver resolver = config.localeResolver();
-        assertNotNull(resolver);
+        Locale resolved = config.defaultLocale();
+        assertNotNull(resolved);
+        assertEquals("ja-JP", resolved.toLanguageTag());
     }
 
     private LocaleConfiguration createConfig(String locale) {

@@ -10,9 +10,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.MediaType;
-
 import lombok.Synchronized;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -46,10 +43,10 @@ public class EmlProcessingUtils {
     };
     private final Map<String, String> EXTENSION_TO_MIME_TYPE =
             Map.of(
-                    ".png", MediaType.IMAGE_PNG_VALUE,
-                    ".jpg", MediaType.IMAGE_JPEG_VALUE,
-                    ".jpeg", MediaType.IMAGE_JPEG_VALUE,
-                    ".gif", MediaType.IMAGE_GIF_VALUE,
+                    ".png", "image/png",
+                    ".jpg", "image/jpeg",
+                    ".jpeg", "image/jpeg",
+                    ".gif", "image/gif",
                     ".bmp", "image/bmp",
                     ".webp", "image/webp",
                     ".svg", "image/svg+xml",
@@ -112,8 +109,8 @@ public class EmlProcessingUtils {
                             || lowerContent.contains("bcc:");
             boolean hasMimeStructure =
                     lowerContent.contains("multipart/")
-                            || lowerContent.contains(MediaType.TEXT_PLAIN_VALUE)
-                            || lowerContent.contains(MediaType.TEXT_HTML_VALUE)
+                            || lowerContent.contains("text/plain")
+                            || lowerContent.contains("text/html")
                             || lowerContent.contains("boundary=");
 
             int headerCount = 0;
@@ -328,8 +325,13 @@ public class EmlProcessingUtils {
         }
 
         try {
-            ClassPathResource resource = new ClassPathResource(CSS_RESOURCE_PATH);
-            try (InputStream inputStream = resource.getInputStream()) {
+            try (InputStream inputStream =
+                    EmlProcessingUtils.class
+                            .getClassLoader()
+                            .getResourceAsStream(CSS_RESOURCE_PATH)) {
+                if (inputStream == null) {
+                    throw new IOException("Resource not found: " + CSS_RESOURCE_PATH);
+                }
                 cachedCssContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
                 return cachedCssContent;
             }
@@ -454,7 +456,7 @@ public class EmlProcessingUtils {
             }
         }
 
-        return MediaType.IMAGE_PNG_VALUE; // Default MIME type
+        return "image/png"; // Default MIME type
     }
 
     public String decodeUrlEncoded(String encoded) {

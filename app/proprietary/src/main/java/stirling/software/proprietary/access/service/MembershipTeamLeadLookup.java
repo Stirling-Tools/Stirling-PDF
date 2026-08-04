@@ -1,6 +1,6 @@
 package stirling.software.proprietary.access.service;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -9,7 +9,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 
 /** Real lookup backed by team_memberships LEADER rows; wins over the no-op default bean. */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class MembershipTeamLeadLookup implements TeamLeadLookup {
 

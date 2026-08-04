@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.PdfToCbzUtils;
 import stirling.software.common.util.TempFileManager;
@@ -27,12 +27,12 @@ public class PdfToCbzUtilsTest {
 
     @Test
     public void testIsPdfFile() {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile("test", "test.pdf", "application/pdf", new byte[10]);
-        MockMultipartFile nonPdfFile =
-                new MockMultipartFile("test", "test.txt", "text/plain", new byte[10]);
-        MockMultipartFile noNameFile =
-                new MockMultipartFile("test", null, "application/pdf", new byte[10]);
+        ByteArrayMultipartFile pdfFile =
+                new ByteArrayMultipartFile("test", "test.pdf", "application/pdf", new byte[10]);
+        ByteArrayMultipartFile nonPdfFile =
+                new ByteArrayMultipartFile("test", "test.txt", "text/plain", new byte[10]);
+        ByteArrayMultipartFile noNameFile =
+                new ByteArrayMultipartFile("test", null, "application/pdf", new byte[10]);
 
         Assertions.assertTrue(PdfToCbzUtils.isPdfFile(pdfFile));
         Assertions.assertFalse(PdfToCbzUtils.isPdfFile(nonPdfFile));
@@ -52,8 +52,8 @@ public class PdfToCbzUtilsTest {
 
     @Test
     public void testConvertPdfToCbz_EmptyFile() {
-        MockMultipartFile emptyFile =
-                new MockMultipartFile("test", "test.pdf", "application/pdf", new byte[0]);
+        ByteArrayMultipartFile emptyFile =
+                new ByteArrayMultipartFile("test", "test.pdf", "application/pdf", new byte[0]);
 
         IllegalArgumentException exception =
                 Assertions.assertThrows(
@@ -66,8 +66,8 @@ public class PdfToCbzUtilsTest {
 
     @Test
     public void testConvertPdfToCbz_NonPdfFile() {
-        MockMultipartFile nonPdfFile =
-                new MockMultipartFile("test", "test.txt", "text/plain", new byte[10]);
+        ByteArrayMultipartFile nonPdfFile =
+                new ByteArrayMultipartFile("test", "test.txt", "text/plain", new byte[10]);
 
         IllegalArgumentException exception =
                 Assertions.assertThrows(
@@ -81,8 +81,8 @@ public class PdfToCbzUtilsTest {
     @Test
     public void testConvertPdfToCbz_ValidPdf() throws IOException {
         // Create a simple mock PDF
-        MockMultipartFile pdfFile =
-                new MockMultipartFile("test", "test.pdf", "application/pdf", new byte[100]);
+        ByteArrayMultipartFile pdfFile =
+                new ByteArrayMultipartFile("test", "test.pdf", "application/pdf", new byte[100]);
 
         // Mock the PDF document
         PDDocument mockDocument = Mockito.mock(PDDocument.class);

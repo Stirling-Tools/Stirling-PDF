@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.model.api.ai.Evidence;
@@ -40,7 +41,7 @@ import tools.jackson.databind.ObjectMapper;
  * <p>The raw PDF never leaves Java. Python only receives structured text and CSV data.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class MathAuditorOrchestrator {
 
     private static final String EXAMINE_PATH = "/api/v1/ai/math-auditor-agent/examine";
@@ -50,14 +51,14 @@ public class MathAuditorOrchestrator {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
-    private final UserServiceInterface userService;
+    private final Instance<UserServiceInterface> userService;
 
     public MathAuditorOrchestrator(
             AiEngineClient aiEngineClient,
             CustomPDFDocumentFactory pdfDocumentFactory,
             PdfContentExtractor pdfContentExtractor,
             ObjectMapper objectMapper,
-            @Autowired(required = false) UserServiceInterface userService) {
+            Instance<UserServiceInterface> userService) {
         this.aiEngineClient = aiEngineClient;
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.pdfContentExtractor = pdfContentExtractor;
@@ -66,7 +67,7 @@ public class MathAuditorOrchestrator {
     }
 
     private String currentUserId() {
-        return userService != null ? userService.getCurrentUsername() : null;
+        return userService.isResolvable() ? userService.get().getCurrentUsername() : null;
     }
 
     /**

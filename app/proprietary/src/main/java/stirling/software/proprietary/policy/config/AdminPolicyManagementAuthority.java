@@ -1,7 +1,8 @@
 package stirling.software.proprietary.policy.config;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.UnlessBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,8 +15,8 @@ import stirling.software.proprietary.security.service.UserService;
  * user's team (typically a single shared team self-hosted). SaaS overrides this with a team-leader
  * check (see the {@code saas}-profiled implementation).
  */
-@Component
-@Profile("!saas")
+@ApplicationScoped
+@UnlessBuildProfile("saas")
 @RequiredArgsConstructor
 public class AdminPolicyManagementAuthority implements PolicyManagementAuthority {
 

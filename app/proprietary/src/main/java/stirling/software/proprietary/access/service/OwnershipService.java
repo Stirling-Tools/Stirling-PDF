@@ -3,10 +3,10 @@ package stirling.software.proprietary.access.service;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,9 +19,10 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 
 /** Ownership and access checks for {@link OwnedResource}, backed by the resource-grant ACL. */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+// jakarta.transaction.Transactional has no readOnly hint; the reads are unchanged without it.
+@Transactional
 public class OwnershipService {
 
     private final ResourceAccessService accessService;
@@ -76,12 +77,12 @@ public class OwnershipService {
             }
             case TEAM -> {
                 if (teamId == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "ownerTeamId is required");
+                    throw new WebApplicationException(
+                            "ownerTeamId is required", Response.Status.BAD_REQUEST);
                 }
                 Team team =
                         teamRepository
-                                .findById(teamId)
+                                .findByIdOptional(teamId)
                                 .orElseThrow(() -> notFound("Team not found"));
                 if (!isAdmin(user) && !teamLeadLookup.isLeaderOfTeam(user, team.getId())) {
                     throw forbidden("Only admins or team leaders can create team-owned resources");
@@ -110,11 +111,11 @@ public class OwnershipService {
                 && teamLeadLookup.isLeaderOfTeam(user, resource.getOwnerTeamId());
     }
 
-    private ResponseStatusException forbidden(String message) {
-        return new ResponseStatusException(HttpStatus.FORBIDDEN, message);
+    private WebApplicationException forbidden(String message) {
+        return new WebApplicationException(message, Response.Status.FORBIDDEN);
     }
 
-    private ResponseStatusException notFound(String message) {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, message);
+    private WebApplicationException notFound(String message) {
+        return new WebApplicationException(message, Response.Status.NOT_FOUND);
     }
 }

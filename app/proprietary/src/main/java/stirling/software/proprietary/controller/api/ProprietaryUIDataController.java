@@ -6,16 +6,20 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Response;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +44,7 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.security.annotation.DenyDemoUser;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -48,7 +53,6 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.dto.AdminUserSummary;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
-import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
@@ -60,6 +64,8 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
+@ApplicationScoped
+@Path("/api/v1/proprietary/ui-data")
 @ProprietaryUiDataApi
 public class ProprietaryUIDataController {
 
@@ -79,6 +85,9 @@ public class ProprietaryUIDataController {
     private final LoginAttemptService loginAttemptService;
     private final ResourceAccessService resourceAccessService;
 
+    @Inject SecurityIdentity securityIdentity;
+
+    @Inject
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
             AuditConfigurationProperties auditConfig,
@@ -89,7 +98,7 @@ public class ProprietaryUIDataController {
             SessionRepository sessionRepository,
             DatabaseServiceInterface databaseService,
             ObjectMapper objectMapper,
-            @Qualifier("runningEE") boolean runningEE,
+            @Named("runningEE") boolean runningEE,
             UserLicenseSettingsService licenseSettingsService,
             PersistentAuditEventRepository auditRepository,
             MfaService mfaService,
@@ -128,11 +137,12 @@ public class ProprietaryUIDataController {
         return "http://localhost:8080";
     }
 
-    @GetMapping("/audit-dashboard")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/audit-dashboard")
+    @RolesAllowed("ADMIN")
     @EnterpriseEndpoint
     @Operation(summary = "Get audit dashboard data")
-    public ResponseEntity<AuditDashboardData> getAuditDashboardData() {
+    public Response getAuditDashboardData() {
         AuditDashboardData data = new AuditDashboardData();
         data.setAuditEnabled(auditConfig.isEnabled());
         data.setAuditLevel(auditConfig.getAuditLevel());
@@ -148,12 +158,13 @@ public class ProprietaryUIDataController {
         data.setPdfMetadataEnabled(
                 auditConfig.isCaptureFileHash() || auditConfig.isCapturePdfAuthor());
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/login")
+    @GET
+    @Path("/login")
     @Operation(summary = "Get login page data")
-    public ResponseEntity<LoginData> getLoginData() {
+    public Response getLoginData() {
         LoginData data = new LoginData();
         Map<String, String> providerList = new HashMap<>();
         Security securityProps = applicationProperties.getSecurity();
@@ -219,6 +230,25 @@ public class ProprietaryUIDataController {
                             keycloak.getClientName());
                 }
             }
+
+            // The detailed Keycloak provider config (issuer/clientId/clientSecret) is read directly
+            // from MicroProfile config by the custom OAuth2 flow (OAuth2LoginController /
+            // OAuth2CallbackServlet) rather than bound into ApplicationProperties, so the
+            // object-tree
+            // checks above never see it. Detect it from config the same way the flow does -
+            // otherwise
+            // the login page offers no SSO button even though the backend is fully wired for the
+            // round-trip.
+            Config mpConfig = ConfigProvider.getConfig();
+            if (nonBlank(mpConfig, "security.oauth2.client.keycloak.issuer")
+                    && nonBlank(mpConfig, "security.oauth2.client.keycloak.clientId")) {
+                String keycloakName =
+                        mpConfig.getOptionalValue(
+                                        "security.oauth2.client.keycloak.clientName", String.class)
+                                .filter(name -> !name.isBlank())
+                                .orElse("Keycloak");
+                providerList.putIfAbsent("/oauth2/authorization/keycloak", keycloakName);
+            }
         }
 
         SAML2 saml2 = securityProps.getSaml2();
@@ -248,13 +278,20 @@ public class ProprietaryUIDataController {
         data.setLanguages(applicationProperties.getUi().getLanguages());
         data.setDefaultLocale(applicationProperties.getSystem().getDefaultLocale());
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/admin-settings")
-    @PreAuthorize("hasRole('ADMIN')")
+    private static boolean nonBlank(Config config, String key) {
+        return config.getOptionalValue(key, String.class)
+                .filter(value -> !value.isBlank())
+                .isPresent();
+    }
+
+    @GET
+    @Path("/admin-settings")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get admin settings data")
-    public ResponseEntity<AdminSettingsData> getAdminSettingsData(Authentication authentication) {
+    public Response getAdminSettingsData() {
         List<User> allUsers = userRepository.findAllWithTeamAndAuthorities();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
 
@@ -373,7 +410,7 @@ public class ProprietaryUIDataController {
 
         AdminSettingsData data = new AdminSettingsData();
         data.setUsers(userSummaries);
-        data.setCurrentUsername(authentication.getName());
+        data.setCurrentUsername(securityIdentity.getPrincipal().getName());
         data.setRoleDetails(roleDetails);
         data.setUserSessions(userSessions);
         data.setUserLastRequest(userLastRequest);
@@ -395,39 +432,29 @@ public class ProprietaryUIDataController {
         data.setUserSettings(userSettings);
         data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/account")
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @GET
+    @Path("/account")
+    @DenyDemoUser
     @Operation(summary = "Get account page data")
-    public ResponseEntity<AccountData> getAccountData(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
+    public Response getAccountData() {
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
-        Object principal = authentication.getPrincipal();
-        String username = null;
+        String username = securityIdentity.getPrincipal().getName();
         boolean isOAuth2Login = false;
         boolean isSaml2Login = false;
 
-        if (principal instanceof UserDetails detailsUser) {
-            username = detailsUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            username = oAuth2User.getName();
-            isOAuth2Login = true;
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            username = saml2User.name();
-            isSaml2Login = true;
-        }
-
         if (username == null) {
-            return ResponseEntity.status(401).build();
+            return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
         Optional<User> user = userRepository.findByUsernameIgnoreCaseWithSettings(username);
         if (user.isEmpty()) {
-            return ResponseEntity.status(404).build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         String settingsJson;
@@ -435,7 +462,7 @@ public class ProprietaryUIDataController {
             settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
         } catch (JacksonException e) {
             log.error("Error converting settings map", e);
-            return ResponseEntity.status(500).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 
         AccountData data = new AccountData();
@@ -448,13 +475,14 @@ public class ProprietaryUIDataController {
         data.setMfaEnabled(mfaService.isMfaEnabled(user.get()));
         data.setMfaRequired(mfaService.isMfaRequired(user.get()));
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/teams")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/teams")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get teams list data")
-    public ResponseEntity<TeamsData> getTeamsData() {
+    public Response getTeamsData() {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
         List<TeamWithUserCountDTO> teamsWithCounts =
                 allTeamsWithCounts.stream()
@@ -483,20 +511,21 @@ public class ProprietaryUIDataController {
         data.setTeamLastRequest(teamLastRequest);
         data.setTeamOwners(teamOwners);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/teams/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/teams/{id}")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get team details data")
-    public ResponseEntity<TeamDetailsData> getTeamDetailsData(@PathVariable("id") Long id) {
+    public Response getTeamDetailsData(@PathParam("id") Long id) {
         Team team =
                 teamRepository
-                        .findById(id)
+                        .findByIdOptional(id)
                         .orElseThrow(() -> new RuntimeException("Team not found"));
 
         if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
-            return ResponseEntity.status(403).build();
+            return Response.status(Response.Status.FORBIDDEN).build();
         }
 
         List<User> teamUsers = userRepository.findAllByTeamId(id);
@@ -534,13 +563,14 @@ public class ProprietaryUIDataController {
         data.setUserLastRequest(userLastRequest);
         data.setOwnerUserIds(ownerUserIds);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/database")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @Path("/database")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Get database management data")
-    public ResponseEntity<DatabaseData> getDatabaseData() {
+    public Response getDatabaseData() {
         List<FileInfo> backupList = databaseService.getBackupList();
         String dbVersion = databaseService.getH2Version();
         boolean isVersionUnknown = "Unknown".equalsIgnoreCase(dbVersion);
@@ -550,7 +580,7 @@ public class ProprietaryUIDataController {
         data.setDatabaseVersion(dbVersion);
         data.setVersionUnknown(isVersionUnknown);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
     /** Whether the user holds the internal-API authority (never shown in the roster). */

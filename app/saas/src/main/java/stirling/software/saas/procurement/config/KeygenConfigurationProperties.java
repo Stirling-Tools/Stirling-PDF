@@ -1,8 +1,7 @@
 package stirling.software.saas.procurement.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,8 +17,8 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @ConfigurationProperties(prefix = "stirling.keygen")
 public class KeygenConfigurationProperties {
 

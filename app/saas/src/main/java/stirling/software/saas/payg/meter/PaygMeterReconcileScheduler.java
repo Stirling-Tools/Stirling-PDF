@@ -7,14 +7,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,13 +32,12 @@ import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
  *
  * <p>Only retries rows inside Stripe's 24h idempotency window — past that a same-key retry is no
  * longer guaranteed to dedup, so stuck rows are logged for manual reconciliation rather than
- * risking a double charge. Skips teams that have since unsubscribed (nothing to bill). Like {@link
- * stirling.software.saas.payg.lineage.LineagePruneScheduler} it is not {@code @SchedulerLock}'d: a
- * duplicate firing on a multi-pod deploy re-sends the same keys, which dedup at Stripe —
- * idempotent, wasted IO at worst.
+ * risking a double charge. Skips teams that have since unsubscribed (nothing to bill). Not
+ * {@code @SchedulerLock}'d: a duplicate firing on a multi-pod deploy re-sends the same keys, which
+ * dedup at Stripe — idempotent, wasted IO at worst.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class PaygMeterReconcileScheduler {
 
@@ -52,13 +52,17 @@ public class PaygMeterReconcileScheduler {
     private final int batchSize;
     private final Counter retriedCounter;
 
+    @Inject
     public PaygMeterReconcileScheduler(
             PaygMeterEventLogRepository eventLogRepository,
             PaygTeamExtensionsRepository teamExtensionsRepository,
             PaygMeterReportingService meterReportingService,
-            @Value("${payg.meter.reconcile.enabled:true}") boolean enabled,
-            @Value("${payg.meter.reconcile.retry-delay:PT5M}") Duration retryDelay,
-            @Value("${payg.meter.reconcile.batch-size:100}") int batchSize,
+            @ConfigProperty(name = "payg.meter.reconcile.enabled", defaultValue = "true")
+                    boolean enabled,
+            @ConfigProperty(name = "payg.meter.reconcile.retry-delay", defaultValue = "PT5M")
+                    Duration retryDelay,
+            @ConfigProperty(name = "payg.meter.reconcile.batch-size", defaultValue = "100")
+                    int batchSize,
             MeterRegistry meterRegistry) {
         this.eventLogRepository = Objects.requireNonNull(eventLogRepository, "eventLogRepository");
         this.teamExtensionsRepository =
@@ -74,7 +78,8 @@ public class PaygMeterReconcileScheduler {
                         .register(meterRegistry);
     }
 
-    @Scheduled(cron = "${payg.meter.reconcile-cron:0 */15 * * * *}", zone = "UTC")
+    // Quartz cron (Quarkus): seconds + ? in day-of-week since day-of-month is set. Every 15 min.
+    @Scheduled(cron = "{payg.meter.reconcile-cron:0 0/15 * * * ?}", timeZone = "UTC")
     public void reconcile() {
         if (!enabled) {
             return;
@@ -85,15 +90,19 @@ public class PaygMeterReconcileScheduler {
         LocalDateTime floor = now.minus(STRIPE_IDEMPOTENCY_WINDOW);
 
         List<PaygMeterEventLog> retryable =
-                eventLogRepository.findRetryable(cutoff, floor, PageRequest.of(0, batchSize));
+                eventLogRepository.findRetryable(cutoff, floor, batchSize);
 
         // Batch-fetch this page's team extensions in one query (keyed by team id) rather than a
         // findById per row — avoids an N+1 when the page spans several teams.
         List<Long> teamIds =
                 retryable.stream().map(PaygMeterEventLog::getTeamId).distinct().toList();
         Map<Long, PaygTeamExtensions> extById =
-                teamExtensionsRepository.findAllById(teamIds).stream()
-                        .collect(Collectors.toMap(PaygTeamExtensions::getTeamId, ext -> ext));
+                teamIds.isEmpty()
+                        ? Map.of()
+                        : teamExtensionsRepository.list("teamId in ?1", teamIds).stream()
+                                .collect(
+                                        Collectors.toMap(
+                                                PaygTeamExtensions::getTeamId, ext -> ext));
 
         int retried = 0;
         for (PaygMeterEventLog row : retryable) {

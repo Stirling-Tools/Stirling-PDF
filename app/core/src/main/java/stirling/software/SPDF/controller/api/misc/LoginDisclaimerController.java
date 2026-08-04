@@ -1,10 +1,12 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,20 +20,22 @@ import stirling.software.common.service.LoginAgreementService;
  * from disk, so admin edits take effect on the next login without a restart.
  */
 @ConfigApi
+@Path("/api/v1/config")
+@ApplicationScoped
 @Hidden
 @RequiredArgsConstructor
 public class LoginDisclaimerController {
 
     private final LoginAgreementService loginAgreementService;
 
-    @GetMapping("/login-disclaimer")
+    @GET
+    @Path("/login-disclaimer")
     @Operation(
             summary = "Get the login agreement/disclaimer",
             description =
                     "Returns whether the login agreement is enabled and, if so, the markdown to"
                             + " display for the requested language.")
-    public LoginDisclaimerResponse getLoginDisclaimer(
-            @RequestParam(name = "lang", required = false) String lang) {
+    public LoginDisclaimerResponse getLoginDisclaimer(@QueryParam("lang") String lang) {
         boolean showInAnonymousMode = loginAgreementService.isShowInAnonymousMode();
         if (!loginAgreementService.isEnabled()) {
             return new LoginDisclaimerResponse(false, showInAnonymousMode, "", "markdown");

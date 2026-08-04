@@ -1,16 +1,19 @@
 package stirling.software.SPDF.model.api.converters;
 
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import stirling.software.common.model.MultipartFile;
+
 @Data
 @EqualsAndHashCode
 public class SvgToPdfRequest {
 
+    @RestForm("fileInput")
     @Schema(
             description =
                     "The SVG file(s) to be converted to PDF. "
@@ -19,6 +22,7 @@ public class SvgToPdfRequest {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] fileInput;
 
+    @RestForm("combineIntoSinglePdf")
     @Schema(
             description =
                     "Whether to combine all SVG files into a single PDF (each SVG as a separate page) "

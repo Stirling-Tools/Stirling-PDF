@@ -23,14 +23,15 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.quarkus.scheduler.Scheduled;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,16 +43,17 @@ import stirling.software.proprietary.security.repository.JwtSigningKeyRepository
 
 /** Persists JWT signing keys in the shared DB so all nodes sign/verify with the same key. */
 @Slf4j
-@Service
-// CredentialEncryption must init first: startup persists an encrypted private key.
-@DependsOn("credentialEncryption")
+@ApplicationScoped
 public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     public static final String KEY_SUFFIX = ".key";
     public static final String PUB_KEY_SUFFIX = ".pub";
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
-    private final Cache verifyingKeyCache;
+
+    private final com.github.benmanes.caffeine.cache.Cache<String, JwtVerificationKey>
+            verifyingKeyCache = Caffeine.newBuilder().build();
+
     private final JwtSigningKeyRepository keyRepository;
     private final boolean clusterEnabled;
 
@@ -60,13 +62,13 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     private volatile JwtVerificationKey activeKey;
 
+    @Inject
     public KeyPersistenceService(
             ApplicationProperties applicationProperties,
-            CacheManager cacheManager,
             JwtSigningKeyRepository keyRepository,
-            @Value("${cluster.enabled:false}") boolean clusterEnabled) {
+            @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
+                    boolean clusterEnabled) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
-        this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
         this.keyRepository = keyRepository;
         this.clusterEnabled = clusterEnabled;
     }
@@ -92,7 +94,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
      * interval, keeping cluster rotation equivalent to single-node. Cluster-only: a single node
      * always holds its own newest key, so this is skipped entirely off-cluster.
      */
-    @Scheduled(fixedDelayString = "${stirling.security.jwt.activeKeyReloadMs:300000}")
+    @Scheduled(every = "${stirling.security.jwt.activeKeyReloadMs:300000}ms")
     public void reloadActiveKeyFromDb() {
         if (!clusterEnabled || !isKeystoreEnabled()) {
             return;
@@ -176,7 +178,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         if (cached != null) {
             return Optional.of(cached);
         }
-        Optional<JwtSigningKeyEntity> entityOpt = keyRepository.findById(keyId);
+        Optional<JwtSigningKeyEntity> entityOpt = keyRepository.findByIdOptional(keyId);
         if (entityOpt.isEmpty()) {
             log.warn("No signing key found in DB for keyId: {}", keyId);
             return Optional.empty();
@@ -209,7 +211,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     @Override
     public void removeKey(String keyId) {
         keyRepository.deleteById(keyId);
-        verifyingKeyCache.evict(keyId);
+        verifyingKeyCache.invalidate(keyId);
         keyPairCache.remove(keyId);
     }
 

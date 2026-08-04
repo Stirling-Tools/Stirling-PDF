@@ -9,18 +9,18 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +36,12 @@ import tools.jackson.databind.ObjectMapper;
 
 /** REST API controller for audit data used by React frontend. */
 @Slf4j
+@ApplicationScoped
+// @ProprietaryUiDataApi carries only the OpenAPI @Tag; JAX-RS does not inherit @Path from
+// meta-annotations, so the path is declared explicitly here.
+@jakarta.ws.rs.Path("/api/v1/proprietary/ui-data")
 @ProprietaryUiDataApi
-@PreAuthorize("hasRole('ADMIN')")
+@RolesAllowed("ADMIN")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 public class AuditRestController {
@@ -51,33 +55,29 @@ public class AuditRestController {
      *
      * @param page Page number (0-indexed)
      * @param pageSize Number of items per page
-     * @param eventType Filter by event type(s) - can be single value or array
-     * @param username Filter by username(s) - can be single value or array
-     * @param startDate Filter start date
-     * @param endDate Filter end date
+     * @param eventTypes Filter by event type(s) - can be single value or array
+     * @param usernames Filter by username(s) - can be single value or array
+     * @param startDateStr Filter start date (ISO yyyy-MM-dd)
+     * @param endDateStr Filter end date (ISO yyyy-MM-dd)
      * @return Paginated audit events response
      */
-    @GetMapping("/audit-events")
-    public ResponseEntity<AuditEventsResponse> getAuditEvents(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "pageSize", defaultValue = "30") int pageSize,
-            @RequestParam(value = "eventType", required = false) String[] eventTypes,
-            @RequestParam(value = "username", required = false) String[] usernames,
-            @RequestParam(value = "startDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate startDate,
-            @RequestParam(value = "endDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate endDate) {
+    @GET
+    @jakarta.ws.rs.Path("/audit-events")
+    public Response getAuditEvents(
+            @QueryParam("page") @jakarta.ws.rs.DefaultValue("0") int page,
+            @QueryParam("pageSize") @jakarta.ws.rs.DefaultValue("30") int pageSize,
+            @QueryParam("eventType") List<String> eventTypes,
+            @QueryParam("username") List<String> usernames,
+            @QueryParam("startDate") String startDateStr,
+            @QueryParam("endDate") String endDateStr) {
 
-        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("timestamp").descending());
-        Page<PersistentAuditEvent> events;
+        LocalDate startDate = parseIsoDate(startDateStr);
+        LocalDate endDate = parseIsoDate(endDateStr);
 
         // Convert arrays to lists
         List<String> eventTypeList =
-                (eventTypes != null && eventTypes.length > 0) ? Arrays.asList(eventTypes) : null;
-        List<String> usernameList =
-                (usernames != null && usernames.length > 0) ? Arrays.asList(usernames) : null;
+                (eventTypes != null && !eventTypes.isEmpty()) ? eventTypes : null;
+        List<String> usernameList = (usernames != null && !usernames.isEmpty()) ? usernames : null;
 
         Instant startInstant = null;
         Instant endInstant = null;
@@ -86,50 +86,58 @@ public class AuditRestController {
             endInstant = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
         }
 
-        // Apply filters based on provided parameters
+        // Apply filters based on provided parameters. The repository finders now return a Panache
+        // PanacheQuery instead of a Spring Data Page; paging and sorting are applied here.
+        PanacheQuery<PersistentAuditEvent> query;
         if (eventTypeList != null
                 && usernameList != null
                 && startInstant != null
                 && endInstant != null) {
-            events =
+            query =
                     auditRepository.findByTypeInAndPrincipalInAndTimestampBetween(
-                            eventTypeList, usernameList, startInstant, endInstant, pageable);
+                            eventTypeList, usernameList, startInstant, endInstant);
         } else if (eventTypeList != null && usernameList != null) {
-            events =
-                    auditRepository.findByTypeInAndPrincipalIn(
-                            eventTypeList, usernameList, pageable);
+            query = auditRepository.findByTypeInAndPrincipalIn(eventTypeList, usernameList);
         } else if (eventTypeList != null && startInstant != null && endInstant != null) {
-            events =
+            query =
                     auditRepository.findByTypeInAndTimestampBetween(
-                            eventTypeList, startInstant, endInstant, pageable);
+                            eventTypeList, startInstant, endInstant);
         } else if (usernameList != null && startInstant != null && endInstant != null) {
-            events =
+            query =
                     auditRepository.findByPrincipalInAndTimestampBetween(
-                            usernameList, startInstant, endInstant, pageable);
+                            usernameList, startInstant, endInstant);
         } else if (startInstant != null && endInstant != null) {
-            events = auditRepository.findByTimestampBetween(startInstant, endInstant, pageable);
+            query = auditRepository.findByTimestampBetween(startInstant, endInstant);
         } else if (eventTypeList != null) {
-            events = auditRepository.findByTypeIn(eventTypeList, pageable);
+            query = auditRepository.findByTypeIn(eventTypeList);
         } else if (usernameList != null) {
-            events = auditRepository.findByPrincipalIn(usernameList, pageable);
+            query = auditRepository.findByPrincipalIn(usernameList);
         } else {
-            events = auditRepository.findAll(pageable);
+            query = auditRepository.findAll(Sort.descending("timestamp"));
         }
+
+        // Apply the requested page window. The repository finders (and the unfiltered findAll
+        // above) already sort newest-first via io.quarkus.panache.common.Sort.descending(
+        // "timestamp"), reproducing the former Spring Pageable's Sort.by("timestamp").descending().
+        query.page(Page.of(page, pageSize));
+
+        long totalElements = query.count();
+        int totalPages = query.pageCount();
 
         // Convert to response format expected by frontend
         List<AuditEventDto> eventDtos =
-                events.getContent().stream().map(this::convertToDto).toList();
+                query.list().stream().map(this::convertToDto).collect(Collectors.toList());
 
         AuditEventsResponse response =
                 AuditEventsResponse.builder()
                         .events(eventDtos)
-                        .totalEvents((int) events.getTotalElements())
-                        .page(events.getNumber())
-                        .pageSize(events.getSize())
-                        .totalPages(events.getTotalPages())
+                        .totalEvents((int) totalElements)
+                        .page(page)
+                        .pageSize(pageSize)
+                        .totalPages(totalPages)
                         .build();
 
-        return ResponseEntity.ok(response);
+        return Response.ok(response).build();
     }
 
     /**
@@ -138,9 +146,10 @@ public class AuditRestController {
      * @param period Time period for charts (day/week/month)
      * @return Chart data for events by type, user, and over time
      */
-    @GetMapping("/audit-charts")
-    public ResponseEntity<AuditChartsData> getAuditCharts(
-            @RequestParam(value = "period", defaultValue = "week") String period) {
+    @GET
+    @jakarta.ws.rs.Path("/audit-charts")
+    public Response getAuditCharts(
+            @QueryParam("period") @jakarta.ws.rs.DefaultValue("week") String period) {
 
         // Calculate days based on period
         int days;
@@ -215,7 +224,7 @@ public class AuditRestController {
                         .eventsOverTime(eventsOverTimeChart)
                         .build();
 
-        return ResponseEntity.ok(chartsData);
+        return Response.ok(chartsData).build();
     }
 
     /**
@@ -223,8 +232,9 @@ public class AuditRestController {
      *
      * @return List of unique event types
      */
-    @GetMapping("/audit-event-types")
-    public ResponseEntity<List<String>> getEventTypes() {
+    @GET
+    @jakarta.ws.rs.Path("/audit-event-types")
+    public Response getEventTypes() {
         // Get distinct event types from the database
         List<String> dbTypes = auditRepository.findDistinctEventTypes();
 
@@ -239,7 +249,7 @@ public class AuditRestController {
 
         List<String> result = combinedTypes.stream().sorted().toList();
 
-        return ResponseEntity.ok(result);
+        return Response.ok(result).build();
     }
 
     /**
@@ -247,14 +257,15 @@ public class AuditRestController {
      *
      * @return List of unique usernames
      */
-    @GetMapping("/audit-users")
-    public ResponseEntity<List<String>> getUsers() {
+    @GET
+    @jakarta.ws.rs.Path("/audit-users")
+    public Response getUsers() {
         // Use the countByPrincipal query to get unique principals
         List<Object[]> principalCounts = auditRepository.countByPrincipal();
 
         List<String> users = principalCounts.stream().map(arr -> (String) arr[0]).sorted().toList();
 
-        return ResponseEntity.ok(users);
+        return Response.ok(users).build();
     }
 
     /**
@@ -264,9 +275,10 @@ public class AuditRestController {
      * @param period Time period for statistics (day/week/month)
      * @return Audit statistics data for dashboard KPI cards and enhanced charts
      */
-    @GetMapping("/audit-stats")
-    public ResponseEntity<AuditStatsData> getAuditStats(
-            @RequestParam(value = "period", defaultValue = "week") String period) {
+    @GET
+    @jakarta.ws.rs.Path("/audit-stats")
+    public Response getAuditStats(
+            @QueryParam("period") @jakarta.ws.rs.DefaultValue("week") String period) {
 
         // Calculate days based on period
         int days;
@@ -308,24 +320,25 @@ public class AuditRestController {
             hourlyDistribution.put(String.format("%02d", hour), count);
         }
 
-        return ResponseEntity.ok(
-                AuditStatsData.builder()
-                        .totalEvents(currentMetrics.totalEvents)
-                        .prevTotalEvents(prevMetrics.totalEvents)
-                        .uniqueUsers(currentMetrics.uniqueUsers)
-                        .prevUniqueUsers(prevMetrics.uniqueUsers)
-                        .successRate(currentMetrics.successRate)
-                        .prevSuccessRate(prevMetrics.successRate)
-                        .avgLatencyMs(currentMetrics.avgLatencyMs)
-                        .prevAvgLatencyMs(prevMetrics.avgLatencyMs)
-                        .errorCount(currentMetrics.errorCount)
-                        .topEventType(currentMetrics.topEventType)
-                        .topUser(currentMetrics.topUser)
-                        .eventsByType(currentMetrics.eventsByType)
-                        .eventsByUser(currentMetrics.eventsByUser)
-                        .topTools(currentMetrics.topTools)
-                        .hourlyDistribution(hourlyDistribution)
-                        .build());
+        return Response.ok(
+                        AuditStatsData.builder()
+                                .totalEvents(currentMetrics.totalEvents)
+                                .prevTotalEvents(prevMetrics.totalEvents)
+                                .uniqueUsers(currentMetrics.uniqueUsers)
+                                .prevUniqueUsers(prevMetrics.uniqueUsers)
+                                .successRate(currentMetrics.successRate)
+                                .prevSuccessRate(prevMetrics.successRate)
+                                .avgLatencyMs(currentMetrics.avgLatencyMs)
+                                .prevAvgLatencyMs(prevMetrics.avgLatencyMs)
+                                .errorCount(currentMetrics.errorCount)
+                                .topEventType(currentMetrics.topEventType)
+                                .topUser(currentMetrics.topUser)
+                                .eventsByType(currentMetrics.eventsByType)
+                                .eventsByUser(currentMetrics.eventsByUser)
+                                .topTools(currentMetrics.topTools)
+                                .hourlyDistribution(hourlyDistribution)
+                                .build())
+                .build();
     }
 
     /** Compute metrics from a list of audit events. */
@@ -505,31 +518,30 @@ public class AuditRestController {
      *     "date,username,tool,documentName,author,fileHash")
      * @param eventTypes Filter by event type(s) - can be single value or array
      * @param usernames Filter by username(s) - can be single value or array
-     * @param startDate Filter start date
-     * @param endDate Filter end date
+     * @param startDateStr Filter start date (ISO yyyy-MM-dd)
+     * @param endDateStr Filter end date (ISO yyyy-MM-dd)
      * @return File download response
      */
-    @GetMapping("/audit-export")
-    public ResponseEntity<byte[]> exportAuditData(
-            @RequestParam(value = "format", defaultValue = "csv") String format,
-            @RequestParam(value = "fields", required = false) String fields,
-            @RequestParam(value = "eventType", required = false) String[] eventTypes,
-            @RequestParam(value = "username", required = false) String[] usernames,
-            @RequestParam(value = "startDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate startDate,
-            @RequestParam(value = "endDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                    LocalDate endDate) {
+    @GET
+    @jakarta.ws.rs.Path("/audit-export")
+    public Response exportAuditData(
+            @QueryParam("format") @jakarta.ws.rs.DefaultValue("csv") String format,
+            @QueryParam("fields") String fields,
+            @QueryParam("eventType") List<String> eventTypes,
+            @QueryParam("username") List<String> usernames,
+            @QueryParam("startDate") String startDateStr,
+            @QueryParam("endDate") String endDateStr) {
+
+        LocalDate startDate = parseIsoDate(startDateStr);
+        LocalDate endDate = parseIsoDate(endDateStr);
 
         // Get data with same filtering as getAuditEvents
         List<PersistentAuditEvent> events;
 
         // Convert arrays to lists
         List<String> eventTypeList =
-                (eventTypes != null && eventTypes.length > 0) ? Arrays.asList(eventTypes) : null;
-        List<String> usernameList =
-                (usernames != null && usernames.length > 0) ? Arrays.asList(usernames) : null;
+                (eventTypes != null && !eventTypes.isEmpty()) ? eventTypes : null;
+        List<String> usernameList = (usernames != null && !usernames.isEmpty()) ? usernames : null;
 
         Instant startInstant = null;
         Instant endInstant = null;
@@ -564,7 +576,7 @@ public class AuditRestController {
         } else if (usernameList != null) {
             events = auditRepository.findByPrincipalInForExport(usernameList);
         } else {
-            events = auditRepository.findAll();
+            events = auditRepository.findAll(Sort.descending("timestamp")).list();
         }
 
         // Export based on format
@@ -576,6 +588,19 @@ public class AuditRestController {
     }
 
     // Helper methods
+
+    /** Parse an ISO yyyy-MM-dd date string, returning null when blank/unparseable. */
+    private LocalDate parseIsoDate(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(value.trim());
+        } catch (Exception e) {
+            log.trace("Failed to parse ISO date value: {}", value);
+            return null;
+        }
+    }
 
     private AuditEventDto convertToDto(PersistentAuditEvent event) {
         // Parse the JSON data field if present
@@ -613,7 +638,7 @@ public class AuditRestController {
                 .build();
     }
 
-    private ResponseEntity<byte[]> exportAsCsv(List<PersistentAuditEvent> events, String fields) {
+    private Response exportAsCsv(List<PersistentAuditEvent> events, String fields) {
         // Parse selected fields (comma-separated:
         // date,username,tool,documentName,author,fileHash,ipAddress,etc)
         Set<String> selectedFields = new HashSet<>();
@@ -665,15 +690,17 @@ public class AuditRestController {
         }
 
         byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("text/csv;charset=UTF-8"));
-        headers.setContentDispositionFormData(
-                "attachment", "audit_export_" + System.currentTimeMillis() + ".csv");
-
-        return ResponseEntity.ok().headers(headers).body(csvBytes);
+        return Response.ok(csvBytes)
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv;charset=UTF-8")
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"audit_export_"
+                                + System.currentTimeMillis()
+                                + ".csv\"")
+                .build();
     }
 
-    private ResponseEntity<byte[]> exportAsDefaultCsv(List<PersistentAuditEvent> events) {
+    private Response exportAsDefaultCsv(List<PersistentAuditEvent> events) {
         StringBuilder csv = new StringBuilder();
         csv.append("ID,Principal,Type,Timestamp,Data\n");
 
@@ -688,11 +715,12 @@ public class AuditRestController {
         }
 
         byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("text/csv;charset=UTF-8"));
-        headers.setContentDispositionFormData("attachment", "audit_export.csv");
-
-        return ResponseEntity.ok().headers(headers).body(csvBytes);
+        return Response.ok(csvBytes)
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv;charset=UTF-8")
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"audit_export.csv\"")
+                .build();
     }
 
     private Map<String, String> extractEventData(
@@ -783,18 +811,19 @@ public class AuditRestController {
         };
     }
 
-    private ResponseEntity<byte[]> exportAsJson(List<PersistentAuditEvent> events) {
+    private Response exportAsJson(List<PersistentAuditEvent> events) {
         try {
             byte[] jsonBytes = objectMapper.writeValueAsBytes(events);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setContentDispositionFormData("attachment", "audit_export.json");
-
-            return ResponseEntity.ok().headers(headers).body(jsonBytes);
+            return Response.ok(jsonBytes)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                    .header(
+                            HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"audit_export.json\"")
+                    .build();
         } catch (JacksonException e) {
             log.error("Error serializing audit events to JSON", e);
-            return ResponseEntity.internalServerError().build();
+            return Response.serverError().build();
         }
     }
 
@@ -885,18 +914,20 @@ public class AuditRestController {
      *
      * @return Success response
      */
-    @PostMapping("/audit-clear-all")
-    public ResponseEntity<?> clearAllAuditData() {
+    @POST
+    @jakarta.ws.rs.Path("/audit-clear-all")
+    public Response clearAllAuditData() {
         try {
             // Delete all audit events
             auditRepository.deleteAll();
             log.warn("All audit data has been cleared by admin user");
-            return ResponseEntity.ok()
-                    .body(Map.of("message", "All audit data has been cleared successfully"));
+            return Response.ok(Map.of("message", "All audit data has been cleared successfully"))
+                    .build();
         } catch (Exception e) {
             log.error("Error clearing audit data", e);
-            return ResponseEntity.internalServerError()
-                    .body("Failed to clear audit data: " + e.getMessage());
+            return Response.serverError()
+                    .entity("Failed to clear audit data: " + e.getMessage())
+                    .build();
         }
     }
 }

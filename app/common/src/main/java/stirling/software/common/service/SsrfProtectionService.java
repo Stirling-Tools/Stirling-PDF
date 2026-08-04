@@ -8,7 +8,7 @@ import java.net.UnknownHostException;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RegexPatternUtils;
 
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class SsrfProtectionService {

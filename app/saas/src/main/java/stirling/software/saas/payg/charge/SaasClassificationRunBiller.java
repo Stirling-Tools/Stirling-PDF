@@ -1,9 +1,9 @@
 package stirling.software.saas.payg.charge;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,8 +20,8 @@ import stirling.software.saas.util.AuthenticationUtils;
  * Charges one PAYG unit per document as an AUTOMATION job, matching what a server-side classify
  * policy step bills.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class SaasClassificationRunBiller implements ClassificationRunBiller {
 

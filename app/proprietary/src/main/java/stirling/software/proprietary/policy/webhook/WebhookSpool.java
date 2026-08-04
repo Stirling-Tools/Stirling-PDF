@@ -6,11 +6,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 
-@Component
+@ApplicationScoped
 public class WebhookSpool {
 
     private static final String SPOOL_DIR = "policy-webhook-spool";

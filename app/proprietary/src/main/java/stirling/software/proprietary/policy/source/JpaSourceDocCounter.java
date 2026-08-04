@@ -5,14 +5,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 
 /**
  * Durable {@link SourceDocCounter}; the runtime bean. {@code record} keeps two things in step: an
@@ -22,14 +22,14 @@ import org.springframework.stereotype.Service;
  * history, and lets {@link #pruneOldBuckets()} retire buckets past the 30-day window so the hourly
  * table stays bounded (~one row per source per active hour, for at most 30 days).
  */
-@Service
+@ApplicationScoped
 public class JpaSourceDocCounter implements SourceDocCounter {
 
     private final SourceDocCountRepository countRepository;
     private final SourceDocTotalRepository totalRepository;
     private final Supplier<Instant> clock;
 
-    @Autowired
+    @Inject
     public JpaSourceDocCounter(
             SourceDocCountRepository countRepository, SourceDocTotalRepository totalRepository) {
         this(countRepository, totalRepository, Instant::now);
@@ -74,7 +74,7 @@ public class JpaSourceDocCounter implements SourceDocCounter {
         }
         try {
             insert.run();
-        } catch (DataIntegrityViolationException concurrentInsert) {
+        } catch (PersistenceException concurrentInsert) {
             increment.getAsInt();
         }
     }
@@ -124,7 +124,7 @@ public class JpaSourceDocCounter implements SourceDocCounter {
      * nothing reported is lost. Daily is ample - the read queries already ignore older buckets, so
      * this is purely storage hygiene.
      */
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(every = "24h")
     public void pruneOldBuckets() {
         countRepository.deleteOlderThan(SourceDocWindows.firstDayHour(currentHour()));
     }

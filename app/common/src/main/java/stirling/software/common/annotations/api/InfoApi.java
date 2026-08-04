@@ -5,9 +5,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -16,8 +13,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@RestController
-@RequestMapping("/api/v1/info")
+// MIGRATION (Spring->JAX-RS): controllers using this annotation must declare
+// @jakarta.ws.rs.Path("/api/v1/info").
+// JAX-RS does not honour @Path via meta-annotations, so the path is not inherited from here.
 @Tag(
         name = "Info",
         description =

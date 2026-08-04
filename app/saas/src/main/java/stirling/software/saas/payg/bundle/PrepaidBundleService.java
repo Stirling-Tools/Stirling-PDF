@@ -3,9 +3,9 @@ package stirling.software.saas.payg.bundle;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +21,8 @@ import lombok.extern.slf4j.Slf4j;
  * discipline as the free-grant deduction, so concurrent same-team charges can't both spend the last
  * unit.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class PrepaidBundleService {

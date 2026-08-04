@@ -11,11 +11,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,24 +24,24 @@ import lombok.extern.slf4j.Slf4j;
  * Monitors system resources (CPU, memory) to inform job scheduling decisions. Provides information
  * about available resources to prevent overloading the system.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class ResourceMonitor {
 
-    @Value("${stirling.resource.memory.critical-threshold:0.9}")
-    private double memoryCriticalThreshold = 0.9; // 90% usage is critical
+    @ConfigProperty(name = "stirling.resource.memory.critical-threshold", defaultValue = "0.9")
+    double memoryCriticalThreshold; // 90% usage is critical
 
-    @Value("${stirling.resource.memory.high-threshold:0.75}")
-    private double memoryHighThreshold = 0.75; // 75% usage is high
+    @ConfigProperty(name = "stirling.resource.memory.high-threshold", defaultValue = "0.75")
+    double memoryHighThreshold; // 75% usage is high
 
-    @Value("${stirling.resource.cpu.critical-threshold:0.9}")
-    private double cpuCriticalThreshold = 0.9; // 90% usage is critical
+    @ConfigProperty(name = "stirling.resource.cpu.critical-threshold", defaultValue = "0.9")
+    double cpuCriticalThreshold; // 90% usage is critical
 
-    @Value("${stirling.resource.cpu.high-threshold:0.75}")
-    private double cpuHighThreshold = 0.75; // 75% usage is high
+    @ConfigProperty(name = "stirling.resource.cpu.high-threshold", defaultValue = "0.75")
+    double cpuHighThreshold; // 75% usage is high
 
-    @Value("${stirling.resource.monitor.interval-ms:60000}")
-    private long monitorIntervalMs = 60000; // 60 seconds
+    @ConfigProperty(name = "stirling.resource.monitor.interval-ms", defaultValue = "60000")
+    long monitorIntervalMs; // 60 seconds
 
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(

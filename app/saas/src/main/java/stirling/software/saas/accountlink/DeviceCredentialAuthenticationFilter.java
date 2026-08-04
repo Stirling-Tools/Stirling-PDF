@@ -6,9 +6,9 @@ import java.security.MessageDigest;
 import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+import stirling.software.common.security.SecurityContextHolder;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -33,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
  * {@code SupabaseSecurityConfig} never wires it in.
  */
 @Slf4j
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class DeviceCredentialAuthenticationFilter extends OncePerRequestFilter {
 

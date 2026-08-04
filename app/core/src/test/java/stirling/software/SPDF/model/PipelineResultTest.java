@@ -12,8 +12,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.TempFile;
 
 class PipelineResultTest {

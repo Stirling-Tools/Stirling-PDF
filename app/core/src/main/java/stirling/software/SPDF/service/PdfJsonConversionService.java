@@ -87,10 +87,9 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.DateConverter;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -119,6 +118,7 @@ import stirling.software.SPDF.service.pdfjson.type3.Type3ConversionRequest;
 import stirling.software.SPDF.service.pdfjson.type3.Type3FontConversionService;
 import stirling.software.SPDF.service.pdfjson.type3.Type3GlyphExtractor;
 import stirling.software.SPDF.service.pdfjson.type3.model.Type3GlyphOutline;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExceptionUtils;
@@ -130,7 +130,7 @@ import stirling.software.common.util.TempFileManager;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PdfJsonConversionService {
 
@@ -6017,24 +6017,16 @@ public class PdfJsonConversionService {
             return jobId;
         }
 
-        // Fallback to request attribute (for sync jobs)
-        try {
-            org.springframework.web.context.request.RequestAttributes attrs =
-                    org.springframework.web.context.request.RequestContextHolder
-                            .getRequestAttributes();
-            if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes) {
-                jakarta.servlet.http.HttpServletRequest request =
-                        ((org.springframework.web.context.request.ServletRequestAttributes) attrs)
-                                .getRequest();
-                jobId = (String) request.getAttribute("jobId");
-                if (jobId != null) {
-                    log.debug("Retrieved jobId from request attribute: {}", jobId);
-                    return jobId;
-                }
-            }
-        } catch (Exception e) {
-            log.debug("Could not retrieve job ID from request context: {}", e.getMessage());
-        }
+        // TODO Quarkus migration: Spring's RequestContextHolder/ServletRequestAttributes have no
+        // direct Quarkus equivalent for accessing the current request outside of a JAX-RS resource.
+        // The primary mechanism for resolving the jobId is the JobContext ThreadLocal checked
+        // above,
+        // which covers async jobs. The previous Spring fallback read a "jobId" request attribute
+        // for
+        // sync jobs; without a request-scoped holder here we safely fall back to null and rely on
+        // JobContext. If sync-job jobId resolution is needed, inject the request (e.g. via
+        // jakarta.enterprise.inject.Instance<HttpServletRequest> or RoutingContext) at the call
+        // site.
         return null;
     }
 

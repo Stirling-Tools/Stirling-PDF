@@ -1,9 +1,9 @@
 package stirling.software.common.cluster.inprocess;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import io.quarkus.arc.DefaultBean;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,45 +20,48 @@ import stirling.software.common.model.ApplicationProperties;
  * cluster mode is off or {@code cluster.backplane=inprocess}.
  */
 @Slf4j
-@Configuration
-@ConditionalOnExpression(
-        "!${cluster.enabled:false} ||"
-                + " '${cluster.backplane:inprocess}'.equalsIgnoreCase('inprocess')")
+@ApplicationScoped
 public class InProcessClusterConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean
+    @Produces
+    @DefaultBean
+    @ApplicationScoped
     public ClusterBackplane clusterBackplane(ApplicationProperties applicationProperties) {
         log.info("Cluster backplane: in-process (single node)");
         return new InProcessClusterBackplane(applicationProperties);
     }
 
-    @Bean
-    @ConditionalOnMissingBean
+    @Produces
+    @DefaultBean
+    @ApplicationScoped
     public JobStore jobStore() {
         return new InProcessJobStore();
     }
 
-    @Bean
-    @ConditionalOnMissingBean
+    @Produces
+    @DefaultBean
+    @ApplicationScoped
     public RateLimitStore rateLimitStore() {
         return new InProcessRateLimitStore();
     }
 
-    @Bean
-    @ConditionalOnMissingBean
+    @Produces
+    @DefaultBean
+    @ApplicationScoped
     public DistributedLock distributedLock() {
         return new InProcessDistributedLock();
     }
 
-    @Bean
-    @ConditionalOnMissingBean
+    @Produces
+    @DefaultBean
+    @ApplicationScoped
     public KeyValueCache keyValueCache() {
         return new InProcessKeyValueCache();
     }
 
-    @Bean
-    @ConditionalOnMissingBean
+    @Produces
+    @DefaultBean
+    @ApplicationScoped
     public InstanceRegistry instanceRegistry() {
         return new InProcessInstanceRegistry();
     }

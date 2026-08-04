@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,9 +14,9 @@ import stirling.software.proprietary.audit.PortalAuditScopeResolver;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 
 /** SaaS audit visibility: admins see the server; team LEADERs see their team (by member email). */
-@Component
+@ApplicationScoped
 @Primary
-@Profile("saas")
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class SaasPortalAuditScopeResolver implements PortalAuditScopeResolver {
 

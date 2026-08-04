@@ -2,20 +2,21 @@ package stirling.software.proprietary.security.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.model.UserLicenseSettings;
 
-@Repository
-public interface UserLicenseSettingsRepository extends JpaRepository<UserLicenseSettings, Long> {
+@ApplicationScoped
+public class UserLicenseSettingsRepository implements PanacheRepository<UserLicenseSettings> {
 
     /**
      * Finds the singleton UserLicenseSettings record.
      *
      * @return Optional containing the settings if they exist
      */
-    default Optional<UserLicenseSettings> findSettings() {
-        return findById(UserLicenseSettings.SINGLETON_ID);
+    public Optional<UserLicenseSettings> findSettings() {
+        return findByIdOptional(UserLicenseSettings.SINGLETON_ID);
     }
 }

@@ -18,29 +18,22 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.slf4j.MDC;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import jakarta.persistence.PersistenceException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 import stirling.software.common.util.RequestUriUtils;
-import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
@@ -56,12 +49,19 @@ import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 import stirling.software.saas.util.LogRedactionUtils;
 
-/** Stateless JWT authentication filter for the saas profile. */
+/**
+ * Stateless JWT authentication filter for the saas profile.
+ */
 @Slf4j
-public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
+public class SupabaseAuthenticationFilter {
 
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String ANON_PREFIX = "anon_";
+
+    @FunctionalInterface
+    public interface JwtDecoder {
+        JsonWebToken decode(String token);
+    }
 
     private final TeamService teamService;
     private final UserService userService;
@@ -69,8 +69,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     private final SaasTeamService saasTeamService;
     private final JwtDecoder jwtDecoder;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
-    private final AuthenticationEntryPoint authenticationEntryPoint =
-            new BearerTokenAuthenticationEntryPoint();
+
 
     public SupabaseAuthenticationFilter(
             TeamService teamService,
@@ -87,7 +86,6 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         this.apiKeyAuthenticationService = apiKeyAuthenticationService;
     }
 
-    @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -119,14 +117,13 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             processJwtAuthentication(request);
         } catch (AuthenticationException e) {
             SecurityContextHolder.clearContext();
-            authenticationEntryPoint.commence(request, response, e);
+            log.debug("JWT authentication failed: {}", e.getMessage());
             return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
@@ -152,21 +149,27 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(BEARER_PREFIX.length()).trim();
 
         try {
-            Jwt jwt = jwtDecoder.decode(token);
+            JsonWebToken jwt = jwtDecoder.decode(token);
             String supabaseId = jwt.getSubject();
 
             if (!validateRequiredClaims(jwt)) {
-                throw new InvalidBearerTokenException("Invalid JWT: missing required claims");
+                throw new AuthenticationFailureException("Invalid JWT: missing required claims");
             }
 
             User user = getOrCreateUser(jwt);
 
             // Full accounts carry the resolved User as principal for shared
-            // instanceof-User authorization; anonymous sessions keep the raw Jwt.
+            // instanceof-User authorization; anonymous sessions keep the raw JWT.
             EnhancedJwtAuthenticationToken authToken =
                     new EnhancedJwtAuthenticationToken(
                             jwt,
-                            user.getAuthorities(),
+                            user.getAuthorities().stream()
+                                    .map(
+                                            a ->
+                                                    new stirling.software.common.security
+                                                            .SimpleGrantedAuthority(
+                                                            a.getAuthority()))
+                                    .collect(java.util.stream.Collectors.toSet()),
                             user.getUsername(),
                             supabaseId,
                             isAnonymous(jwt) ? null : user);
@@ -182,14 +185,16 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                         LogRedactionUtils.redactSupabaseId(supabaseId),
                         LogRedactionUtils.redactEmail(user.getUsername()));
             }
-        } catch (JwtException e) {
-            throw new InvalidBearerTokenException("Invalid JWT", e);
+        } catch (AuthenticationException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw new AuthenticationFailureException("Invalid JWT", e);
         }
     }
 
-    private boolean validateRequiredClaims(Jwt jwt) {
+    private boolean validateRequiredClaims(JsonWebToken jwt) {
         boolean isAnonymous = isAnonymous(jwt);
-        if (!isAnonymous && isBlank(jwt.getClaimAsString("email"))) {
+        if (!isAnonymous && isBlank(claimAsString(jwt, "email"))) {
             return false;
         }
 
@@ -197,18 +202,18 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         for (String claim : requiredClaims) {
             switch (claim) {
                 case "iss", "sub", "role", "aal", "session_id" -> {
-                    if (isBlank(jwt.getClaimAsString(claim))) {
+                    if (isBlank(claimAsString(jwt, claim))) {
                         return false;
                     }
                 }
                 case "aud" -> {
-                    List<String> audience = jwt.getClaimAsStringList(claim);
+                    List<String> audience = claimAsStringList(jwt, claim);
                     if (audience == null || audience.isEmpty()) {
                         return false;
                     }
                 }
                 case "exp", "iat" -> {
-                    Instant timestamp = jwt.getClaimAsInstant(claim);
+                    Instant timestamp = claimAsInstant(jwt, claim);
                     if (timestamp == null) {
                         return false;
                     }
@@ -218,10 +223,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         return true;
     }
 
-    private User getOrCreateUser(Jwt jwt) throws AuthenticationException {
+    private User getOrCreateUser(JsonWebToken jwt) throws AuthenticationException {
         UUID supabaseId = UUID.fromString(jwt.getSubject());
-        String email = jwt.getClaimAsString("email");
-        Object metaObj = jwt.getClaims().get("app_metadata");
+        String email = claimAsString(jwt, "email");
+        Object metaObj = jwt.getClaim("app_metadata");
         @SuppressWarnings("unchecked")
         Map<String, Object> appMetadata =
                 (metaObj instanceof Map<?, ?>) ? (Map<String, Object>) metaObj : null;
@@ -244,11 +249,11 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
             return createUser(jwt, supabaseId, email, appMetadata);
         } catch (UserNotFoundException e) {
-            throw new InvalidBearerTokenException("User not found", e);
-        } catch (InvalidBearerTokenException e) {
+            throw new AuthenticationFailureException("User not found", e);
+        } catch (AuthenticationException e) {
             throw e;
         } catch (IllegalArgumentException e) {
-            throw new InvalidBearerTokenException(
+            throw new AuthenticationFailureException(
                     "Invalid authentication method: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Failed to process user authentication for {}", supabaseId, e);
@@ -258,7 +263,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
     /** Promote a local anonymous user to the real provider+email carried on the JWT. */
     @Transactional
-    protected User upgradeAnonymousUser(User user, SupabaseUser supabaseUser, Jwt jwt) {
+    protected User upgradeAnonymousUser(User user, SupabaseUser supabaseUser, JsonWebToken jwt) {
         AuthenticationType newType = resolveUpgradedAuthType(jwt);
         log.info(
                 "Upgrading anonymous user {} to {} (Supabase email: {})",
@@ -273,7 +278,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Give the account its own team rather than the shared Default team.
             return saasTeamService.saveUserWithPersonalTeam(user);
-        } catch (DataIntegrityViolationException e) {
+        } catch (PersistenceException e) {
             log.warn(
                     "Email collision upgrading anonymous user {} to {}: {}",
                     user.getId(),
@@ -285,9 +290,9 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /** Maps Supabase's {@code amr} claim to an {@link AuthenticationType}; defaults to WEB. */
-    private AuthenticationType resolveUpgradedAuthType(Jwt jwt) {
+    private AuthenticationType resolveUpgradedAuthType(JsonWebToken jwt) {
         try {
-            Object raw = jwt.getClaims().get("amr");
+            Object raw = jwt.getClaim("amr");
             if (!(raw instanceof List<?> amrList) || amrList.isEmpty()) {
                 return WEB;
             }
@@ -317,7 +322,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
     @Transactional
     protected User createUser(
-            Jwt jwt, UUID supabaseId, String email, Map<String, Object> appMetadata) {
+            JsonWebToken jwt, UUID supabaseId, String email, Map<String, Object> appMetadata) {
 
         User newUser = new User();
         AuthenticationType authenticationType = WEB;
@@ -364,7 +369,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         try {
             boolean isAnon = isAnonymous(jwt);
             supabaseUserService.createSupabaseUser(supabaseId, isAnon ? null : email, isAnon);
-        } catch (DataIntegrityViolationException ignored) {
+        } catch (PersistenceException ignored) {
             // Concurrent creation; fall through, the row exists.
         } catch (Exception e) {
             throw new AuthenticationFailureException("Failed to create SupabaseUser", e);
@@ -376,7 +381,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             return isAnonymous(jwt)
                     ? userService.saveUser(newUser)
                     : saasTeamService.saveUserWithPersonalTeam(newUser);
-        } catch (DataIntegrityViolationException dup) {
+        } catch (PersistenceException dup) {
             // Parallel filter won the race; fetch the winning row.
             return userService
                     .findBySupabaseId(supabaseId)
@@ -403,14 +408,22 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         // label for the processor's document-source attribution.
         Optional<ApiKeyAuthentication> resolved = apiKeyAuthenticationService.authenticate(apiKey);
         if (resolved.isEmpty()) {
-            throw new InvalidBearerTokenException("Invalid API Key.");
+            throw new AuthenticationFailureException("Invalid API Key.");
         }
         User user = resolved.get().user();
 
         userService.trackApiKeyFirstUse(user);
 
-        ApiKeyAuthenticationToken authToken =
-                new ApiKeyAuthenticationToken(user, apiKey, resolved.get().authorities());
+        java.util.Collection<stirling.software.common.security.GrantedAuthority> mappedAuthorities =
+                user.getAuthorities().stream()
+                        .map(
+                                a ->
+                                        (stirling.software.common.security.GrantedAuthority)
+                                                new stirling.software.common.security
+                                                        .SimpleGrantedAuthority(a.getAuthority()))
+                        .collect(java.util.stream.Collectors.toList());
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(user, apiKey, mappedAuthorities);
         SecurityContextHolder.getContext().setAuthentication(authToken);
         if (resolved.get().auditLabel() != null) {
             MDC.put(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY, resolved.get().auditLabel());
@@ -418,7 +431,37 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         return true;
     }
 
-    private static boolean isAnonymous(Jwt jwt) {
-        return Boolean.TRUE.equals(jwt.getClaimAsBoolean("is_anonymous"));
+    private static boolean isAnonymous(JsonWebToken jwt) {
+        return Boolean.TRUE.equals(jwt.<Boolean>getClaim("is_anonymous"));
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    private static String claimAsString(JsonWebToken jwt, String name) {
+        Object value = jwt.getClaim(name);
+        return value == null ? null : value.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> claimAsStringList(JsonWebToken jwt, String name) {
+        Object value = jwt.getClaim(name);
+        if (value instanceof List<?> list) {
+            return (List<String>) list;
+        }
+        if (value instanceof String s) {
+            return List.of(s);
+        }
+        return null;
+    }
+
+    private static Instant claimAsInstant(JsonWebToken jwt, String name) {
+        Object value = jwt.getClaim(name);
+        if (value instanceof Number n) {
+            return Instant.ofEpochSecond(n.longValue());
+        }
+        if (value instanceof Instant i) {
+            return i;
+        }
+        return null;
     }
 }

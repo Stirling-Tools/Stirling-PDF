@@ -6,9 +6,9 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.misc.ColorSpaceConversionStrategy;

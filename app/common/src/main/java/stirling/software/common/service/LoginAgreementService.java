@@ -14,7 +14,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +23,7 @@ import stirling.software.common.model.ApplicationProperties;
 
 // Resolves login agreement text from customFiles/disclaimer/<locale>.md (read live);
 // enable/visibility come from the legal.loginAgreement settings.
-@Service
+@ApplicationScoped
 @Slf4j
 public class LoginAgreementService {
 

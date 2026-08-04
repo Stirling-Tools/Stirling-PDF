@@ -5,27 +5,27 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import stirling.software.saas.model.SupabaseUser;
 
-@Repository
-public interface SupabaseUserRepository extends JpaRepository<SupabaseUser, UUID> {
+@ApplicationScoped
+public class SupabaseUserRepository implements PanacheRepositoryBase<SupabaseUser, UUID> {
 
     /**
      * Anonymous users created before the cut-off date. Used by the cleanup job to drop stale
      * anonymous sessions in batch (avoids long-running transactions on a single big delete).
      */
-    @Query(
-            "SELECT s.id FROM SupabaseUser s WHERE s.isAnonymous = true AND s.createdAt < :cutoffDate")
-    Stream<UUID> findByCreatedAtBeforeAndIsAnonymousTrue(
-            @Param("cutoffDate") LocalDateTime cutoffDate);
+    public Stream<UUID> findByCreatedAtBeforeAndIsAnonymousTrue(LocalDateTime cutoffDate) {
+        return find("isAnonymous = true AND createdAt < ?1", cutoffDate).<SupabaseUser>stream()
+                .map(s -> s.getId());
+    }
 
-    @Modifying(clearAutomatically = true)
-    @Query("DELETE FROM SupabaseUser u WHERE u.id IN :ids")
-    void deleteAllByIdInBatch(@Param("ids") List<UUID> ids);
+    @Transactional
+    public void deleteAllByIdInBatch(List<UUID> ids) {
+        delete("id IN ?1", ids);
+    }
 }

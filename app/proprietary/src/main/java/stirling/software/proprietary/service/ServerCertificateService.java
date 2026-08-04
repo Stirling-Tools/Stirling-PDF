@@ -22,7 +22,9 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +34,7 @@ import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class ServerCertificateService implements ServerCertificateServiceInterface {
 
@@ -40,13 +42,14 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     private static final String KEYSTORE_ALIAS = "stirling-pdf-server";
     private static final String DEFAULT_PASSWORD = "stirling-pdf-server-cert";
 
-    private boolean enabled;
-    private String organizationName;
-    private int validityDays;
-    private boolean regenerateOnStartup;
+    private final boolean enabled;
+    private final String organizationName;
+    private final int validityDays;
+    private final boolean regenerateOnStartup;
 
     private final LicenseKeyChecker licenseKeyChecker;
 
+    @Inject
     public ServerCertificateService(
             LicenseKeyChecker licenseKeyChecker, ApplicationProperties applicationProperties) {
         this.licenseKeyChecker = licenseKeyChecker;

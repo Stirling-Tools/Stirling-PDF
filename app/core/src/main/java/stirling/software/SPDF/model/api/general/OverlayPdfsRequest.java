@@ -1,18 +1,20 @@
 package stirling.software.SPDF.model.api.general;
 
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class OverlayPdfsRequest extends PDFFile {
 
+    @RestForm("overlayFiles")
     @Schema(
             description =
                     "An array of PDF files to be used as overlays on the base PDF. The order in"
@@ -20,6 +22,7 @@ public class OverlayPdfsRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] overlayFiles;
 
+    @RestForm("overlayMode")
     @Schema(
             description =
                     "The mode of overlaying: 'SequentialOverlay' for sequential application,"
@@ -29,6 +32,7 @@ public class OverlayPdfsRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String overlayMode;
 
+    @RestForm("counts")
     @Schema(
             description =
                     "An array of integers specifying the number of times each corresponding overlay"
@@ -37,6 +41,7 @@ public class OverlayPdfsRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private int[] counts;
 
+    @RestForm("overlayPosition")
     @Schema(
             description = "Overlay position 0 is Foregound, 1 is Background",
             allowableValues = {"0", "1"},

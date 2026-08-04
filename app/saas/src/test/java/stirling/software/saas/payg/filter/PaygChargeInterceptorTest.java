@@ -24,8 +24,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
+import stirling.software.common.security.SecurityContextHolder;
 import org.springframework.web.method.HandlerMethod;
 
 import io.micrometer.core.instrument.MeterRegistry;

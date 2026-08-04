@@ -7,9 +7,9 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,8 +38,8 @@ import stirling.software.saas.procurement.repository.ProcurementQuoteRepository;
  * and this service issues the annual licence. All amounts are minor units (cents).
  */
 @Slf4j
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class ProcurementService {
 
     // Local mapper for the line-items JSON snapshot; the saas context exposes no injectable

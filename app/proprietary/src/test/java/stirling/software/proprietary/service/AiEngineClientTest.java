@@ -15,14 +15,19 @@ import java.net.http.HttpTimeoutException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 
 /**
  * Verifies that AiEngineClient surfaces network-layer failures as structured HTTP statuses so every
  * AI tool caller sees a consistent, meaningful error rather than a raw 500.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): the client now throws a JAX-RS {@link WebApplicationException}
+ * carrying a {@link Response.Status} (was Spring's {@code ResponseStatusException} / {@code
+ * HttpStatus}); the status is read from {@code ex.getResponse().getStatus()}.
  */
 class AiEngineClientTest {
 
@@ -45,10 +50,11 @@ class AiEngineClientTest {
         ConnectException cause = new ConnectException("Connection refused");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
+        WebApplicationException ex =
+                assertThrows(WebApplicationException.class, () -> client.post("/x", "{}", null));
 
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
+        assertEquals(
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), ex.getResponse().getStatus());
         assertSame(cause, ex.getCause(), "Original cause should be preserved for diagnostics");
     }
 
@@ -57,10 +63,10 @@ class AiEngineClientTest {
         HttpTimeoutException cause = new HttpTimeoutException("request timed out");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
+        WebApplicationException ex =
+                assertThrows(WebApplicationException.class, () -> client.post("/x", "{}", null));
 
-        assertEquals(HttpStatus.GATEWAY_TIMEOUT, ex.getStatusCode());
+        assertEquals(Response.Status.GATEWAY_TIMEOUT.getStatusCode(), ex.getResponse().getStatus());
         assertSame(cause, ex.getCause());
     }
 
@@ -69,20 +75,22 @@ class AiEngineClientTest {
         IOException cause = new IOException("socket reset");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.get("/x", null));
+        WebApplicationException ex =
+                assertThrows(WebApplicationException.class, () -> client.get("/x", null));
 
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
+        assertEquals(
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), ex.getResponse().getStatus());
     }
 
     @Test
     void postShortCircuitsWhenEngineDisabled() {
         applicationProperties.getAiEngine().setEnabled(false);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
+        WebApplicationException ex =
+                assertThrows(WebApplicationException.class, () -> client.post("/x", "{}", null));
 
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
+        assertEquals(
+                Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), ex.getResponse().getStatus());
     }
 
     @Test

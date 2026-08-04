@@ -20,14 +20,12 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.springframework.core.io.AbstractResource;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.google.crypto.tink.subtle.AesGcmHkdfStreaming;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.provider.StorageProvider;
@@ -297,7 +295,7 @@ public class EncryptingStorageProvider implements StorageProvider {
                 return new OneShotResource(
                         new SequenceInputStream(new ByteArrayInputStream(prefix), in),
                         length,
-                        raw.getDescription());
+                        raw.getFilename());
             }
             byte[] dek = unwrapDek(header);
             InputStream decrypting;
@@ -306,7 +304,7 @@ public class EncryptingStorageProvider implements StorageProvider {
             } catch (GeneralSecurityException e) {
                 throw new StorageEncryptionException("Failed to open decrypting stream", e);
             }
-            return new OneShotResource(decrypting, header.plaintextLength(), raw.getDescription());
+            return new OneShotResource(decrypting, header.plaintextLength(), raw.getFilename());
         } catch (IOException | RuntimeException e) {
             try {
                 in.close();
@@ -322,7 +320,7 @@ public class EncryptingStorageProvider implements StorageProvider {
      * range request still decrypts from byte 0 and discards up to the offset — inherent to
      * streaming AEAD without a seekable-channel implementation.
      */
-    private static final class ReopenableDecryptedResource extends AbstractResource {
+    private static final class ReopenableDecryptedResource implements Resource {
         private final Resource ciphertext;
         private final EncryptedFileFormat.Header header;
         private final byte[] dek;
@@ -364,13 +362,13 @@ public class EncryptingStorageProvider implements StorageProvider {
         }
 
         @Override
-        public String getDescription() {
-            return "decrypted " + ciphertext.getDescription();
+        public File getFile() throws IOException {
+            throw new IOException("Decrypted content is not backed by a file");
         }
     }
 
     /** Single-use resource over an already-open stream (mirrors InputStreamResource semantics). */
-    private static final class OneShotResource extends AbstractResource {
+    private static final class OneShotResource implements Resource {
         private final InputStream stream;
         private final long contentLength;
         private final String description;
@@ -408,8 +406,13 @@ public class EncryptingStorageProvider implements StorageProvider {
         }
 
         @Override
-        public String getDescription() {
-            return "decrypted " + description;
+        public String getFilename() {
+            return description;
+        }
+
+        @Override
+        public File getFile() throws IOException {
+            throw new IOException("Decrypted content is not backed by a file");
         }
     }
 

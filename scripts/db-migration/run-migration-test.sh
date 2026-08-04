@@ -10,8 +10,6 @@
 # Inputs:
 #   STIRLING_JAR  - path to a pre-built Stirling-PDF .jar (defaults to the
 #                   :stirling-pdf:bootJar output)
-#   JAVA_BIN      - override the Java executable used to launch the JAR
-#                   (defaults to MIGRATION_TEST_JAVA, JAVA_HOME, then PATH)
 #   FIXTURE_DIR   - override the fixture directory (rarely needed)
 #
 # Exits non-zero on any fixture failure and writes a summary to stderr.
@@ -35,6 +33,9 @@ java_major_version() {
         | awk -F'= ' '/java.specification.version =/ { print $2; exit }'
 }
 
+# The runner JAR is Java 25 class files; the host default `java` may be older.
+# Prefer JAVA_BIN/MIGRATION_TEST_JAVA, then JAVA_HOME, then the JDK 25 homes
+# GitHub's setup-java exports, then PATH.
 find_java() {
     local candidate
     if [[ -n "$JAVA_BIN" ]]; then
@@ -60,7 +61,6 @@ find_java() {
             candidate=$(command -v java || true)
         fi
     fi
-
     [[ -n "${candidate:-}" ]] || fail "No java executable found; install JDK 25 or set JAVA_BIN"
     realpath "$candidate"
 }
@@ -81,9 +81,8 @@ find_jar() {
         [[ -f "$STIRLING_JAR" ]] || fail "STIRLING_JAR='$STIRLING_JAR' not found"
         candidate="$STIRLING_JAR"
     else
-        candidate=$(find "$REPO_ROOT/app/core/build/libs" -maxdepth 1 -name 'Stirling-PDF*.jar' -o -name 'stirling-pdf*.jar' 2>/dev/null \
-            | grep -vE '(-plain|-sources)\.jar$' | head -n 1 || true)
-        [[ -n "$candidate" ]] || fail "No JAR under app/core/build/libs - run './gradlew :stirling-pdf:bootJar' first"
+        candidate=$(find "$REPO_ROOT/app/core/build" -maxdepth 1 -name '*-runner.jar' 2>/dev/null | head -n 1 || true)
+        [[ -n "$candidate" ]] || fail "No *-runner.jar under app/core/build - run './gradlew :stirling-pdf:quarkusBuild' first"
     fi
     # Resolve to an absolute path: test_fixture pushd's into a temp workdir
     # before launching java, so a relative path here would dangle.
@@ -112,8 +111,7 @@ test_fixture() {
     label=$(basename "$fixture_path" .mv.db)
     log "=== $label ==="
 
-    local jar
-    jar=$(find_jar)
+    local jar; jar=$(find_jar)
     local java_bin="$MIGRATION_JAVA_BIN"
     local workdir; workdir=$(mktemp -d)
     local configsdir="$workdir/configs"
@@ -138,13 +136,17 @@ test_fixture() {
     # to cwd, and we want to make sure we hit the fixture's configs/ and not
     # whatever happens to live at the runner's working directory.
     pushd "$workdir" >/dev/null
-    "$java_bin" -Xmx1g -jar "$jar" \
-        "--server.port=$port" \
-        "--spring.datasource.url=jdbc:h2:file:./configs/stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;MODE=PostgreSQL" \
-        "--spring.jpa.show-sql=false" \
-        "--logging.level.root=WARN" \
-        "--logging.level.stirling=INFO" \
-        "--logging.level.org.hibernate.tool.schema=INFO" \
+    # Quarkus reads config from -D system properties (which must precede -jar),
+    # not Spring's post-jar --key=value args. Translated 1:1 from the former
+    # Spring properties; system properties override application.properties.
+    "$java_bin" -Xmx1g \
+        "-Dquarkus.http.port=$port" \
+        "-Dquarkus.datasource.jdbc.url=jdbc:h2:file:./configs/stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;MODE=PostgreSQL" \
+        "-Dquarkus.hibernate-orm.log.sql=false" \
+        "-Dquarkus.log.level=WARN" \
+        "-Dquarkus.log.category.stirling.level=INFO" \
+        '-Dquarkus.log.category."org.hibernate.tool.schema".level=INFO' \
+        -jar "$jar" \
         > "$log_file" 2>&1 &
     local pid=$!
     popd >/dev/null
@@ -223,7 +225,6 @@ main() {
     [[ -d "$FIXTURE_DIR" ]] || fail "Fixture dir not found: $FIXTURE_DIR"
     MIGRATION_JAVA_BIN=$(find_java)
     assert_supported_java "$MIGRATION_JAVA_BIN"
-
     local fixtures
     mapfile -t fixtures < <(find "$FIXTURE_DIR" -maxdepth 1 -name '*.mv.db' | sort)
     [[ ${#fixtures[@]} -gt 0 ]] || fail "No fixtures under $FIXTURE_DIR"

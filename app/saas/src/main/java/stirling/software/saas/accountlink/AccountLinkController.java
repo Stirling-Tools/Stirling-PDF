@@ -3,11 +3,11 @@ package stirling.software.saas.accountlink;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
+import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
+import jakarta.annotation.security.RolesAllowed;
+import stirling.software.common.security.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,7 +42,7 @@ import stirling.software.saas.util.AuthenticationUtils;
 @Hidden
 @RestController
 @RequestMapping("/api/v1/account-link")
-@Profile("saas")
+@IfBuildProfile("saas")
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class AccountLinkController {
 

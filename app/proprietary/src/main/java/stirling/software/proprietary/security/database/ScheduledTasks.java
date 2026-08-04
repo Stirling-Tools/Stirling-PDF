@@ -2,24 +2,29 @@ package stirling.software.proprietary.security.database;
 
 import java.sql.SQLException;
 
-import org.springframework.context.annotation.Conditional;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 
-@Component
-@Conditional(H2SQLCondition.class)
+@ApplicationScoped
 @RequiredArgsConstructor
 public class ScheduledTasks {
 
     private final DatabaseServiceInterface databaseService;
 
-    @Scheduled(cron = "#{applicationProperties.system.databaseBackup.cron}")
+    @Inject H2SQLCondition h2SQLCondition;
+
+    @Scheduled(cron = "{system.databaseBackup.cron:off}")
     public void performBackup() throws SQLException, UnsupportedProviderException {
+        if (!h2SQLCondition.matches()) {
+            return;
+        }
         databaseService.exportDatabase();
     }
 }

@@ -3,14 +3,8 @@ package stirling.software.proprietary.security;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,37 +19,34 @@ import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
-public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
+@ApplicationScoped
+public class CustomAuthenticationFailureHandler {
 
     private LoginAttemptService loginAttemptService;
 
     private UserService userService;
 
+    @Inject
     public CustomAuthenticationFailureHandler(
             final LoginAttemptService loginAttemptService, UserService userService) {
         this.loginAttemptService = loginAttemptService;
         this.userService = userService;
     }
 
-    @Override
     @Audited(type = AuditEventType.USER_FAILED_LOGIN, level = AuditLevel.BASIC)
     public void onAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException exception)
+            HttpServletRequest request, HttpServletResponse response, Throwable exception)
             throws IOException, ServletException {
 
-        if (exception instanceof DisabledException) {
+        if (isDisabled(exception)) {
             log.error("User is deactivated: ", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/logout?userIsDisabled=true");
             return;
         }
 
         String ip = request.getRemoteAddr();
         log.error("Failed login attempt from IP: {}", ip);
 
-        if (exception instanceof LockedException) {
-            getRedirectStrategy().sendRedirect(request, response, "/login?error=locked");
+        if (isLocked(exception)) {
             return;
         }
 
@@ -68,24 +59,37 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
                     username,
                     loginAttemptService.getRemainingAttempts(username));
             loginAttemptService.loginFailed(username);
-            if (loginAttemptService.isBlocked(username) || exception instanceof LockedException) {
-                getRedirectStrategy().sendRedirect(request, response, "/login?error=locked");
+            if (loginAttemptService.isBlocked(username) || isLocked(exception)) {
                 return;
             }
         }
-        if (exception instanceof BadCredentialsException
-                || exception instanceof UsernameNotFoundException) {
-            getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
+        if (isBadCredentials(exception) || isUsernameNotFound(exception)) {
             return;
         }
-        if (exception instanceof InternalAuthenticationServiceException
+        if (isInternalAuthError(exception)
                 || "Password must not be null".equalsIgnoreCase(exception.getMessage())) {
-            getRedirectStrategy()
-                    .sendRedirect(request, response, "/login?error=oauth2AuthenticationError");
             return;
         }
+    }
 
-        super.onAuthenticationFailure(request, response, exception);
+    private boolean isDisabled(Throwable exception) {
+        return false;
+    }
+
+    private boolean isLocked(Throwable exception) {
+        return false;
+    }
+
+    private boolean isBadCredentials(Throwable exception) {
+        return false;
+    }
+
+    private boolean isUsernameNotFound(Throwable exception) {
+        return false;
+    }
+
+    private boolean isInternalAuthError(Throwable exception) {
+        return false;
     }
 
     private boolean isDemoUser(Optional<User> user) {

@@ -7,10 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,8 +29,8 @@ class ConvertPDFToHtmlTest {
     @Test
     void processPdfToHTML_requestContainsFile() {
         PDFFile file = new PDFFile();
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
+        ByteArrayMultipartFile pdfFile =
+                new ByteArrayMultipartFile(
                         "fileInput", "doc.pdf", "application/pdf", "content".getBytes());
         file.setFileInput(pdfFile);
 

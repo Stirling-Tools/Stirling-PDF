@@ -14,7 +14,12 @@ pluginManagement {
                 allowInsecureProtocol true
             }
         }
+        mavenCentral()
         gradlePluginPortal()
+    }
+    plugins {
+        // Quarkus Gradle plugin (replaces org.springframework.boot). Version from gradle.properties.
+        id "${quarkusPluginId}" version "${quarkusPluginVersion}"
     }
 }
 

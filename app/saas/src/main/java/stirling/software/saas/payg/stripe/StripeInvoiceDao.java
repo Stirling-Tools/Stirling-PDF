@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.context.annotation.Profile;
+import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,8 +25,8 @@ import lombok.extern.slf4j.Slf4j;
  * yet" rather than 500ing the page.
  */
 @Slf4j
-@Repository
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class StripeInvoiceDao {
 
     /**

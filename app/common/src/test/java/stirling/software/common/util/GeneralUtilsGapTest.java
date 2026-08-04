@@ -15,9 +15,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 
 /**
  * Gap-coverage tests for {@link GeneralUtils}. Targets the public methods NOT already exercised by

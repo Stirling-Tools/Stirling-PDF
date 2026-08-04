@@ -6,12 +6,14 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.UUID;
-
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.transaction.support.TransactionOperations;
+import java.util.function.Supplier;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.quarkus.narayana.jta.QuarkusTransaction;
+
+import jakarta.persistence.PersistenceException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,8 +46,35 @@ public class FileEncryptionKeyService {
      * INSERT would otherwise defer to the outer commit — the duplicate-key exception would surface
      * far from {@link #createActive}'s recovery catch, and the outer transaction would already be
      * rollback-only.
+     *
+     * <p>Migrated from Spring's {@code TransactionOperations}: production passes {@link
+     * #requiringNewTransaction()}, tests pass a plain pass-through.
      */
-    private final TransactionOperations keyCreationTx;
+    public interface KeyCreationTx {
+        <T> T execute(Supplier<T> work);
+    }
+
+    /** Quarkus REQUIRES_NEW: the key row commits independently of any caller transaction. */
+    public static KeyCreationTx requiringNewTransaction() {
+        return new KeyCreationTx() {
+            @Override
+            public <T> T execute(Supplier<T> work) {
+                return QuarkusTransaction.requiringNew().call(work::get);
+            }
+        };
+    }
+
+    /** No transaction management: the work runs on whatever context the caller is already in. */
+    public static KeyCreationTx withoutTransaction() {
+        return new KeyCreationTx() {
+            @Override
+            public <T> T execute(Supplier<T> work) {
+                return work.get();
+            }
+        };
+    }
+
+    private final KeyCreationTx keyCreationTx;
 
     private final Cache<UUID, byte[]> unwrapCache =
             Caffeine.newBuilder().expireAfterWrite(CACHE_TTL).maximumSize(10_000).build();
@@ -54,13 +83,13 @@ public class FileEncryptionKeyService {
 
     public FileEncryptionKeyService(
             FileEncryptionKeyRepository repository, FileEncryptionMasterKey masterKey) {
-        this(repository, masterKey, TransactionOperations.withoutTransaction());
+        this(repository, masterKey, withoutTransaction());
     }
 
     public FileEncryptionKeyService(
             FileEncryptionKeyRepository repository,
             FileEncryptionMasterKey masterKey,
-            TransactionOperations keyCreationTx) {
+            KeyCreationTx keyCreationTx) {
         this.repository = repository;
         this.masterKey = masterKey;
         this.keyCreationTx = keyCreationTx;
@@ -98,7 +127,7 @@ public class FileEncryptionKeyService {
         }
         FileEncryptionKey row =
                 repository
-                        .findById(keyId)
+                        .findByIdOptional(keyId)
                         .orElseThrow(
                                 () ->
                                         new StorageEncryptionException(
@@ -173,7 +202,7 @@ public class FileEncryptionKeyService {
         try {
             // saveAndFlush inside a fresh transaction so a unique-constraint violation surfaces
             // right here (not at some outer commit) and the caller's transaction stays healthy.
-            FileEncryptionKey saved = keyCreationTx.execute(status -> repository.saveAndFlush(row));
+            FileEncryptionKey saved = keyCreationTx.execute(() -> repository.saveAndFlush(row));
             log.info(
                     "Created storage encryption key {} for {}:{}",
                     saved.getKeyId(),
@@ -181,7 +210,7 @@ public class FileEncryptionKeyService {
                     scopeId);
             unwrapCache.put(saved.getKeyId(), kek);
             return saved;
-        } catch (DataIntegrityViolationException raced) {
+        } catch (PersistenceException raced) {
             // Another node created the scope key concurrently; use theirs.
             return repository
                     .findFirstByScopeTypeAndScopeIdAndStatus(

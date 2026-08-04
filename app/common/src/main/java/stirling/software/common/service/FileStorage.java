@@ -9,22 +9,23 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.FileStore;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.JobContext;
 
 /**
  * Service for storing and retrieving files with unique file IDs. Used by the AutoJobPostMapping
  * system to handle file references. Disk I/O is delegated to the injected {@link FileStore} bean.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class FileStorage {
@@ -34,7 +35,12 @@ public class FileStorage {
 
     private final FileOrUploadService fileOrUploadService;
     private final FileStore fileStore;
-    private final Optional<JobOwnershipService> jobOwnershipService;
+
+    // MIGRATION: CDI does not inject java.util.Optional<T>. Optional<JobOwnershipService> is now
+    // jakarta.enterprise.inject.Instance<JobOwnershipService>, resolved via isResolvable()/get().
+    // Exactly one JobOwnershipService impl is selected at build time (Impl vs NoOp), so this is
+    // always resolvable in practice, but Instance<> keeps the previous optional contract.
+    private final Instance<JobOwnershipService> jobOwnershipService;
 
     public String storeFile(MultipartFile file) throws IOException {
         String owner = resolveOwner();
@@ -97,7 +103,7 @@ public class FileStorage {
         return new StoredFile(stored.fileId(), stored.size());
     }
 
-    public String storeFromStreamingBody(StreamingResponseBody body, String originalName)
+    public String storeFromStreamingBody(StreamingOutput body, String originalName)
             throws IOException {
         String owner = resolveOwner();
         // Hold Throwable not IOException: an unchecked failure (NPE, IllegalState, OOM, etc.)
@@ -113,7 +119,7 @@ public class FileStorage {
                         executor.submit(
                                 () -> {
                                     try {
-                                        body.writeTo(out);
+                                        body.write(out);
                                     } catch (Throwable ex) {
                                         bodyError.set(ex);
                                     } finally {
@@ -142,10 +148,9 @@ public class FileStorage {
                         throw ioe;
                     }
                     throw new IOException(
-                            "StreamingResponseBody writer failed: " + writerErr.getMessage(),
-                            writerErr);
+                            "StreamingOutput writer failed: " + writerErr.getMessage(), writerErr);
                 }
-                log.debug("Stored StreamingResponseBody with ID: {}", stored.fileId());
+                log.debug("Stored StreamingOutput with ID: {}", stored.fileId());
                 return stored.fileId();
             } finally {
                 // Interrupt and join the writer task: shutdown() alone returns immediately and a
@@ -194,11 +199,14 @@ public class FileStorage {
         if (propagated != null) {
             return propagated;
         }
-        return jobOwnershipService.flatMap(JobOwnershipService::getCurrentUserId).orElse(null);
+        if (!jobOwnershipService.isResolvable()) {
+            return null;
+        }
+        return jobOwnershipService.get().getCurrentUserId().orElse(null);
     }
 
     private void enforceOwnership(String fileId) {
-        if (jobOwnershipService.isEmpty()) {
+        if (!jobOwnershipService.isResolvable()) {
             return;
         }
         Optional<String> currentUser = jobOwnershipService.get().getCurrentUserId();

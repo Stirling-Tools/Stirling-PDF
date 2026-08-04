@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,14 +32,12 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -49,17 +48,6 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertEbookToPDFControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
@@ -87,15 +75,8 @@ class ConvertEbookToPDFControllerTest {
     void convertEbookToPdf_buildsCalibreCommandAndCleansUp() throws Exception {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
 
-        MockMultipartFile ebookFile =
-                new MockMultipartFile(
-                        "fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
-
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(ebookFile);
-        request.setEmbedAllFonts(true);
-        request.setIncludeTableOfContents(true);
-        request.setIncludePageNumbers(true);
+        FileUpload ebookFile =
+                TestFileUploads.of("content".getBytes(), "ebook.epub", "application/epub+zip");
 
         Path workingDir = Files.createTempDirectory("ebook-convert-test-");
         when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
@@ -147,13 +128,13 @@ class ConvertEbookToPDFControllerTest {
                                 return execResult;
                             });
 
-            ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
+            Response expectedResponse = Response.ok("result".getBytes()).build();
             wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
             gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
                     .thenReturn("ebook_convertedToPDF.pdf");
 
-            ResponseEntity<Resource> response = controller.convertEbookToPdf(request);
+            Response response = controller.convertEbookToPdf(ebookFile, true, true, true, null);
 
             assertSame(expectedResponse, response);
 
@@ -190,14 +171,12 @@ class ConvertEbookToPDFControllerTest {
     void convertEbookToPdf_withUnsupportedExtensionThrows() {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
 
-        MockMultipartFile unsupported =
-                new MockMultipartFile(
-                        "fileInput", "ebook.exe", "application/octet-stream", new byte[] {1, 2, 3});
+        FileUpload unsupported =
+                TestFileUploads.of(new byte[] {1, 2, 3}, "ebook.exe", "application/octet-stream");
 
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(unsupported);
-
-        assertThrows(IllegalArgumentException.class, () -> controller.convertEbookToPdf(request));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.convertEbookToPdf(unsupported, null, null, null, null));
     }
 
     @Test
@@ -205,13 +184,8 @@ class ConvertEbookToPDFControllerTest {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
 
-        MockMultipartFile ebookFile =
-                new MockMultipartFile(
-                        "fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
-
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(ebookFile);
-        request.setOptimizeForEbook(true);
+        FileUpload ebookFile =
+                TestFileUploads.of("content".getBytes(), "ebook.epub", "application/epub+zip");
 
         Path workingDir = Files.createTempDirectory("ebook-convert-opt-test-");
         when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
@@ -263,11 +237,11 @@ class ConvertEbookToPDFControllerTest {
             gu.when(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)))
                     .thenReturn(optimizedBytes);
 
-            ResponseEntity<Resource> expectedResponse = streamingOk(optimizedBytes);
+            Response expectedResponse = Response.ok(optimizedBytes).build();
             wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.convertEbookToPdf(request);
+            Response response = controller.convertEbookToPdf(ebookFile, null, null, null, true);
 
             assertSame(expectedResponse, response);
             gu.verify(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)));

@@ -4,7 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.web.multipart.MultipartFile;
+
+import stirling.software.common.model.MultipartFile;
 
 class PdfToCbzUtilsTest {
 

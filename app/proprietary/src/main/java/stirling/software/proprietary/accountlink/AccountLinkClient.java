@@ -8,10 +8,10 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,10 +41,11 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern; see
  * {@code AiEngineClient}); base URL + client are injectable so tests can stub SaaS.
  */
+// Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
+// bean; it holds no state and only its flag-gated callers ever issue a call.
 @Slf4j
-@Service
-@Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ApplicationScoped
+@IfBuildProfile("!saas")
 public class AccountLinkClient {
 
     static final String HEADER_DEVICE_ID = "X-Device-Id";
@@ -54,7 +55,7 @@ public class AccountLinkClient {
     private final ObjectMapper mapper;
     private final HttpClient httpClient;
 
-    @Autowired
+    @Inject
     public AccountLinkClient(AccountLinkProperties properties, ObjectMapper mapper) {
         this(
                 properties,

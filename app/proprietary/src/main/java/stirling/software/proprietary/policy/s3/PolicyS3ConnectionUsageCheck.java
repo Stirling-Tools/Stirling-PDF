@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,7 +22,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * delete guard). Scans in memory - fine at admin-dashboard scale, always consistent with the live
  * stores.
  */
-@Component
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class PolicyS3ConnectionUsageCheck implements IntegrationConfigUsageCheck {
 

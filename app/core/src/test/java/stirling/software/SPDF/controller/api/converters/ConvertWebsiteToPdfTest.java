@@ -30,15 +30,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -49,27 +45,26 @@ import stirling.software.common.util.ProcessExecutor.Processes;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
+// Migration: the endpoint now returns jakarta.ws.rs.core.Response (not Spring ResponseEntity) and
+// builds redirect URIs from an injected @Context UriInfo (not ServletUriComponentsBuilder /
+// RequestContextHolder). urlToPdf's signature changed from (UrlToPdfRequest) to (String urlInput,
+// UriInfo uriInfo); we drive it with the raw url string and a UriInfo whose getBaseUriBuilder()
+// yields a fresh builder rooted at http://localhost:8080/.
 public class ConvertWebsiteToPdfTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     private static final Pattern PDF_FILENAME_PATTERN = Pattern.compile("[A-Za-z0-9_]+\\.pdf");
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private TempFileManager tempFileManager;
+    @Mock private UriInfo uriInfo;
 
     private ApplicationProperties applicationProperties;
     private ConvertWebsiteToPDF sut;
     private AutoCloseable mocks;
+
+    private Response urlToPdf(String urlInput) throws Exception {
+        return sut.urlToPdf(urlInput, uriInfo);
+    }
 
     @BeforeEach
     void setUp() throws Exception {
@@ -92,8 +87,8 @@ public class ConvertWebsiteToPdfTest {
         applicationProperties.getSystem().setEnableUrlToPDF(true);
 
         // Stubs in case the code continues to run
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
-        when(pdfDocumentFactory.load(any(File.class))).thenReturn(new PDDocument());
+        lenient().when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
+        lenient().when(pdfDocumentFactory.load(any(File.class))).thenReturn(new PDDocument());
 
         // Build SUT
         sut =
@@ -103,29 +98,24 @@ public class ConvertWebsiteToPdfTest {
                         applicationProperties,
                         tempFileManager);
 
-        // Provide RequestContext for ServletUriComponentsBuilder
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setScheme("http");
-        req.setServerName("localhost");
-        req.setServerPort(8080);
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req));
+        // UriInfo.getBaseUriBuilder() backs the redirect-URI construction; hand out a fresh builder
+        // each call so the production .replacePath(...).clone().queryParam(...) chain is isolated.
+        lenient()
+                .when(uriInfo.getBaseUriBuilder())
+                .thenAnswer(inv -> UriBuilder.fromUri("http://localhost:8080/"));
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        RequestContextHolder.resetRequestAttributes();
         if (mocks != null) mocks.close();
     }
 
     @Test
     void redirect_with_error_when_invalid_url_format_provided() throws Exception {
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput("not-a-url");
+        Response resp = urlToPdf("not-a-url");
 
-        ResponseEntity<?> resp = sut.urlToPdf(request);
-
-        assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
-        URI location = resp.getHeaders().getLocation();
+        assertEquals(Response.Status.SEE_OTHER.getStatusCode(), resp.getStatus());
+        URI location = resp.getLocation();
         assertNotNull(location, "Location header expected");
         assertTrue(
                 location.getQuery() != null
@@ -134,14 +124,11 @@ public class ConvertWebsiteToPdfTest {
 
     @Test
     void redirect_with_error_when_url_is_not_reachable() throws Exception {
-        UrlToPdfRequest request = new UrlToPdfRequest();
         // .invalid is reserved by RFC and not resolvable
-        request.setUrlInput("https://nonexistent.invalid/");
+        Response resp = urlToPdf("https://nonexistent.invalid/");
 
-        ResponseEntity<?> resp = sut.urlToPdf(request);
-
-        assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
-        URI location = resp.getHeaders().getLocation();
+        assertEquals(Response.Status.SEE_OTHER.getStatusCode(), resp.getStatus());
+        URI location = resp.getLocation();
         assertNotNull(location, "Location header expected");
         assertTrue(
                 location.getQuery() != null
@@ -153,13 +140,10 @@ public class ConvertWebsiteToPdfTest {
         // Disable feature
         applicationProperties.getSystem().setEnableUrlToPDF(false);
 
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput("https://example.com/");
+        Response resp = urlToPdf("https://example.com/");
 
-        ResponseEntity<?> resp = sut.urlToPdf(request);
-
-        assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
-        URI location = resp.getHeaders().getLocation();
+        assertEquals(Response.Status.SEE_OTHER.getStatusCode(), resp.getStatus());
+        URI location = resp.getLocation();
         assertNotNull(location, "Location header expected");
         assertTrue(
                 location.getQuery() != null
@@ -201,9 +185,6 @@ public class ConvertWebsiteToPdfTest {
 
     @Test
     void happy_path_executes_weasyprint_loads_pdf_and_returns_response() throws Exception {
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput("https://example.com");
-
         try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
                 MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<HttpClient> httpClient = mockHttpClientReturning("<html></html>")) {
@@ -224,11 +205,11 @@ public class ConvertWebsiteToPdfTest {
             when(mockExec.runCommandWithOutputHandling(cmdCaptor.capture()))
                     .thenReturn(dummyResult);
 
-            ResponseEntity<?> resp = sut.urlToPdf(request);
+            Response resp = urlToPdf("https://example.com");
 
             // Assert
             assertNotNull(resp);
-            assertEquals(HttpStatus.OK, resp.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), resp.getStatus());
 
             // Assert – WeasyPrint command correct
             List<String> cmd = cmdCaptor.getValue();
@@ -252,9 +233,6 @@ public class ConvertWebsiteToPdfTest {
     @Test
     void finally_block_logs_and_swallows_ioexception_on_delete() throws Exception {
         // Arrange
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput("https://example.com");
-
         Path preCreatedTemp = Files.createTempFile("test_output_", ".pdf");
         Path htmlTemp = Files.createTempFile("test_input_", ".html");
 
@@ -295,10 +273,10 @@ public class ConvertWebsiteToPdfTest {
             ProcessExecutorResult dummy = Mockito.mock(ProcessExecutorResult.class);
             when(mockExec.runCommandWithOutputHandling(Mockito.<List>any())).thenReturn(dummy);
 
-            ResponseEntity<?> resp = assertDoesNotThrow(() -> sut.urlToPdf(request));
+            Response resp = assertDoesNotThrow(() -> urlToPdf("https://example.com"));
 
             assertNotNull(resp, "Response should not be null");
-            assertEquals(HttpStatus.OK, resp.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), resp.getStatus());
             assertTrue(
                     Files.exists(preCreatedTemp),
                     "Temp file should still exist despite delete IOException");
@@ -331,9 +309,6 @@ public class ConvertWebsiteToPdfTest {
 
     @Test
     void redirect_with_error_when_disallowed_content_detected() throws Exception {
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput("https://example.com");
-
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<HttpClient> httpClient =
                         mockHttpClientReturning(
@@ -342,10 +317,10 @@ public class ConvertWebsiteToPdfTest {
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
 
-            ResponseEntity<?> resp = sut.urlToPdf(request);
+            Response resp = urlToPdf("https://example.com");
 
-            assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
-            URI location = resp.getHeaders().getLocation();
+            assertEquals(Response.Status.SEE_OTHER.getStatusCode(), resp.getStatus());
+            URI location = resp.getLocation();
             assertNotNull(location, "Location header expected");
             assertTrue(
                     location.getQuery() != null

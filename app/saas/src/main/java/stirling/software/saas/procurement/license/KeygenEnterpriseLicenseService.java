@@ -13,8 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,8 +35,8 @@ import stirling.software.saas.procurement.config.KeygenConfigurationProperties;
  * licence key returned is stored on the deal as its {@code license_ref}.
  */
 @Slf4j
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @ConditionalOnProperty(name = "stirling.keygen.enabled", havingValue = "true")
 public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService {
 

@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * collection of paths with their creation timestamps.
  */
 @Slf4j
-@Component
+@ApplicationScoped
 public class TempFileRegistry {
 
     private final ConcurrentMap<Path, Instant> registeredFiles = new ConcurrentHashMap<>();

@@ -36,7 +36,9 @@ public final class InMemoryKeyRepo {
                             rows.put(row.getKeyId(), row);
                             return row;
                         });
-        when(mock.findById(any(UUID.class)))
+        // findByIdOptional, not findById: Panache's inherited findById returns a nullable entity,
+        // so the service uses the Optional-returning variant.
+        when(mock.findByIdOptional(any(UUID.class)))
                 .thenAnswer(inv -> Optional.ofNullable(rows.get(inv.<UUID>getArgument(0))));
         when(mock.findFirstByScopeTypeAndScopeIdAndStatus(any(), anyLong(), any()))
                 .thenAnswer(

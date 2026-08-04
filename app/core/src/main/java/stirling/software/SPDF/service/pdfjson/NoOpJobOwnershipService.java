@@ -2,8 +2,9 @@ package stirling.software.SPDF.service.pdfjson;
 
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.properties.IfBuildProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
  * accessible without authentication.
  */
 @Slf4j
-@Service
-@ConditionalOnProperty(name = "security.enable-login", havingValue = "false", matchIfMissing = true)
+@ApplicationScoped
+@IfBuildProperty(name = "security.enable-login", stringValue = "false", enableIfMissing = true)
 public class NoOpJobOwnershipService
         implements stirling.software.common.service.JobOwnershipService {
 

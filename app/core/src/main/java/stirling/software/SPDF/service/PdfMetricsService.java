@@ -4,13 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PostHogService;
 
-@Service
+@ApplicationScoped
 public class PdfMetricsService {
 
     private final PostHogService postHogService;
@@ -41,7 +42,7 @@ public class PdfMetricsService {
         }
     }
 
-    @Scheduled(fixedRate = 7200000)
+    @Scheduled(every = "7200s")
     public void flushMetrics() {
         if (!isEnabled()) {
             return;

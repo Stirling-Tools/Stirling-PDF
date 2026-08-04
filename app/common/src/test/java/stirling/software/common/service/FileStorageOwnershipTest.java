@@ -13,16 +13,29 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import jakarta.enterprise.inject.Instance;
+
 import stirling.software.common.cluster.inprocess.LocalDiskFileStore;
 import stirling.software.common.util.JobContext;
 
 class FileStorageOwnershipTest {
 
+    // FileStorage now takes a CDI Instance<JobOwnershipService> (was Optional). Build a mock
+    // Instance
+    // whose isResolvable()/get() mirror the previous Optional.empty()/Optional.of(svc) contract.
+    @SuppressWarnings("unchecked")
+    private static Instance<JobOwnershipService> instanceOf(JobOwnershipService svc) {
+        Instance<JobOwnershipService> instance = mock(Instance.class);
+        when(instance.isResolvable()).thenReturn(svc != null);
+        when(instance.get()).thenReturn(svc);
+        return instance;
+    }
+
     private FileStorage newStorageWithoutSecurity(Path tempDir) {
         return new FileStorage(
                 mock(FileOrUploadService.class),
                 new LocalDiskFileStore(tempDir.toString()),
-                Optional.empty());
+                instanceOf(null));
     }
 
     private FileStorage newStorageWithCurrentUser(Path tempDir, AtomicReference<String> userRef) {
@@ -31,7 +44,7 @@ class FileStorageOwnershipTest {
         return new FileStorage(
                 mock(FileOrUploadService.class),
                 new LocalDiskFileStore(tempDir.toString()),
-                Optional.of(svc));
+                instanceOf(svc));
     }
 
     @Test

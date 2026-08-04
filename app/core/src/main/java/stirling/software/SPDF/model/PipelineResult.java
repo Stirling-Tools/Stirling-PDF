@@ -3,11 +3,10 @@ package stirling.software.SPDF.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.core.io.Resource;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.TempFile;
 
 @Data

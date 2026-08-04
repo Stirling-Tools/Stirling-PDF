@@ -13,14 +13,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Tests the wiring of {@link AiUserDataService}: the path/userId combination forwarded to the
  * engine, plus the swallowing-not-throwing behaviour for engine failures. Doesn't try to assert
- * {@code @Async} dispatch - that's Spring infrastructure and only fires through the proxy, which a
- * unit-level test bypasses by design.
+ * async dispatch - the former Spring {@code @Async} has no Quarkus equivalent and the method now
+ * runs synchronously, so a unit-level test exercises it directly.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): engine HTTP failures arrive as a JAX-RS {@link
+ * WebApplicationException} (was Spring's {@code ResponseStatusException}); the service swallows it
+ * the same way.
  */
 @ExtendWith(MockitoExtension.class)
 class AiUserDataServiceTest {
@@ -66,8 +71,8 @@ class AiUserDataServiceTest {
     }
 
     @Test
-    void swallowsResponseStatusExceptionFromEngine() throws IOException {
-        doThrow(new ResponseStatusException(HttpStatus.BAD_GATEWAY, "engine returned 502"))
+    void swallowsWebApplicationExceptionFromEngine() throws IOException {
+        doThrow(new WebApplicationException("engine returned 502", Response.Status.BAD_GATEWAY))
                 .when(aiEngineClient)
                 .delete(eq(PURGE_PATH), eq("alice"));
         service.purgeUserDocuments("alice");

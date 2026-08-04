@@ -1,30 +1,35 @@
 package stirling.software.SPDF.config;
 
-import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
-import org.springframework.stereotype.Component;
+import java.util.Map;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.oas.models.media.Content;
-import io.swagger.v3.oas.models.media.MediaType;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.responses.ApiResponse;
+import org.eclipse.microprofile.openapi.OASFactory;
+import org.eclipse.microprofile.openapi.OASFilter;
+import org.eclipse.microprofile.openapi.models.OpenAPI;
+import org.eclipse.microprofile.openapi.models.Operation;
+import org.eclipse.microprofile.openapi.models.PathItem;
+import org.eclipse.microprofile.openapi.models.media.MediaType;
+import org.eclipse.microprofile.openapi.models.media.Schema;
+import org.eclipse.microprofile.openapi.models.responses.APIResponse;
 
 /**
  * Global OpenAPI customizer that adds standard error responses (400, 413, 422, 500) to all API
  * operations under /api/v1/** paths.
+ *
+ * <p>Migrated from a springdoc {@code GlobalOpenApiCustomizer} to a MicroProfile {@link OASFilter}
+ * (quarkus-smallrye-openapi). Register this filter via {@code mp.openapi.filter} in
+ * application.properties, e.g. {@code
+ * mp.openapi.filter=stirling.software.SPDF.config.GlobalErrorResponseCustomizer}.
  */
-@Component
-public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
+public class GlobalErrorResponseCustomizer implements OASFilter {
 
     @Override
-    public void customise(OpenAPI openApi) {
-        if (openApi.getPaths() == null) {
+    public void filterOpenAPI(OpenAPI openApi) {
+        if (openApi.getPaths() == null || openApi.getPaths().getPathItems() == null) {
             return;
         }
 
         openApi.getPaths()
+                .getPathItems()
                 .forEach(
                         (path, pathItem) -> {
                             if (path.startsWith("/api/v1/")) {
@@ -34,20 +39,20 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
     }
 
     private void addErrorResponsesToPathItem(PathItem pathItem) {
-        if (pathItem.getPost() != null) {
-            addStandardErrorResponses(pathItem.getPost());
+        if (pathItem.getPOST() != null) {
+            addStandardErrorResponses(pathItem.getPOST());
         }
-        if (pathItem.getPut() != null) {
-            addStandardErrorResponses(pathItem.getPut());
+        if (pathItem.getPUT() != null) {
+            addStandardErrorResponses(pathItem.getPUT());
         }
-        if (pathItem.getPatch() != null) {
-            addStandardErrorResponses(pathItem.getPatch());
+        if (pathItem.getPATCH() != null) {
+            addStandardErrorResponses(pathItem.getPATCH());
         }
-        if (pathItem.getDelete() != null) {
-            addStandardErrorResponses(pathItem.getDelete());
+        if (pathItem.getDELETE() != null) {
+            addStandardErrorResponses(pathItem.getDELETE());
         }
-        if (pathItem.getGet() != null) {
-            addStandardErrorResponses(pathItem.getGet());
+        if (pathItem.getGET() != null) {
+            addStandardErrorResponses(pathItem.getGET());
         }
     }
 
@@ -57,118 +62,110 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
         }
 
         // Only add error responses if they don't already exist
-        if (!operation.getResponses().containsKey("400")) {
-            operation.getResponses().addApiResponse("400", create400Response());
+        if (!operation.getResponses().hasAPIResponse("400")) {
+            operation.getResponses().addAPIResponse("400", create400Response());
         }
-        if (!operation.getResponses().containsKey("413")) {
-            operation.getResponses().addApiResponse("413", create413Response());
+        if (!operation.getResponses().hasAPIResponse("413")) {
+            operation.getResponses().addAPIResponse("413", create413Response());
         }
-        if (!operation.getResponses().containsKey("422")) {
-            operation.getResponses().addApiResponse("422", create422Response());
+        if (!operation.getResponses().hasAPIResponse("422")) {
+            operation.getResponses().addAPIResponse("422", create422Response());
         }
-        if (!operation.getResponses().containsKey("500")) {
-            operation.getResponses().addApiResponse("500", create500Response());
+        if (!operation.getResponses().hasAPIResponse("500")) {
+            operation.getResponses().addAPIResponse("500", create500Response());
         }
     }
 
-    private ApiResponse create400Response() {
-        return new ApiResponse()
+    private APIResponse create400Response() {
+        return OASFactory.createAPIResponse()
                 .description(
                         "Bad request - Invalid input parameters, unsupported format, or corrupted file")
                 .content(
-                        new Content()
+                        OASFactory.createContent()
                                 .addMediaType(
                                         "application/json",
-                                        new MediaType()
-                                                .schema(
-                                                        createErrorSchema(
-                                                                400,
-                                                                "Invalid input parameters or corrupted file",
-                                                                "/api/v1/example/endpoint"))
-                                                .example(
-                                                        createErrorExample(
-                                                                400,
-                                                                "Invalid input parameters or corrupted file",
-                                                                "/api/v1/example/endpoint"))));
+                                        createMediaType(
+                                                400,
+                                                "Invalid input parameters or corrupted file",
+                                                "/api/v1/example/endpoint")));
     }
 
-    private ApiResponse create413Response() {
-        return new ApiResponse()
+    private APIResponse create413Response() {
+        return OASFactory.createAPIResponse()
                 .description("Payload too large - File exceeds maximum allowed size")
                 .content(
-                        new Content()
+                        OASFactory.createContent()
                                 .addMediaType(
                                         "application/json",
-                                        new MediaType()
-                                                .schema(
-                                                        createErrorSchema(
-                                                                413,
-                                                                "File size exceeds maximum allowed limit",
-                                                                "/api/v1/example/endpoint"))
-                                                .example(
-                                                        createErrorExample(
-                                                                413,
-                                                                "File size exceeds maximum allowed limit",
-                                                                "/api/v1/example/endpoint"))));
+                                        createMediaType(
+                                                413,
+                                                "File size exceeds maximum allowed limit",
+                                                "/api/v1/example/endpoint")));
     }
 
-    private ApiResponse create422Response() {
-        return new ApiResponse()
+    private APIResponse create422Response() {
+        return OASFactory.createAPIResponse()
                 .description("Unprocessable entity - File is valid but cannot be processed")
                 .content(
-                        new Content()
+                        OASFactory.createContent()
                                 .addMediaType(
                                         "application/json",
-                                        new MediaType()
-                                                .schema(
-                                                        createErrorSchema(
-                                                                422,
-                                                                "File is valid but cannot be processed",
-                                                                "/api/v1/example/endpoint"))
-                                                .example(
-                                                        createErrorExample(
-                                                                422,
-                                                                "File is valid but cannot be processed",
-                                                                "/api/v1/example/endpoint"))));
+                                        createMediaType(
+                                                422,
+                                                "File is valid but cannot be processed",
+                                                "/api/v1/example/endpoint")));
     }
 
-    private ApiResponse create500Response() {
-        return new ApiResponse()
+    private APIResponse create500Response() {
+        return OASFactory.createAPIResponse()
                 .description("Internal server error - Unexpected error during processing")
                 .content(
-                        new Content()
+                        OASFactory.createContent()
                                 .addMediaType(
                                         "application/json",
-                                        new MediaType()
-                                                .schema(
-                                                        createErrorSchema(
-                                                                500,
-                                                                "Unexpected error during processing",
-                                                                "/api/v1/example/endpoint"))
-                                                .example(
-                                                        createErrorExample(
-                                                                500,
-                                                                "Unexpected error during processing",
-                                                                "/api/v1/example/endpoint"))));
+                                        createMediaType(
+                                                500,
+                                                "Unexpected error during processing",
+                                                "/api/v1/example/endpoint")));
     }
 
-    private Schema<?> createErrorSchema(int status, String message, String path) {
-        return new Schema<>()
-                .type("object")
-                .addProperty("status", new Schema<>().type("integer").example(status))
-                .addProperty("error", new Schema<>().type("string").example(getErrorType(status)))
-                .addProperty("message", new Schema<>().type("string").example(message))
+    private MediaType createMediaType(int status, String message, String path) {
+        return OASFactory.createMediaType()
+                .schema(createErrorSchema(status, message, path))
+                .example(createErrorExample(status, message, path));
+    }
+
+    private Schema createErrorSchema(int status, String message, String path) {
+        return OASFactory.createSchema()
+                .addType(Schema.SchemaType.OBJECT)
+                .addProperty(
+                        "status",
+                        OASFactory.createSchema()
+                                .addType(Schema.SchemaType.INTEGER)
+                                .example(status))
+                .addProperty(
+                        "error",
+                        OASFactory.createSchema()
+                                .addType(Schema.SchemaType.STRING)
+                                .example(getErrorType(status)))
+                .addProperty(
+                        "message",
+                        OASFactory.createSchema()
+                                .addType(Schema.SchemaType.STRING)
+                                .example(message))
                 .addProperty(
                         "timestamp",
-                        new Schema<>()
-                                .type("string")
+                        OASFactory.createSchema()
+                                .addType(Schema.SchemaType.STRING)
                                 .format("date-time")
                                 .example("2024-01-15T10:30:00Z"))
-                .addProperty("path", new Schema<>().type("string").example(path));
+                .addProperty(
+                        "path",
+                        OASFactory.createSchema().addType(Schema.SchemaType.STRING).example(path));
     }
 
     private Object createErrorExample(int status, String message, String path) {
-        return java.util.Map.of(
+        return Map.of(
                 "status", status,
                 "error", getErrorType(status),
                 "message", message,

@@ -4,12 +4,12 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import org.springframework.context.annotation.Profile;
+import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.security.RolesAllowed;
+import stirling.software.common.security.Authentication;
+import jakarta.transaction.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,7 +30,7 @@ import stirling.software.saas.util.AuthenticationUtils;
 /**
  * SaaS counterpart to {@code FleetUsageController}: the same "Free PDF Editors" figures, scoped to
  * the caller's team (one SaaS backend serves many tenants, so the self-hosted server-wide variant
- * is disabled here via {@code @Profile("!saas")}).
+ * is disabled here via {@code @IfBuildProfile("!saas")}).
  *
  * <ul>
  *   <li>editorsDeployed — number of team members ({@code team_memberships}), not seat limits;
@@ -45,7 +45,7 @@ import stirling.software.saas.util.AuthenticationUtils;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/usage")
-@Profile("saas")
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class SaasFleetUsageController {
 

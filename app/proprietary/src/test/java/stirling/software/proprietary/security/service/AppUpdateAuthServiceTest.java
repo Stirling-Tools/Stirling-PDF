@@ -10,11 +10,11 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 

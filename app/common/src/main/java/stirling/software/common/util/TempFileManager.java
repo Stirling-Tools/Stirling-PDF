@@ -8,20 +8,20 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Service for managing temporary files in Stirling-PDF. Provides methods for creating, tracking,
  * and cleaning up temporary files.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class TempFileManager {
 

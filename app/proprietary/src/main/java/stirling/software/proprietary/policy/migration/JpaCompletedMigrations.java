@@ -2,8 +2,8 @@ package stirling.software.proprietary.policy.migration;
 
 import java.time.Instant;
 
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * rather than propagated, so it never disturbs the migration that called it.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class JpaCompletedMigrations implements CompletedMigrations {
 
@@ -30,7 +30,7 @@ public class JpaCompletedMigrations implements CompletedMigrations {
     public void markDone(String id) {
         try {
             repository.save(new CompletedMigration(id, Instant.now()));
-        } catch (DataIntegrityViolationException alreadyRecorded) {
+        } catch (PersistenceException alreadyRecorded) {
             // A concurrent boot recorded the same marker first; the row exists, so we are done.
             log.debug("Completion marker '{}' was already recorded concurrently", id);
         }

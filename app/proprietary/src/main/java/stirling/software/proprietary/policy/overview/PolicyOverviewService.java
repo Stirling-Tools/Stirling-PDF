@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,7 +28,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * so the view always reflects the live source set. This is the "all pipelines" admin surface; the
  * user-facing Policies page builds only a friendly subset of the same backend policies.
  */
-@Service
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class PolicyOverviewService {
 

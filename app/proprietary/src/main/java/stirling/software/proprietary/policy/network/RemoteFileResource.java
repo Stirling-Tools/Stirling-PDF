@@ -1,10 +1,11 @@
 package stirling.software.proprietary.policy.network;
 
+import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.springframework.core.io.AbstractResource;
+import stirling.software.common.model.io.Resource;
 
 /**
  * A policy input backed by a remote file, streamed on demand. Each read opens its own short-lived
@@ -12,7 +13,7 @@ import org.springframework.core.io.AbstractResource;
  * stream, so closing the stream tears the session down. Size and name come from the listing, so the
  * pipeline can size the input without a second round trip.
  */
-final class RemoteFileResource extends AbstractResource {
+final class RemoteFileResource implements Resource {
 
     private final RemoteFileClientFactory factory;
     private final NetworkConfig config;
@@ -61,8 +62,12 @@ final class RemoteFileResource extends AbstractResource {
         return file.name();
     }
 
+    /** Remote-only: there is no local file to hand out, callers must stream it. */
     @Override
-    public String getDescription() {
-        return "network file " + NetworkIdentities.identity(config, file.path());
+    public File getFile() throws IOException {
+        throw new IOException(
+                "network file "
+                        + NetworkIdentities.identity(config, file.path())
+                        + " is not backed by a local file");
     }
 }

@@ -15,9 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.GrantedAuthority;
 
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.security.GrantedAuthority;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
 import stirling.software.proprietary.security.model.Authority;
@@ -60,7 +60,7 @@ class ApiKeyAuthenticationServiceTest {
         String raw = "raw-1";
         when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
                 .thenReturn(Optional.of(key(1, 7, true, null)));
-        when(userRepository.findById(7L)).thenReturn(Optional.of(user(7, true)));
+        when(userRepository.findByIdOptional(7L)).thenReturn(Optional.of(user(7, true)));
 
         var result = service.authenticate(raw);
 
@@ -87,7 +87,7 @@ class ApiKeyAuthenticationServiceTest {
         String raw = "raw-3";
         when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
                 .thenReturn(Optional.of(key(3, 8, true, null)));
-        when(userRepository.findById(8L)).thenReturn(Optional.of(user(8, false)));
+        when(userRepository.findByIdOptional(8L)).thenReturn(Optional.of(user(8, false)));
 
         assertThat(service.authenticate(raw)).isEmpty();
     }
@@ -122,7 +122,7 @@ class ApiKeyAuthenticationServiceTest {
         owner.addAuthority(new Authority(Role.ADMIN.getRoleId(), owner));
         when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
                 .thenReturn(Optional.of(key(6, 8, true, null)));
-        when(userRepository.findById(8L)).thenReturn(Optional.of(owner));
+        when(userRepository.findByIdOptional(8L)).thenReturn(Optional.of(owner));
 
         var result = service.authenticate(raw);
 

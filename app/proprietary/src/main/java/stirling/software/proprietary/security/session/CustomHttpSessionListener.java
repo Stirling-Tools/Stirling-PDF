@@ -1,18 +1,19 @@
 package stirling.software.proprietary.security.session;
 
-import org.springframework.stereotype.Component;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpSessionEvent;
 import jakarta.servlet.http.HttpSessionListener;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Component
+@ApplicationScoped
 @Slf4j
 public class CustomHttpSessionListener implements HttpSessionListener {
 
     private final SessionPersistentRegistry sessionPersistentRegistry;
 
+    @Inject
     public CustomHttpSessionListener(SessionPersistentRegistry sessionPersistentRegistry) {
         super();
         this.sessionPersistentRegistry = sessionPersistentRegistry;

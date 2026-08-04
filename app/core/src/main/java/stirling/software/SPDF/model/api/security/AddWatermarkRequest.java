@@ -1,7 +1,5 @@
 package stirling.software.SPDF.model.api.security;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.DecimalMin;
@@ -10,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 
 @Data

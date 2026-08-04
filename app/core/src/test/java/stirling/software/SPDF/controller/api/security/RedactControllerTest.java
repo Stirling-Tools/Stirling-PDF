@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -29,6 +30,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,33 +45,27 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
-import stirling.software.SPDF.model.api.security.RedactPdfRequest;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+
+import tools.jackson.databind.json.JsonMapper;
 
 @DisplayName("PDF Redaction Controller tests")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class RedactControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
+    private static final JsonMapper JSON = JsonMapper.builder().build();
+
+    private static String toJson(Object value) {
+        return value == null ? null : JSON.writeValueAsString(value);
     }
 
     private static final Logger log = LoggerFactory.getLogger(RedactControllerTest.class);
@@ -82,7 +78,7 @@ class RedactControllerTest {
     private ManualRedactionService manualRedactionService;
     private RedactController redactController;
 
-    private MockMultipartFile mockPdfFile;
+    private byte[] pdfBytes;
     private PDDocument mockDocument;
     private PDPageTree mockPages;
     private PDPage mockPage;
@@ -105,6 +101,10 @@ class RedactControllerTest {
             doc.save(baos);
             return baos.toByteArray();
         }
+    }
+
+    private FileUpload pdfUpload() {
+        return TestFileUploads.of(pdfBytes, "test.pdf", "application/pdf");
     }
 
     private static List<RedactionArea> createValidRedactionAreas() {
@@ -145,12 +145,7 @@ class RedactControllerTest {
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
                         });
-        mockPdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        createSimplePdfContent());
+        pdfBytes = createSimplePdfContent();
 
         // Mock PDF document and related objects
         mockDocument = mock(PDDocument.class);
@@ -160,7 +155,7 @@ class RedactControllerTest {
                 mock(org.apache.pdfbox.pdmodel.PDDocumentCatalog.class);
 
         // Setup document structure properly
-        when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getPages()).thenReturn(mockPages);
         when(mockDocument.getNumberOfPages()).thenReturn(1);
@@ -328,24 +323,25 @@ class RedactControllerTest {
         @Test
         @DisplayName("Should handle document with metadata")
         void handleDocumentWithMetadata() throws Exception {
-            RedactPdfRequest request = createRedactPdfRequest();
-            request.setListOfText("confidential");
-            request.setUseRegex(false);
-            request.setWholeWordSearch(false);
-            request.setRedactColor("#000000");
-            request.setCustomPadding(1.0f);
-            request.setConvertPDFToImage(false);
-
             when(mockPages.get(0)).thenReturn(mockPage);
 
             org.apache.pdfbox.pdmodel.PDDocumentInformation mockInfo =
                     mock(org.apache.pdfbox.pdmodel.PDDocumentInformation.class);
             when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
 
-            ResponseEntity<Resource> response = redactController.redactPdf(request);
+            Response response =
+                    redactController.redactPdf(
+                            pdfUpload(),
+                            null,
+                            "confidential",
+                            false,
+                            false,
+                            "#000000",
+                            1.0f,
+                            false);
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
 
             verify(mockDocument).save(any(File.class));
             verify(mockDocument).close();
@@ -690,18 +686,6 @@ class RedactControllerTest {
                 Operator.getOperator("ET"));
     }
 
-    private RedactPdfRequest createRedactPdfRequest() {
-        RedactPdfRequest request = new RedactPdfRequest();
-        request.setFileInput(mockPdfFile);
-        return request;
-    }
-
-    private ManualRedactPdfRequest createManualRedactPdfRequest() {
-        ManualRedactPdfRequest request = new ManualRedactPdfRequest();
-        request.setFileInput(mockPdfFile);
-        return request;
-    }
-
     private static String extractTextFromTokens(List<Object> tokens) {
         StringBuilder text = new StringBuilder();
         for (Object token : tokens) {
@@ -737,22 +721,22 @@ class RedactControllerTest {
             float padding,
             boolean convertToImage,
             boolean expectSuccess) {
-        RedactPdfRequest request = createRedactPdfRequest();
-        request.setListOfText(searchText);
-        request.setUseRegex(useRegex);
-        request.setWholeWordSearch(wholeWordSearch);
-        request.setRedactColor(redactColor);
-        request.setCustomPadding(padding);
-        request.setConvertPDFToImage(convertToImage);
-
         try {
-            ResponseEntity<Resource> response = redactController.redactPdf(request);
+            Response response =
+                    redactController.redactPdf(
+                            pdfUpload(),
+                            null,
+                            searchText,
+                            useRegex,
+                            wholeWordSearch,
+                            redactColor,
+                            padding,
+                            convertToImage);
 
             if (expectSuccess && response != null) {
                 assertNotNull(response);
-                assertEquals(200, response.getStatusCode().value());
-                assertNotNull(response.getBody());
-                assertTrue(drainBody(response).length > 0);
+                assertEquals(200, response.getStatus());
+                assertNotNull(response.getEntity());
                 verify(mockDocument, times(1)).save(any(File.class));
                 verify(mockDocument, times(1)).close();
             }
@@ -766,16 +750,14 @@ class RedactControllerTest {
     }
 
     private void testManualRedaction(List<RedactionArea> redactionAreas, boolean convertToImage) {
-        ManualRedactPdfRequest request = createManualRedactPdfRequest();
-        request.setRedactions(redactionAreas);
-        request.setConvertPDFToImage(convertToImage);
-
         try {
-            ResponseEntity<Resource> response = redactController.redactPDF(request);
+            Response response =
+                    redactController.redactPDF(
+                            pdfUpload(), null, null, toJson(redactionAreas), convertToImage, null);
 
             if (response != null) {
                 assertNotNull(response);
-                assertEquals(200, response.getStatusCode().value());
+                assertEquals(200, response.getStatus());
                 verify(mockDocument, times(1)).save(any(File.class));
             }
         } catch (Exception e) {
@@ -897,14 +879,11 @@ class RedactControllerTest {
         @Test
         @DisplayName("Should handle null file input gracefully")
         void handleNullFileInput() {
-            RedactPdfRequest request = new RedactPdfRequest();
-            request.setFileInput(null);
-            request.setListOfText("test");
-
             assertDoesNotThrow(
                     () -> {
                         try {
-                            redactController.redactPdf(request);
+                            redactController.redactPdf(
+                                    null, null, "test", false, false, "#000000", 1.0f, false);
                         } catch (Exception e) {
                             assertNotNull(e);
                         }
@@ -914,21 +893,24 @@ class RedactControllerTest {
         @Test
         @DisplayName("Should handle malformed PDF gracefully")
         void handleMalformedPdfGracefully() {
-            MockMultipartFile malformedFile =
-                    new MockMultipartFile(
-                            "fileInput",
+            FileUpload malformedFile =
+                    TestFileUploads.of(
+                            "Not a real PDF content".getBytes(),
                             "malformed.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Not a real PDF content".getBytes());
-
-            RedactPdfRequest request = new RedactPdfRequest();
-            request.setFileInput(malformedFile);
-            request.setListOfText("test");
+                            "application/pdf");
 
             assertDoesNotThrow(
                     () -> {
                         try {
-                            redactController.redactPdf(request);
+                            redactController.redactPdf(
+                                    malformedFile,
+                                    null,
+                                    "test",
+                                    false,
+                                    false,
+                                    "#000000",
+                                    1.0f,
+                                    false);
                         } catch (Exception e) {
                             assertNotNull(e);
                         }
@@ -958,14 +940,12 @@ class RedactControllerTest {
         @Test
         @DisplayName("Should handle null redact color gracefully")
         void handleNullRedactColor() {
-            RedactPdfRequest request = createRedactPdfRequest();
-            request.setListOfText("test");
-            request.setRedactColor(null);
-
-            ResponseEntity<Resource> response = redactController.redactPdf(request);
+            Response response =
+                    redactController.redactPdf(
+                            pdfUpload(), null, "test", false, false, null, 1.0f, false);
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
         }
 
         @Test
@@ -983,25 +963,21 @@ class RedactControllerTest {
         @Test
         @DisplayName("Should handle null manual redaction areas gracefully")
         void handleNullManualRedactionAreas() throws Exception {
-            ManualRedactPdfRequest request = createManualRedactPdfRequest();
-            request.setRedactions(null);
-
-            ResponseEntity<Resource> response = redactController.redactPDF(request);
+            Response response =
+                    redactController.redactPDF(pdfUpload(), null, null, null, false, null);
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
         }
 
         @Test
         @DisplayName("Should handle out of bounds page numbers gracefully")
         void handleOutOfBoundsPageNumbers() throws Exception {
-            ManualRedactPdfRequest request = createManualRedactPdfRequest();
-            request.setPageNumbers("100-200");
-
-            ResponseEntity<Resource> response = redactController.redactPDF(request);
+            Response response =
+                    redactController.redactPDF(pdfUpload(), null, "100-200", null, false, null);
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
         }
     }
 
@@ -1456,17 +1432,20 @@ class RedactControllerTest {
                 contentStream.endText();
             }
 
-            RedactPdfRequest request = createRedactPdfRequest();
-            request.setListOfText("confidential");
-            request.setUseRegex(false);
-            request.setWholeWordSearch(false);
-
-            ResponseEntity<Resource> response = redactController.redactPdf(request);
+            Response response =
+                    redactController.redactPdf(
+                            pdfUpload(),
+                            null,
+                            "confidential",
+                            false,
+                            false,
+                            "#000000",
+                            1.0f,
+                            false);
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
-            assertNotNull(response.getBody());
-            assertTrue(drainBody(response).length > 0);
+            assertEquals(200, response.getStatus());
+            assertNotNull(response.getEntity());
         }
     }
 }

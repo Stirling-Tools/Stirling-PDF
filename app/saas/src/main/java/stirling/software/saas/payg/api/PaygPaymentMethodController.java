@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
+import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.security.RolesAllowed;
+import stirling.software.common.security.Authentication;
+import jakarta.transaction.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,7 +43,7 @@ import stirling.software.saas.util.AuthenticationUtils;
 @Hidden
 @RestController
 @RequestMapping("/api/v1/payg")
-@Profile("saas")
+@IfBuildProfile("saas")
 public class PaygPaymentMethodController {
 
     /** Trimmed default-card shape. {@code present=false} carries no card fields. */

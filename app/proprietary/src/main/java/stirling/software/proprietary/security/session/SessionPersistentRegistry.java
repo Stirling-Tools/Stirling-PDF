@@ -7,33 +7,33 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.SessionRegistry;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
 
-    @Value("${server.servlet.session.timeout:30m}")
-    private Duration defaultMaxInactiveInterval;
+    @ConfigProperty(name = "server.servlet.session.timeout", defaultValue = "30m")
+    Duration defaultMaxInactiveInterval;
 
     @Override
     public List<Object> getAllPrincipals() {
-        List<SessionEntity> sessions = sessionRepository.findAll();
+        List<SessionEntity> sessions = sessionRepository.listAll();
         List<Object> principals = new ArrayList<>();
         for (SessionEntity session : sessions) {
             principals.add(session.getPrincipalName());
@@ -102,7 +102,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             sessionEntity.setPrincipalName(principalName);
             sessionEntity.setLastRequest(Instant.now()); // Set lastRequest to the current date
             sessionEntity.setExpired(false);
-            sessionRepository.save(sessionEntity);
+            sessionRepository.persist(sessionEntity);
         }
     }
 
@@ -115,17 +115,17 @@ public class SessionPersistentRegistry implements SessionRegistry {
     @Override
     @Transactional
     public void refreshLastRequest(String sessionId) {
-        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
+        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findByIdOptional(sessionId);
         if (sessionEntityOpt.isPresent()) {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             sessionEntity.setLastRequest(Instant.now()); // Update lastRequest to the current date
-            sessionRepository.save(sessionEntity);
+            sessionRepository.persist(sessionEntity);
         }
     }
 
     @Override
     public SessionInformation getSessionInformation(String sessionId) {
-        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
+        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findByIdOptional(sessionId);
         if (sessionEntityOpt.isPresent()) {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             return new SessionInformation(
@@ -143,7 +143,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
 
     // Retrieve all sessions
     public List<SessionEntity> getAllSessions() {
-        return sessionRepository.findAll();
+        return sessionRepository.listAll();
     }
 
     // Flag every session idle past the timeout.
@@ -157,12 +157,13 @@ public class SessionPersistentRegistry implements SessionRegistry {
     }
 
     // Mark a session as expired
+    @Transactional
     public void expireSession(String sessionId) {
-        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
+        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findByIdOptional(sessionId);
         if (sessionEntityOpt.isPresent()) {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             sessionEntity.setExpired(true); // Set expired to true
-            sessionRepository.save(sessionEntity);
+            sessionRepository.persist(sessionEntity);
         }
     }
 

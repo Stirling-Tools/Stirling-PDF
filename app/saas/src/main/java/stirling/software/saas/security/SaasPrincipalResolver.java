@@ -3,16 +3,16 @@ package stirling.software.saas.security;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.access.model.PrincipalRef;
 import stirling.software.proprietary.access.service.PrincipalResolver;
 import stirling.software.proprietary.security.model.User;
 
 /** USER/TEAM only: SaaS has no org concept, so an ORG grant must never match across tenants. */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class SaasPrincipalResolver implements PrincipalResolver {
 
     @Override

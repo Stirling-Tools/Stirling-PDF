@@ -3,22 +3,22 @@ package stirling.software.saas.ai.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +29,9 @@ import stirling.software.saas.ai.service.AiCreateSessionService;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
 
-@RestController
-@Profile("saas")
-@RequestMapping("/api/v1/ai/create/internal")
+@ApplicationScoped
+@IfBuildProfile("saas")
+@Path("/api/v1/ai/create/internal")
 @Tag(name = "AI")
 @Hidden
 @RequiredArgsConstructor
@@ -44,17 +44,19 @@ public class AiCreateInternalController {
     // bean in the context. Stateless usage, so a fresh instance per controller is fine.
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @GetMapping("/sessions/{sessionId}")
-    public ResponseEntity<AiCreateController.AiCreateSessionResponse> getSession(
-            @PathVariable String sessionId) {
+    @GET
+    @Path("/sessions/{sessionId}")
+    public Response getSession(@PathParam("sessionId") String sessionId) {
         log.info("AI create internal getSession sessionId={}", sessionId);
         AiCreateSession session = sessionService.getSession(sessionId);
-        return ResponseEntity.ok(toResponse(session));
+        return Response.ok(toResponse(session)).build();
     }
 
-    @PostMapping("/sessions/{sessionId}/update")
-    public ResponseEntity<AiCreateController.AiCreateSessionResponse> updateSession(
-            @PathVariable String sessionId, @RequestBody UpdateSessionRequest request) {
+    @POST
+    @Path("/sessions/{sessionId}/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateSession(
+            @PathParam("sessionId") String sessionId, UpdateSessionRequest request) {
         log.info("AI create internal updateSession sessionId={}", sessionId);
         String outlineConstraintsPayload = null;
         if (request.outlineConstraints() != null) {
@@ -62,8 +64,8 @@ public class AiCreateInternalController {
                 outlineConstraintsPayload =
                         objectMapper.writeValueAsString(request.outlineConstraints());
             } catch (JsonProcessingException exc) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Invalid outline constraints payload", exc);
+                throw new WebApplicationException(
+                        "Invalid outline constraints payload", exc, Response.Status.BAD_REQUEST);
             }
         }
         String draftSectionsPayload = null;
@@ -71,8 +73,8 @@ public class AiCreateInternalController {
             try {
                 draftSectionsPayload = objectMapper.writeValueAsString(request.draftSections());
             } catch (JsonProcessingException exc) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Invalid draft sections payload", exc);
+                throw new WebApplicationException(
+                        "Invalid draft sections payload", exc, Response.Status.BAD_REQUEST);
             }
         }
         AiCreateSession session =
@@ -88,7 +90,7 @@ public class AiCreateInternalController {
                         request.docType(),
                         request.templateId(),
                         request.status());
-        return ResponseEntity.ok(toResponse(session));
+        return Response.ok(toResponse(session)).build();
     }
 
     public record UpdateSessionRequest(

@@ -12,13 +12,17 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -38,14 +44,19 @@ import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
 @Slf4j
+@ApplicationScoped
+@Path("/api/v1/general")
 @RequiredArgsConstructor
 public class RemoveImagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/remove-image-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/remove-image-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @ToolIO(produces = ToolFormat.PDF)
@@ -54,8 +65,13 @@ public class RemoveImagesController {
             description =
                     "This endpoint removes all embedded images from a PDF file and returns the"
                             + " modified document.")
-    public ResponseEntity<Resource> removeImages(@ModelAttribute PDFFile request)
+    public Response removeImages(
+            @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
             throws IOException {
+
+        PDFFile request = new PDFFile();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
 
         MultipartFile inputFile = request.getFileInput();
 

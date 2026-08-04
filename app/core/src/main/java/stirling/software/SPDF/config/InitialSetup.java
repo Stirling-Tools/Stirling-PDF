@@ -4,25 +4,22 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Component;
-
 import io.micrometer.common.util.StringUtils;
+import io.quarkus.runtime.StartupEvent;
 
-import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.GeneralUtils;
 
-@Component
+@ApplicationScoped
 @Slf4j
-@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 @RequiredArgsConstructor
 public class InitialSetup {
 
@@ -30,7 +27,10 @@ public class InitialSetup {
 
     private static boolean isNewServer = false;
 
-    @PostConstruct
+    void onStart(@Observes StartupEvent event) throws IOException {
+        init();
+    }
+
     public void init() throws IOException {
         initUUIDKey();
         initSecretKey();

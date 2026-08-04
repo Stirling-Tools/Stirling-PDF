@@ -4,18 +4,20 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.*;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+import stirling.software.common.model.MultipartFile;
+
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FileOrUploadService {
 
-    @Value("${stirling.tempDir:/tmp/stirling-files}")
-    private String tempDirPath;
+    @ConfigProperty(name = "stirling.tempDir", defaultValue = "/tmp/stirling-files")
+    String tempDirPath;
 
     public Path resolveFilePath(String fileId) {
         return Path.of(tempDirPath).resolve(fileId);

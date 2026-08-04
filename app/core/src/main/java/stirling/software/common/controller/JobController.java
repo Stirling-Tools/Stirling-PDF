@@ -6,21 +6,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.ClusterBackplane;
@@ -35,10 +34,9 @@ import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.RegexPatternUtils;
 
-@RestController
-@RequiredArgsConstructor
+@ApplicationScoped
 @Slf4j
-@RequestMapping("/api/v1/general")
+@Path("/api/v1/general")
 @Tag(name = "Job Management", description = "Job Management API")
 public class JobController {
 
@@ -53,31 +51,48 @@ public class JobController {
     // HGETALL round-trip on every download retry for the same job.
     private final JobOwnershipCache ownershipCache = new JobOwnershipCache();
 
-    @Autowired(required = false)
-    private JobOwnershipService jobOwnershipService;
+    // @Autowired(required = false) -> CDI Instance<T> (optional / may be unsatisfied).
+    @Inject Instance<JobOwnershipService> jobOwnershipService;
 
-    @Autowired(required = false)
-    private StickyMissRecorder stickyMissRecorder;
+    @Inject Instance<StickyMissRecorder> stickyMissRecorder;
 
-    @GetMapping("/job/{jobId}")
+    @Inject
+    public JobController(
+            TaskManager taskManager,
+            FileStorage fileStorage,
+            JobQueue jobQueue,
+            HttpServletRequest request,
+            ClusterBackplane clusterBackplane,
+            JobStore jobStore) {
+        this.taskManager = taskManager;
+        this.fileStorage = fileStorage;
+        this.jobQueue = jobQueue;
+        this.request = request;
+        this.clusterBackplane = clusterBackplane;
+        this.jobStore = jobStore;
+    }
+
+    @GET
+    @Path("/job/{jobId}")
     @Operation(summary = "Get job status")
-    public ResponseEntity<?> getJobStatus(@PathVariable("jobId") String jobId) {
+    public Response getJobStatus(@PathParam("jobId") String jobId) {
         // Sticky-410 must run before user-auth: a 403 here would leak job existence and defeat
         // LB re-routing. The owner node is where the real auth check should happen.
-        Optional<ResponseEntity<?>> peerOwned = guardNonOwner(jobId);
+        Optional<Response> peerOwned = guardNonOwner(jobId);
         if (peerOwned.isPresent()) {
             return peerOwned.get();
         }
 
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job status: {}", jobId);
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "You are not authorized to access this job"));
+            return Response.status(403)
+                    .entity(Map.of("message", "You are not authorized to access this job"))
+                    .build();
         }
 
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
-            return ResponseEntity.notFound().build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         if (!result.isComplete() && jobQueue.isJobQueued(jobId)) {
@@ -88,50 +103,56 @@ public class JobController {
                             result,
                             "queueInfo",
                             Map.of("inQueue", true, "position", position));
-            return ResponseEntity.ok(resultWithQueueInfo);
+            return Response.ok(resultWithQueueInfo).build();
         }
 
-        return ResponseEntity.ok(result);
+        return Response.ok(result).build();
     }
 
-    @GetMapping("/job/{jobId}/result")
+    @GET
+    @Path("/job/{jobId}/result")
     @Operation(summary = "Get job result")
-    public ResponseEntity<?> getJobResult(@PathVariable("jobId") String jobId) {
-        Optional<ResponseEntity<?>> peerOwned = guardNonOwner(jobId);
+    public Response getJobResult(@PathParam("jobId") String jobId) {
+        Optional<Response> peerOwned = guardNonOwner(jobId);
         if (peerOwned.isPresent()) {
             return peerOwned.get();
         }
 
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job result: {}", jobId);
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "You are not authorized to access this job"));
+            return Response.status(403)
+                    .entity(Map.of("message", "You are not authorized to access this job"))
+                    .build();
         }
 
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
-            return ResponseEntity.notFound().build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         if (!result.isComplete()) {
-            return ResponseEntity.badRequest().body("Job is not complete yet");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Job is not complete yet")
+                    .build();
         }
 
         if (result.getError() != null) {
-            return ResponseEntity.badRequest().body("Job failed: " + result.getError());
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Job failed: " + result.getError())
+                    .build();
         }
 
         if (result.hasMultipleFiles()) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(
+            return Response.ok(
                             Map.of(
                                     "jobId",
                                     jobId,
                                     "hasMultipleFiles",
                                     true,
                                     "files",
-                                    result.getAllResultFiles()));
+                                    result.getAllResultFiles()))
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
         }
 
         if (result.hasFiles() && !result.hasMultipleFiles()) {
@@ -140,36 +161,39 @@ public class JobController {
                 ResultFile singleFile = files.get(0);
 
                 byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
-                return ResponseEntity.ok()
+                return Response.ok(fileContent)
                         .header("Content-Type", singleFile.getContentType())
                         .header(
                                 "Content-Disposition",
                                 createContentDispositionHeader(singleFile.getFileName()))
-                        .body(fileContent);
+                        .build();
             } catch (Exception e) {
                 log.error("Error retrieving file for job {}: {}", jobId, e.getMessage(), e);
-                return ResponseEntity.internalServerError()
-                        .body("Error retrieving file: " + e.getMessage());
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Error retrieving file: " + e.getMessage())
+                        .build();
             }
         }
 
-        return ResponseEntity.ok(result.getResult());
+        return Response.ok(result.getResult()).build();
     }
 
-    @DeleteMapping("/job/{jobId}")
+    @DELETE
+    @Path("/job/{jobId}")
     @Operation(summary = "Cancel a job")
-    public ResponseEntity<?> cancelJob(@PathVariable("jobId") String jobId) {
+    public Response cancelJob(@PathParam("jobId") String jobId) {
         log.debug("Request to cancel job: {}", jobId);
 
-        Optional<ResponseEntity<?>> peerOwned = guardNonOwner(jobId);
+        Optional<Response> peerOwned = guardNonOwner(jobId);
         if (peerOwned.isPresent()) {
             return peerOwned.get();
         }
 
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to cancel job: {}", jobId);
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "You are not authorized to cancel this job"));
+            return Response.status(403)
+                    .entity(Map.of("message", "You are not authorized to cancel this job"))
+                    .build();
         }
 
         boolean cancelled = false;
@@ -191,66 +215,77 @@ public class JobController {
         }
 
         if (cancelled) {
-            return ResponseEntity.ok(
-                    Map.of(
-                            "message",
-                            "Job cancelled successfully",
-                            "wasQueued",
-                            queuePosition >= 0,
-                            "queuePosition",
-                            queuePosition >= 0 ? queuePosition : "n/a"));
+            return Response.ok(
+                            Map.of(
+                                    "message",
+                                    "Job cancelled successfully",
+                                    "wasQueued",
+                                    queuePosition >= 0,
+                                    "queuePosition",
+                                    queuePosition >= 0 ? queuePosition : "n/a"))
+                    .build();
         } else {
             JobResult result = taskManager.getJobResult(jobId);
             if (result == null) {
-                return ResponseEntity.notFound().build();
+                return Response.status(Response.Status.NOT_FOUND).build();
             } else if (result.isComplete()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("message", "Cannot cancel job that is already complete"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("message", "Cannot cancel job that is already complete"))
+                        .build();
             } else {
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("message", "Failed to cancel job for unknown reason"));
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(Map.of("message", "Failed to cancel job for unknown reason"))
+                        .build();
             }
         }
     }
 
-    @GetMapping("/job/{jobId}/result/files")
+    @GET
+    @Path("/job/{jobId}/result/files")
     @Operation(summary = "Get job result files")
-    public ResponseEntity<?> getJobFiles(@PathVariable("jobId") String jobId) {
-        Optional<ResponseEntity<?>> peerOwned = guardNonOwner(jobId);
+    public Response getJobFiles(@PathParam("jobId") String jobId) {
+        Optional<Response> peerOwned = guardNonOwner(jobId);
         if (peerOwned.isPresent()) {
             return peerOwned.get();
         }
 
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job files: {}", jobId);
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "You are not authorized to access this job"));
+            return Response.status(403)
+                    .entity(Map.of("message", "You are not authorized to access this job"))
+                    .build();
         }
 
         JobResult result = taskManager.getJobResult(jobId);
         if (result == null) {
-            return ResponseEntity.notFound().build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         if (!result.isComplete()) {
-            return ResponseEntity.badRequest().body("Job is not complete yet");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Job is not complete yet")
+                    .build();
         }
 
         if (result.getError() != null) {
-            return ResponseEntity.badRequest().body("Job failed: " + result.getError());
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Job failed: " + result.getError())
+                    .build();
         }
 
         List<ResultFile> files = result.getAllResultFiles();
-        return ResponseEntity.ok(
-                Map.of(
-                        "jobId", jobId,
-                        "fileCount", files.size(),
-                        "files", files));
+        return Response.ok(
+                        Map.of(
+                                "jobId", jobId,
+                                "fileCount", files.size(),
+                                "files", files))
+                .build();
     }
 
-    @GetMapping("/files/{fileId}/metadata")
+    @GET
+    @Path("/files/{fileId}/metadata")
     @Operation(summary = "Get file metadata")
-    public ResponseEntity<?> getFileMetadata(@PathVariable("fileId") String fileId) {
+    public Response getFileMetadata(@PathParam("fileId") String fileId) {
         try {
             String jobKey;
             try {
@@ -259,55 +294,59 @@ public class JobController {
                 return backplaneUnavailable(fileId, backplaneEx);
             }
             if (jobKey == null) {
-                return ResponseEntity.notFound().build();
+                return Response.status(Response.Status.NOT_FOUND).build();
             }
 
-            Optional<ResponseEntity<?>> notOwner = guardNonOwner(jobKey);
+            Optional<Response> notOwner = guardNonOwner(jobKey);
             if (notOwner.isPresent()) {
                 return notOwner.get();
             }
 
             if (!validateJobAccess(jobKey)) {
                 log.warn("Unauthorized attempt to access file metadata: {}", fileId);
-                return ResponseEntity.status(403)
-                        .body(Map.of("message", "You are not authorized to access this file"));
+                return Response.status(403)
+                        .entity(Map.of("message", "You are not authorized to access this file"))
+                        .build();
             }
 
             ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
 
             if (resultFile != null) {
-                return ResponseEntity.ok(resultFile);
+                return Response.ok(resultFile).build();
             }
 
             if (!isSecurityEnabled()) {
                 if (!fileStorage.fileExists(fileId)) {
-                    return ResponseEntity.notFound().build();
+                    return Response.status(Response.Status.NOT_FOUND).build();
                 }
 
                 long fileSize = fileStorage.getFileSize(fileId);
-                return ResponseEntity.ok(
-                        Map.of(
-                                "fileId",
-                                fileId,
-                                "fileName",
-                                "unknown",
-                                "contentType",
-                                MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                                "fileSize",
-                                fileSize));
+                return Response.ok(
+                                Map.of(
+                                        "fileId",
+                                        fileId,
+                                        "fileName",
+                                        "unknown",
+                                        "contentType",
+                                        MediaType.APPLICATION_OCTET_STREAM,
+                                        "fileSize",
+                                        fileSize))
+                        .build();
             }
 
-            return ResponseEntity.notFound().build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         } catch (Exception e) {
             log.error("Error retrieving file metadata {}: {}", fileId, e.getMessage(), e);
-            return ResponseEntity.internalServerError()
-                    .body("Error retrieving file metadata: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error retrieving file metadata: " + e.getMessage())
+                    .build();
         }
     }
 
-    @GetMapping("/files/{fileId}")
+    @GET
+    @Path("/files/{fileId}")
     @Operation(summary = "Download a file")
-    public ResponseEntity<?> downloadFile(@PathVariable("fileId") String fileId) {
+    public Response downloadFile(@PathParam("fileId") String fileId) {
         try {
             String jobKey;
             try {
@@ -316,18 +355,19 @@ public class JobController {
                 return backplaneUnavailable(fileId, backplaneEx);
             }
             if (jobKey == null) {
-                return ResponseEntity.notFound().build();
+                return Response.status(Response.Status.NOT_FOUND).build();
             }
 
-            Optional<ResponseEntity<?>> notOwner = guardNonOwner(jobKey);
+            Optional<Response> notOwner = guardNonOwner(jobKey);
             if (notOwner.isPresent()) {
                 return notOwner.get();
             }
 
             if (!validateJobAccess(jobKey)) {
                 log.warn("Unauthorized attempt to download file: {}", fileId);
-                return ResponseEntity.status(403)
-                        .body(Map.of("message", "You are not authorized to access this file"));
+                return Response.status(403)
+                        .entity(Map.of("message", "You are not authorized to access this file"))
+                        .build();
             }
 
             ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
@@ -336,22 +376,24 @@ public class JobController {
             String contentType =
                     resultFile != null
                             ? resultFile.getContentType()
-                            : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                            : MediaType.APPLICATION_OCTET_STREAM;
 
             byte[] fileContent = fileStorage.retrieveBytes(fileId);
 
-            return ResponseEntity.ok()
+            return Response.ok(fileContent)
                     .header("Content-Type", contentType)
                     .header("Content-Disposition", createContentDispositionHeader(fileName))
-                    .body(fileContent);
+                    .build();
         } catch (Exception e) {
             log.error("Error retrieving file {}: {}", fileId, e.getMessage(), e);
-            return ResponseEntity.internalServerError().body("Error retrieving file");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error retrieving file")
+                    .build();
         }
     }
 
     private boolean isSecurityEnabled() {
-        return jobOwnershipService != null;
+        return jobOwnershipService.isResolvable();
     }
 
     /**
@@ -359,7 +401,7 @@ public class JobController {
      * local cache to avoid repeated Valkey lookups on the hot download path. When the backplane is
      * unreachable, a locally-held job is still served and anything else gets a retryable 503.
      */
-    private Optional<ResponseEntity<?>> guardNonOwner(String jobId) {
+    private Optional<Response> guardNonOwner(String jobId) {
         if (clusterBackplane == null || jobStore == null) {
             return Optional.empty();
         }
@@ -401,13 +443,13 @@ public class JobController {
                 jobId,
                 owner,
                 localId);
-        if (stickyMissRecorder != null) {
-            stickyMissRecorder.recordStickyMiss();
+        if (stickyMissRecorder.isResolvable()) {
+            stickyMissRecorder.get().recordStickyMiss();
         }
         return Optional.of(
-                ResponseEntity.status(410)
+                Response.status(410)
                         .header("Retry-After", "0")
-                        .body(
+                        .entity(
                                 Map.of(
                                         "message",
                                         "Result lives on another node. Retry to be routed there"
@@ -416,7 +458,8 @@ public class JobController {
                                         "ownedBy",
                                         owner,
                                         "currentNode",
-                                        localId == null ? "" : localId)));
+                                        localId == null ? "" : localId))
+                        .build());
     }
 
     /**
@@ -424,17 +467,18 @@ public class JobController {
      * without that check would be unsafe - so return a retryable 503 (consistent with the
      * sticky-410 retry model) rather than a misleading 404 or a generic 500.
      */
-    private ResponseEntity<?> backplaneUnavailable(String id, RuntimeException ex) {
+    private Response backplaneUnavailable(String id, RuntimeException ex) {
         log.warn(
                 "Backplane lookup failed for {}; returning 503 (retryable): {}",
                 id,
                 ex.getMessage());
-        return ResponseEntity.status(503)
+        return Response.status(503)
                 .header("Retry-After", "1")
-                .body(
+                .entity(
                         Map.of(
                                 "message",
-                                "Cluster backplane temporarily unavailable; retry shortly."));
+                                "Cluster backplane temporarily unavailable; retry shortly."))
+                .build();
     }
 
     private String createContentDispositionHeader(String fileName) {
@@ -451,9 +495,9 @@ public class JobController {
     }
 
     private boolean validateJobAccess(String jobId) {
-        if (jobOwnershipService != null) {
+        if (jobOwnershipService.isResolvable()) {
             try {
-                return jobOwnershipService.validateJobAccess(jobId);
+                return jobOwnershipService.get().validateJobAccess(jobId);
             } catch (SecurityException e) {
                 log.warn("Job ownership validation failed for jobId {}: {}", jobId, e.getMessage());
                 return false;

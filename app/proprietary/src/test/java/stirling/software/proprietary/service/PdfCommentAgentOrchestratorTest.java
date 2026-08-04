@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,13 +31,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.WebApplicationException;
+
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfAnnotationService;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentEngineResponse;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentInstruction;
 import stirling.software.proprietary.model.api.ai.comments.TextChunk;
@@ -56,6 +59,7 @@ class PdfCommentAgentOrchestratorTest {
     @Mock private AiEngineClient aiEngineClient;
     @Mock private PdfTextChunkExtractor pdfTextChunkExtractor;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private Instance<UserServiceInterface> userService;
 
     private ObjectMapper objectMapper;
     private PdfAnnotationService pdfAnnotationService;
@@ -67,6 +71,10 @@ class PdfCommentAgentOrchestratorTest {
         // Real (not mocked) — it's a pure primitive; exercising it in the test gives us stronger
         // assertions (the annotated PDF actually has the expected sticky notes).
         pdfAnnotationService = new PdfAnnotationService();
+        // Spring's @Autowired(required=false) UserServiceInterface became a CDI Instance<>;
+        // the orchestrator resolves the current user id via isResolvable()/get(). Security is
+        // off in this unit test, so report it as unresolvable (currentUserId() returns null).
+        lenient().when(userService.isResolvable()).thenReturn(false);
         orchestrator =
                 new PdfCommentAgentOrchestrator(
                         aiEngineClient,
@@ -74,12 +82,12 @@ class PdfCommentAgentOrchestratorTest {
                         pdfDocumentFactory,
                         objectMapper,
                         pdfAnnotationService,
-                        null);
+                        userService);
     }
 
     @Test
     void happyPathAppliesValidInstructionsOnCorrectPagesAndReturnsBytes() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf");
+        ByteArrayMultipartFile input = pdf("doc.pdf");
         byte[] pdfBytes = twoPagePdfBytes();
         when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
@@ -117,7 +125,7 @@ class PdfCommentAgentOrchestratorTest {
 
     @Test
     void unknownChunkIdsAreSkippedButValidOnesApplied() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf");
+        ByteArrayMultipartFile input = pdf("doc.pdf");
         byte[] pdfBytes = twoPagePdfBytes();
         when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
@@ -148,7 +156,7 @@ class PdfCommentAgentOrchestratorTest {
 
     @Test
     void emptyCommentsListReturnsDocumentWithoutAnnotations() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf");
+        ByteArrayMultipartFile input = pdf("doc.pdf");
         byte[] pdfBytes = twoPagePdfBytes();
         when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
@@ -175,42 +183,42 @@ class PdfCommentAgentOrchestratorTest {
 
     @Test
     void emptyChunksListThrowsBadRequestAndDoesNotCallEngine() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf");
+        ByteArrayMultipartFile input = pdf("doc.pdf");
         byte[] pdfBytes = twoPagePdfBytes();
         when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
         when(pdfTextChunkExtractor.extract(any(PDDocument.class))).thenReturn(List.of());
 
-        ResponseStatusException ex =
+        WebApplicationException ex =
                 assertThrows(
-                        ResponseStatusException.class,
+                        WebApplicationException.class,
                         () -> orchestrator.applyComments(input, "whatever"));
-        assertEquals(400, ex.getStatusCode().value());
+        assertEquals(400, ex.getResponse().getStatus());
         verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
 
     @Test
     void promptTooLongThrowsBadRequestAndDoesNotCallEngine() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf");
+        ByteArrayMultipartFile input = pdf("doc.pdf");
         String tooLong = "x".repeat(4001);
 
-        ResponseStatusException ex =
+        WebApplicationException ex =
                 assertThrows(
-                        ResponseStatusException.class,
+                        WebApplicationException.class,
                         () -> orchestrator.applyComments(input, tooLong));
-        assertEquals(400, ex.getStatusCode().value());
+        assertEquals(400, ex.getResponse().getStatus());
         verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
 
     @Test
     void blankPromptThrowsBadRequestAndDoesNotCallEngine() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf");
+        ByteArrayMultipartFile input = pdf("doc.pdf");
 
-        ResponseStatusException ex =
+        WebApplicationException ex =
                 assertThrows(
-                        ResponseStatusException.class,
+                        WebApplicationException.class,
                         () -> orchestrator.applyComments(input, "   "));
-        assertEquals(400, ex.getStatusCode().value());
+        assertEquals(400, ex.getResponse().getStatus());
         verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
 
@@ -218,12 +226,9 @@ class PdfCommentAgentOrchestratorTest {
     // Helpers
     // ---------------------------------------------------------------------
 
-    private static MockMultipartFile pdf(String filename) {
-        return new MockMultipartFile(
-                "fileInput",
-                filename,
-                MediaType.APPLICATION_PDF_VALUE,
-                "%PDF-1.4\n%%EOF".getBytes());
+    private static ByteArrayMultipartFile pdf(String filename) {
+        return new ByteArrayMultipartFile(
+                "fileInput", filename, "application/pdf", "%PDF-1.4\n%%EOF".getBytes());
     }
 
     private static byte[] twoPagePdfBytes() throws IOException {

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Hidden;
 

@@ -1,8 +1,9 @@
 package stirling.software.proprietary.mcp.tools;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.lookup.LookupIfProperty;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Singleton;
 
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
@@ -10,14 +11,18 @@ import stirling.software.proprietary.mcp.catalog.OperationCategory;
 import tools.jackson.databind.ObjectMapper;
 
 /** Exposes the {@code /api/v1/general/*} (page operations) namespace as a single MCP tool. */
-@Component
-@ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
+// MIGRATION: @Singleton (not @ApplicationScoped) because this bean extends AbstractCategoryTool,
+// which has no no-arg constructor. A normal-scoped bean needs a client proxy and therefore a
+// non-private no-arg constructor; @Singleton beans are not proxied, so they wire cleanly. The tool
+// is stateless, so singleton scope is behaviourally equivalent here.
+@Singleton
+@LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class StirlingPagesTool extends AbstractCategoryTool {
 
     public StirlingPagesTool(
             ObjectMapper mapper,
-            ObjectProvider<McpToolCatalog> catalog,
-            ObjectProvider<McpOperationExecutor> executor) {
+            Instance<McpToolCatalog> catalog,
+            Instance<McpOperationExecutor> executor) {
         super(mapper, catalog, executor);
     }
 

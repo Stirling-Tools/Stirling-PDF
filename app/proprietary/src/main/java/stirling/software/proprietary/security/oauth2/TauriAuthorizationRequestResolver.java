@@ -1,49 +1,32 @@
 package stirling.software.proprietary.security.oauth2;
 
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 
-public class TauriAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
+@ApplicationScoped
+public class TauriAuthorizationRequestResolver {
 
     private static final String TAURI_STATE_PREFIX = "tauri:";
 
-    private final OAuth2AuthorizationRequestResolver delegate;
-
-    public TauriAuthorizationRequestResolver(
-            ClientRegistrationRepository clientRegistrationRepository) {
-        this.delegate =
-                new DefaultOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository, "/oauth2/authorization");
-    }
-
-    @Override
-    public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
-        return customize(request, delegate.resolve(request));
-    }
-
-    @Override
-    public OAuth2AuthorizationRequest resolve(
-            HttpServletRequest request, String clientRegistrationId) {
-        return customize(request, delegate.resolve(request, clientRegistrationId));
-    }
-
-    private OAuth2AuthorizationRequest customize(
-            HttpServletRequest request, OAuth2AuthorizationRequest authorizationRequest) {
-        if (authorizationRequest == null) {
-            return null;
+    /**
+     * Preserved Tauri state-customization logic. Given the original OAuth2 "state" value and the
+     * incoming request, returns the state value that should be used for the authorization request.
+     *
+     * <p>When the request carries {@code tauri=1}, the state is prefixed with {@code "tauri:"} (and
+     * the optional {@code nonce} request parameter appended for CSRF protection), unless it has
+     * already been customized. Otherwise the original state is returned unchanged.
+     */
+    public String customizeState(HttpServletRequest request, String state) {
+        if (request == null) {
+            return state;
         }
         String tauriParam = request.getParameter("tauri");
         if (!"1".equals(tauriParam)) {
-            return authorizationRequest;
+            return state;
         }
 
-        String state = authorizationRequest.getState();
         if (state == null || state.startsWith(TAURI_STATE_PREFIX)) {
-            return authorizationRequest;
+            return state;
         }
 
         // Extract nonce from request for CSRF protection
@@ -53,6 +36,6 @@ public class TauriAuthorizationRequestResolver implements OAuth2AuthorizationReq
             customState = customState + ":" + nonce;
         }
 
-        return OAuth2AuthorizationRequest.from(authorizationRequest).state(customState).build();
+        return customState;
     }
 }

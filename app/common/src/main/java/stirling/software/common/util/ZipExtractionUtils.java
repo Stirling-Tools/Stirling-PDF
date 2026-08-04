@@ -10,13 +10,13 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-
 import io.github.pixee.security.ZipSecurity;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 /**
  * Helpers for detecting and extracting ZIP-formatted responses returned from Stirling API

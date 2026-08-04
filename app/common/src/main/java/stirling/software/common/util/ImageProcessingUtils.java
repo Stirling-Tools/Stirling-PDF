@@ -12,8 +12,6 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
@@ -21,6 +19,8 @@ import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.MultipartFile;
 
 @Slf4j
 public class ImageProcessingUtils {

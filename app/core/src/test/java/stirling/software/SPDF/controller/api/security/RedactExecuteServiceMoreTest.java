@@ -31,7 +31,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
@@ -40,6 +39,7 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyl
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactionStrategy;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.pdf.parser.PageColumnLayout;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;

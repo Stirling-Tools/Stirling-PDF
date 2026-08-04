@@ -2,7 +2,7 @@ package stirling.software.proprietary.integration.api;
 
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +23,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
  * <p>Registered as a {@link PipelineStepValidator} so both entry points cover it: save-time
  * validation of a stored policy, and {@code PolicyController}'s ad-hoc gate.
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class IntegrationStepValidator implements PipelineStepValidator {
 

@@ -1,13 +1,14 @@
 package stirling.software.proprietary.security.supabase;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Stirling's customer-facing Supabase project endpoints ({@code auth.stirling.com} in production).
  * Overridable via {@code stirling.supabase.url} / {@code stirling.supabase.publishable-key}.
  */
-@Component
+@ApplicationScoped
 public class SupabaseEndpoints {
 
     public static final String DEFAULT_URL = "https://auth.stirling.com";
@@ -16,11 +17,13 @@ public class SupabaseEndpoints {
     public static final String DEFAULT_PUBLISHABLE_KEY =
             "sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb"; // gitleaks:allow
 
-    @Value("${stirling.supabase.url:" + DEFAULT_URL + "}")
-    private String url;
+    @ConfigProperty(name = "stirling.supabase.url", defaultValue = DEFAULT_URL)
+    String url;
 
-    @Value("${stirling.supabase.publishable-key:" + DEFAULT_PUBLISHABLE_KEY + "}")
-    private String publishableKey;
+    @ConfigProperty(
+            name = "stirling.supabase.publishable-key",
+            defaultValue = DEFAULT_PUBLISHABLE_KEY)
+    String publishableKey;
 
     public String getUrl() {
         return url;

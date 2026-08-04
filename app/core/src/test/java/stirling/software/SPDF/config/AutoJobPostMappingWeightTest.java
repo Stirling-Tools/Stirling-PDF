@@ -2,48 +2,91 @@ package stirling.software.SPDF.config;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.Indexer;
+import org.jboss.jandex.MethodInfo;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
-import org.springframework.core.type.classreading.MetadataReader;
-import org.springframework.core.type.classreading.MetadataReaderFactory;
-import org.springframework.core.type.filter.TypeFilter;
-
-import stirling.software.common.annotations.AutoJobPostMapping;
 
 /**
- * Build-time guardrail: every {@link AutoJobPostMapping} method must declare an explicit {@code
+ * Build-time guardrail: every {@code @AutoJobPostMapping} method must declare an explicit {@code
  * resourceWeight}.
  *
  * <p>The credits interceptor multiplies {@code resourceWeight} into the per-call charge. An
  * endpoint that falls through to the annotation default produces a charge derived from a value
- * nobody chose — silently under- or over-billing depending on the endpoint's true cost. Forcing
+ * nobody chose - silently under- or over-billing depending on the endpoint's true cost. Forcing
  * each method to pick a value from {@link stirling.software.common.enumeration.ResourceWeight}
  * keeps the choice deliberate.
  *
  * <p>The annotation's default is {@link Integer#MIN_VALUE} (a sentinel). Runtime readers clamp the
- * value into {@code [1, 100]}, so a missed declaration can't crash production — this test is the
+ * value into {@code [1, 100]}, so a missed declaration can't crash production - this test is the
  * contract, the clamp is the safety net.
  *
  * <p>Lives in {@code :stirling-pdf} (core) because that's the module whose compile classpath
  * transitively sees every other module's controllers ({@code :common}, {@code :proprietary}, and
  * {@code :saas} when enabled).
+ *
+ * <p>MIGRATION (Spring -&gt; Quarkus): the previous Spring {@code MetadataReader} class-file scan
+ * was replaced with Jandex (the indexer Quarkus itself uses). Both read annotation metadata
+ * straight from bytecode, so no class on the test classpath has to be loaded just to find the few
+ * that are annotated.
  */
 class AutoJobPostMappingWeightTest {
 
-    private static final String SCAN_BASE_PACKAGE = "stirling.software";
+    private static final String SCAN_PREFIX = "stirling/software/";
+    private static final DotName AUTO_JOB_POST_MAPPING =
+            DotName.createSimple("stirling.software.common.annotations.AutoJobPostMapping");
+
+    /** {@code AutoJobPostMapping#resourceWeight()} default - "no explicit value chosen". */
+    private static final int UNSET_WEIGHT = Integer.MIN_VALUE;
+
+    private static Index index;
+
+    @BeforeAll
+    static void buildIndex() throws IOException {
+        Indexer indexer = new Indexer();
+        for (String entry : System.getProperty("java.class.path").split(File.pathSeparator)) {
+            File root = new File(entry);
+            if (!root.exists()) {
+                continue;
+            }
+            if (root.isDirectory()) {
+                indexClassDirectory(indexer, root.toPath());
+            } else if (entry.endsWith(".jar")) {
+                indexJar(indexer, root);
+            }
+        }
+        index = indexer.complete();
+    }
 
     @Test
-    void everyAutoJobPostMappingDeclaresExplicitResourceWeight() throws Exception {
-        List<String> offenders = findOffendingMethods();
+    void everyAutoJobPostMappingDeclaresExplicitResourceWeight() {
+        List<String> offenders = new ArrayList<>();
+        for (AnnotationInstance annotation : index.getAnnotations(AUTO_JOB_POST_MAPPING)) {
+            if (annotation.target().kind() != AnnotationTarget.Kind.METHOD) {
+                continue;
+            }
+            AnnotationValue weight = annotation.value("resourceWeight");
+            if (weight == null || weight.asInt() == UNSET_WEIGHT) {
+                MethodInfo method = annotation.target().asMethod();
+                offenders.add(method.declaringClass().name() + "#" + method.name());
+            }
+        }
 
         assertTrue(
                 offenders.isEmpty(),
@@ -55,65 +98,15 @@ class AutoJobPostMappingWeightTest {
                                 + String.join("\n  - ", offenders));
     }
 
-    private List<String> findOffendingMethods() throws IOException, ClassNotFoundException {
-        List<String> offenders = new ArrayList<>();
-        for (Class<?> candidate : scanForCandidateClasses()) {
-            for (Method method : candidate.getDeclaredMethods()) {
-                AutoJobPostMapping annotation = method.getAnnotation(AutoJobPostMapping.class);
-                if (annotation == null) {
-                    continue;
-                }
-                if (annotation.resourceWeight() == Integer.MIN_VALUE) {
-                    offenders.add(candidate.getName() + "#" + method.getName());
-                }
-            }
-        }
-        return offenders;
-    }
-
-    /**
-     * Returns every class under {@link #SCAN_BASE_PACKAGE} that has an @AutoJobPostMapping method.
-     */
-    private List<Class<?>> scanForCandidateClasses() throws IOException, ClassNotFoundException {
-        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(resolver);
-
-        String pattern = "classpath*:" + SCAN_BASE_PACKAGE.replace('.', '/') + "/**/*.class";
-        Resource[] resources = resolver.getResources(pattern);
-
-        // Pre-filter by reading annotation metadata from the class file so we don't have to load
-        // every class on the test classpath just to find the few that are annotated.
-        TypeFilter mentionsAutoJobPostMapping =
-                (reader, factory) ->
-                        reader.getAnnotationMetadata()
-                                        .getAnnotatedMethods(AutoJobPostMapping.class.getName())
-                                        .size()
-                                > 0;
-
-        List<Class<?>> matches = new ArrayList<>();
-        for (Resource resource : resources) {
-            if (!resource.isReadable()) {
-                continue;
-            }
-            MetadataReader reader = metadataReaderFactory.getMetadataReader(resource);
-            if (!mentionsAutoJobPostMapping.match(reader, metadataReaderFactory)) {
-                continue;
-            }
-            matches.add(Class.forName(reader.getClassMetadata().getClassName()));
-        }
-        return matches;
-    }
-
     /**
      * Sanity check that the classpath scan returns non-empty; otherwise the main test passes
      * vacuously.
      */
     @Test
-    void scannerFindsAtLeastOneAutoJobPostMapping() throws Exception {
+    void scannerFindsAtLeastOneAutoJobPostMapping() {
         long count =
-                scanForCandidateClasses().stream()
-                        .flatMap(c -> java.util.Arrays.stream(c.getDeclaredMethods()))
-                        .filter(m -> m.isAnnotationPresent(AutoJobPostMapping.class))
+                index.getAnnotations(AUTO_JOB_POST_MAPPING).stream()
+                        .filter(a -> a.target().kind() == AnnotationTarget.Kind.METHOD)
                         .count();
 
         assertTrue(
@@ -125,8 +118,38 @@ class AutoJobPostMappingWeightTest {
                                 + ". Scanner regression?");
     }
 
-    @SuppressWarnings("unused")
-    private static String describeCandidates(List<Class<?>> candidates) {
-        return candidates.stream().map(Class::getName).collect(Collectors.joining(", "));
+    private static void indexClassDirectory(Indexer indexer, Path root) throws IOException {
+        Path base = root.resolve(SCAN_PREFIX);
+        if (!Files.isDirectory(base)) {
+            return;
+        }
+        try (Stream<Path> classes = Files.walk(base)) {
+            List<Path> classFiles =
+                    classes.filter(p -> p.toString().endsWith(".class"))
+                            .filter(p -> !p.getFileName().toString().equals("module-info.class"))
+                            .toList();
+            for (Path classFile : classFiles) {
+                try (InputStream in = Files.newInputStream(classFile)) {
+                    indexer.index(in);
+                }
+            }
+        }
+    }
+
+    private static void indexJar(Indexer indexer, File jar) throws IOException {
+        try (ZipFile zip = new ZipFile(jar)) {
+            var entries = zip.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry zipEntry = entries.nextElement();
+                String name = zipEntry.getName();
+                if (name.startsWith(SCAN_PREFIX)
+                        && name.endsWith(".class")
+                        && !name.endsWith("module-info.class")) {
+                    try (InputStream in = zip.getInputStream(zipEntry)) {
+                        indexer.index(in);
+                    }
+                }
+            }
+        }
     }
 }

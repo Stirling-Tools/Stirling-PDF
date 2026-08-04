@@ -1,14 +1,12 @@
 package stirling.software.proprietary.security.supabase;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Data;
 
 /** Config for the optional Supabase login on proprietary deployments. */
 @Data
-@Component
-@ConfigurationProperties(prefix = "security.supabase.user-login")
+@ApplicationScoped
 public class SupabaseUserLoginProperties {
 
     /** Master switch. */

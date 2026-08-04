@@ -4,13 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
 import java.util.List;
 
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.core.env.StandardEnvironment;
+
+import io.smallrye.config.SmallRyeConfig;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -36,10 +40,11 @@ class FolderAccessGuardTest {
     private FolderAccessGuard guard(List<String> allowedRoots, String... activeProfiles) {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
-        StandardEnvironment environment = new StandardEnvironment();
-        environment.setActiveProfiles(activeProfiles);
         return new FolderAccessGuard(
-                properties, new RuntimePathConfig(properties), environment, sourceStore);
+                properties,
+                new RuntimePathConfig(properties),
+                configWithProfiles(activeProfiles),
+                sourceStore);
     }
 
     private FolderAccessGuard guardWithStorage(
@@ -51,10 +56,7 @@ class FolderAccessGuardTest {
         storage.setProvider(provider);
         storage.getLocal().setBasePath(basePath);
         return new FolderAccessGuard(
-                properties,
-                new RuntimePathConfig(properties),
-                new StandardEnvironment(),
-                sourceStore);
+                properties, new RuntimePathConfig(properties), configWithProfiles(), sourceStore);
     }
 
     private FolderAccessGuard guardWithWatchedFolder(String watchedDir) {
@@ -65,10 +67,18 @@ class FolderAccessGuardTest {
                 .getPipeline()
                 .setWatchedFoldersDirs(List.of(watchedDir));
         return new FolderAccessGuard(
-                properties,
-                new RuntimePathConfig(properties),
-                new StandardEnvironment(),
-                sourceStore);
+                properties, new RuntimePathConfig(properties), configWithProfiles(), sourceStore);
+    }
+
+    /**
+     * A {@link Config} whose unwrapped {@link SmallRyeConfig} reports the given active profiles.
+     */
+    private static Config configWithProfiles(String... activeProfiles) {
+        SmallRyeConfig smallRyeConfig = mock(SmallRyeConfig.class);
+        when(smallRyeConfig.getProfiles()).thenReturn(List.of(activeProfiles));
+        Config config = mock(Config.class);
+        when(config.unwrap(SmallRyeConfig.class)).thenReturn(smallRyeConfig);
+        return config;
     }
 
     @Test

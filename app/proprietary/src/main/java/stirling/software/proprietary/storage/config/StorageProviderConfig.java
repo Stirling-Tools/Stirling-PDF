@@ -6,13 +6,13 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.TransactionOperations;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Disposes;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Singleton;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
-@Configuration
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class StorageProviderConfig {
@@ -50,25 +50,30 @@ public class StorageProviderConfig {
      * (config drift on one cluster node must fail loudly, never stream ciphertext). Turning the
      * flag off or losing the licence only stops encrypting new writes; decryption stays available.
      */
-    @Bean
+    @Produces
+    @Singleton
     public StorageEncryptionState storageEncryptionState(
-            @Value("${stirling.security.fileEncryptionKey:}") String configuredFileEncryptionKey,
-            @Value("${cluster.enabled:false}") boolean clusterEnabled,
-            PlatformTransactionManager transactionManager) {
+            // Optional, not defaultValue="": SmallRye Config reads an empty default as absent and
+            // then fails to convert it to String.
+            @ConfigProperty(name = "stirling.security.fileEncryptionKey")
+                    Optional<String> fileEncryptionKey,
+            @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
+                    boolean clusterEnabled) {
+        String configuredFileEncryptionKey = fileEncryptionKey.orElse("");
         boolean writeEnabled = applicationProperties.getStorage().getEncryption().isEnabled();
         if (writeEnabled) {
             licenseKeyChecker.requireProOrEnterprise("storage.encryption");
         }
         // Key creation must commit independently of any caller transaction (see
         // FileEncryptionKeyService#createActive).
-        TransactionTemplate requiresNew = new TransactionTemplate(transactionManager);
-        requiresNew.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         StorageEncryptionState state =
                 new StorageEncryptionState(
                         writeEnabled,
                         () ->
                                 createKeyService(
-                                        configuredFileEncryptionKey, clusterEnabled, requiresNew),
+                                        configuredFileEncryptionKey,
+                                        clusterEnabled,
+                                        FileEncryptionKeyService.requiringNewTransaction()),
                         fileEncryptionKeyRepository);
         // The registry table may not exist when storage is unused, so only probe if it is on.
         boolean probeForExistingKeys =
@@ -83,7 +88,9 @@ public class StorageProviderConfig {
     }
 
     private FileEncryptionKeyService createKeyService(
-            String configuredKey, boolean clusterEnabled, TransactionOperations keyCreationTx) {
+            String configuredKey,
+            boolean clusterEnabled,
+            FileEncryptionKeyService.KeyCreationTx keyCreationTx) {
         FileEncryptionMasterKey masterKey =
                 new FileEncryptionMasterKey(configuredKey, clusterEnabled);
         FileEncryptionKeyService keyService =
@@ -93,11 +100,15 @@ public class StorageProviderConfig {
         return keyService;
     }
 
-    @Bean(destroyMethod = "close")
+    // Disposed by closeStorageProvider below (was Spring's @Bean(destroyMethod = "close")).
+    @Produces
+    @Singleton
     public StorageProvider storageProvider(
-            StorageEncryptionState encryptionState, Optional<TempFileManager> tempFileManager) {
+            StorageEncryptionState encryptionState, Instance<TempFileManager> tempFileManager) {
         return new EncryptingStorageProvider(
-                innerStorageProvider(), encryptionState, tempFileManager.orElse(null));
+                innerStorageProvider(),
+                encryptionState,
+                tempFileManager.isResolvable() ? tempFileManager.get() : null);
     }
 
     private StorageProvider innerStorageProvider() {
@@ -146,6 +157,16 @@ public class StorageProviderConfig {
             }
         }
         return new LocalStorageProvider(basePath);
+    }
+
+    // Replaces Spring's @Bean(destroyMethod = "close"): CDI invokes this disposer
+    // when the application-scoped StorageProvider is destroyed.
+    void closeStorageProvider(@Disposes StorageProvider storageProvider) {
+        try {
+            storageProvider.close();
+        } catch (Exception e) {
+            log.warn("Failed to close storage provider", e);
+        }
     }
 
     private S3StorageProvider buildS3Provider(ApplicationProperties.Storage.S3 cfg) {

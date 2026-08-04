@@ -1,13 +1,18 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,12 +25,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.security.TimestampPdfRequest;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @DisplayName("TimestampController security tests")
 @ExtendWith(MockitoExtension.class)
@@ -34,34 +40,39 @@ class TimestampControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private ApplicationProperties applicationProperties;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private TimestampController controller;
 
     private ApplicationProperties.Security security;
     private ApplicationProperties.Security.Timestamp tsConfig;
-    private MockMultipartFile mockPdfFile;
+    private FileUpload mockPdfFile;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         security = new ApplicationProperties.Security();
         tsConfig = new ApplicationProperties.Security.Timestamp();
         security.setTimestamp(tsConfig);
 
         when(applicationProperties.getSecurity()).thenReturn(security);
 
-        mockPdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        new byte[] {0x25, 0x50, 0x44, 0x46}); // %PDF header
-    }
+        when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
 
-    private TimestampPdfRequest createRequest(String tsaUrl) {
-        TimestampPdfRequest request = new TimestampPdfRequest();
-        request.setFileInput(mockPdfFile);
-        request.setTsaUrl(tsaUrl);
-        return request;
+        mockPdfFile =
+                TestFileUploads.of(
+                        new byte[] {0x25, 0x50, 0x44, 0x46}, // %PDF header
+                        "test.pdf",
+                        "application/pdf");
     }
 
     @Nested
@@ -81,23 +92,14 @@ class TimestampControllerTest {
         void shouldAcceptPresetUrls(String presetUrl) throws Exception {
             // Mock PDF loading to avoid actual TSA call — we only test validation here
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
-            doAnswer(
-                            inv -> {
-                                ByteArrayOutputStream baos = inv.getArgument(0);
-                                baos.write(new byte[] {0x25, 0x50, 0x44, 0x46});
-                                return null;
-                            })
-                    .when(mockDoc)
-                    .saveIncremental(any(ByteArrayOutputStream.class));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
+            doNothing().when(mockDoc).saveIncremental(any(OutputStream.class));
             doNothing().when(mockDoc).close();
-
-            TimestampPdfRequest request = createRequest(presetUrl);
 
             // The method should NOT throw IllegalArgumentException for preset URLs
             // It may throw IOException when contacting the TSA — that's expected
             try {
-                controller.timestampPdf(request);
+                controller.timestampPdf(mockPdfFile, null, presetUrl);
             } catch (IllegalArgumentException e) {
                 fail("Preset URL should be in the allowlist: " + presetUrl);
             } catch (Exception e) {
@@ -111,11 +113,12 @@ class TimestampControllerTest {
         @Test
         @DisplayName("Should reject arbitrary URL not in allowlist")
         void shouldRejectArbitraryUrl() {
-            TimestampPdfRequest request = createRequest("http://evil.internal.corp/ssrf");
-
             IllegalArgumentException ex =
                     assertThrows(
-                            IllegalArgumentException.class, () -> controller.timestampPdf(request));
+                            IllegalArgumentException.class,
+                            () ->
+                                    controller.timestampPdf(
+                                            mockPdfFile, null, "http://evil.internal.corp/ssrf"));
             assertTrue(ex.getMessage().contains("not in the allowed list"));
         }
 
@@ -133,11 +136,9 @@ class TimestampControllerTest {
                     "gopher://internal:25/",
                 })
         void shouldRejectSsrfUrls(String ssrfUrl) {
-            TimestampPdfRequest request = createRequest(ssrfUrl);
-
             assertThrows(
                     IllegalArgumentException.class,
-                    () -> controller.timestampPdf(request),
+                    () -> controller.timestampPdf(mockPdfFile, null, ssrfUrl),
                     "Should reject SSRF URL: " + ssrfUrl);
         }
 
@@ -148,13 +149,11 @@ class TimestampControllerTest {
             tsConfig.setCustomTsaUrls(new ArrayList<>(List.of(customUrl)));
 
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
 
-            TimestampPdfRequest request = createRequest(customUrl);
-
             try {
-                controller.timestampPdf(request);
+                controller.timestampPdf(mockPdfFile, null, customUrl);
             } catch (IllegalArgumentException e) {
                 fail("Admin-configured custom URL should be accepted: " + customUrl);
             } catch (Exception e) {
@@ -169,10 +168,13 @@ class TimestampControllerTest {
             tsConfig.setCustomTsaUrls(
                     new ArrayList<>(List.of("https://allowed-tsa.corp.com/timestamp")));
 
-            TimestampPdfRequest request =
-                    createRequest("https://not-allowed-tsa.evil.com/timestamp");
-
-            assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            controller.timestampPdf(
+                                    mockPdfFile,
+                                    null,
+                                    "https://not-allowed-tsa.evil.com/timestamp"));
         }
     }
 
@@ -186,14 +188,12 @@ class TimestampControllerTest {
             tsConfig.setDefaultTsaUrl("http://timestamp.digicert.com");
 
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
-
-            TimestampPdfRequest request = createRequest(null);
 
             // Should not throw IllegalArgumentException — default is in presets
             try {
-                controller.timestampPdf(request);
+                controller.timestampPdf(mockPdfFile, null, null);
             } catch (IllegalArgumentException e) {
                 fail("Default TSA URL should be accepted");
             } catch (Exception e) {
@@ -207,13 +207,11 @@ class TimestampControllerTest {
             tsConfig.setDefaultTsaUrl("http://timestamp.digicert.com");
 
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
 
-            TimestampPdfRequest request = createRequest("   ");
-
             try {
-                controller.timestampPdf(request);
+                controller.timestampPdf(mockPdfFile, null, "   ");
             } catch (IllegalArgumentException e) {
                 fail("Should fallback to config default when blank");
             } catch (Exception e) {
@@ -232,10 +230,10 @@ class TimestampControllerTest {
             List<String> customUrls = new ArrayList<>(List.of("", "  ", "http://valid-tsa.com/ts"));
             tsConfig.setCustomTsaUrls(customUrls);
 
-            TimestampPdfRequest request = createRequest("http://evil.com/ssrf");
-
             // Blank entries should not expand the allowlist
-            assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> controller.timestampPdf(mockPdfFile, null, "http://evil.com/ssrf"));
         }
 
         @Test
@@ -244,11 +242,9 @@ class TimestampControllerTest {
             tsConfig.setDefaultTsaUrl("file:///etc/passwd");
             tsConfig.setCustomTsaUrls(new ArrayList<>());
 
-            TimestampPdfRequest request = createRequest(null);
-
             // file:// default should be filtered out, leaving no valid default
             // The request falls back to "file:///etc/passwd" which is not in allowed set
-            assertThrows(Exception.class, () -> controller.timestampPdf(request));
+            assertThrows(Exception.class, () -> controller.timestampPdf(mockPdfFile, null, null));
         }
 
         @Test
@@ -256,9 +252,11 @@ class TimestampControllerTest {
         void shouldRejectFtpProtocolInCustomUrls() {
             tsConfig.setCustomTsaUrls(new ArrayList<>(List.of("ftp://internal-server/timestamp")));
 
-            TimestampPdfRequest request = createRequest("ftp://internal-server/timestamp");
-
-            assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            controller.timestampPdf(
+                                    mockPdfFile, null, "ftp://internal-server/timestamp"));
         }
     }
 
@@ -270,13 +268,11 @@ class TimestampControllerTest {
         @DisplayName("Should match URLs regardless of case")
         void shouldMatchCaseInsensitive() throws Exception {
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
 
-            TimestampPdfRequest request = createRequest("HTTP://TIMESTAMP.DIGICERT.COM");
-
             try {
-                controller.timestampPdf(request);
+                controller.timestampPdf(mockPdfFile, null, "HTTP://TIMESTAMP.DIGICERT.COM");
             } catch (IllegalArgumentException e) {
                 fail("Case-insensitive URL should match preset");
             } catch (Exception e) {

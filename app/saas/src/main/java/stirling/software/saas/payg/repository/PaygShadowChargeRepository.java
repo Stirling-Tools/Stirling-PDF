@@ -5,44 +5,55 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
+import stirling.software.saas.payg.model.ShadowChargeStatus;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
 
-@Repository
-public interface PaygShadowChargeRepository extends JpaRepository<PaygShadowCharge, Long> {
+@ApplicationScoped
+public class PaygShadowChargeRepository implements PanacheRepositoryBase<PaygShadowCharge, Long> {
 
-    @Query(
-            "SELECT s FROM PaygShadowCharge s"
-                    + " WHERE s.occurredAt >= :from AND s.occurredAt < :to"
-                    + " ORDER BY s.occurredAt DESC")
-    List<PaygShadowCharge> findInWindow(
-            @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+    /** Spring-style saveOrUpdate kept for callers; persists new rows, merges detached ones. */
+    public PaygShadowCharge save(PaygShadowCharge entity) {
+        if (entity.getId() == null) {
+            persist(entity);
+            return entity;
+        }
+        return getEntityManager().merge(entity);
+    }
+
+    public List<PaygShadowCharge> findInWindow(LocalDateTime from, LocalDateTime to) {
+        return find("occurredAt >= ?1 AND occurredAt < ?2 ORDER BY occurredAt DESC", from, to)
+                .list();
+    }
 
     /**
-     * The shadow row written when the given process was opened. At most one row per {@code jobId}
-     * exists by construction — {@code openProcess} writes exactly one row on OPENED and zero on
-     * JOINED — so callers can treat the result as a single optional. Returns the first row by id
-     * defensively if a duplicate ever appears.
+     * The shadow row written when the given process was opened. At most one row per jobId exists.
      */
-    Optional<PaygShadowCharge> findFirstByJobIdOrderByIdAsc(UUID jobId);
+    public Optional<PaygShadowCharge> findFirstByJobIdOrderByIdAsc(UUID jobId) {
+        return find("jobId = ?1 ORDER BY id ASC", jobId).firstResultOptional();
+    }
 
     /**
-     * Paid (Stripe-metered) documents for a team in a period: {@code SUM(payg_units −
-     * free_units_consumed)} over CHARGED rows. This is exactly what was reported to Stripe in the
-     * window, so the wallet's "estimated bill so far" is the metered total × rate. REFUNDED rows
-     * are excluded.
+     * Paid (Stripe-metered) documents for a team in a period: SUM(paygUnits - freeUnitsConsumed)
+     * over CHARGED rows; the metered total reported to Stripe. REFUNDED rows are excluded.
      */
-    @Query(
-            "SELECT COALESCE(SUM(s.paygUnits - s.freeUnitsConsumed), 0) FROM PaygShadowCharge s"
-                    + " WHERE s.teamId = :teamId"
-                    + " AND s.status = stirling.software.saas.payg.model.ShadowChargeStatus.CHARGED"
-                    + " AND s.occurredAt >= :from AND s.occurredAt < :to")
-    long sumPaidUnits(
-            @Param("teamId") Long teamId,
-            @Param("from") LocalDateTime from,
-            @Param("to") LocalDateTime to);
+    public long sumPaidUnits(Long teamId, LocalDateTime from, LocalDateTime to) {
+        Object result =
+                getEntityManager()
+                        .createQuery(
+                                "SELECT COALESCE(SUM(s.paygUnits - s.freeUnitsConsumed), 0)"
+                                        + " FROM PaygShadowCharge s"
+                                        + " WHERE s.teamId = :teamId"
+                                        + " AND s.status = :status"
+                                        + " AND s.occurredAt >= :from AND s.occurredAt < :to")
+                        .setParameter("teamId", teamId)
+                        .setParameter("status", ShadowChargeStatus.CHARGED)
+                        .setParameter("from", from)
+                        .setParameter("to", to)
+                        .getSingleResult();
+        return ((Number) result).longValue();
+    }
 }

@@ -25,16 +25,19 @@ import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FilePurpose;
@@ -64,7 +67,7 @@ import tools.jackson.databind.ObjectMapper;
  * <p>Delegates file storage to FileStorageService/StorageProvider and integrates with the file
  * sharing infrastructure.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
@@ -83,7 +86,8 @@ public class WorkflowSessionService {
     public void ensureSigningEnabled() {
         if (!applicationProperties.getStorage().isEnabled()
                 || !applicationProperties.getStorage().getSigning().isEnabled()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Group signing is disabled");
+            throw new WebApplicationException(
+                    "Group signing is disabled", Response.Status.FORBIDDEN);
         }
     }
 
@@ -100,11 +104,12 @@ public class WorkflowSessionService {
 
         // Validate request
         if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
+            throw new WebApplicationException("File is required", Response.Status.BAD_REQUEST);
         }
 
         if (request.getWorkflowType() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Workflow type is required");
+            throw new WebApplicationException(
+                    "Workflow type is required", Response.Status.BAD_REQUEST);
         }
 
         // Store original file using StorageProvider
@@ -133,9 +138,9 @@ public class WorkflowSessionService {
                         objectMapper.readValue(request.getWorkflowMetadata(), Map.class);
                 session.setWorkflowMetadata(metadataMap);
             } catch (JacksonException e) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Invalid workflowMetadata: must be a valid JSON object");
+                throw new WebApplicationException(
+                        "Invalid workflowMetadata: must be a valid JSON object",
+                        Response.Status.BAD_REQUEST);
             }
         }
 
@@ -143,7 +148,9 @@ public class WorkflowSessionService {
         originalFile.setWorkflowSession(session);
         originalFile.setPurpose(FilePurpose.SIGNING_ORIGINAL);
 
-        session = workflowSessionRepository.save(session);
+        // Panache persist replaces Spring Data save; the same managed instance is reused (no
+        // reassignment needed because persist() is void and mutates the entity in place).
+        workflowSessionRepository.persist(session);
         storedFileRepository.save(originalFile);
 
         // Add participants
@@ -227,12 +234,12 @@ public class WorkflowSessionService {
             if (request.getUserId() != null) {
                 User user =
                         userRepository
-                                .findById(request.getUserId())
+                                .findByIdOptional(request.getUserId())
                                 .orElseThrow(
                                         () ->
-                                                new ResponseStatusException(
-                                                        HttpStatus.NOT_FOUND,
-                                                        "User not found: " + request.getUserId()));
+                                                new WebApplicationException(
+                                                        "User not found: " + request.getUserId(),
+                                                        Response.Status.NOT_FOUND));
                 participant.setUser(user);
                 participant.setEmail(user.getUsername()); // User entity uses username, not email
                 participant.setName(user.getUsername());
@@ -241,12 +248,13 @@ public class WorkflowSessionService {
                 participant.setName(
                         request.getName() != null ? request.getName() : request.getEmail());
             } else {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Participant must have either userId or email");
+                throw new WebApplicationException(
+                        "Participant must have either userId or email",
+                        Response.Status.BAD_REQUEST);
             }
 
             session.addParticipant(participant);
-            participant = workflowParticipantRepository.save(participant);
+            workflowParticipantRepository.persist(participant);
         }
     }
 
@@ -270,59 +278,71 @@ public class WorkflowSessionService {
     }
 
     /** Retrieves a workflow session by session ID. */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public WorkflowSession getSession(String sessionId) {
         return workflowSessionRepository
                 .findBySessionId(sessionId)
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND,
-                                        "Workflow session not found: " + sessionId));
+                                new WebApplicationException(
+                                        "Workflow session not found: " + sessionId,
+                                        Response.Status.NOT_FOUND));
     }
 
     /** Retrieves a workflow session with authorization check. */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public WorkflowSession getSessionForOwner(String sessionId, User owner) {
         WorkflowSession session = getSession(sessionId);
         if (!session.getOwner().equals(owner)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Not authorized to access this workflow session");
+            throw new WebApplicationException(
+                    "Not authorized to access this workflow session", Response.Status.FORBIDDEN);
         }
         return session;
     }
 
     /** Retrieves a workflow session with participants eagerly loaded for finalization. */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public WorkflowSession getSessionWithParticipants(String sessionId) {
         return workflowSessionRepository
                 .findBySessionIdWithParticipants(sessionId)
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND,
-                                        "Workflow session not found: " + sessionId));
+                                new WebApplicationException(
+                                        "Workflow session not found: " + sessionId,
+                                        Response.Status.NOT_FOUND));
     }
 
     /** Retrieves a workflow session with participants, with authorization check. */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public WorkflowSession getSessionWithParticipantsForOwner(String sessionId, User owner) {
         WorkflowSession session = getSessionWithParticipants(sessionId);
         if (!session.getOwner().equals(owner)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Not authorized to access this workflow session");
+            throw new WebApplicationException(
+                    "Not authorized to access this workflow session", Response.Status.FORBIDDEN);
         }
         return session;
     }
 
     /** Lists all workflow sessions owned by a user. */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public List<WorkflowSession> listUserSessions(User owner) {
         return workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(owner);
     }
 
     /** Lists active workflow sessions for a user. */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public List<WorkflowSession> listActiveSessions(User owner) {
         return workflowSessionRepository.findActiveSessionsByOwner(owner);
     }
@@ -334,8 +354,8 @@ public class WorkflowSessionService {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
 
         if (!session.isActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Cannot add participants to inactive workflow");
+            throw new WebApplicationException(
+                    "Cannot add participants to inactive workflow", Response.Status.BAD_REQUEST);
         }
 
         addParticipantsToSession(session, participants);
@@ -349,16 +369,16 @@ public class WorkflowSessionService {
 
         WorkflowParticipant participant =
                 workflowParticipantRepository
-                        .findById(participantId)
+                        .findByIdOptional(participantId)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Participant not found: " + participantId));
+                                        new WebApplicationException(
+                                                "Participant not found: " + participantId,
+                                                Response.Status.NOT_FOUND));
 
         if (!participant.getWorkflowSession().equals(session)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Participant not in this workflow session");
+            throw new WebApplicationException(
+                    "Participant not in this workflow session", Response.Status.BAD_REQUEST);
         }
 
         session.removeParticipant(participant);
@@ -370,15 +390,15 @@ public class WorkflowSessionService {
     public void updateParticipantStatus(Long participantId, ParticipantStatus newStatus) {
         WorkflowParticipant participant =
                 workflowParticipantRepository
-                        .findById(participantId)
+                        .findByIdOptional(participantId)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Participant not found: " + participantId));
+                                        new WebApplicationException(
+                                                "Participant not found: " + participantId,
+                                                Response.Status.NOT_FOUND));
 
         participant.setStatus(newStatus);
-        workflowParticipantRepository.save(participant);
+        workflowParticipantRepository.persist(participant);
         log.debug("Updated participant {} status to {}", participantId, newStatus);
     }
 
@@ -386,16 +406,16 @@ public class WorkflowSessionService {
     public void addParticipantNotification(Long participantId, String message) {
         WorkflowParticipant participant =
                 workflowParticipantRepository
-                        .findById(participantId)
+                        .findByIdOptional(participantId)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Participant not found: " + participantId));
+                                        new WebApplicationException(
+                                                "Participant not found: " + participantId,
+                                                Response.Status.NOT_FOUND));
 
         String timestampedMessage = LocalDateTime.now().toString() + ": " + message;
         participant.addNotification(timestampedMessage);
-        workflowParticipantRepository.save(participant);
+        workflowParticipantRepository.persist(participant);
     }
 
     /** Stores the processed/finalized file for a workflow session. */
@@ -403,8 +423,9 @@ public class WorkflowSessionService {
             throws IOException {
         log.info("Storing processed file for session {}", session.getSessionId());
 
-        // Create a temporary multipart file wrapper
-        MultipartFile processedFile = new ByteArrayMultipartFile(fileData, filename);
+        // Create a temporary multipart file wrapper (common migration shim)
+        MultipartFile processedFile =
+                new ByteArrayMultipartFile("file", filename, "application/pdf", fileData);
 
         // Store using StorageProvider
         StoredFile storedFile =
@@ -415,7 +436,7 @@ public class WorkflowSessionService {
         session.setProcessedFile(storedFile);
 
         storedFileRepository.save(storedFile);
-        workflowSessionRepository.save(session);
+        workflowSessionRepository.persist(session);
     }
 
     /** Marks a workflow session as finalized. */
@@ -423,44 +444,52 @@ public class WorkflowSessionService {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
 
         if (session.isFinalized()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Workflow session already finalized");
+            throw new WebApplicationException(
+                    "Workflow session already finalized", Response.Status.BAD_REQUEST);
         }
 
         session.setFinalized(true);
         session.setStatus(WorkflowStatus.COMPLETED);
-        workflowSessionRepository.save(session);
+        workflowSessionRepository.persist(session);
 
         log.info("Finalized workflow session {}", sessionId);
     }
 
     /** Retrieves the processed file data for a workflow session. */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public byte[] getProcessedFile(String sessionId, User owner) throws IOException {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
 
         if (session.getProcessedFile() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "No processed file available for this session");
+            throw new WebApplicationException(
+                    "No processed file available for this session", Response.Status.NOT_FOUND);
         }
 
         String storageKey = session.getProcessedFile().getStorageKey();
-        org.springframework.core.io.Resource resource = storageProvider.load(storageKey);
-        return resource.getContentAsByteArray();
+        Resource resource = storageProvider.load(storageKey);
+        try (java.io.InputStream in = resource.getInputStream()) {
+            return in.readAllBytes();
+        }
     }
 
     /** Retrieves the original file data for a workflow session. */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public byte[] getOriginalFile(String sessionId) throws IOException {
         WorkflowSession session = getSession(sessionId);
         if (session.getOriginalFile() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Original file no longer available (session may be finalized)");
+            throw new WebApplicationException(
+                    "Original file no longer available (session may be finalized)",
+                    Response.Status.NOT_FOUND);
         }
         String storageKey = session.getOriginalFile().getStorageKey();
-        org.springframework.core.io.Resource resource = storageProvider.load(storageKey);
-        return resource.getContentAsByteArray();
+        Resource resource = storageProvider.load(storageKey);
+        try (java.io.InputStream in = resource.getInputStream()) {
+            return in.readAllBytes();
+        }
     }
 
     /** Deletes a workflow session and associated files. */
@@ -469,9 +498,9 @@ public class WorkflowSessionService {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
 
         if (session.isFinalized()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Cannot delete a finalized session. The signed PDF remains accessible from your session history.");
+            throw new WebApplicationException(
+                    "Cannot delete a finalized session. The signed PDF remains accessible from your session history.",
+                    Response.Status.BAD_REQUEST);
         }
 
         // Delete physical storage files (non-fatal; may already be absent)
@@ -528,7 +557,7 @@ public class WorkflowSessionService {
             storageProvider.delete(session.getOriginalFile().getStorageKey());
             StoredFile originalFile = session.getOriginalFile();
             session.setOriginalFile(null);
-            workflowSessionRepository.save(session);
+            workflowSessionRepository.persist(session);
             storedFileRepository.delete(originalFile);
             log.info("Deleted original presigned file for session {}", session.getSessionId());
         } catch (Exception e) {
@@ -547,7 +576,9 @@ public class WorkflowSessionService {
      * @param user The participant user
      * @return List of sign request summaries
      */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public List<stirling.software.proprietary.workflow.dto.SignRequestSummaryDTO> listSignRequests(
             User user) {
         List<WorkflowParticipant> participations =
@@ -581,7 +612,9 @@ public class WorkflowSessionService {
      * @param user The participant user
      * @return Sign request detail
      */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public stirling.software.proprietary.workflow.dto.SignRequestDetailDTO getSignRequestDetail(
             String sessionId, User user) {
         WorkflowSession session = getSession(sessionId);
@@ -625,7 +658,7 @@ public class WorkflowSessionService {
         // Update status to VIEWED if it was NOTIFIED
         if (participant.getStatus() == ParticipantStatus.NOTIFIED) {
             participant.setStatus(ParticipantStatus.VIEWED);
-            workflowParticipantRepository.save(participant);
+            workflowParticipantRepository.persist(participant);
         }
 
         return dto;
@@ -641,7 +674,9 @@ public class WorkflowSessionService {
      * @param user The participant user
      * @return PDF document bytes
      */
-    @Transactional(readOnly = true)
+    // jakarta.transaction.Transactional has no readOnly attribute; mapped to SUPPORTS so read
+    // methods join an existing tx without forcing a new one.
+    @Transactional(Transactional.TxType.SUPPORTS)
     public byte[] getSignRequestDocument(String sessionId, User user) {
         WorkflowSession session = getSession(sessionId);
         getParticipantForUser(session, user); // Verify participant access
@@ -653,18 +688,19 @@ public class WorkflowSessionService {
                         : session.getOriginalFile();
 
         if (fileToServe == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Document not available for this session");
+            throw new WebApplicationException(
+                    "Document not available for this session", Response.Status.NOT_FOUND);
         }
 
         try {
-            org.springframework.core.io.Resource resource =
-                    storageProvider.load(fileToServe.getStorageKey());
-            return resource.getContentAsByteArray();
+            Resource resource = storageProvider.load(fileToServe.getStorageKey());
+            try (java.io.InputStream in = resource.getInputStream()) {
+                return in.readAllBytes();
+            }
         } catch (IOException e) {
             log.error("Failed to retrieve document for session {}", sessionId, e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve document");
+            throw new WebApplicationException(
+                    "Failed to retrieve document", Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -683,13 +719,13 @@ public class WorkflowSessionService {
         WorkflowParticipant participant = getParticipantForUser(session, user);
 
         if (participant.getStatus() == ParticipantStatus.SIGNED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Document already signed by this user");
+            throw new WebApplicationException(
+                    "Document already signed by this user", Response.Status.BAD_REQUEST);
         }
 
         if (participant.getStatus() == ParticipantStatus.DECLINED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Cannot sign after declining");
+            throw new WebApplicationException(
+                    "Cannot sign after declining", Response.Status.BAD_REQUEST);
         }
 
         // Build metadata JSON containing certificate submission and wet signature data
@@ -714,12 +750,12 @@ public class WorkflowSessionService {
                         request.getP12File().getBytes(),
                         request.getCertType(),
                         request.getPassword());
-            } catch (ResponseStatusException e) {
+            } catch (WebApplicationException e) {
                 throw e;
             } catch (IOException e) {
                 log.error("Failed to read P12 keystore file for validation", e);
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+                throw new WebApplicationException(
+                        "Failed to process certificate file", Response.Status.BAD_REQUEST);
             }
         }
 
@@ -730,12 +766,12 @@ public class WorkflowSessionService {
             try {
                 certificateSubmissionValidator.validateAndExtractInfo(
                         request.getJksFile().getBytes(), "JKS", request.getPassword());
-            } catch (ResponseStatusException e) {
+            } catch (WebApplicationException e) {
                 throw e;
             } catch (IOException e) {
                 log.error("Failed to read JKS keystore file for validation", e);
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+                throw new WebApplicationException(
+                        "Failed to process certificate file", Response.Status.BAD_REQUEST);
             }
         }
 
@@ -770,8 +806,8 @@ public class WorkflowSessionService {
                                     request.getP12File().getBytes()));
                 } catch (IOException e) {
                     log.error("Failed to read P12 keystore file", e);
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+                    throw new WebApplicationException(
+                            "Failed to process certificate file", Response.Status.BAD_REQUEST);
                 }
             } else if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
                 try {
@@ -781,8 +817,8 @@ public class WorkflowSessionService {
                                     request.getJksFile().getBytes()));
                 } catch (IOException e) {
                     log.error("Failed to read JKS keystore file", e);
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+                    throw new WebApplicationException(
+                            "Failed to process certificate file", Response.Status.BAD_REQUEST);
                 }
             }
         }
@@ -802,15 +838,15 @@ public class WorkflowSessionService {
                                 request.getWetSignaturesData(),
                                 new TypeReference<List<WetSignatureMetadata>>() {});
                 if (wetSigs.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
+                    throw new WebApplicationException(
+                            "Too many wet signatures submitted", Response.Status.BAD_REQUEST);
                 }
                 request.setWetSignatures(wetSigs);
                 log.info("Parsed {} wet signatures from wetSignaturesData", wetSigs.size());
             } catch (JacksonException e) {
                 log.error("Failed to parse wetSignaturesData: {}", e.getMessage());
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Invalid wet signatures data");
+                throw new WebApplicationException(
+                        "Invalid wet signatures data", Response.Status.BAD_REQUEST);
             }
         }
 
@@ -853,7 +889,7 @@ public class WorkflowSessionService {
 
         // 5. Update participant status
         participant.setStatus(ParticipantStatus.SIGNED);
-        workflowParticipantRepository.save(participant);
+        workflowParticipantRepository.persist(participant);
 
         log.info(
                 "User {} signed document in session {} - certificate and signature data stored",
@@ -872,12 +908,12 @@ public class WorkflowSessionService {
         WorkflowParticipant participant = getParticipantForUser(session, user);
 
         if (participant.getStatus() == ParticipantStatus.SIGNED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Cannot decline after signing");
+            throw new WebApplicationException(
+                    "Cannot decline after signing", Response.Status.BAD_REQUEST);
         }
 
         participant.setStatus(ParticipantStatus.DECLINED);
-        workflowParticipantRepository.save(participant); // updatedAt is auto-updated
+        workflowParticipantRepository.persist(participant); // updatedAt is auto-updated
 
         log.info("User {} declined sign request for session {}", user.getUsername(), sessionId);
     }
@@ -888,7 +924,7 @@ public class WorkflowSessionService {
      * @param session The workflow session
      * @param user The user
      * @return Participant record
-     * @throws ResponseStatusException if user is not a participant
+     * @throws WebApplicationException if user is not a participant
      */
     private WorkflowParticipant getParticipantForUser(WorkflowSession session, User user) {
         return session.getParticipants().stream()
@@ -896,9 +932,9 @@ public class WorkflowSessionService {
                 .findFirst()
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.FORBIDDEN,
-                                        "User is not a participant in this session"));
+                                new WebApplicationException(
+                                        "User is not a participant in this session",
+                                        Response.Status.FORBIDDEN));
     }
 
     /**
@@ -911,9 +947,9 @@ public class WorkflowSessionService {
                 || privateKeyFile.isEmpty()
                 || certFile == null
                 || certFile.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "PEM signing requires both a private key file and a certificate file");
+            throw new WebApplicationException(
+                    "PEM signing requires both a private key file and a certificate file",
+                    Response.Status.BAD_REQUEST);
         }
         char[] pw = password != null ? password.toCharArray() : new char[0];
         try {
@@ -927,13 +963,13 @@ public class WorkflowSessionService {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             keyStore.store(out, pw);
             return out.toByteArray();
-        } catch (ResponseStatusException e) {
+        } catch (WebApplicationException e) {
             throw e;
         } catch (Exception e) {
             log.error("Failed to build keystore from PEM certificate", e);
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Failed to read PEM certificate — check the key/certificate files and password");
+            throw new WebApplicationException(
+                    "Failed to read PEM certificate - check the key/certificate files and password",
+                    Response.Status.BAD_REQUEST);
         }
     }
 
@@ -957,61 +993,10 @@ public class WorkflowSessionService {
             } else if (pemObject instanceof PrivateKeyInfo info) {
                 keyInfo = info;
             } else {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Unsupported PEM private key format");
+                throw new WebApplicationException(
+                        "Unsupported PEM private key format", Response.Status.BAD_REQUEST);
             }
             return converter.getPrivateKey(keyInfo);
-        }
-    }
-
-    /** Helper class to wrap byte array as MultipartFile. */
-    private static class ByteArrayMultipartFile implements MultipartFile {
-        private final byte[] content;
-        private final String filename;
-
-        public ByteArrayMultipartFile(byte[] content, String filename) {
-            this.content = content;
-            this.filename = filename;
-        }
-
-        @Override
-        public String getName() {
-            return "file";
-        }
-
-        @Override
-        public String getOriginalFilename() {
-            return filename;
-        }
-
-        @Override
-        public String getContentType() {
-            return "application/pdf";
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return content == null || content.length == 0;
-        }
-
-        @Override
-        public long getSize() {
-            return content.length;
-        }
-
-        @Override
-        public byte[] getBytes() {
-            return content;
-        }
-
-        @Override
-        public java.io.InputStream getInputStream() {
-            return new java.io.ByteArrayInputStream(content);
-        }
-
-        @Override
-        public void transferTo(java.io.File dest) throws IOException {
-            java.nio.file.Files.write(dest.toPath(), content);
         }
     }
 }

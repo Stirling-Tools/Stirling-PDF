@@ -8,14 +8,12 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.core.Response;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +25,8 @@ import stirling.software.common.annotations.api.UiDataApi;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -36,33 +36,34 @@ import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @UiDataApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/ui-data")
 public class UIDataController {
 
     private final ApplicationProperties applicationProperties;
     private final SharedSignatureService signatureService;
-    private final UserServiceInterface userService;
-    private final ResourceLoader resourceLoader;
+    // @Autowired(required = false) -> optional CDI dependency via Instance<T>.
+    private final Instance<UserServiceInterface> userService;
     private final RuntimePathConfig runtimePathConfig;
     private final ObjectMapper objectMapper;
 
     public UIDataController(
             ApplicationProperties applicationProperties,
             SharedSignatureService signatureService,
-            @Autowired(required = false) UserServiceInterface userService,
-            ResourceLoader resourceLoader,
+            Instance<UserServiceInterface> userService,
             RuntimePathConfig runtimePathConfig,
             ObjectMapper objectMapper) {
         this.applicationProperties = applicationProperties;
         this.signatureService = signatureService;
         this.userService = userService;
-        this.resourceLoader = resourceLoader;
         this.runtimePathConfig = runtimePathConfig;
         this.objectMapper = objectMapper;
     }
 
-    @GetMapping("/footer-info")
+    @GET
+    @jakarta.ws.rs.Path("/footer-info")
     @Operation(summary = "Get public footer configuration data")
-    public ResponseEntity<FooterData> getFooterData() {
+    public Response getFooterData() {
         FooterData data = new FooterData();
         data.setAnalyticsEnabled(applicationProperties.getSystem().getEnableAnalytics());
         data.setTermsAndConditions(applicationProperties.getLegal().getTermsAndConditions());
@@ -72,24 +73,26 @@ public class UIDataController {
         data.setCookiePolicy(applicationProperties.getLegal().getCookiePolicy());
         data.setImpressum(applicationProperties.getLegal().getImpressum());
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/home")
+    @GET
+    @jakarta.ws.rs.Path("/home")
     @Operation(summary = "Get home page data")
-    public ResponseEntity<HomeData> getHomeData() {
+    public Response getHomeData() {
         String showSurvey = System.getenv("SHOW_SURVEY");
         boolean showSurveyValue = showSurvey == null || "true".equalsIgnoreCase(showSurvey);
 
         HomeData data = new HomeData();
         data.setShowSurveyFromDocker(showSurveyValue);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/licenses")
+    @GET
+    @jakarta.ws.rs.Path("/licenses")
     @Operation(summary = "Get third-party licenses data")
-    public ResponseEntity<LicensesData> getLicensesData() {
+    public Response getLicensesData() {
         LicensesData data = new LicensesData();
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
 
@@ -102,12 +105,13 @@ public class UIDataController {
             data.setDependencies(Collections.emptyList());
         }
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/pipeline")
+    @GET
+    @jakarta.ws.rs.Path("/pipeline")
     @Operation(summary = "Get pipeline configuration data")
-    public ResponseEntity<PipelineData> getPipelineData() {
+    public Response getPipelineData() {
         PipelineData data = new PipelineData();
         List<String> pipelineConfigs = new ArrayList<>();
         List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
@@ -158,15 +162,16 @@ public class UIDataController {
         data.setPipelineConfigsWithNames(pipelineConfigsWithNames);
         data.setPipelineConfigs(pipelineConfigs);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/sign")
+    @GET
+    @jakarta.ws.rs.Path("/sign")
     @Operation(summary = "Get signature form data")
-    public ResponseEntity<SignData> getSignData() {
+    public Response getSignData() {
         String username = "";
-        if (userService != null) {
-            username = userService.getCurrentUsername();
+        if (userService != null && userService.isResolvable()) {
+            username = userService.get().getCurrentUsername();
         }
 
         List<SignatureFile> signatures = signatureService.getAvailableSignatures(username);
@@ -176,18 +181,19 @@ public class UIDataController {
         data.setSignatures(signatures);
         data.setFonts(fonts);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
-    @GetMapping("/ocr-pdf")
+    @GET
+    @jakarta.ws.rs.Path("/ocr-pdf")
     @Operation(summary = "Get OCR PDF data")
-    public ResponseEntity<OcrData> getOcrPdfData() {
+    public Response getOcrPdfData() {
         List<String> languages = getAvailableTesseractLanguages();
 
         OcrData data = new OcrData();
         data.setLanguages(languages);
 
-        return ResponseEntity.ok(data);
+        return Response.ok(data).build();
     }
 
     private List<String> getAvailableTesseractLanguages() {
@@ -219,8 +225,7 @@ public class UIDataController {
 
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
-            Resource[] resources =
-                    GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
+            Resource[] resources = GeneralUtils.getResourcesFromLocationPattern(locationPattern);
             return Arrays.stream(resources)
                     .map(
                             resource -> {

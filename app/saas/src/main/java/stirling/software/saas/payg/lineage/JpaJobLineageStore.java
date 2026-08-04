@@ -11,10 +11,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.data.domain.Limit;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,8 +32,8 @@ import stirling.software.saas.payg.repository.JobArtifactHashRepository;
  * <p>Signatures are persisted using {@link LineageSignature#asStorageKey()} ({@code "type:value"})
  * so multiple signature types coexist on the same column without a schema change.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class JpaJobLineageStore implements JobLineageStore {
 
@@ -48,15 +48,15 @@ public class JpaJobLineageStore implements JobLineageStore {
         if (signatures.isEmpty()) {
             return;
         }
-        // saveAll + @Transactional → one transaction, all-or-nothing. Without this, a multi-
-        // signature record() could leave partial state if a save mid-way fails.
+        // persist + @Transactional → one transaction, all-or-nothing. Without this, a multi-
+        // signature record() could leave partial state if a persist mid-way fails.
         List<JobArtifactHash> rows = new ArrayList<>(signatures.size());
         for (LineageSignature signature : signatures) {
             JobArtifactHash row = new JobArtifactHash();
             row.setId(new JobArtifactHashId(jobId, signature.asStorageKey(), kind));
             rows.add(row);
         }
-        hashRepository.saveAll(rows);
+        hashRepository.persist(rows);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class JpaJobLineageStore implements JobLineageStore {
 
         List<LineageMatch> matches =
                 hashRepository.findOpenJobsForSignatures(
-                        userId, JobStatus.OPEN, since, storageKeys, Limit.of(1));
+                        userId, JobStatus.OPEN, since, storageKeys, 1);
         return matches.isEmpty() ? Optional.empty() : Optional.of(matches.get(0));
     }
 

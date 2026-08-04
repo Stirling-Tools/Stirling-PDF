@@ -13,10 +13,10 @@ import java.util.Locale;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.proprietary.integration.purview.PdfSensitivityLabels;
 import stirling.software.proprietary.integration.purview.SensitivityLabel;

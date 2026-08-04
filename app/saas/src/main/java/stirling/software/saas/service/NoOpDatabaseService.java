@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,8 +13,7 @@ import stirling.software.common.model.FileInfo;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 
 /** Saas-profile {@link DatabaseServiceInterface}: every method is a safe no-op. */
-@Service
-@Profile("saas")
+@ApplicationScoped
 @Slf4j
 public class NoOpDatabaseService implements DatabaseServiceInterface {
 

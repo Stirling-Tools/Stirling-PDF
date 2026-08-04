@@ -15,7 +15,6 @@ import java.util.UUID;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
-import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.persistence.EntityManager;
@@ -24,6 +23,7 @@ import jakarta.persistence.EntityManagerFactory;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.access.model.DefaultAccessPolicy;
 import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.access.service.DefaultPrincipalResolver;

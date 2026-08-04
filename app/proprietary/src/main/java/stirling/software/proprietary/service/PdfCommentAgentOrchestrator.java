@@ -11,14 +11,15 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.comments.AnnotationLocation;
 import stirling.software.common.model.api.comments.StickyNoteSpec;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -51,7 +52,7 @@ import tools.jackson.databind.ObjectMapper;
  * engine round-trip.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class PdfCommentAgentOrchestrator {
 
     private static final String GENERATE_PATH = "/api/v1/ai/pdf-comment-agent/generate";
@@ -83,7 +84,7 @@ public class PdfCommentAgentOrchestrator {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final PdfAnnotationService pdfAnnotationService;
-    private final UserServiceInterface userService;
+    private final Instance<UserServiceInterface> userService;
 
     public PdfCommentAgentOrchestrator(
             AiEngineClient aiEngineClient,
@@ -91,7 +92,7 @@ public class PdfCommentAgentOrchestrator {
             CustomPDFDocumentFactory pdfDocumentFactory,
             ObjectMapper objectMapper,
             PdfAnnotationService pdfAnnotationService,
-            @Autowired(required = false) UserServiceInterface userService) {
+            Instance<UserServiceInterface> userService) {
         this.aiEngineClient = aiEngineClient;
         this.pdfTextChunkExtractor = pdfTextChunkExtractor;
         this.pdfDocumentFactory = pdfDocumentFactory;
@@ -101,7 +102,7 @@ public class PdfCommentAgentOrchestrator {
     }
 
     private String currentUserId() {
-        return userService != null ? userService.getCurrentUsername() : null;
+        return userService.isResolvable() ? userService.get().getCurrentUsername() : null;
     }
 
     /**
@@ -115,12 +116,12 @@ public class PdfCommentAgentOrchestrator {
         AiToolInputValidator.validatePdfUpload(pdfFile);
         String trimmedPrompt = prompt == null ? "" : prompt.trim();
         if (trimmedPrompt.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Prompt is required");
+            throw new WebApplicationException("Prompt is required", Response.Status.BAD_REQUEST);
         }
         if (trimmedPrompt.length() > MAX_PROMPT_LEN) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Prompt exceeds maximum length of " + MAX_PROMPT_LEN + " characters");
+            throw new WebApplicationException(
+                    "Prompt exceeds maximum length of " + MAX_PROMPT_LEN + " characters",
+                    Response.Status.BAD_REQUEST);
         }
 
         String sessionId = UUID.randomUUID().toString();
@@ -133,8 +134,8 @@ public class PdfCommentAgentOrchestrator {
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
             List<TextChunk> chunks = pdfTextChunkExtractor.extract(document);
             if (chunks.isEmpty()) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "PDF has no extractable text");
+                throw new WebApplicationException(
+                        "PDF has no extractable text", Response.Status.BAD_REQUEST);
             }
             log.info(
                     "[pdf-comment-agent] session={} extracted {} chunks across {} pages",

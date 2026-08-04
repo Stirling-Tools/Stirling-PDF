@@ -7,46 +7,101 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.*;
 import org.slf4j.MDC;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.servlet.http.HttpServletRequest;
+import io.quarkus.vertx.http.runtime.CurrentVertxRequest;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Priority;
+import jakarta.inject.Inject;
+import jakarta.interceptor.AroundInvoke;
+import jakarta.interceptor.Interceptor;
+import jakarta.interceptor.InvocationContext;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 
-@Aspect
-@Component
-@RequiredArgsConstructor
+/**
+ * MIGRATION (Spring AOP -> CDI interceptor): was an {@code @Aspect} with {@code @Around} advice on
+ * {@code @AutoJobPostMapping}. Reworked into a CDI {@link Interceptor} bound by the
+ * {@code @AutoJobPostMapping} {@code @InterceptorBinding}; {@code @Around}/{@code
+ * ProceedingJoinPoint} became {@code @AroundInvoke}/{@link InvocationContext}.
+ * {@code @Priority(20)} now meaningfully orders this interceptor (runs after lower-priority audit
+ * interceptors populate MDC).
+ */
+@Interceptor
+@AutoJobPostMapping
+@Priority(20)
 @Slf4j
-@Order(20) // Lower precedence - executes AFTER audit aspects populate MDC
 public class AutoJobAspect {
 
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
 
     private final JobExecutorService jobExecutorService;
-    private final HttpServletRequest request;
+    // Reactive-safe access to the current request. The undertow HttpServletRequest proxy throws
+    // UT000048 ("No request is currently active") on RESTEasy Reactive worker threads, so query
+    // params / method / path / attributes are read from the Vert.x request instead, degrading to
+    // null/empty when no request is active.
+    private final CurrentVertxRequest currentVertxRequest;
     private final FileStorage fileStorage;
 
-    @Around("@annotation(autoJobPostMapping)")
-    public Object wrapWithJobExecution(
-            ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) throws Exception {
-        // This aspect will run before any audit aspects due to @Order(0)
+    @Inject
+    public AutoJobAspect(
+            JobExecutorService jobExecutorService,
+            CurrentVertxRequest currentVertxRequest,
+            FileStorage fileStorage) {
+        this.jobExecutorService = jobExecutorService;
+        this.currentVertxRequest = currentVertxRequest;
+        this.fileStorage = fileStorage;
+    }
+
+    private io.vertx.core.http.HttpServerRequest vertxRequest() {
+        try {
+            var current = currentVertxRequest.getCurrent();
+            return current != null ? current.request() : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    private String requestParam(String name) {
+        io.vertx.core.http.HttpServerRequest req = vertxRequest();
+        return req != null ? req.getParam(name) : null;
+    }
+
+    private String requestMethod() {
+        io.vertx.core.http.HttpServerRequest req = vertxRequest();
+        return req != null ? req.method().name() : "";
+    }
+
+    private String requestUri() {
+        io.vertx.core.http.HttpServerRequest req = vertxRequest();
+        return req != null ? req.path() : "";
+    }
+
+    private Object requestAttribute(String name) {
+        try {
+            var current = currentVertxRequest.getCurrent();
+            return current != null ? current.get(name) : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    @AroundInvoke
+    public Object wrapWithJobExecution(InvocationContext ctx) throws Exception {
+        AutoJobPostMapping autoJobPostMapping =
+                ctx.getMethod().getAnnotation(AutoJobPostMapping.class);
         // Extract parameters from the request and annotation
-        boolean async = Boolean.parseBoolean(request.getParameter("async"));
+        boolean async = Boolean.parseBoolean(requestParam("async"));
         log.debug(
                 "AutoJobAspect: Processing {} {} with async={}",
-                request.getMethod(),
-                request.getRequestURI(),
+                requestMethod(),
+                requestUri(),
                 async);
         long timeout = autoJobPostMapping.timeout();
         int retryCount = autoJobPostMapping.retryCount();
@@ -61,7 +116,8 @@ public class AutoJobAspect {
                 trackProgress);
 
         // Process arguments in-place to avoid type mismatch issues
-        Object[] args = processArgsInPlace(joinPoint.getArgs(), async);
+        Object[] args = processArgsInPlace(ctx.getParameters(), async);
+        ctx.setParameters(args);
 
         // Extract queueable and resourceWeight parameters and validate
         boolean queueable = autoJobPostMapping.queueable();
@@ -80,7 +136,7 @@ public class AutoJobAspect {
                                     // The trackProgress flag controls whether detailed progress is
                                     // stored
                                     // for REST API queries, not WebSocket notifications
-                                    return joinPoint.proceed(args);
+                                    return ctx.proceed();
                                 } catch (Throwable ex) {
                                     log.error(
                                             "AutoJobAspect caught exception during job execution: {}",
@@ -101,7 +157,7 @@ public class AutoJobAspect {
         } else {
             // Use retry logic
             return executeWithRetries(
-                    joinPoint,
+                    ctx,
                     args,
                     async,
                     timeout,
@@ -113,7 +169,7 @@ public class AutoJobAspect {
     }
 
     private Object executeWithRetries(
-            ProceedingJoinPoint joinPoint,
+            InvocationContext ctx,
             Object[] args,
             boolean async,
             long timeout,
@@ -158,7 +214,7 @@ public class AutoJobAspect {
                                     }
 
                                     // Attempt to execute the operation
-                                    return joinPoint.proceed(args);
+                                    return ctx.proceed();
 
                                 } catch (Throwable ex) {
                                     lastException = ex;
@@ -292,7 +348,7 @@ public class AutoJobAspect {
 
     private String getJobIdFromContext() {
         try {
-            return (String) request.getAttribute("jobId");
+            return (String) requestAttribute("jobId");
         } catch (Exception e) {
             log.debug("Could not retrieve job ID from context: {}", e.getMessage());
             return null;

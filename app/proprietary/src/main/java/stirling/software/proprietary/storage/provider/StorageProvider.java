@@ -5,9 +5,8 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
-
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.security.model.User;
 
 public interface StorageProvider extends AutoCloseable {
@@ -19,8 +18,8 @@ public interface StorageProvider extends AutoCloseable {
 
     /**
      * Releases any backend-specific resources. Default no-op so {@link LocalStorageProvider} and
-     * {@link DatabaseStorageProvider} (which hold no closeable handles) satisfy Spring's
-     * {@code @Bean(destroyMethod = "close")} signature requirement without ceremony. {@code
+     * {@link DatabaseStorageProvider} (which hold no closeable handles) satisfy the
+     * {@code @PreDestroy}/producer disposer close signature requirement without ceremony. {@code
      * S3StorageProvider} overrides this to close the underlying SDK client + presigner.
      */
     @Override
