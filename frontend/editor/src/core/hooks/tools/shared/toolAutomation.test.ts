@@ -26,6 +26,8 @@ import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRo
 import { defaultParameters as autoRotateDefaults } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
 import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
 import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
+import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
 
 function entry(over: Partial<ToolRegistryEntry>): ToolRegistryEntry {
   return {
@@ -294,6 +296,125 @@ describe("shared-endpoint disambiguation", () => {
       );
     });
   }
+});
+
+describe("convert (format-routed custom tool)", () => {
+  const convertRegistry: Partial<ToolRegistry> = {
+    convert: entry({
+      name: "Convert",
+      automationSettings: NoopSettings,
+      operationConfig: asRegistryConfig(convertOperationConfig),
+    }),
+  };
+
+  test("is offered as an editable step despite an unresolved default endpoint", () => {
+    const tools = getExecutableTools(convertRegistry);
+    expect(tools.map((t) => t.toolId)).toEqual(["convert"]);
+    expect(tools[0].support).toBe("editable");
+    // Its from/to are unset by default, so a representative endpoint stands in for the picker.
+    expect(tools[0].endpoint).toBe("/api/v1/convert/file/pdf");
+    expect(tools[0].endpoints).toContain("/api/v1/convert/pdf/word");
+  });
+
+  test("round-trips a PDF -> Word step, carrying from/to and the output format", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: { ...convertDefaults, fromExtension: "pdf", toExtension: "docx" },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    expect(api.operation).toBe("/api/v1/convert/pdf/word");
+    expect(api.parameters).toMatchObject({
+      fromExtension: "pdf",
+      toExtension: "docx",
+      outputFormat: "docx",
+    });
+
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.toolId).toBe("convert");
+    expect(back.support).toBe("editable");
+    expect(back.operation).toBe("/api/v1/convert/pdf/word");
+    expect(back.params).toMatchObject({
+      fromExtension: "pdf",
+      toExtension: "docx",
+    });
+  });
+
+  test("round-trips a PDF -> image step, restoring the image options", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: {
+        ...convertDefaults,
+        fromExtension: "pdf",
+        toExtension: "png",
+        imageOptions: { ...convertDefaults.imageOptions, dpi: 600 },
+      },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    expect(api.operation).toBe("/api/v1/convert/pdf/img");
+    expect(api.parameters).toMatchObject({ imageFormat: "png", dpi: "600" });
+
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.operation).toBe("/api/v1/convert/pdf/img");
+    const params = back.params as typeof convertDefaults;
+    expect(params.toExtension).toBe("png");
+    expect(params.imageOptions.dpi).toBe(600);
+  });
+
+  test("round-trips an image -> PDF step, restoring the from-image options", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: {
+        ...convertDefaults,
+        fromExtension: "png",
+        toExtension: "pdf",
+        imageOptions: {
+          ...convertDefaults.imageOptions,
+          fitOption: "fillPage",
+          autoRotate: false,
+        },
+      },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    expect(api.operation).toBe("/api/v1/convert/img/pdf");
+    expect(api.parameters).toMatchObject({
+      fitOption: "fillPage",
+      autoRotate: "false",
+    });
+
+    const params = deserializeToolStep(api, convertRegistry)
+      .params as typeof convertDefaults;
+    expect(params.imageOptions.fitOption).toBe("fillPage");
+    expect(params.imageOptions.autoRotate).toBe(false);
+  });
+
+  test("routes PDF/X through the shared PDF/A endpoint and recovers the PDF/X target", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: { ...convertDefaults, fromExtension: "pdf", toExtension: "pdfx" },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    // PDF/X has no endpoint of its own; it rides the PDF/A endpoint, distinguished by the bookkeeping.
+    expect(api.operation).toBe("/api/v1/convert/pdf/pdfa");
+    expect(api.parameters).toMatchObject({ toExtension: "pdfx" });
+
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.operation).toBe("/api/v1/convert/pdf/pdfa");
+    const params = back.params as typeof convertDefaults;
+    expect(params.toExtension).toBe("pdfx");
+    expect(params.pdfxOptions.outputFormat).toBeDefined();
+  });
 });
 
 describe("stepRequiresUpload", () => {
