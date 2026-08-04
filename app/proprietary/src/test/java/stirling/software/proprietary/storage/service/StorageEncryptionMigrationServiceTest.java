@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -160,9 +161,10 @@ class StorageEncryptionMigrationServiceTest {
 
     private StorageEncryptionMigrationService.MigrationStatus awaitCompletion() throws Exception {
         for (int i = 0; i < 300; i++) {
-            StorageEncryptionMigrationService.MigrationStatus s = service.status();
-            if (s != null && s.state() != StorageEncryptionMigrationService.State.RUNNING) {
-                return s;
+            Optional<StorageEncryptionMigrationService.MigrationStatus> s = service.status();
+            if (s.isPresent()
+                    && s.get().state() != StorageEncryptionMigrationService.State.RUNNING) {
+                return s.get();
             }
             Thread.sleep(100);
         }

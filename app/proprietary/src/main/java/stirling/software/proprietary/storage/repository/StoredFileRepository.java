@@ -3,6 +3,7 @@ package stirling.software.proprietary.storage.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -88,8 +89,7 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     @Query(
             "SELECT f FROM StoredFile f JOIN FETCH f.owner "
                     + "WHERE f.encryptionKeyId IS NULL AND f.id > :lastId ORDER BY f.id ASC")
-    List<StoredFile> findMigratableAfter(
-            @Param("lastId") long lastId, org.springframework.data.domain.Pageable pageable);
+    List<StoredFile> findMigratableAfter(@Param("lastId") long lastId, Pageable pageable);
 
     /**
      * Compare-and-swap updates for the migration: each blob's storage key only flips if it still

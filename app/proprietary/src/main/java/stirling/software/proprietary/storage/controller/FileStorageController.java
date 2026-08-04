@@ -5,6 +5,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.ContentDisposition;
@@ -270,7 +271,7 @@ public class FileStorageController {
             // (inline=true is an in-app view; false is a saved download).
             auditService.audit(
                     AuditEventType.STORAGE_ENCRYPTION,
-                    java.util.Map.of(
+                    Map.of(
                             "action",
                             "plaintextExport",
                             "fileId",

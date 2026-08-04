@@ -242,6 +242,16 @@ public class FileEncryptionKeyService {
                         pending);
             }
         }
+        long stranded = repository.countByMasterKeyVersionGreaterThan(masterKey.currentVersion());
+        if (stranded > 0) {
+            log.warn(
+                    "{} encryption key row(s) are wrapped by a master-key version newer than the"
+                            + " configured stirling.security.fileEncryptionKeyVersion={}. Rotation"
+                            + " only re-wraps rows below the configured version, so these rows can"
+                            + " never be re-wrapped while it stays this low.",
+                    stranded,
+                    masterKey.currentVersion());
+        }
         repository
                 .findFirstByStatus(FileEncryptionKey.Status.ACTIVE)
                 .or(() -> repository.findFirstByStatus(FileEncryptionKey.Status.RETIRED))

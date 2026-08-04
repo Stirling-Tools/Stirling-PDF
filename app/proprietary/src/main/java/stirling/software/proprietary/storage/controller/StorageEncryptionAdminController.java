@@ -174,8 +174,10 @@ public class StorageEncryptionAdminController {
 
     @GetMapping(value = "/migrate/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public MigrationStatusResponse migrationStatus() {
-        StorageEncryptionMigrationService.MigrationStatus status = migrationService.status();
-        return status != null ? MigrationStatusResponse.from(status) : MigrationStatusResponse.IDLE;
+        return migrationService
+                .status()
+                .map(MigrationStatusResponse::from)
+                .orElse(MigrationStatusResponse.IDLE);
     }
 
     /**

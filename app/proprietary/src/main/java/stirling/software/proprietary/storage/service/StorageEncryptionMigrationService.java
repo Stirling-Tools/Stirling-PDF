@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -98,10 +99,10 @@ public class StorageEncryptionMigrationService {
         return run.snapshot();
     }
 
-    /** Latest run's progress, or empty state if never started this uptime. */
-    public MigrationStatus status() {
+    /** Latest run's progress, or empty if none has started this uptime. */
+    public Optional<MigrationStatus> status() {
         Run run = currentRun.get();
-        return run != null ? run.snapshot() : null;
+        return Optional.ofNullable(run).map(Run::snapshot);
     }
 
     private void execute(Run run) {
@@ -172,6 +173,11 @@ public class StorageEncryptionMigrationService {
         }
     }
 
+    /**
+     * The three blobs are swapped independently, so a compare-and-swap miss on a secondary one
+     * abandons the whole file for this run: the row keeps {@code encryptionKeyId} null and the next
+     * run picks it up from the top.
+     */
     private void migrateFile(StoredFile file, Run run) throws IOException {
         User owner = file.getOwner();
 

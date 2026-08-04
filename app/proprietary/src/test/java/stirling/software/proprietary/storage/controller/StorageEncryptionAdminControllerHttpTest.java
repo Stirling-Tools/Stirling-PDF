@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -135,7 +136,7 @@ class StorageEncryptionAdminControllerHttpTest {
 
     @Test
     void migrateStatus_neverStarted_serialisesIdle() throws Exception {
-        when(migrationService.status()).thenReturn(null);
+        when(migrationService.status()).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/admin/storage-encryption/migrate/status"))
                 .andExpect(status().isOk())

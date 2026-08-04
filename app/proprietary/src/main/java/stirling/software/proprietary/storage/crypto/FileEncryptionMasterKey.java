@@ -72,6 +72,11 @@ public class FileEncryptionMasterKey {
                         ? null
                         : decodeKey(
                                 previousKeyBase64, "stirling.security.fileEncryptionKeyPrevious");
+        if (currentVersion < 1) {
+            log.warn(
+                    "stirling.security.fileEncryptionKeyVersion={} is not a valid version; using 1",
+                    currentVersion);
+        }
         this.currentVersion = Math.max(1, currentVersion);
         log.info(
                 "Storage encryption master key initialised (AES-256-GCM, fingerprint {}, version"
@@ -192,7 +197,14 @@ public class FileEncryptionMasterKey {
             if (previousKey == null) {
                 throw primaryFailure;
             }
-            return unwrapWith(previousKey, wrapped, associatedData);
+            try {
+                return unwrapWith(previousKey, wrapped, associatedData);
+            } catch (GeneralSecurityException previousFailure) {
+                // Report the primary key's failure, or a corrupt row gets diagnosed through the
+                // outgoing key's error message.
+                primaryFailure.addSuppressed(previousFailure);
+                throw primaryFailure;
+            }
         }
     }
 

@@ -1,15 +1,19 @@
 package stirling.software.proprietary.storage.crypto;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.data.domain.Sort;
 
 import stirling.software.proprietary.storage.model.FileEncryptionKey;
 import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
@@ -65,8 +69,8 @@ public final class InMemoryKeyRepo {
                                         .filter(r -> r.getStatus() == inv.getArgument(0))
                                         .findFirst());
         when(mock.count()).thenAnswer(inv -> (long) rows.size());
-        when(mock.findAll()).thenAnswer(inv -> java.util.List.copyOf(rows.values()));
-        when(mock.countByMasterKeyVersionLessThan(org.mockito.ArgumentMatchers.anyInt()))
+        when(mock.findAll()).thenAnswer(inv -> List.copyOf(rows.values()));
+        when(mock.countByMasterKeyVersionLessThan(anyInt()))
                 .thenAnswer(
                         inv ->
                                 rows.values().stream()
@@ -75,7 +79,7 @@ public final class InMemoryKeyRepo {
                                                         r.getMasterKeyVersion()
                                                                 < inv.<Integer>getArgument(0))
                                         .count());
-        when(mock.findByMasterKeyVersionLessThan(org.mockito.ArgumentMatchers.anyInt()))
+        when(mock.findByMasterKeyVersionLessThan(anyInt()))
                 .thenAnswer(
                         inv ->
                                 rows.values().stream()
@@ -84,7 +88,15 @@ public final class InMemoryKeyRepo {
                                                         r.getMasterKeyVersion()
                                                                 < inv.<Integer>getArgument(0))
                                         .toList());
-        when(mock.findAll(any(org.springframework.data.domain.Sort.class)))
-                .thenAnswer(inv -> java.util.List.copyOf(rows.values()));
+        when(mock.countByMasterKeyVersionGreaterThan(anyInt()))
+                .thenAnswer(
+                        inv ->
+                                rows.values().stream()
+                                        .filter(
+                                                r ->
+                                                        r.getMasterKeyVersion()
+                                                                > inv.<Integer>getArgument(0))
+                                        .count());
+        when(mock.findAll(any(Sort.class))).thenAnswer(inv -> List.copyOf(rows.values()));
     }
 }

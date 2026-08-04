@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -141,7 +142,7 @@ class StorageEncryptionAdminControllerTest {
 
     @Test
     void migrationStatus_neverStarted_reportsIdle() {
-        when(migrationService.status()).thenReturn(null);
+        when(migrationService.status()).thenReturn(Optional.empty());
         assertThat(controller.migrationStatus().state()).isEqualTo("IDLE");
     }
 

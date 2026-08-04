@@ -31,4 +31,10 @@ public interface FileEncryptionKeyRepository extends JpaRepository<FileEncryptio
     long countByMasterKeyVersionLessThan(int masterKeyVersion);
 
     List<FileEncryptionKey> findByMasterKeyVersionLessThan(int masterKeyVersion);
+
+    /**
+     * Rows wrapped by a version the configuration has since gone below. Rotation only re-wraps rows
+     * <em>under</em> the configured version, so these can never be re-wrapped.
+     */
+    long countByMasterKeyVersionGreaterThan(int masterKeyVersion);
 }
