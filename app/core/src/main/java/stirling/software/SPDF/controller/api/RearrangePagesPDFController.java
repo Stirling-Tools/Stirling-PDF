@@ -12,6 +12,7 @@ import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,8 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.SortTypes;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
+import stirling.software.SPDF.model.api.page.InsertBlankPagesRequest;
+import stirling.software.SPDF.model.api.page.ReplacePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -303,6 +306,150 @@ public class RearrangePagesPDFController {
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);
             throw e;
+        }
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/insert-blank-pages",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(
+            summary = "Insert blank pages into a PDF file",
+            description =
+                    "This endpoint inserts blank pages at a specified position in a given PDF file.")
+    public ResponseEntity<Resource> insertBlankPages(@ModelAttribute InsertBlankPagesRequest request)
+            throws IOException {
+        MultipartFile pdfFile = request.getFileInput();
+        int position = request.getPosition();
+        int count = request.getCount();
+        String pageSize = request.getPageSize();
+
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
+            PDPageTree pages = document.getDocumentCatalog().getPages();
+            
+            // Parse page size
+            PDRectangle rectangle = parsePageSize(pageSize);
+            
+            // Insert blank pages at the specified position
+            for (int i = 0; i < count; i++) {
+                PDPage blankPage = new PDPage(rectangle);
+                pages.add(position + i, blankPage);
+            }
+
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.generateFilename(
+                            pdfFile.getOriginalFilename(), "_blank_pages_inserted.pdf"),
+                    tempFileManager);
+        }
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/replace-pages",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(
+            summary = "Replace pages in a PDF file with pages from another PDF",
+            description =
+                    "This endpoint replaces specific pages in a PDF file with pages from another PDF file.")
+    public ResponseEntity<Resource> replacePages(@ModelAttribute ReplacePagesRequest request)
+            throws IOException {
+        MultipartFile pdfFile = request.getFileInput();
+        MultipartFile replacementFile = request.getReplacementFile();
+        List<Integer> targetIndices = request.getTargetIndices();
+        List<Integer> sourceIndices = request.getSourceIndices();
+
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile);
+                PDDocument replacementDocument = pdfDocumentFactory.load(replacementFile)) {
+
+            PDPageTree pages = document.getDocumentCatalog().getPages();
+            PDPageTree replacementPages = replacementDocument.getDocumentCatalog().getPages();
+
+            // Validate indices
+            if (targetIndices.size() != sourceIndices.size()) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat",
+                        "Target and source page counts must match");
+            }
+
+            // Remove target pages in reverse order to maintain correct indices
+            Collections.sort(targetIndices, Collections.reverseOrder());
+            for (Integer targetIndex : targetIndices) {
+                if (targetIndex >= 0 && targetIndex < pages.getCount()) {
+                    pages.remove(targetIndex);
+                }
+            }
+
+            // Insert replacement pages at appropriate positions
+            // Sort both lists together to maintain correspondence
+            List<PageReplacement> replacements = new ArrayList<>();
+            for (int i = 0; i < targetIndices.size(); i++) {
+                replacements.add(new PageReplacement(targetIndices.get(i), sourceIndices.get(i)));
+            }
+            Collections.sort(replacements);
+
+            int offset = 0;
+            for (PageReplacement replacement : replacements) {
+                int targetPos = replacement.targetIndex - offset;
+                int sourceIndex = replacement.sourceIndex;
+                
+                if (sourceIndex >= 0 && sourceIndex < replacementPages.getCount()) {
+                    PDPage sourcePage = replacementPages.get(sourceIndex);
+                    COSDictionary clonedDict = new COSDictionary();
+                    clonedDict.addAll(sourcePage.getCOSObject());
+                    PDPage clonedPage = new PDPage(clonedDict);
+                    pages.add(Math.max(0, targetPos), clonedPage);
+                    offset++;
+                }
+            }
+
+            FormUtils.pruneOrphanedFormFields(document);
+
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.generateFilename(
+                            pdfFile.getOriginalFilename(), "_pages_replaced.pdf"),
+                    tempFileManager);
+        }
+    }
+
+    private PDRectangle parsePageSize(String pageSize) {
+        if (pageSize == null || pageSize.isEmpty()) {
+            return PDRectangle.A4;
+        }
+        
+        switch (pageSize.toUpperCase(Locale.ROOT)) {
+            case "LETTER":
+                return PDRectangle.LETTER;
+            case "LEGAL":
+                return PDRectangle.LEGAL;
+            case "A3":
+                return PDRectangle.A3;
+            case "A5":
+                return PDRectangle.A5;
+            case "TABLOID":
+                return PDRectangle.TABLOID;
+            default:
+                return PDRectangle.A4;
+        }
+    }
+
+    private static class PageReplacement implements Comparable<PageReplacement> {
+        int targetIndex;
+        int sourceIndex;
+
+        PageReplacement(int targetIndex, int sourceIndex) {
+            this.targetIndex = targetIndex;
+            this.sourceIndex = sourceIndex;
+        }
+
+        @Override
+        public int compareTo(PageReplacement other) {
+            return Integer.compare(this.targetIndex, other.targetIndex);
         }
     }
 }
