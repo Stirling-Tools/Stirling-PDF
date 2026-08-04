@@ -67,9 +67,9 @@ class FileRunEventStoreTest {
             assertThat(event.lastSeenAt()).isNotNull();
 
             // Snapshotted, not derived: re-classifying a kind later must not rewrite this row.
-            assertThat(event.stage()).isEqualTo(FailureKind.Stage.INPUT);
-            assertThat(event.severity()).isEqualTo(FailureKind.Severity.ERROR);
-            assertThat(event.scope()).isEqualTo(FailureKind.Scope.FILE);
+            assertThat(event.stage()).isEqualTo(FailureStage.INPUT);
+            assertThat(event.severity()).isEqualTo(FailureSeverity.ERROR);
+            assertThat(event.scope()).isEqualTo(FailureScope.FILE);
         }
 
         @Test
@@ -281,7 +281,7 @@ class FileRunEventStoreTest {
             store.record(failure(FailureKind.UNKNOWN, TEAM, "mine", "a"));
             store.record(failure(FailureKind.UNKNOWN, OTHER_TEAM, "theirs", "b"));
 
-            assertThat(store.list(TEAM, null, 50))
+            assertThat(store.list(TEAM, null, null, 50))
                     .extracting(FileRunEvent::fileId)
                     .containsExactly("mine");
         }
@@ -293,7 +293,7 @@ class FileRunEventStoreTest {
             store.record(failure(FailureKind.UNKNOWN, null, "unteamed", "a"));
             store.record(failure(FailureKind.UNKNOWN, TEAM, "teamed", "b"));
 
-            assertThat(store.list(null, null, 50))
+            assertThat(store.list(null, null, null, 50))
                     .extracting(FileRunEvent::fileId)
                     .containsExactly("unteamed");
         }
@@ -304,7 +304,7 @@ class FileRunEventStoreTest {
             store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "closed", "b"));
             store.applyStatus(open.id(), TEAM, FileRunEventStatus.ACKNOWLEDGED, "me");
 
-            assertThat(store.list(TEAM, FileRunEventStatus.ACKNOWLEDGED, 50))
+            assertThat(store.list(TEAM, FileRunEventStatus.ACKNOWLEDGED, null, 50))
                     .extracting(FileRunEvent::fileId)
                     .containsExactly("open");
         }

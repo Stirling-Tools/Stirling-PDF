@@ -1,10 +1,12 @@
 package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
+
+import jakarta.annotation.PostConstruct;
 
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.util.ExceptionUtils;
@@ -178,6 +182,35 @@ class FailureClassifierTest {
                 chain = new IllegalStateException("wrap " + i, chain);
             }
             assertThat(classifier.classify(chain)).isEqualTo(FailureKind.UNKNOWN);
+        }
+    }
+
+    @Nested
+    @DisplayName("the boot guard on an ambiguous registry")
+    class BootGuard {
+
+        @Test
+        void isWiredToRunAtStartupRatherThanOnlyBeingCallable() throws Exception {
+            // The check moved out of FailureKind's class initialiser to get a readable message.
+            // That only buys anything if Spring actually invokes it.
+            assertThat(
+                            FailureClassifier.class
+                                    .getDeclaredMethod("verifyNoErrorCodeIsClaimedTwice")
+                                    .isAnnotationPresent(PostConstruct.class))
+                    .isTrue();
+        }
+
+        @Test
+        void acceptsTheRealRegistry() {
+            assertThatCode(classifier::verifyNoErrorCodeIsClaimedTwice).doesNotThrowAnyException();
+        }
+
+        @Test
+        void wouldRejectADuplicate() {
+            // FailureKind is a closed enum, so the guard cannot be handed a bad registry. What can
+            // be shown is that the detection it depends on finds a duplicate when there is one.
+            assertThat(FailureKind.duplicatesIn(Stream.of("E004", "E001", "E004")))
+                    .containsExactly("E004");
         }
     }
 }

@@ -4,8 +4,14 @@ import static stirling.software.proprietary.failure.FailureActionId.ACKNOWLEDGE;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,20 +27,20 @@ import lombok.Getter;
 @Getter
 public enum FailureKind {
     INPUT_PASSWORD_PROTECTED(
-            Stage.INPUT,
-            Severity.ERROR,
-            Remedy.NEEDS_USER_INPUT,
-            Scope.FILE,
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_USER_INPUT,
+            FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
             offer(ACKNOWLEDGE, "acknowledgeUnlock"),
             offer(DISMISS, "dismissSkipFile")),
 
     UNKNOWN(
-            Stage.INTERNAL,
-            Severity.ERROR,
-            Remedy.PERMANENT,
-            Scope.RUN,
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.PERMANENT,
+            FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
             offer(ACKNOWLEDGE),
@@ -43,10 +49,17 @@ public enum FailureKind {
     private static final String KEY_PREFIX = "portal.failures.kind.";
     private static final String ACTION_KEY_PREFIX = "portal.failures.action.";
 
-    private final Stage stage;
-    private final Severity severity;
-    private final Remedy remedy;
-    private final Scope scope;
+    /**
+     * Every claimed {@code ErrorCode}, to the kind claiming it. Indexed once rather than scanned
+     * per lookup, so a duplicate cannot be resolved by declaration order without anyone noticing. A
+     * duplicate is refused at boot; see {@link #duplicateErrorCodes()}.
+     */
+    private static final Map<String, FailureKind> BY_ERROR_CODE = indexErrorCodes();
+
+    private final FailureStage stage;
+    private final FailureSeverity severity;
+    private final FailureRemedy remedy;
+    private final FailureScope scope;
 
     /** English fallback, used when the client has no translation for {@link #getTitleKey()}. */
     private final String defaultTitle;
@@ -62,10 +75,10 @@ public enum FailureKind {
     private final List<Offer> offers;
 
     FailureKind(
-            Stage stage,
-            Severity severity,
-            Remedy remedy,
-            Scope scope,
+            FailureStage stage,
+            FailureSeverity severity,
+            FailureRemedy remedy,
+            FailureScope scope,
             List<String> errorCodes,
             String defaultTitle,
             Offer... offers) {
@@ -162,14 +175,44 @@ public enum FailureKind {
         return Arrays.stream(values()).filter(kind -> kind.name().equals(id)).findFirst();
     }
 
+    private static Map<String, FailureKind> indexErrorCodes() {
+        Map<String, FailureKind> index = new HashMap<>();
+        for (FailureKind kind : values()) {
+            for (String code : kind.errorCodes) {
+                index.putIfAbsent(code, kind);
+            }
+        }
+        return Map.copyOf(index);
+    }
+
+    /**
+     * Codes claimed by more than one kind, which would make classification depend on declaration
+     * order. Empty in a well-formed registry.
+     *
+     * <p>Reported for a caller to act on rather than thrown from class init, where it would arrive
+     * as an {@code ExceptionInInitializerError} blamed on whatever touched the enum first, then as
+     * {@code NoClassDefFoundError} everywhere after. {@link FailureClassifier} refuses to start.
+     */
+    static List<String> duplicateErrorCodes() {
+        return duplicatesIn(Arrays.stream(values()).flatMap(kind -> kind.errorCodes.stream()));
+    }
+
+    /**
+     * The codes appearing more than once, first-seen order. Split out from the registry because the
+     * registry is a closed enum: this is the only seam at which the detection itself can be shown
+     * to find anything.
+     */
+    static List<String> duplicatesIn(Stream<String> codes) {
+        Set<String> seen = new HashSet<>();
+        return codes.filter(code -> !seen.add(code)).distinct().toList();
+    }
+
     /** The kind claiming {@code errorCode}, if any. Empty for a code no kind has adopted yet. */
     public static Optional<FailureKind> byErrorCode(String errorCode) {
         if (errorCode == null || errorCode.isBlank()) {
             return Optional.empty();
         }
-        return Arrays.stream(values())
-                .filter(kind -> kind.errorCodes.contains(errorCode))
-                .findFirst();
+        return Optional.ofNullable(BY_ERROR_CODE.get(errorCode));
     }
 
     private String lowerCamelId() {
@@ -180,7 +223,7 @@ public enum FailureKind {
      * {@code INPUT_PASSWORD_PROTECTED} to {@code inputPasswordProtected}, for i18n key building.
      */
     private static String toLowerCamel(String screamingSnake) {
-        String[] parts = screamingSnake.toLowerCase(java.util.Locale.ROOT).split("_");
+        String[] parts = screamingSnake.toLowerCase(Locale.ROOT).split("_");
         StringBuilder out = new StringBuilder(parts[0]);
         for (int i = 1; i < parts.length; i++) {
             if (parts[i].isEmpty()) {
@@ -189,56 +232,5 @@ public enum FailureKind {
             out.append(Character.toUpperCase(parts[i].charAt(0))).append(parts[i].substring(1));
         }
         return out.toString();
-    }
-
-    // ── Facets ──────────────────────────────────────────────────────────────
-    // Nested because each describes a FailureKind and is never a concept on its own.
-
-    /**
-     * Where in a run's life the failure happened: reading the document ({@code INPUT}), a tool step
-     * or the engine ({@code INTERNAL}), delivery ({@code OUTPUT}), a gate refusing it ({@code
-     * BLOCKED}), or never admitted ({@code NEVER_RAN}).
-     *
-     * <p>All five declared up front so a later kind needs no enum change, which would strand the
-     * value already snapshotted on existing rows.
-     */
-    public enum Stage {
-        INPUT,
-        INTERNAL,
-        OUTPUT,
-        BLOCKED,
-        NEVER_RAN
-    }
-
-    /** How loudly a failure kind should be surfaced. */
-    public enum Severity {
-        ERROR,
-        WARNING,
-        INFO
-    }
-
-    /**
-     * What intervention would clear this failure. Advisory metadata for the review surface; nothing
-     * branches on it server-side yet.
-     */
-    public enum Remedy {
-        TRANSIENT,
-        NEEDS_USER_INPUT,
-        NEEDS_FILE_FIX,
-        NEEDS_CONFIG_FIX,
-        NEEDS_SERVER_FIX,
-        PERMANENT
-    }
-
-    /**
-     * What the failure is about, which is what the dedup key groups repeats by: one file, run,
-     * policy, source, or the whole server.
-     */
-    public enum Scope {
-        FILE,
-        RUN,
-        POLICY,
-        SOURCE,
-        SERVER
     }
 }

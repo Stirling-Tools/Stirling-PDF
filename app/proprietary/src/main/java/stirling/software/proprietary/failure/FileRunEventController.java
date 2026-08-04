@@ -55,18 +55,17 @@ public class FileRunEventController {
                     "Failures recorded for the caller's team, newest first. Each row carries its"
                             + " available actions already resolved.")
     public FileRunEventsResponse list(
-            @RequestParam(required = false) String status,
+            // Spring's converter 400s on a value outside the enum, so no hand-rolled parse.
+            @RequestParam(required = false) FileRunEventStatus status,
             @RequestParam(required = false) String kindId,
             @RequestParam(required = false) Integer limit) {
         requireFailureReviewAllowed();
-        FileRunEventStatus parsedStatus = parseStatus(status);
         int cappedLimit = Math.min(limit == null ? DEFAULT_LIMIT : Math.max(1, limit), MAX_LIMIT);
 
         List<FileRunEventView> events =
-                service.list(parsedStatus, cappedLimit).stream()
-                        // Filtered here rather than in SQL: the page is already team- and
-                        // status-scoped, so this avoids a second query shape.
-                        .filter(event -> kindId == null || kindId.equals(event.kind().getId()))
+                // The kind filter is part of the query, before the limit is applied: filtering an
+                // already-limited page could return nothing while matching rows exist.
+                service.list(status, kindId, cappedLimit).stream()
                         .map(event -> FileRunEventView.of(event, service.availableActions(event)))
                         .toList();
         return new FileRunEventsResponse(events);
@@ -132,18 +131,6 @@ public class FileRunEventController {
             case ACTION_NOT_RECOGNISED, ACTION_NOT_DECLARED -> HttpStatus.BAD_REQUEST;
             case ALREADY_CLOSED -> HttpStatus.CONFLICT;
         };
-    }
-
-    private static FileRunEventStatus parseStatus(String status) {
-        if (status == null || status.isBlank()) {
-            return null;
-        }
-        for (FileRunEventStatus candidate : FileRunEventStatus.values()) {
-            if (candidate.name().equalsIgnoreCase(status)) {
-                return candidate;
-            }
-        }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown status: " + status);
     }
 
     /** Wrapped rather than a bare array so pagination can be added without breaking clients. */

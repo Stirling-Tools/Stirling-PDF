@@ -1,5 +1,6 @@
 package stirling.software.proprietary.failure;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class FailureActionRegistry {
     @PostConstruct
     void verifyEveryDeclaredActionHasAHandler() {
         List<String> gaps =
-                java.util.Arrays.stream(FailureKind.values())
+                Arrays.stream(FailureKind.values())
                         .flatMap(
                                 kind ->
                                         kind.getActions().stream()

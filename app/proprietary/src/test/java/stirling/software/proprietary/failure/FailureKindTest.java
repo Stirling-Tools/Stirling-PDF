@@ -2,9 +2,16 @@ package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
@@ -67,7 +74,7 @@ class FailureKindTest {
             Set<String> known =
                     Arrays.stream(ExceptionUtils.ErrorCode.values())
                             .map(ExceptionUtils.ErrorCode::getCode)
-                            .collect(java.util.stream.Collectors.toSet());
+                            .collect(Collectors.toSet());
             assertThat(known).containsAll(kind.getErrorCodes());
         }
 
@@ -83,6 +90,11 @@ class FailureKindTest {
 
         @Test
         void noTwoKindsClaimTheSameErrorCode() {
+            // Computed independently of duplicateErrorCodes(), then checked against it: the boot
+            // guard reads that method, so a version of it that always returned empty would leave
+            // the guard decorative and every other test still passing.
+            assertThat(FailureKind.duplicateErrorCodes()).isEmpty();
+
             Set<String> claimed = new HashSet<>();
             Stream.of(FailureKind.values())
                     .flatMap(kind -> kind.getErrorCodes().stream())
@@ -91,6 +103,77 @@ class FailureKindTest {
                                     assertThat(claimed.add(code))
                                             .as("error code %s claimed twice", code)
                                             .isTrue());
+        }
+    }
+
+    @Nested
+    @DisplayName("every derived key resolves to English copy")
+    class Copy {
+
+        /**
+         * The enum builds its i18n keys from the constant name, so renaming a kind or shipping a
+         * new one sends keys the client has no copy for, and the UI renders the raw key. Nothing
+         * else checks that: the portal reads these keys at runtime, and the unused-translation
+         * audit only looks the other way, for copy no source file mentions.
+         */
+        private static final Set<String> KEYS = englishKeys();
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void titleAndDescriptionAreTranslated(FailureKind kind) {
+            assertThat(KEYS).contains(kind.getTitleKey(), kind.getDescriptionKey());
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void everyOfferedActionIsLabelled(FailureKind kind) {
+            for (FailureActionId action : kind.getActions()) {
+                assertThat(KEYS)
+                        .as("%s offers %s, but nothing labels it", kind.getId(), action)
+                        .contains(kind.labelKeyFor(action));
+            }
+        }
+
+        /**
+         * Every dotted key in the English file, as {@code [section]} plus the name before {@code
+         * =}.
+         */
+        private static Set<String> englishKeys() {
+            Set<String> keys = new HashSet<>();
+            String section = "";
+            for (String raw : readTranslations()) {
+                String line = raw.strip();
+                if (line.isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+                if (line.startsWith("[") && line.endsWith("]")) {
+                    section = line.substring(1, line.length() - 1).strip() + ".";
+                    continue;
+                }
+                int equals = line.indexOf('=');
+                if (equals > 0) {
+                    keys.add(section + line.substring(0, equals).strip());
+                }
+            }
+            return keys;
+        }
+
+        private static List<String> readTranslations() {
+            // Located by walking up, so the test does not depend on the directory Gradle runs it
+            // in.
+            Path relative = Path.of("frontend/editor/public/locales/en-US/translation.toml");
+            for (Path dir = Path.of("").toAbsolutePath(); dir != null; dir = dir.getParent()) {
+                Path candidate = dir.resolve(relative);
+                if (Files.isRegularFile(candidate)) {
+                    try {
+                        return Files.readAllLines(candidate, StandardCharsets.UTF_8);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                }
+            }
+            throw new IllegalStateException(
+                    "No " + relative + " above " + Path.of("").toAbsolutePath());
         }
     }
 

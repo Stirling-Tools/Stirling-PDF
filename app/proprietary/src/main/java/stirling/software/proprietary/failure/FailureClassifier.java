@@ -1,7 +1,11 @@
 package stirling.software.proprietary.failure;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
+
+import jakarta.annotation.PostConstruct;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,14 +32,28 @@ public class FailureClassifier {
     /** Set by {@code GlobalExceptionHandler#createProblemDetailResponse}. */
     private static final String ERROR_CODE_PROPERTY = "errorCode";
 
-    private final ObjectMapper objectMapper;
-
     /**
      * Depth bound on the cause chain. The JDK forbids self-causation but not a longer cycle (A
      * caused by B caused by A), which an unbounded walk would spin on. Real chains are a handful
      * deep.
      */
     private static final int MAX_CAUSE_DEPTH = 16;
+
+    private final ObjectMapper objectMapper;
+
+    /**
+     * Refuse to start on an ambiguous registry: two kinds claiming one code would make {@link
+     * #classify} depend on declaration order. Checked here because this is what resolves codes to
+     * kinds, and at boot so the message names the codes rather than arriving as a class-init error.
+     */
+    @PostConstruct
+    void verifyNoErrorCodeIsClaimedTwice() {
+        List<String> duplicates = FailureKind.duplicateErrorCodes();
+        if (!duplicates.isEmpty()) {
+            throw new IllegalStateException(
+                    "Error codes claimed by more than one failure kind: " + duplicates);
+        }
+    }
 
     /** Never null, never throws. A classifier that can fail would lose the failure it describes. */
     public FailureKind classify(Throwable throwable) {

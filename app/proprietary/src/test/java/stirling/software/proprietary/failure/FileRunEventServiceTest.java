@@ -3,10 +3,11 @@ package stirling.software.proprietary.failure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -19,11 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
-import stirling.software.proprietary.policy.ledger.ProcessedLedger;
-import stirling.software.proprietary.policy.output.PolicyOutputSink;
 
 /**
  * Tests for {@link FileRunEventService}: team scoping, the declaration guard, transition legality,
@@ -37,12 +35,6 @@ class FileRunEventServiceTest {
 
     @Mock private PolicyManagementAuthority authority;
     @Mock private UserServiceInterface userService;
-
-    /** Collaborators an action must never reach for. Verified, not merely unused. */
-    @Mock private ProcessedLedger processedLedger;
-
-    @Mock private FileStorage fileStorage;
-    @Mock private PolicyOutputSink outputSink;
 
     private FileRunEventStore store;
     private FileRunEventService service;
@@ -136,16 +128,34 @@ class FileRunEventServiceTest {
 
         /**
          * What makes both actions valid for every kind, UNKNOWN included: they are incident
-         * dispositions, not document ones, so neither deletes a file or pushes it to an output.
+         * dispositions, not document ones. Asserted structurally — an action whose only dependency
+         * is the event store <em>cannot</em> reach the ledger, file storage, or an output sink. A
+         * mocked-collaborator version of this test passed vacuously, because nothing ever handed
+         * the mocks to the actions.
          */
         @Test
-        void neitherActionReachesTheLedgerStorageOrAnyOutputSink() {
-            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+        void actionsDependOnNothingButTheEventStore() {
+            for (FailureAction action :
+                    List.of(new AcknowledgeAction(store), new DismissAction(store))) {
+                String name = action.getClass().getSimpleName();
+                List<Class<?>> dependencies =
+                        Arrays.stream(action.getClass().getDeclaredFields())
+                                // Coverage instrumentation adds its own field; only ours count.
+                                .filter(field -> !field.isSynthetic())
+                                .map(Field::getType)
+                                .toList();
 
-            service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
-            service.dispatch(event.id(), "DISMISS", Map.of());
-
-            verifyNoInteractions(processedLedger, fileStorage, outputSink);
+                // Asserted first, so an action that lost its fields fails here rather than
+                // satisfying the check below by holding nothing at all.
+                assertThat(dependencies).as("%s declares no dependencies", name).isNotEmpty();
+                assertThat(dependencies)
+                        .as(
+                                "%s: an incident disposition reaches the event store and nothing"
+                                        + " else. Adding to this is how one starts touching"
+                                        + " documents.",
+                                name)
+                        .containsOnly(FileRunEventStore.class);
+            }
         }
 
         @Test
@@ -189,24 +199,6 @@ class FileRunEventServiceTest {
                     .isInstanceOf(FailureActionException.class)
                     .extracting(e -> ((FailureActionException) e).getReason())
                     .isEqualTo(FailureActionException.Reason.ACTION_NOT_RECOGNISED);
-        }
-
-        /**
-         * The declaration guard is what stops an Approve on an output error. Both kinds today
-         * declare both actions, so real data cannot reach it yet, which is why it is asserted
-         * directly.
-         */
-        @Test
-        void theDeclarationGuardIsCheckedBeforeTheHandlerIsResolved() {
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
-            for (FailureActionId declared : event.kind().getActions()) {
-                assertThat(event.kind().declares(declared)).isTrue();
-            }
-            // Nothing outside the declared set is dispatchable, whatever a caller sends.
-            assertThatThrownBy(() -> service.dispatch(event.id(), "RETRY", Map.of()))
-                    .isInstanceOf(FailureActionException.class);
-            assertThat(store.find(event.id(), TEAM).orElseThrow().status())
-                    .isEqualTo(FileRunEventStatus.NEW);
         }
 
         @Test
@@ -308,7 +300,7 @@ class FileRunEventServiceTest {
             given(FailureKind.UNKNOWN, TEAM, "mine");
             given(FailureKind.UNKNOWN, 99L, "theirs");
 
-            assertThat(service.list(null, 50))
+            assertThat(service.list(null, null, 50))
                     .extracting(FileRunEvent::fileId)
                     .containsExactly("mine");
         }
@@ -321,7 +313,7 @@ class FileRunEventServiceTest {
             given(FailureKind.UNKNOWN, TEAM, "mine");
             when(authority.currentUserTeamId()).thenReturn(null);
 
-            assertThat(service.list(null, 50)).isEmpty();
+            assertThat(service.list(null, null, 50)).isEmpty();
         }
 
         @Test
@@ -352,7 +344,7 @@ class FileRunEventServiceTest {
             given(FailureKind.UNKNOWN, null, "unteamed");
             given(FailureKind.UNKNOWN, TEAM, "teamed");
 
-            assertThat(unsecured.list(null, 50))
+            assertThat(unsecured.list(null, null, 50))
                     .extracting(FileRunEvent::fileId)
                     .containsExactly("unteamed");
         }

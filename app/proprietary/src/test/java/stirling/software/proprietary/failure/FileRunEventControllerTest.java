@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -120,7 +121,11 @@ class FileRunEventControllerTest {
             controller.act(event.id(), "DISMISS", null);
 
             List<FileRunEventView.ActionView> actions =
-                    controller.list("DISMISSED", null, null).events().getFirst().actions();
+                    controller
+                            .list(FileRunEventStatus.DISMISSED, null, null)
+                            .events()
+                            .getFirst()
+                            .actions();
 
             assertThat(actions).noneMatch(FileRunEventView.ActionView::enabled);
             assertThat(actions)
@@ -133,7 +138,8 @@ class FileRunEventControllerTest {
             given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked");
             controller.act(open.id(), "ACKNOWLEDGE", null);
 
-            assertThat(controller.list("ACKNOWLEDGED", null, null).events()).hasSize(1);
+            assertThat(controller.list(FileRunEventStatus.ACKNOWLEDGED, null, null).events())
+                    .hasSize(1);
             assertThat(controller.list(null, "INPUT_PASSWORD_PROTECTED", null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("locked");
@@ -141,21 +147,32 @@ class FileRunEventControllerTest {
         }
 
         @Test
-        void rejectsAnUnknownStatusFilter() {
-            assertThatThrownBy(() -> controller.list("BANANA", null, null))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .hasMessageContaining("400");
-        }
-
-        @Test
         void capsTheRequestedLimitSoAClientCannotAskForTheWholeTable() {
+            // Distinct files, so five genuinely distinct rows exist. The earlier version of this
+            // test used a RUN-scoped kind with one hardcoded run id, so all five folded into one
+            // row and the assertion measured the rollup rather than the cap.
             for (int i = 0; i < 5; i++) {
-                given(FailureKind.UNKNOWN, TEAM, "f" + i);
+                given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f" + i);
             }
 
             // Over-large and non-positive limits are both coerced rather than rejected.
-            assertThat(controller.list(null, null, 100_000).events()).isNotEmpty();
+            assertThat(controller.list(null, null, 100_000).events()).hasSize(5);
+            assertThat(controller.list(null, null, 2).events()).hasSize(2);
             assertThat(controller.list(null, null, 0).events()).hasSize(1);
+        }
+
+        @Test
+        void kindFilterAppliesBeforeTheLimitNotAfter() {
+            // A post-limit filter would take the newest N rows and then discard non-matches,
+            // returning nothing while matching rows exist. The filter lives in the query.
+            given(FailureKind.UNKNOWN, TEAM, "old-unknown");
+            for (int i = 0; i < 3; i++) {
+                given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "newer-" + i);
+            }
+
+            assertThat(controller.list(null, "UNKNOWN", 1).events())
+                    .extracting(FileRunEventView::fileId)
+                    .containsExactly("old-unknown");
         }
     }
 
@@ -337,10 +354,9 @@ class FileRunEventControllerTest {
 
             assertThat(response.events()).isEmpty();
             assertThat(
-                            java.util.Arrays.stream(
-                                            FileRunEventController.class.getDeclaredMethods())
+                            Arrays.stream(FileRunEventController.class.getDeclaredMethods())
                                     .filter(m -> "list".equals(m.getName()))
-                                    .flatMap(m -> java.util.Arrays.stream(m.getParameterTypes()))
+                                    .flatMap(m -> Arrays.stream(m.getParameterTypes()))
                                     .toList())
                     .doesNotContain(Long.class);
         }

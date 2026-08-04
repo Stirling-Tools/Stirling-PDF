@@ -32,12 +32,12 @@ public class FileRunEventService {
     private final ApplicationProperties applicationProperties;
 
     /** The calling user's events, newest first. Empty when their team cannot be resolved. */
-    public List<FileRunEvent> list(FileRunEventStatus status, int limit) {
+    public List<FileRunEvent> list(FileRunEventStatus status, String kindId, int limit) {
         TeamScope scope = scope();
         if (!scope.permitted()) {
             return List.of();
         }
-        return store.list(scope.teamId(), status, limit);
+        return store.list(scope.teamId(), status, kindId, limit);
     }
 
     /**

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -461,9 +462,23 @@ class PolicyEngineTest {
     void cancellingARunRecordsNoFailureEvent() throws Exception {
         // A cancellation is an intended outcome, not an incident. Recording one would put a row in
         // front of an admin describing something a user deliberately did.
+        //
+        // The cancel happens while the tool call is in flight, held on a latch: an earlier version
+        // of this test awaited completion first, and cancel() on a finished run is a documented
+        // no-op, so it asserted nothing.
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
-        stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
+        CountDownLatch toolEntered = new CountDownLatch(1);
+        CountDownLatch releaseTool = new CountDownLatch(1);
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        invocation -> {
+                            toolEntered.countDown();
+                            assertTrue(
+                                    releaseTool.await(10, TimeUnit.SECONDS),
+                                    "test never released the tool call");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
         when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
                 .thenReturn(new StoredFile("file-1", 7L));
 
@@ -472,8 +487,10 @@ class PolicyEngineTest {
                         definition(new PipelineStep(ROTATE, Map.of())),
                         PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
                         PolicyProgressListener.NOOP);
+        assertTrue(toolEntered.await(10, TimeUnit.SECONDS), "run never reached the tool call");
+        assertTrue(engine.cancel(handle.runId()), "cancel was a no-op, so this asserts nothing");
+        releaseTool.countDown();
         handle.completion().get(10, TimeUnit.SECONDS);
-        engine.cancel(handle.runId());
 
         verifyNoInteractions(failureRecorder);
     }

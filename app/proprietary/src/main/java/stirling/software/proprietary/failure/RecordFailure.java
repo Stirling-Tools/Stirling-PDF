@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.regex.Pattern;
 
 /**
  * Everything needed to record one failure. Every reference field is nullable, because a failure can
@@ -20,6 +21,26 @@ public record RecordFailure(
         String sourceId,
         String fileId,
         String detail) {
+
+    /**
+     * Anything shaped like a file path or name: path characters ending in a short extension.
+     * Matched by shape rather than an extension allowlist, so a newly supported format needs no
+     * maintenance here. An extension may contain digits ({@code mp4}, {@code 7z}) but cannot be all
+     * digits, which is what keeps version strings like {@code v2.14.2} intact.
+     *
+     * <p>The lookbehind and lookahead keep it off dotted identifiers, so {@code java.lang.Foo}
+     * survives a stack trace. Known cost: {@code Foo.java:120} becomes {@code <file>:120}.
+     *
+     * <p>Best-effort, not a guarantee. {@code \w} is ASCII here, so names containing spaces ({@code
+     * Q3 Layoff List.pdf} keeps its words), non-ASCII characters, or a second extension pass
+     * through partially or wholly unredacted. The primary defence is that the engine's own messages
+     * never include a name; this pass only tidies what downstream tools embed.
+     */
+    private static final Pattern FILE_PATH_OR_NAME =
+            Pattern.compile("(?<![\\w.])[\\w\\-/\\\\]+\\.(?![0-9]+\\b)[A-Za-z0-9]{2,6}\\b(?![.(])");
+
+    /** Upper bound on a stored message, so one enormous stack trace cannot fill the column. */
+    private static final int MAX_DETAIL_LENGTH = 2_000;
 
     public RecordFailure {
         if (kind == null) {
@@ -89,22 +110,6 @@ public record RecordFailure(
     }
 
     /**
-     * Anything shaped like a file path or name: path characters ending in a short extension.
-     * Matched by shape rather than an extension allowlist, so a newly supported format needs no
-     * maintenance here. An extension may contain digits ({@code mp4}, {@code 7z}) but cannot be all
-     * digits, which is what keeps version strings like {@code v2.14.2} intact.
-     *
-     * <p>The lookbehind and lookahead keep it off dotted identifiers, so {@code java.lang.Foo}
-     * survives a stack trace. Known cost: {@code Foo.java:120} becomes {@code <file>:120}.
-     */
-    private static final java.util.regex.Pattern FILE_PATH_OR_NAME =
-            java.util.regex.Pattern.compile(
-                    "(?<![\\w.])[\\w\\-/\\\\]+\\.(?![0-9]+\\b)[A-Za-z0-9]{2,6}\\b(?![.(])");
-
-    /** Upper bound on a stored message, so one enormous stack trace cannot fill the column. */
-    private static final int MAX_DETAIL_LENGTH = 2_000;
-
-    /**
      * Strip file paths and names out of a failure message. The engine's own messages already omit
      * them; a message forwarded from a downstream tool is outside this package's control.
      */
@@ -113,9 +118,16 @@ public record RecordFailure(
     }
 
     private static String truncate(String detail) {
-        return detail == null || detail.length() <= MAX_DETAIL_LENGTH
-                ? detail
-                : detail.substring(0, MAX_DETAIL_LENGTH) + "…";
+        if (detail == null || detail.length() <= MAX_DETAIL_LENGTH) {
+            return detail;
+        }
+        // Leave room for the ellipsis so the cap is the cap, and step back once more rather than
+        // cutting between the halves of a surrogate pair, which would store invalid UTF-16.
+        int end = MAX_DETAIL_LENGTH - 1;
+        if (Character.isHighSurrogate(detail.charAt(end - 1))) {
+            end--;
+        }
+        return detail.substring(0, end) + "…";
     }
 
     private static boolean isBlank(String value) {

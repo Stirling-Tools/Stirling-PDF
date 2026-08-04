@@ -9,10 +9,10 @@ import java.util.List;
  */
 public record FailureKindView(
         String id,
-        FailureKind.Stage stage,
-        FailureKind.Severity severity,
-        FailureKind.Remedy remedy,
-        FailureKind.Scope scope,
+        FailureStage stage,
+        FailureSeverity severity,
+        FailureRemedy remedy,
+        FailureScope scope,
         List<String> errorCodes,
         String titleKey,
         String descriptionKey,

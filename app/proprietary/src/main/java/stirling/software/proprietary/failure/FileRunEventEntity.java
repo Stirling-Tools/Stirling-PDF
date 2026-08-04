@@ -64,15 +64,15 @@ public class FileRunEventEntity implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "stage", nullable = false)
-    private FailureKind.Stage stage;
+    private FailureStage stage;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "severity", nullable = false)
-    private FailureKind.Severity severity;
+    private FailureSeverity severity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "scope", nullable = false)
-    private FailureKind.Scope scope;
+    private FailureScope scope;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "origin", nullable = false)

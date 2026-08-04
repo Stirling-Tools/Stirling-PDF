@@ -1,6 +1,7 @@
 package stirling.software.proprietary.failure;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,19 +43,20 @@ public class FileRunEventStore {
         String dedupKey = command.dedupKey();
         Instant now = Instant.now();
 
-        Optional<FileRunEventEntity> existing = findByDedupKey(command.teamId(), dedupKey);
-        if (existing.isPresent()) {
-            return FileRunEvent.of(absorb(existing.get(), command, now));
+        Optional<FileRunEvent> folded =
+                findByDedupKey(command.teamId(), dedupKey)
+                        .flatMap(row -> absorb(row.getId(), command, now));
+        if (folded.isPresent()) {
+            return folded.get();
         }
 
         try {
             return FileRunEvent.of(insert(command, dedupKey, now));
         } catch (DataIntegrityViolationException e) {
             // The unique constraint fired, so a concurrent writer inserted this incident between
-            // our
-            // read and our insert. Their row is the incident; fold into it instead of failing.
+            // our read and our insert. Their row is the incident; fold into it instead of failing.
             return findByDedupKey(command.teamId(), dedupKey)
-                    .map(row -> FileRunEvent.of(absorb(row, command, now)))
+                    .flatMap(row -> absorb(row.getId(), command, now))
                     .orElseThrow(() -> e);
         }
     }
@@ -66,20 +68,20 @@ public class FileRunEventStore {
     /**
      * Fold a repeat into an existing incident. {@code DISMISSED} stays dismissed, so a reviewer's
      * "stop showing me this" holds; {@code RESOLVED} reopens, so a recurrence is visible again.
+     *
+     * <p>Both steps are single guarded UPDATE statements against the row's current values, never a
+     * save of the entity we read: that would merge a possibly stale snapshot over concurrent
+     * writes, losing counts and reverting a dismiss that landed in between.
+     *
+     * <p>Empty when the row went away between the caller's read and the fold, so the caller inserts
+     * instead. Reporting that as an error would lose the incident for a log line.
      */
-    private FileRunEventEntity absorb(
-            FileRunEventEntity entity, RecordFailure command, Instant now) {
-        entity.setOccurrences(entity.getOccurrences() + 1);
-        entity.setLastSeenAt(now);
-        if (command.detail() != null) {
-            entity.setDetail(command.detail());
+    private Optional<FileRunEvent> absorb(String id, RecordFailure command, Instant now) {
+        if (repository.fold(id, now, command.detail()) == 0) {
+            return Optional.empty();
         }
-        if (entity.getStatus() == FileRunEventStatus.RESOLVED) {
-            entity.setStatus(FileRunEventStatus.NEW);
-            entity.setStatusActor(null);
-            entity.setStatusAt(null);
-        }
-        return repository.save(entity);
+        repository.reopenIfResolved(id);
+        return repository.findById(id).map(FileRunEvent::of);
     }
 
     private FileRunEventEntity insert(RecordFailure command, String dedupKey, Instant now) {
@@ -103,16 +105,25 @@ public class FileRunEventStore {
         entity.setStatus(FileRunEventStatus.NEW);
         entity.setCreatedAt(now);
         entity.setLastSeenAt(now);
-        return repository.save(entity);
+        // Flushed so a duplicate-key violation surfaces here, inside record()'s catch. A plain
+        // save() defers the INSERT to commit time once a caller is transactional, and the
+        // violation would escape the catch as a 500.
+        return repository.saveAndFlush(entity);
     }
 
+    /**
+     * A page of incidents, newest first, optionally narrowed to one status and one kind. The kind
+     * filter lives in the query, before the limit: filtering a already-limited page could return
+     * nothing while matching rows exist.
+     */
     @Transactional(readOnly = true)
-    public List<FileRunEvent> list(Long teamId, FileRunEventStatus status, int limit) {
+    public List<FileRunEvent> list(
+            Long teamId, FileRunEventStatus status, String kindId, int limit) {
         Pageable page = PageRequest.of(0, Math.max(1, limit));
         List<FileRunEventEntity> rows =
                 status == null
-                        ? repository.findByTeam(teamId, page)
-                        : repository.findByTeamAndStatus(teamId, status, page);
+                        ? repository.findByTeam(teamId, kindId, page)
+                        : repository.findByTeamAndStatus(teamId, status, kindId, page);
         return rows.stream().map(FileRunEvent::of).toList();
     }
 
@@ -121,16 +132,70 @@ public class FileRunEventStore {
         return repository.findByIdAndTeam(id, teamId).map(FileRunEvent::of);
     }
 
+    /**
+     * Transition an open row, refusing a closed one. The service checks {@code terminal()} before
+     * dispatching, but that check and this write are separate requests under concurrency; the
+     * guarded UPDATE is what makes two racing closes resolve to one winner.
+     *
+     * @throws FailureActionException {@code ALREADY_CLOSED} when the row exists but is terminal,
+     *     {@code EVENT_NOT_FOUND} when it does not exist for this team
+     */
     @Transactional
     public FileRunEvent applyStatus(
             String id, Long teamId, FileRunEventStatus target, String actor) {
-        FileRunEventEntity entity =
-                repository
-                        .findByIdAndTeam(id, teamId)
-                        .orElseThrow(() -> new IllegalArgumentException("unknown event: " + id));
-        entity.setStatus(target);
-        entity.setStatusActor(actor);
-        entity.setStatusAt(Instant.now());
-        return FileRunEvent.of(repository.save(entity));
+        return applyStatus(id, teamId, target, actor, FileRunEventStatus.open())
+                .orElseThrow(() -> refusalFor(id, teamId));
+    }
+
+    /**
+     * As {@link #applyStatus(String, Long, FileRunEventStatus, String)} but with the caller naming
+     * which current statuses may transition. Empty when the row exists outside {@code allowedFrom}.
+     *
+     * <p>The UPDATE runs first and nothing is read beforehand: a pre-read only to classify the
+     * refusal would be one more thing to race with, and would report a row deleted in between as
+     * closed rather than missing.
+     */
+    @Transactional
+    public Optional<FileRunEvent> applyStatus(
+            String id,
+            Long teamId,
+            FileRunEventStatus target,
+            String actor,
+            Collection<FileRunEventStatus> allowedFrom) {
+        if (repository.applyStatusIf(id, teamId, target, actor, Instant.now(), allowedFrom) == 0) {
+            return Optional.empty();
+        }
+        return repository.findByIdAndTeam(id, teamId).map(FileRunEvent::of);
+    }
+
+    /**
+     * Transition, or accept that someone else already reached {@code target}. The loser of a race
+     * reads the winner's row back rather than re-stamping it, so the first actor keeps the credit.
+     */
+    @Transactional
+    public FileRunEvent applyStatusOnce(
+            String id,
+            Long teamId,
+            FileRunEventStatus target,
+            String actor,
+            Collection<FileRunEventStatus> allowedFrom) {
+        return applyStatus(id, teamId, target, actor, allowedFrom)
+                .or(() -> find(id, teamId).filter(current -> current.status() == target))
+                .orElseThrow(() -> refusalFor(id, teamId));
+    }
+
+    /**
+     * Why the guarded UPDATE refused, worked out only once it has. Missing and closed are told
+     * apart after the fact rather than before, so the answer describes the row the UPDATE saw.
+     */
+    private FailureActionException refusalFor(String id, Long teamId) {
+        return repository.findByIdAndTeam(id, teamId).isPresent()
+                ? new FailureActionException(
+                        FailureActionException.Reason.ALREADY_CLOSED,
+                        "Event " + id + " is already closed")
+                // The same reason the service raises for an id it never found, so losing a delete
+                // race answers 404 like every other "no such event" rather than 400.
+                : new FailureActionException(
+                        FailureActionException.Reason.EVENT_NOT_FOUND, "No such event: " + id);
     }
 }

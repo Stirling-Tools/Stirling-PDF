@@ -24,6 +24,10 @@ public class FailureActionException extends RuntimeException {
         /**
          * The action exists but this kind does not declare it, so an incoherent pairing (releasing
          * a document whose destination is what failed) cannot be dispatched even by hand.
+         *
+         * <p>Unreachable today: both kinds declare both actions, so no request can trip this guard
+         * until a kind ships with a restricted action set. Declared now because the guard must
+         * exist before that kind does, not after.
          */
         ACTION_NOT_DECLARED,
 
@@ -31,10 +35,15 @@ public class FailureActionException extends RuntimeException {
         ALREADY_CLOSED
     }
 
-    private final transient Reason reason;
+    private final Reason reason;
 
     public FailureActionException(Reason reason, String message) {
-        super(message);
+        this(reason, message, null);
+    }
+
+    /** For a refusal that follows from a lower-level failure, so its stack is not dropped. */
+    public FailureActionException(Reason reason, String message, Throwable cause) {
+        super(message, cause);
         this.reason = reason;
     }
 }

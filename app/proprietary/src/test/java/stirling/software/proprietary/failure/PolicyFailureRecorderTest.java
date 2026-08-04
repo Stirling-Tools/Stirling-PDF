@@ -93,7 +93,7 @@ class PolicyFailureRecorderTest {
                     "Policy run failed: locked",
                     passwordFailure());
 
-            FileRunEvent event = store.list(TEAM, null, 10).getFirst();
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
             assertThat(event.kind()).isEqualTo(FailureKind.INPUT_PASSWORD_PROTECTED);
             assertThat(event.runId()).isEqualTo("run-1");
             assertThat(event.policyId()).isEqualTo("policy-1");
@@ -114,7 +114,7 @@ class PolicyFailureRecorderTest {
                     "Policy run failed: java.lang.NullPointerException",
                     new RuntimeException("npe"));
 
-            FileRunEvent event = store.list(TEAM, null, 10).getFirst();
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
             assertThat(event.kind()).isEqualTo(FailureKind.UNKNOWN);
             assertThat(event.detail()).contains("NullPointerException");
         }
@@ -127,7 +127,7 @@ class PolicyFailureRecorderTest {
             recorder.recordRunFailureAs(
                     FailureKind.UNKNOWN, "run-3", "policy-1", null, "could not be queued");
 
-            assertThat(store.list(TEAM, null, 10)).hasSize(1);
+            assertThat(store.list(TEAM, null, null, 10)).hasSize(1);
         }
 
         @Test
@@ -143,7 +143,7 @@ class PolicyFailureRecorderTest {
             recorder.recordRunFailure(
                     "run-2", "policy-1", "dana@example.com", "locked", passwordFailure());
 
-            List<FileRunEvent> events = store.list(TEAM, null, 10);
+            List<FileRunEvent> events = store.list(TEAM, null, null, 10);
             assertThat(events).hasSize(2);
             assertThat(events).allMatch(event -> event.occurrences() == 1);
             assertThat(events)
@@ -160,7 +160,7 @@ class PolicyFailureRecorderTest {
             recorder.recordRunFailure(
                     "run-1", "policy-1", "dana@example.com", "locked", passwordFailure());
 
-            assertThat(store.list(TEAM, null, 10))
+            assertThat(store.list(TEAM, null, null, 10))
                     .singleElement()
                     .extracting(FileRunEvent::occurrences)
                     .isEqualTo(2);
@@ -177,7 +177,7 @@ class PolicyFailureRecorderTest {
 
             recorder.recordRunFailure("run-1", "policy-1", null, "boom", new RuntimeException());
 
-            assertThat(store.list(TEAM, null, 10)).hasSize(1);
+            assertThat(store.list(TEAM, null, null, 10)).hasSize(1);
         }
 
         @Test
@@ -186,8 +186,8 @@ class PolicyFailureRecorderTest {
             // attributed to whichever team happened to be nearby.
             recorder.recordRunFailure("run-1", null, null, "boom", new RuntimeException());
 
-            assertThat(store.list(null, null, 10)).hasSize(1);
-            assertThat(store.list(TEAM, null, 10)).isEmpty();
+            assertThat(store.list(null, null, null, 10)).hasSize(1);
+            assertThat(store.list(TEAM, null, null, 10)).isEmpty();
         }
 
         @Test
@@ -204,7 +204,7 @@ class PolicyFailureRecorderTest {
                                             new RuntimeException()))
                     .doesNotThrowAnyException();
             // Still recorded, just unteamed: a lookup problem must not lose the incident.
-            assertThat(store.list(null, null, 10)).hasSize(1);
+            assertThat(store.list(null, null, null, 10)).hasSize(1);
         }
     }
 
@@ -247,7 +247,8 @@ class PolicyFailureRecorderTest {
                                     recorder.recordRunFailure(
                                             "run-1", "policy-1", null, "no cause", null))
                     .doesNotThrowAnyException();
-            assertThat(store.list(TEAM, null, 10).getFirst().kind()).isEqualTo(FailureKind.UNKNOWN);
+            assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
+                    .isEqualTo(FailureKind.UNKNOWN);
         }
     }
 
@@ -262,7 +263,7 @@ class PolicyFailureRecorderTest {
             recorder.recordRunFailure("run-1", "policy-1", null, "boom", new IOException("x"));
             recorder.recordRunFailure("run-1", "policy-1", null, "boom", new IOException("x"));
 
-            List<FileRunEvent> events = store.list(TEAM, null, 10);
+            List<FileRunEvent> events = store.list(TEAM, null, null, 10);
             assertThat(events).hasSize(1);
             assertThat(events.getFirst().occurrences()).isEqualTo(2);
         }
@@ -275,7 +276,7 @@ class PolicyFailureRecorderTest {
             recorder.recordRunFailure("run-1", "policy-1", null, "boom", new IOException("x"));
             recorder.recordRunFailure("run-2", "policy-1", null, "boom", new IOException("x"));
 
-            assertThat(store.list(TEAM, null, 10)).hasSize(2);
+            assertThat(store.list(TEAM, null, null, 10)).hasSize(2);
         }
     }
 }

@@ -1,10 +1,13 @@
 package stirling.software.proprietary.failure;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.springframework.data.domain.Pageable;
 
@@ -39,18 +42,86 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         return sorted;
     }
 
+    /** The real queries page in SQL, so the fake must page too or limit tests test nothing. */
+    private static List<FileRunEventEntity> page(List<FileRunEventEntity> rows, Pageable pageable) {
+        return pageable == null || pageable.isUnpaged() || rows.size() <= pageable.getPageSize()
+                ? rows
+                : rows.subList(0, pageable.getPageSize());
+    }
+
+    private static boolean sameKind(FileRunEventEntity entity, String kindId) {
+        return kindId == null || kindId.equals(entity.getKindId());
+    }
+
     @Override
-    public List<FileRunEventEntity> findByTeam(Long teamId, Pageable pageable) {
-        return newestFirst(rows.values().stream().filter(e -> sameTeam(e, teamId)).toList());
+    public List<FileRunEventEntity> findByTeam(Long teamId, String kindId, Pageable pageable) {
+        return page(
+                newestFirst(
+                        rows.values().stream()
+                                .filter(e -> sameTeam(e, teamId) && sameKind(e, kindId))
+                                .toList()),
+                pageable);
     }
 
     @Override
     public List<FileRunEventEntity> findByTeamAndStatus(
-            Long teamId, FileRunEventStatus status, Pageable pageable) {
-        return newestFirst(
-                rows.values().stream()
-                        .filter(e -> sameTeam(e, teamId) && e.getStatus() == status)
-                        .toList());
+            Long teamId, FileRunEventStatus status, String kindId, Pageable pageable) {
+        return page(
+                newestFirst(
+                        rows.values().stream()
+                                .filter(
+                                        e ->
+                                                sameTeam(e, teamId)
+                                                        && e.getStatus() == status
+                                                        && sameKind(e, kindId))
+                                .toList()),
+                pageable);
+    }
+
+    @Override
+    public int fold(String id, Instant now, String detail) {
+        FileRunEventEntity entity = rows.get(id);
+        if (entity == null) {
+            return 0;
+        }
+        entity.setOccurrences(entity.getOccurrences() + 1);
+        entity.setLastSeenAt(now);
+        if (detail != null) {
+            entity.setDetail(detail);
+        }
+        return 1;
+    }
+
+    @Override
+    public int reopenIfResolved(String id) {
+        FileRunEventEntity entity = rows.get(id);
+        if (entity == null || entity.getStatus() != FileRunEventStatus.RESOLVED) {
+            return 0;
+        }
+        entity.setStatus(FileRunEventStatus.NEW);
+        entity.setStatusActor(null);
+        entity.setStatusAt(null);
+        return 1;
+    }
+
+    @Override
+    public int applyStatusIf(
+            String id,
+            Long teamId,
+            FileRunEventStatus target,
+            String actor,
+            Instant now,
+            Collection<FileRunEventStatus> allowedFrom) {
+        FileRunEventEntity entity = rows.get(id);
+        if (entity == null
+                || !sameTeam(entity, teamId)
+                || !allowedFrom.contains(entity.getStatus())) {
+            return 0;
+        }
+        entity.setStatus(target);
+        entity.setStatusActor(actor);
+        entity.setStatusAt(now);
+        return 1;
     }
 
     @Override
@@ -234,7 +305,7 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
     @Override
     public <S extends FileRunEventEntity, R> R findBy(
             org.springframework.data.domain.Example<S> example,
-            java.util.function.Function<
+            Function<
                             org.springframework.data.repository.query.FluentQuery
                                             .FetchableFluentQuery<
                                     S>,

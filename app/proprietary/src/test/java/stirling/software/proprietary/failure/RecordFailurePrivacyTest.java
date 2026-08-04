@@ -2,9 +2,13 @@ package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.RecordComponent;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -87,13 +91,13 @@ class RecordFailurePrivacyTest {
     void hasNoFileNameFieldAtAll() {
         // Structural, not behavioural: if a fileName component is ever added back, this fails.
         assertThat(List.of(RecordFailure.class.getRecordComponents()))
-                .extracting(java.lang.reflect.RecordComponent::getName)
+                .extracting(RecordComponent::getName)
                 .doesNotContain("fileName");
         assertThat(List.of(FileRunEventEntity.class.getDeclaredFields()))
-                .extracting(java.lang.reflect.Field::getName)
+                .extracting(Field::getName)
                 .doesNotContain("fileName");
         assertThat(List.of(FileRunEventView.class.getRecordComponents()))
-                .extracting(java.lang.reflect.RecordComponent::getName)
+                .extracting(RecordComponent::getName)
                 .doesNotContain("fileName");
     }
 
@@ -127,5 +131,35 @@ class RecordFailurePrivacyTest {
         assertThat(a.dedupKey()).isNotEqualTo(b.dedupKey());
         assertThat(a.dedupKey()).hasSize(64).isEqualTo(a.dedupKey());
         assertThat(a.scopeRef()).doesNotContain(".pdf");
+    }
+
+    @Nested
+    @DisplayName("the detail cap")
+    class DetailCap {
+
+        @Test
+        void capsAnOversizedMessageAtTheLimitIncludingTheEllipsis() {
+            String stored = withDetail("x".repeat(5_000)).detail();
+
+            assertThat(stored).hasSize(2_000).endsWith("…");
+        }
+
+        @Test
+        void leavesAMessageAtTheLimitAlone() {
+            String atLimit = "x".repeat(2_000);
+
+            assertThat(withDetail(atLimit).detail()).isEqualTo(atLimit);
+        }
+
+        @Test
+        void neverCutsBetweenTheHalvesOfASurrogatePair() {
+            // A string of astral-plane characters: every char is half of a surrogate pair, so a
+            // blind substring at the cap has a 50% chance of storing invalid UTF-16.
+            String stored = withDetail("\uD835\uDC9C".repeat(3_000)).detail();
+
+            assertThat(new String(stored.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8))
+                    .as("a round-trip through UTF-8 mangles an unpaired surrogate")
+                    .isEqualTo(stored);
+        }
     }
 }

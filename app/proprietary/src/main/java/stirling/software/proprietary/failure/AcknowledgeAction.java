@@ -1,5 +1,6 @@
 package stirling.software.proprietary.failure;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
@@ -26,10 +27,13 @@ public class AcknowledgeAction implements FailureAction {
 
     @Override
     public FileRunEvent execute(FileRunEvent event, Map<String, String> inputs, String actor) {
-        if (event.status() == FileRunEventStatus.ACKNOWLEDGED) {
-            return event;
-        }
-        return store.applyStatus(
-                event.id(), event.teamId(), FileRunEventStatus.ACKNOWLEDGED, actor);
+        // Guarded on NEW so a racing acknowledger cannot re-stamp the row, and so re-acknowledging
+        // returns the first actor's row rather than taking their credit.
+        return store.applyStatusOnce(
+                event.id(),
+                event.teamId(),
+                FileRunEventStatus.ACKNOWLEDGED,
+                actor,
+                List.of(FileRunEventStatus.NEW));
     }
 }

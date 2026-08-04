@@ -50,11 +50,7 @@ public class PolicyFailureRecorder {
                     RecordFailure.forRun(kind, teamFor(policyId), actor, policyId, runId, detail));
         } catch (RuntimeException e) {
             // Deliberately swallowed: see the class comment.
-            log.warn(
-                    "Could not record failure event for run {} (kind {}): {}",
-                    runId,
-                    kind.getId(),
-                    e.getMessage());
+            log.warn("Could not record failure event for run {} (kind {})", runId, kind.getId(), e);
         }
     }
 
