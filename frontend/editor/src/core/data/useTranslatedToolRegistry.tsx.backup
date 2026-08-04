@@ -52,7 +52,6 @@ import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
 import { removeAnnotationsOperationConfig } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
 import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
-import { replaceImageOperationConfig } from "@app/hooks/tools/replaceImage/useReplaceImageOperation";
 import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
 import { removeBlanksOperationConfig } from "@app/hooks/tools/removeBlanks/useRemoveBlanksOperation";
 import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
@@ -992,28 +991,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["remove-image-pdf"],
         operationConfig: undefined,
         synonyms: getSynonyms(t, "removeImage"),
-        automationSettings: null,
-      },
-      replaceImage: {
-        icon: (
-          <LocalIcon
-            icon="replace-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.replaceImage.title", "Replace Image"),
-        component: lazy(() => import("@app/tools/ReplaceImage")),
-        description: t(
-          "home.replaceImage.desc",
-          "Replace images in your PDF",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.IMAGE_MANAGEMENT,
-        maxFiles: 1,
-        endpoints: ["replace-image"],
-        operationConfig: asRegistryConfig(replaceImageOperationConfig),
-        synonyms: getSynonyms(t, "replaceImage"),
         automationSettings: null,
       },
       removePassword: {
