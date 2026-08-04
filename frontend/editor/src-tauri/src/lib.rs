@@ -311,3 +311,39 @@ pub fn run() {
       }
     });
 }
+
+#[cfg(test)]
+mod tests {
+  use super::is_app_url;
+
+  fn allows(raw: &str) -> bool {
+    is_app_url(&tauri::Url::parse(raw).expect("valid url"))
+  }
+
+  #[test]
+  fn allows_bundled_app_and_dev_server() {
+    assert!(allows("tauri://localhost/index.html"));
+    assert!(allows("http://tauri.localhost/"));
+    assert!(allows("http://localhost:5173/"));
+    assert!(allows("http://127.0.0.1:8080/api"));
+    assert!(allows("about:blank"));
+    assert!(allows("blob:http://localhost:5173/abc"));
+    assert!(allows("data:text/html,hi"));
+  }
+
+  #[test]
+  fn blocks_dropped_files() {
+    // The #6872 lockup: webview navigating to a dropped PDF.
+    assert!(!allows("file:///C:/Users/me/report.pdf"));
+    assert!(!allows("file:///home/me/report.pdf"));
+  }
+
+  #[test]
+  fn blocks_remote_origins() {
+    assert!(!allows("https://example.com/"));
+    assert!(!allows("http://evil.test/"));
+    // Look-alike hosts must not slip past the allowlist.
+    assert!(!allows("https://localhost.evil.test/"));
+    assert!(!allows("https://nottauri.localhost.evil.test/"));
+  }
+}
