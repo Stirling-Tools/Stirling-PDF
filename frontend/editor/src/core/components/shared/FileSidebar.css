@@ -1,17 +1,32 @@
 /* ========== FILE SIDEBAR ========== */
 
 .file-sidebar {
-  background-color: var(--c-bg-raised);
-  border-right: 1px solid var(--c-border-subtle);
+  background-color: var(--c-bg);
   display: flex;
   flex-direction: column;
   height: 100%;
   position: relative;
-  z-index: 10;
-  /* Animating width + min-width + max-width together can leave the flex layout
-     stuck on the pre-animation size in some browsers. Snap instead and rely
-     on the inner content fade for visual smoothness. */
+  /* Above the workbench column (also z-10, but later in the DOM, so it would
+     otherwise paint over us). The brand switcher's menu is wider than the
+     collapsed rail and has to spill across that boundary intact. */
+  z-index: var(--z-dropdown);
   flex-shrink: 0;
+  /* Slide the rail between collapsed/expanded. The delayed content-fade
+     (sidebar-content-in, 0.18s) is timed against this 0.22s so labels resolve
+     only after the width has settled — no squashed text mid-animation. */
+  transition:
+    width var(--motion-spring),
+    min-width var(--motion-spring),
+    max-width var(--motion-spring);
+  /* Gap around the floating boxes. */
+  padding: var(--nav-gutter);
+  gap: var(--nav-gutter);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar {
+    transition: none;
+  }
 }
 
 .file-sidebar-inner {
@@ -19,7 +34,73 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  gap: 0.5rem;
+}
+
+/* ---- Brand header (logo / editor⇄processor switcher) ---- */
+.file-sidebar-brand {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 0.375rem;
+  flex-shrink: 0;
+}
+
+.file-sidebar-collapse-toggle {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.file-sidebar[data-collapsed="true"] .file-sidebar-brand {
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0;
+}
+.file-sidebar[data-collapsed="true"] .file-sidebar-collapse-toggle {
+  margin-left: 0;
+}
+
+/* ---- Three floating nav-surface boxes (controls / files / footer) ---- */
+/* Horizontal padding is 0 so row highlights bleed to the surface edges; each
+   row's own inner padding keeps its text/icon indented. */
+.file-sidebar-controls {
+  padding: 0.25rem 0;
+  flex-shrink: 0;
+}
+.file-sidebar-files-box {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem 0;
   overflow: hidden;
+}
+.file-sidebar-footer-box {
+  padding: 0.25rem 0;
+  flex-shrink: 0;
+}
+
+/* Collapsed rail: the file tree isn't rendered, so hide its (empty) box and
+   let the boxes stack at the top — controls, then the settings footer right
+   after — instead of the files box stretching to fill. */
+.file-sidebar[data-collapsed="true"] .file-sidebar-controls,
+.file-sidebar[data-collapsed="true"] .file-sidebar-footer-box {
+  padding: 0.25rem;
+}
+.file-sidebar[data-collapsed="true"] .file-sidebar-files-box {
+  display: none;
+}
+.file-sidebar[data-collapsed="true"] .file-sidebar-inner {
+  flex: 0 0 auto;
+}
+/* Centre each row's icon in the narrow rail (no side padding/margin to shove
+   it off the edge). */
+.file-sidebar[data-collapsed="true"] .file-sidebar-search-row,
+.file-sidebar[data-collapsed="true"] .file-sidebar-action-row,
+.file-sidebar[data-collapsed="true"] .file-sidebar-cloud-row {
+  justify-content: center;
+  padding-inline: 0;
+  margin: 0;
 }
 
 /* ---- Native file drag-and-drop ---- */
@@ -58,72 +139,16 @@
   color: var(--mantine-color-blue-6, var(--c-primary));
 }
 
-/* ---- Header ---- */
-.file-sidebar-header {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  padding: 0 14px;
-  gap: 10px;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 4px 4px 0 4px;
-  flex-shrink: 0;
-  transition: background-color 0.15s ease;
-}
-
-/* Icons stay left-aligned during animation; overflow:hidden on inner clips text naturally */
-
-.file-sidebar-header:hover {
-  background-color: var(--c-hover);
-}
-
-.file-sidebar-menu-icon {
-  color: var(--c-text-subtle) !important;
-  font-size: 18px !important;
-  flex-shrink: 0;
-}
-
-/* Inherits font-size so swap-in icons render at 18px like the original. */
-.file-sidebar-menu-icon > svg {
-  font-size: inherit;
-  width: 1em;
-  height: 1em;
-}
-
-/* Flip directional toggle icons in RTL (skipped for the symmetric burger). */
-[dir="rtl"] .file-sidebar-menu-icon[data-toggle-flip-rtl="true"] > svg {
-  transform: scaleX(-1);
-}
-
-.file-sidebar-brand-text {
-  height: 22px;
-  width: auto;
-  flex-shrink: 0;
-}
-
-/* App switcher (portal builds only) sits at the far end of the header row.
-   The content-fade animation makes this span a stacking context, which would
-   trap the menu's z-index below later sidebar rows — elevate the span so the
-   open menu paints above them. */
-.file-sidebar-app-switch {
-  margin-inline-start: auto;
-  display: flex;
-  align-items: center;
-  position: relative;
-  z-index: var(--z-dropdown);
-}
-
 /* ---- Search row ---- */
 .file-sidebar-search-row {
   display: flex;
   align-items: center;
   min-height: 32px;
-  padding: 0 14px;
+  padding: 0 8px;
   gap: 0;
   cursor: pointer;
   border-radius: 4px;
-  margin: 0 4px;
+  margin: 0;
   flex-shrink: 0;
   transition: background-color 0.15s ease;
 }
@@ -160,7 +185,7 @@
 .file-sidebar-search-label {
   margin-left: 12px;
   font-size: 14px;
-  color: var(--c-text-muted);
+  color: var(--c-text);
 }
 
 /* ---- Scrollable content ---- */
@@ -170,7 +195,8 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .file-sidebar-scroll::-webkit-scrollbar {
@@ -189,10 +215,10 @@
   display: flex;
   align-items: center;
   height: 32px;
-  padding: 0 14px;
+  padding: 0 8px;
   cursor: pointer;
   border-radius: 4px;
-  margin: 0 4px;
+  margin: 0;
   gap: 0;
   transition: background-color 0.15s ease;
   flex-shrink: 0;
@@ -234,7 +260,7 @@
 .file-sidebar-action-label {
   margin-left: 12px;
   font-size: 14px;
-  color: var(--c-text-muted);
+  color: var(--c-text);
   white-space: nowrap;
 }
 
@@ -243,10 +269,10 @@
   display: flex;
   align-items: center;
   height: 32px;
-  padding: 0 14px;
+  padding: 0 8px;
   cursor: pointer;
   border-radius: 4px;
-  margin: 0 4px;
+  margin: 0;
   gap: 0;
   transition: background-color 0.15s ease;
   flex-shrink: 0;
@@ -447,28 +473,21 @@
 }
 
 .file-sidebar-section-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 12px 14px 6px 14px;
-  margin: 4px 0 0 0;
-}
-
-.file-sidebar-section-header {
-  position: relative;
-  border-top: 1px solid var(--c-border-subtle);
-  padding-top: 10px;
-  margin-top: 4px;
+  padding: 0 6px 2px 6px;
+  margin: 0;
   flex-shrink: 0;
 }
 
 .file-sidebar-section-label {
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--c-text-subtle);
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
 }
 
 /* Slim "Adding files… X/Y" progress row shown during a bulk drop's pre-scan,
@@ -575,10 +594,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border-top: 1px solid var(--c-border-subtle);
+  padding: 4px 6px;
   flex-shrink: 0;
-  min-height: 48px;
+  min-height: 40px;
 }
 
 /* Bottom bar settings icon tracks the right edge during collapse animation */

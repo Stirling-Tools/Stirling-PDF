@@ -24,6 +24,7 @@ import {
   AutoRotateParameters,
   AutoRotateDetectionMode,
   defaultParameters,
+  validateAutoRotateParameters,
 } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
 
 export const AUTO_ROTATE_ENDPOINT =
@@ -169,6 +170,7 @@ export const autoRotateOperationConfig = defineCustomTool<AutoRotateParameters>(
     toApiParams: autoRotateToApiParams,
     fromApiParams: autoRotateFromApiParams,
     defaultParameters,
+    validateParams: validateAutoRotateParameters,
   },
 );
 
