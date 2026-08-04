@@ -25,6 +25,8 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       exclude: [
         "node_modules/",
+        "dist/**",
+        "coverage/**",
         "src/core/setupTests.ts",
         "src/proprietary/setupTests.ts",
         "src/saas/setupTests.ts",
