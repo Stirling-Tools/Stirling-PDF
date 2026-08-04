@@ -77,18 +77,24 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   onConfigLoadedRef.current = onConfigLoaded;
 
   const queryClient = useQueryClient();
-  // Auth pages skip the fetch until sign-in asks for one. Enabling the query is
-  // what loads it; refetchQueries cannot wake a disabled query.
+  // Auth pages skip the fetch until sign-in asks for one.
   const [signedIn, setSignedIn] = useState(false);
+  // fetchQuery, not refetchQueries: the latter skips a disabled query, and
+  // enabling one whose cache is still fresh doesn't fetch either. Sign-in has
+  // to force the request — a pre-login 401 leaves a cached default behind.
   const refetch = useCallback(async () => {
     setSignedIn(true);
-    await queryClient.refetchQueries({ queryKey: qk.appConfig() });
+    await queryClient.fetchQuery({
+      queryKey: qk.appConfig(),
+      queryFn: fetchAppConfig,
+      staleTime: 0,
+    });
   }, [queryClient]);
 
   const { isAuthPage } = useJwtConfigSync(refetch);
   const fetching = autoFetch && (!isAuthPage || signedIn);
 
-  const { data, error, isPending } = useQuery({
+  const { data, error, isFetching } = useQuery({
     queryKey: qk.appConfig(),
     queryFn: fetchAppConfig,
     enabled: fetching,
@@ -115,15 +121,15 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         data ??
         initialConfig ??
         (isAuthPage || error ? DEFAULT_APP_CONFIG : null),
-      // Means "a fetch is in flight". Consumers key effects on the true→false
-      // flip, so it must go true for the post-sign-in fetch on an auth page —
-      // and a disabled query stays isPending, hence the explicit cases.
+      // isFetching, not isPending: consumers key effects on the true→false
+      // flip, and a pre-login 401 resolves to the default config, so isPending
+      // is already false by the time the post-sign-in fetch runs.
       loading: seeded
         ? false
         : !autoFetch
           ? true
           : fetching
-            ? isPending
+            ? isFetching
             : false,
       error: error ? errorMessage(error) : null,
       refetch,
@@ -131,7 +137,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     [
       data,
       error,
-      isPending,
+      isFetching,
       initialConfig,
       isAuthPage,
       seeded,

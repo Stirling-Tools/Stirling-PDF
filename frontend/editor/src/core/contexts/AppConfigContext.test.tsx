@@ -325,6 +325,76 @@ describe("AppConfigContext", () => {
     });
   });
 
+  it("flips loading after sign-in even when a pre-login 401 already cached a config", async () => {
+    // The live sequence: the app loads on "/" while logged out, app-config 401s
+    // and resolves to the login-enabled default, then the user signs in on
+    // /login. That cached default means isPending is already false, so loading
+    // has to track isFetching or useOnboardingOrchestrator — whose effect deps
+    // are [config?.enableLogin, configLoading], both unchanged here — never
+    // re-runs, and the first-login password prompt never opens.
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const sharedWrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>
+        <AppConfigProvider>{children}</AppConfigProvider>
+      </QueryClientProvider>
+    );
+
+    // Logged out on a non-auth page: 401 → default config, cached.
+    vi.mocked(apiClient.get).mockRejectedValueOnce(
+      Object.assign(new Error("Unauthorized"), {
+        response: { status: 401, data: {} },
+      }),
+    );
+    const loggedOut = renderHook(() => useAppConfig(), {
+      wrapper: sharedWrapper,
+    });
+    await waitFor(() =>
+      expect(loggedOut.result.current.config).toEqual({ enableLogin: true }),
+    );
+    expect(loggedOut.result.current.loading).toBe(false);
+    loggedOut.unmount();
+
+    // Now on /login, with that default still cached.
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/login" },
+      writable: true,
+    });
+    let resolveFetch: (value: unknown) => void = () => {};
+    vi.mocked(apiClient.get).mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      }) as never,
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: sharedWrapper,
+    });
+    expect(result.current.loading).toBe(false);
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent("jwt-available"));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(true));
+
+    await act(async () => {
+      resolveFetch({
+        status: 200,
+        data: { enableLogin: true, isAdmin: true },
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.config).toEqual({
+      enableLogin: true,
+      isAdmin: true,
+    });
+  });
+
   it("serves a remounted provider from cache", async () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       status: 200,
