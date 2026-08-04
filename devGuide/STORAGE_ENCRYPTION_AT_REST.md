@@ -121,7 +121,10 @@ Rotation only re-wraps the small `file_encryption_keys` table — file contents 
 1. Set the new key as `stirling.security.fileEncryptionKey`.
 2. Keep the outgoing key in `stirling.security.fileEncryptionKeyPrevious`.
 3. Bump `stirling.security.fileEncryptionKeyVersion`.
-4. Restart. Startup warns about rows still wrapped by the previous key.
+4. Restart. Startup warns about rows still wrapped by the previous key. On a cluster, wait until
+   **every** node carries both keys — a node still holding only the outgoing key cannot read a
+   re-wrapped row, so rotating mid-deploy makes the lagging nodes fail on those scopes until they
+   catch up.
 5. `POST /api/v1/admin/storage-encryption/master/rotate`.
 6. Confirm the response's `rewrapped` count and that `/status` shows every key row at the new
    `masterKeyVersion`.
