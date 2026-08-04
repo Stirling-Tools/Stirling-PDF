@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -333,6 +334,107 @@ class StorageEncryptionMigrationServiceTest {
                         eq("admin-alice"),
                         eq(AuditEventType.STORAGE_ENCRYPTION),
                         argThat(data -> "migration.completed".equals(data.get("action"))));
+    }
+
+    // ---- one-shot backends (S3, database) ------------------------------------------------
+
+    /**
+     * Wraps the local provider so {@code load} hands back a stock {@link InputStreamResource}: a
+     * one-shot stream that refuses {@code contentLength()} once partially read, the way an S3 or
+     * database resource behaves. Local files are re-openable and never exercise that branch.
+     */
+    private StorageProvider oneShotBacked() {
+        return new StorageProvider() {
+            @Override
+            public StoredObject store(User o, MultipartFile f) throws java.io.IOException {
+                return inner.store(o, f);
+            }
+
+            @Override
+            public org.springframework.core.io.Resource load(String key)
+                    throws java.io.IOException {
+                return new InputStreamResource(inner.load(key).getInputStream());
+            }
+
+            @Override
+            public void delete(String key) throws java.io.IOException {
+                inner.delete(key);
+            }
+        };
+    }
+
+    private void useProvider(StorageProvider backing) {
+        service =
+                new StorageEncryptionMigrationService(
+                        fileRepo,
+                        new EncryptingStorageProvider(
+                                backing,
+                                StorageEncryptionState.of(
+                                        true, keyService, StorageEncryptionAuditListener.NOOP)),
+                        StorageEncryptionState.of(
+                                true, keyService, StorageEncryptionAuditListener.NOOP),
+                        mock(AuditService.class));
+    }
+
+    @Test
+    void migrate_oneShotResource_fallsBackToTheRecordedSizeAndStillEncrypts() throws Exception {
+        StoredFile file = plaintextFile(1, false);
+        useProvider(oneShotBacked());
+
+        service.start();
+        StorageEncryptionMigrationService.MigrationStatus done = awaitCompletion();
+
+        assertThat(done.state()).isEqualTo(StorageEncryptionMigrationService.State.COMPLETED);
+        assertThat(done.processed()).isEqualTo(1);
+        assertThat(file.getEncryptionKeyId()).isNotNull();
+        byte[] onDisk = Files.readAllBytes(tempDir.resolve(file.getStorageKey()));
+        assertThat(new String(onDisk, 0, 8, StandardCharsets.US_ASCII)).isEqualTo("SPDFEAR1");
+        // Decrypting through a fresh load must return the original bytes, not a truncated stream.
+        try (var in =
+                new EncryptingStorageProvider(inner, keyService, true)
+                        .load(file.getStorageKey())
+                        .getInputStream()) {
+            assertThat(in.readAllBytes()).isEqualTo(CONTENT);
+        }
+    }
+
+    @Test
+    void migrate_oneShotResourceWithWrongRecordedSize_failsTheFileAndLeavesTheRowAlone()
+            throws Exception {
+        StoredFile file = plaintextFile(1, false);
+        String originalKey = file.getStorageKey();
+        file.setSizeBytes(CONTENT.length + 7L); // stale/incorrect row size
+        useProvider(oneShotBacked());
+
+        service.start();
+        StorageEncryptionMigrationService.MigrationStatus done = awaitCompletion();
+
+        // The size mismatch is caught inside store(), before the compare-and-swap, so the file is
+        // counted as failed and the row still points at its untouched plaintext blob.
+        assertThat(done.failed()).isEqualTo(1);
+        assertThat(done.processed()).isZero();
+        assertThat(file.getEncryptionKeyId()).isNull();
+        assertThat(file.getStorageKey()).isEqualTo(originalKey);
+        assertThat(Files.readAllBytes(tempDir.resolve(originalKey))).isEqualTo(CONTENT);
+    }
+
+    @Test
+    void migrate_oneShotResourceWithNoRecordedSize_failsTheFileRatherThanGuessing()
+            throws Exception {
+        // Only the secondary blobs have a nullable size, so that is where "no size available at
+        // all" is reachable: neither the resource nor the row can say how long the plaintext is.
+        StoredFile file = plaintextFile(1, true);
+        String historyKey = file.getHistoryStorageKey();
+        file.setHistorySizeBytes(null);
+        useProvider(oneShotBacked());
+
+        service.start();
+        StorageEncryptionMigrationService.MigrationStatus done = awaitCompletion();
+
+        assertThat(done.failed()).isEqualTo(1);
+        assertThat(done.processed()).isZero();
+        assertThat(file.getEncryptionKeyId()).isNull();
+        assertThat(file.getHistoryStorageKey()).isEqualTo(historyKey);
     }
 
     private StorageEncryptionState flippableState(AtomicBoolean writeEnabled) {
