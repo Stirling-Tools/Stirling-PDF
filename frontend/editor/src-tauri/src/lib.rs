@@ -12,6 +12,7 @@ use commands::{
     clear_refresh_token,
     clear_user_info,
     forward_files_to_window,
+    get_dropped_file_paths,
     is_default_pdf_handler,
     get_auth_token,
     get_backend_port,
@@ -84,6 +85,37 @@ fn is_app_url(url: &tauri::Url) -> bool {
   }
 }
 
+// Menu id of the custom macOS Quit item installed by install_macos_quit_menu.
+#[cfg(target_os = "macos")]
+const QUIT_MENU_ID: &str = "stirling-quit";
+
+// Default Quit calls NSApp terminate:, skipping CloseRequested and the JS
+// unsaved-changes guard. Swap it for an item that closes windows (Cmd+W path).
+#[cfg(target_os = "macos")]
+fn install_macos_quit_menu(app: &tauri::App) -> tauri::Result<()> {
+  use tauri::menu::{Menu, MenuItem, MenuItemKind};
+
+  let handle = app.handle();
+  let menu = Menu::default(handle)?;
+  if let Some(MenuItemKind::Submenu(app_submenu)) = menu.items()?.into_iter().next() {
+    // Quit is the last item of the application submenu in Tauri's default menu.
+    let items = app_submenu.items()?;
+    if !items.is_empty() {
+      app_submenu.remove_at(items.len() - 1)?;
+    }
+    let quit = MenuItem::with_id(
+      handle,
+      QUIT_MENU_ID,
+      format!("Quit {}", handle.package_info().name),
+      true,
+      Some("CmdOrCtrl+Q"),
+    )?;
+    app_submenu.append(&quit)?;
+  }
+  app.set_menu(menu)?;
+  Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   // WebKitGTK's DMA-BUF renderer crashes the web process on NVIDIA and some
@@ -124,6 +156,19 @@ pub fn run() {
     .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_window_state::Builder::default().build())
     .manage(AppConnectionState::default())
+    .on_menu_event(|app, event| {
+      #[cfg(target_os = "macos")]
+      if event.id() == QUIT_MENU_ID {
+        add_log("🛑 Quit menu item selected, closing all windows".to_string());
+        // close() (not destroy) so each window's JS guard can intervene;
+        // once the last window is destroyed the app exits naturally.
+        for (_label, window) in app.webview_windows() {
+          let _ = window.close();
+        }
+      }
+      #[cfg(not(target_os = "macos"))]
+      let _ = (app, event);
+    })
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
       // Runs in the existing instance when a second launch is attempted
       // (e.g. "open with" / double-click while the app is running).
@@ -145,6 +190,11 @@ pub fn run() {
     }))
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
+
+      #[cfg(target_os = "macos")]
+      if let Err(err) = install_macos_quit_menu(app) {
+        add_log(format!("⚠️ Failed to install custom quit menu: {}", err));
+      }
 
       // Files passed on the command line at first launch load into the main
       // window once the frontend mounts.
@@ -201,6 +251,7 @@ pub fn run() {
       get_opened_files,
       pop_opened_files,
       clear_opened_files,
+      get_dropped_file_paths,
       open_in_new_window,
       open_files_in_new_window,
       pop_window_file_ids,
@@ -244,10 +295,20 @@ pub fn run() {
           app_handle.cleanup_before_exit();
         }
         RunEvent::Exit => {
-          // Lingering plugin/webview threads can keep the process alive after the
-          // event loop ends (macOS "app won't quit"). Backend is dead; hard-exit.
+          // Kill the backend on paths that skip ExitRequested (macOS terminate:).
           cleanup_backend();
-          std::process::exit(0);
+          // process::exit here ran atexit inside applicationWillTerminate and could
+          // deadlock (Cmd+Q beachball); instead force-quit only if teardown wedges.
+          std::thread::spawn(|| {
+            std::thread::sleep(std::time::Duration::from_secs(5));
+            // _exit skips atexit handlers, so it cannot hit the same deadlock.
+            #[cfg(unix)]
+            unsafe {
+              libc::_exit(0)
+            }
+            #[cfg(not(unix))]
+            std::process::exit(0);
+          });
         }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, label, .. } => {
           add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());

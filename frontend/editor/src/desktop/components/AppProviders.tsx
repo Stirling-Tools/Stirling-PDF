@@ -22,7 +22,9 @@ import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { authService } from "@app/services/authService";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { isTauri } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
+import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
+import { createQuickKey } from "@app/types/fileContext";
 import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
 import UpdateModal from "@core/components/shared/UpdateModal";
 import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
@@ -68,11 +70,43 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // in-app drag & drop is unaffected.
   useEffect(() => {
     const preventNavigation = (e: DragEvent) => e.preventDefault();
+    // HTML5 drops lose the on-disk path (dragDropEnabled: false), breaking
+    // save-in-place. Recover paths from the OS (macOS drag pasteboard) and
+    // stage them so addFiles picks them up by quickKey, like the file dialog.
+    const captureDropPaths = (e: DragEvent) => {
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      if (files.length === 0) return;
+      void invoke<string[]>("get_dropped_file_paths")
+        .then((paths) => {
+          const unclaimed = [...paths];
+          for (const file of files) {
+            const index = unclaimed.findIndex(
+              (path) => path.split(/[\\/]/).pop() === file.name,
+            );
+            if (index >= 0) {
+              pendingFilePathMappings.set(
+                createQuickKey(file),
+                unclaimed[index],
+              );
+              unclaimed.splice(index, 1);
+            }
+          }
+        })
+        .catch((error) => {
+          console.warn(
+            "[Desktop] Failed to resolve dropped file paths:",
+            error,
+          );
+        });
+    };
     window.addEventListener("dragover", preventNavigation);
     window.addEventListener("drop", preventNavigation);
+    // Capture phase: resolve paths before dropzone handlers start adding files.
+    window.addEventListener("drop", captureDropPaths, true);
     return () => {
       window.removeEventListener("dragover", preventNavigation);
       window.removeEventListener("drop", preventNavigation);
+      window.removeEventListener("drop", captureDropPaths, true);
     };
   }, []);
 

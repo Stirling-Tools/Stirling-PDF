@@ -28,8 +28,8 @@ export function useExitWarning() {
       const allStubs = selectorsRef.current.getStirlingFileStubs();
       const dirtyStubs = allStubs.filter((stub) => stub.isDirty);
 
-      // Nothing unsaved: don't preventDefault, so the window closes natively
-      // without depending on the JS dialog/destroy round-trip below.
+      // Nothing unsaved: skip preventDefault so the Tauri API wrapper
+      // destroys the window itself once this handler returns.
       if (dirtyStubs.length === 0) {
         isClosingRef.current = true;
         return;

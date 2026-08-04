@@ -42,3 +42,41 @@ pub async fn pop_opened_files() -> Result<Vec<String>, String> {
     add_log(format!("📂 Returning and clearing {} opened file(s)", all_files.len()));
     Ok(all_files)
 }
+
+// HTML5 drops carry no paths (dragDropEnabled: false); on macOS the drag
+// pasteboard still holds the dragged file URLs, so read them back.
+#[tauri::command]
+pub fn get_dropped_file_paths() -> Vec<String> {
+    #[cfg(target_os = "macos")]
+    {
+        use objc2_app_kit::{NSPasteboard, NSPasteboardNameDrag, NSPasteboardTypeFileURL};
+
+        let mut paths = Vec::new();
+        // Extern statics; the pasteboard calls themselves are safe bindings.
+        let (name, file_url_type) = unsafe { (NSPasteboardNameDrag, NSPasteboardTypeFileURL) };
+        let pasteboard = NSPasteboard::pasteboardWithName(name);
+        if let Some(items) = pasteboard.pasteboardItems() {
+            for item in items.iter() {
+                let Some(url_str) = item.stringForType(file_url_type) else {
+                    continue;
+                };
+                let Ok(url) = url::Url::parse(&url_str.to_string()) else {
+                    continue;
+                };
+                let Ok(path) = url.to_file_path() else {
+                    continue;
+                };
+                // Stale pasteboard entries or vanished files must not map.
+                if path.exists() {
+                    if let Some(path_str) = path.to_str() {
+                        paths.push(path_str.to_string());
+                    }
+                }
+            }
+        }
+        add_log(format!("📂 Drag pasteboard resolved {} dropped path(s)", paths.len()));
+        paths
+    }
+    #[cfg(not(target_os = "macos"))]
+    Vec::new()
+}
