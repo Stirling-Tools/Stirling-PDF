@@ -18,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
@@ -59,8 +60,11 @@ class StorageEncryptionAdminControllerHttpTest {
         when(storedFileRepository.countByEncryptionKeyIdIsNull()).thenReturn(3L);
         migrationService = mock(StorageEncryptionMigrationService.class);
 
+        ApplicationProperties props = new ApplicationProperties();
+        props.getStorage().setEnabled(true);
         StorageEncryptionAdminController controller =
                 new StorageEncryptionAdminController(
+                        props,
                         StorageEncryptionState.of(
                                 true, keyService, StorageEncryptionAuditListener.NOOP),
                         keyRepo.mock,

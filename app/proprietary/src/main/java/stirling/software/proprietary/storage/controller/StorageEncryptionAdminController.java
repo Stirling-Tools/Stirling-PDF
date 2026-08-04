@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,7 +22,9 @@ import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.crypto.FileEncryptionKeyService;
@@ -42,17 +45,39 @@ import stirling.software.proprietary.storage.service.StorageEncryptionMigrationS
 @RequestMapping("/api/v1/admin/storage-encryption")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Admin: Storage Encryption", description = "Encryption-at-rest administration")
 public class StorageEncryptionAdminController {
 
+    private final ApplicationProperties applicationProperties;
     private final StorageEncryptionState encryptionState;
     private final FileEncryptionKeyRepository keyRepository;
     private final StoredFileRepository storedFileRepository;
     private final StorageEncryptionMigrationService migrationService;
     private final AuditService auditService;
 
+    /**
+     * Reports write state, master-key fingerprint and encrypted/plaintext counts. Refuses rather
+     * than reading the registry when storage is off, because a deployment that never stores files
+     * may not have the table at all — the same reason the decorator's boot probe is gated.
+     */
     @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public StorageEncryptionStatusResponse status() {
+        if (!applicationProperties.getStorage().isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage is disabled");
+        }
+        try {
+            return buildStatus();
+        } catch (DataAccessException e) {
+            log.warn("Could not read storage encryption status: {}", e.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "The storage encryption key registry could not be read",
+                    e);
+        }
+    }
+
+    private StorageEncryptionStatusResponse buildStatus() {
         List<StorageEncryptionStatusResponse.KeyInfo> keys =
                 keyRepository.findAll(Sort.by("createdAt")).stream()
                         .map(
@@ -99,7 +124,12 @@ public class StorageEncryptionAdminController {
         return toKeyInfo(row);
     }
 
-    /** Reverses the kill switch. Only DISABLED keys can be enabled (back to ACTIVE). */
+    /**
+     * Reverses the kill switch: only DISABLED keys can be enabled, and they come back ACTIVE unless
+     * the scope acquired another active key while revoked, in which case they come back RETIRED —
+     * readable, but not a second key wrapping new writes. The response carries the resulting
+     * status.
+     */
     @PostMapping("/keys/{keyId}/enable")
     public StorageEncryptionStatusResponse.KeyInfo enableKey(@PathVariable UUID keyId) {
         FileEncryptionKey existing =
@@ -114,10 +144,22 @@ public class StorageEncryptionAdminController {
                     HttpStatus.CONFLICT,
                     "Key is not disabled (status: " + existing.getStatus() + ")");
         }
-        FileEncryptionKey row = setStatus(keyId, FileEncryptionKey.Status.ACTIVE);
+        FileEncryptionKeyService keyService = requireKeyService();
+        FileEncryptionKey row;
+        try {
+            row = keyService.enable(keyId, currentUsername());
+        } catch (StorageEncryptionException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
         auditService.audit(
                 AuditEventType.STORAGE_ENCRYPTION,
-                Map.of("action", "key.enabled", "keyId", keyId.toString()));
+                Map.of(
+                        "action",
+                        "key.enabled",
+                        "keyId",
+                        keyId.toString(),
+                        "status",
+                        row.getStatus().name()));
         return toKeyInfo(row);
     }
 

@@ -12,7 +12,11 @@ import stirling.software.proprietary.storage.model.FileEncryptionKey;
 @Repository
 public interface FileEncryptionKeyRepository extends JpaRepository<FileEncryptionKey, UUID> {
 
-    Optional<FileEncryptionKey> findFirstByScopeTypeAndScopeIdAndStatus(
+    /**
+     * Ordered so that if a scope ever holds more than one row in the given status, every node picks
+     * the same one instead of following database row order.
+     */
+    Optional<FileEncryptionKey> findFirstByScopeTypeAndScopeIdAndStatusOrderByKeyVersionDesc(
             FileEncryptionKey.ScopeType scopeType, long scopeId, FileEncryptionKey.Status status);
 
     Optional<FileEncryptionKey> findFirstByScopeTypeAndScopeIdOrderByKeyVersionDesc(

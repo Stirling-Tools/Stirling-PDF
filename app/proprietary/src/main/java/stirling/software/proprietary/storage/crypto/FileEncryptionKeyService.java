@@ -6,6 +6,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -163,6 +164,41 @@ public class FileEncryptionKeyService {
     }
 
     /**
+     * Reverses the kill switch. Returns the key to ACTIVE only while its scope has no other ACTIVE
+     * key, otherwise to RETIRED — which unwraps existing content just the same, and keeps exactly
+     * one key wrapping new writes per scope.
+     *
+     * <p>The second case is reached whenever the scope uploaded anything while revoked: those
+     * writes minted a fresh ACTIVE key, since revoking a key blocks reads of existing content
+     * rather than stopping the scope from storing new files.
+     */
+    public FileEncryptionKey enable(UUID keyId, String actor) throws StorageEncryptionException {
+        FileEncryptionKey row =
+                repository
+                        .findById(keyId)
+                        .orElseThrow(
+                                () -> new StorageEncryptionException("No encryption key " + keyId));
+        boolean scopeHasAnotherActiveKey =
+                activeForScope(row.getScopeType(), row.getScopeId())
+                        .filter(other -> !other.getKeyId().equals(keyId))
+                        .isPresent();
+        FileEncryptionKey.Status target =
+                scopeHasAnotherActiveKey
+                        ? FileEncryptionKey.Status.RETIRED
+                        : FileEncryptionKey.Status.ACTIVE;
+        if (scopeHasAnotherActiveKey) {
+            log.info(
+                    "Enabling key {} as RETIRED: {}:{} already has an active key wrapping new"
+                            + " writes. Existing content under {} is readable again.",
+                    keyId,
+                    row.getScopeType(),
+                    row.getScopeId(),
+                    keyId);
+        }
+        return setKeyStatus(keyId, target, actor);
+    }
+
+    /**
      * Drops cached material for a key so status changes take effect without waiting out the TTL.
      */
     public void invalidate(UUID keyId) {
@@ -230,10 +266,13 @@ public class FileEncryptionKeyService {
 
     private FileEncryptionKey findOrCreateActive(
             FileEncryptionKey.ScopeType scopeType, long scopeId) throws StorageEncryptionException {
-        return repository
-                .findFirstByScopeTypeAndScopeIdAndStatus(
-                        scopeType, scopeId, FileEncryptionKey.Status.ACTIVE)
-                .orElseGet(() -> createActive(scopeType, scopeId));
+        return activeForScope(scopeType, scopeId).orElseGet(() -> createActive(scopeType, scopeId));
+    }
+
+    private Optional<FileEncryptionKey> activeForScope(
+            FileEncryptionKey.ScopeType scopeType, long scopeId) {
+        return repository.findFirstByScopeTypeAndScopeIdAndStatusOrderByKeyVersionDesc(
+                scopeType, scopeId, FileEncryptionKey.Status.ACTIVE);
     }
 
     // Package-private so the @DataJpaTest can drive duplicate-insert recovery deterministically.
@@ -270,10 +309,7 @@ public class FileEncryptionKeyService {
             return saved;
         } catch (DataIntegrityViolationException raced) {
             // Another node created the scope key concurrently; use theirs.
-            return repository
-                    .findFirstByScopeTypeAndScopeIdAndStatus(
-                            scopeType, scopeId, FileEncryptionKey.Status.ACTIVE)
-                    .orElseThrow(() -> raced);
+            return activeForScope(scopeType, scopeId).orElseThrow(() -> raced);
         }
     }
 

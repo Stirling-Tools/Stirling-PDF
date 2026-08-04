@@ -38,14 +38,17 @@ public final class InMemoryKeyRepo {
                         });
         when(mock.findById(any(UUID.class)))
                 .thenAnswer(inv -> Optional.ofNullable(rows.get(inv.<UUID>getArgument(0))));
-        when(mock.findFirstByScopeTypeAndScopeIdAndStatus(any(), anyLong(), any()))
+        when(mock.findFirstByScopeTypeAndScopeIdAndStatusOrderByKeyVersionDesc(
+                        any(), anyLong(), any()))
                 .thenAnswer(
                         inv ->
                                 rows.values().stream()
                                         .filter(r -> r.getScopeType() == inv.getArgument(0))
                                         .filter(r -> r.getScopeId() == inv.<Long>getArgument(1))
                                         .filter(r -> r.getStatus() == inv.getArgument(2))
-                                        .findFirst());
+                                        .max(
+                                                Comparator.comparingInt(
+                                                        FileEncryptionKey::getKeyVersion)));
         when(mock.findFirstByScopeTypeAndScopeIdOrderByKeyVersionDesc(any(), anyLong()))
                 .thenAnswer(
                         inv ->

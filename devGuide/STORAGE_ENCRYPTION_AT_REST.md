@@ -92,12 +92,23 @@ on a cluster the guard is per-node, so trigger the migration on one node only.
 
 ## Revoking access (kill switch)
 
-Disabling a scope key makes every file under it fail closed with `403` until it is re-enabled:
+Disabling a scope key makes every file already stored under it fail closed with `403` until it is
+re-enabled:
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/admin/storage-encryption/keys/{keyId}/disable
 curl -X POST http://localhost:8080/api/v1/admin/storage-encryption/keys/{keyId}/enable
 ```
+
+This revokes access to existing content; it does **not** stop the scope from storing new files. The
+next upload finds no active key for the scope and mints one, so the team keeps working while its
+history stays sealed. To stop new writes as well, turn encryption off (or take the scope's access
+away at the application level) — the kill switch is aimed at stored bytes.
+
+Because of that, re-enabling is status-aware: the key returns to `ACTIVE` if its scope has no other
+active key, and to `RETIRED` if one was minted while it was revoked. Both statuses decrypt existing
+content; only `ACTIVE` wraps new writes, so a scope never ends up with two keys competing for new
+uploads. The `enable` response reports which status was applied.
 
 This is reversible: the key material stays in the database and nothing is destroyed. No API path
 deletes key material. On a cluster, other nodes pick the change up within their 60-second key-cache

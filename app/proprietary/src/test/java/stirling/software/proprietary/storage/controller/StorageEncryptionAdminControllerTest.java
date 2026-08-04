@@ -2,7 +2,11 @@ package stirling.software.proprietary.storage.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Base64;
@@ -10,9 +14,12 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
@@ -22,6 +29,7 @@ import stirling.software.proprietary.storage.crypto.InMemoryKeyRepo;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionAuditListener;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionState;
 import stirling.software.proprietary.storage.model.api.StorageEncryptionStatusResponse;
+import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.storage.service.StorageEncryptionMigrationService;
 
@@ -48,12 +56,19 @@ class StorageEncryptionAdminControllerTest {
         migrationService = mock(StorageEncryptionMigrationService.class);
         controller =
                 new StorageEncryptionAdminController(
+                        storageEnabled(true),
                         StorageEncryptionState.of(
                                 true, keyService, StorageEncryptionAuditListener.NOOP),
                         keyRepo.mock,
                         storedFileRepository,
                         migrationService,
                         mock(AuditService.class));
+    }
+
+    private static ApplicationProperties storageEnabled(boolean enabled) {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getStorage().setEnabled(enabled);
+        return props;
     }
 
     private UUID createKey() throws Exception {
@@ -134,6 +149,7 @@ class StorageEncryptionAdminControllerTest {
     void rotate_whenInactive_conflicts() {
         StorageEncryptionAdminController inactive =
                 new StorageEncryptionAdminController(
+                        storageEnabled(true),
                         new StorageEncryptionState(
                                 false,
                                 () -> {
@@ -151,6 +167,52 @@ class StorageEncryptionAdminControllerTest {
                         e ->
                                 assertThat(((ResponseStatusException) e).getStatusCode())
                                         .isEqualTo(HttpStatus.CONFLICT));
+    }
+
+    @Test
+    void status_storageDisabled_refusesWithoutTouchingTheRegistry() {
+        StorageEncryptionAdminController storageOff =
+                new StorageEncryptionAdminController(
+                        storageEnabled(false),
+                        StorageEncryptionState.of(
+                                false, keyService, StorageEncryptionAuditListener.NOOP),
+                        keyRepo.mock,
+                        storedFileRepository,
+                        migrationService,
+                        mock(AuditService.class));
+
+        assertThatThrownBy(storageOff::status)
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.FORBIDDEN));
+        // The registry table need not exist on a deployment that never stores files.
+        verifyNoInteractions(storedFileRepository);
+        verify(keyRepo.mock, never()).findAll(any(Sort.class));
+    }
+
+    @Test
+    void status_unreadableRegistry_reports503RatherThanRaw500() {
+        FileEncryptionKeyRepository broken = mock(FileEncryptionKeyRepository.class);
+        when(broken.findAll(any(Sort.class)))
+                .thenThrow(new InvalidDataAccessResourceUsageException("no such table"));
+        StorageEncryptionAdminController brokenRegistry =
+                new StorageEncryptionAdminController(
+                        storageEnabled(true),
+                        StorageEncryptionState.of(
+                                true, keyService, StorageEncryptionAuditListener.NOOP),
+                        broken,
+                        storedFileRepository,
+                        migrationService,
+                        mock(AuditService.class));
+
+        assertThatThrownBy(brokenRegistry::status)
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
     }
 
     @Test

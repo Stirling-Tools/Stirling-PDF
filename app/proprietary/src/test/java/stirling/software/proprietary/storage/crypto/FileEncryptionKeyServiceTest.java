@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -231,6 +232,64 @@ class FileEncryptionKeyServiceTest {
 
         // Second rotation call is a no-op.
         assertThat(rotatedService.rotateMasterKey()).isZero();
+    }
+
+    @Test
+    void enable_afterScopeMintedAnotherKey_comesBackRetiredNotSecondActive() throws Exception {
+        FileEncryptionKeyService.ScopeKek revoked = service.activeKekForOwner(teamUser(1));
+        service.setKeyStatus(revoked.keyId(), FileEncryptionKey.Status.DISABLED, "admin");
+
+        // Revoking does not stop the team uploading: this mints a second key for the scope.
+        FileEncryptionKeyService.ScopeKek minted = service.activeKekForOwner(teamUser(1));
+        assertThat(minted.keyId()).isNotEqualTo(revoked.keyId());
+
+        FileEncryptionKey reEnabled = service.enable(revoked.keyId(), "admin");
+
+        assertThat(reEnabled.getStatus()).isEqualTo(FileEncryptionKey.Status.RETIRED);
+        assertThat(activeKeysForTeam(1)).containsExactly(minted.keyId());
+        // RETIRED still unwraps, so the revoked content is readable again.
+        assertThat(service.kekForDecrypt(revoked.keyId())).isEqualTo(revoked.key());
+    }
+
+    @Test
+    void enable_scopeHasNoOtherActiveKey_comesBackActive() throws Exception {
+        FileEncryptionKeyService.ScopeKek created = service.activeKekForOwner(teamUser(1));
+        service.setKeyStatus(created.keyId(), FileEncryptionKey.Status.DISABLED, "admin");
+
+        FileEncryptionKey reEnabled = service.enable(created.keyId(), "admin");
+
+        assertThat(reEnabled.getStatus()).isEqualTo(FileEncryptionKey.Status.ACTIVE);
+        assertThat(activeKeysForTeam(1)).containsExactly(created.keyId());
+        assertThat(service.kekForDecrypt(created.keyId())).isEqualTo(created.key());
+    }
+
+    @Test
+    void activeKekForOwner_twoActiveRowsInScope_picksTheHighestVersionOnEveryNode()
+            throws Exception {
+        // A registry left in the pre-fix shape (an older build re-enabled a key straight to
+        // ACTIVE).
+        FileEncryptionKeyService.ScopeKek older = service.activeKekForOwner(teamUser(1));
+        service.setKeyStatus(older.keyId(), FileEncryptionKey.Status.DISABLED, "admin");
+        FileEncryptionKeyService.ScopeKek newer = service.activeKekForOwner(teamUser(1));
+        service.setKeyStatus(older.keyId(), FileEncryptionKey.Status.ACTIVE, "old-build");
+        assertThat(activeKeysForTeam(1)).hasSize(2);
+
+        // Two independent nodes (fresh caches) must agree, rather than follow DB row order.
+        for (int node = 0; node < 2; node++) {
+            FileEncryptionKeyService fresh =
+                    new FileEncryptionKeyService(
+                            repo.mock, new FileEncryptionMasterKey(MASTER_A, false));
+            assertThat(fresh.activeKekForOwner(teamUser(1)).keyId()).isEqualTo(newer.keyId());
+        }
+    }
+
+    private List<UUID> activeKeysForTeam(long teamId) {
+        return repo.rows.values().stream()
+                .filter(r -> r.getScopeType() == FileEncryptionKey.ScopeType.TEAM)
+                .filter(r -> r.getScopeId() == teamId)
+                .filter(r -> r.getStatus() == FileEncryptionKey.Status.ACTIVE)
+                .map(FileEncryptionKey::getKeyId)
+                .toList();
     }
 
     @Test

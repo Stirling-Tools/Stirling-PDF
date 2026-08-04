@@ -79,7 +79,10 @@ public class StorageEncryptionMigrationService {
             throw new IllegalStateException(
                     "storage.encryption.enabled must be on before migrating existing files");
         }
-        Run run = new Run(storedFileRepository.countByEncryptionKeyIdIsNull());
+        // Captured here because the run itself executes on a virtual thread with no security
+        // context: without this, re-encrypting every stored file is attributed to "system".
+        String principal = auditService.captureCurrentPrincipal();
+        Run run = new Run(storedFileRepository.countByEncryptionKeyIdIsNull(), principal);
         Run previous = currentRun.get();
         if (previous != null && previous.state == State.RUNNING) {
             throw new IllegalStateException("A migration is already running");
@@ -87,6 +90,10 @@ public class StorageEncryptionMigrationService {
         if (!currentRun.compareAndSet(previous, run)) {
             throw new IllegalStateException("A migration is already running");
         }
+        auditService.audit(
+                principal,
+                AuditEventType.STORAGE_ENCRYPTION,
+                Map.of("action", "migration.started", "plaintextFiles", run.total));
         Thread.ofVirtual().name("storage-encryption-migration").start(() -> execute(run));
         return run.snapshot();
     }
@@ -99,35 +106,18 @@ public class StorageEncryptionMigrationService {
 
     private void execute(Run run) {
         log.info("Storage encryption migration started ({} plaintext files)", run.total);
+        State terminal;
         try {
-            long lastId = 0;
-            while (true) {
-                List<StoredFile> page =
-                        storedFileRepository.findMigratableAfter(
-                                lastId, PageRequest.of(0, PAGE_SIZE));
-                if (page.isEmpty()) {
-                    break;
-                }
-                for (StoredFile file : page) {
-                    lastId = file.getId();
-                    try {
-                        migrateFile(file, run);
-                    } catch (Exception e) {
-                        run.failed.incrementAndGet();
-                        log.error(
-                                "Failed to encrypt stored file {} (key {})",
-                                file.getId(),
-                                file.getStorageKey(),
-                                e);
-                    }
-                }
-                Thread.sleep(PAUSE_BETWEEN_PAGES_MS);
-            }
-            run.finish(State.COMPLETED);
+            terminal = migratePages(run);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Storage encryption migration interrupted");
+            terminal = State.FAILED;
         } catch (Exception e) {
             log.error("Storage encryption migration aborted", e);
-            run.finish(State.FAILED);
+            terminal = State.FAILED;
         }
+        run.finish(terminal);
         MigrationStatus done = run.snapshot();
         log.info(
                 "Storage encryption migration finished: {} encrypted, {} skipped, {} failed",
@@ -135,6 +125,7 @@ public class StorageEncryptionMigrationService {
                 done.skipped(),
                 done.failed());
         auditService.audit(
+                run.principal,
                 AuditEventType.STORAGE_ENCRYPTION,
                 Map.of(
                         "action", "migration.completed",
@@ -142,6 +133,43 @@ public class StorageEncryptionMigrationService {
                         "encrypted", done.processed(),
                         "skipped", done.skipped(),
                         "failed", done.failed()));
+    }
+
+    /** Walks the plaintext backlog a page at a time; returns the state the run ends in. */
+    private State migratePages(Run run) throws InterruptedException {
+        long lastId = 0;
+        while (true) {
+            List<StoredFile> page =
+                    storedFileRepository.findMigratableAfter(lastId, PageRequest.of(0, PAGE_SIZE));
+            if (page.isEmpty()) {
+                return State.COMPLETED;
+            }
+            for (StoredFile file : page) {
+                if (!encryptionState.isWriteEnabled()) {
+                    // Run-level condition, not a per-file failure: carrying on would copy every
+                    // remaining file as plaintext and delete it again.
+                    log.warn(
+                            "Encryption write path turned off mid-run; stopping with {} of {} files"
+                                    + " encrypted. Re-enable storage.encryption.enabled and start"
+                                    + " the migration again.",
+                            run.processed.get(),
+                            run.total);
+                    return State.FAILED;
+                }
+                lastId = file.getId();
+                try {
+                    migrateFile(file, run);
+                } catch (Exception e) {
+                    run.failed.incrementAndGet();
+                    log.error(
+                            "Failed to encrypt stored file {} (key {})",
+                            file.getId(),
+                            file.getStorageKey(),
+                            e);
+                }
+            }
+            Thread.sleep(PAUSE_BETWEEN_PAGES_MS);
+        }
     }
 
     private void migrateFile(StoredFile file, Run run) throws IOException {
@@ -195,7 +223,8 @@ public class StorageEncryptionMigrationService {
                         file.getContentType(),
                         file.getSizeBytes());
         if (encrypted.getEncryptionKeyId() == null) {
-            // Write side got turned off mid-run; storing plaintext copies would churn for nothing.
+            // The flag flipped between this page's check and the store; the loop stops on the next
+            // file, so this only ever discards one plaintext copy.
             deleteQuietly(encrypted.getStorageKey());
             throw new IllegalStateException("Encryption write path is no longer active");
         }
@@ -246,6 +275,10 @@ public class StorageEncryptionMigrationService {
 
     private static final class Run {
         private final long total;
+
+        /** The admin who started the run, so the completion event is attributed to them. */
+        private final String principal;
+
         private final Instant startedAt = Instant.now();
         private final AtomicLong processed = new AtomicLong();
         private final AtomicLong skipped = new AtomicLong();
@@ -253,8 +286,9 @@ public class StorageEncryptionMigrationService {
         private volatile State state = State.RUNNING;
         private volatile Instant finishedAt;
 
-        private Run(long total) {
+        private Run(long total, String principal) {
             this.total = total;
+            this.principal = principal;
         }
 
         private void finish(State terminal) {

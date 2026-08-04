@@ -5,7 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
@@ -15,13 +18,17 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
@@ -53,12 +60,13 @@ class StorageEncryptionMigrationServiceTest {
     private StorageProvider provider;
     private StoredFileRepository fileRepo;
     private StorageEncryptionMigrationService service;
+    private FileEncryptionKeyService keyService;
     private User owner;
 
     @BeforeEach
     void setUp() {
         inner = new LocalStorageProvider(tempDir);
-        FileEncryptionKeyService keyService =
+        keyService =
                 new FileEncryptionKeyService(
                         new InMemoryKeyRepo().mock, new FileEncryptionMasterKey(MASTER, false));
         provider =
@@ -242,6 +250,99 @@ class StorageEncryptionMigrationServiceTest {
         assertThatThrownBy(disabled::start)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("storage.encryption.enabled");
+    }
+
+    @Test
+    void migrate_writeFlagOffMidRun_stopsFailedWithoutChurningTheRestOfTheBacklog()
+            throws Exception {
+        for (long i = 1; i <= 30; i++) { // more than one page, so the run has somewhere to churn
+            plaintextFile(i, false);
+        }
+        AtomicBoolean writeEnabled = new AtomicBoolean(true);
+        AtomicInteger stores = new AtomicInteger();
+        // Flip the flag the instant the first file has been stored, exactly as an admin toggling
+        // storage.encryption.enabled mid-run would.
+        StorageProvider countingInner =
+                new StorageProvider() {
+                    @Override
+                    public StoredObject store(User o, MultipartFile f) throws java.io.IOException {
+                        StoredObject stored = inner.store(o, f);
+                        if (stores.incrementAndGet() == 1) {
+                            writeEnabled.set(false);
+                        }
+                        return stored;
+                    }
+
+                    @Override
+                    public org.springframework.core.io.Resource load(String key)
+                            throws java.io.IOException {
+                        return inner.load(key);
+                    }
+
+                    @Override
+                    public void delete(String key) throws java.io.IOException {
+                        inner.delete(key);
+                    }
+                };
+        StorageEncryptionState flippable = flippableState(writeEnabled);
+        service =
+                new StorageEncryptionMigrationService(
+                        fileRepo,
+                        new EncryptingStorageProvider(countingInner, flippable),
+                        flippable,
+                        mock(AuditService.class));
+
+        service.start();
+        StorageEncryptionMigrationService.MigrationStatus done = awaitCompletion();
+
+        assertThat(done.state()).isEqualTo(StorageEncryptionMigrationService.State.FAILED);
+        assertThat(done.processed()).isEqualTo(1);
+        // The remaining 29 files were never re-stored, so nothing was written and deleted for
+        // nothing, and none of them is counted as a failure.
+        assertThat(stores.get()).isEqualTo(1);
+        assertThat(done.failed()).isZero();
+        assertThat(rows.values().stream().filter(f -> f.getEncryptionKeyId() == null).count())
+                .isEqualTo(29);
+    }
+
+    @Test
+    void start_auditsTheAdminWhoTriggeredIt_onStartAndCompletion() throws Exception {
+        plaintextFile(1, false);
+        AuditService audit = mock(AuditService.class);
+        when(audit.captureCurrentPrincipal()).thenReturn("admin-alice");
+        service =
+                new StorageEncryptionMigrationService(
+                        fileRepo,
+                        provider,
+                        StorageEncryptionState.of(
+                                true, keyService, StorageEncryptionAuditListener.NOOP),
+                        audit);
+
+        service.start();
+        awaitCompletion();
+
+        // Both ends of the run must name the admin: the completion event runs on a virtual thread
+        // with no security context, where the principal would otherwise resolve to "system".
+        verify(audit)
+                .audit(
+                        eq("admin-alice"),
+                        eq(AuditEventType.STORAGE_ENCRYPTION),
+                        argThat(data -> "migration.started".equals(data.get("action"))));
+        verify(audit)
+                .audit(
+                        eq("admin-alice"),
+                        eq(AuditEventType.STORAGE_ENCRYPTION),
+                        argThat(data -> "migration.completed".equals(data.get("action"))));
+    }
+
+    private StorageEncryptionState flippableState(AtomicBoolean writeEnabled) {
+        return new StorageEncryptionState(
+                true, () -> keyService, null, StorageEncryptionAuditListener.NOOP) {
+            @Override
+            public boolean isWriteEnabled() {
+                return writeEnabled.get();
+            }
+        };
     }
 
     @Test
