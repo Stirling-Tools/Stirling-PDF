@@ -32,7 +32,7 @@ public class ReactRoutingController {
     private static final Pattern BASE_HREF_PATTERN =
             Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
 
-    @Value("${server.servlet.context-path:/}")
+    @Value("${server.servlet.context-path}")
     private String contextPath;
 
     private String cachedIndexHtml;
