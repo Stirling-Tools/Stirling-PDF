@@ -177,10 +177,8 @@ public class FileEncryptionKeyService {
      */
     public int rotateMasterKey() throws StorageEncryptionException {
         int rewrapped = 0;
-        for (FileEncryptionKey row : repository.findAll()) {
-            if (row.getMasterKeyVersion() >= masterKey.currentVersion()) {
-                continue;
-            }
+        for (FileEncryptionKey row :
+                repository.findByMasterKeyVersionLessThan(masterKey.currentVersion())) {
             byte[] kek = unwrapRow(row);
             row.setWrappedKey(
                     Base64.getEncoder()
@@ -199,10 +197,7 @@ public class FileEncryptionKeyService {
      */
     public void verifyMasterKey() {
         if (masterKey.hasPreviousKey()) {
-            long pending =
-                    repository.findAll().stream()
-                            .filter(r -> r.getMasterKeyVersion() < masterKey.currentVersion())
-                            .count();
+            long pending = repository.countByMasterKeyVersionLessThan(masterKey.currentVersion());
             if (pending > 0) {
                 log.warn(
                         "{} encryption key row(s) are still wrapped by the previous master key."

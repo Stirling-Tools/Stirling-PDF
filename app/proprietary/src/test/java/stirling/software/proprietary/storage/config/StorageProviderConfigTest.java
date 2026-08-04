@@ -123,6 +123,8 @@ class StorageProviderConfigTest {
         StorageEncryptionState state = newState(cfg);
 
         assertThat(state.isWriteEnabled()).isFalse();
+        // No probe means no eager init, so no master key is resolved on a node that never stores.
+        assertThat(state.isMaterialised()).isFalse();
         verify(keyRepo.mock, never()).count();
     }
 

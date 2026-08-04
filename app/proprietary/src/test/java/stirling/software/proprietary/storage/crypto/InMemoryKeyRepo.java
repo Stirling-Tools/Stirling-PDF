@@ -63,6 +63,24 @@ public final class InMemoryKeyRepo {
                                         .findFirst());
         when(mock.count()).thenAnswer(inv -> (long) rows.size());
         when(mock.findAll()).thenAnswer(inv -> java.util.List.copyOf(rows.values()));
+        when(mock.countByMasterKeyVersionLessThan(org.mockito.ArgumentMatchers.anyInt()))
+                .thenAnswer(
+                        inv ->
+                                rows.values().stream()
+                                        .filter(
+                                                r ->
+                                                        r.getMasterKeyVersion()
+                                                                < inv.<Integer>getArgument(0))
+                                        .count());
+        when(mock.findByMasterKeyVersionLessThan(org.mockito.ArgumentMatchers.anyInt()))
+                .thenAnswer(
+                        inv ->
+                                rows.values().stream()
+                                        .filter(
+                                                r ->
+                                                        r.getMasterKeyVersion()
+                                                                < inv.<Integer>getArgument(0))
+                                        .toList());
         when(mock.findAll(any(org.springframework.data.domain.Sort.class)))
                 .thenAnswer(inv -> java.util.List.copyOf(rows.values()));
     }
