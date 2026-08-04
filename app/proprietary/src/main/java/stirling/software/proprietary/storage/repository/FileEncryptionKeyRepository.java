@@ -45,4 +45,9 @@ public class FileEncryptionKeyRepository implements PanacheRepositoryBase<FileEn
         persistAndFlush(row);
         return row;
     }
+
+    /** Spring Data's {@code save}: merge, since a rotated key row is updated in place. */
+    public FileEncryptionKey save(FileEncryptionKey row) {
+        return getEntityManager().merge(row);
+    }
 }

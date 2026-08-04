@@ -81,7 +81,10 @@ class JpaSourceStoreTest {
     @Test
     void allDeserializesEverySource() {
         Source a = new Source("a", "A", "folder", Map.of("directory", "/a"), true, "alice", 1L);
-        when(repository.findAll()).thenReturn(queryOf(entityFor(a)));
+        // Built before the when(): stubbing the query mock inside thenReturn() would nest one
+        // stubbing in another, which Mockito rejects.
+        PanacheQuery<SourceEntity> query = queryOf(entityFor(a));
+        when(repository.findAll()).thenReturn(query);
 
         assertEquals(List.of(a), store.all());
     }

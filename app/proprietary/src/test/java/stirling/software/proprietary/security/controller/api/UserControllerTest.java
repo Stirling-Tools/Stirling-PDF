@@ -222,11 +222,11 @@ class UserControllerTest {
     void listUsersDefaultScopeIsOrgWide() {
         // Default "org" scope returns every enabled user via findAll(), no team lookup.
         Team alpha = team(1L, "alpha");
-        when(userRepository.findAll())
-                .thenReturn(
-                        queryOf(
-                                user(1L, "a@alpha.com", true, alpha),
-                                user(2L, "b@alpha.com", true, alpha)));
+        // Built before the when(): stubbing the query mock inside thenReturn() would nest one
+        // stubbing in another, which Mockito rejects.
+        PanacheQuery<User> query =
+                queryOf(user(1L, "a@alpha.com", true, alpha), user(2L, "b@alpha.com", true, alpha));
+        when(userRepository.findAll()).thenReturn(query);
         authenticateAs("a@alpha.com");
 
         Response response = controller.listUsers();
@@ -260,11 +260,11 @@ class UserControllerTest {
     @Test
     void listUsersOrgScopeFiltersDisabledUsers() {
         Team alpha = team(1L, "alpha");
-        when(userRepository.findAll())
-                .thenReturn(
-                        queryOf(
-                                user(1L, "enabled@alpha.com", true, alpha),
-                                user(2L, "disabled@alpha.com", false, alpha)));
+        PanacheQuery<User> query =
+                queryOf(
+                        user(1L, "enabled@alpha.com", true, alpha),
+                        user(2L, "disabled@alpha.com", false, alpha));
+        when(userRepository.findAll()).thenReturn(query);
         authenticateAs("enabled@alpha.com");
 
         Response response = controller.listUsers();
@@ -427,7 +427,8 @@ class UserControllerTest {
     @Test
     void listUsersOrgScopeIsCaseInsensitive() {
         applicationProperties.getStorage().getSigning().setUserListScope("ORG");
-        when(userRepository.findAll()).thenReturn(queryOf(user(1L, "a@alpha.com", true, null)));
+        PanacheQuery<User> query = queryOf(user(1L, "a@alpha.com", true, null));
+        when(userRepository.findAll()).thenReturn(query);
         authenticateAs("a@alpha.com");
 
         Response response = controller.listUsers();

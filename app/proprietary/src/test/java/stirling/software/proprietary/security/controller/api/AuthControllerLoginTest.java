@@ -29,6 +29,8 @@ import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.access.service.ResourceAccessService;
+import stirling.software.proprietary.access.service.TeamLeadLookup;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
@@ -40,6 +42,7 @@ import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.RefreshRateLimitService;
 import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.service.AiUserDataService;
 
 /**
  * Migration (Spring MockMvc -> direct JAX-RS calls): {@code AuthController} now returns {@code
@@ -65,6 +68,9 @@ class AuthControllerLoginTest {
     @Mock private TotpService totpService;
     @Mock private RefreshRateLimitService refreshRateLimitService;
     @Mock private SecurityIdentity securityIdentity;
+    @Mock private ResourceAccessService resourceAccessService;
+    @Mock private TeamLeadLookup teamLeadLookup;
+    @Mock private AiUserDataService aiUserDataService;
 
     private ApplicationProperties.Security securityProperties;
     private AuthController controller;
@@ -91,6 +97,9 @@ class AuthControllerLoginTest {
         controller.securityProperties = securityProperties;
         controller.applicationProperties = applicationProperties;
         controller.securityIdentity = securityIdentity;
+        controller.resourceAccessService = resourceAccessService;
+        controller.teamLeadLookup = teamLeadLookup;
+        controller.aiUserDataService = aiUserDataService;
     }
 
     /** Vert.x request whose remote address is unknown (controller treats this as a null IP). */
