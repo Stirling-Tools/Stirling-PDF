@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { TOOL_FORMATS, type ToolFormat } from "@app/types/toolIO";
 import {
@@ -9,7 +10,7 @@ import {
 
 /** The en-US `[toolFormat]` block, read straight from the locale file. */
 function toolFormatLabels(): Record<string, string> {
-  let current = dirname(new URL(import.meta.url).pathname);
+  let current = dirname(fileURLToPath(import.meta.url));
   for (let i = 0; i < 12; i++) {
     try {
       const toml = readFileSync(
