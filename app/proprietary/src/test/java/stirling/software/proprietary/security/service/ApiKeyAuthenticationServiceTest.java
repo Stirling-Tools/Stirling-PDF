@@ -60,7 +60,7 @@ class ApiKeyAuthenticationServiceTest {
         String raw = "raw-1";
         when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
                 .thenReturn(Optional.of(key(1, 7, true, null)));
-        when(userRepository.findById(7L)).thenReturn(Optional.of(user(7, true)));
+        when(userRepository.findByIdOptional(7L)).thenReturn(Optional.of(user(7, true)));
 
         var result = service.authenticate(raw);
 
@@ -87,7 +87,7 @@ class ApiKeyAuthenticationServiceTest {
         String raw = "raw-3";
         when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
                 .thenReturn(Optional.of(key(3, 8, true, null)));
-        when(userRepository.findById(8L)).thenReturn(Optional.of(user(8, false)));
+        when(userRepository.findByIdOptional(8L)).thenReturn(Optional.of(user(8, false)));
 
         assertThat(service.authenticate(raw)).isEmpty();
     }
@@ -122,7 +122,7 @@ class ApiKeyAuthenticationServiceTest {
         owner.addAuthority(new Authority(Role.ADMIN.getRoleId(), owner));
         when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
                 .thenReturn(Optional.of(key(6, 8, true, null)));
-        when(userRepository.findById(8L)).thenReturn(Optional.of(owner));
+        when(userRepository.findByIdOptional(8L)).thenReturn(Optional.of(owner));
 
         var result = service.authenticate(raw);
 

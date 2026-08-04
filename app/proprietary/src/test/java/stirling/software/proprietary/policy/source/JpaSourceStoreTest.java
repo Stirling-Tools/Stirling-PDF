@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -69,7 +73,7 @@ class JpaSourceStoreTest {
     void getDeserializesTheSourceFromJson() {
         Source source =
                 new Source("s1", "Claims", "folder", Map.of("directory", "/in"), true, "alice", 1L);
-        when(repository.findById("s1")).thenReturn(Optional.of(entityFor(source)));
+        when(repository.findByIdOptional("s1")).thenReturn(Optional.of(entityFor(source)));
 
         assertEquals(source, store.get("s1").orElseThrow());
     }
@@ -77,7 +81,7 @@ class JpaSourceStoreTest {
     @Test
     void allDeserializesEverySource() {
         Source a = new Source("a", "A", "folder", Map.of("directory", "/a"), true, "alice", 1L);
-        when(repository.findAll()).thenReturn(List.of(entityFor(a)));
+        when(repository.findAll()).thenReturn(queryOf(entityFor(a)));
 
         assertEquals(List.of(a), store.all());
     }
@@ -98,6 +102,14 @@ class JpaSourceStoreTest {
 
         when(repository.existsById("missing")).thenReturn(false);
         assertFalse(store.delete("missing"));
+    }
+
+    // Panache findAll() hands back a query, and the store streams it.
+    @SuppressWarnings("unchecked")
+    private PanacheQuery<SourceEntity> queryOf(SourceEntity... entities) {
+        PanacheQuery<SourceEntity> query = mock(PanacheQuery.class);
+        when(query.<SourceEntity>stream()).thenReturn(Stream.of(entities));
+        return query;
     }
 
     private SourceEntity entityFor(Source source) {

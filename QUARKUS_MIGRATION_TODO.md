@@ -1,165 +1,129 @@
 # Quarkus migration TODO
 
-The Spring Boot -> Quarkus port of this branch is not finished. This file is the single backlog for
-what is left. The per-file `TODO: Migration required` comments that used to carry this information
-have been removed from the source and folded in here. Companion docs:
-`QUARKUS_MIGRATION_HANDOFF.md` (how to work on the migration - stack, commands, patterns) and
-`migration-report.md` (the original summary).
+Backlog for finishing the Spring Boot -> Quarkus port of this branch. The per-file
+`TODO: Migration required` comments that used to carry this information were removed from the
+source and folded in here. Companion docs: `QUARKUS_MIGRATION_HANDOFF.md` (stack, commands,
+patterns) and `migration-report.md` (the original summary).
 
 ## Status
 
-| Module | `compileJava` | Notes |
-|---|---|---|
-| `:common` | clean | no Spring imports left in main sources |
-| `:stirling-pdf` (`app/core`) | clean | no Spring imports left in main sources |
-| `:proprietary` | **fails** | see [Blocking compile errors](#blocking-compile-errors) |
-| `:saas` | not measured | opt-in flavor (`STIRLING_FLAVOR=saas`), sits on top of `:proprietary` |
+| Module | main sources | test sources | notes |
+|---|---|---|---|
+| `:common` | compiles | compiles | no Spring imports |
+| `:stirling-pdf` (`app/core`) | compiles | compiles | no Spring imports |
+| `:proprietary` | **compiles** | **fails** | see [Test layer](#test-layer) |
+| `:saas` | not measured | not measured | opt-in flavor, 21 files still on Spring |
 
-`:proprietary` is compiled by **every** flavor - `settings.gradle` always includes it and only
-`:saas` is conditional - so `./gradlew build` cannot pass on any flavor, `core` included, until the
-list below is empty.
+The **proprietary (default) flavor builds, boots and serves**:
 
-## Blocking compile errors
+```bash
+STIRLING_FLAVOR=proprietary ./gradlew :stirling-pdf:quarkusBuild -PnoSpotless
+```
 
-`STIRLING_FLAVOR=proprietary ./gradlew :proprietary:compileJava` reports **1266 errors across
-70 files**. javac stops printing after 100 errors by default; to see them all, temporarily
-add `options.compilerArgs << '-Xmaxerrs' << '20000'` to the `JavaCompile` tasks.
+```bash
+java -jar app/core/build/stirling-pdf-*-runner.jar
+```
 
-Two things worth knowing before working through this list:
+Verified on that jar: Quarkus augmentation clean, **0 errors during startup**, and
+`rotate-pdf`, `get-info-on-pdf` and `compress-pdf` all return valid output over HTTP.
+Its OpenAPI document carries **333 operations over 315 paths**, against main's 294/277.
 
-- **Lombok bails on the first hard javac error and takes every generated member with it.** One
-  malformed annotation used to produce ~5500 extra `cannot find symbol: variable log` /
-  `cannot find symbol: method getX()` errors in unrelated files. If the count jumps, look for a
-  single real error first rather than trusting the total.
-- Fix the shared types (repositories, resolvers) before their callers; a lot of `cannot find symbol`
-  in a controller is really its repository failing to compile.
+`./gradlew build` still fails, because `:proprietary` test sources do not compile yet - and note
+`settings.gradle` includes `:proprietary` on *every* flavor, so that blocks the `core` leg too.
 
-Grouped by the port each file needs, largest group first.
+## Test layer
 
-### Spring MVC REST controllers -> JAX-RS (16 files, 682 errors)
+`STIRLING_FLAVOR=proprietary ./gradlew :proprietary:compileTestJava` fails in 16 files.
+The main-source port moved signatures the tests still assert against. The three shapes:
 
-`@RestController` + `@RequestMapping` -> `@ApplicationScoped` + `@Path`; `@GetMapping`/`@PostMapping`/`@PutMapping`/`@DeleteMapping` -> `@GET`/`@POST`/`@PUT`/`@DELETE` + `@Path`; `ResponseEntity<T>` -> `jakarta.ws.rs.core.Response`; `@RequestBody` -> a plain parameter; `@RequestParam` -> `@QueryParam` (or `@RestForm` for multipart); `@PathVariable` -> `@PathParam`; `@RequestHeader` -> `@HeaderParam`; `@ModelAttribute`/`@RequestPart` -> `@BeanParam`/`@RestForm`; `@AuthenticationPrincipal` -> injected `SecurityIdentity`. Exemplar: `controller/api/AdminJobController.java`.
+- **`findById` stubs.** Spring Data returned `Optional<E>`; Panache's inherited `findById` returns
+  a nullable entity and `findByIdOptional` returns the `Optional`. Production call sites moved to
+  `findByIdOptional`, so `when(repo.findById(id)).thenReturn(Optional.of(x))` has to follow.
+- **A missing `save()` shim, which is a production bug, not a test bug.**
+  `WorkflowParticipantRepository` and `FileEncryptionKeyRepository` are Panache repositories that
+  never regained the `save(E)` that main's `JpaRepository` supplied for free. Add the shim rather
+  than editing the tests around it.
+- **`Environment` mocks.** `TeamMembershipService` moved to MicroProfile Config;
+  `TeamMembershipServiceTest` still mocks Spring's `Environment` - and does so *fully qualified*,
+  so the import-based test exclusion filter does not catch it.
 
-- [ ] `proprietary/policy/controller/PolicyController.java` - 130 errors
-- [ ] `proprietary/integration/controller/IntegrationConfigController.java` - 76 errors
-- [ ] `proprietary/integration/api/ExternalApiCallController.java` - 68 errors
-- [ ] `proprietary/policy/source/SourceController.java` - 64 errors
-- [ ] `proprietary/access/controller/ResourceGrantController.java` - 54 errors
-- [ ] `proprietary/accountlink/AccountLinkController.java` - 50 errors
-- [ ] `proprietary/integration/purview/PurviewLabelController.java` - 48 errors
-- [ ] `proprietary/security/controller/api/AdminLoginAgreementController.java` - 34 errors
-- [ ] `proprietary/controller/api/PortalApiKeysController.java` - 32 errors
-- [ ] `proprietary/policy/webhook/WebhookReceiverController.java` - 32 errors
-- [ ] `proprietary/policy/controller/ClassificationMeterController.java` - 26 errors
-- [ ] `proprietary/controller/api/ClassifyLabelController.java` - 24 errors
-- [ ] `proprietary/controller/api/PortalDocumentsController.java` - 14 errors
-- [ ] `proprietary/controller/api/PortalInfraAuditController.java` - 14 errors
-- [ ] `proprietary/controller/api/FleetUsageController.java` - 12 errors
-- [ ] `proprietary/policy/controller/FolderAccessSettingsController.java` - 4 errors
+- [ ] `proprietary/accountlink/InstanceEntitlementGateTest.java` - 2 distinct error(s)
+- [ ] `proprietary/controller/api/PdfCommentAgentControllerTest.java` - 1 distinct error(s)
+- [ ] `proprietary/controller/api/ProprietaryUIDataControllerTest.java` - 1 distinct error(s)
+- [ ] `proprietary/policy/config/FolderAccessGuardTest.java` - 2 distinct error(s)
+- [ ] `proprietary/policy/engine/PolicyExecutorTest.java` - 1 distinct error(s)
+- [ ] `proprietary/policy/input/FolderInputSourceTest.java` - 1 distinct error(s)
+- [ ] `proprietary/policy/output/FolderOutputSinkTest.java` - 2 distinct error(s)
+- [ ] `proprietary/policy/s3/EmbeddedS3CredentialMigrationTest.java` - 1 distinct error(s)
+- [ ] `proprietary/policy/source/JpaSourceStoreTest.java` - 2 distinct error(s)
+- [ ] `proprietary/security/controller/api/UserControllerTest.java` - 1 distinct error(s)
+- [ ] `proprietary/security/service/ApiKeyAuthenticationServiceTest.java` - 1 distinct error(s)
+- [ ] `proprietary/security/service/TeamMembershipServiceTest.java` - 1 distinct error(s)
+- [ ] `proprietary/security/service/UserServiceTest.java` - 1 distinct error(s)
+- [ ] `proprietary/service/AiWorkflowServiceTest.java` - 1 distinct error(s)
+- [ ] `proprietary/storage/crypto/InMemoryKeyRepo.java` - 1 distinct error(s)
+- [ ] `proprietary/workflow/service/WorkflowSessionServiceTest.java` - 1 distinct error(s)
 
-### Spring Data JPA repositories -> Panache (14 files, 328 errors)
+## `:saas` flavor
 
-`extends JpaRepository<T, ID>` -> `implements PanacheRepositoryBase<T, ID>` on an `@ApplicationScoped` class; derived finders become explicit `find`/`list` calls; `@Query`/`@Modifying`/`@Param` become Panache `find(...)`/`update(...)` with `Parameters.with(...)`; `findById` -> `findByIdOptional`; add a `save()` shim where callers expect Spring Data's. Exemplars: `policy/store/PolicyRepository.java`, `repository/PersistentAuditEventRepository.java`.
+21 files still import Spring. Same three tiers as the proprietary port, so the same
+recipes apply. `:saas` sits on `:proprietary`, so it could not be measured until now.
 
-- [ ] `proprietary/policy/ledger/ProcessedFileRepository.java` - 136 errors
-- [ ] `proprietary/security/repository/ApiKeyDailyUsageRepository.java` - 42 errors
-- [ ] `proprietary/policy/source/SourceDocCountRepository.java` - 38 errors
-- [ ] `proprietary/accountlink/UsageCounterRepository.java` - 34 errors
-- [ ] `proprietary/policy/source/SourceDocTotalRepository.java` - 22 errors
-- [ ] `proprietary/access/repository/ResourceGrantRepository.java` - 16 errors
-- [ ] `proprietary/policy/source/SourceRepository.java` - 12 errors
-- [ ] `proprietary/integration/repository/IntegrationConfigRepository.java` - 4 errors
-- [ ] `proprietary/security/repository/ApiKeyRepository.java` - 4 errors
-- [ ] `proprietary/accountlink/AccountLinkSyncStateRepository.java` - 4 errors
-- [ ] `proprietary/accountlink/DeviceCredentialRepository.java` - 4 errors
-- [ ] `proprietary/accountlink/MeteredInputSignatureRepository.java` - 4 errors
-- [ ] `proprietary/policy/migration/CompletedMigrationRepository.java` - 4 errors
-- [ ] `proprietary/security/repository/JwtSigningKeyRepository.java` - 4 errors
+### Spring Data repositories -> Panache (5)
 
-### Spring MVC infrastructure (interceptors, WebMvcConfigurer) (3 files, 34 errors)
+- [ ] `saas/accountlink/LinkedInstanceRepository.java`
+- [ ] `saas/payg/bundle/PrepaidBundleRepository.java`
+- [ ] `saas/payg/repository/PaygInstanceUsageRepository.java`
+- [ ] `saas/procurement/repository/ProcurementDealRepository.java`
+- [ ] `saas/procurement/repository/ProcurementQuoteRepository.java`
 
-`HandlerInterceptor` / `WebMvcConfigurer` / `HandlerMapping` / `WebUtils` have no Quarkus equivalent. Re-implement as a JAX-RS `@Provider ContainerRequestFilter` (or a Vert.x route filter for non-JAX-RS paths) and delete the MVC registration class.
+### Services and config (9)
 
-- [ ] `proprietary/accountlink/InstanceEntitlementInterceptor.java` - 20 errors
-- [ ] `proprietary/accountlink/AccountLinkWebMvcConfig.java` - 12 errors
-- [ ] `proprietary/policy/controller/PolicyRunRoutes.java` - 2 errors
+- [ ] `saas/accountlink/AccountLinkService.java`
+- [ ] `saas/accountlink/LinkedInstanceAuthenticationToken.java`
+- [ ] `saas/model/SaasUserExtensions.java`
+- [ ] `saas/payg/instance/InstanceUsageIngestService.java`
+- [ ] `saas/payg/stripe/StripeInvoiceDao.java`
+- [ ] `saas/payg/stripe/StripePaymentMethodDao.java`
+- [ ] `saas/procurement/license/KeygenEnterpriseLicenseService.java`
+- [ ] `saas/procurement/license/MockEnterpriseLicenseService.java`
+- [ ] `saas/security/SaasPortalAuditScopeResolver.java`
 
-### ResponseStatusException -> WebApplicationException (4 files, 26 errors)
+### REST controllers and filters (7)
 
-`ResponseStatusException(HttpStatus.X, msg)` -> `jakarta.ws.rs.WebApplicationException(msg, Response.Status.X)`; `HttpStatus` -> `Response.Status`.
+- [ ] `saas/accountlink/AccountLinkController.java`
+- [ ] `saas/accountlink/DeviceCredentialAuthenticationFilter.java`
+- [ ] `saas/accountlink/InstanceController.java`
+- [ ] `saas/payg/api/PaygInvoicesController.java`
+- [ ] `saas/payg/api/PaygPaymentMethodController.java`
+- [ ] `saas/procurement/api/ProcurementController.java`
+- [ ] `saas/usage/SaasFleetUsageController.java`
 
-- [ ] `proprietary/access/service/OwnershipService.java` - 10 errors
-- [ ] `proprietary/integration/service/IntegrationConfigService.java` - 8 errors
-- [ ] `proprietary/service/AiFeatureGate.java` - 4 errors
-- [ ] `proprietary/security/service/ApiKeyManagementService.java` - 4 errors
+## Parity gaps against main
 
-### Conditional beans (9 files, 56 errors)
+Measured by diffing the OpenAPI document of a booted `origin/main` (Spring, proprietary flavor)
+against a booted branch jar of the same flavor.
 
-`@ConditionalOnProperty` / `@ConditionalOnMissingBean` gate on runtime config, which Arc cannot do at build time. Branch convention: keep the bean unconditional and guard at the call site on `ApplicationProperties`, or use `@io.quarkus.arc.lookup.LookupIfProperty` / `@IfBuildProfile` once the flag can become build-time.
+- **The automation/policy stack is unavailable on the proprietary flavor.** Every policy bean
+  carries `@IfBuildProfile("saas")` - a pre-existing branch decision, not something main does:
+  main serves policies on proprietary. Arc turns that gate into `@Vetoed` off the saas profile, so
+  each consumer needs the same gate or augmentation fails; 11 controllers/services were gated to
+  make the flavor build. The visible symptom in the spec diff is one missing operation,
+  `GET /api/v1/admin/settings/policies/implied-folder-roots`, but the whole subsystem is off.
+  Deciding whether policies should run on proprietary is an owner call, not a mechanical port.
+- **`policies.streamTimeoutMs` is ignored.** `/api/v1/policies/run-stream` used Spring's
+  `SseEmitter(timeout)`; JAX-RS SSE has no per-sink deadline, so the stream is now bounded by the
+  container's HTTP idle timeout instead of the configured 30 minutes.
+- **Multipart parameters no longer bind from the query string.** Spring's `@RequestParam` read
+  both the query string and the form body; `@RestForm` reads only the body. 20 operations are
+  affected. A client that passed these as query parameters on a multipart POST would now get a
+  null. The frontend sends them as form fields, so this is a compatibility narrowing for API
+  callers rather than a broken feature.
 
-- [ ] `proprietary/accountlink/UsageSyncService.java` - 14 errors
-- [ ] `proprietary/access/config/AccessConfig.java` - 10 errors
-- [ ] `proprietary/accountlink/DeviceCredentialStore.java` - 8 errors
-- [ ] `proprietary/accountlink/AccountLinkClient.java` - 4 errors
-- [ ] `proprietary/accountlink/AccountLinkService.java` - 4 errors
-- [ ] `proprietary/accountlink/LocalUsageService.java` - 4 errors
-- [ ] `proprietary/accountlink/EntitlementCache.java` - 4 errors
-- [ ] `proprietary/accountlink/InstanceEntitlementGate.java` - 4 errors
-- [ ] `proprietary/accountlink/UsageMeterService.java` - 4 errors
-
-### Spring lifecycle events (5 files, 52 errors)
-
-`@EventListener(ApplicationReadyEvent|ContextRefreshedEvent)` -> `void onStart(@Observes StartupEvent ev)`; `@TransactionalEventListener` -> an explicit call after the transaction commits; `ApplicationEventPublisher` -> CDI `Event<T>`.
-
-- [ ] `proprietary/policy/seed/DefaultClassificationPolicySeeder.java` - 16 errors
-- [ ] `proprietary/policy/output/PolicyInlineOutputMigration.java` - 10 errors
-- [ ] `proprietary/policy/s3/EmbeddedS3CredentialMigration.java` - 10 errors
-- [ ] `proprietary/policy/ledger/JpaProcessedLedger.java` - 8 errors
-- [ ] `proprietary/service/AiEngineConfigSync.java` - 8 errors
-
-### Paging / sorting / Persistable (4 files, 24 errors)
-
-`Pageable`/`PageRequest`/`Sort`/`Page<T>` -> Panache `page(Page.of(n, size))` + `io.quarkus.panache.common.Sort`; `Persistable` -> drop it (Panache decides insert vs update from the id).
-
-- [ ] `proprietary/service/PortalAuditReadService.java` - 12 errors
-- [ ] `proprietary/policy/ledger/ProcessedFileEntity.java` - 4 errors
-- [ ] `proprietary/policy/source/SourceDocCountEntity.java` - 4 errors
-- [ ] `proprietary/policy/source/SourceDocTotalEntity.java` - 4 errors
-
-### Scheduling (1 files, 4 errors)
-
-`@Scheduled` / `SchedulingConfigurer` / `FixedDelayTask` -> `io.quarkus.scheduler.Scheduled(every = "...")`; a dynamic registrar becomes a `@Scheduled` method reading its interval from config.
-
-- [ ] `proprietary/security/service/ApiKeyUsageRecorder.java` - 4 errors
-
-### Transaction propagation (2 files, 20 errors)
-
-`@Transactional(propagation = REQUIRES_NEW)` -> `jakarta.transaction.Transactional(REQUIRES_NEW)` or `QuarkusTransaction.requiringNew()`; `readOnly` has no jakarta equivalent and is dropped.
-
-- [ ] `proprietary/security/service/ApiKeyUsageWriter.java` - 14 errors
-- [ ] `proprietary/security/service/ApiKeyLegacyMigrator.java` - 6 errors
-
-### Spring HTTP MediaType (2 files, 6 errors)
-
-`org.springframework.http.MediaType` / `MediaTypeFactory` -> `jakarta.ws.rs.core.MediaType` plus an explicit extension-to-type map.
-
-- [ ] `proprietary/policy/output/S3OutputSink.java` - 4 errors
-- [ ] `proprietary/integration/api/ApiTokenCache.java` - 2 errors
-
-### Remaining assorted Spring types (10 files, 34 errors)
-
-Assorted remaining Spring types; each file's imports name what it needs.
-
-- [ ] `proprietary/security/service/TeamMembershipService.java` - 8 errors
-- [ ] `proprietary/model/TeamEntityListener.java` - 6 errors
-- [ ] `proprietary/policy/input/S3InputSource.java` - 4 errors
-- [ ] `proprietary/policy/source/JpaSourceDocCounter.java` - 4 errors
-- [ ] `proprietary/accountlink/AccountLinkProperties.java` - 2 errors
-- [ ] `proprietary/integration/api/ResultFiles.java` - 2 errors
-- [ ] `proprietary/access/service/ResourceAccessService.java` - 2 errors
-- [ ] `proprietary/access/security/ResourceAccessSecurity.java` - 2 errors
-- [ ] `proprietary/integration/api/ApiConnectionResolver.java` - 2 errors
-- [ ] `proprietary/policy/s3/S3ConnectionResolver.java` - 2 errors
+Everything else in the spec diff is benign: 97 operations where main published an opaque request
+body and the branch now describes the individual multipart fields, 20 same-name relocations from
+the change above, and 40 branch-only routes (static/SPA paths, MCP, mobile-scanner, AI) that
+springdoc did not document. **No operation loses a parameter outright.**
 
 ## Deferred behaviour
 

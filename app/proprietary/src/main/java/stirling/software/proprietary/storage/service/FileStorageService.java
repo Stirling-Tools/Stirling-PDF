@@ -520,10 +520,10 @@ public class FileStorageService {
                     "Access to stored file {} denied: {}",
                     file != null ? file.getId() : null,
                     e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
+            throw new WebApplicationException(
                     "Access to this file has been revoked (its encryption key is disabled)",
-                    e);
+                    e,
+                    Response.Status.FORBIDDEN);
         } catch (IOException e) {
             log.error(
                     "Failed to load stored file {} (key: {})",

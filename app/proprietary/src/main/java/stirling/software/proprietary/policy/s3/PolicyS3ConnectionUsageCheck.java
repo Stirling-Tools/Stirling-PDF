@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * stores.
  */
 @ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class PolicyS3ConnectionUsageCheck implements IntegrationConfigUsageCheck {
 

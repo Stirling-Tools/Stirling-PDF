@@ -57,11 +57,6 @@ import tools.jackson.databind.json.JsonMapper;
  * steps, multi-input vs per-file dispatch, ZIP unpacking, structured-list parameter encoding,
  * progress callbacks, and timeout propagation. External collaborators are mocked; {@link
  * TempFileManager} is real so ZIP extraction exercises real code.
- *
- * <p>MIGRATION (Spring -> Quarkus): {@link InternalApiClient} now takes a {@code
- * Map<String,List<Object>>} body (was Spring {@code MultiValueMap}) and returns a {@link Response}
- * (was {@code ResponseEntity<Resource>}); file parts are the {@link Resource} shim (was Spring's
- * {@code org.springframework.core.io.Resource}).
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyExecutorTest {
@@ -181,9 +176,7 @@ class PolicyExecutorTest {
         assertEquals(1, result.files().size());
         assertEquals("purchase-order.pdf", result.files().get(0).getFilename());
 
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<Map<String, List<Object>>> bodyCaptor = bodyCaptor();
         verify(internalApiClient, times(1)).post(eq(createPdf), bodyCaptor.capture());
         // No document stream: the body carries only the generator's parameters, no fileInput.
         assertNull(bodyCaptor.getValue().get("fileInput"));
@@ -403,8 +396,7 @@ class PolicyExecutorTest {
 
     /**
      * In-memory {@link Resource} with a stable filename, repeatable reads, and a real {@code
-     * contentLength()} (so the executor's empty-body / ZIP handling works). Replaces the Spring
-     * {@code ByteArrayResource} the test used pre-migration.
+     * contentLength()} (so the executor's empty-body / ZIP handling works).
      */
     private static final class ByteArrayBackedResource implements Resource {
         private final byte[] bytes;

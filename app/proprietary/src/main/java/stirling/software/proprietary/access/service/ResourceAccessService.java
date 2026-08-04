@@ -27,7 +27,8 @@ import stirling.software.proprietary.security.model.User;
 @ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+// jakarta.transaction.Transactional has no readOnly hint; the reads are unchanged without it.
+@Transactional
 public class ResourceAccessService {
 
     private final ResourceGrantRepository grantRepository;
@@ -35,7 +36,7 @@ public class ResourceAccessService {
     private final PrincipalResolver principalResolver;
 
     @ConfigProperty(name = "security.portal.defaultAccess", defaultValue = "ADMINS_AND_TEAM_LEADS")
-    private DefaultAccessPolicy portalDefaultPolicy;
+    DefaultAccessPolicy portalDefaultPolicy;
 
     // ---- public checks ----
 

@@ -37,7 +37,8 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+// jakarta.transaction.Transactional has no readOnly hint; the reads are unchanged without it.
+@Transactional
 public class S3ConnectionResolver {
 
     static final String CONNECTION_ID_OPTION = "connectionId";
@@ -57,7 +58,7 @@ public class S3ConnectionResolver {
         }
         IntegrationConfig connection =
                 connections
-                        .findById(connectionId)
+                        .findByIdOptional(connectionId)
                         .filter(cfg -> cfg.getIntegrationType() == IntegrationType.S3)
                         .filter(this::usableByCurrentUser)
                         // Existence and access collapse into one error: a caller must not be able

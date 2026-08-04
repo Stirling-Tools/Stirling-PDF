@@ -46,8 +46,7 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 
 /**
  * MIGRATION (Spring -> Quarkus): {@link UserService} now depends on the {@code
- * stirling.software.common.security.PasswordEncoder} shim (was Spring's {@code
- * org.springframework.security.crypto.password.PasswordEncoder}); the Spring {@code MessageSource}
+ * stirling.software.common.security.PasswordEncoder} shim; the Spring {@code MessageSource}
  * dependency was removed (localization deferred), so it is no longer mocked. Persistence uses the
  * Panache repository API: {@code persist(...)} (void) for inserts/updates and per-item {@code
  * delete(...)} for cleanup, replacing Spring Data's {@code save(...)} / {@code deleteAll(List)}.
@@ -205,8 +204,6 @@ class UserServiceTest {
         user.setApiKey("old-secret");
         when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
         when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         User updated = userService.addApiKeyToUser("user");
 
@@ -215,7 +212,7 @@ class UserServiceTest {
         // authenticating.
         org.mockito.InOrder inOrder = inOrder(apiKeyAuthenticationService, userRepository);
         inOrder.verify(apiKeyAuthenticationService).revokeMigratedKey("old-secret");
-        inOrder.verify(userRepository).save(user);
+        inOrder.verify(userRepository).persist(user);
         assertNotEquals("old-secret", updated.getApiKey());
     }
 

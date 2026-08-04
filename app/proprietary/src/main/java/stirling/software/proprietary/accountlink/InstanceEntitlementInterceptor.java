@@ -8,25 +8,28 @@ import java.nio.file.Path;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.util.WebUtils;
 
 import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.MultipartFile;
 import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -46,38 +49,61 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
  *
  * <p>Blocking responds {@code 402} with a machine-readable body the FE maps to a "link to activate"
  * prompt; fail-open and flag-off both let the request continue. Metering is separately gated behind
- * {@code …metering.enabled} via {@link ObjectProvider} — switch off means the {@link
- * UsageMeterService} bean is absent and nothing accrues, while the gate still works.
+ * {@code …metering.enabled}, tested before every accrual — switch off means nothing accrues, while
+ * the gate still works.
  */
+// Servlet filter retained (quarkus-undertow): only the servlet API exposes the parsed multipart
+// parts, the attribute preHandle/afterCompletion pass the category through, and the raw status.
+// Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
+// bean; doFilter reads the flag itself and passes straight through, as bean-absence used to.
 @Slf4j
 @ApplicationScoped
 @IfBuildProfile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
-public class InstanceEntitlementInterceptor implements HandlerInterceptor {
+@WebFilter("/*")
+public class InstanceEntitlementInterceptor implements Filter {
 
     private static final String ATTR_CATEGORY =
             InstanceEntitlementInterceptor.class.getName() + ".category";
 
-    private final InstanceEntitlementGate gate;
-    private final EntitlementCache entitlementCache;
-    private final ObjectProvider<UsageMeterService> meterProvider;
-    private final TempFileManager tempFileManager;
-
-    public InstanceEntitlementInterceptor(
-            InstanceEntitlementGate gate,
-            EntitlementCache entitlementCache,
-            ObjectProvider<UsageMeterService> meterProvider,
-            TempFileManager tempFileManager) {
-        this.gate = gate;
-        this.entitlementCache = entitlementCache;
-        this.meterProvider = meterProvider;
-        this.tempFileManager = tempFileManager;
-    }
+    // Field injection, not constructor: Undertow instantiates a @WebFilter through the servlet
+    // container's instance factory, which needs a no-arg constructor.
+    @Inject InstanceEntitlementGate gate;
+    @Inject EntitlementCache entitlementCache;
+    @Inject AccountLinkProperties properties;
+    @Inject Instance<UsageMeterService> meterProvider;
+    @Inject TempFileManager tempFileManager;
 
     @Override
-    public boolean preHandle(
-            HttpServletRequest request, HttpServletResponse response, Object handler)
-            throws Exception {
+    public void doFilter(
+            ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+        // Self-gate on the path scope the InterceptorRegistry used to apply (see
+        // AccountLinkWebMvcConfig): a filter mapped to /* is handed every request.
+        if (!properties.isEnabled() || !AccountLinkWebMvcConfig.isGated(request.getRequestURI())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        if (!preHandle(request, response)) {
+            return;
+        }
+        // A throwing chain is the `ex` Spring handed afterCompletion - same "don't meter" signal.
+        Exception failure = null;
+        try {
+            filterChain.doFilter(request, response);
+        } catch (IOException | ServletException | RuntimeException e) {
+            failure = e;
+            throw e;
+        } finally {
+            afterCompletion(request, response, failure);
+        }
+    }
+
+    // Package-private, not private: the two phases stay individually drivable from the unit test,
+    // the way HandlerInterceptor's were.
+    boolean preHandle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         GateDecision decision;
         try {
             // API-key tool calls are billable (category API); stash the category for the meter.
@@ -104,7 +130,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         }
 
         log.debug("Account-link gate blocked {} ({})", request.getRequestURI(), decision.reason());
-        response.setStatus(HttpStatus.PAYMENT_REQUIRED.value());
+        response.setStatus(Response.Status.PAYMENT_REQUIRED.getStatusCode());
         response.setContentType("application/json");
         response.getWriter()
                 .write(
@@ -114,20 +140,15 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         return false;
     }
 
-    @Override
-    public void afterCompletion(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            Exception ex) {
+    void afterCompletion(HttpServletRequest request, HttpServletResponse response, Exception ex) {
         // Meter successful billable ops only.
         if (ex != null || response.getStatus() >= 400) {
             return;
         }
-        UsageMeterService meter = meterProvider.getIfAvailable();
-        if (meter == null) {
+        if (!properties.getMetering().isEnabled() || !meterProvider.isResolvable()) {
             return; // metering switch off
         }
+        UsageMeterService meter = meterProvider.get();
         if (!(request.getAttribute(ATTR_CATEGORY) instanceof BillingCategory category)
                 || category == BillingCategory.BYPASSED) {
             return;
@@ -157,9 +178,8 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             InstanceEntitlement ent,
             UsageMeterService meter) {
         UnitCalcPolicy policy = ent.unitCalcPolicy();
-        MultipartHttpServletRequest mreq =
-                WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
-        if (mreq == null) {
+        List<Part> fileParts = fileParts(request);
+        if (fileParts == null) {
             long fileless = DocumentUnitCalculator.unitsForFile(0, 0, policy);
             meter.accrue(ent.periodStart(), category, fileless, null);
             return;
@@ -169,32 +189,30 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             List<FileSize> sizes = new ArrayList<>();
             List<String> hashes = new ArrayList<>();
             int fileCount = 0;
-            for (List<MultipartFile> files : mreq.getMultiFileMap().values()) {
-                for (MultipartFile f : files) {
-                    fileCount++;
-                    try {
-                        TempFile temp = tempFileManager.createManagedTempFile(".bin");
-                        temps.add(temp);
-                        // Hash in the same pass that writes the temp file — one read of the upload,
-                        // not a second full read just to fingerprint it.
-                        MessageDigest digest = ContentHasher.newSha256();
-                        try (InputStream in = f.getInputStream();
-                                DigestOutputStream out =
-                                        new DigestOutputStream(
-                                                Files.newOutputStream(temp.getPath()), digest)) {
-                            in.transferTo(out);
-                        }
-                        sizes.add(new FileSize(pageCount(temp.getPath(), f), f.getSize()));
-                        hashes.add(ContentHasher.toHex(digest.digest()));
-                    } catch (IOException | RuntimeException perFile) {
-                        // Couldn't materialise/hash this input — bill on bytes only and, by leaving
-                        // it out of `hashes`, drop dedup for the whole op rather than risk a
-                        // mismatch.
-                        log.debug(
-                                "Metering materialise/hash failed for {}; bytes-only",
-                                f.getOriginalFilename());
-                        sizes.add(new FileSize(0, f.getSize()));
+            for (Part f : fileParts) {
+                fileCount++;
+                try {
+                    TempFile temp = tempFileManager.createManagedTempFile(".bin");
+                    temps.add(temp);
+                    // Hash in the same pass that writes the temp file — one read of the upload,
+                    // not a second full read just to fingerprint it.
+                    MessageDigest digest = ContentHasher.newSha256();
+                    try (InputStream in = f.getInputStream();
+                            DigestOutputStream out =
+                                    new DigestOutputStream(
+                                            Files.newOutputStream(temp.getPath()), digest)) {
+                        in.transferTo(out);
                     }
+                    sizes.add(new FileSize(pageCount(temp.getPath(), f), f.getSize()));
+                    hashes.add(ContentHasher.toHex(digest.digest()));
+                } catch (IOException | RuntimeException perFile) {
+                    // Couldn't materialise/hash this input — bill on bytes only and, by leaving
+                    // it out of `hashes`, drop dedup for the whole op rather than risk a
+                    // mismatch.
+                    log.debug(
+                            "Metering materialise/hash failed for {}; bytes-only",
+                            f.getSubmittedFileName());
+                    sizes.add(new FileSize(0, f.getSize()));
                 }
             }
             long units =
@@ -217,8 +235,35 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         }
     }
 
+    /**
+     * The uploaded inputs - parts carrying a filename, exactly what Spring's multi-file map held -
+     * or null when the request is not multipart at all (the fileless op main spotted by the absence
+     * of a native multipart request). Parts that can no longer be read yield none, billing the same
+     * 1-unit floor as a fileless op rather than inventing inputs.
+     */
+    private static List<Part> fileParts(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        if (contentType == null || !contentType.toLowerCase().startsWith("multipart/form-data")) {
+            return null;
+        }
+        List<Part> files = new ArrayList<>();
+        try {
+            Collection<Part> parts = request.getParts();
+            if (parts != null) {
+                for (Part part : parts) {
+                    if (part.getSubmittedFileName() != null) {
+                        files.add(part);
+                    }
+                }
+            }
+        } catch (IOException | ServletException | RuntimeException e) {
+            log.debug("Metering could not read the multipart parts of {}", request.getRequestURI());
+        }
+        return files;
+    }
+
     /** Page count via jpdfium (parser-identical to SaaS); 0 for non-PDF / unreadable inputs. */
-    private static int pageCount(Path path, MultipartFile file) {
+    private static int pageCount(Path path, Part file) {
         if (!isPdf(file)) {
             return 0;
         }
@@ -228,7 +273,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             // Malformed / encrypted → byte axis only, matching the SaaS classifier.
             log.debug(
                     "Page count unavailable for {}; metering on bytes only",
-                    file.getOriginalFilename());
+                    file.getSubmittedFileName());
             return 0;
         }
     }
@@ -240,12 +285,12 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         return ContentHasher.sha256(String.join("\n", sorted).getBytes(StandardCharsets.UTF_8));
     }
 
-    private static boolean isPdf(MultipartFile file) {
+    private static boolean isPdf(Part file) {
         String contentType = file.getContentType();
         if (contentType != null && contentType.toLowerCase().contains("pdf")) {
             return true;
         }
-        String name = file.getOriginalFilename();
+        String name = file.getSubmittedFileName();
         return name != null && name.toLowerCase().endsWith(".pdf");
     }
 }

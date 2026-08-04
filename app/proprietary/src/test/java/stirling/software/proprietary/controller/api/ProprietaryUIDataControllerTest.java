@@ -1,12 +1,8 @@
 package stirling.software.proprietary.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.security.Principal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,13 +13,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.security.identity.SecurityIdentity;
 
 import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.AccountData;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.DatabaseData;
@@ -44,14 +40,6 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * MIGRATION (Spring -> Quarkus): {@code ProprietaryUIDataController} endpoints now return JAX-RS
- * {@link Response} (was {@code ResponseEntity}); {@code getAccountData()} takes no argument and
- * reads the caller from the injected {@code SecurityIdentity} (was a Spring {@code Authentication}
- * parameter); and {@code UserRepository} is a Panache repository, so {@code findAll()} returns a
- * {@link PanacheQuery} (stubbed to {@code .list()} here). Assertions are adapted to the JAX-RS
- * status code / entity API.
- */
 @ExtendWith(MockitoExtension.class)
 class ProprietaryUIDataControllerTest {
 
@@ -65,6 +53,7 @@ class ProprietaryUIDataControllerTest {
     @Mock private PersistentAuditEventRepository auditRepository;
     @Mock private MfaService mfaService;
     @Mock private LoginAttemptService loginAttemptService;
+    @Mock private ResourceAccessService resourceAccessService;
     @Mock private SecurityIdentity securityIdentity;
 
     private ApplicationProperties applicationProperties;
@@ -100,22 +89,15 @@ class ProprietaryUIDataControllerTest {
                         licenseSettingsService,
                         auditRepository,
                         mfaService,
-                        loginAttemptService);
+                        loginAttemptService,
+                        resourceAccessService);
         // securityIdentity is @Inject field injection - wire the mock directly (no CDI container).
         controller.securityIdentity = securityIdentity;
     }
 
-    @SuppressWarnings("unchecked")
-    private PanacheQuery<User> queryOf(List<User> users) {
-        PanacheQuery<User> query = mock(PanacheQuery.class);
-        lenient().when(query.list()).thenReturn(users);
-        return query;
-    }
-
     @Test
     void loginDataFlagsFirstTimeSetupWhenNoUsers() {
-        PanacheQuery<User> emptyQuery = queryOf(Collections.emptyList());
-        when(userRepository.findAll()).thenReturn(emptyQuery);
+        when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId())).thenReturn(0L);
 
         Response response = controller.getLoginData();
 
@@ -141,10 +123,9 @@ class ProprietaryUIDataControllerTest {
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
         when(mfaService.isMfaRequired(user)).thenReturn(false);
 
-        Principal principal = mock(Principal.class);
-        when(principal.getName()).thenReturn("user@example.com");
+        // The User entity is itself the SecurityIdentity principal (implements Principal).
         when(securityIdentity.isAnonymous()).thenReturn(false);
-        when(securityIdentity.getPrincipal()).thenReturn(principal);
+        when(securityIdentity.getPrincipal()).thenReturn(user);
 
         Response response = controller.getAccountData();
 

@@ -5,6 +5,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import stirling.software.proprietary.policy.webhook.WebhookConfig;
 
 @Slf4j
 @ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class WebhookTrigger implements PolicyTrigger {
 

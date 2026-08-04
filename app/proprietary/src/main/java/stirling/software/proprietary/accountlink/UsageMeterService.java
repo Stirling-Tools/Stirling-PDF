@@ -3,8 +3,6 @@ package stirling.software.proprietary.accountlink;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
 import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -24,12 +22,11 @@ import stirling.software.proprietary.billing.BillingCategory;
  * instance and in the cloud. Fileless ops pass a null signature and always accrue. {@link #accrue}
  * is best-effort: callers need not handle persistence errors.
  */
+// Arc cannot gate a bean on a runtime property, so the metering flag no longer removes this bean;
+// callers check AccountLinkProperties.getMetering().isEnabled() before accruing.
 @Slf4j
 @ApplicationScoped
 @IfBuildProfile("!saas")
-@ConditionalOnProperty(
-        name = "stirling.billing.account-link.metering.enabled",
-        havingValue = "true")
 public class UsageMeterService {
 
     private final UsageCounterRepository repo;

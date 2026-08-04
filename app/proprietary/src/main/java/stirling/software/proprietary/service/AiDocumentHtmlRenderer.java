@@ -1,6 +1,7 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -126,8 +127,8 @@ public class AiDocumentHtmlRenderer {
     }
 
     private static String loadTemplate() {
-        try {
-            return new ClassPathResource(TEMPLATE_PATH).getContentAsString(StandardCharsets.UTF_8);
+        try (InputStream in = new ClassPathResource(TEMPLATE_PATH).getInputStream()) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

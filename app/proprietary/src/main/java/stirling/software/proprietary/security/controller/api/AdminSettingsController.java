@@ -192,7 +192,7 @@ public class AdminSettingsController {
                                 return isSensitiveFieldWithPath(leaf, key);
                             });
             if (settings.isEmpty()) {
-                return ResponseEntity.ok(Map.of("message", "No changed settings to update."));
+                return Response.ok(Map.of("message", "No changed settings to update.")).build();
             }
 
             // Validate all settings first before applying any changes

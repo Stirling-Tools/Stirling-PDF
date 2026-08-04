@@ -178,7 +178,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         if (cached != null) {
             return Optional.of(cached);
         }
-        Optional<JwtSigningKeyEntity> entityOpt = keyRepository.findById(keyId);
+        Optional<JwtSigningKeyEntity> entityOpt = keyRepository.findByIdOptional(keyId);
         if (entityOpt.isEmpty()) {
             log.warn("No signing key found in DB for keyId: {}", keyId);
             return Optional.empty();

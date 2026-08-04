@@ -39,11 +39,14 @@ public class SignDocumentRequest {
 
     // Certificate/key upload parts. RESTEasy Reactive only populates @RestForm FileUpload fields
     // (not the common MultipartFile shim), so they are bound as FileUpload here and adapted back to
-    // MultipartFile via the getP12File()/getPrivateKeyFile()/getCertFile() accessors below, leaving
-    // the signing service unchanged. The frontend posts these exact part names (p12File for
-    // PKCS12/PFX/JKS keystores; privateKeyFile + certFile for PEM).
+    // MultipartFile via the getP12File()/getJksFile()/getPrivateKeyFile()/getCertFile() accessors
+    // below, leaving the signing service unchanged. The frontend posts these exact part names
+    // (p12File for PKCS12/PFX; jksFile for JKS; privateKeyFile + certFile for PEM).
     @RestForm("p12File")
     private FileUpload p12FileUpload;
+
+    @RestForm("jksFile")
+    private FileUpload jksFileUpload;
 
     @RestForm("password")
     private String password;
@@ -56,6 +59,10 @@ public class SignDocumentRequest {
 
     public MultipartFile getP12File() {
         return FileUploadMultipartFile.of(p12FileUpload);
+    }
+
+    public MultipartFile getJksFile() {
+        return FileUploadMultipartFile.of(jksFileUpload);
     }
 
     public MultipartFile getPrivateKeyFile() {

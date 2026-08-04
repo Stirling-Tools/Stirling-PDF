@@ -1,12 +1,13 @@
 package stirling.software.proprietary.integration.api;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.TempFileManager;
@@ -132,12 +133,49 @@ final class ResultFiles {
     }
 
     static Resource asResource(byte[] content, String filename) {
-        return new ByteArrayResource(content) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        };
+        return new ByteArrayBackedResource(content, filename);
+    }
+
+    /**
+     * In-memory {@link Resource} replacing Spring's {@code ByteArrayResource}. The response bytes
+     * are read more than once - sniffed for the ZIP magic, then extracted or streamed out - and
+     * {@code ZipExtractionUtils} sizes a resource before reading it, so the common {@code
+     * InputStreamResource} shim (single-read, length {@code -1}) will not do here.
+     */
+    private static final class ByteArrayBackedResource implements Resource {
+
+        private final byte[] content;
+        private final String filename;
+
+        ByteArrayBackedResource(byte[] content, String filename) {
+            this.content = content;
+            this.filename = filename;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(content);
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+
+        @Override
+        public long contentLength() {
+            return content.length;
+        }
+
+        @Override
+        public File getFile() throws IOException {
+            throw new IOException("the API response is held in memory, not backed by a file");
+        }
     }
 
     /** Only {@code *} is supported, and only against the entry's own name. */

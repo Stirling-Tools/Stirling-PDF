@@ -55,7 +55,7 @@ public class NetworkConnectionResolver {
         }
         IntegrationConfig connection =
                 connections
-                        .findById(connectionId)
+                        .findByIdOptional(connectionId)
                         .filter(cfg -> cfg.getIntegrationType() == IntegrationType.NETWORK)
                         .filter(this::usableByCurrentUser)
                         // Existence and access collapse into one error so a caller cannot tell

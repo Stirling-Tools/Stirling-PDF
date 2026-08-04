@@ -1,7 +1,5 @@
 package stirling.software.proprietary.policy.controller;
 
-import org.springframework.web.servlet.HandlerMapping;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -23,14 +21,18 @@ public final class PolicyRunRoutes {
 
     private static final String BASE = "/api/v1/policies";
 
+    /** Same attribute name {@code AiToolRoutes} reads, so the two gates can't drift. */
+    private static final String BEST_MATCHING_PATTERN_ATTRIBUTE =
+            "org.springframework.web.servlet.HandlerMapping.bestMatchingPattern";
+
     private PolicyRunRoutes() {}
 
     /**
      * True when the request resolved to a policy execute endpoint. Prefers the matched route
-     * pattern (context-path independent, set by Spring MVC) and falls back to the raw request URI.
+     * pattern when one is set (context-path independent) and falls back to the raw request URI.
      */
     public static boolean matches(HttpServletRequest request) {
-        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        Object pattern = request.getAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE);
         String path = pattern instanceof String s ? s : request.getRequestURI();
         String rel = relativeToBase(path);
         return rel != null && isExecuteRoute(rel);

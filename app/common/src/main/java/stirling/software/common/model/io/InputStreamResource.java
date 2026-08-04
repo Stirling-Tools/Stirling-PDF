@@ -44,6 +44,11 @@ public class InputStreamResource implements Resource {
     }
 
     @Override
+    public boolean isOpen() {
+        return true;
+    }
+
+    @Override
     public File getFile() throws IOException {
         throw new IOException("InputStreamResource is not backed by a file");
     }

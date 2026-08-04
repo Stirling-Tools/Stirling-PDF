@@ -70,17 +70,13 @@ public class UserBasedRateLimitingFilter implements jakarta.servlet.Filter {
         // extra keys can't multiply the daily limit. Fall back to the raw key / IP only when the
         // request is unauthenticated.
         String identifier = null;
-        // Check for API key in the request headers
-        String apiKey = request.getHeader("X-API-KEY");
-        if (apiKey != null && !apiKey.trim().isEmpty()) {
-            identifier = // Prefix to distinguish between API keys and usernames
-                    "API_KEY_" + apiKey;
-        } else if (securityIdentity != null && !securityIdentity.isAnonymous()) {
+        if (securityIdentity != null && !securityIdentity.isAnonymous()) {
             identifier = securityIdentity.getPrincipal().getName();
         }
         if (identifier == null) {
             String apiKey = request.getHeader("X-API-KEY");
             if (apiKey != null && !apiKey.trim().isEmpty()) {
+                // Prefix to distinguish between API keys and usernames
                 identifier = "API_KEY_" + apiKey;
             } else {
                 identifier = request.getRemoteAddr();

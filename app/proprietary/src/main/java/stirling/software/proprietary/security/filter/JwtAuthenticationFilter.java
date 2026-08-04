@@ -37,6 +37,7 @@ import stirling.software.common.security.UsernameNotFoundException;
 import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;

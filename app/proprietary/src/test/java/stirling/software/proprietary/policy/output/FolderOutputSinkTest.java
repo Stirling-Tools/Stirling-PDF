@@ -35,11 +35,8 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 /**
- * Tests for {@link FolderOutputSink}: outputs are written to the configured directory on disk.
- *
- * <p>MIGRATION (Spring -> Quarkus): {@link FolderAccessGuard} now reads active profiles from
- * MicroProfile {@link Config} (was Spring {@code StandardEnvironment}); output files are the {@link
- * Resource} shim (was Spring's {@code org.springframework.core.io.Resource}).
+ * Tests for {@link FolderOutputSink}: outputs are staged hidden, recorded in the ledger, then
+ * atomically renamed into the configured directory.
  */
 class FolderOutputSinkTest {
 
@@ -53,9 +50,8 @@ class FolderOutputSinkTest {
 
     @BeforeEach
     void setUp() {
-        ApplicationProperties properties = new ApplicationProperties();
-        properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        sink = new FolderOutputSink(new FolderAccessGuard(properties, configWithNoProfiles()));
+        ledger = new InProcessProcessedLedger();
+        sink = new FolderOutputSink(guardRootedAt(tempDir), ledger);
     }
 
     @Test
@@ -113,16 +109,7 @@ class FolderOutputSinkTest {
     void recordsAnOutputBeforeItBecomesVisible() throws IOException {
         Path out = tempDir.resolve("out");
         VisibilityAssertingLedger orderedLedger = new VisibilityAssertingLedger();
-        ApplicationProperties properties = new ApplicationProperties();
-        properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        FolderOutputSink orderedSink =
-                new FolderOutputSink(
-                        new FolderAccessGuard(
-                                properties,
-                                new RuntimePathConfig(properties),
-                                new StandardEnvironment(),
-                                new InProcessSourceStore()),
-                        orderedLedger);
+        FolderOutputSink orderedSink = new FolderOutputSink(guardRootedAt(tempDir), orderedLedger);
 
         orderedSink.deliver(
                 POLICY_RUN, List.of(named("a.pdf", "aaa")), OutputSpec.folder(out.toString()));
@@ -185,6 +172,17 @@ class FolderOutputSinkTest {
         assertFalse(Files.exists(tempDir.resolve("escape.pdf")));
     }
 
+    /** A guard that allows only {@code root}, with the {@code saas} profile inactive. */
+    private static FolderAccessGuard guardRootedAt(Path root) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPolicies().setAllowedFolderRoots(List.of(root.toString()));
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                configWithNoProfiles(),
+                new InProcessSourceStore());
+    }
+
     /** A {@link Config} whose unwrapped {@link SmallRyeConfig} reports no active profile. */
     private static Config configWithNoProfiles() {
         SmallRyeConfig smallRyeConfig = mock(SmallRyeConfig.class);
@@ -198,10 +196,7 @@ class FolderOutputSinkTest {
         return new ByteArrayBackedResource(content.getBytes(), filename);
     }
 
-    /**
-     * In-memory {@link Resource} with a stable filename (replaces Spring's {@code
-     * ByteArrayResource}).
-     */
+    /** In-memory {@link Resource} with a stable filename. */
     private static final class ByteArrayBackedResource implements Resource {
         private final byte[] bytes;
         private final String filename;

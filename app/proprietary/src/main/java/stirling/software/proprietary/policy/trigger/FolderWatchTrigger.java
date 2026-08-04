@@ -69,10 +69,12 @@ public class FolderWatchTrigger implements PolicyTrigger {
             PolicyStore policyStore,
             PolicyRunner policyRunner,
             @All List<InputSource> inputSources,
+            SourceStore sourceStore,
             ApplicationProperties applicationProperties) {
         this.policyStore = policyStore;
         this.policyRunner = policyRunner;
         this.inputSources = inputSources;
+        this.sourceStore = sourceStore;
         this.applicationProperties = applicationProperties;
     }
 

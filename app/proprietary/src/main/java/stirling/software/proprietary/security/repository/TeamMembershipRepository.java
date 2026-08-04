@@ -58,6 +58,16 @@ public class TeamMembershipRepository implements PanacheRepositoryBase<TeamMembe
         return count("team.id = ?1", teamId);
     }
 
+    /** Spring Data {@code save}: insert a new row, merge an already-identified one. */
+    @Transactional
+    public TeamMembership save(TeamMembership membership) {
+        if (membership.getMembershipId() == null) {
+            persist(membership);
+            return membership;
+        }
+        return getEntityManager().merge(membership);
+    }
+
     /** Delete membership by team ID and user ID */
     @Transactional
     public void deleteByTeamIdAndUserId(Long teamId, Long userId) {

@@ -1,38 +1,45 @@
 package stirling.software.proprietary.accountlink;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import io.quarkus.arc.profile.IfBuildProfile;
-
-import jakarta.enterprise.context.ApplicationScoped;
-
 /**
- * Registers the account-link entitlement gate. Path patterns cover the billable API surface; the
- * interceptor itself re-checks billability (and short-circuits manual tools), but scoping here
- * keeps the gate off the bulk of interactive endpoints entirely.
+ * Path scope of the account-link entitlement gate. Spring bound {@link
+ * InstanceEntitlementInterceptor} to these patterns through an {@code InterceptorRegistry}; the
+ * filter that replaces it is mapped to {@code /*} and handed every request, so it asks here
+ * instead. Scoping still keeps the gate off the bulk of interactive endpoints; the interceptor
+ * itself re-checks billability (and short-circuits manual tools).
  *
- * <p>Whole config is gated behind {@code stirling.billing.account-link.enabled} +
- * {@code @IfBuildProfile("!saas")}; absent when off, so no interceptor is registered.
+ * <p>The flag {@code stirling.billing.account-link.enabled} is read by the filter and by {@code
+ * InstanceEntitlementGate} (allowing with {@code FLAG_OFF}), and {@code @IfBuildProfile("!saas")}
+ * stays on the interceptor, so "off" is as inert as the absent config bean was.
  */
-@ApplicationScoped
-@IfBuildProfile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
-public class AccountLinkWebMvcConfig implements WebMvcConfigurer {
+public final class AccountLinkWebMvcConfig {
 
-    private final InstanceEntitlementInterceptor gateInterceptor;
+    // AI surface is always billable; the broad /api/v1/** catch lets automation-marked manual calls
+    // be gated too, while the interceptor lets genuine manual tools through.
+    private static final String API_BASE = "/api/v1";
 
-    public AccountLinkWebMvcConfig(InstanceEntitlementInterceptor gateInterceptor) {
-        this.gateInterceptor = gateInterceptor;
+    // Linking must stay reachable on an unlinked instance, or an API-key admin could never link it.
+    private static final String ACCOUNT_LINK_BASE = "/api/v1/account-link";
+
+    private AccountLinkWebMvcConfig() {}
+
+    /** The mapped surface: {@code /api/v1/**}, excluding {@code /api/v1/account-link/**}. */
+    public static boolean isGated(String path) {
+        // A servlet path always has one leading slash, UriInfo.getPath() may not; normalise both.
+        String uri = "/" + (path == null ? "" : path).replaceAll("^/+", "");
+        return underBase(uri, API_BASE) && !underBase(uri, ACCOUNT_LINK_BASE);
     }
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        // AI surface is always billable; the broad /api/v1/** catch lets automation-marked manual
-        // calls be gated too, while the interceptor lets genuine manual tools through.
-        registry.addInterceptor(gateInterceptor)
-                .addPathPatterns("/api/v1/**")
-                .excludePathPatterns("/api/v1/account-link/**");
+    /**
+     * Ant {@code base/**} semantics - the base itself or anything below it - segment-anchored so a
+     * sibling like {@code /api/v1x} never matches, and tolerant of a deployment context path prefix
+     * as {@code PolicyRunRoutes} is.
+     */
+    private static boolean underBase(String uri, String base) {
+        int at = uri.indexOf(base);
+        if (at < 0) {
+            return false;
+        }
+        int end = at + base.length();
+        return end == uri.length() || uri.charAt(end) == '/';
     }
 }

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 import io.smallrye.config.SmallRyeConfig;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -29,10 +30,6 @@ import stirling.software.proprietary.policy.source.SourceStore;
 /**
  * Tests for {@link FolderAccessGuard}: folder access is fail-closed, confined to the configured
  * allowed roots, never reaches Stirling's own config directory, and is off entirely under SaaS.
- *
- * <p>MIGRATION (Spring -> Quarkus): the guard now reads the active profile from MicroProfile {@link
- * Config} ({@code config.unwrap(SmallRyeConfig.class).getProfiles()}) instead of Spring's {@code
- * StandardEnvironment.setActiveProfiles(...)}. The {@code Config} is mocked accordingly.
  */
 class FolderAccessGuardTest {
 
@@ -43,7 +40,34 @@ class FolderAccessGuardTest {
     private FolderAccessGuard guard(List<String> allowedRoots, String... activeProfiles) {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
-        return new FolderAccessGuard(properties, configWithProfiles(activeProfiles));
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                configWithProfiles(activeProfiles),
+                sourceStore);
+    }
+
+    private FolderAccessGuard guardWithStorage(
+            List<String> allowedRoots, boolean storageEnabled, String provider, String basePath) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPolicies().setAllowedFolderRoots(allowedRoots);
+        ApplicationProperties.Storage storage = properties.getStorage();
+        storage.setEnabled(storageEnabled);
+        storage.setProvider(provider);
+        storage.getLocal().setBasePath(basePath);
+        return new FolderAccessGuard(
+                properties, new RuntimePathConfig(properties), configWithProfiles(), sourceStore);
+    }
+
+    private FolderAccessGuard guardWithWatchedFolder(String watchedDir) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties
+                .getSystem()
+                .getCustomPaths()
+                .getPipeline()
+                .setWatchedFoldersDirs(List.of(watchedDir));
+        return new FolderAccessGuard(
+                properties, new RuntimePathConfig(properties), configWithProfiles(), sourceStore);
     }
 
     /**

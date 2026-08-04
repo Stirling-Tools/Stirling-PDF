@@ -27,6 +27,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Storage;
 import stirling.software.common.model.ApplicationProperties.Storage.Signing;
 import stirling.software.common.model.multipart.ByteArrayMultipartFile;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -173,7 +174,6 @@ class WorkflowSessionServiceTest {
         User user = user("dave");
         WorkflowParticipant participant = pendingParticipant(user);
         sessionWithParticipant("s7", participant);
-        when(workflowParticipantRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         byte[] p12Bytes;
         try (var in = getClass().getResourceAsStream("/test-certs/valid-test.p12")) {
@@ -184,15 +184,15 @@ class WorkflowSessionServiceTest {
         SignDocumentRequest req = new SignDocumentRequest();
         req.setCertType("PKCS12");
         req.setPassword("changeit");
-        req.setP12File(
-                new MockMultipartFile(
-                        "p12File", "valid-test.p12", "application/x-pkcs12", p12Bytes));
+        // The keystore part is bound as a RESTEasy FileUpload and adapted by getP12File()
+        req.setP12FileUpload(
+                TestFileUploads.of(p12Bytes, "valid-test.p12", "application/x-pkcs12"));
 
         svc.signDocument("s7", user, req);
 
         ArgumentCaptor<WorkflowParticipant> captor =
                 ArgumentCaptor.forClass(WorkflowParticipant.class);
-        verify(workflowParticipantRepository).save(captor.capture());
+        verify(workflowParticipantRepository).persist(captor.capture());
 
         @SuppressWarnings("unchecked")
         Map<String, Object> cert =

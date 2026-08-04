@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,13 +19,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
@@ -74,7 +79,8 @@ class UserControllerTest {
                         userRepository,
                         emailServiceInstance(),
                         licenseSettingsService,
-                        loginAttemptService);
+                        loginAttemptService,
+                        teamMembershipService);
     }
 
     @SuppressWarnings("unchecked")
@@ -172,5 +178,282 @@ class UserControllerTest {
         assertEquals("User account unlocked successfully", body(response).get("message"));
 
         verify(loginAttemptService).resetAttempts("lockeduser");
+    }
+
+    // ---------------------------------------------------------------------
+    // GET /api/v1/user/users - storage.signing.userListScope scoping
+    // ---------------------------------------------------------------------
+
+    private static User user(long id, String username, boolean enabled, Team team) {
+        User u = new User();
+        u.setId(id);
+        u.setUsername(username);
+        u.setEnabled(enabled);
+        u.setTeam(team);
+        return u;
+    }
+
+    private static Team team(long id, String name) {
+        Team t = new Team();
+        t.setId(id);
+        t.setName(name);
+        return t;
+    }
+
+    // Panache findAll() hands back a query the controller calls list() on.
+    @SuppressWarnings("unchecked")
+    private static PanacheQuery<User> queryOf(User... users) {
+        PanacheQuery<User> query = mock(PanacheQuery.class);
+        when(query.<User>list()).thenReturn(List.of(users));
+        return query;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<UserSummaryDTO> userList(Response response) {
+        return (List<UserSummaryDTO>) response.getEntity();
+    }
+
+    // No principal at all: JAX-RS still injects a context, getUserPrincipal() is just null.
+    private void unauthenticated() {
+        controller.securityContext = mock(SecurityContext.class);
+    }
+
+    @Test
+    void listUsersDefaultScopeIsOrgWide() {
+        // Default "org" scope returns every enabled user via findAll(), no team lookup.
+        Team alpha = team(1L, "alpha");
+        when(userRepository.findAll())
+                .thenReturn(
+                        queryOf(
+                                user(1L, "a@alpha.com", true, alpha),
+                                user(2L, "b@alpha.com", true, alpha)));
+        authenticateAs("a@alpha.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        List<UserSummaryDTO> users = userList(response);
+        assertEquals(2, users.size());
+        assertEquals("a@alpha.com", users.get(0).getUsername());
+        assertEquals("b@alpha.com", users.get(1).getUsername());
+
+        // Caller is resolved (for the anonymous-gate) but org scope still uses findAll, not team.
+        verify(userRepository, never()).findAllByTeamId(any());
+    }
+
+    @Test
+    void listUsersForbiddenForAnonymousCaller() {
+        // Anonymous SaaS accounts must never enumerate users, regardless of scope.
+        User anon = user(1L, "anon_abc", true, team(1L, TeamService.DEFAULT_TEAM_NAME));
+        anon.setAuthenticationType(AuthenticationType.ANONYMOUS);
+        when(userService.findByUsernameIgnoreCase("anon_abc")).thenReturn(Optional.of(anon));
+        authenticateAs("anon_abc");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
+
+        verify(userRepository, never()).findAll();
+        verify(userRepository, never()).findAllByTeamId(any());
+    }
+
+    @Test
+    void listUsersOrgScopeFiltersDisabledUsers() {
+        Team alpha = team(1L, "alpha");
+        when(userRepository.findAll())
+                .thenReturn(
+                        queryOf(
+                                user(1L, "enabled@alpha.com", true, alpha),
+                                user(2L, "disabled@alpha.com", false, alpha)));
+        authenticateAs("enabled@alpha.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        List<UserSummaryDTO> users = userList(response);
+        assertEquals(1, users.size());
+        assertEquals("enabled@alpha.com", users.get(0).getUsername());
+    }
+
+    @Test
+    void listUsersTeamScopeReturnsOnlyCallerTeam() {
+        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        Team alpha = team(7L, "alpha");
+        User caller = user(1L, "caller@alpha.com", true, alpha);
+        when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
+                .thenReturn(Optional.of(caller));
+        when(userRepository.findAllByTeamId(7L))
+                .thenReturn(List.of(caller, user(2L, "mate@alpha.com", true, alpha)));
+        authenticateAs("caller@alpha.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        List<UserSummaryDTO> users = userList(response);
+        assertEquals(2, users.size());
+        assertEquals("alpha", users.get(0).getTeamName());
+
+        verify(userRepository).findAllByTeamId(7L);
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersTeamScopeWithMissingCallerReturnsEmpty() {
+        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        when(userService.findByUsernameIgnoreCase("ghost@alpha.com")).thenReturn(Optional.empty());
+        authenticateAs("ghost@alpha.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(0, userList(response).size());
+
+        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersTeamScopeWithNullTeamReturnsSelfOnly() {
+        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        User caller = user(1L, "solo@nowhere.com", true, null);
+        when(userService.findByUsernameIgnoreCase("solo@nowhere.com"))
+                .thenReturn(Optional.of(caller));
+        authenticateAs("solo@nowhere.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        List<UserSummaryDTO> users = userList(response);
+        assertEquals(1, users.size());
+        assertEquals("solo@nowhere.com", users.get(0).getUsername());
+
+        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersTeamScopeOnDefaultTeamReturnsSelfOnly() {
+        // A caller on a shared system team must not enumerate its members.
+        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        Team defaultTeam = team(1L, TeamService.DEFAULT_TEAM_NAME);
+        User caller = user(1L, "new@saas.com", true, defaultTeam);
+        when(userService.findByUsernameIgnoreCase("new@saas.com")).thenReturn(Optional.of(caller));
+        authenticateAs("new@saas.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        List<UserSummaryDTO> users = userList(response);
+        assertEquals(1, users.size());
+        assertEquals("new@saas.com", users.get(0).getUsername());
+
+        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersTeamScopeOnInternalTeamReturnsSelfOnly() {
+        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        Team internalTeam = team(2L, TeamService.INTERNAL_TEAM_NAME);
+        User caller = user(1L, "svc@saas.com", true, internalTeam);
+        when(userService.findByUsernameIgnoreCase("svc@saas.com")).thenReturn(Optional.of(caller));
+        authenticateAs("svc@saas.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        List<UserSummaryDTO> users = userList(response);
+        assertEquals(1, users.size());
+        assertEquals("svc@saas.com", users.get(0).getUsername());
+
+        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersFailsClosedOnUnrecognisedScope() {
+        // Any non-"org" value must restrict to the caller's team, not leak the instance.
+        applicationProperties.getStorage().getSigning().setUserListScope("tewm");
+        Team alpha = team(3L, "alpha");
+        when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
+                .thenReturn(Optional.of(user(1L, "caller@alpha.com", true, alpha)));
+        when(userRepository.findAllByTeamId(3L))
+                .thenReturn(List.of(user(1L, "caller@alpha.com", true, alpha)));
+        authenticateAs("caller@alpha.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        verify(userRepository).findAllByTeamId(3L);
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersFailsClosedOnBlankScope() {
+        applicationProperties.getStorage().getSigning().setUserListScope("   ");
+        Team alpha = team(4L, "alpha");
+        when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
+                .thenReturn(Optional.of(user(1L, "caller@alpha.com", true, alpha)));
+        when(userRepository.findAllByTeamId(4L)).thenReturn(List.of());
+        authenticateAs("caller@alpha.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        verify(userRepository).findAllByTeamId(4L);
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersFailsClosedOnNullScope() {
+        // A null value must also fail closed to the caller's team.
+        applicationProperties.getStorage().getSigning().setUserListScope(null);
+        Team alpha = team(9L, "alpha");
+        when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
+                .thenReturn(Optional.of(user(1L, "caller@alpha.com", true, alpha)));
+        when(userRepository.findAllByTeamId(9L)).thenReturn(List.of());
+        authenticateAs("caller@alpha.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        verify(userRepository).findAllByTeamId(9L);
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersOrgScopeIsCaseInsensitive() {
+        applicationProperties.getStorage().getSigning().setUserListScope("ORG");
+        when(userRepository.findAll()).thenReturn(queryOf(user(1L, "a@alpha.com", true, null)));
+        authenticateAs("a@alpha.com");
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        verify(userRepository).findAll();
+        verify(userRepository, never()).findAllByTeamId(any());
+    }
+
+    @Test
+    void listUsersRequiresAuthentication() {
+        unauthenticated();
+
+        Response response = controller.listUsers();
+
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+
+        verify(userRepository, never()).findAll();
+        verify(userRepository, never()).findAllByTeamId(any());
+    }
+
+    @Test
+    void signingUserListScopeDefaultsToOrg() {
+        // Self-host backward-compat: default must stay "org" (saas profile flips it to "team").
+        assertEquals(
+                "org", new ApplicationProperties().getStorage().getSigning().getUserListScope());
     }
 }

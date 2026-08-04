@@ -53,10 +53,13 @@ public class StorageProviderConfig {
     @Produces
     @Singleton
     public StorageEncryptionState storageEncryptionState(
-            @ConfigProperty(name = "stirling.security.fileEncryptionKey", defaultValue = "")
-                    String configuredFileEncryptionKey,
+            // Optional, not defaultValue="": SmallRye Config reads an empty default as absent and
+            // then fails to convert it to String.
+            @ConfigProperty(name = "stirling.security.fileEncryptionKey")
+                    Optional<String> fileEncryptionKey,
             @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
                     boolean clusterEnabled) {
+        String configuredFileEncryptionKey = fileEncryptionKey.orElse("");
         boolean writeEnabled = applicationProperties.getStorage().getEncryption().isEnabled();
         if (writeEnabled) {
             licenseKeyChecker.requireProOrEnterprise("storage.encryption");

@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -125,7 +124,7 @@ public class JpaSourceDocCounter implements SourceDocCounter {
      * nothing reported is lost. Daily is ample - the read queries already ignore older buckets, so
      * this is purely storage hygiene.
      */
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(every = "24h")
     public void pruneOldBuckets() {
         countRepository.deleteOlderThan(SourceDocWindows.firstDayHour(currentHour()));
     }

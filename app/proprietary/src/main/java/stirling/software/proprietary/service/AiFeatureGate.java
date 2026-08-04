@@ -1,9 +1,8 @@
 package stirling.software.proprietary.service;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,8 +25,9 @@ public class AiFeatureGate {
 
     private void require(boolean featureEnabled, String feature) {
         if (!applicationProperties.getAiEngine().isEnabled() || !featureEnabled) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI feature '" + feature + "' is disabled");
+            throw new WebApplicationException(
+                    "AI feature '" + feature + "' is disabled",
+                    Response.Status.SERVICE_UNAVAILABLE);
         }
     }
 

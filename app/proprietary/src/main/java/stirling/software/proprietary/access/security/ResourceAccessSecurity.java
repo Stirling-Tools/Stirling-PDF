@@ -1,6 +1,7 @@
 package stirling.software.proprietary.access.security;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +18,8 @@ import stirling.software.proprietary.security.service.UserService;
  * {@code @PreAuthorize("@resourceAccess.canUsePortal()")}; endpoints shared with the editor (e.g.
  * the policies API) must NOT be.
  */
-@ApplicationScoped("resourceAccess")
+@ApplicationScoped
+@Named("resourceAccess")
 @RequiredArgsConstructor
 public class ResourceAccessSecurity {
 

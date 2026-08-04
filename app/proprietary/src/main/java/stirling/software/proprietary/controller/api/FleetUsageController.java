@@ -4,13 +4,14 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.arc.profile.UnlessBuildProfile;
 
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,22 +37,24 @@ import stirling.software.proprietary.security.database.repository.UserRepository
  * carry {@code source=null}, so the cumulative "PDFs edited" figure effectively starts at deploy.
  */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/usage")
+@ApplicationScoped
+@Path("/api/v1/usage")
 @RolesAllowed("ADMIN")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 // Self-hosted only: counts are server-wide. On SaaS this endpoint is owned by the team-scoped
 // SaasFleetUsageController (@IfBuildProfile("saas")) so one backend can't leak another tenant's
 // usage.
-@IfBuildProfile("!saas")
+@UnlessBuildProfile("saas")
 public class FleetUsageController {
 
     private final PersistentAuditEventRepository auditRepository;
     private final UserRepository userRepository;
     private final AuditConfigurationProperties auditConfig;
 
-    @GetMapping("/fleet-stats")
+    @GET
+    @Path("/fleet-stats")
+    @Produces(MediaType.APPLICATION_JSON)
     public FleetUsageStats fleetStats() {
         // Exclude the reserved INTERNAL_API_USER row that InitialSecuritySetup creates on every
         // install, so a fresh single-admin instance reads 1 editor, not 2.

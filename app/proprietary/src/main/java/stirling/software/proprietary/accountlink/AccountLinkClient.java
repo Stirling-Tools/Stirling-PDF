@@ -8,8 +8,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
 import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -43,10 +41,11 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern; see
  * {@code AiEngineClient}); base URL + client are injectable so tests can stub SaaS.
  */
+// Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
+// bean; it holds no state and only its flag-gated callers ever issue a call.
 @Slf4j
 @ApplicationScoped
 @IfBuildProfile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class AccountLinkClient {
 
     static final String HEADER_DEVICE_ID = "X-Device-Id";

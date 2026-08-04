@@ -8,10 +8,10 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.http.MediaType;
-
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import jakarta.ws.rs.core.MediaType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -115,7 +115,7 @@ public class ApiTokenCache {
         HttpRequest.Builder request =
                 HttpRequest.newBuilder(target)
                         .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
-                        .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                        .header("Content-Type", MediaType.APPLICATION_JSON)
                         .POST(
                                 HttpRequest.BodyPublishers.ofByteArray(
                                         objectMapper.writeValueAsBytes(login.loginBody())));

@@ -6,11 +6,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import io.quarkus.runtime.StartupEvent;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,11 @@ public class AiEngineConfigSync {
         pushExecutor.shutdownNow();
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+    // Observer kept separate so the startup push stays directly callable.
+    void onStart(@Observes StartupEvent event) {
+        pushConfigOnStartup();
+    }
+
     public void pushConfigOnStartup() {
         AiEngine cfg = applicationProperties.getAiEngine();
         if (!cfg.isEnabled()) {

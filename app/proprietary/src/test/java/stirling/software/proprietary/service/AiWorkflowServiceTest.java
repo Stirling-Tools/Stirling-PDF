@@ -250,8 +250,8 @@ class AiWorkflowServiceTest {
 
     @Test
     void mergeOutputHasNoSourceIndex() throws IOException {
-        MockMultipartFile a = pdf("a.pdf", "a-bytes");
-        MockMultipartFile b = pdf("b.pdf", "b-bytes");
+        FileUpload a = pdf("a.pdf", "a-bytes");
+        FileUpload b = pdf("b.pdf", "b-bytes");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Merging"}
@@ -263,7 +263,7 @@ class AiWorkflowServiceTest {
         stubFileStorage();
 
         AiWorkflowResponse result =
-                service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "merge these"));
+                service.orchestrate(requestFor(new FileUpload[] {a, b}, "merge these"));
 
         // A merge draws on several inputs, so there is no single source to version in place.
         assertNull(result.getResultFiles().get(0).getSourceIndex());
@@ -271,7 +271,7 @@ class AiWorkflowServiceTest {
 
     @Test
     void splitOutputsHaveNoSourceIndex() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf", "original");
+        FileUpload input = pdf("doc.pdf", "original");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Splitting"}

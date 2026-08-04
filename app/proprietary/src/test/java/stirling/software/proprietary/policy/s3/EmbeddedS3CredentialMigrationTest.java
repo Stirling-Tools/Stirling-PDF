@@ -58,7 +58,7 @@ class EmbeddedS3CredentialMigrationTest {
                         new InProcessCompletedMigrations());
         AtomicLong ids = new AtomicLong(100);
         // Lenient: the nothing-to-migrate cases never create a connection.
-        lenient().when(connections.findAll()).thenReturn(List.of());
+        lenient().when(connections.listAll()).thenReturn(List.of());
         lenient()
                 .when(connections.save(any()))
                 .thenAnswer(
@@ -75,7 +75,7 @@ class EmbeddedS3CredentialMigrationTest {
     void extractsSharedCredentialsIntoOneTeamScopedConnection() {
         Team team = new Team();
         team.setId(7L);
-        when(teamRepository.findById(7L)).thenReturn(Optional.of(team));
+        when(teamRepository.findByIdOptional(7L)).thenReturn(Optional.of(team));
         Source source =
                 sourceStore.save(
                         new Source(
@@ -132,7 +132,7 @@ class EmbeddedS3CredentialMigrationTest {
     void connectionOwnershipFollowsTheSourceTeam() {
         Team team = new Team();
         team.setId(7L);
-        when(teamRepository.findById(7L)).thenReturn(Optional.of(team));
+        when(teamRepository.findByIdOptional(7L)).thenReturn(Optional.of(team));
         sourceStore.save(s3Source("teamed", 7L));
 
         migration.migrate();

@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.MDC;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -29,6 +31,7 @@ import stirling.software.common.security.OAuth2User;
 import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.security.SessionInformation;
 import stirling.software.common.security.UserDetails;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
@@ -72,18 +75,18 @@ public class UserAuthenticationFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        // Start each request clean so a pooled thread can't inherit a prior request's key label -
-        // but keep a label an upstream filter (JwtAuthenticationFilter) already set for a request
-        // it API-key-authenticated.
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            MDC.remove(API_KEY_LABEL_MDC);
-        }
-
         // Spring's OncePerRequestFilter#shouldNotFilter behavior: skip the filter body for static
         // resources, SPA routes and public API endpoints.
         if (shouldNotFilter(request)) {
             filterChain.doFilter(request, response);
             return;
+        }
+
+        // Start each request clean so a pooled thread can't inherit a prior request's key label -
+        // but keep a label an upstream filter (JwtAuthenticationFilter) already set for a request
+        // it API-key-authenticated.
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            MDC.remove(API_KEY_LABEL_MDC);
         }
 
         if (!loginEnabledValue) {
@@ -127,20 +130,8 @@ public class UserAuthenticationFilter implements Filter {
                     // UsernamePasswordAuthenticationToken so the Authentication variable stays
                     // typed.
                     authentication =
-                            new stirling.software.common.security
-                                    .UsernamePasswordAuthenticationToken(
-                                    user,
-                                    apiKey,
-                                    user.getAuthorities().stream()
-                                            .map(
-                                                    a ->
-                                                            new stirling.software.common.security
-                                                                    .SimpleGrantedAuthority(
-                                                                    a.getAuthority()))
-                                            .collect(java.util.stream.Collectors.toSet()));
-                    if (resolved.get().auditLabel() != null) {
-                        MDC.put(API_KEY_LABEL_MDC, resolved.get().auditLabel());
-                    }
+                            new UsernamePasswordAuthenticationToken(
+                                    user, apiKey, resolved.get().authorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     if (resolved.get().auditLabel() != null) {
                         MDC.put(API_KEY_LABEL_MDC, resolved.get().auditLabel());
@@ -308,7 +299,7 @@ public class UserAuthenticationFilter implements Filter {
 
     // Was Spring's OncePerRequestFilter#shouldNotFilter; now called explicitly at the top of
     // doFilter.
-    private boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
 

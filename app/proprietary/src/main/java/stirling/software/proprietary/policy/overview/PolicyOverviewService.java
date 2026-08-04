@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * user-facing Policies page builds only a friendly subset of the same backend policies.
  */
 @ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class PolicyOverviewService {
 

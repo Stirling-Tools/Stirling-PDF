@@ -1,25 +1,30 @@
 package stirling.software.proprietary.integration.api;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.io.Resource;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.AutomationRunContext;
@@ -62,8 +68,8 @@ import tools.jackson.databind.node.ObjectNode;
  * </ul>
  */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/integration")
+@ApplicationScoped
+@Path("/api/v1/integration")
 @RequiredArgsConstructor
 @Tag(name = "Integrations", description = "Third-party integration steps.")
 public class ExternalApiCallController {
@@ -93,7 +99,9 @@ public class ExternalApiCallController {
 
     // The document is forwarded as bytes and never parsed, and in 'replace' mode the response
     // becomes the document, so neither side can be pinned to a format.
-    @PostMapping(value = "/external-api-call", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/external-api-call")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.ANY)
     @Operation(
             summary = "Send the document to an external API",
@@ -103,27 +111,25 @@ public class ExternalApiCallController {
                             + " document with it. Fields, path and headers may reference"
                             + " {{document.*}}, {{classification.*}}, {{sensitivityLabel.*}} and"
                             + " {{run.*}}.")
-    public ResponseEntity<Resource> call(
-            @RequestParam("fileInput") MultipartFile fileInput,
-            @RequestParam("connectionId") String connectionId,
-            @RequestParam(value = "path", required = false) String path,
-            @RequestParam(value = "method", defaultValue = "POST") String method,
-            @RequestParam(value = "bodyMode", defaultValue = BODY_MULTIPART) String bodyMode,
-            @RequestParam(value = "fileFieldName", defaultValue = "file") String fileFieldName,
-            @RequestParam(value = "responseMode", defaultValue = MODE_REPORT) String responseMode,
-            @RequestParam(value = "resultUrlPath", required = false) String resultUrlPath,
-            @RequestParam(value = "resultUrlHeader", required = false) String resultUrlHeader,
-            @RequestParam(value = "responseSelect", required = false) String responseSelect,
-            @RequestParam(value = "requireTrue", required = false) String requireTrue,
-            @RequestParam(value = "fields", required = false) String fields,
-            @RequestParam(value = "bodyTemplate", required = false) String bodyTemplate,
-            @RequestParam(value = "headers", required = false) String headers,
-            @RequestParam(value = "includeContext", defaultValue = "false") boolean includeContext,
-            @RequestParam(value = "includeFile", defaultValue = "true") boolean includeFile,
-            @RequestHeader(value = InternalApiClient.POLICY_NAME_HEADER, required = false)
-                    String policyName,
-            @RequestHeader(value = AutomationRunContext.RUN_ID_HEADER, required = false)
-                    String runId)
+    public Response call(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("connectionId") String connectionId,
+            @RestForm("path") String path,
+            @RestForm("method") @DefaultValue("POST") String method,
+            @RestForm("bodyMode") @DefaultValue(BODY_MULTIPART) String bodyMode,
+            @RestForm("fileFieldName") @DefaultValue("file") String fileFieldName,
+            @RestForm("responseMode") @DefaultValue(MODE_REPORT) String responseMode,
+            @RestForm("resultUrlPath") String resultUrlPath,
+            @RestForm("resultUrlHeader") String resultUrlHeader,
+            @RestForm("responseSelect") String responseSelect,
+            @RestForm("requireTrue") String requireTrue,
+            @RestForm("fields") String fields,
+            @RestForm("bodyTemplate") String bodyTemplate,
+            @RestForm("headers") String headers,
+            @RestForm("includeContext") @DefaultValue("false") boolean includeContext,
+            @RestForm("includeFile") @DefaultValue("true") boolean includeFile,
+            @HeaderParam(InternalApiClient.POLICY_NAME_HEADER) String policyName,
+            @HeaderParam(AutomationRunContext.RUN_ID_HEADER) String runId)
             throws IOException {
 
         String mode = normalise(responseMode, MODE_REPORT, MODE_REPORT, MODE_REPLACE);
@@ -136,15 +142,15 @@ public class ExternalApiCallController {
         }
         ApiConnectionSettings settings = connectionResolver.resolve(id);
 
-        String filename = safeFileName(fileInput.getOriginalFilename());
+        MultipartFile file = FileUploadMultipartFile.of(fileInput);
+        String filename = safeFileName(file.getOriginalFilename());
         String contentType =
-                fileInput.getContentType() == null
-                        ? MediaType.APPLICATION_OCTET_STREAM_VALUE
-                        : fileInput.getContentType();
-        byte[] content = fileInput.getBytes();
+                file.getContentType() == null
+                        ? MediaType.APPLICATION_OCTET_STREAM
+                        : file.getContentType();
+        byte[] content = file.getBytes();
 
-        ObjectNode context =
-                DocumentContext.build(fileInput, content, policyName, runId, objectMapper);
+        ObjectNode context = DocumentContext.build(file, content, policyName, runId, objectMapper);
 
         ExternalApiCaller.Response response =
                 caller.dispatch(
@@ -181,7 +187,7 @@ public class ExternalApiCallController {
                         resultUrlPath,
                         resultUrlHeader,
                         responseSelect)
-                : reportOnly(fileInput, filename, contentType, response);
+                : reportOnly(file, filename, contentType, response);
     }
 
     /**
@@ -237,7 +243,7 @@ public class ExternalApiCallController {
                     json.put("content", Base64.getEncoder().encodeToString(content));
                 }
                 return ExternalApiCaller.raw(
-                        MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(json));
+                        MediaType.APPLICATION_JSON, objectMapper.writeValueAsBytes(json));
             }
             default -> {
                 Map<String, String> all = new LinkedHashMap<>(fields);
@@ -287,7 +293,7 @@ public class ExternalApiCallController {
         }
         JsonNode resolved = Placeholders.resolveTree(template, withFile);
         return ExternalApiCaller.raw(
-                MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(resolved));
+                MediaType.APPLICATION_JSON, objectMapper.writeValueAsBytes(resolved));
     }
 
     /** Resolve every value's placeholders against the context. */
@@ -351,7 +357,7 @@ public class ExternalApiCallController {
      * a URL to fetch it from, or an archive to pick it out of. Anything else fails the step rather
      * than putting a non-document into the pipeline for a later step to trip over.
      */
-    private ResponseEntity<Resource> replaceDocument(
+    private Response replaceDocument(
             ApiConnectionSettings settings,
             ExternalApiCaller.Response response,
             String requestFilename,
@@ -406,14 +412,27 @@ public class ExternalApiCallController {
 
         MediaType type =
                 payload.contentType() == null || ResultFiles.isArchiveName(filename)
-                        ? MediaType.APPLICATION_OCTET_STREAM
-                        : MediaType.parseMediaType(payload.contentType().split(";")[0].trim());
-        return ResponseEntity.ok()
-                .contentType(type)
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + filename + "\"")
-                .body(result);
+                        ? MediaType.APPLICATION_OCTET_STREAM_TYPE
+                        : MediaType.valueOf(payload.contentType().split(";")[0].trim());
+        Response.ResponseBuilder ok =
+                Response.ok(stream(result), type)
+                        .header(
+                                HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + filename + "\"");
+        long length = result.contentLength();
+        if (length >= 0) {
+            ok.header(HttpHeaders.CONTENT_LENGTH, length);
+        }
+        return ok.build();
+    }
+
+    /** Writes the chosen bytes out, as Spring's Resource converter did once the step returned. */
+    private static StreamingOutput stream(Resource resource) {
+        return output -> {
+            try (InputStream in = resource.getInputStream()) {
+                in.transferTo(output);
+            }
+        };
     }
 
     /** The result URL the API pointed at, from the body or a header; null when neither is set. */
@@ -476,19 +495,18 @@ public class ExternalApiCallController {
     }
 
     /** The document passes through; the API's answer rides in the report header. */
-    private ResponseEntity<Resource> reportOnly(
+    private Response reportOnly(
             MultipartFile fileInput,
             String filename,
             String contentType,
             ExternalApiCaller.Response response)
             throws IOException {
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
+        return Response.ok(fileInput.getBytes(), MediaType.valueOf(contentType))
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + filename + "\"")
                 .header(AiToolResponseHeaders.TOOL_REPORT, buildReport(response))
-                .body(new ByteArrayResource(fileInput.getBytes()));
+                .build();
     }
 
     /** A JSON object describing the call, small enough to survive as a header. */

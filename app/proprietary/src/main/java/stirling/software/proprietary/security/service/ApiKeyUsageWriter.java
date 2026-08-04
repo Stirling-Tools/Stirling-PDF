@@ -2,8 +2,6 @@ package stirling.software.proprietary.security.service;
 
 import java.time.Instant;
 
-import org.springframework.transaction.annotation.Propagation;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
@@ -28,7 +26,7 @@ class ApiKeyUsageWriter {
     private final ApiKeyDailyUsageRepository usageRepository;
 
     /** Bump today's tally if the row already exists; returns rows updated (0 if none yet). */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public int increment(Long apiKeyId, long epochDay) {
         return usageRepository.incrementIfPresent(apiKeyId, epochDay);
     }
@@ -37,7 +35,7 @@ class ApiKeyUsageWriter {
      * Insert today's row with a count of 1. Flushes so a concurrent first-write's unique-key clash
      * surfaces here (returning false) instead of at commit; the caller then increments instead.
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public boolean tryInsertFirstUse(Long apiKeyId, long epochDay) {
         try {
             usageRepository.saveAndFlush(new ApiKeyDailyUsage(apiKeyId, epochDay, 1));
@@ -47,10 +45,10 @@ class ApiKeyUsageWriter {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public void stampLastUsed(Long apiKeyId) {
         apiKeyRepository
-                .findById(apiKeyId)
+                .findByIdOptional(apiKeyId)
                 .ifPresent(
                         key -> {
                             key.setLastUsedAt(Instant.now());

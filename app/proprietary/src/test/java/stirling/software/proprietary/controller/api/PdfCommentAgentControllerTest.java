@@ -23,23 +23,21 @@ import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.MultipartFile;
 import stirling.software.common.testsupport.TestFileUploads;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
 
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * MIGRATION (Spring -> Quarkus): {@code PdfCommentAgentController} is a JAX-RS resource taking a
- * RESTEasy Reactive {@code FileUpload} + form {@code prompt} and returning {@link Response}. Tests
- * call the handler directly with a {@link TestFileUploads} stub for the upload.
+ * Controller tests for {@link PdfCommentAgentController}. The orchestrator is mocked so the test
+ * never hits the engine or real filesystem, and the JAX-RS handler is called directly with a {@link
+ * TestFileUploads} stub for the upload.
  *
- * <p>The orchestrator is mocked so the test never hits the engine or real filesystem. Validation
- * errors are now signalled by {@code WebApplicationException} (was Spring {@code
- * ResponseStatusException}); the controller lets them propagate, so the error-path tests assert the
- * thrown status rather than a MockMvc {@code status()} matcher. The former "missing required form
- * param" tests (previously enforced by Spring's {@code DefaultHandlerExceptionResolver}) are kept
- * as direct-call equivalents: a missing file arrives as {@code null} and the controller fails fast
- * before reaching the orchestrator; a missing prompt is rejected by the orchestrator with 400.
+ * <p>The controller lets validation failures propagate as {@link WebApplicationException}, so the
+ * error-path tests assert the thrown status. Missing form params are covered the same way: a
+ * missing file binds as {@code null} and the controller fails fast before reaching the
+ * orchestrator, while a missing prompt is rejected by the orchestrator with 400.
  */
 @ExtendWith(MockitoExtension.class)
 class PdfCommentAgentControllerTest {
@@ -54,6 +52,7 @@ class PdfCommentAgentControllerTest {
         controller = new PdfCommentAgentController();
         controller.orchestrator = orchestrator;
         controller.objectMapper = JsonMapper.builder().build();
+        controller.aiFeatureGate = aiFeatureGate;
     }
 
     @Test
@@ -107,23 +106,20 @@ class PdfCommentAgentControllerTest {
 
     @Test
     void returnsServiceUnavailableWhenPdfCommentFeatureDisabled() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE))
+        // The gate runs before any upload handling, so its 503 leaves the orchestrator untouched.
+        doThrow(new WebApplicationException(Response.Status.SERVICE_UNAVAILABLE))
                 .when(aiFeatureGate)
                 .requirePdfComment();
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "input.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "%PDF-1.4\n%%EOF".getBytes());
+        FileUpload pdfFile =
+                TestFileUploads.of("%PDF-1.4\n%%EOF".getBytes(), "input.pdf", "application/pdf");
 
-        mockMvc.perform(
-                        multipart("/api/v1/ai/tools/pdf-comment-agent")
-                                .file(pdfFile)
-                                .param("prompt", "flag dates"))
-                .andExpect(status().isServiceUnavailable());
+        WebApplicationException ex =
+                assertThrows(
+                        WebApplicationException.class,
+                        () -> controller.pdfCommentAgent(pdfFile, "flag dates"));
+        assertEquals(503, ex.getResponse().getStatus());
 
-        verify(orchestrator, never()).applyComments(any(), anyString());
+        verify(orchestrator, never()).applyComments(any(), any());
     }
 
     @Test

@@ -1,21 +1,23 @@
 package stirling.software.proprietary.controller.api;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.proprietary.model.api.apikey.CreateApiKeyRequest;
-import stirling.software.proprietary.model.api.apikey.CreatedApiKeyDto;
-import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
 import stirling.software.proprietary.security.service.ApiKeyManagementService;
 
 /**
@@ -23,32 +25,39 @@ import stirling.software.proprietary.security.service.ApiKeyManagementService;
  * keys. Replaces the former portal-only mock endpoint. Not gated behind an Enterprise license - API
  * keys are a core auth feature available on every self-hosted instance.
  */
+@ApplicationScoped
 @ProprietaryUiDataApi
+@Path("/api/v1/proprietary/ui-data")
 @RequiredArgsConstructor
 public class PortalApiKeysController {
 
     private final ApiKeyManagementService apiKeyManagementService;
 
     // tier accepted for endpoint symmetry with the other infra tabs; ignored here.
-    @GetMapping("/infrastructure/api-keys")
+    @GET
+    @Path("/infrastructure/api-keys")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List API keys", description = "The caller's personal API keys.")
-    public ResponseEntity<PortalApiKeysResponse> list(
-            @RequestParam(value = "tier", required = false) String tier) {
-        return ResponseEntity.ok(apiKeyManagementService.listVisibleKeys());
+    public Response list(@QueryParam("tier") String tier) {
+        return Response.ok(apiKeyManagementService.listVisibleKeys()).build();
     }
 
-    @PostMapping("/infrastructure/api-keys")
+    @POST
+    @Path("/infrastructure/api-keys")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Create an API key",
             description = "Mints a personal key and returns its one-time secret.")
-    public ResponseEntity<CreatedApiKeyDto> create(@RequestBody CreateApiKeyRequest request) {
-        return ResponseEntity.ok(apiKeyManagementService.createKey(request));
+    public Response create(CreateApiKeyRequest request) {
+        return Response.ok(apiKeyManagementService.createKey(request)).build();
     }
 
-    @DeleteMapping("/infrastructure/api-keys/{id}")
+    @DELETE
+    @Path("/infrastructure/api-keys/{id}")
     @Operation(summary = "Revoke an API key", description = "Disables a key the caller owns.")
-    public ResponseEntity<Void> revoke(@PathVariable("id") Long id) {
+    public Response revoke(@PathParam("id") Long id) {
         apiKeyManagementService.revokeKey(id);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 }

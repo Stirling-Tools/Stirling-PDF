@@ -30,18 +30,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.smallrye.config.SmallRyeConfig;
 
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 /**
- * Tests for {@link FolderInputSource}: consume (claim + route) and snapshot (read-only) modes.
- *
- * <p>MIGRATION (Spring -> Quarkus): {@link FolderAccessGuard} now reads active profiles from
- * MicroProfile {@link Config} instead of Spring's {@code StandardEnvironment}; a {@code Config}
- * reporting no active profile is supplied here.
+ * Tests for {@link FolderInputSource}: consume mode tracks files in place through the ledger,
+ * snapshot stays stateless, and discovery skips hidden entries and honours the recursive option.
  */
 @ExtendWith(MockitoExtension.class)
 class FolderInputSourceTest {
@@ -60,7 +59,12 @@ class FolderInputSourceTest {
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        FolderAccessGuard guard = new FolderAccessGuard(properties, configWithNoProfiles());
+        FolderAccessGuard guard =
+                new FolderAccessGuard(
+                        properties,
+                        new RuntimePathConfig(properties),
+                        configWithNoProfiles(),
+                        new InProcessSourceStore());
         source = new FolderInputSource(readinessChecker, guard);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();

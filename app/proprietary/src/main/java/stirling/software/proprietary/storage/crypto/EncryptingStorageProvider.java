@@ -396,6 +396,11 @@ public class EncryptingStorageProvider implements StorageProvider {
         }
 
         @Override
+        public boolean isOpen() {
+            return true;
+        }
+
+        @Override
         public boolean exists() {
             return true;
         }

@@ -103,6 +103,7 @@ public class PolicyEngine {
             JobOwnershipService jobOwnershipService,
             UserService userService,
             @All List<PolicyOutputSink> outputSinks,
+            PolicyOutputResolver outputResolver,
             ResourceMonitor resourceMonitor,
             JobQueue jobQueue) {
         this.stepExecutor = stepExecutor;
@@ -112,6 +113,7 @@ public class PolicyEngine {
         this.jobOwnershipService = jobOwnershipService;
         this.userService = userService;
         this.outputSinks = outputSinks;
+        this.outputResolver = outputResolver;
         this.resourceMonitor = resourceMonitor;
         this.jobQueue = jobQueue;
     }

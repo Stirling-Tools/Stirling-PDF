@@ -766,10 +766,10 @@ public class WorkflowSessionService {
             try {
                 certificateSubmissionValidator.validateAndExtractInfo(
                         request.getJksFile().getBytes(), "JKS", request.getPassword());
-            } catch (ResponseStatusException e) {
+            } catch (WebApplicationException e) {
                 throw e;
             } catch (IOException e) {
-                log.error("Failed to read P12 keystore file", e);
+                log.error("Failed to read JKS keystore file for validation", e);
                 throw new WebApplicationException(
                         "Failed to process certificate file", Response.Status.BAD_REQUEST);
             }
@@ -806,8 +806,8 @@ public class WorkflowSessionService {
                                     request.getP12File().getBytes()));
                 } catch (IOException e) {
                     log.error("Failed to read P12 keystore file", e);
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+                    throw new WebApplicationException(
+                            "Failed to process certificate file", Response.Status.BAD_REQUEST);
                 }
             } else if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
                 try {
@@ -817,8 +817,8 @@ public class WorkflowSessionService {
                                     request.getJksFile().getBytes()));
                 } catch (IOException e) {
                     log.error("Failed to read JKS keystore file", e);
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+                    throw new WebApplicationException(
+                            "Failed to process certificate file", Response.Status.BAD_REQUEST);
                 }
             }
         }

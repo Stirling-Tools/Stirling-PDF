@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import io.quarkus.runtime.StartupEvent;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.persistence.PersistenceException;
 
@@ -200,8 +200,13 @@ public class JpaProcessedLedger implements ProcessedLedger {
         repository.deleteByPolicy(policyId);
     }
 
+    // Spring hung @EventListener(ApplicationReadyEvent) on recoverInterrupted() itself; a CDI
+    // observer needs the event parameter, and the interface method has none, hence the delegate.
+    void onStart(@Observes StartupEvent event) {
+        recoverInterrupted();
+    }
+
     @Override
-    @EventListener(ApplicationReadyEvent.class)
     public void recoverInterrupted() {
         int recovered = repository.markAllProcessingInterrupted(nowMillis.get());
         if (recovered > 0) {

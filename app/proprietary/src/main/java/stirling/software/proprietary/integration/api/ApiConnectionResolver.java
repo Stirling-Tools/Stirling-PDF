@@ -33,7 +33,8 @@ import tools.jackson.databind.ObjectMapper;
  */
 @ApplicationScoped
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+// jakarta.transaction.Transactional has no readOnly hint; the reads are unchanged without it.
+@Transactional
 public class ApiConnectionResolver {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -46,7 +47,7 @@ public class ApiConnectionResolver {
     public Map<String, Object> resolveConfig(Long connectionId, IntegrationType type) {
         IntegrationConfig connection =
                 connections
-                        .findById(connectionId)
+                        .findByIdOptional(connectionId)
                         .filter(cfg -> cfg.getIntegrationType() == type)
                         .filter(this::usableByCurrentUser)
                         // Existence and access collapse into one error so a caller cannot tell

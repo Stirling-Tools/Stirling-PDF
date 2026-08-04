@@ -11,6 +11,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
@@ -24,6 +25,7 @@ import tools.jackson.databind.node.ObjectNode;
  * Durable {@link PolicyStore} backed by JPA; the runtime store. Policies are persisted as JSON via
  * {@link PolicyEntity}, with scalar columns kept in sync for querying.
  */
+@Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
 @IfBuildProfile("saas")
@@ -61,11 +63,13 @@ public class JpaPolicyStore implements PolicyStore {
         // team's queue (max + 1), so setting up a policy adds it last by default.
         entity.setSortOrder(
                 repository
-                        .findById(id)
+                        .findByIdOptional(id)
                         .map(PolicyEntity::getSortOrder)
                         .orElseGet(() -> nextSortOrder(stored.teamId())));
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
-        repository.persist(entity);
+        // The id is always assigned, so this is Spring Data's save: merge, which updates an
+        // existing row instead of failing the insert a plain persist() would attempt.
+        repository.getEntityManager().merge(entity);
         return stored;
     }
 

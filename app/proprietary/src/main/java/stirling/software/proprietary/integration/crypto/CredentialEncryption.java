@@ -11,6 +11,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.EnumSet;
+import java.util.Optional;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -19,6 +20,9 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.arc.Arc;
+import io.quarkus.runtime.Startup;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -30,6 +34,9 @@ import stirling.software.common.configuration.InstallationPathConfig;
 /**
  * AES-256-GCM for stored credentials. Key from property, env var, or an auto-generated key file.
  */
+// @Startup, because nothing injects this bean - it is reached through its static encrypt/decrypt
+// from a JPA AttributeConverter, so Arc would otherwise remove it as unused and never run init().
+@Startup
 @ApplicationScoped
 @Slf4j
 public class CredentialEncryption {
@@ -47,11 +54,13 @@ public class CredentialEncryption {
     private final boolean clusterEnabled;
 
     public CredentialEncryption(
-            @ConfigProperty(name = "stirling.security.credentialEncryptionKey", defaultValue = "")
-                    String configuredKey,
+            // Optional, not defaultValue="": SmallRye Config reads an empty default as absent and
+            // then fails to convert it to String.
+            @ConfigProperty(name = "stirling.security.credentialEncryptionKey")
+                    Optional<String> configuredKey,
             @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
                     boolean clusterEnabled) {
-        this.configuredKey = configuredKey;
+        this.configuredKey = configuredKey.orElse("");
         this.clusterEnabled = clusterEnabled;
     }
 
@@ -158,10 +167,23 @@ public class CredentialEncryption {
 
     private static SecretKey requireKey() {
         SecretKey current = key;
+        if (current == null && Arc.container() != null) {
+            // A JPA AttributeConverter can encrypt during another bean's @PostConstruct, before
+            // this one is first injected. Spring created singletons eagerly; Arc does not, and its
+            // client proxy stays uninitialised until a method is called on it - hence activeKey().
+            CredentialEncryption bean =
+                    Arc.container().instance(CredentialEncryption.class).orElse(null);
+            current = bean == null ? null : bean.activeKey();
+        }
         if (current == null) {
             throw new IllegalStateException("Credential encryption not initialised");
         }
         return current;
+    }
+
+    /** Called through the CDI proxy purely to force {@link #init()} to have run. */
+    SecretKey activeKey() {
+        return key;
     }
 
     /** For tests. */

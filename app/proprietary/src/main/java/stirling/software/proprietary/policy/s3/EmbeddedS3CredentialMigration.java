@@ -4,10 +4,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.runtime.StartupEvent;
 
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.interceptor.Interceptor;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +47,7 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class EmbeddedS3CredentialMigration {
 
@@ -64,11 +69,16 @@ public class EmbeddedS3CredentialMigration {
 
     // Must run before PolicyInlineOutputMigration: that migration copies a policy's inline output
     // options into a Source, so embedded S3 credentials have to be extracted into a connection here
-    // first, or they would be copied verbatim (plaintext) into the new source row. Each rewrite is
-    // its own idempotent commit (dedup by credential key), so a crash mid-run just re-runs next
-    // boot; the completion marker below is written only once the whole pass succeeds.
-    @Order(1)
-    @EventListener(ApplicationReadyEvent.class)
+    // first, or they would be copied verbatim (plaintext) into the new source row. Spring's
+    // @Order(1) maps to an observer @Priority just after the config overlay (APPLICATION) and well
+    // below the default 2500, which keeps that order.
+    // @Transactional: Panache needs an ambient transaction and the StartupEvent thread has none.
+    // The rewrites and the marker then commit together; a crash mid-run just re-runs next boot.
+    @Transactional
+    void onStart(@Observes @Priority(Interceptor.Priority.APPLICATION + 1) StartupEvent event) {
+        migrate();
+    }
+
     public void migrate() {
         if (completedMigrations.isDone(MIGRATION_ID)) {
             return;
@@ -123,7 +133,7 @@ public class EmbeddedS3CredentialMigration {
         connection.setEnabled(true);
         connection.setLocked(false);
         connection.setDefaultAccess(DefaultAccessPolicy.EXPLICIT_ONLY);
-        Team team = teamId == null ? null : teamRepository.findById(teamId).orElse(null);
+        Team team = teamId == null ? null : teamRepository.findByIdOptional(teamId).orElse(null);
         if (team != null) {
             connection.setScope(OwnerScope.TEAM);
             connection.setOwnerTeam(team);
@@ -164,7 +174,7 @@ public class EmbeddedS3CredentialMigration {
 
     private Map<String, IntegrationConfig> indexExistingConnections() {
         Map<String, IntegrationConfig> byKey = new LinkedHashMap<>();
-        for (IntegrationConfig connection : connections.findAll()) {
+        for (IntegrationConfig connection : connections.listAll()) {
             if (connection.getIntegrationType() != IntegrationType.S3) {
                 continue;
             }

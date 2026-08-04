@@ -1,12 +1,11 @@
 package stirling.software.proprietary.policy.input;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.core.io.AbstractResource;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -230,7 +229,7 @@ public class S3InputSource implements InputSource {
      * reads a different version than the sweep claimed (a swapped object fails the read with a
      * precondition error and the new version is claimed by a later sweep).
      */
-    private static final class S3ObjectResource extends AbstractResource {
+    private static final class S3ObjectResource implements Resource {
 
         private final S3Client client;
         private final String bucket;
@@ -278,8 +277,14 @@ public class S3InputSource implements InputSource {
             return key.substring(key.lastIndexOf('/') + 1);
         }
 
+        /** Bucket-only: there is no local file to hand out, callers must stream it. */
         @Override
-        public String getDescription() {
+        public File getFile() throws IOException {
+            throw new IOException(getDescription() + " is not backed by a local file");
+        }
+
+        /** A helper now, not an override: the Resource shim carries no description. */
+        private String getDescription() {
             return "S3 object " + S3Identities.identity(bucket, key);
         }
     }

@@ -10,7 +10,7 @@ import java.io.InputStream;
  * <p>Quarkus/Jakarta has no single {@code Resource} abstraction. Rather than rewrite the many
  * public method signatures across the codebase that accept or return {@code Resource}, this
  * interface mirrors the subset of Spring's API the codebase actually uses ({@code
- * getInputStream/exists/getFile/getFilename/contentLength/isFile}) together with the {@link
+ * getInputStream/exists/getFile/getFilename/contentLength/isFile/isOpen}) together with the {@link
  * FileSystemResource}, {@link InputStreamResource} and {@link ClassPathResource} implementations.
  * Converting a file is then just an import swap.
  */
@@ -26,6 +26,14 @@ public interface Resource {
 
     /** Whether this resource is backed by a real file in the filesystem. */
     default boolean isFile() {
+        return false;
+    }
+
+    /**
+     * Whether this resource wraps an already-open stream, so {@link #getInputStream()} can only be
+     * read once and must be consumed or closed to avoid a leak.
+     */
+    default boolean isOpen() {
         return false;
     }
 

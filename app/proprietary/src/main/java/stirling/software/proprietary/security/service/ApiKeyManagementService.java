@@ -7,12 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,23 +106,23 @@ public class ApiKeyManagementService {
         User caller = requireCaller();
         String name = request == null ? null : request.name();
         if (name == null || name.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Key name is required");
+            throw new WebApplicationException("Key name is required", Response.Status.BAD_REQUEST);
         }
         if (name.trim().length() > MAX_NAME_LENGTH) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Key name must be " + MAX_NAME_LENGTH + " characters or fewer");
+            throw new WebApplicationException(
+                    "Key name must be " + MAX_NAME_LENGTH + " characters or fewer",
+                    Response.Status.BAD_REQUEST);
         }
         long activeOwned =
                 apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(caller.getId()).stream()
                         .filter(ApiKey::isActive)
                         .count();
         if (activeOwned >= MAX_ACTIVE_KEYS_PER_USER) {
-            throw new ResponseStatusException(
-                    HttpStatus.TOO_MANY_REQUESTS,
+            throw new WebApplicationException(
                     "You have reached the maximum of "
                             + MAX_ACTIVE_KEYS_PER_USER
-                            + " active API keys; revoke one before creating another");
+                            + " active API keys; revoke one before creating another",
+                    Response.Status.TOO_MANY_REQUESTS);
         }
 
         String rawKey = ApiKeyHasher.generateRawKey();
@@ -147,12 +146,14 @@ public class ApiKeyManagementService {
         User caller = requireCaller();
         ApiKey key =
                 apiKeyRepository
-                        .findById(id)
+                        .findByIdOptional(id)
                         .orElseThrow(
-                                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No key"));
+                                () ->
+                                        new WebApplicationException(
+                                                "No key", Response.Status.NOT_FOUND));
         if (!key.getOwnerUserId().equals(caller.getId())) {
             // Not-found rather than forbidden so a caller can't probe other users' key ids.
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No key");
+            throw new WebApplicationException("No key", Response.Status.NOT_FOUND);
         }
         key.setEnabled(false);
         key.setRevokedAt(Instant.now());
@@ -193,14 +194,14 @@ public class ApiKeyManagementService {
      */
     private void clearLegacyColumnIfMatches(ApiKey key) {
         userRepository
-                .findById(key.getOwnerUserId())
+                .findByIdOptional(key.getOwnerUserId())
                 .ifPresent(
                         owner -> {
                             String legacy = owner.getApiKey();
                             if (legacy != null
                                     && ApiKeyHasher.hash(legacy).equals(key.getKeyHash())) {
                                 owner.setApiKey(null);
-                                userRepository.save(owner);
+                                userRepository.persist(owner);
                             }
                         });
     }
@@ -226,11 +227,13 @@ public class ApiKeyManagementService {
     private User requireCaller() {
         String username = userService.getCurrentUsername();
         if (username == null || username.isBlank() || "anonymousUser".equalsIgnoreCase(username)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+            throw new WebApplicationException("Not authenticated", Response.Status.UNAUTHORIZED);
         }
         return userService
                 .findByUsernameIgnoreCase(username)
                 .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unknown user"));
+                        () ->
+                                new WebApplicationException(
+                                        "Unknown user", Response.Status.UNAUTHORIZED));
     }
 }

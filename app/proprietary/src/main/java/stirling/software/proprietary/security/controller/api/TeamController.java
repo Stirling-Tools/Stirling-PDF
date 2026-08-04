@@ -46,6 +46,7 @@ public class TeamController {
     @POST
     @Path("/create")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
     public Response createTeam(@QueryParam("name") String name) {
         if (teamRepository.existsByNameIgnoreCase(name)) {
             return Response.status(Response.Status.CONFLICT)
@@ -62,6 +63,7 @@ public class TeamController {
     @POST
     @Path("/rename")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
     public Response renameTeam(
             @QueryParam("teamId") Long teamId, @QueryParam("newName") String newName) {
         Optional<Team> existing = teamRepository.findByIdOptional(teamId);
@@ -122,11 +124,12 @@ public class TeamController {
         }
 
         if (integrationConfigRepository.existsByOwnerTeam_Id(teamId)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(
                             Map.of(
                                     "error",
-                                    "Team still owns integration configurations. Delete or reassign them first."));
+                                    "Team still owns integration configurations. Delete or reassign them first."))
+                    .build();
         }
 
         // Team grants and membership rows would dangle once the team row is gone

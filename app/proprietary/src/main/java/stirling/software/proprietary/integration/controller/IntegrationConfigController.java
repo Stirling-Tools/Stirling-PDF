@@ -1,54 +1,62 @@
 package stirling.software.proprietary.integration.controller;
 
-import java.util.List;
+import java.security.Principal;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.integration.dto.IntegrationConfigRequest;
-import stirling.software.proprietary.integration.dto.IntegrationConfigResponse;
 import stirling.software.proprietary.integration.service.IntegrationConfigService;
 import stirling.software.proprietary.security.model.User;
 
 /** CRUD for S3/MCP/API integration configs. Secrets are never returned. */
-@RestController
-@RequestMapping("/api/v1/integrations")
+@ApplicationScoped
+@Path("/api/v1/integrations")
+@Produces(MediaType.APPLICATION_JSON)
 @RequiredArgsConstructor
 // Portal-exclusive: server-side portal-access boundary, not just isAuthenticated. Per-config
 // ownership is still enforced in the service layer.
-@PreAuthorize("@resourceAccess.canUsePortal()")
 @Tag(name = "Integrations", description = "Manage S3/MCP/API integration configurations")
 public class IntegrationConfigController {
 
     private final IntegrationConfigService service;
+    private final ResourceAccessService accessService;
 
-    @GetMapping
-    public ResponseEntity<List<IntegrationConfigResponse>> list(
-            @AuthenticationPrincipal User user) {
-        requireUser(user);
-        return ResponseEntity.ok(
-                service.listVisible(user).stream().map(c -> service.toResponse(c, user)).toList());
+    // Field-injected so @RequiredArgsConstructor stays a pure collaborator constructor.
+    @Inject SecurityIdentity securityIdentity;
+
+    @GET
+    public Response list() {
+        User user = requirePortalUser();
+        return Response.ok(
+                        service.listVisible(user).stream()
+                                .map(c -> service.toResponse(c, user))
+                                .toList())
+                .build();
     }
 
-    @PostMapping
-    public ResponseEntity<IntegrationConfigResponse> create(
-            @RequestBody IntegrationConfigRequest request, @AuthenticationPrincipal User user) {
-        requireUser(user);
-        return ResponseEntity.ok(service.toResponse(service.create(request, user), user));
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response create(IntegrationConfigRequest request) {
+        User user = requirePortalUser();
+        return Response.ok(service.toResponse(service.create(request, user), user)).build();
     }
 
     /**
@@ -57,12 +65,12 @@ public class IntegrationConfigController {
      * inferred client-side: hiding a button is presentation, and the service still refuses the call
      * regardless of what the client believed.
      */
-    @GetMapping("/capabilities")
-    public ResponseEntity<IntegrationCapabilitiesResponse> capabilities(
-            @AuthenticationPrincipal User user) {
-        requireUser(user);
-        return ResponseEntity.ok(
-                new IntegrationCapabilitiesResponse(service.canAuthorCustomApi(user)));
+    @GET
+    @Path("/capabilities")
+    public Response capabilities() {
+        User user = requirePortalUser();
+        return Response.ok(new IntegrationCapabilitiesResponse(service.canAuthorCustomApi(user)))
+                .build();
     }
 
     /**
@@ -70,32 +78,50 @@ public class IntegrationConfigController {
      */
     public record IntegrationCapabilitiesResponse(boolean customApi) {}
 
-    @GetMapping("/{id}")
-    public ResponseEntity<IntegrationConfigResponse> get(
-            @PathVariable Long id, @AuthenticationPrincipal User user) {
-        requireUser(user);
-        return ResponseEntity.ok(service.toResponse(service.getForUse(id, user), user));
+    @GET
+    @Path("/{id}")
+    public Response get(@PathParam("id") Long id) {
+        User user = requirePortalUser();
+        return Response.ok(service.toResponse(service.getForUse(id, user), user)).build();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<IntegrationConfigResponse> update(
-            @PathVariable Long id,
-            @RequestBody IntegrationConfigRequest request,
-            @AuthenticationPrincipal User user) {
-        requireUser(user);
-        return ResponseEntity.ok(service.toResponse(service.update(id, request, user), user));
+    @PUT
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response update(@PathParam("id") Long id, IntegrationConfigRequest request) {
+        User user = requirePortalUser();
+        return Response.ok(service.toResponse(service.update(id, request, user), user)).build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        requireUser(user);
+    @DELETE
+    @Path("/{id}")
+    public Response delete(@PathParam("id") Long id) {
+        User user = requirePortalUser();
         service.delete(id, user);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    private void requireUser(User user) {
+    // Replaces the class-level @PreAuthorize("@resourceAccess.canUsePortal()"): Quarkus has no SpEL
+    // gate, so every endpoint resolves the caller and clears the portal boundary before any work.
+    private User requirePortalUser() {
+        User user = currentUser();
         if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+            throw new WebApplicationException(
+                    "Authentication required", Response.Status.UNAUTHORIZED);
         }
+        if (!accessService.canAccessPortal(user)) {
+            throw new WebApplicationException("Portal access required", Response.Status.FORBIDDEN);
+        }
+        return user;
+    }
+
+    // The User entity is the principal, attached by UserSecurityIdentityAugmentor; Spring's
+    // SecurityContextHolder is never populated on RESTEasy threads.
+    private User currentUser() {
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
+            return null;
+        }
+        Principal principal = securityIdentity.getPrincipal();
+        return principal instanceof User user ? user : null;
     }
 }

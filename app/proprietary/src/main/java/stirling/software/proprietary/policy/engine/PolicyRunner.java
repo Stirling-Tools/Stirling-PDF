@@ -45,10 +45,20 @@ public class PolicyRunner {
     private final SourceDocCounter docCounter;
     private final ProcessedLedger processedLedger;
 
+    // Written out rather than @RequiredArgsConstructor because Lombok cannot stamp @All onto the
+    // InputSource list, which is how Arc injects every bean of a type.
     @jakarta.inject.Inject
-    public PolicyRunner(PolicyEngine policyEngine, @All List<InputSource> inputSources) {
+    public PolicyRunner(
+            PolicyEngine policyEngine,
+            @All List<InputSource> inputSources,
+            SourceStore sourceStore,
+            SourceDocCounter docCounter,
+            ProcessedLedger processedLedger) {
         this.policyEngine = policyEngine;
         this.inputSources = inputSources;
+        this.sourceStore = sourceStore;
+        this.docCounter = docCounter;
+        this.processedLedger = processedLedger;
     }
 
     /** Full-listing sweep over every input: resolve each source, then reconcile the ledger. */

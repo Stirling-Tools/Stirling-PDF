@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import stirling.software.proprietary.util.SecretMasker;
  * always consistent with the live policy set.
  */
 @ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class SourceOverviewService {
 

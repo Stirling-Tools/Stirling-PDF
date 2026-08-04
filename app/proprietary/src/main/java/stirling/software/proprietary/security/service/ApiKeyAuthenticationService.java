@@ -2,6 +2,7 @@ package stirling.software.proprietary.security.service;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,6 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
 import stirling.software.proprietary.security.model.User;
@@ -58,20 +60,30 @@ public class ApiKeyAuthenticationService {
             if (!key.isActive()) {
                 return Optional.empty();
             }
-            User owner = userRepository.findById(key.getOwnerUserId()).orElse(null);
+            User owner = userRepository.findByIdOptional(key.getOwnerUserId()).orElse(null);
             if (owner == null || !owner.isEnabled()) {
                 return Optional.empty();
             }
             usageRecorder.record(key.getId());
             return Optional.of(
-                    new ApiKeyAuthentication(owner, auditLabel(key), owner.getAuthorities()));
+                    new ApiKeyAuthentication(owner, auditLabel(key), authoritiesOf(owner)));
         }
 
         // Legacy single per-user key: keep working, always a personal key for its user.
         return userRepository
                 .findByApiKey(rawKey)
                 .filter(User::isEnabled)
-                .map(user -> new ApiKeyAuthentication(user, null, user.getAuthorities()));
+                .map(user -> new ApiKeyAuthentication(user, null, authoritiesOf(user)));
+    }
+
+    // Authority is a JPA entity, not a GrantedAuthority shim; adapt each role string.
+    private static List<GrantedAuthority> authoritiesOf(User user) {
+        return user.getAuthorities().stream()
+                .map(
+                        authority ->
+                                (GrantedAuthority)
+                                        new SimpleGrantedAuthority(authority.getAuthority()))
+                .toList();
     }
 
     /** "Production ingest (sk_a1b2c3d4)" - shown against API-sourced docs in the processor feed. */
