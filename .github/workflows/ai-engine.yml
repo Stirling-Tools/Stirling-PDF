@@ -80,6 +80,32 @@ jobs:
               });
             }
 
+      - name: Run engine tests with coverage
+        id: engine-coverage
+        if: always()
+        run: task engine:test:coverage
+
+      - name: Add engine coverage to step summary
+        if: always() && steps.engine-coverage.outcome == 'success'
+        working-directory: engine
+        run: |
+          {
+            echo '## AI Engine coverage'
+            echo
+            echo '```text'
+            uv run coverage report --show-missing
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload engine coverage report
+        if: always() && steps.engine-coverage.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ai-engine-coverage
+          path: engine/coverage/
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Fail if engine check failed
         if: steps.engine-check.outcome == 'failure'
         run: |
