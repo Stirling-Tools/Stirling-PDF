@@ -268,11 +268,14 @@ tasks:
   lint:css:
     desc: "Lint stylesheets for duplicate selectors"
     deps: [install]
+    summary: |
+      Covers CSS in the backend static resources and the whole editor source
+      tree, including the portal/processor layer. Vendored CSS and build
+      output are excluded via ignoreFiles in the selected Stylelint config.
     cmds:
-      # Covers the whole editor tree, including the portal/processor layer and
-      # public/css. Vendored CSS and build output are excluded via ignoreFiles
-      # in stylelint.config.mjs.
-      - npx stylelint "editor/**/*.css"
+      - task: lint:css:check
+        vars:
+          STYLELINT_CONFIG: "../devTools/.stylelintrc.duplicates.json"
 
   lint:colors:
     desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
@@ -316,7 +319,7 @@ tasks:
       STYLELINT_CONFIG: '{{.STYLELINT_CONFIG | default "../devTools/.stylelintrc.json"}}'
     cmds:
       - >-
-        npm --prefix ../devTools exec -- stylelint
+        npx stylelint
         "../app/**/src/main/resources/static/css/*.css"
         "../frontend/editor/src/**/*.css"
         --config "{{.STYLELINT_CONFIG}}"
@@ -327,7 +330,7 @@ tasks:
       STYLELINT_CONFIG: '{{.STYLELINT_CONFIG | default "../devTools/.stylelintrc.json"}}'
     cmds:
       - >-
-        npm --prefix ../devTools exec -- stylelint
+        npx stylelint
         "../app/**/src/main/resources/static/css/*.css"
         "../frontend/editor/src/**/*.css"
         --config "{{.STYLELINT_CONFIG}}"
