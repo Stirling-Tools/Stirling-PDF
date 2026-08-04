@@ -39,6 +39,24 @@ export const LARGE_PDF_PARSE_LIMIT = 100 * 1024 * 1024;
  * prefix is often enough to render a thumbnail without reading the file. */
 const LINEARIZED_PREFIX_BYTES = 2 * 1024 * 1024;
 
+/** Window at the end of the file searched for an /Encrypt entry. */
+const TRAILER_PROBE_BYTES = 64 * 1024;
+
+/** Decoded latin1 because the input is binary - UTF-8 replacement characters
+ * can swallow the marker. \b excludes longer keys like /Encryption. */
+export function containsEncryptMarker(bytes: Uint8Array): boolean {
+  return /\/Encrypt\b/.test(new TextDecoder("latin1").decode(bytes));
+}
+
+/** /Encrypt is referenced from the trailer, which the prefix never contains, so
+ * encryption can only be read from the tail. Heuristic: a false positive offers
+ * unlock on a file that did not need it, a false negative leaves it unopenable. */
+async function looksEncryptedFromTrailer(file: File): Promise<boolean> {
+  const start = Math.max(0, file.size - TRAILER_PROBE_BYTES);
+  const tail = await file.slice(start).arrayBuffer();
+  return containsEncryptMarker(new Uint8Array(tail));
+}
+
 interface PdfiumRenderResult {
   thumbnail: string;
   pageCount: number;
@@ -269,6 +287,9 @@ export async function generateThumbnailWithMetadata(
   // Never full-parse huge PDFs client-side - the renderer process OOMs long
   // before system RAM runs out. The prefix succeeds for linearized PDFs.
   if (file.size >= LARGE_PDF_PARSE_LIMIT) {
+    if (await looksEncryptedFromTrailer(file)) {
+      return { thumbnail: "", pageCount: 1, isEncrypted: true };
+    }
     try {
       const chunk = await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer();
       const result = await renderPdfThumbnailPdfium(
@@ -331,8 +352,16 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
   rotated: ThumbnailWithMetadata;
 }> {
   const scale = calculateScaleFromFileSize(file.size);
+  const isLarge = file.size >= LARGE_PDF_PARSE_LIMIT;
+  if (isLarge && (await looksEncryptedFromTrailer(file))) {
+    const encrypted: ThumbnailWithMetadata = {
+      thumbnail: "",
+      pageCount: 1,
+      isEncrypted: true,
+    };
+    return { unrotated: encrypted, rotated: { ...encrypted } };
+  }
   try {
-    const isLarge = file.size >= LARGE_PDF_PARSE_LIMIT;
     const buffer = isLarge
       ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
       : await file.arrayBuffer();
