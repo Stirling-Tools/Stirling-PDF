@@ -243,12 +243,6 @@ pub fn run() {
           // Use Tauri's built-in cleanup
           app_handle.cleanup_before_exit();
         }
-        RunEvent::Exit => {
-          // Lingering plugin/webview threads can keep the process alive after the
-          // event loop ends (macOS "app won't quit"). Backend is dead; hard-exit.
-          cleanup_backend();
-          std::process::exit(0);
-        }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, label, .. } => {
           add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
           // Don't cleanup here - let JavaScript handler prevent close if needed
