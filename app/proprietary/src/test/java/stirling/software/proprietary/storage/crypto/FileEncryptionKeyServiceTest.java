@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -142,6 +143,56 @@ class FileEncryptionKeyServiceTest {
                                         .verifyMasterKey())
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("cannot unwrap");
+    }
+
+    @Test
+    void verifyMasterKey_halfRotatedRegistryWithPreviousKeyRemoved_refusesStartup()
+            throws Exception {
+        // Team 1 gets re-wrapped under the new master key; team 2 does not, because the rotation
+        // stopped part-way (or was never run).
+        FileEncryptionKeyService.ScopeKek rewrapped = service.activeKekForOwner(teamUser(1));
+        FileEncryptionKeyService.ScopeKek leftBehind = service.activeKekForOwner(teamUser(2));
+        FileEncryptionMasterKey rotating =
+                new FileEncryptionMasterKey(MASTER_B, MASTER_A, 2, false);
+        FileEncryptionKey row = repo.rows.get(rewrapped.keyId());
+        row.setWrappedKey(
+                Base64.getEncoder()
+                        .encodeToString(
+                                rotating.wrap(
+                                        rewrapped.key(),
+                                        rewrapped
+                                                .keyId()
+                                                .toString()
+                                                .getBytes(StandardCharsets.US_ASCII))));
+        row.setMasterKeyVersion(2);
+
+        // The operator now removes the previous key, believing rotation finished. Team 2's files
+        // are only recoverable while MASTER_A still exists, so startup must not look healthy.
+        FileEncryptionKeyService afterRemoval =
+                new FileEncryptionKeyService(
+                        repo.mock, new FileEncryptionMasterKey(MASTER_B, null, 2, false));
+
+        assertThatThrownBy(afterRemoval::verifyMasterKey)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cannot unwrap 1 of 2")
+                .hasMessageContaining(leftBehind.keyId().toString())
+                .hasMessageContaining("Refusing to start");
+    }
+
+    @Test
+    void verifyMasterKey_disabledRowThatCannotUnwrap_refusesStartup() throws Exception {
+        // Revocation is advertised as reversible, so an unreadable DISABLED row is just as much a
+        // loss of access as an unreadable ACTIVE one - it would not come back on enable.
+        FileEncryptionKeyService.ScopeKek created = service.activeKekForOwner(teamUser(1));
+        service.setKeyStatus(created.keyId(), FileEncryptionKey.Status.DISABLED, "admin");
+
+        FileEncryptionKeyService wrongKey =
+                new FileEncryptionKeyService(
+                        repo.mock, new FileEncryptionMasterKey(MASTER_B, false));
+
+        assertThatThrownBy(wrongKey::verifyMasterKey)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cannot unwrap 1 of 1");
     }
 
     @Test

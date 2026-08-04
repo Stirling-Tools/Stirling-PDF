@@ -123,7 +123,16 @@ Rotation only re-wraps the small `file_encryption_keys` table — file contents 
 3. Bump `stirling.security.fileEncryptionKeyVersion`.
 4. Restart. Startup warns about rows still wrapped by the previous key.
 5. `POST /api/v1/admin/storage-encryption/master/rotate`.
-6. Remove `fileEncryptionKeyPrevious` and restart.
+6. Confirm the response's `rewrapped` count and that `/status` shows every key row at the new
+   `masterKeyVersion`.
+7. Remove `fileEncryptionKeyPrevious` and restart.
+
+**Do not skip step 6.** Until a row is re-wrapped it is still readable only with the outgoing key, so
+removing that key while rows remain behind would seal the files under them. Startup verifies every
+key row against the configured keys and refuses to start if any cannot be unwrapped, naming the count
+and the first affected scope — so this shows up as a failed deploy, recoverable by putting the old key
+back, rather than as unreadable files discovered later. Keep the outgoing key archived until a
+restart has succeeded without it.
 
 Key material is never accepted over HTTP; the endpoint only performs the re-wrap step.
 

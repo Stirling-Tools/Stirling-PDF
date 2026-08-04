@@ -5,7 +5,9 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -228,19 +230,20 @@ public class FileEncryptionKeyService {
     }
 
     /**
-     * Startup self-check: proves the resolved master key can unwrap an existing row, so a wrong key
-     * fails fast instead of silently writing new files under a second key hierarchy.
+     * Startup self-check: proves the configured master key can unwrap <em>every</em> KEK row, so a
+     * wrong or half-rotated key fails fast instead of silently writing new files under a second key
+     * hierarchy — or leaving some scopes' files unreadable while the rest of the app looks healthy.
+     * Checking all rows rather than a sample matters because rotation can stop part-way; the table
+     * holds one row per scope per rotation, so this stays cheap.
      */
     public void verifyMasterKey() {
-        if (masterKey.hasPreviousKey()) {
-            long pending = repository.countByMasterKeyVersionLessThan(masterKey.currentVersion());
-            if (pending > 0) {
-                log.warn(
-                        "{} encryption key row(s) are still wrapped by the previous master key."
-                                + " Run POST /api/v1/admin/storage-encryption/master/rotate, then"
-                                + " remove stirling.security.fileEncryptionKeyPrevious.",
-                        pending);
-            }
+        long pending = repository.countByMasterKeyVersionLessThan(masterKey.currentVersion());
+        if (pending > 0) {
+            log.warn(
+                    "{} encryption key row(s) are still wrapped by the previous master key. Run"
+                            + " POST /api/v1/admin/storage-encryption/master/rotate, then remove"
+                            + " stirling.security.fileEncryptionKeyPrevious.",
+                    pending);
         }
         long stranded = repository.countByMasterKeyVersionGreaterThan(masterKey.currentVersion());
         if (stranded > 0) {
@@ -252,26 +255,42 @@ public class FileEncryptionKeyService {
                     stranded,
                     masterKey.currentVersion());
         }
-        repository
-                .findFirstByStatus(FileEncryptionKey.Status.ACTIVE)
-                .or(() -> repository.findFirstByStatus(FileEncryptionKey.Status.RETIRED))
-                .ifPresent(
-                        row -> {
-                            try {
-                                unwrapRow(row);
-                            } catch (StorageEncryptionException e) {
-                                throw new IllegalStateException(
-                                        "The configured file encryption key (fingerprint "
-                                                + masterKey.fingerprint()
-                                                + ") cannot unwrap existing key "
-                                                + row.getKeyId()
-                                                + ". Refusing to start with a mismatched key —"
-                                                + " restore the original"
-                                                + " STIRLING_FILE_ENCRYPTION_KEY /"
-                                                + " file-encryption.key.",
-                                        e);
-                            }
-                        });
+        List<FileEncryptionKey> unreadable = new ArrayList<>();
+        StorageEncryptionException firstFailure = null;
+        // DISABLED rows are included: revocation is meant to be reversible, and a row that cannot
+        // be unwrapped would not come back on enable.
+        for (FileEncryptionKey row : repository.findAll()) {
+            try {
+                unwrapRow(row);
+            } catch (StorageEncryptionException e) {
+                unreadable.add(row);
+                if (firstFailure == null) {
+                    firstFailure = e;
+                }
+            }
+        }
+        if (!unreadable.isEmpty()) {
+            throw new IllegalStateException(
+                    "The configured file encryption key (fingerprint "
+                            + masterKey.fingerprint()
+                            + ") cannot unwrap "
+                            + unreadable.size()
+                            + " of "
+                            + repository.count()
+                            + " encryption key row(s), starting with "
+                            + unreadable.get(0).getKeyId()
+                            + " ("
+                            + unreadable.get(0).getScopeType()
+                            + ":"
+                            + unreadable.get(0).getScopeId()
+                            + ", master key version "
+                            + unreadable.get(0).getMasterKeyVersion()
+                            + "). Files under those keys would be unreadable. Refusing to start —"
+                            + " restore the original key as"
+                            + " stirling.security.fileEncryptionKeyPrevious (or as"
+                            + " STIRLING_FILE_ENCRYPTION_KEY) and re-run the rotation.",
+                    firstFailure);
+        }
     }
 
     private FileEncryptionKey findOrCreateActive(
