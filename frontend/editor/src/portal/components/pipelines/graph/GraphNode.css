@@ -1,77 +1,8 @@
 /**
- * One graph node card. The graph positions it absolutely; everything here is the card's own look.
+ * Graph-only extras layered on the shared NodeCard tile (see @app/ui/NodeCard): the config warning
+ * line, drag dimming, the remove control and run-state glyphs. The surface, selection ring and
+ * icon/title/detail layout all live in NodeCard.
  */
-
-.portal-graph-node {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  box-sizing: border-box;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition:
-    border-color var(--motion-fast),
-    box-shadow var(--motion-fast),
-    opacity var(--motion-fast);
-}
-
-/* The whole card selects; delete sits over it as a sibling. The select target and the two circular
-   controls are the shared Button/ActionIcon carrying bespoke styling, so re-assert the card look
-   over the design-system base (which otherwise imposes a fixed height, its own padding and an
-   accent text colour). */
-.portal-graph-node__select.sui-btn {
-  flex: 1;
-  min-width: 0;
-  height: auto;
-  min-height: 0;
-  border: none;
-  background: none;
-  padding: 0.625rem 0.75rem;
-  text-align: left;
-  font-weight: 400;
-  color: var(--c-text);
-  border-radius: inherit;
-}
-
-/* Mantine wraps a button's children in its label element, so the glyph and the text are laid out
-   there - a gap on the button root would only space the wrapper, not what is inside it. */
-.portal-graph-node__select.sui-btn .mantine-Button-label {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.625rem;
-  min-width: 0;
-  overflow: visible;
-}
-
-.portal-graph-node__text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 0.0625rem;
-}
-
-.portal-graph-node__title {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--c-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.portal-graph-node__detail {
-  font-size: 0.6875rem;
-  /* --c-text-subtle does not clear 4.5:1 at this size in either theme (axe: 4.39 light, 3.66
-     dark); --c-text-muted is the next rung up and does. */
-  color: var(--c-text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* Amber carries the tone on the glyph; the words stay body-coloured. --c-warning is amber-600,
    which is only 3.18:1 on a light surface at this size (axe) - readable as an icon, not as text. */
@@ -79,7 +10,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.6875rem;
   color: var(--c-text);
 }
 
@@ -88,31 +18,17 @@
   flex: none;
 }
 
-/* Selected: the node whose settings the inspector is showing. */
-.portal-graph-node.is-selected {
-  border-color: var(--c-primary);
-  box-shadow: 0 0 0 1px var(--c-primary);
-}
-
-.portal-graph-node:hover:not(.is-selected) {
-  border-color: var(--c-border-strong);
-}
-
-.portal-graph-node.has-warning:not(.is-selected) {
-  border-color: var(--c-warning);
-}
-
 /* Lifted out of the chain: the origin dims so the drop target reads as the real position. */
 .portal-graph-node.is-dragging {
   opacity: 0.4;
 }
 
 /* Steps can be picked up and moved; the input and output are fixed ends. */
-.portal-graph-node--step .portal-graph-node__select.sui-btn {
+.portal-graph-node--step .sui-node-card__select.sui-btn {
   cursor: grab;
 }
 
-.portal-graph-node--step.is-dragging .portal-graph-node__select.sui-btn {
+.portal-graph-node--step.is-dragging .sui-node-card__select.sui-btn {
   cursor: grabbing;
 }
 

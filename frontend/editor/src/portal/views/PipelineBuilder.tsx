@@ -673,7 +673,9 @@ export function PipelineBuilder() {
       link.href = url;
       link.download = output.fileName ?? output.fileId;
       link.click();
-      URL.revokeObjectURL(url);
+      // Revoke on the next tick: some browsers have not yet begun reading the
+      // blob when click() returns, and revoking now would cancel the download.
+      setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (e) {
       if (mounted.current)
         setRunResult({ tone: "danger", text: errorMessage(e) });

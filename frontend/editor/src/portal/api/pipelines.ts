@@ -1,4 +1,5 @@
 import { apiClient } from "@portal/api/http";
+import { type ToolApiStep } from "@app/hooks/tools/shared/toolAutomation";
 
 /**
  * Pipelines service layer: the backend contract.
@@ -212,7 +213,7 @@ export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
 /** What an ad-hoc test run posts: the steps as they stand, with no source and no trigger. */
 export interface TestRunDefinition {
   name: string;
-  steps: unknown[];
+  steps: ToolApiStep[];
   output: OutputSpec;
 }
 
@@ -231,6 +232,8 @@ export async function runPipelineTest(
     new Blob([JSON.stringify(definition)], { type: "application/json" }),
   );
   form.append("fileInput", file);
+  // The POST returns the identifier as `jobId`, but it is the same run id every other endpoint
+  // (fetchRun, fetchRunOutput) calls `runId`; normalise to that here so callers see one name.
   const res = await apiClient.local.multipart<{ jobId: string }>(
     "/api/v1/policies/run",
     form,

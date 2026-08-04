@@ -83,21 +83,15 @@
   padding: 0;
 }
 
+/* Holds the shared Input, which brings its own border/focus ring; the row just insets it and rules
+   it off from the list below. */
 .portal-pipelines__picker-search {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1.125rem;
+  padding: 0.75rem 0.75rem 0.625rem;
   border-bottom: 1px solid var(--c-border-subtle);
 }
 
-.portal-pipelines__picker-search input {
-  flex: 1;
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 0.875rem;
-  color: var(--c-text);
-  outline: none;
+.portal-pipelines__picker-search .sui-input {
+  width: 100%;
 }
 
 .portal-pipelines__picker-list {

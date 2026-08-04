@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import { Button, Input } from "@app/ui";
 import {
   getSubcategoryLabel,
   SUBCATEGORY_ORDER,
@@ -79,10 +80,13 @@ export function ToolPicker({
   return (
     <div className="portal-pipelines__picker">
       <div className="portal-pipelines__picker-search">
-        <input
+        <Input
           autoFocus
+          inputSize="sm"
           value={query}
+          aria-label={t("portal.pipelines.builder.searchTools")}
           placeholder={t("portal.pipelines.builder.searchTools")}
+          leadingIcon={<SearchRoundedIcon style={{ fontSize: "1.125rem" }} />}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Escape") onClose();

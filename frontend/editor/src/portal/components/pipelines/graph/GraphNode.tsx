@@ -7,8 +7,8 @@ import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import { ActionIcon, Button } from "@app/ui";
-import { IconBadge, type IconBadgeAccent } from "@app/ui/IconBadge";
+import { ActionIcon, NodeCard } from "@app/ui";
+import { type IconBadgeAccent } from "@app/ui/IconBadge";
 import type { GraphNodeKind } from "@portal/components/pipelines/graph/pipelineLayout";
 import "@portal/components/pipelines/graph/GraphNode.css";
 
@@ -60,11 +60,10 @@ export interface GraphNodeProps {
 }
 
 /**
- * One node in the pipeline graph: a card carrying its glyph, title and a one-line summary.
- *
- * The whole card is the select target, with delete as a separate sibling button rather than a
- * nested one (nested interactive elements are invalid and unreachable by keyboard). Position is
- * applied by the graph, so the node itself knows nothing about layout.
+ * One node in the pipeline graph: the shared {@link NodeCard} tile carrying its glyph, title and a
+ * one-line summary, plus the graph-only extras layered on top - run status, a remove control, drag
+ * dimming, and the "why this cannot be saved" warning line. Position is applied by the graph, so the
+ * node itself knows nothing about layout.
  */
 export function GraphNode({
   kind,
@@ -82,90 +81,103 @@ export function GraphNode({
   ref,
 }: GraphNodeProps) {
   const { t } = useTranslation();
-  const className = [
-    "portal-graph-node",
-    `portal-graph-node--${kind}`,
-    selected ? "is-selected" : "",
-    dragging ? "is-dragging" : "",
-    warning ? "has-warning" : "",
-    runState ? `is-${runState}` : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+
+  const runStatus = runState && (
+    <RunStatus
+      runState={runState}
+      title={title}
+      onOpenRunState={onOpenRunState}
+    />
+  );
+  const remove = onRemove && (
+    <ActionIcon
+      variant="tertiary"
+      size="sm"
+      shape="circle"
+      className="portal-graph-node__remove"
+      aria-label={t("portal.pipelines.graph.removeNode", { name: title })}
+      onClick={onRemove}
+    >
+      <CloseRoundedIcon style={{ fontSize: "0.875rem" }} />
+    </ActionIcon>
+  );
 
   return (
-    <div
-      className={className}
+    <NodeCard
       ref={ref}
       data-graph-node={kind}
       data-step-index={stepIndex}
-    >
-      <Button
-        variant="quiet"
-        className="portal-graph-node__select"
-        aria-pressed={selected}
-        onClick={onSelect}
-      >
-        <IconBadge accent={KIND_ACCENT[kind]} size="sm">
-          {icon ?? KIND_ICON[kind]}
-        </IconBadge>
-        <span className="portal-graph-node__text">
-          <span className="portal-graph-node__title">{title}</span>
-          {warning ? (
-            <span className="portal-graph-node__warning">
-              <WarningAmberRoundedIcon style={{ fontSize: "0.875rem" }} />
-              {warning}
-            </span>
-          ) : (
-            detail && (
-              <span className="portal-graph-node__detail">{detail}</span>
-            )
-          )}
-        </span>
-      </Button>
-
-      {runState && onOpenRunState ? (
-        <ActionIcon
-          variant="tertiary"
-          size="sm"
-          shape="circle"
-          className="portal-graph-node__run portal-graph-node__run--open"
-          aria-label={t("portal.pipelines.graph.showError", { name: title })}
-          onClick={onOpenRunState}
-        >
-          <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
-        </ActionIcon>
-      ) : (
-        runState && (
-          <span className="portal-graph-node__run" role="status">
-            {runState === "running" && (
-              <span className="portal-graph-node__pulse" aria-hidden />
-            )}
-            {runState === "done" && (
-              <CheckRoundedIcon style={{ fontSize: "1.125rem" }} />
-            )}
-            {runState === "failed" && (
-              <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
-            )}
-            <span className="portal-graph-node__run-label">
-              {t(`portal.pipelines.graph.run.${runState}`)}
-            </span>
+      className={[
+        "portal-graph-node",
+        `portal-graph-node--${kind}`,
+        dragging ? "is-dragging" : "",
+        runState ? `is-${runState}` : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      icon={icon ?? KIND_ICON[kind]}
+      iconAccent={KIND_ACCENT[kind]}
+      title={title}
+      tone={warning ? "warning" : "default"}
+      selected={selected}
+      onSelect={onSelect}
+      detail={
+        warning ? (
+          <span className="portal-graph-node__warning">
+            <WarningAmberRoundedIcon style={{ fontSize: "0.875rem" }} />
+            {warning}
           </span>
+        ) : (
+          detail
         )
-      )}
+      }
+      trailing={
+        <>
+          {runStatus}
+          {remove}
+        </>
+      }
+    />
+  );
+}
 
-      {onRemove && (
-        <ActionIcon
-          variant="tertiary"
-          size="sm"
-          shape="circle"
-          className="portal-graph-node__remove"
-          aria-label={t("portal.pipelines.graph.removeNode", { name: title })}
-          onClick={onRemove}
-        >
-          <CloseRoundedIcon style={{ fontSize: "0.875rem" }} />
-        </ActionIcon>
+interface RunStatusProps {
+  runState: NodeRunState;
+  title: string;
+  onOpenRunState?: () => void;
+}
+
+/** The run glyph on the card's trailing edge; a button when it opens a failure, else a status. */
+function RunStatus({ runState, title, onOpenRunState }: RunStatusProps) {
+  const { t } = useTranslation();
+  if (runState === "failed" && onOpenRunState) {
+    return (
+      <ActionIcon
+        variant="tertiary"
+        size="sm"
+        shape="circle"
+        className="portal-graph-node__run portal-graph-node__run--open"
+        aria-label={t("portal.pipelines.graph.showError", { name: title })}
+        onClick={onOpenRunState}
+      >
+        <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
+      </ActionIcon>
+    );
+  }
+  return (
+    <span className="portal-graph-node__run" role="status">
+      {runState === "running" && (
+        <span className="portal-graph-node__pulse" aria-hidden />
       )}
-    </div>
+      {runState === "done" && (
+        <CheckRoundedIcon style={{ fontSize: "1.125rem" }} />
+      )}
+      {runState === "failed" && (
+        <ErrorOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
+      )}
+      <span className="portal-graph-node__run-label">
+        {t(`portal.pipelines.graph.run.${runState}`)}
+      </span>
+    </span>
   );
 }
