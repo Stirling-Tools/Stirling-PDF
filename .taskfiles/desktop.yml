@@ -194,7 +194,8 @@ tasks:
       # `desktop:build` run `jlink:clean` first to force a fresh build.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"
+      # Escape the $ so Task's shell doesn't expand $_/$false to empty before PowerShell sees them.
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { \$_.IsReadOnly = \$false }"
         platforms: [windows]
     status:
       - test -f runtime/jre/release
