@@ -6,6 +6,7 @@ import java.util.regex.PatternSyntaxException;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -156,6 +157,12 @@ public final class RegexPatternUtils {
     private Pattern getOrCompile(PatternKey key) {
         try {
             return patternCache.get(key, () -> compilePattern(key));
+        } catch (UncheckedExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof PatternSyntaxException patternSyntaxException) {
+                throw patternSyntaxException;
+            }
+            throw e;
         } catch (java.util.concurrent.ExecutionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof PatternSyntaxException patternSyntaxException) {
