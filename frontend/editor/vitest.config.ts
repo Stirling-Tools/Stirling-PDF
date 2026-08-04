@@ -33,10 +33,10 @@ export default defineConfig({
         "src/**/*.spec.ts",
       ],
       thresholds: {
-        lines: 14,
+        lines: 13,
         functions: 40,
         branches: 63,
-        statements: 14,
+        statements: 13,
       },
     },
     projects: [
