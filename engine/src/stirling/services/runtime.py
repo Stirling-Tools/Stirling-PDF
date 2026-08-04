@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any, assert_never
@@ -133,7 +133,7 @@ class ConcurrencyLimitedModel(WrapperModel):
         model_settings: ModelSettings | None,
         model_request_parameters: ModelRequestParameters,
         run_context: RunContext[Any] | None = None,
-    ) -> AsyncIterator[StreamedResponse]:
+    ) -> AsyncGenerator[StreamedResponse, None]:
         async with self._semaphore:
             async with super().request_stream(
                 messages, model_settings, model_request_parameters, run_context
