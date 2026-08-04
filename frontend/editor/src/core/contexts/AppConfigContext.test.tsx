@@ -285,34 +285,44 @@ describe("AppConfigContext", () => {
     expect(apiClient.get).toHaveBeenCalled();
   });
 
-  it("fetches on an auth page once a JWT arrives", async () => {
+  it("fetches on an auth page once a JWT arrives, flipping loading", async () => {
     // Signing in on /login must load the config the first-login password
-    // prompt reads. Enabling the query is what does that — refetchQueries
-    // cannot wake a disabled one.
+    // prompt reads. useOnboardingOrchestrator keys its effect on
+    // [config?.enableLogin, configLoading] — both primitives — so the config
+    // value changing is not enough. loading has to go true then false, or the
+    // prompt never opens.
     Object.defineProperty(window, "location", {
       value: { pathname: "/login" },
       writable: true,
     });
-    vi.mocked(apiClient.get).mockResolvedValue({
-      status: 200,
-      data: { enableLogin: true, isAdmin: true },
-    } as any);
+    let resolveFetch: (value: unknown) => void = () => {};
+    vi.mocked(apiClient.get).mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      }) as never,
+    );
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
     expect(apiClient.get).not.toHaveBeenCalled();
+    expect(result.current.loading).toBe(false);
 
     await act(async () => {
       window.dispatchEvent(new CustomEvent("jwt-available"));
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    await waitFor(() =>
-      expect(result.current.config).toEqual({
-        enableLogin: true,
-        isAdmin: true,
-      }),
-    );
-    expect(apiClient.get).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(result.current.loading).toBe(true));
+
+    await act(async () => {
+      resolveFetch({ status: 200, data: { enableLogin: true, isAdmin: true } });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.config).toEqual({
+      enableLogin: true,
+      isAdmin: true,
+    });
   });
 
   it("serves a remounted provider from cache", async () => {

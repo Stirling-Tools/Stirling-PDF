@@ -78,8 +78,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
   const queryClient = useQueryClient();
   // Auth pages skip the fetch until sign-in asks for one. Enabling the query is
-  // what actually loads it — refetchQueries cannot wake a disabled query, and
-  // the first-login password prompt reads the config that arrives here.
+  // what loads it; refetchQueries cannot wake a disabled query.
   const [signedIn, setSignedIn] = useState(false);
   const refetch = useCallback(async () => {
     setSignedIn(true);
@@ -87,11 +86,12 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   }, [queryClient]);
 
   const { isAuthPage } = useJwtConfigSync(refetch);
+  const fetching = autoFetch && (!isAuthPage || signedIn);
 
   const { data, error, isPending } = useQuery({
     queryKey: qk.appConfig(),
     queryFn: fetchAppConfig,
-    enabled: autoFetch && (!isAuthPage || signedIn),
+    enabled: fetching,
     staleTime: CONFIG_STALE_TIME,
     // Network and 5xx only; failureCount is 0-based, so `<` gives maxRetries retries.
     retry: (failureCount, err) => {
@@ -115,8 +115,16 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         data ??
         initialConfig ??
         (isAuthPage || error ? DEFAULT_APP_CONFIG : null),
-      // A disabled query stays isPending, so the enabled cases are explicit.
-      loading: isAuthPage || seeded ? false : autoFetch ? isPending : true,
+      // Means "a fetch is in flight". Consumers key effects on the true→false
+      // flip, so it must go true for the post-sign-in fetch on an auth page —
+      // and a disabled query stays isPending, hence the explicit cases.
+      loading: seeded
+        ? false
+        : !autoFetch
+          ? true
+          : fetching
+            ? isPending
+            : false,
       error: error ? errorMessage(error) : null,
       refetch,
     }),
@@ -128,6 +136,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
       isAuthPage,
       seeded,
       autoFetch,
+      fetching,
       refetch,
     ],
   );
