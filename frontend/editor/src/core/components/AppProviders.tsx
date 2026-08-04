@@ -1,4 +1,7 @@
 import { ReactNode, useEffect } from "react";
+if (import.meta.env.DEV) {
+  void import("@app/debug/memoryTelemetry");
+}
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
@@ -44,11 +47,13 @@ function ScarfTrackingInitializer() {
   return null;
 }
 
+import { PdfEngineProvider, usePdfiumEngine } from "@embedpdf/engines/react";
+import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
+
 function PosthogTrackingInitializer() {
   usePosthogTracking();
   return null;
 }
-
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
   useAppInitialization();
@@ -119,6 +124,16 @@ export function AppProviders({
   appConfigRetryOptions,
   appConfigProviderProps,
 }: AppProvidersProps) {
+  const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: pdfiumWasmUrl,
+    worker: true,
+    encoderPoolSize:
+      typeof navigator !== "undefined" && navigator.hardwareConcurrency
+        ? Math.min(2, navigator.hardwareConcurrency)
+        : 1,
+    fontFallback: null,
+  });
+
   return (
     <PreferencesProvider>
       <ThemeProvider>
@@ -135,50 +150,56 @@ export function AppProviders({
               {/* Auto-popup on startup when a newer Stirling-PDF release is available.
                   No-ops inside Tauri — the desktop popup handles that flow. */}
               <UpdateStartupPopup />
-              <FileContextProvider
-                enableUrlSync={true}
-                enablePersistence={true}
+              <PdfEngineProvider
+                engine={engine}
+                isLoading={isLoading}
+                error={error}
               >
-                <FolderProvider>
-                  <AppInitializer />
-                  <BrandingAssetManager />
-                  <ToolRegistryProvider>
-                    <NavigationProvider>
-                      <FilesModalProvider>
-                        <ToolWorkflowProvider>
-                          <HotkeyProvider>
-                            <SidebarProvider>
-                              <ViewerProvider>
-                                <PageEditorProvider>
-                                  <SignatureProvider>
-                                    <SigningOverlayProvider>
-                                      <RedactionProvider>
-                                        <FormFillProvider>
-                                          <AnnotationProvider>
-                                            <WorkbenchBarProvider>
-                                              <TourOrchestrationProvider>
-                                                <AdminTourOrchestrationProvider>
-                                                  <FolderFileContextProvider>
-                                                    {children}
-                                                  </FolderFileContextProvider>
-                                                </AdminTourOrchestrationProvider>
-                                              </TourOrchestrationProvider>
-                                            </WorkbenchBarProvider>
-                                          </AnnotationProvider>
-                                        </FormFillProvider>
-                                      </RedactionProvider>
-                                    </SigningOverlayProvider>
-                                  </SignatureProvider>
-                                </PageEditorProvider>
-                              </ViewerProvider>
-                            </SidebarProvider>
-                          </HotkeyProvider>
-                        </ToolWorkflowProvider>
-                      </FilesModalProvider>
-                    </NavigationProvider>
-                  </ToolRegistryProvider>
-                </FolderProvider>
-              </FileContextProvider>
+                <FileContextProvider
+                  enableUrlSync={true}
+                  enablePersistence={true}
+                >
+                  <FolderProvider>
+                    <AppInitializer />
+                    <BrandingAssetManager />
+                    <ToolRegistryProvider>
+                      <NavigationProvider>
+                        <FilesModalProvider>
+                          <ToolWorkflowProvider>
+                            <HotkeyProvider>
+                              <SidebarProvider>
+                                <ViewerProvider>
+                                  <PageEditorProvider>
+                                    <SignatureProvider>
+                                      <SigningOverlayProvider>
+                                        <RedactionProvider>
+                                          <FormFillProvider>
+                                            <AnnotationProvider>
+                                              <WorkbenchBarProvider>
+                                                <TourOrchestrationProvider>
+                                                  <AdminTourOrchestrationProvider>
+                                                    <FolderFileContextProvider>
+                                                      {children}
+                                                    </FolderFileContextProvider>
+                                                  </AdminTourOrchestrationProvider>
+                                                </TourOrchestrationProvider>
+                                              </WorkbenchBarProvider>
+                                            </AnnotationProvider>
+                                          </FormFillProvider>
+                                        </RedactionProvider>
+                                      </SigningOverlayProvider>
+                                    </SignatureProvider>
+                                  </PageEditorProvider>
+                                </ViewerProvider>
+                              </SidebarProvider>
+                            </HotkeyProvider>
+                          </ToolWorkflowProvider>
+                        </FilesModalProvider>
+                      </NavigationProvider>
+                    </ToolRegistryProvider>
+                  </FolderProvider>
+                </FileContextProvider>
+              </PdfEngineProvider>
             </AppConfigProvider>
           </BannerProvider>
         </ErrorBoundary>
