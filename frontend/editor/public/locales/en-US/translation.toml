@@ -3877,10 +3877,10 @@ customizeGroups = "Customize groups"
 dropHint = "Open files to get started"
 dropToAdd = "Drop files to add"
 expand = "Expand sidebar"
-files = "Files"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive is not configured"
 leaveMyFiles = "Leave My Files"
+library = "PDF Library"
 myFiles = "My Files"
 noFiles = "No files yet"
 openFileManager = "Browse all files & folders"
@@ -4830,8 +4830,7 @@ welcomeTitle = "You've been invited!"
 addFiles = "Add Files"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
-uploadFromComputer = "Upload from computer"
-workbenchEmptyStateHero = "Drop a PDF anywhere"
+uploadFromComputer = "Browse files"
 
 [language]
 direction = "ltr"
@@ -4896,7 +4895,6 @@ signInWith = "Sign in with"
 title = "Sign in"
 unexpectedError = "Unexpected error: {{message}}"
 updatePassword = "Update password"
-useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
@@ -6702,8 +6700,14 @@ label = "Server URL"
 [portal.connections.commonFields.email]
 label = "Email"
 
+[portal.connections.commonFields.host]
+label = "Host"
+
 [portal.connections.commonFields.password]
 label = "Password"
+
+[portal.connections.commonFields.port]
+label = "Port"
 
 [portal.connections.commonFields.username]
 label = "Username"
@@ -6837,6 +6841,27 @@ baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Index an audit event in Elasticsearch each time a policy handles a document."
 label = "Elasticsearch"
 
+[portal.connections.types.ftp]
+description = "Poll an FTP or FTPS server for new documents."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Connection mode"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Active"
+passive = "Passive (recommended)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "Plain FTP sends credentials and files unencrypted; choose FTPS if the server supports it."
+label = "Encryption"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explicit / AUTH TLS)"
+implicit = "FTPS (implicit)"
+none = "None (plain FTP)"
+
 [portal.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Post a message to a Google Chat space when a policy runs."
@@ -6904,9 +6929,42 @@ label = "Secret access key"
 description = "Email a document or a notification when a policy runs."
 label = "SendGrid"
 
+[portal.connections.types.sftp]
+description = "Poll an SFTP (SSH) server for new documents."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Optional. The server's SHA-256 host key fingerprint (from `ssh-keyscan host | ssh-keygen -lf -`). When set, only a server presenting this key is accepted; when blank, the key seen on first connect is pinned and later changes are refused."
+label = "Host key fingerprint"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key passphrase"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Leave blank if you authenticate with a private key instead."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Optional. Paste an OpenSSH private key to authenticate with a key instead of a password."
+label = "Private key"
+
 [portal.connections.types.slack]
 description = "Post a message to Slack when a policy processes a document."
 label = "Slack"
+
+[portal.connections.types.smb]
+description = "Watch an SMB / CIFS network share (Windows or Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Network share"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Optional. The Windows domain or workgroup, if your server uses one."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
 
 [portal.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
@@ -7741,6 +7799,7 @@ newPipeline = "New pipeline"
 [portal.pipelines.builder]
 addStep = "Add tool"
 back = "Back to pipelines"
+cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
 chooseDestination = "Choose a destination"
 chooseOperation = "Choose what this step does"
@@ -7760,6 +7819,7 @@ searchTools = "Search tools"
 selectToolBody = "Add a tool to build your pipeline."
 selectToolTitle = "No tools yet"
 sendToSystem = "Send to another system"
+stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
 stepsNeedSetup = "These steps still need setting up before saving: {{tools}}."
 toolSettings = "Tool settings"
 unknownStep = "Unrecognized operation, kept as-is."
@@ -7767,6 +7827,14 @@ unsavedBody = "You have unsaved changes. Save them before leaving, or discard th
 unsavedTitle = "Unsaved changes"
 uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
+
+[portal.pipelines.builder.diagnostic]
+fan-in = "Combines every file from the previous step"
+fan-out = "Runs once per file from the previous step"
+format-mismatch = "Needs {{accepts}}, but the previous step produces {{produced}}"
+output-uncertain = "May not run: the previous step's output depends on how it's set up"
+source-mismatch = "Needs {{accepts}}, but this pipeline's input is {{produced}}"
+undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.composer]
 addTool = "Add tool"
@@ -8651,7 +8719,6 @@ account-link = "Account link"
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
-brandSuffix = "Stirling Processor"
 linkAccount = "Link Stirling account"
 primaryNav = "Primary navigation"
 switchApp = "Switch app"
@@ -8701,6 +8768,30 @@ title = "No sources connected yet"
 inUse = "In use"
 total = "Connections"
 unused = "Unused"
+
+[portal.sources.networkFields.connection]
+helperText = "The stored connection with the server address and credentials. Reused by every source that references it."
+label = "Connection"
+
+[portal.sources.networkFields.directory]
+helperText = "Folder on the server to poll, relative to the login home or share root. Leave blank for the root."
+label = "Folder"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume removes each file from the server once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: process each file once"
+snapshot = "Snapshot: re-read the folder every run"
+
+[portal.sources.networkFields.recursive]
+label = "Folder depth"
+
+[portal.sources.networkFields.recursive.options]
+all = "Include subfolders"
+top = "Top level only"
 
 [portal.sources.status]
 active = "Active"
@@ -8760,6 +8851,10 @@ label = "Folder depth"
 [portal.sources.types.folder.fields.recursive.options]
 all = "Include subfolders"
 top = "Top level only"
+
+[portal.sources.types.ftp]
+description = "Poll an FTP or FTPS server folder for new documents."
+label = "FTP"
 
 [portal.sources.types.googledrive]
 description = "Pull documents from shared Google Drive folders."
@@ -10632,14 +10727,42 @@ selectFilesHint = "Select files in Active Files to run this tool"
 singleFileScope = "Only applying to: {{fileName}}"
 viewerMode = "Switch to the file editor to add multiple files."
 
+[toolFormat]
+ANY = "any file"
+CBR = "a comic book archive (CBR)"
+CBZ = "a comic book archive (CBZ)"
+CSV = "a CSV file"
+EBOOK = "an ebook"
+EMAIL = "an email"
+EXCEL = "a spreadsheet"
+HTML = "a web page"
+IMAGE = "images"
+JAVASCRIPT = "a JavaScript file"
+JSON = "a JSON file"
+MARKDOWN = "a Markdown file"
+NONE = "no file"
+PCL = "a PCL print file"
+PDF = "a PDF"
+PDF_ENCRYPTED = "a password-protected PDF"
+POSTSCRIPT = "a PostScript file"
+PPT = "a presentation"
+TEXT = "a text file"
+VIDEO = "a video"
+WORD = "a Word document"
+XML = "an XML file"
+XPS = "an XPS document"
+ZIP = "a ZIP archive"
+
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Back to all tools"
 collapse = "Collapse panel"
 expand = "Expand panel"
 goBack = "Go back"
+pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
 premiumFeature = "Premium feature:"
+searchTools = "Search tools"
 toolsHeader = "Tools"
 viewAllTools = "View all tools"
 
