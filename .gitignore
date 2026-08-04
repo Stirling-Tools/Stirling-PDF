@@ -1,45 +1,76 @@
 ```
-# Compiled and build artifacts
-*.class
-*.o
-*.obj
-*.out
-build/
+# Java/Maven build artifacts
 target/
+*.class
+*.jar
+*.war
+*.ear
 
 # Dependencies
 node_modules/
-__pycache__/
-.mypy_cache/
-.pytest_cache/
-.venv/
-venv/
-.gradle/
+**/node_modules/
 
-# Logs and temp files
+# Python artifacts (if any Python components)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
 *.log
 *.tmp
-*.swp
 
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editors
-.vscode/
+# IDE specific files
 .idea/
+*.swp
+*.swo
+*~
+.vscode/
 
-# System files
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Coverage
-coverage/
-htmlcov/
-.coverage
+# Environment variables
+.env
+.env.local
+.env.*
 
-# Archives
+# Backup files
+*.backup
+*.bak
+*.orig
+*.tmp
+
+# Test reports
+test-results/
+*.xml
+*.html
+
+# Frontend build artifacts
+frontend/**/dist/
+frontend/**/build/
+frontend/**/node_modules/
+frontend/**/*.map
+
+# Compressed files
 *.zip
 *.gz
 *.tar
