@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useEffect,
   useCallback,
+  useState,
   ReactNode,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -76,7 +77,12 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   onConfigLoadedRef.current = onConfigLoaded;
 
   const queryClient = useQueryClient();
+  // Auth pages skip the fetch until sign-in asks for one. Enabling the query is
+  // what actually loads it — refetchQueries cannot wake a disabled query, and
+  // the first-login password prompt reads the config that arrives here.
+  const [signedIn, setSignedIn] = useState(false);
   const refetch = useCallback(async () => {
+    setSignedIn(true);
     await queryClient.refetchQueries({ queryKey: qk.appConfig() });
   }, [queryClient]);
 
@@ -85,7 +91,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   const { data, error, isPending } = useQuery({
     queryKey: qk.appConfig(),
     queryFn: fetchAppConfig,
-    enabled: autoFetch && !isAuthPage,
+    enabled: autoFetch && (!isAuthPage || signedIn),
     staleTime: CONFIG_STALE_TIME,
     // Network and 5xx only; failureCount is 0-based, so `<` gives maxRetries retries.
     retry: (failureCount, err) => {

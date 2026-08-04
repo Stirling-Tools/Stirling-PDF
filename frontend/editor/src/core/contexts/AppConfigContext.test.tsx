@@ -285,6 +285,36 @@ describe("AppConfigContext", () => {
     expect(apiClient.get).toHaveBeenCalled();
   });
 
+  it("fetches on an auth page once a JWT arrives", async () => {
+    // Signing in on /login must load the config the first-login password
+    // prompt reads. Enabling the query is what does that — refetchQueries
+    // cannot wake a disabled one.
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/login" },
+      writable: true,
+    });
+    vi.mocked(apiClient.get).mockResolvedValue({
+      status: 200,
+      data: { enableLogin: true, isAdmin: true },
+    } as any);
+
+    const { result } = renderHook(() => useAppConfig(), { wrapper });
+    expect(apiClient.get).not.toHaveBeenCalled();
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent("jwt-available"));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() =>
+      expect(result.current.config).toEqual({
+        enableLogin: true,
+        isAdmin: true,
+      }),
+    );
+    expect(apiClient.get).toHaveBeenCalledTimes(1);
+  });
+
   it("serves a remounted provider from cache", async () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       status: 200,
