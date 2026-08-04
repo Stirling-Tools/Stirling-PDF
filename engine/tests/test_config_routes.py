@@ -31,7 +31,7 @@ def _client(
     settings_factory: Callable[[], AppSettings],
     *,
     client_addr: tuple[str, int] = ("127.0.0.1", 12345),
-) -> Generator[TestClient, None, None]:
+) -> Generator[TestClient]:
     """Enter a TestClient whose lifespan builds app.state from ``settings_factory``."""
     previous = app.dependency_overrides.get(load_settings)
     app.dependency_overrides[load_settings] = settings_factory

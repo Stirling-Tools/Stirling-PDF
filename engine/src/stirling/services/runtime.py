@@ -133,7 +133,7 @@ class ConcurrencyLimitedModel(WrapperModel):
         model_settings: ModelSettings | None,
         model_request_parameters: ModelRequestParameters,
         run_context: RunContext[Any] | None = None,
-    ) -> AsyncGenerator[StreamedResponse, None]:
+    ) -> AsyncGenerator[StreamedResponse]:
         async with self._semaphore:
             async with super().request_stream(
                 messages, model_settings, model_request_parameters, run_context
