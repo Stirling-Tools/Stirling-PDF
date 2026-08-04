@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
+import type { FileId } from "@app/types/file";
 
 describe("FileLifecycleManager", () => {
   beforeEach(() => {
@@ -7,10 +8,9 @@ describe("FileLifecycleManager", () => {
   });
 
   it("revokes tracked blob URLs during cleanup", () => {
+    const fileId = "file-1" as FileId;
     const filesRef = {
-      current: new Map<string, File>([
-        ["file-1", new File(["pdf"], "file.pdf")],
-      ]),
+      current: new Map<FileId, File>([[fileId, new File(["pdf"], "file.pdf")]]),
     };
     const dispatch = vi.fn();
     const manager = new FileLifecycleManager(filesRef, dispatch);
