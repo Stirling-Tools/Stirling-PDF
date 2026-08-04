@@ -28,6 +28,7 @@ import {
   serializeToolStep,
   stepNeedsConfiguring,
   stepRequiresUpload,
+  updateWorkingStepParams,
   type ExecutableTool,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
@@ -377,9 +378,11 @@ export function PipelineBuilder() {
     setSteps((current) =>
       current.map((step, i) =>
         // Integration steps are deliberately toolId-less, so they must be editable too; only a
-        // genuinely unrecognised step has no editor to send changes from.
+        // genuinely unrecognised step has no editor to send changes from. updateWorkingStepParams
+        // also re-resolves the endpoint for a format-routed tool (convert's from/to) so validation
+        // below reflects the edit; it's a no-op on the operation for fixed-endpoint steps.
         i === index && (step.toolId !== null || isIntegrationStep(step))
-          ? { ...step, params }
+          ? updateWorkingStepParams(step, params, allTools)
           : step,
       ),
     );
@@ -413,18 +416,25 @@ export function PipelineBuilder() {
     .map(stepLabel);
   const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
+  // Steps as the I/O checker sees them. A step still needing configuration has no settled endpoint
+  // yet (a format-routed tool like convert doesn't know its from/to), so it is presented as
+  // undeclared: it raises no compatibility error and breaks the carry chain, leaving downstream
+  // steps unjudged until it is filled in. Its own "needs configuring" note already flags it.
+  const validationSteps = useMemo(
+    () =>
+      steps.map((step) => ({
+        operation: stepNeedsConfiguring(step, allTools) ? "" : step.operation,
+        parameters: step.params,
+      })),
+    [steps, allTools],
+  );
+
   // Whether each step can actually accept what the one before it produces. Checked here from the
   // generated tool I/O table rather than by running the pipeline, so an impossible chain (say,
   // Extract Images then Rotate) is caught while it is being built.
   const chainDiagnostics = useMemo(
-    () =>
-      validateToolChain(
-        steps.map((step) => ({
-          operation: step.operation,
-          parameters: step.params,
-        })),
-      ),
-    [steps],
+    () => validateToolChain(validationSteps),
+    [validationSteps],
   );
   const blockingSteps = chainDiagnostics
     .filter((d) => d.severity === "ERROR")
@@ -433,14 +443,8 @@ export function PipelineBuilder() {
 
   // What a newly added step would be handed, so the picker can flag tools that cannot take it.
   const chainOutput = useMemo(
-    () =>
-      chainOutputFormat(
-        steps.map((step) => ({
-          operation: step.operation,
-          parameters: step.params,
-        })),
-      ),
-    [steps],
+    () => chainOutputFormat(validationSteps),
+    [validationSteps],
   );
 
   function diagnosticNote(diagnostic: ToolDiagnostic): string {

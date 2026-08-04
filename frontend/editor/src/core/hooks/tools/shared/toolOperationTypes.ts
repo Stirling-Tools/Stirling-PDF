@@ -166,8 +166,14 @@ export interface CustomToolOperationConfig<
    */
   endpoint?: string | ((params: TParams) => string | undefined);
 
-  /** `never` so `endpoints` stays readable across the union; custom tools declare no set. */
-  endpoints?: never;
+  /**
+   * The full set of endpoints a dynamic (function) `endpoint` may resolve to. A custom tool whose
+   * endpoint is chosen from frontend-only parameters (e.g. convert's from/to selectors) declares it
+   * so a stored step maps back to this tool by endpoint membership - see findToolByEndpoint - which
+   * replaying the endpoint function against the stored body alone could not recover. Omit for a
+   * static endpoint.
+   */
+  endpoints?: readonly ToolEndpoint[];
 
   /**
    * Custom processing logic that completely bypasses standard file processing.

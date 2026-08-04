@@ -45,6 +45,12 @@ export interface ExecutableTool {
   subcategoryId: SubcategoryId;
   /** Endpoint resolved from default parameters, for display/inclusion. The stored step's endpoint is re-resolved from the configured parameters at serialization time. */
   endpoint: ToolEndpoint;
+  /**
+   * For a format-routed tool (one dynamic endpoint over a declared set, e.g. convert), the full set
+   * it may resolve to. A picker can then judge compatibility against any of them rather than the one
+   * representative `endpoint`. Absent for a single-endpoint tool.
+   */
+  endpoints?: readonly ToolEndpoint[];
   support: ToolStepSupport;
 }
 
@@ -158,9 +164,10 @@ export function stepNeedsConfiguring(
 }
 
 /**
- * The tools that can be run as a backend operation step, sorted by name. Includes only automatable
- * tools whose endpoint resolves from defaults (so they can become a backend step); this drops
- * tools with no operationConfig and tools whose endpoint needs runtime input (e.g. convert).
+ * The tools that can be run as a backend operation step, sorted by name. Includes automatable tools
+ * whose endpoint resolves from defaults, plus format-routed tools (e.g. convert) whose endpoint only
+ * resolves once configured but that declare their routing set - represented by the first endpoint of
+ * that set. Drops tools with no operationConfig and no way to name a backend endpoint at all.
  */
 export function getExecutableTools(
   registry: Partial<ToolRegistry>,
@@ -170,7 +177,11 @@ export function getExecutableTools(
     if (!entry || !getToolSupportsAutomate(entry)) continue;
     const config = entry.operationConfig;
     if (!config) continue;
-    const endpoint = resolveEndpoint(config, config.defaultParameters ?? {});
+    // A configured endpoint from defaults, else the routing set's first member as a stand-in so a
+    // tool that only resolves once the user picks (convert's from/to) can still be offered.
+    const endpoint =
+      resolveEndpoint(config, config.defaultParameters ?? {}) ??
+      config.endpoints?.find(isToolEndpoint);
     if (!endpoint) continue;
     tools.push({
       toolId: id as ToolId,
@@ -178,6 +189,7 @@ export function getExecutableTools(
       icon: entry.icon,
       subcategoryId: entry.subcategoryId,
       endpoint,
+      endpoints: config.endpoints,
       support: classifyToolStepSupport(entry),
     });
   }
@@ -196,6 +208,27 @@ export function newWorkingToolStep(
     params: { ...(config?.defaultParameters ?? {}) },
     support: tool.support,
   };
+}
+
+/**
+ * Apply edited parameters to a working step, re-resolving its endpoint from them. A format-routed
+ * tool changes which endpoint it targets as its routing parameters change (convert's from/to,
+ * split's method), so the working step's `operation` must track the params to keep live chain
+ * validation and the carried output format honest - not just at serialization time. The operation
+ * is left unchanged when the new params don't resolve one, or the step maps to no known tool.
+ */
+export function updateWorkingStepParams(
+  step: WorkingToolStep,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): WorkingToolStep {
+  const next = { ...step, params };
+  if (next.toolId === null) return next;
+  const config = registry[next.toolId]?.operationConfig;
+  if (!config) return next;
+  const merged = { ...(config.defaultParameters ?? {}), ...params };
+  const operation = resolveEndpoint(config, merged);
+  return operation ? { ...next, operation } : next;
 }
 
 /** Serialize a working step into the backend step contract (endpoint + backend parameters). */
