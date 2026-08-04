@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
+import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
@@ -325,6 +326,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
           autoFetch: false,
         }}
       >
+        {/* Also here: the auth check below switches mode pre-authChecked. */}
+        <DesktopQueryCacheReset />
         <div style={{ minHeight: "100vh" }} />
         {updatePopupModal}
       </ProprietaryAppProviders>
@@ -350,6 +353,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
         }}
       >
+        <DesktopQueryCacheReset />
         <SaaSTeamProvider key={appKey}>
           <DesktopConfigSync />
           <DesktopBannerInitializer />
