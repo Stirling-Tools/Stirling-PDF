@@ -28,7 +28,7 @@ export default defineConfig({
         "dist/**",
         "coverage/**",
         "src/core/setupTests.ts",
-        "src/proprietary/setupTests.ts",
+        "src/portal/setupTests.ts",
         "src/saas/setupTests.ts",
         "**/*.d.ts",
         "src/tests/test-fixtures/**",
