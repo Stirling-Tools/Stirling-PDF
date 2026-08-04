@@ -6,6 +6,8 @@ import {
 } from "@app/contexts/AppConfigContext";
 import apiClient from "@app/services/apiClient";
 import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
+import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
 
 // Mock apiClient
@@ -26,7 +28,9 @@ describe("AppConfigContext", () => {
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <AppConfigProvider>{children}</AppConfigProvider>
+    <TestQueryProvider>
+      <AppConfigProvider>{children}</AppConfigProvider>
+    </TestQueryProvider>
   );
 
   it("should fetch and provide app config on non-auth pages", async () => {
@@ -261,9 +265,11 @@ describe("AppConfigContext", () => {
     };
 
     const customWrapper = ({ children }: { children: ReactNode }) => (
-      <AppConfigProvider initialConfig={initialConfig}>
-        {children}
-      </AppConfigProvider>
+      <TestQueryProvider>
+        <AppConfigProvider initialConfig={initialConfig}>
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
     );
 
     const { result } = renderHook(() => useAppConfig(), {
@@ -277,6 +283,96 @@ describe("AppConfigContext", () => {
 
     // Should still make API call
     expect(apiClient.get).toHaveBeenCalled();
+  });
+
+  it("serves a remounted provider from cache", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      status: 200,
+      data: { enableLogin: false },
+    } as any);
+
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const sharedWrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>
+        <AppConfigProvider>{children}</AppConfigProvider>
+      </QueryClientProvider>
+    );
+
+    const first = renderHook(() => useAppConfig(), { wrapper: sharedWrapper });
+    await waitFor(() => expect(first.result.current.loading).toBe(false));
+    first.unmount();
+
+    const second = renderHook(() => useAppConfig(), { wrapper: sharedWrapper });
+    // Cached, so no loading flash and no second request.
+    expect(second.result.current.loading).toBe(false);
+    expect(second.result.current.config).toEqual({ enableLogin: false });
+    expect(apiClient.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("honours maxRetries for network failures", async () => {
+    expectConsole.error(/\[AppConfig\] Failed to fetch app config/);
+    vi.mocked(apiClient.get).mockRejectedValue(new Error("boom"));
+
+    const retryWrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider retryOptions={{ maxRetries: 2, initialDelay: 1 }}>
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: retryWrapper,
+    });
+
+    await waitFor(() => expect(result.current.error).toBe("boom"));
+    expect(apiClient.get).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not retry a 4xx", async () => {
+    expectConsole.error(/\[AppConfig\] Failed to fetch app config/);
+    vi.mocked(apiClient.get).mockRejectedValue(
+      Object.assign(new Error("nope"), { response: { status: 403, data: {} } }),
+    );
+
+    const retryWrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider retryOptions={{ maxRetries: 5, initialDelay: 1 }}>
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: retryWrapper,
+    });
+
+    await waitFor(() => expect(result.current.error).toBe("nope"));
+    expect(apiClient.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fetch when autoFetch is off", async () => {
+    const offWrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider
+          initialConfig={{ enableLogin: false }}
+          bootstrapMode="non-blocking"
+          autoFetch={false}
+        >
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: offWrapper,
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.config).toEqual({ enableLogin: false });
+    expect(apiClient.get).not.toHaveBeenCalled();
   });
 
   it("should use suppressErrorToast for all config requests", async () => {
