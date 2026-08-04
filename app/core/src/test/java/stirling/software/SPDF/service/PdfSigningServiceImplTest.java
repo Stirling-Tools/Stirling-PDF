@@ -2,25 +2,19 @@ package stirling.software.SPDF.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.security.KeyStore;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.MockedStatic;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.controller.api.security.CertSignController;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 class PdfSigningServiceImplTest {
