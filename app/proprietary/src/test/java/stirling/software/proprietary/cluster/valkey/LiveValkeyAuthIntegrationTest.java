@@ -17,28 +17,23 @@ import org.testcontainers.utility.DockerImageName;
 
 import stirling.software.common.model.ApplicationProperties;
 
-/**
- * Live AUTH coverage against a password-protected Valkey. The main {@link
- * LiveValkeyIntegrationTest} runs against a no-auth instance, so the credential-bearing URL path
- * (parse -> RedisStandaloneConfiguration -> real AUTH handshake) was otherwise unexercised. Drives
- * the full production bean method {@code valkeyConnectionFactory()} so the parse, credential
- * wiring, and eager-handshake all run exactly as at boot.
- */
 @Testcontainers
 @EnabledIf("isDockerAvailable")
 class LiveValkeyAuthIntegrationTest {
 
     private static final String PASSWORD = "s3cr3tpw";
 
-    // @Container is intentionally NOT used: lifecycle is managed manually so the container can be
-    // shared across the password-only and ACL-user cases without a per-method restart.
     static final GenericContainer<?> VALKEY =
             new GenericContainer<>(DockerImageName.parse("valkey/valkey:8.0-alpine"))
                     .withExposedPorts(6379)
                     .withCommand("valkey-server", "--requirepass", PASSWORD);
 
     static boolean isDockerAvailable() {
-        return DockerClientFactory.instance().isDockerAvailable();
+        try {
+            return DockerClientFactory.instance().isDockerAvailable();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @org.junit.jupiter.api.BeforeAll
@@ -89,7 +84,6 @@ class LiveValkeyAuthIntegrationTest {
     @Test
     @DisplayName("user:password URL (ACL named user) authenticates and round-trips a key")
     void namedUserAuthWorks() throws Exception {
-        // Default user is password-protected; create a named ACL user to exercise two-arg AUTH.
         Container.ExecResult res =
                 VALKEY.execInContainer(
                         "valkey-cli",
@@ -135,7 +129,6 @@ class LiveValkeyAuthIntegrationTest {
                 ex.getMessage().toLowerCase().contains("authentication failed"),
                 "real Valkey WRONGPASS must be classified as an auth failure; got: "
                         + ex.getMessage());
-        // The retry loop is 10 x 3s; a recognised auth failure must abort well before that.
         assertTrue(
                 elapsedMs < 10_000,
                 "auth failure must short-circuit the 30s retry loop; elapsed=" + elapsedMs + " ms");

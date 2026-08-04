@@ -1,4 +1,4 @@
-package com.stirlingsoftware.pdfelite.controller;
+package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class RearrangePagesPDFController {
             return ResponseEntity.badRequest().body(null);
         }
 
-        try (PDDocument document = Loader.loadPDF(file.getInputStream())) {
+        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             int totalPages = document.getNumberOfPages();
             List<Integer> newPageIndices = parsePageOrder(pageOrder, totalPages);
 
@@ -40,17 +40,17 @@ public class RearrangePagesPDFController {
                 }
             }
 
-            PDDocument newDocument = new PDDocument();
-            for (PDPage page : orderedPages) {
-                newDocument.addPage(page);
-            }
+            try (PDDocument newDocument = new PDDocument()) {
+                for (PDPage page : orderedPages) {
+                    newDocument.addPage(page);
+                }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            newDocument.save(baos);
-            newDocument.close();
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=rearranged_pages.pdf")
-                    .body(baos.toByteArray());
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                newDocument.save(baos);
+                return ResponseEntity.ok()
+                        .header("Content-Disposition", "attachment; filename=rearranged_pages.pdf")
+                        .body(baos.toByteArray());
+            }
         }
     }
 
@@ -64,7 +64,7 @@ public class RearrangePagesPDFController {
         String[] parts = pageOrder.split(",");
         for (String part : parts) {
             part = part.trim();
-            if (part.matches("\d+")) {
+            if (part.matches("\\d+")) {
                 indices.add(Integer.parseInt(part) - 1);
             }
         }

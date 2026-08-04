@@ -19,15 +19,6 @@ import org.testcontainers.utility.DockerImageName;
 
 import stirling.software.common.model.ApplicationProperties;
 
-/**
- * Live failure-injection: a frozen (network-black-holed) Valkey must NOT stall hot-path commands
- * for Lettuce's 60s default. {@link ValkeyConnectionConfiguration} pins a 2s command timeout, so a
- * paused server must surface an error in seconds, and the connection must recover when it returns.
- *
- * <p>Uses {@code docker pause}/{@code unpause} (TCP stays ESTABLISHED but the server never replies)
- * to reproduce a partition rather than {@code stop} (which would fail fast with
- * connection-refused).
- */
 @Testcontainers
 @EnabledIf("isDockerAvailable")
 class LiveValkeyChaosTest {
@@ -38,7 +29,11 @@ class LiveValkeyChaosTest {
                     .withExposedPorts(6379);
 
     static boolean isDockerAvailable() {
-        return DockerClientFactory.instance().isDockerAvailable();
+        try {
+            return DockerClientFactory.instance().isDockerAvailable();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private boolean paused;
@@ -51,7 +46,6 @@ class LiveValkeyChaosTest {
                 .getValkey()
                 .setUrl("redis://" + VALKEY.getHost() + ":" + VALKEY.getMappedPort(6379));
         p.getCluster().getNode().setId("chaos");
-        // Built via the production bean so the real 2s commandTimeout is in effect.
         return new ValkeyConnectionConfiguration(p).valkeyConnectionFactory();
     }
 
@@ -71,7 +65,6 @@ class LiveValkeyChaosTest {
             try {
                 unpause();
             } catch (RuntimeException ignored) {
-                // container teardown will handle it
             }
         }
     }
@@ -87,7 +80,6 @@ class LiveValkeyChaosTest {
 
             pause();
             long start = System.nanoTime();
-            // DataAccessException is spring-data-redis's wrapper for the Lettuce timeout.
             assertThrows(DataAccessException.class, () -> t.opsForValue().get("chaos:k"));
             long elapsedMs = (System.nanoTime() - start) / 1_000_000;
             assertTrue(
@@ -97,7 +89,6 @@ class LiveValkeyChaosTest {
                             + " ms");
 
             unpause();
-            // After the partition heals the client must recover (Lettuce reconnects lazily).
             String recovered = null;
             long deadline = System.currentTimeMillis() + 10_000;
             while (System.currentTimeMillis() < deadline) {
@@ -105,12 +96,15 @@ class LiveValkeyChaosTest {
                     recovered = t.opsForValue().get("chaos:k");
                     break;
                 } catch (RuntimeException retry) {
-                    Thread.sleep(250);
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
                 }
             }
             assertEquals("before", recovered, "connection must recover after the partition heals");
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
         } finally {
             factory.destroy();
         }

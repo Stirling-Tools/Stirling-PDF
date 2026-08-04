@@ -32,13 +32,6 @@ import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.cluster.RateLimitStore.RateLimitDecision;
 import stirling.software.common.model.ApplicationProperties;
 
-/**
- * Live integration tests against a real Valkey instance, started by Testcontainers. The
- * {@code @EnabledIf} guard probes the Docker daemon via {@link
- * DockerClientFactory#isDockerAvailable()} (non-throwing) so the suite skips cleanly when Docker is
- * unavailable - without that guard, {@code @Testcontainers} would throw {@code initializationError}
- * (test FAILURE, not skip) on CI runners without Docker.
- */
 @Testcontainers
 @EnabledIf("isDockerAvailable")
 class LiveValkeyIntegrationTest {
@@ -49,7 +42,11 @@ class LiveValkeyIntegrationTest {
                     .withExposedPorts(6379);
 
     static boolean isDockerAvailable() {
-        return DockerClientFactory.instance().isDockerAvailable();
+        try {
+            return DockerClientFactory.instance().isDockerAvailable();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static LettuceConnectionFactory factoryA;
@@ -162,7 +159,6 @@ class LiveValkeyIntegrationTest {
 
         AtomicInteger allowed = new AtomicInteger();
         for (int i = 0; i < 8; i++) {
-            // alternate consumers
             var store = (i % 2 == 0) ? storeA : storeB;
             RateLimitDecision d = store.tryConsume(key, capacity, Duration.ofSeconds(30));
             if (d.allowed()) allowed.incrementAndGet();
@@ -189,7 +185,6 @@ class LiveValkeyIntegrationTest {
 
         heldByA.get().release();
 
-        // After release, B can acquire
         Optional<DistributedLock.LockHandle> retry =
                 lockB.tryAcquire("election-X", Duration.ofSeconds(30));
         assertTrue(retry.isPresent());
@@ -225,16 +220,14 @@ class LiveValkeyIntegrationTest {
         Optional<DistributedLock.LockHandle> a = lockA.tryAcquire(key, Duration.ofMillis(500));
         assertTrue(a.isPresent());
 
-        // Let A's 500ms lease TTL-expire so Valkey drops the key, then B takes a fresh lock.
         Thread.sleep(800);
         Optional<DistributedLock.LockHandle> b = lockB.tryAcquire(key, Duration.ofSeconds(30));
         assertTrue(b.isPresent(), "B must acquire after A's lease expired");
 
-        // A's stale handle (different UUID value) must touch neither B's renew nor B's key.
         assertFalse(
                 a.get().renew(Duration.ofSeconds(30)),
                 "stale owner must not be able to renew a lock now owned by B");
-        a.get().release(); // value-checked DEL: must be a no-op, must NOT delete B's key
+        a.get().release();
 
         assertFalse(
                 lockA.tryAcquire(key, Duration.ofMillis(100)).isPresent(),
@@ -254,7 +247,6 @@ class LiveValkeyIntegrationTest {
                         "BOTH");
         reg.register(node, Duration.ofSeconds(30));
 
-        // TTL must be positive; -1 would mean EXPIRE did not commit inside MULTI/EXEC.
         Long ttlMs =
                 templateA.getExpire(
                         "stirling:nodes:" + node.nodeId(),
@@ -379,8 +371,6 @@ class LiveValkeyIntegrationTest {
                         Map.of()),
                 Duration.ofSeconds(30));
 
-        // Simulate the race: between delete()'s WATCH read and EXEC, add a new fileId.
-        // The first EXEC aborts; the retry catches the new fileId and deletes both entries.
         Thread mutator =
                 new Thread(
                         () -> {
@@ -451,8 +441,6 @@ class LiveValkeyIntegrationTest {
 
         store.delete(jobId);
 
-        // Both the main hash AND every reverse-index entry must be gone; dangling reverse-index
-        // entries would cause findJobIdByFileId() to return a deleted jobId.
         assertFalse(store.exists(jobId), "main hash must be deleted");
         assertFalse(
                 store.findJobIdByFileId(fileA).isPresent(),

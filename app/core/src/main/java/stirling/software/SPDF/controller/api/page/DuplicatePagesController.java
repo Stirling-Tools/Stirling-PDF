@@ -26,7 +26,7 @@ public class DuplicatePagesController {
             return ResponseEntity.badRequest().body(null);
         }
 
-        try (PDDocument document = Loader.loadPDF(file.getInputStream())) {
+        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             int pageCount = document.getNumberOfPages();
 
             List<PDPage> originalPages = new ArrayList<>();
