@@ -35,6 +35,7 @@ import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.repository.ProcurementAgreementSignatureRepository;
 import stirling.software.saas.procurement.repository.ProcurementDealRepository;
 import stirling.software.saas.procurement.repository.ProcurementQuoteRepository;
+import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.util.LogRedactionUtils;
 
 /**
@@ -63,7 +64,7 @@ public class ProcurementService {
     private final ProcurementAgreementSignatureRepository signatureRepo;
     // Trial-setup invitations run through the team-invite path, with its seat, role and
     // rate-limit rules rather than a second implementation here.
-    private final stirling.software.saas.service.SaasTeamService teams;
+    private final SaasTeamService teams;
 
     public ProcurementService(
             ProcurementDealRepository dealRepo,
@@ -75,7 +76,7 @@ public class ProcurementService {
             AgreementAssembler agreementAssembler,
             AgreementPdfRenderer agreementPdfRenderer,
             ProcurementAgreementSignatureRepository signatureRepo,
-            stirling.software.saas.service.SaasTeamService teams) {
+            SaasTeamService teams) {
         this.dealRepo = dealRepo;
         this.quoteRepo = quoteRepo;
         this.pricing = pricing;
@@ -428,8 +429,11 @@ public class ProcurementService {
      * the PDF (best-effort), and persist an immutable signature pinned to the exact document
      * version. Does not itself accept the quote into a subscription — the caller proceeds to accept
      * as before.
+     *
+     * <p>Deliberately not {@code @Transactional}: rendering the PDF shells out to WeasyPrint, and
+     * holding the deal's row lock across an external process buys nothing here. The only write is a
+     * single insert, which {@code save} makes atomic on its own.
      */
-    @Transactional
     public ProcurementAgreementSignature signAgreement(
             Long teamId, AgreementSigning signing, String signerIp) {
         ProcurementDeal deal =
@@ -441,6 +445,18 @@ public class ProcurementService {
                                 () ->
                                         new IllegalStateException(
                                                 "No quote to sign for team " + teamId));
+
+        // Signing is only meaningful against an issued quote at the agreement stage. Without this a
+        // direct API call could record a signature over a draft (whose quote_ref is still empty),
+        // or
+        // re-sign a deal that has already moved on.
+        if (!ProcurementDeal.STAGE_AGREEMENT.equals(deal.getStage())) {
+            throw new IllegalStateException(
+                    "Deal is not at the agreement stage for team " + teamId);
+        }
+        if (!ProcurementQuote.STATUS_SENT.equals(quote.getStatus())) {
+            throw new IllegalStateException("Quote is not issued for team " + teamId);
+        }
 
         AssembledAgreement assembled = agreementAssembler.assemble(quote, signing);
 
@@ -479,9 +495,12 @@ public class ProcurementService {
     }
 
     /**
-     * The version label of the deal's latest signed agreement that has a downloadable PDF, if any.
-     * Used to surface the "download signed agreement" action only when a file actually exists (the
-     * snapshot polls this, so it deliberately avoids loading the PDF bytes).
+     * The version label of the deal's latest signed agreement, if any. Used to surface the
+     * "download signed agreement" action once a signature exists; the snapshot polls this, so it
+     * deliberately avoids loading the PDF bytes.
+     *
+     * <p>Deliberately not conditional on a stored PDF: download re-renders from the pinned document
+     * version on demand, so the action works whether or not the render succeeded at signing time.
      */
     @Transactional(readOnly = true)
     public Optional<String> signedAgreementLabel(Long dealId) {
@@ -548,23 +567,52 @@ public class ProcurementService {
      * {@code invoice.paid} webhook, and by the demo control when those are enabled. Re-affirms the
      * annual licence in case provisioning didn't run at accept.
      *
-     * <p>Idempotent, and it has to be: {@code invoice.paid} fires again on every renewal and Stripe
-     * redelivers events, so a deal already live short-circuits rather than reissuing its licence.
+     * <p>Idempotent per invoice rather than per stage, which matters because {@code invoice.paid}
+     * carries two different meanings. Stripe redelivers events, so the <em>same</em> invoice
+     * arriving twice must do nothing. But the renewal payment a year later is also an {@code
+     * invoice.paid}, and the committed licence expires term years from issue — so a
+     * <em>different</em> invoice has to re-issue, moving the expiry out, or the customer's licence
+     * lapses after they have paid. Keying on the stage alone couldn't tell those apart and treated
+     * every renewal as a duplicate.
+     *
+     * @param paidInvoiceId the Stripe invoice that was paid, or null when the caller has no invoice
+     *     to identify the payment by (the demo control). Null keeps the old conservative behaviour:
+     *     a live deal short-circuits, since there is nothing to tell a renewal from a repeat.
      */
     @Transactional
-    public ProcurementDeal markLive(Long teamId) {
+    public ProcurementDeal markLive(Long teamId, String paidInvoiceId) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
-        if (ProcurementDeal.STAGE_LIVE.equals(deal.getStage())) {
-            log.debug("[procurement] deal already live team={} deal={}", teamId, deal.getDealId());
+        if (ProcurementDeal.STAGE_LIVE.equals(deal.getStage())
+                && (paidInvoiceId == null || paidInvoiceId.equals(deal.getLastPaidInvoiceId()))) {
+            log.debug(
+                    "[procurement] invoice.paid already applied team={} deal={} invoice={}",
+                    teamId,
+                    deal.getDealId(),
+                    paidInvoiceId);
             return deal;
         }
+        boolean renewal = ProcurementDeal.STAGE_LIVE.equals(deal.getStage());
         deal.setLicenseRef(issueOrUpgradeAnnual(deal));
+        if (paidInvoiceId != null) deal.setLastPaidInvoiceId(paidInvoiceId);
         deal.setStage(ProcurementDeal.STAGE_LIVE);
         deal = dealRepo.save(deal);
-        log.info("[procurement] deal live team={} deal={}", teamId, deal.getDealId());
+        log.info(
+                "[procurement] deal live team={} deal={} renewal={} invoice={}",
+                teamId,
+                deal.getDealId(),
+                renewal,
+                paidInvoiceId);
         return deal;
+    }
+
+    /**
+     * Go live with no invoice reference — the demo control. See {@link #markLive(Long, String)}.
+     */
+    @Transactional
+    public ProcurementDeal markLive(Long teamId) {
+        return markLive(teamId, null);
     }
 
     /**

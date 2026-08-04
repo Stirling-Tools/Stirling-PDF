@@ -89,7 +89,19 @@ public class LegalController {
         Optional<TeamMembership> membership = primaryMembership(auth);
         Long teamId = membership.map(m -> m.getTeam().getId()).orElse(null);
         Long userId = membership.map(m -> m.getUser().getId()).orElse(null);
-        consents.record(teamId, userId, request.documentId(), request.context(), clientIp(http));
+        // Best-effort for real: consent is audit metadata, not an authorisation gate, so a failed
+        // write must not fail the trial start or quote generation this call accompanies. Previously
+        // that only held because the caller happened to swallow the 500.
+        try {
+            consents.record(
+                    teamId, userId, request.documentId(), request.context(), clientIp(http));
+        } catch (RuntimeException e) {
+            log.warn(
+                    "[legal] consent not recorded doc={} context={}: {}",
+                    request.documentId(),
+                    request.context(),
+                    e.getMessage());
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -103,6 +115,14 @@ public class LegalController {
         return memberRepo.findPrimaryMembership(user.getId()).stream().findFirst();
     }
 
+    /**
+     * Best guess at the caller's address, for the audit record.
+     *
+     * <p>Informational only, and must stay that way: the first {@code X-Forwarded-For} hop is set
+     * by the client, so a stored address is trivially spoofable and is not evidence of where a
+     * consent or signature came from. Treat it as a hint when reconstructing events, never as
+     * proof.
+     */
     private static String clientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {

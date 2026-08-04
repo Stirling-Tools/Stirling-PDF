@@ -8,6 +8,7 @@ import {
 } from "@portal/api/procurement";
 import {
   CalendarIcon,
+  CheckIcon,
   DocumentsIcon,
   KeyIcon,
   UserPlusIcon,
@@ -166,7 +167,7 @@ export function DealStatusHero({
       {isLive && (
         <div className="portal-hero__live">
           <span className="portal-hero__live-tile" aria-hidden>
-            ✓
+            <CheckIcon size={15} />
           </span>
           <span className="portal-hero__live-text">
             <span className="portal-hero__live-title">

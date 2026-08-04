@@ -321,3 +321,11 @@ export function KeyIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <polyline points="4,12.5 9.5,18 20,6.5" />
+    </Svg>
+  );
+}

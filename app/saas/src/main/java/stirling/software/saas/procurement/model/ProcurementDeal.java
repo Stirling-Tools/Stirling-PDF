@@ -99,6 +99,15 @@ public class ProcurementDeal implements Serializable {
     @Column(name = "subscription_id", length = 255)
     private String subscriptionId;
 
+    /**
+     * The last Stripe invoice whose payment was applied to this deal. Distinguishes a redelivered
+     * {@code invoice.paid} for a payment already handled from a genuine renewal, which has to
+     * re-issue: the committed licence expires term years from issue, so a renewal that doesn't
+     * re-issue leaves the licence lapsing after the customer has paid.
+     */
+    @Column(name = "last_paid_invoice_id", length = 255)
+    private String lastPaidInvoiceId;
+
     @Column(name = "accepted_quote_id")
     private Long acceptedQuoteId;
 

@@ -515,7 +515,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;
+  /* Holds a CheckIcon, which takes its stroke from `color` and its size from its own prop. */
   color: var(--c-success);
   background: var(--c-success-subtle);
 }

@@ -503,14 +503,19 @@ public class ProcurementController {
      *
      * <p>Answers 200 when the team has no deal at all, rather than erroring: a committed
      * subscription can be closed directly in Stripe by sales with no portal deal behind it, and a
-     * non-2xx would have Stripe retry a webhook that can never succeed. Idempotent for the same
-     * reason — the event repeats on every renewal.
+     * non-2xx would have Stripe retry a webhook that can never succeed.
+     *
+     * <p>{@code invoiceId} is what makes this idempotent without swallowing renewals: the same
+     * invoice twice is a redelivery, a different one is next year's payment and has to re-issue the
+     * licence. Optional so an older caller still works, at the cost of that distinction.
      */
     @PostMapping("/activate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> activate(@RequestParam("teamId") long teamId) {
+    public ResponseEntity<Void> activate(
+            @RequestParam("teamId") long teamId,
+            @RequestParam(value = "invoiceId", required = false) String invoiceId) {
         try {
-            procurement.markLive(teamId);
+            procurement.markLive(teamId, invoiceId);
         } catch (IllegalStateException e) {
             log.info(
                     "[procurement] activate skipped, no deal for team={}: {}",
@@ -569,7 +574,13 @@ public class ProcurementController {
                 .orElse(null);
     }
 
-    /** Best-effort client IP for the signature record: first X-Forwarded-For hop, else the peer. */
+    /**
+     * Best-effort client IP for the signature record: first X-Forwarded-For hop, else the peer.
+     *
+     * <p>Informational only. That header is client-set, so {@code signer_ip} is spoofable and is
+     * not evidence of where a signature came from — the document hash and version are what make the
+     * record trustworthy. Treat the address as a hint, never as proof.
+     */
     private static String clientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {

@@ -102,7 +102,7 @@ public class AgreementAssembler {
 
         Map<String, String> t = new LinkedHashMap<>(registry.commonTokens(meta));
         t.put("effective_date", signed ? LocalDate.now().format(DATE) : "On signature");
-        t.put("customer_legal_name", legalName);
+        t.put("customer_legal_name", cell(legalName));
         t.put("quote_ref", nz(quote.getQuoteNumber()));
         t.put("deployment", ProcurementPricingService.deploymentName(quote.getDeployment()));
         t.put("committed_pdfs_yr", String.format(Locale.US, "%,d", Math.max(0, quote.getVolume())));
@@ -115,18 +115,30 @@ public class AgreementAssembler {
         t.put("annual_fee_y1", money(quote.getAnnualNetMinor()));
         t.put("contract_total", money(quote.getTcvMinor()));
         t.put("elected_or_not", quote.isIndemnification() ? "Elected" : "Not elected");
-        t.put("po_number", notBlank(quote.getPoNumber()) ? quote.getPoNumber().trim() : "—");
+        t.put("po_number", notBlank(quote.getPoNumber()) ? cell(quote.getPoNumber()) : "—");
         t.put(
                 "customer_signatory",
                 signed && notBlank(signing.signatoryName())
-                        ? signing.signatoryName().trim()
+                        ? cell(signing.signatoryName())
                         : BLANK);
         t.put(
                 "customer_signatory_title",
                 signed && notBlank(signing.signatoryTitle())
-                        ? signing.signatoryTitle().trim()
+                        ? cell(signing.signatoryTitle())
                         : BLANK);
         return t;
+    }
+
+    /**
+     * Make a buyer-supplied value safe to slot into a markdown table cell.
+     *
+     * <p>An unescaped {@code |} or newline splits the cell and breaks the Order Form's table. That
+     * matters beyond appearance: this markdown is what gets hashed into the signature record, so a
+     * value that restructures the table means the SHA-256 we keep as proof covers a document
+     * reading differently from the one the signatory saw.
+     */
+    private static String cell(String raw) {
+        return raw.trim().replace("|", "\\|").replaceAll("\\s*\\R+\\s*", " ");
     }
 
     /** Part B — the Order Form. Generated from the quote; the only per-deal section. */
