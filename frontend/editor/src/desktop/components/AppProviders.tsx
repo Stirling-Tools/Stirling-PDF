@@ -62,6 +62,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [appKey, setAppKey] = useState(0);
   const hasLoadedInitialMode = useRef(false);
 
+  // Files dropped outside a dropzone must never navigate the webview to the
+  // file (Linux WebKit renders the PDF fullscreen and orphans the app UI).
+  // Dropzone-level handlers run before these window-level listeners, so
+  // in-app drag & drop is unaffected.
+  useEffect(() => {
+    const preventNavigation = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", preventNavigation);
+    window.addEventListener("drop", preventNavigation);
+    return () => {
+      window.removeEventListener("dragover", preventNavigation);
+      window.removeEventListener("drop", preventNavigation);
+    };
+  }, []);
+
   // Load connection mode on mount and subscribe to future changes
   useEffect(() => {
     void connectionModeService.getCurrentMode().then((mode) => {
