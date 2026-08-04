@@ -54,11 +54,12 @@ class PDFWorkerManager {
       disableStream?: boolean;
       stopAtErrors?: boolean;
       verbosity?: number;
+      signal?: { cancelled: boolean };
     } = {},
   ): Promise<PDFDocumentProxy> {
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
-      await this.waitForAvailableWorker();
+      await this.waitForAvailableWorker(options.signal);
     }
 
     // Normalize input data to PDF.js format
@@ -105,7 +106,7 @@ class PDFWorkerManager {
       // If document creation fails, make sure to clean up the loading task
       if (loadingTask) {
         try {
-          loadingTask.destroy();
+          void loadingTask.destroy();
         } catch {
           // Ignore errors
         }
@@ -147,13 +148,21 @@ class PDFWorkerManager {
   /**
    * Wait for a worker to become available
    */
-  private async waitForAvailableWorker(): Promise<void> {
-    return new Promise((resolve) => {
+  private async waitForAvailableWorker(signal?: {
+    cancelled: boolean;
+  }): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | null = null;
       const checkAvailability = () => {
+        if (signal?.cancelled) {
+          if (timer !== null) clearTimeout(timer);
+          reject(new Error("CANCELLED"));
+          return;
+        }
         if (this.activeDocuments.size < this.maxWorkers) {
           resolve();
         } else {
-          setTimeout(checkAvailability, 100);
+          timer = setTimeout(checkAvailability, 100);
         }
       };
       checkAvailability();

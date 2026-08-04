@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -209,6 +209,17 @@ const StampSetupSettings = ({
   filename,
 }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
+  const stampImageUrl = useMemo(
+    () =>
+      parameters.stampImage ? URL.createObjectURL(parameters.stampImage) : null,
+    [parameters.stampImage],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (stampImageUrl) URL.revokeObjectURL(stampImageUrl);
+    };
+  }, [stampImageUrl]);
 
   return (
     <Stack gap="md">
@@ -679,10 +690,10 @@ const StampSetupSettings = ({
           >
             {t("chooseFile", "Choose File")}
           </Button>
-          {parameters.stampImage && (
+          {parameters.stampImage && stampImageUrl && (
             <Stack gap="xs">
               <img
-                src={URL.createObjectURL(parameters.stampImage)}
+                src={stampImageUrl}
                 alt="Selected stamp image"
                 className="max-h-24 w-full object-contain border border-gray-200 rounded bg-gray-50"
               />

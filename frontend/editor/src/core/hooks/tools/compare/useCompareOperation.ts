@@ -681,6 +681,8 @@ export const useCompareOperation = (): CompareOperationHook => {
 
   useEffect(() => {
     return () => {
+      cancelledRef.current = true;
+      pixelSignalRef.current.cancelled = true;
       cleanupDownloadUrl();
       revokePixelUrls();
       if (workerRef.current) {
