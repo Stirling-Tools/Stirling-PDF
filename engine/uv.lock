@@ -538,21 +538,21 @@ wheels = [
 
 [[package]]
 name = "datamodel-code-generator"
-version = "0.56.0"
+version = "0.72.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argcomplete" },
-    { name = "black" },
+    { name = "black", marker = "sys_platform != 'emscripten'" },
     { name = "genson" },
     { name = "inflect" },
-    { name = "isort" },
+    { name = "isort", marker = "sys_platform != 'emscripten'" },
     { name = "jinja2" },
     { name = "pydantic" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/03/7d/7fc2bb3d8946ca45851da3f23497a2c6e252e92558ccbd89d609cf1e13d4/datamodel_code_generator-0.56.0.tar.gz", hash = "sha256:e7c003fb5421b890aabe12f66ae65b57198b04cfe1da7c40810798020835b3a8", size = 837708, upload-time = "2026-04-04T09:46:19.636Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/bc/a11657789f312bb788063eb549c94be02f90daf039c80752414129bf7059/datamodel_code_generator-0.72.0.tar.gz", hash = "sha256:1eb5356a75ba7c91f0265ca59e181c8da392a51ec23012f8b0d0f2d8125af5e0", size = 1808117, upload-time = "2026-08-03T18:20:37.741Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ed/3a/7f169ffc7a2d69a4f9158b1ac083f685b7f4a1a8a1db5d1e4abbb4e741b7/datamodel_code_generator-0.56.0-py3-none-any.whl", hash = "sha256:a0559683fbe90cdf2ce9b6637e3adae3e3a8056a8d0516df581d486e2834ead2", size = 256545, upload-time = "2026-04-04T09:46:17.582Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/07/80627e062c56076cfc560a83153b4ca26df37d1bc7c4b730943641d5075f/datamodel_code_generator-0.72.0-py3-none-any.whl", hash = "sha256:04ea49686a08298bec99a4a8470f87940bacb2a50dcda262bd4c6c46b9ecc1b5", size = 495786, upload-time = "2026-08-03T18:20:36.141Z" },
 ]
 
 [package.optional-dependencies]
@@ -650,7 +650,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "anyio", specifier = ">=4.0.0" },
-    { name = "datamodel-code-generator", extras = ["ruff"], specifier = ">=0.26.0" },
+    { name = "datamodel-code-generator", extras = ["ruff"], specifier = ">=0.61.0" },
     { name = "pyright", specifier = ">=1.1.408" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "referencing", specifier = ">=0.35.0" },
