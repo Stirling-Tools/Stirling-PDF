@@ -118,14 +118,13 @@ class PDFWorkerManager {
   /**
    * Properly destroy a PDF document and clean up resources
    */
-  destroyDocument(pdf: PDFDocumentProxy): void {
+  async destroyDocument(pdf: PDFDocumentProxy): Promise<void> {
     if (this.activeDocuments.has(pdf)) {
       try {
-        pdf.destroy();
-        this.activeDocuments.delete(pdf);
-        this.workerCount = Math.max(0, this.workerCount - 1);
+        await pdf.destroy();
       } catch {
-        // Still remove from tracking even if destroy failed
+        // Still remove from tracking if destroy fails.
+      } finally {
         this.activeDocuments.delete(pdf);
         this.workerCount = Math.max(0, this.workerCount - 1);
       }
@@ -135,14 +134,11 @@ class PDFWorkerManager {
   /**
    * Destroy all active PDF documents
    */
-  destroyAllDocuments(): void {
+  async destroyAllDocuments(): Promise<void> {
     const documentsToDestroy = Array.from(this.activeDocuments);
-    documentsToDestroy.forEach((pdf) => {
-      this.destroyDocument(pdf);
-    });
-
-    this.activeDocuments.clear();
-    this.workerCount = 0;
+    await Promise.all(
+      documentsToDestroy.map((pdf) => this.destroyDocument(pdf)),
+    );
   }
 
   /**
@@ -187,7 +183,7 @@ class PDFWorkerManager {
     // Force destroy all documents
     this.activeDocuments.forEach((pdf) => {
       try {
-        pdf.destroy();
+        void pdf.destroy();
       } catch {
         // Ignore errors
       }

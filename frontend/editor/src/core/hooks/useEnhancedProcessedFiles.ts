@@ -59,6 +59,7 @@ export function useEnhancedProcessedFiles(
 
   // Process files when activeFiles changes
   useEffect(() => {
+    let cancelled = false;
     console.log(
       "useEnhancedProcessedFiles: activeFiles changed",
       activeFiles.length,
@@ -79,6 +80,7 @@ export function useEnhancedProcessedFiles(
       const newProcessedFiles = new Map<File, ProcessedFile>();
 
       for (const file of activeFiles) {
+        if (cancelled) return;
         // Generate hash for this file
         const fileHash = await FileHasher.generateHybridHash(file);
         fileHashMapRef.current.set(file, fileHash);
@@ -122,12 +124,16 @@ export function useEnhancedProcessedFiles(
           (file) => !processedFiles.has(file),
         );
 
-      if (hasChanged) {
+      if (hasChanged && !cancelled) {
+        processedFilesRef.current = newProcessedFiles;
         setProcessedFiles(newProcessedFiles);
       }
     };
 
     processFiles();
+    return () => {
+      cancelled = true;
+    };
   }, [activeFiles]); // Only depend on activeFiles to avoid infinite loops
 
   // Listen for processing completion
