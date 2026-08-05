@@ -7,12 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * A document's accessibility standing.
- *
- * <p>The machine/human split is deliberate and load-bearing. veraPDF checks roughly half of the
- * Matterhorn Protocol; the rest needs a person to judge whether the reading order is right and
- * whether the alternative text says anything useful. Reporting a clean automated pass as
- * "accessible" would be a compliance claim nobody has earned.
+ * A document's accessibility standing. The machine/human split is load-bearing: veraPDF covers only
+ * about half of the Matterhorn Protocol, so a clean automated pass is not "accessible".
  */
 @Data
 @Schema(description = "Accessibility standing of a document")

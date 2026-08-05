@@ -4,7 +4,7 @@ package stirling.software.common.pdf.ua;
 public enum PdfUaProfile {
     /** ISO 14289-1, layered on PDF 1.7. */
     UA1(1, 1.7f, 0),
-    /** ISO 14289-2, which requires PDF 2.0, namespaced structure types and a revision year. */
+    /** ISO 14289-2: needs PDF 2.0, namespaced structure types and a revision year. */
     UA2(2, 2.0f, 2024);
 
     private final int part;
@@ -25,7 +25,7 @@ public enum PdfUaProfile {
         return pdfVersion;
     }
 
-    /** The {@code pdfuaid:rev} year, or 0 when the profile does not use one. UA-2 requires 2024. */
+    /** The {@code pdfuaid:rev} year, or 0 when the profile does not use one. */
     public int revision() {
         return revision;
     }

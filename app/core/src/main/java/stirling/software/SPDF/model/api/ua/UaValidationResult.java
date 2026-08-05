@@ -5,11 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * Outcome of validating a document against one PDF/UA profile.
- *
- * @param compliant true when every automated check passed; it does not mean the document is usable
- *     by assistive technology, which only a person can judge
- * @param totalFailures raw failure count before grouping by rule
+ * Outcome of validating against one PDF/UA profile. compliant means every automated check passed,
+ * which is not the same as usable by assistive technology; totalFailures is ungrouped.
  */
 @Schema(description = "Result of validating a document against a PDF/UA profile")
 public record UaValidationResult(

@@ -14,11 +14,8 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Turns an untagged PDF into a tagged one and applies the document-level PDF/UA requirements.
- *
- * <p>Order matters: content must be marked before the structure tree can reference it, and the
- * conformance declaration is deliberately not written here. Callers declare conformance only after
- * validating the result, so a file never claims PDF/UA on the strength of intent alone.
+ * Tags an untagged PDF and applies the document-level PDF/UA requirements. Content must be marked
+ * before the tree can reference it, and conformance is declared elsewhere, only after validation.
  */
 @Slf4j
 public class PdfUaTagger {
@@ -84,9 +81,7 @@ public class PdfUaTagger {
         return new TaggingResult(structure, true);
     }
 
-    /**
-     * Explicit title first, then the first heading, then whatever the caller offered as a fallback.
-     */
+    /** Explicit title first, then the first heading, then the caller's fallback. */
     private static String resolveTitle(TaggingOptions options, DocumentStructure structure) {
         for (String candidate :
                 new String[] {
@@ -109,10 +104,7 @@ public class PdfUaTagger {
         metadataWriter.removeConformanceDeclaration(document);
     }
 
-    /**
-     * Wraps content page by page. Marked content ids are numbered per page, so the counter restarts
-     * on every page rather than running across the document.
-     */
+    /** Wraps content page by page; marked content ids restart on each page. */
     private void injectMarkedContent(
             PDDocument document, DocumentStructure structure, List<PageContent> pages)
             throws IOException {
@@ -124,8 +116,7 @@ public class PdfUaTagger {
         }
         for (int pageIndex = 0; pageIndex < document.getNumberOfPages(); pageIndex++) {
             List<StructBlock> blocks = byPage.getOrDefault(pageIndex, List.of());
-            // A page with no markable operators has nothing to wrap, and rewriting it would cost a
-            // parse, a re-serialise and a recompress to produce an identical stream.
+            // Nothing to wrap, and rewriting costs a parse and recompress for an identical stream.
             if (blocks.isEmpty() && markableCounts.getOrDefault(pageIndex, 0) == 0) {
                 continue;
             }
@@ -154,8 +145,7 @@ public class PdfUaTagger {
                         block.setAlt(alt);
                     }
                 });
-        // Marking images decorative makes a document validate by hiding content from assistive
-        // technology. That is sometimes right, but it must never look like a clean result.
+        // Marking images decorative validates by hiding content, so never report it as clean.
         if (suppressed[0] > 0) {
             structure.warn(
                     suppressed[0]
@@ -172,10 +162,8 @@ public class PdfUaTagger {
     }
 
     /**
-     * A structure tree is only worth keeping when it is actually wired up: it needs children, a
-     * parent tree to resolve marked content back to elements, and a catalog that admits the
-     * document is marked. A tree failing any of those claims coverage it does not have, and keeping
-     * it would leave the document permanently unfixable.
+     * A tree is only worth keeping when wired up: kids, a parent tree, and a marked catalog.
+     * Keeping one that fails any of those leaves the document permanently unfixable.
      */
     static boolean hasUsableStructureTree(PDDocument document) {
         PDDocumentCatalog catalog = document.getDocumentCatalog();

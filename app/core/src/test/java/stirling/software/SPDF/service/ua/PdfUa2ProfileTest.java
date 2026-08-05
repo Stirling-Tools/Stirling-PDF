@@ -17,10 +17,7 @@ import stirling.software.common.pdf.ua.TaggingOptions;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 
-/**
- * Covers the PDF/UA-2 profile, which is not simply a different number in the metadata: it requires
- * PDF 2.0 and namespaced structure types.
- */
+/** PDF/UA-2 is not just a metadata number: it needs PDF 2.0 and namespaced structure types. */
 class PdfUa2ProfileTest {
 
     private static PdfUaConversionService conversion;

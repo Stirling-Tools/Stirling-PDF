@@ -20,12 +20,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 
 /**
- * The alternative-text loop, end to end.
- *
- * <p>The converter refuses to invent descriptions, which is only a defensible position if a caller
- * can find out what needs describing and supply it. This proves the report hands out keys that the
- * conversion actually accepts, and that supplying them is what lets an illustrated document
- * conform.
+ * The alt-text loop end to end: the report hands out keys the conversion accepts. The converter
+ * never invents descriptions, so a caller must be able to supply them.
  */
 class AltTextRoundTripTest {
 

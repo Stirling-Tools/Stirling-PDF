@@ -1821,19 +1821,13 @@ public class ConvertPDFToPDFA {
         return Files.readAllBytes(outputPdf);
     }
 
-    /**
-     * Tags a converted PDF/A file so it can claim conformance level A.
-     *
-     * <p>Runs last because Ghostscript discards the structure tree, so anything tagged earlier in
-     * the pipeline would not survive the conversion.
-     */
+    /** Tags a converted PDF/A for level A; must run after Ghostscript, which discards tags. */
     private byte[] applyLevelA(
             byte[] converted, PdfaProfile profile, String baseFileName, boolean declarePdfUa) {
         if (!profile.requiresTagging()) {
             return converted;
         }
-        // The document's own title and language win. Hardcoding "en" and the upload filename
-        // relabelled a German report as English and destroyed its real title.
+        // Prefer the document's own title/language; hardcoding "en" mislabelled German reports.
         String language = null;
         String title = null;
         try (PDDocument probe = Loader.loadPDF(converted)) {
@@ -2533,8 +2527,7 @@ public class ConvertPDFToPDFA {
         PDF_A_1B(1, "B", "PDF/A-1b", "_PDFA-1b.pdf", "1.4", Format.PDF_A1B, "pdfa-1"),
         PDF_A_2B(2, "B", "PDF/A-2b", "_PDFA-2b.pdf", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
         PDF_A_3B(3, "B", "PDF/A-3b", "_PDFA-3b.pdf", "1.7", null, "pdfa-3", "pdfa-3b"),
-        // Level A adds the accessibility requirements on top of level B: a tagged structure tree,
-        // a declared language and Unicode-mappable text. Tagging runs after the conversion.
+        // Level A = level B plus tagging, declared language and Unicode text; tagged post-convert.
         PDF_A_1A(1, "A", "PDF/A-1a", "_PDFA-1a.pdf", "1.4", Format.PDF_A1B, "pdfa-1a"),
         PDF_A_2A(2, "A", "PDF/A-2a", "_PDFA-2a.pdf", "1.7", null, "pdfa-2a"),
         PDF_A_3A(3, "A", "PDF/A-3a", "_PDFA-3a.pdf", "1.7", null, "pdfa-3a");

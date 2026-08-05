@@ -5,10 +5,9 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * The result of a PDF/UA conversion.
+ * Result of a PDF/UA conversion.
  *
- * @param pdfBytes the converted file, declared conformant only when {@code declared} is true
- * @param declared whether a {@code pdfuaid} conformance claim was written
+ * @param declared whether a {@code pdfuaid} conformance claim was written into {@code pdfBytes}
  */
 @Schema(description = "Result of converting a document to PDF/UA")
 public record PdfUaConversionOutcome(

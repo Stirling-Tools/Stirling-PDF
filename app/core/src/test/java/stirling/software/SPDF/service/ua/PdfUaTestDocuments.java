@@ -22,10 +22,8 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.util.Matrix;
 
 /**
- * Builds the fixture corpus used by the PDF/UA tests.
- *
- * <p>Fonts are embedded deliberately. The standard 14 fonts are never embedded, which fails PDF/UA
- * clause 7.21 on its own and would mask every other result.
+ * Builds the fixture corpus used by the PDF/UA tests. Fonts are embedded deliberately: the standard
+ * 14 fail clause 7.21 and would mask every result.
  */
 final class PdfUaTestDocuments {
 
@@ -284,10 +282,7 @@ final class PdfUaTestDocuments {
         }
     }
 
-    /**
-     * A page whose content arrives as two separate streams, which PDF stores as an array. The
-     * parser must see them as one sequence and the injector must be able to replace the array.
-     */
+    /** Content split across two streams (a PDF array) - the parser must see one sequence. */
     static byte[] multiStreamDocument() throws IOException {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
@@ -350,7 +345,7 @@ final class PdfUaTestDocuments {
     }
 
     /**
-     * Emits one row, using a separate show-text operator per cell so each can carry its own MCID.
+     * Emits one row with a separate show-text operator per cell, so each cell gets its own MCID.
      */
     private static void tableRow(
             PDPageContentStream cs,

@@ -33,16 +33,8 @@ import stirling.software.common.pdf.ua.TaggingOptions;
 import stirling.software.common.pdf.ua.TaggingResult;
 
 /**
- * Raises a PDF/A file from conformance level B to level A.
- *
- * <p>The two levels differ by accessibility: level B guarantees only that the file will look the
- * same in future, while level A additionally requires a tagged structure tree, a declared language
- * and Unicode-mappable text. That is the same machinery the PDF/UA tagger already provides, so
- * level A costs a tagging pass rather than a second engine.
- *
- * <p>Order is not negotiable. Ghostscript produces the PDF/A file and discards any structure tree
- * on the way through, so tagging has to happen afterwards. Running it first silently throws the
- * tags away and yields a level B file wearing a level A claim.
+ * Raises a PDF/A file from conformance level B to level A, which adds the tagging the PDF/UA tagger
+ * already does. Must run after Ghostscript, which discards any structure tree it is given.
  */
 @Service
 @Slf4j
@@ -53,18 +45,13 @@ public class PdfaAccessibilityService {
     private final stirling.software.SPDF.service.VeraPDFService veraPdfService;
 
     /**
-     * @param pdfBytes the upgraded document
      * @param levelA true when the file was successfully tagged and may claim conformance A
      */
     public record Result(byte[] pdfBytes, boolean levelA, List<String> warnings) {}
 
     /**
-     * Tags an already-converted PDF/A file and marks it conformance A.
-     *
-     * <p>Returns the input unchanged, with an explanation, if tagging cannot produce a structure
-     * tree. A level A claim over untagged content is exactly the false claim to avoid.
-     *
-     * @param part the PDF/A part, 1 to 3; part 1 keeps its PDF 1.4 version
+     * Tags a converted PDF/A and marks it conformance A, or returns it unchanged rather than
+     * claiming level A over untagged content. part is 1 to 3; part 1 keeps its PDF 1.4 version.
      */
     public Result upgradeToLevelA(byte[] pdfBytes, int part, String language, String title) {
         return upgradeToLevelA(pdfBytes, part, language, title, false);
@@ -87,11 +74,9 @@ public class PdfaAccessibilityService {
                                 .language(language)
                                 .title(title)
                                 .fallbackTitle(title)
-                                // Ghostscript already embedded the fonts on the PDF/A pass, and a
-                                // second rewrite would undo the conversion we just made.
+                                // Fonts were embedded on the PDF/A pass; a rewrite would undo it.
                                 .embedFonts(false)
-                                // PDF/A-1 is defined on PDF 1.4; raising it would break
-                                // conformance.
+                                // PDF/A-1 is defined on PDF 1.4; raising it breaks conformance.
                                 .preservePdfVersion(part == 1)
                                 .existingTags(TaggingOptions.ExistingTags.AUTO)
                                 .build();
@@ -116,9 +101,7 @@ public class PdfaAccessibilityService {
 
             byte[] declared = setConformance(tagged, part, "A");
 
-            // Tagging is necessary for level A but not sufficient: it also requires Unicode
-            // mappings on every font and more. Claiming A because a structure tree exists is the
-            // same unvalidated assertion this converter refuses to make for PDF/UA.
+            // Tagging is necessary for level A but not sufficient: Unicode mappings are too.
             if (!validatesAtLevelA(declared, part)) {
                 warnings.add(
                         "The document was tagged but does not validate as PDF/A-"
@@ -158,13 +141,8 @@ public class PdfaAccessibilityService {
     }
 
     /**
-     * Declares PDF/UA alongside PDF/A in one file.
-     *
-     * <p>This is the combination archives and public bodies actually ask for: readable in fifty
-     * years <em>and</em> usable with a screen reader today. It needs more than writing both
-     * identifiers, because PDF/A forbids XMP properties that no schema describes, and XMPBox has no
-     * PDF/UA schema. Without the extension schema below, adding {@code pdfuaid} to a PDF/A file
-     * breaks the PDF/A conformance it already had.
+     * Declares PDF/UA alongside PDF/A in one file. The extension schema is required: PDF/A forbids
+     * XMP properties no schema describes, and XMPBox has none for {@code pdfuaid}.
      */
     static byte[] declarePdfUaAlongsidePdfa(byte[] pdfBytes, int part) throws Exception {
         try (PDDocument document = Loader.loadPDF(pdfBytes)) {
@@ -181,11 +159,8 @@ public class PdfaAccessibilityService {
     }
 
     /**
-     * Describes the pdfuaid namespace so a PDF/A validator accepts it.
-     *
-     * <p>The structured types are populated field by field rather than by subclassing: XMPBox reads
-     * each type's namespace from a {@code @StructuredType} annotation, and annotations are not
-     * inherited, so a subclass loses the very metadata the type needs to serialise.
+     * Describes the pdfuaid namespace so a PDF/A validator accepts it. Fields are set individually,
+     * not by subclassing: XMPBox reads the namespace from an annotation, which is not inherited.
      */
     private static void addPdfUaExtensionSchema(XMPMetadata xmp) {
         PDFAExtensionSchema extension =
@@ -314,9 +289,8 @@ public class PdfaAccessibilityService {
     }
 
     /**
-     * PDFBox compresses into object streams by default, which requires PDF 1.5 and would quietly
-     * push a PDF/A-1 file off its required 1.4 version. Part 1 is therefore saved uncompressed,
-     * matching what the PDF/A converter already does.
+     * Part 1 is saved uncompressed: PDFBox's default object streams need PDF 1.5, which would push
+     * a PDF/A-1 file off its required 1.4 version.
      */
     private static byte[] save(PDDocument document, int part) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();

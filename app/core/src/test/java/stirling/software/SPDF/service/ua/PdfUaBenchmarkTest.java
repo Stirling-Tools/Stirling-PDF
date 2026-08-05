@@ -31,11 +31,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 
 /**
- * Measures where conversion time and memory actually go.
- *
- * <p>Written to be run and read rather than to gate CI: the assertions only catch
- * order-of-magnitude regressions, because wall-clock numbers on a developer machine are not a
- * contract. The phase breakdown is the point - optimising without it is guesswork.
+ * Measures where conversion time and memory go; meant to be read, not to gate CI. Assertions catch
+ * only order-of-magnitude regressions - wall-clock numbers are no contract.
  */
 class PdfUaBenchmarkTest {
 

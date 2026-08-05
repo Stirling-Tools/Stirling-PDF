@@ -25,12 +25,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 
 /**
- * Runs the converter over every PDF checked into the repository.
- *
- * <p>Generated fixtures only prove the happy path. These files were produced by a range of real
- * tools, so they are the ones that expose reading-order, encoding and content-stream assumptions.
- * Encrypted and corrupt files are expected to be refused, and being refused cleanly counts as a
- * pass: the requirement is that nothing crashes and nothing silently produces a false claim.
+ * Runs the converter over every PDF in the repository, where real-tool output breaks assumptions. A
+ * clean refusal counts as a pass; nothing may crash or make a false conformance claim.
  */
 class PdfUaRealCorpusTest {
 
@@ -95,15 +91,13 @@ class PdfUaRealCorpusTest {
             try {
                 String stem = pdf.getFileName().toString().replaceFirst("\\.pdf$", "");
 
-                // Fidelity is a property of tagging alone, so it is measured with font embedding
-                // off: Ghostscript legitimately rewrites the file and is checked separately.
+                // Fidelity is a tagging property, so measure it with font embedding off.
                 PdfUaConversionOutcome taggedOnly =
                         service.convert(input, options(stem).embedFonts(false).build());
                 assertTextPreserved(name, input, taggedOnly.pdfBytes());
 
                 PdfUaConversionOutcome outcome = service.convert(input, options(stem).build());
-                // Also check the full pipeline, font embedding included. Ghostscript can exit 0
-                // having blanked the document, and checking only the tagging pass missed that.
+                // Full pipeline too: Ghostscript can exit 0 having blanked the document.
                 assertTextPreserved(name + " (with font embedding)", input, outcome.pdfBytes());
                 outcomes.add(
                         new Outcome(
@@ -157,10 +151,7 @@ class PdfUaRealCorpusTest {
                 "converter crashed on: " + String.join("; ", unexpectedCrashes));
     }
 
-    /**
-     * Marked-content operators do not render, so tagging must not change what a reader extracts. A
-     * difference here means the content-stream rewrite corrupted the page.
-     */
+    /** Tagging must not change extracted text; a diff means the rewrite corrupted the page. */
     private static void assertTextPreserved(String name, byte[] before, byte[] after) {
         String textBefore = safeExtract(before);
         if (textBefore == null) {
@@ -201,13 +192,7 @@ class PdfUaRealCorpusTest {
         }
     }
 
-    /**
-     * Drops invisible formatting characters before comparing.
-     *
-     * <p>Rebuilding discards {@code /ActualText} from the source's marked content, which can remove
-     * zero-width spaces and soft hyphens. That is reported as a warning by the converter, so it is
-     * expected rather than corruption. Any loss of real characters still fails.
-     */
+    /** Drops invisible formatting characters: a rebuild legitimately loses soft hyphens. */
     static String normalise(String text) {
         StringBuilder sb = new StringBuilder(text.length());
         text.codePoints()

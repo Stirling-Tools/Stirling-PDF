@@ -15,13 +15,7 @@ interface ConvertToPdfUaSettingsProps {
   disabled?: boolean;
 }
 
-/**
- * Options for the PDF/UA (accessibility) conversion.
- *
- * The wording here matters as much as the controls. The converter only declares conformance when
- * validation actually passes, and it never invents descriptions for images, so the panel says what
- * the user will have to do rather than implying the conversion is a single click.
- */
+/** PDF/UA conversion options; copy is deliberate - conformance is not guaranteed by one click. */
 const ConvertToPdfUaSettings = ({
   parameters,
   onParameterChange,

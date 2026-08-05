@@ -23,19 +23,8 @@ import org.apache.pdfbox.pdmodel.common.PDStream;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Rewrites a page content stream so every markable operator sits inside a marked-content sequence.
- *
- * <p>Content claimed by a structure block is wrapped in {@code /Tag <</MCID n>> BDC ... EMC}.
- * Everything else is wrapped as {@code /Artifact BMC ... EMC}, which is what makes the "all real
- * content is tagged, everything else is an artifact" rule of PDF/UA-1 clause 7.1 hold by
- * construction rather than by hope.
- *
- * <p>Sequences are closed and reopened at {@code BT}, {@code ET}, {@code q} and {@code Q} so they
- * always nest correctly. A block whose content is interrupted that way simply receives more than
- * one MCID; the structure element then references each of them.
- *
- * <p>Marked-content operators do not render, so a correct rewrite leaves the page visually
- * identical.
+ * Rewrites a page stream so every markable operator sits inside a marked-content sequence: claimed
+ * content gets an MCID, everything else /Artifact, satisfying PDF/UA-1 clause 7.1 by construction.
  */
 @Slf4j
 public class MarkedContentInjector {
@@ -55,11 +44,8 @@ public class MarkedContentInjector {
     }
 
     /**
-     * Path-construction operators, which begin a path object.
-     *
-     * <p>ISO 32000-1 does not allow a marked-content operator inside a path object, so a sequence
-     * wrapping a fill or stroke has to open before the path starts, not immediately before the
-     * painting operator.
+     * Path-construction operators; ISO 32000-1 forbids marked content inside a path object, so a
+     * sequence wrapping a fill or stroke must open before the path starts.
      */
     private static boolean isPathConstruction(String name) {
         return switch (name) {
@@ -73,12 +59,8 @@ public class MarkedContentInjector {
     }
 
     /**
-     * True for an optional-content sequence, which controls whether its contents are visible.
-     *
-     * <p>These must survive a rebuild. Stripping an {@code /OC} wrapper does not just lose
-     * structure, it makes hidden content visible: a DRAFT or CONFIDENTIAL watermark layer, a
-     * print-only layer or a redaction overlay that the author switched off would be rendered in the
-     * returned document.
+     * True for an optional-content sequence; stripping an {@code /OC} wrapper would make hidden
+     * layers such as watermarks or redaction overlays visible.
      */
     private static boolean isOptionalContent(String name, List<COSBase> operands) {
         return opensMarkedContent(name)
@@ -88,12 +70,8 @@ public class MarkedContentInjector {
     }
 
     /**
-     * True when a sequence supplies replacement text for the glyphs it wraps.
-     *
-     * <p>Generators use {@code /ActualText} to say what a ligature or a decorative glyph really
-     * spells. Discarding it leaves a screen reader announcing whatever the font's own mapping says,
-     * which for an "ffi" ligature with no ToUnicode entry is nothing useful. Our own sequence nests
-     * inside the preserved one, so the marked content id still resolves to the structure element.
+     * True when a sequence supplies replacement text for its glyphs; dropping it leaves a screen
+     * reader with the font's own mapping, which for a ligature says nothing useful.
      */
     private static boolean carriesReplacementText(String name, List<COSBase> operands) {
         if (!opensMarkedContent(name)) {
@@ -119,14 +97,7 @@ public class MarkedContentInjector {
         }
     }
 
-    /**
-     * Wraps every markable operator on the page.
-     *
-     * @param blocks blocks owning content on this page, artifacts included
-     * @param nextMcid first marked content id to hand out
-     * @param stripExisting remove marked-content operators already present before rewriting
-     * @return the next unused marked content id
-     */
+    /** Wraps every markable operator on the page; returns the next unused marked content id. */
     public int inject(
             PDDocument document,
             PDPage page,

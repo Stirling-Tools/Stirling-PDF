@@ -163,12 +163,7 @@ class VeraPDFServicePdfaFixtureTest {
         }
     }
 
-    /**
-     * The PDF/A result, ignoring the PDF/UA one.
-     *
-     * <p>Every document is now also checked against PDF/UA-1 whether or not it declares it, so
-     * these PDF/A assertions have to pick their result out rather than assume there is only one.
-     */
+    /** The PDF/A result; every document is also checked against PDF/UA, so filter that one out. */
     private PDFVerificationResult onlyResult(byte[] pdfBytes) throws Exception {
         List<PDFVerificationResult> results =
                 service.validatePDF(new ByteArrayInputStream(pdfBytes));

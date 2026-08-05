@@ -21,9 +21,7 @@ public class DocumentStructure {
     private String title;
     private String language;
 
-    /**
-     * True when real text had to be wrapped as artifacts, which must block any conformance claim.
-     */
+    /** True when real text was wrapped as artifacts, which blocks any conformance claim. */
     private boolean textSuppressed;
 
     /** Body text size used as the baseline for heading detection, in points. */

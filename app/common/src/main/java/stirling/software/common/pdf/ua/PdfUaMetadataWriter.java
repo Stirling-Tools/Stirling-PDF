@@ -23,13 +23,7 @@ import org.apache.xmpbox.xml.XmpSerializer;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Applies the document-level requirements of PDF/UA that have nothing to do with tagging.
- *
- * <p>These are the fixes that make an already-tagged file conform: a title that viewers actually
- * display, a declared language, a tab order, and the {@code pdfuaid} declaration itself. A
- * surprising share of real documents fail only on these.
- */
+/** Applies the document-level PDF/UA requirements: title, language, tab order, declaration. */
 @Slf4j
 public class PdfUaMetadataWriter {
 
@@ -37,10 +31,8 @@ public class PdfUaMetadataWriter {
     private static final COSName SUSPECTS = COSName.getPDFName("Suspects");
 
     /**
-     * Applies everything except the conformance declaration.
-     *
-     * @param title required by clause 7.1; falls back to the existing metadata title
-     * @param language a BCP-47 tag such as {@code en-GB}
+     * Applies everything except the conformance declaration. Clause 7.1 requires a title, so a
+     * blank one falls back to the existing metadata title.
      */
     public List<String> applyDocumentRequirements(
             PDDocument document, String title, String language, PdfUaProfile profile)
@@ -98,11 +90,8 @@ public class PdfUaMetadataWriter {
     }
 
     /**
-     * Gives every form field a {@code /TU} description, which clause 7.18.1 requires.
-     *
-     * <p>The field's own partial name is used, because that is authored metadata already in the
-     * document rather than something invented. A field with no name at all is reported instead of
-     * being given a placeholder: "Text field 3" satisfies a checker and tells a user nothing.
+     * Gives every form field the {@code /TU} description clause 7.18.1 requires, reusing its
+     * authored partial name. Unnamed fields are reported, never given a useless placeholder.
      */
     private static List<String> describeFormFields(PDDocument document) {
         List<String> warnings = new ArrayList<>();
@@ -133,10 +122,8 @@ public class PdfUaMetadataWriter {
     }
 
     /**
-     * Strips the {@code pdfuaid} declaration.
-     *
-     * <p>Used when validation fails after the claim was written: the remediated file is still worth
-     * returning, but it must not assert conformance it does not have.
+     * Strips the {@code pdfuaid} declaration when validation fails after it was written, so the
+     * returned file does not assert conformance it lacks.
      */
     public void removeConformanceDeclaration(PDDocument document) throws IOException {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -167,8 +154,8 @@ public class PdfUaMetadataWriter {
     }
 
     /**
-     * Rewrites the XMP packet, preserving whatever was already there. A malformed existing packet
-     * is replaced rather than propagated, since an unparseable packet fails validation on its own.
+     * Rewrites the XMP packet, preserving what was there. A malformed packet is replaced, since an
+     * unparseable one fails validation on its own.
      */
     private void writeXmp(PDDocument document, String title, String language, PdfUaProfile profile)
             throws IOException {
@@ -191,8 +178,7 @@ public class PdfUaMetadataWriter {
         }
 
         if (profile != null) {
-            // Converting an already-declared file would otherwise leave two pdfuaid schemas in the
-            // packet, which no validator accepts.
+            // Re-converting an already-declared file must not leave two pdfuaid schemas.
             XMPSchema stale = metadata.getSchema(PdfUaIdentificationSchema.NAMESPACE);
             if (stale != null) {
                 metadata.removeSchema(stale);
@@ -226,9 +212,7 @@ public class PdfUaMetadataWriter {
         if (existing != null) {
             try {
                 DomXmpParser parser = new DomXmpParser();
-                // Strict parsing rejects namespaces XMPBox does not know, which includes pdfuaid
-                // itself. Left strict, re-reading a packet we just wrote silently discards all of
-                // it, taking the title and language with it.
+                // Strict parsing rejects pdfuaid, silently discarding a packet we just wrote.
                 parser.setStrictParsing(false);
                 return parser.parse(new ByteArrayInputStream(existing.toByteArray()));
             } catch (Exception e) {

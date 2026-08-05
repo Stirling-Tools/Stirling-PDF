@@ -6,11 +6,8 @@ import org.apache.xmpbox.type.IntegerType;
 import org.apache.xmpbox.type.StructuredType;
 
 /**
- * The {@code pdfuaid} XMP schema, which is how a file declares PDF/UA conformance.
- *
- * <p>XMPBox ships {@code PDFAIdentificationSchema} but has no PDF/UA equivalent, so this supplies
- * it. Writing {@code pdfuaid:part} is the last step of a conversion and must only happen once
- * validation has passed: the declaration is a compliance claim, not a hint.
+ * The {@code pdfuaid} XMP conformance schema, which XMPBox does not ship. Only write it once
+ * validation has passed - it is a compliance claim.
  */
 @StructuredType(
         preferedPrefix = PdfUaIdentificationSchema.PREFERRED_PREFIX,

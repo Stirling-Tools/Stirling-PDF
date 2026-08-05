@@ -1,12 +1,8 @@
 package stirling.software.common.pdf.ua;
 
 /**
- * One operator in a page content stream that may be wrapped in a marked-content sequence.
- *
- * <p>The {@code ordinal} is the operator's index within the page's own top-level operator sequence,
- * counting only markable operators. It is the join key between text extraction and token rewriting:
- * both passes walk the same stream and count the same operator names, so the ordinals agree by
- * construction.
+ * One operator in a page content stream that may be wrapped in a marked-content sequence. The
+ * ordinal counts only markable operators, joining text extraction to token rewriting.
  */
 public record MarkableOp(int ordinal, Kind kind, BBox bbox, String resourceName) {
 
@@ -28,11 +24,8 @@ public record MarkableOp(int ordinal, Kind kind, BBox bbox, String resourceName)
     }
 
     /**
-     * Operator names counted as markable. Both passes must agree on this set.
-     *
-     * <p>Path painting belongs here: a rule under a heading or a table border is visible content,
-     * so PDF/UA-1 clause 7.1 requires it to be either tagged or marked as an artifact. Leaving it
-     * out was the single largest source of "content is neither tagged nor artifact" failures.
+     * Operator names counted as markable; both passes must agree on this set. Path painting is
+     * included because clause 7.1 needs visible rules and borders tagged or artifacted.
      */
     public static boolean isMarkableOperator(String name) {
         return switch (name) {
@@ -41,9 +34,7 @@ public record MarkableOp(int ordinal, Kind kind, BBox bbox, String resourceName)
         };
     }
 
-    /**
-     * Painting operators only: {@code n} ends a path without marking the page, so it is excluded.
-     */
+    /** Painting operators only: {@code n} ends a path without marking the page. */
     public static boolean isPathPainting(String name) {
         return switch (name) {
             case "S", "s", "f", "F", "f*", "B", "B*", "b", "b*", "sh" -> true;

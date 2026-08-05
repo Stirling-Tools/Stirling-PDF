@@ -53,9 +53,7 @@ class PdfUaServicesTest {
         audit = new AccessibilityAuditService(validation);
     }
 
-    /**
-     * Uses a standard 14 font deliberately: those are never embedded, which clause 7.21 forbids.
-     */
+    /** Uses a standard 14 font deliberately: never embedded, which clause 7.21 forbids. */
     private static byte[] unembeddedFontPdf() throws IOException {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);

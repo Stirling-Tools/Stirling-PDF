@@ -20,15 +20,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 
 /**
- * Writes converted output to disk so external tools can inspect it.
- *
- * <p>Everything else in this suite validates PDFBox output with PDFBox and veraPDF. That is
- * circular: a bug in how the structure is written can be invisible to the library that wrote it.
- * These files exist to be fed to independent parsers, to a renderer, and to the checkers customers
- * actually run - PAC 2024 and a screen reader.
- *
- * <p>Disabled by default because it writes outside the build directory. Run with {@code
- * DUMP_UA_SAMPLES=<dir>}.
+ * Dumps converted output for independent checkers; validating PDFBox with PDFBox is circular. Off
+ * by default as it writes outside the build directory: run with {@code DUMP_UA_SAMPLES=<dir>}.
  */
 @EnabledIfEnvironmentVariable(named = "DUMP_UA_SAMPLES", matches = ".+")
 class PdfUaSampleDumpTest {

@@ -26,9 +26,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 
 /**
- * End-to-end conversion over the fixture corpus, validated with veraPDF.
- *
- * <p>The corpus is deliberately varied: what breaks a tagger is rarely the simple case.
+ * End-to-end conversion over the fixture corpus, validated with veraPDF. The corpus is deliberately
+ * varied: what breaks a tagger is rarely the simple case.
  */
 class PdfUaConversionIntegrationTest {
 
@@ -46,9 +45,7 @@ class PdfUaConversionIntegrationTest {
                                 org.mockito.Mockito.mock(PdfMetadataService.class)));
     }
 
-    /**
-     * Fixtures already embed their fonts, so the Ghostscript pass is off to keep tests hermetic.
-     */
+    /** Fixtures already embed fonts, so the Ghostscript pass is off to keep tests hermetic. */
     private static TaggingOptions options() {
         return TaggingOptions.builder()
                 .profile(PdfUaProfile.UA1)

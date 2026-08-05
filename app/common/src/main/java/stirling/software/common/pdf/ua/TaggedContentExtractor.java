@@ -31,17 +31,8 @@ import org.apache.pdfbox.util.Vector;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Extracts text lines and graphic operations from page content streams, tagging each with the
- * ordinal of the operator that produced it.
- *
- * <p>Two passes run over the same operator sequence. The text pass ({@link PDFTextStripper}) yields
- * lines and glyph geometry; the token pass ({@link PDFStreamParser}) yields graphics and the
- * transformation matrices needed to place them. Both count the same operator names in the same
- * order, so ordinals from one pass address operators in the other.
- *
- * <p>The text pass does descend into form XObjects, but only operators in the page's own stream are
- * counted; glyphs drawn inside a form are attributed to the {@code Do} that invoked it. That is
- * what lets a form's text be tagged as prose without its inner operators shifting the ordinals.
+ * Extracts text lines and graphic ops from page streams, tagging each with its operator ordinal.
+ * Both passes count the same operators in the same order, so ordinals cross-reference.
  */
 @Slf4j
 public class TaggedContentExtractor {
@@ -63,9 +54,8 @@ public class TaggedContentExtractor {
             List<TextLineInfo> lines = collector.linesFor(i);
             boolean dropped = false;
             if (ops.size() < maxOrdinal(lines) + 1) {
-                // Ordinals cannot be trusted for this page, so dropping the lines makes it
-                // untaggable rather than mis-tagged. The flag lets the caller refuse to declare
-                // conformance over text it just hid.
+                // Untrusted ordinals: drop the lines so the page is untaggable rather than
+                // mis-tagged, and flag it so the caller refuses to declare conformance.
                 log.warn(
                         "Ordinal mismatch on page {} (ops={}, text={}); skipping page",
                         i,
@@ -89,12 +79,8 @@ public class TaggedContentExtractor {
     }
 
     /**
-     * The page box in the same space as the extracted line coordinates.
-     *
-     * <p>The text engine translates by the MediaBox origin and reports rotated pages in the rotated
-     * frame, so the box the analyser compares against must be origin-zero with width and height
-     * swapped for 90 and 270 degree rotations. Using the raw MediaBox here silently broke
-     * running-head detection on offset-origin and rotated pages.
+     * The page box in the space of extracted line coordinates: origin-zero, width and height
+     * swapped for 90/270 rotations, because the text engine reports in the rotated frame.
      */
     static BBox normalisedBox(PDPage page) {
         PDRectangle mediaBox = page.getMediaBox();
@@ -104,13 +90,7 @@ public class TaggedContentExtractor {
         return new BBox(0, 0, width, height);
     }
 
-    /**
-     * Counts images without running the text pass.
-     *
-     * <p>The full extraction runs {@link PDFTextStripper} over every page, which is by far the
-     * expensive half. A report only needs to know how many figures exist, and the token scan alone
-     * answers that.
-     */
+    /** Counts images with the token scan alone, skipping the expensive text pass. */
     public int countGraphics(PDDocument document) {
         int total = 0;
         for (int i = 0; i < document.getNumberOfPages(); i++) {
@@ -169,10 +149,6 @@ public class TaggedContentExtractor {
 
     // --- Operator classification -------------------------------------------
 
-    /**
-     * True when a marked-content sequence carries replacement or alternative text. Rebuilding drops
-     * it, which changes what a reader extracts, so the caller warns rather than losing it silently.
-     */
     private static boolean isPathConstruction(String name) {
         return switch (name) {
             case "m", "l", "c", "v", "y", "re" -> true;
@@ -180,6 +156,7 @@ public class TaggedContentExtractor {
         };
     }
 
+    /** True when a sequence carries replacement or alternative text, which a rebuild would drop. */
     private static boolean carriesTextSemantics(List<COSBase> operands) {
         for (COSBase operand : operands) {
             if (operand instanceof COSDictionary dictionary
@@ -193,11 +170,8 @@ public class TaggedContentExtractor {
     }
 
     /**
-     * Describes one markable operator, using the engine's own transformation matrix to place it.
-     *
-     * <p>Taking the matrix from the graphics state rather than tracking q/Q/cm by hand removes a
-     * whole class of bug: the engine already handles nesting, form matrices and text-space
-     * subtleties that a hand-rolled stack gets wrong.
+     * Describes one markable operator, placed with the engine's own matrix rather than a
+     * hand-rolled q/Q/cm stack that would get nesting and form matrices wrong.
      */
     private static MarkableOp classify(
             String name,
@@ -239,11 +213,8 @@ public class TaggedContentExtractor {
     }
 
     /**
-     * Extends the running path box with the points of one path-construction operator.
-     *
-     * <p>Without this every vector carried an empty box and was written off as decoration, which
-     * made bar charts, pie charts and vector logos disappear from the structure tree while the
-     * report cheerfully said no figure needed a description.
+     * Extends the running path box with one path-construction operator's points; without it every
+     * vector had an empty box and charts and vector logos vanished from the structure tree.
      */
     private static BBox extendPath(BBox current, String name, List<COSBase> operands, Matrix ctm) {
         int pairs =
@@ -258,9 +229,7 @@ public class TaggedContentExtractor {
             return current;
         }
 
-        // Deliberately allocation-free. This runs for every path-construction operator on every
-        // page, and the obvious version - build a point list, wrap each in a Vector, union a BBox
-        // per point - cost about a third of the extraction budget on a chart-heavy document.
+        // Deliberately allocation-free; the obvious version cost a third of the extraction budget.
         float minX = current.isEmpty() ? Float.MAX_VALUE : current.x0();
         float minY = current.isEmpty() ? Float.MAX_VALUE : current.y0();
         float maxX = current.isEmpty() ? -Float.MAX_VALUE : current.x1();
@@ -402,14 +371,8 @@ public class TaggedContentExtractor {
         }
 
         /**
-         * Counts only operators that are physically present in the page's own stream.
-         *
-         * <p>Two things would otherwise inflate the count and break the join with the token pass.
-         * PDFBox implements {@code '} and {@code "} by re-entering {@code processOperator} with
-         * synthetic {@code T*}, {@code Tj}, {@code Tw} and {@code Tc} calls, and the engine
-         * descends into form XObjects, whose operators never appear in the page stream at all.
-         * Content inside a nested stream is attributed to the operator that invoked it, which is
-         * what lets a form be tagged as a single region.
+         * Counts only operators physically present in the page's own stream: PDFBox re-enters here
+         * with synthetic calls for {@code '} and {@code "}, and descends into form XObjects.
          */
         @Override
         protected void processOperator(Operator operator, List<COSBase> operands)

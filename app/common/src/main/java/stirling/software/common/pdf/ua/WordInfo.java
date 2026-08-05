@@ -1,10 +1,8 @@
 package stirling.software.common.pdf.ua;
 
 /**
- * A whitespace-delimited run of glyphs, with the operator ordinals that produced it.
- *
- * <p>Cell detection needs word geometry, and cells can only become separate structure elements when
- * their words come from different operators, so both are carried here.
+ * A whitespace-delimited run of glyphs, with the operator ordinals that produced it. Cell detection
+ * needs both: geometry to find cells, ordinals to tell whether they can be tagged separately.
  */
 public record WordInfo(
         String text, BBox bbox, int startOrdinal, int endOrdinal, float fontSize, boolean bold) {

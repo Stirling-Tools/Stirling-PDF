@@ -3,10 +3,8 @@ package stirling.software.common.pdf.ua;
 import java.util.List;
 
 /**
- * A run of text on one baseline, with the operator ordinals that produced it.
- *
- * @param dominantFontSize the most common glyph size on the line, in points
- * @param preMarked true when the source content stream already wrapped this text in BDC/EMC
+ * A run of text on one baseline, with the operator ordinals that produced it. {@code preMarked}
+ * means the source stream already wrapped this text in BDC/EMC.
  */
 public record TextLineInfo(
         int pageIndex,

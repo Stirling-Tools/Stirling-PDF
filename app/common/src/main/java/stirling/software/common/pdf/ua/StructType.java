@@ -1,11 +1,8 @@
 package stirling.software.common.pdf.ua;
 
 /**
- * PDF standard structure types emitted by the tagger (ISO 32000-1 14.8.4).
- *
- * <p>Only the subset needed for PDF/UA conformance is modelled. {@link #ARTIFACT} is not a
- * structure type: content carrying it is marked as an artifact in the content stream and
- * deliberately left out of the structure tree.
+ * PDF standard structure types emitted by the tagger (ISO 32000-1 14.8.4), limited to the PDF/UA
+ * subset. {@link #ARTIFACT} is not one: it marks content in the stream and stays out of the tree.
  */
 public enum StructType {
     DOCUMENT("Document"),

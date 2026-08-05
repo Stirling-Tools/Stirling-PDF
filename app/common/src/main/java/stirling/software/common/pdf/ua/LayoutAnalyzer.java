@@ -15,16 +15,8 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Derives a logical structure from extracted lines and graphics.
- *
- * <p>The heuristics deliberately mirror the ones already tuned in {@code HeadingDetector}: size
- * relative to the body baseline is the primary heading signal, brevity and sentence-ending
- * punctuation are vetoes, and boldness alone never promotes a line to a heading because that is the
- * main source of false positives.
- *
- * <p>Where a construct cannot be tagged safely the analyser degrades to paragraphs rather than
- * guessing. A wrong tag is worse than a coarse one: it actively misleads a screen reader, while a
- * paragraph is merely unhelpful.
+ * Derives a logical structure from extracted lines and graphics, reusing {@code HeadingDetector}'s
+ * heuristics. Degrades to paragraphs rather than guessing, since a wrong tag misleads readers.
  */
 @Slf4j
 public class LayoutAnalyzer {
@@ -144,10 +136,7 @@ public class LayoutAnalyzer {
         if (bodySize <= 0) {
             return Map.of();
         }
-        // Count how many lines use each size. On an invoice the character-weighted median lands on
-        // the 9pt line-item text, which would promote every ordinary 11pt address line to a
-        // heading. Headings are rare by nature, so a size used by a large share of the document's
-        // lines is body text whatever the median says.
+        // A size used by a large share of the lines is body text, whatever the median says.
         Map<Float, Integer> lineCounts = new HashMap<>();
         int totalLines = 0;
         for (PageContent page : pages) {
@@ -160,10 +149,7 @@ public class LayoutAnalyzer {
         }
         int headingLineCeiling = Math.max(1, (int) (totalLines * MAX_HEADING_LINE_SHARE));
 
-        // Headings do not cluster. A run of consecutive lines sharing one size is a block of text -
-        // a postal address, a signature block, a quotation - even when that size is larger than the
-        // document's median. This is what stops an invoice's 11pt address turning into three
-        // headings above its 9pt line items.
+        // Headings do not cluster; a run of same-size lines is a text block, not headings.
         Map<Float, Integer> longestRun = new HashMap<>();
         for (PageContent page : pages) {
             Float runSize = null;
@@ -213,18 +199,12 @@ public class LayoutAnalyzer {
     }
 
     /**
-     * Claims a line's operators for a block, word run by word run rather than as one span.
-     *
-     * <p>A sorted "line" can merge glyphs from operators far apart in the stream, and claiming the
-     * whole ordinal interval would swallow anything drawn between them, an image included. Word
-     * ranges only claim operators that actually painted the text.
+     * Claims a line's operators word run by word run; claiming the whole ordinal interval would
+     * swallow anything drawn between them, an image included.
      */
     private static void claimLine(StructBlock block, TextLineInfo line) {
-        // Sorted by ordinal, not by reading position. The extractor sorts words by position, so a
-        // line whose runs were drawn out of order (a value painted before its label, a bold amount
-        // in a second pass, a column-major table) yields decreasing ordinals. Merging those in
-        // position order silently drops the out-of-order run, which then falls through to
-        // /Artifact and disappears from assistive technology while the file still validates.
+        // Sort by ordinal, not position: merging out-of-order runs silently drops them to
+        // /Artifact, hiding them from assistive technology while the file still validates.
         List<WordInfo> words =
                 line.words().stream()
                         .filter(w -> !w.isBlank())
@@ -299,9 +279,8 @@ public class LayoutAnalyzer {
                 boolean repeats =
                         pages.size() >= 3 && counts.getOrDefault(mask(line.text()), 0) >= threshold;
                 boolean pageNumber = PAGE_NUMBER.matcher(line.text().strip()).matches();
-                // Masking digits makes "Section 1" and "Section 2" look like the same running head.
-                // A genuine running head is never larger than body text, so size is the tie-break
-                // that stops a real heading near the top of the page being demoted to decoration.
+                // Masked digits merge "Section 1" and "Section 2"; size is the tie-break that stops
+                // a real heading being demoted, as running heads are never larger than body text.
                 boolean looksLikeChrome =
                         bodySize <= 0 || line.dominantFontSize() <= bodySize * 1.05f;
                 if (pageNumber || (repeats && looksLikeChrome)) {
@@ -382,9 +361,7 @@ public class LayoutAnalyzer {
             index = paragraphEnd + 1;
         }
 
-        // Text drawn inside a form XObject is attributed to the Do that invoked it, so that
-        // operator
-        // is already tagged as prose. Emitting a Figure for it too would double-claim the content.
+        // Form XObject text is attributed to its Do, so a Figure too would double-claim it.
         Set<Integer> claimed = new HashSet<>();
         for (StructBlock block : blocks) {
             block.visit(
@@ -676,10 +653,7 @@ public class LayoutAnalyzer {
         if (table.getChildren().size() < 2) {
             return null;
         }
-        // Clause 7.5 requires every row to have the same number of cells. Rather than trust the
-        // construction above to guarantee that, check it and fall back to paragraphs if it does
-        // not:
-        // a ragged table is a hard validation failure, while paragraphs merely lose the semantics.
+        // Clause 7.5 needs equal cell counts per row; a ragged table fails validation outright.
         long distinctWidths =
                 table.getChildren().stream()
                         .map(row -> row.getChildren().size())
@@ -712,9 +686,7 @@ public class LayoutAnalyzer {
         List<StructBlock> blocks = new ArrayList<>();
         boolean warnedForms = false;
 
-        // Vectors are handled as clusters, because a chart is many strokes in one region while a
-        // rule is a single thin one. Treating every path as decoration made charts vanish while the
-        // report claimed no figure needed a description.
+        // Vectors cluster: a chart is many strokes in one region, a rule is a single thin one.
         java.util.Set<Integer> vectorFigureOrdinals = vectorFigureOrdinals(page, claimed);
 
         for (MarkableOp op : page.ops()) {
@@ -761,17 +733,12 @@ public class LayoutAnalyzer {
     }
 
     /**
-     * Finds vector operators that belong to a substantial drawing rather than to page furniture.
-     *
-     * <p>A run of consecutive non-thin path paintings covering a reasonable area is a chart, a
-     * diagram or a vector logo, all of which carry meaning and need a description. Thin paths are
-     * rules and table borders, and a short run is ornament.
+     * Finds vector operators belonging to a substantial drawing rather than page furniture; thin
+     * paths are rules and table borders, and a short run is ornament.
      */
     private static Set<Integer> vectorFigureOrdinals(
             PageContent page, java.util.Set<Integer> claimed) {
-        // Text sitting inside the region is the tell. A chart's plot area is mostly empty; shaded
-        // table rows and highlight boxes sit behind the very text they decorate. Without this,
-        // every table with filled cell backgrounds demanded alternative text for its shading.
+        // A chart's plot area is mostly empty, while shading sits behind the text it decorates.
         Set<Integer> result = new HashSet<>();
         List<MarkableOp> run = new ArrayList<>();
         BBox extent = BBox.EMPTY;

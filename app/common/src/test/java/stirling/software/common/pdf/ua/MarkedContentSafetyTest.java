@@ -20,12 +20,7 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Regression tests for three ways the rewriter could quietly harm a document.
- *
- * <p>Each of these passed validation while doing damage, which is why they need explicit tests: a
- * validator cannot see content that has been hidden, and cannot see a layer that has been revealed.
- */
+/** Regression tests for rewriter damage a validator cannot see, so it still passes validation. */
 class MarkedContentSafetyTest {
 
     private static String contentOf(PDDocument document) throws IOException {

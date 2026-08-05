@@ -25,13 +25,8 @@ import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Exercises the endpoints over HTTP rather than by calling the services directly.
- *
- * <p>Everything else in this suite invokes the service layer. That leaves the whole request path
- * unverified: whether the composed annotations really produce {@code /api/v1/convert/pdf/ua},
- * whether multipart form fields bind to the request model, and whether the response headers and
- * JSON shape a client depends on actually come back. A feature that works in a unit test and 404s
- * over the wire is not a feature.
+ * Exercises the endpoints over HTTP, not through the service layer. Covers route mapping, multipart
+ * binding, and the headers and JSON a client depends on.
  */
 class PdfUaHttpEndpointTest {
 
@@ -56,8 +51,7 @@ class PdfUaHttpEndpointTest {
                         new stirling.software.common.util.TempFileRegistry(),
                         new stirling.software.common.model.ApplicationProperties());
 
-        // The application's own advice is registered so the error mapping a client sees is what
-        // gets asserted; a standalone setup without it turns every rejection into a raw 500.
+        // Register the app's own advice; without it every rejection becomes a raw 500.
         var advice =
                 new stirling.software.SPDF.exception.GlobalExceptionHandler(
                         new org.springframework.context.support.StaticMessageSource(),

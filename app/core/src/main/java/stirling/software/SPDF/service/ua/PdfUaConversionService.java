@@ -22,11 +22,8 @@ import stirling.software.common.pdf.ua.TaggingOptions;
 import stirling.software.common.pdf.ua.TaggingResult;
 
 /**
- * Converts a PDF to PDF/UA.
- *
- * <p>The declaration is written before validation and kept only if validation passes, so a returned
- * file either conforms or does not claim to. A document that cannot be made conformant is still
- * returned improved - tagged, titled, language-tagged - just without the claim.
+ * Converts a PDF to PDF/UA. The declaration is written first and withdrawn unless validation
+ * passes, so a returned file either conforms or does not claim to.
  */
 @Service
 @Slf4j
@@ -58,8 +55,6 @@ public class PdfUaConversionService {
         byte[] source = input;
         if (options.isEmbedFonts()) {
             // Must precede tagging: the embedder rewrites the file and drops any structure tree.
-            // It inspects the document itself and returns the input unchanged when it cannot, so an
-            // encrypted file falls through to the load below and reports there.
             FontEmbeddingService.Result fonts = fontEmbeddingService.embedFonts(input);
             source = fonts.pdfBytes();
             if (fonts.warning() != null) {
@@ -67,8 +62,7 @@ public class PdfUaConversionService {
             }
         }
 
-        // Tag and declare in one pass. The claim is provisional until validation agrees, and is
-        // withdrawn below if it does not, which keeps the common path to a single load and save.
+        // Tag and declare in one pass; the claim is withdrawn below if validation disagrees.
         byte[] declared;
         TaggingResult taggingResult;
         PdfUaTagger tagger = new PdfUaTagger();
@@ -84,7 +78,7 @@ public class PdfUaConversionService {
         UaValidationResult validation = validationService.validate(declared, profile);
 
         // A validator cannot see text hidden behind artifact markers, so a clean verdict over
-        // suppressed content is exactly the false claim this converter exists to avoid.
+        // suppressed content would be a false claim.
         boolean honest = !taggingResult.isContentSuppressed();
 
         if (validation.compliant() && honest) {
@@ -125,10 +119,8 @@ public class PdfUaConversionService {
     }
 
     /**
-     * Tagging rewrites content streams and metadata, which invalidates any existing signature.
-     *
-     * <p>The conversion still runs, because an inaccessible signed document is not much use either,
-     * but the caller has to know the signature will no longer verify.
+     * Tagging rewrites the content streams a signature covers, so the conversion still runs but the
+     * caller has to know the signature will no longer verify.
      */
     private static void warnSignatures(PDDocument document, List<String> warnings) {
         int signatures = document.getSignatureDictionaries().size();
@@ -140,20 +132,13 @@ public class PdfUaConversionService {
         }
     }
 
-    /**
-     * A password-protected file fails to open before any of our checks run, and PDFBox's own
-     * message talks about an incorrect password, which is baffling when the caller never supplied
-     * one.
-     */
+    /** Replaces PDFBox's "incorrect password" wording, baffling when the caller supplied none. */
     private PDDocument load(byte[] bytes) throws IOException {
         try {
-            // The factory spills large documents to a temp-file cache instead of holding the whole
-            // object graph in heap, which is what every other document endpoint here does.
+            // The factory spills large documents to a temp-file cache instead of the heap.
             return pdfDocumentFactory.load(bytes);
         } catch (IOException | RuntimeException e) {
-            // The factory wraps the underlying parse failure, so the cause chain is checked rather
-            // than the exception type: PDFBox's own wording talks about an incorrect password,
-            // which is baffling when the caller never supplied one.
+            // The factory wraps the parse failure, so check the cause chain rather than the type.
             if (mentionsPassword(e)) {
                 throw new IOException(
                         "This PDF is encrypted. Remove the password before converting it to"
@@ -180,10 +165,7 @@ public class PdfUaConversionService {
         return false;
     }
 
-    /**
-     * XFA forms are forbidden by PDF/UA-1 clause 7.15 and encrypted files cannot be restructured
-     * safely, so both are refused with an explanation rather than silently mangled.
-     */
+    /** XFA is forbidden by PDF/UA-1 clause 7.15; encrypted or huge files cannot be restructured. */
     private static void rejectUnsupported(PDDocument document) throws IOException {
         if (document.getNumberOfPages() > MAX_PAGES) {
             throw new IOException(

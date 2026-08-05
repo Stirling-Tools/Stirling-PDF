@@ -24,15 +24,8 @@ import stirling.software.SPDF.model.api.ua.UaValidationResult;
 import stirling.software.common.pdf.ua.PdfUaProfile;
 
 /**
- * Validates a document against a PDF/UA profile using veraPDF.
- *
- * <p>This is the oracle the converter is defined against: a conversion succeeds when this reports
- * zero failures, and the {@code pdfuaid} declaration is written only in that case.
- * Hand-interpreting ISO 14289 is not part of the design.
- *
- * <p>veraPDF checks the machine-verifiable subset of the standard. Roughly half the Matterhorn
- * Protocol's failure conditions need a human, so a clean result means "passes automated checks",
- * not "accessible".
+ * Validates a document against a PDF/UA profile using veraPDF, the oracle a conversion is declared
+ * against. It checks only the machine-verifiable subset, so a clean result is not "accessible".
  */
 @Service
 @Slf4j
@@ -121,11 +114,8 @@ public class PdfUaValidationService {
     }
 
     /**
-     * Finds the most specific table entry covering a clause.
-     *
-     * <p>veraPDF reports subclauses such as {@code 7.21.4.1}, so matching must walk up the dotted
-     * hierarchy. Plain string prefixes would be wrong: {@code 7.1} is not an ancestor of {@code
-     * 7.18.1}, but it is a string prefix of it.
+     * Finds the most specific entry covering a clause by walking up the dotted hierarchy. String
+     * prefixes would be wrong: {@code 7.1} prefixes {@code 7.18.1} without being its ancestor.
      */
     static ClauseInfo lookupClause(String clause) {
         if (clause == null) {

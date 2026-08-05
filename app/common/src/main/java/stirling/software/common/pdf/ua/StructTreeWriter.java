@@ -27,12 +27,8 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Serialises a {@link DocumentStructure} into a PDF structure tree.
- *
- * <p>Runs after {@link MarkedContentInjector}, which is what assigns the marked content ids this
- * writer references. Building the parent tree is the fiddly part: it maps each page's {@code
- * /StructParents} key to an array indexed by marked content id, so a consumer can go from a glyph
- * back to its structure element.
+ * Serialises a {@link DocumentStructure} into a PDF structure tree. Must run after {@link
+ * MarkedContentInjector}, which assigns the marked content ids this writer references.
  */
 @Slf4j
 public class StructTreeWriter {
@@ -86,10 +82,8 @@ public class StructTreeWriter {
             PDStructureElement parent,
             PdfUaProfile profile) {
 
-        // Prune on assigned MCIDs, not on claimed ranges. When several blocks claim the same
-        // operator - which is what happens to every line inside a form XObject, since they all
-        // resolve to the invoking Do - only the first is given content. Emitting the rest would
-        // announce a run of empty paragraphs to a screen reader, which is worse than omitting them.
+        // Prune on assigned MCIDs, not claimed ranges: form-XObject lines all resolve to one Do,
+        // and emitting the losers would announce empty paragraphs to a screen reader.
         if (!carriesContent(block)) {
             return null;
         }
@@ -185,9 +179,8 @@ public class StructTreeWriter {
     }
 
     /**
-     * Builds {@code /ParentTree}: one entry per page keyed by {@code /StructParents}, whose value
-     * is an array indexed by marked content id, plus one entry per annotation keyed by {@code
-     * /StructParent}.
+     * Builds {@code /ParentTree}: per page, an array indexed by marked content id keyed on {@code
+     * /StructParents}, plus one entry per annotation keyed on {@code /StructParent}.
      */
     private void buildParentTree(PDDocument document, PDStructureTreeRoot root) {
         COSArray nums = new COSArray();
@@ -226,9 +219,8 @@ public class StructTreeWriter {
     }
 
     /**
-     * Gives every visible annotation a structure element so it is reachable from the tree, which
-     * PDF/UA-1 clause 7.18 requires. Link annotations become Link elements; anything else becomes
-     * an Annot.
+     * Clause 7.18: every visible annotation needs a structure element so it is reachable from the
+     * tree. Links become Link elements, anything else an Annot.
      */
     private List<COSBase> tagAnnotations(PDDocument document, PDStructureTreeRoot root) {
         List<COSBase> entries = new ArrayList<>();
@@ -274,10 +266,7 @@ public class StructTreeWriter {
         return entries;
     }
 
-    /**
-     * A widget must sit inside a Form element (clause 7.18.4) and a link inside a Link element;
-     * anything else is a generic Annot.
-     */
+    /** Clause 7.18.4: widgets need a Form element, links a Link element, everything else Annot. */
     private static String annotationType(PDAnnotation annotation) {
         if (annotation instanceof PDAnnotationWidget) {
             return StructType.FORM.tag();

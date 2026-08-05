@@ -22,11 +22,8 @@ import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 
 /**
- * Proves that tagging a PDF/A file raises it from conformance level B to level A.
- *
- * <p>Level A is the accessible tier of PDF/A, and it is the reason the tagger and the archival
- * converter belong in the same pipeline. veraPDF is the arbiter here as elsewhere: the claim is
- * only meaningful if the validator agrees.
+ * Proves tagging raises a PDF/A file from level B to the accessible level A. veraPDF is the
+ * arbiter: the claim only counts if the validator agrees.
  */
 class PdfaLevelATest {
 

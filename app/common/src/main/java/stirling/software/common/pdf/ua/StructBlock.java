@@ -8,11 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * One node of the derived logical structure.
- *
- * <p>A block either owns page content (via {@link #getRanges()}, ranges of markable operator
- * ordinals in its page's content stream) or contains child blocks. Containers with no content of
- * their own are pruned before serialisation.
+ * One node of the derived logical structure: either page content (ranges of markable operator
+ * ordinals) or child blocks. Containers with no content are pruned before serialisation.
  */
 @Getter
 @Setter
@@ -57,9 +54,8 @@ public class StructBlock {
     private String id;
 
     /**
-     * Marked content ids assigned during injection. One block yields several when its content is
-     * split by a text-object or graphics-state boundary, since a marked-content sequence must nest
-     * inside BT/ET and q/Q rather than straddle them.
+     * Marked content ids assigned during injection; one block yields several when split, since a
+     * sequence must nest inside BT/ET and q/Q rather than straddle them.
      */
     private final List<Integer> mcids = new ArrayList<>();
 

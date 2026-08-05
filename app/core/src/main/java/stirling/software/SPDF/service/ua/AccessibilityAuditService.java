@@ -33,10 +33,7 @@ import stirling.software.common.pdf.ua.TaggedContentExtractor;
 @RequiredArgsConstructor
 public class AccessibilityAuditService {
 
-    /**
-     * Checks no validator can make. Listing them is the point: a report that shows only automated
-     * results implies the remaining work does not exist.
-     */
+    /** Checks no validator can make; omitting them implies the work does not exist. */
     private static final List<String> HUMAN_CHECKS =
             List.of(
                     "Is the reading order correct for someone who cannot see the layout?",
@@ -110,11 +107,8 @@ public class AccessibilityAuditService {
     }
 
     /**
-     * Lists the figures a conversion would leave undescribed.
-     *
-     * <p>This runs the same analysis the converter would, because the report has to describe what
-     * conversion will actually produce rather than a cheaper approximation. Counting raster images
-     * alone would miss vector charts and would not know which figures already carry a description.
+     * Lists the figures a conversion would leave undescribed, running the converter's own analysis
+     * because counting raster images would miss vector charts and existing descriptions.
      */
     private List<FigureDescriptor> figuresNeedingDescription(PDDocument document) {
         try {

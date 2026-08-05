@@ -3,14 +3,9 @@ package stirling.software.common.pdf.ua;
 import java.util.List;
 
 /**
- * Everything the layout analyser needs about one page.
- *
- * @param markableCount number of markable operators in the page's own content stream
- * @param preExistingMarkedContent true when the source stream already contained BDC/BMC
- * @param carriesTextSemantics true when existing marked content supplies ActualText, Alt or an
- *     expansion, all of which a rebuild discards
- * @param linesDropped true when the page had text but its lines were discarded because the two
- *     extraction passes disagreed; tagging would wrap that text as artifacts
+ * Everything the layout analyser needs about one page. carriesTextSemantics: existing marked
+ * content has ActualText/Alt/expansion a rebuild would discard. linesDropped: text became
+ * artifacts.
  */
 public record PageContent(
         int pageIndex,

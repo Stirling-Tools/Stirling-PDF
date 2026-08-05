@@ -20,14 +20,8 @@ import stirling.software.common.pdf.ua.PageContent;
 import stirling.software.common.pdf.ua.TaggedContentExtractor;
 
 /**
- * Guards the invariant the whole tagger rests on: the token pass and the text pass must agree about
- * which operators exist in a page's own content stream.
- *
- * <p>They can silently disagree. PDFBox implements {@code '} and {@code "} by re-entering the
- * operator handler with synthetic calls, and the text engine descends into form XObjects whose
- * operators are not in the page stream at all. Either one shifts every ordinal after it, and the
- * extractor responds by dropping the page rather than mis-tagging it. A page that has extractable
- * text but produces no lines is therefore the symptom to watch for.
+ * Guards the invariant the tagger rests on: the token pass and text pass must agree on ordinals.
+ * They can silently disagree, and the extractor then drops the page rather than mis-tag it.
  */
 class TaggedContentExtractorRealFilesTest {
 

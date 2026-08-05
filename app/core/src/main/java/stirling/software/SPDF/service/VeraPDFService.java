@@ -285,10 +285,8 @@ public class VeraPDFService {
             }
         }
 
-        // PDF/UA is deliberately NOT forced in here. Adding it unconditionally made every
-        // /verify-pdf and /get-info-on-pdf call report an ordinary document as PDF/UA
-        // non-compliant, which reads as a defect in the customer's file, and doubled the cost of
-        // two shipped tools. The dedicated /accessibility-report endpoint checks PDF/UA on demand.
+        // Never force PDF/UA here - it flags every ordinary document as non-compliant and doubles
+        // verify cost; /accessibility-report checks PDF/UA on demand.
         if (!hasPdfaDeclaration) {
             results.add(createNoPdfaDeclarationResult());
         }

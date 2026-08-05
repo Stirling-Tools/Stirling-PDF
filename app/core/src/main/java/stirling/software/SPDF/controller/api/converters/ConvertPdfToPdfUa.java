@@ -33,13 +33,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-/**
- * Converts a PDF to PDF/UA.
- *
- * <p>The response headers report what happened, because the returned file is only declared
- * conformant when it actually validated. A caller must be able to tell the difference between "this
- * is now PDF/UA" and "this is better but still needs work", and the body alone cannot say so.
- */
+/** Converts a PDF to PDF/UA; response headers say whether the result actually conforms. */
 @ConvertApi
 @Slf4j
 @RequiredArgsConstructor
@@ -106,8 +100,7 @@ public class ConvertPdfToPdfUa {
 
         outcome.warnings().forEach(warning -> log.info("PDF/UA warning: {}", warning));
 
-        // Streamed from a managed temp file rather than returned as a heap byte[], so a large
-        // conversion does not hold another whole copy of the document until Spring writes it.
+        // Streamed from a temp file so a large conversion does not hold a second heap copy.
         String suffix = outcome.declared() ? "_pdfua" + profile.part() : "_tagged";
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
         try {
@@ -126,18 +119,14 @@ public class ConvertPdfToPdfUa {
                 .header(
                         HEADER_ALT_NEEDED,
                         String.valueOf(outcome.tagging().figuresNeedingAltText()))
-                // Count only: warning text is multi-line prose, which HTTP headers mangle. The
-                // accessibility-report endpoint carries the details.
+                // Count only: warning text is multi-line prose, which HTTP headers mangle.
                 .header(HEADER_WARNINGS, String.valueOf(outcome.warnings().size()))
                 .body(response.getBody());
     }
 
     /**
-     * Parses the newline-separated {@code key=description} form into the map the tagger takes.
-     *
-     * <p>Keys are the ones the accessibility report hands out, so a caller can enumerate what needs
-     * describing and post the answers straight back. Only the first "=" splits, since a description
-     * may legitimately contain one.
+     * Parses newline-separated {@code key=description} pairs, keyed as the report hands them out.
+     * Only the first "=" splits, since a description may contain one.
      */
     public static Map<String, String> parseAltText(String raw) {
         if (raw == null || raw.isBlank()) {

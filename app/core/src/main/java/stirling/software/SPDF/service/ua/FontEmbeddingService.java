@@ -25,21 +25,13 @@ import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 /**
- * Embeds any font the document references but does not carry.
- *
- * <p>Unembedded fonts are the single most common PDF/UA blocker in practice: a viewer substitutes a
- * local font, so the file does not render identically everywhere and assistive technology cannot
- * rely on the glyph mapping. PDF/UA-1 clause 7.21 forbids it outright.
- *
- * <p>Ghostscript does the embedding because it rewrites font programs properly. It also discards
- * the structure tree, which is precisely why this runs <em>before</em> tagging rather than after.
- * Running the two in the other order silently throws the tags away.
+ * Embeds any font the document references but does not carry, as PDF/UA-1 clause 7.21 requires.
+ * Ghostscript does the embedding and discards the structure tree, so this must run before tagging.
  */
 @Service
 @Slf4j
 public class FontEmbeddingService {
 
-    /** Fonts that are always present in a viewer and never embedded by generators. */
     public boolean hasUnembeddedFonts(byte[] pdfBytes) {
         try (PDDocument document = Loader.loadPDF(pdfBytes)) {
             return !findUnembeddedFonts(document).isEmpty();
@@ -71,9 +63,8 @@ public class FontEmbeddingService {
     }
 
     /**
-     * Returns the document with all fonts embedded, or the input unchanged when nothing needed
-     * doing or Ghostscript is unavailable. Never throws: failing to embed is a reportable
-     * shortfall, not a reason to abandon the conversion.
+     * Returns the document with all fonts embedded, or the input unchanged. Never throws: failing
+     * to embed is a reportable shortfall, not a reason to abandon the conversion.
      */
     public Result embedFonts(byte[] pdfBytes) {
         Set<String> missing;
@@ -117,10 +108,8 @@ public class FontEmbeddingService {
             }
             byte[] embedded = Files.readAllBytes(output);
 
-            // Ghostscript can exit 0 having destroyed the document. On a malformed or unusual
-            // input it prints "Couldn't initialise file" and writes a blank page, so the exit code
-            // says success while the customer's content is gone. Discarding the result and
-            // continuing with unembedded fonts is always better than returning an empty document.
+            // Ghostscript can exit 0 having written a blank page, so keep the original rather than
+            // return an empty document.
             if (!survived(pdfBytes, embedded)) {
                 log.warn("Ghostscript produced a degenerate document; keeping the original");
                 return new Result(
@@ -160,10 +149,8 @@ public class FontEmbeddingService {
     }
 
     /**
-     * True when the rewritten document still holds the content the original did.
-     *
-     * <p>Compares page count and total content-stream size. A collapse to near-nothing is the
-     * signature of a failed rewrite, and it is not otherwise detectable from the exit code.
+     * True when the rewritten document still holds the original's content. A collapse in page count
+     * or content-stream size is the only signature of a failed rewrite the exit code hides.
      */
     private static boolean survived(byte[] original, byte[] rewritten) {
         try (PDDocument before = Loader.loadPDF(original);

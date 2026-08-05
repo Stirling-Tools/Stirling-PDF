@@ -22,10 +22,7 @@ public class TaggingOptions {
 
     /** How images with no alternative description are handled. */
     public enum FigurePolicy {
-        /**
-         * Leave them undescribed so validation fails honestly and the report asks for input. Faking
-         * an {@code /Alt} would pass the checker while telling a screen-reader user nothing.
-         */
+        /** Leave undescribed so validation fails honestly; a faked {@code /Alt} helps nobody. */
         REQUIRE_ALT,
         /** Treat every image as decoration and mark it as an artifact. */
         MARK_DECORATIVE
@@ -38,21 +35,13 @@ public class TaggingOptions {
 
     private String title;
 
-    /**
-     * Used when no title is given and none can be derived from a heading. PDF/UA requires a title,
-     * so callers should pass something meaningful such as the uploaded filename.
-     */
+    /** Last resort when no title is given and none can be derived; pass the uploaded filename. */
     private String fallbackTitle;
 
     /** Embed any font the document references but does not carry, which clause 7.21 requires. */
     @Builder.Default private boolean embedFonts = true;
 
-    /**
-     * Leave the PDF version alone.
-     *
-     * <p>PDF/A-1 is defined on PDF 1.4, so raising the version to suit a PDF/UA profile would break
-     * the archival conformance the caller actually asked for.
-     */
+    /** Leave the PDF version alone; raising it would break PDF/A-1, defined on PDF 1.4. */
     @Builder.Default private boolean preservePdfVersion = false;
 
     @Builder.Default private ExistingTags existingTags = ExistingTags.AUTO;
