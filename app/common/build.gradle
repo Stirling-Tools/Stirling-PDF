@@ -1,3 +1,7 @@
+plugins {
+    id 'java-library'
+}
+
 // NOTE: This module (:common) is a library module, NOT a Spring Boot application.
 // The bootRun task should NOT be configured here. It is only configured in :stirling-pdf.
 // The Spring Boot plugin is applied to all subprojects from root build.gradle, but

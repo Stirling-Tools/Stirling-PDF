@@ -1,11 +1,13 @@
+plugins {
+    id 'java-library'
+}
+
 // NOTE: This module (:saas) is a library module, NOT a Spring Boot application.
-// The bootRun task should NOT be configured here. It is only configured in :stirling-pdf.
-// The Spring Boot plugin is applied to all subprojects from root build.gradle, but
-// bootJar is disabled for non-application modules (see root__build.gradle line 196-200).
+// The bootJar and bootRun tasks are disabled for non-application modules.
 
 dependencies {
-    implementation project(':common')
-    implementation project(':proprietary')
+    api project(':common')
+    api project(':proprietary')
 
     api 'org.springframework.boot:spring-boot-starter-security'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
