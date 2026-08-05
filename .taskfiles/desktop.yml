@@ -165,7 +165,7 @@ tasks:
       # jdk.crypto.mscapi (the Windows certificate store / SunMSCAPI provider, used by
       # hardware-backed cert signing) is a Windows-only module - it only exists in a Windows
       # JDK's jmods, so it is added on Windows only or jlink fails to resolve it elsewhere.
-      - cmd: powershell -NoProfile -Command "$JlinkExe = '{{if .JAVA_HOME}}{{.JAVA_HOME}}\\bin\\jlink{{else}}jlink{{end}}'; if (-not (Test-Path $JlinkExe)) { $JlinkExe = 'jlink' }; $HelpOutput = & $JlinkExe --help 2>&1; $SupportsZip = $HelpOutput -match 'zip-\\[\\d\\]'; $CompressArg = if ($SupportsZip) { '--compress=zip-6' } else { '--compress=2' }; & $JlinkExe --add-modules {{.JLINK_MODULES}} --strip-debug $CompressArg --no-man-pages --no-header-files --output runtime/jre"
+      - cmd: powershell -NoProfile -Command "$$JlinkExe = '{{if .JAVA_HOME}}{{.JAVA_HOME}}\\bin\\jlink{{else}}jlink{{end}}'; if (-not (Test-Path $$JlinkExe)) { $$JlinkExe = 'jlink' }; $$HelpOutput = & $$JlinkExe --help 2>&1; $$SupportsZip = $$HelpOutput -match 'zip-\\[\\d\\]'; $$CompressArg = if ($$SupportsZip) { '--compress=zip-6' } else { '--compress=2' }; & $$JlinkExe --add-modules {{.JLINK_MODULES}} --strip-debug $$CompressArg --no-man-pages --no-header-files --output runtime/jre"
         platforms: [windows]
       - cmd: |
           JLINK="{{if .JAVA_HOME}}{{.JAVA_HOME}}/bin/jlink{{else}}jlink{{end}}"
