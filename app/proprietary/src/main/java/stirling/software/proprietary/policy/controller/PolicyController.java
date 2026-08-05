@@ -44,7 +44,9 @@ import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.service.JobOwnershipService;
+import stirling.software.common.service.ToolChainValidator;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.audit.AuditContext;
@@ -60,6 +62,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
@@ -240,6 +243,23 @@ public class PolicyController {
     }
 
     // --- Policy management ---
+
+    @PostMapping(value = "/validate", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Check whether a chain of steps can run",
+            description =
+                    "Reports which steps cannot accept what the step before them produces, without"
+                            + " running anything or storing anything. Saving already rejects a"
+                            + " chain whose steps cannot run; this answers the same question up"
+                            + " front, and also returns the warnings and fan-out notes that saving"
+                            + " does not.")
+    public PipelineValidation.Response validateChain(
+            @RequestBody PipelineValidation.Request request) {
+        List<ToolDiagnostic> diagnostics =
+                policyValidator.diagnoseChain(request.steps(), request.sourceFormat());
+        return new PipelineValidation.Response(
+                !ToolChainValidator.hasErrors(diagnostics), diagnostics);
+    }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(

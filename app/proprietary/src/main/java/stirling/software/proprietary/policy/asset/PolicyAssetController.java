@@ -1,11 +1,13 @@
 package stirling.software.proprietary.policy.asset;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -100,8 +102,13 @@ public class PolicyAssetController {
     @GetMapping("/{assetId}/content")
     @Operation(
             summary = "Download a stored supporting file",
-            description = "Returns the asset's bytes with its stored content type and filename.")
+            description =
+                    "Returns the asset's bytes with its stored content type and filename. Gated"
+                            + " like upload and delete: supporting files include signing"
+                            + " certificates, so reading the bytes back needs the same authority"
+                            + " that put them there, not merely team membership.")
     public ResponseEntity<Resource> content(@PathVariable String assetId) {
+        requirePolicyEditingAllowed();
         PolicyAsset asset = accessibleAsset(assetId);
         byte[] bytes =
                 assetStore
@@ -121,9 +128,10 @@ public class PolicyAssetController {
         return ResponseEntity.ok()
                 .contentType(mediaType)
                 .header(
-                        "Content-Disposition",
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        // UTF-8 so a non-ASCII filename encodes per RFC 5987 instead of mangling.
                         ContentDisposition.attachment()
-                                .filename(asset.fileName())
+                                .filename(asset.fileName(), StandardCharsets.UTF_8)
                                 .build()
                                 .toString())
                 .body(new ByteArrayResource(bytes));

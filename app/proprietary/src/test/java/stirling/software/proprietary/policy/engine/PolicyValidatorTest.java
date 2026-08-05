@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIOSource;
+import stirling.software.common.model.tool.ToolIOSpec;
+import stirling.software.common.service.ToolChainValidator;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAsset;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
@@ -55,7 +61,8 @@ class PolicyValidatorTest {
                         List.of(outputSink),
                         List.of(stepValidator),
                         sourceStore,
-                        assetStore);
+                        assetStore,
+                        new ToolChainValidator(path -> java.util.Optional.empty()));
     }
 
     @Test
@@ -184,6 +191,76 @@ class PolicyValidatorTest {
                         IllegalArgumentException.class,
                         () -> validator.validate(policy("mystery")));
         assertTrue(ex.getMessage().contains("unknown trigger type"));
+    }
+
+    @Test
+    void rejectsAChainWhoseStepsCannotRunOnEachOther() {
+        // Extracting images then rotating them saves fine today and fails part-way through the
+        // first run, which for a scheduled policy can be long after the mistake was made.
+        // The chain is checked before the output, so the sink is never reached here.
+        when(inputSource.supports(any())).thenReturn(true);
+        PolicyValidator strict = validatorWith(IMAGE_THEN_PDF);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> strict.validate(withSteps(EXTRACT_IMAGES, ROTATE)));
+
+        assertTrue(ex.getMessage().contains("cannot run in this order"), ex.getMessage());
+    }
+
+    @Test
+    void acceptsAChainWhoseStepsLineUp() {
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        PolicyValidator strict = validatorWith(IMAGE_THEN_PDF);
+
+        strict.validate(withSteps(ROTATE, ROTATE));
+
+        verify(outputSink).validate(any());
+    }
+
+    private static final String EXTRACT_IMAGES = "/api/v1/misc/extract-images";
+    private static final String ROTATE = "/api/v1/general/rotate-pdf";
+
+    private static final ToolIOSource IMAGE_THEN_PDF =
+            ToolIOSource.of(
+                    Map.of(
+                            EXTRACT_IMAGES,
+                            new ToolIOSpec(
+                                    Set.of(ToolFormat.PDF),
+                                    ToolFormat.IMAGE,
+                                    ToolArity.SIMO,
+                                    List.of()),
+                            ROTATE,
+                            new ToolIOSpec(
+                                    Set.of(ToolFormat.PDF),
+                                    ToolFormat.PDF,
+                                    ToolArity.SISO,
+                                    List.of())));
+
+    private PolicyValidator validatorWith(ToolIOSource toolIO) {
+        return new PolicyValidator(
+                List.of(trigger),
+                List.of(inputSource),
+                List.of(outputSink),
+                List.of(stepValidator),
+                sourceStore,
+                assetStore,
+                new ToolChainValidator(toolIO));
+    }
+
+    private Policy withSteps(String... operations) {
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                List.of(PipelineInput.manual(folderSourceId())),
+                java.util.Arrays.stream(operations)
+                        .map(op -> new PipelineStep(op, Map.of(), Map.of()))
+                        .toList(),
+                OutputSpec.inline());
     }
 
     // The one-input/one-output caps are a product decision, not a model limit: the lists stay so

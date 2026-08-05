@@ -39,7 +39,8 @@ public class PolicyAssetEntity implements Serializable {
     @Column(name = "content_type")
     private String contentType;
 
-    @Column(name = "size")
+    // Not "size": a reserved word in Oracle, one of the supported providers.
+    @Column(name = "file_size")
     private long size;
 
     @Column(name = "owner")

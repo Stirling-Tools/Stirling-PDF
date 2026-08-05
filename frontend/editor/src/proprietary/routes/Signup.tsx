@@ -135,6 +135,7 @@ export default function Signup() {
           variant="tertiary"
           onClick={() => navigate("/login")}
           className="auth-link-black"
+          style={{ color: "var(--c-primary)" }}
         >
           {t("login.logIn", "Log In")}
         </Button>
