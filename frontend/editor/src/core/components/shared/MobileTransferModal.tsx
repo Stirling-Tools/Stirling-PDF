@@ -134,6 +134,10 @@ export default function MobileTransferModal({
               size={qrSize}
               level="H"
               includeMargin
+              title={t(
+                "mobileUpload.qrCodeTitle",
+                "QR code linking to the mobile upload page",
+              )}
             />
           </Box>
 

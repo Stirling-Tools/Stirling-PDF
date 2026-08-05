@@ -98,7 +98,17 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
           {t("fileManager.details", "File Details")}
         </Text>
       </Box>
-      <ScrollArea style={{ flex: 1, minHeight: 0 }} p="md">
+      {/* The viewport is focusable and named so keyboard users can scroll the
+          detail list once it overflows. */}
+      <ScrollArea
+        style={{ flex: 1, minHeight: 0 }}
+        p="md"
+        viewportProps={{
+          tabIndex: 0,
+          role: "group",
+          "aria-label": t("fileManager.details", "File Details"),
+        }}
+      >
         <Stack gap="sm">
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">

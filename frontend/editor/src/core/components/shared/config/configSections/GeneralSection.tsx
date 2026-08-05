@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useId, useState, useEffect } from "react";
 import {
   Paper,
   Stack,
@@ -83,6 +83,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   desktopUpdateMode,
 }) => {
   const { t } = useTranslation();
+  // Each setting is a row of label text next to a bare control, so the controls
+  // are named by pointing at that text rather than by a <label> association.
+  const labelIds = useId();
+  const updateModeLabelId = `${labelIds}-update-mode`;
+  const viewerZoomLabelId = `${labelIds}-viewer-zoom`;
+  const hideToolsLabelId = `${labelIds}-hide-tools`;
+  const hideConversionsLabelId = `${labelIds}-hide-conversions`;
+  const autoUnzipLabelId = `${labelIds}-auto-unzip`;
+  const autoUnzipLimitLabelId = `${labelIds}-auto-unzip-limit`;
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
   const { setTheme, themeMode } = useTheme();
@@ -248,7 +257,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               href="https://docs.stirlingpdf.com/Configuration/System%20and%20Security/"
               target="_blank"
               size="sm"
-              style={{ color: "var(--mantine-color-blue-6)" }}
             >
               {t(
                 "settings.general.enableFeatures.learnMore",
@@ -391,7 +399,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             {desktopUpdateMode && (
               <Stack gap="xs">
                 <Group gap="xs" align="center">
-                  <Text fw={600} size="sm">
+                  <Text id={updateModeLabelId} fw={600} size="sm">
                     {t(
                       "settings.general.updates.updateBehavior",
                       "Update behavior",
@@ -422,6 +430,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                       )}
                 </Text>
                 <Select
+                  aria-labelledby={updateModeLabelId}
                   disabled={desktopUpdateMode.locked}
                   value={desktopUpdateMode.mode}
                   onChange={(value) => {
@@ -622,7 +631,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
+              <Text id={viewerZoomLabelId} fw={500} size="sm">
                 {t("settings.general.defaultViewerZoom", "Default reader zoom")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
@@ -633,6 +642,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               </Text>
             </div>
             <Select
+              aria-labelledby={viewerZoomLabelId}
               value={preferences.defaultViewerZoom}
               onChange={(val: string | null) => {
                 if (val)
@@ -677,7 +687,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
+              <Text id={hideToolsLabelId} fw={500} size="sm">
                 {t(
                   "settings.general.hideUnavailableTools",
                   "Hide unavailable tools",
@@ -691,6 +701,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               </Text>
             </div>
             <Switch
+              aria-labelledby={hideToolsLabelId}
               checked={preferences.hideUnavailableTools}
               onChange={(event) =>
                 updatePreference(
@@ -708,7 +719,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
+              <Text id={hideConversionsLabelId} fw={500} size="sm">
                 {t(
                   "settings.general.hideUnavailableConversions",
                   "Hide unavailable conversions",
@@ -722,6 +733,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               </Text>
             </div>
             <Switch
+              aria-labelledby={hideConversionsLabelId}
               checked={preferences.hideUnavailableConversions}
               onChange={(event) =>
                 updatePreference(
@@ -749,7 +761,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <Text fw={500} size="sm">
+                <Text id={autoUnzipLabelId} fw={500} size="sm">
                   {t("settings.general.autoUnzip", "Auto-unzip API responses")}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
@@ -760,6 +772,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 </Text>
               </div>
               <Switch
+                aria-labelledby={autoUnzipLabelId}
                 checked={preferences.autoUnzip}
                 onChange={(event) =>
                   updatePreference("autoUnzip", event.currentTarget.checked)
@@ -786,7 +799,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <Text fw={500} size="sm">
+                <Text id={autoUnzipLimitLabelId} fw={500} size="sm">
                   {t(
                     "settings.general.autoUnzipFileLimit",
                     "Auto-unzip file limit",
@@ -800,6 +813,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 </Text>
               </div>
               <NumberInput
+                aria-labelledby={autoUnzipLimitLabelId}
                 value={fileLimitInput}
                 onChange={setFileLimitInput}
                 onBlur={() => {

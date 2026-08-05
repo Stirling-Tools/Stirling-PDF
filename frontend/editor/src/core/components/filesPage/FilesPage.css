@@ -339,6 +339,9 @@
 }
 
 .files-page-list-row.is-header [data-sortable="true"] {
+  /* Block so the hit area and hover tint fill the columnheader cell that wraps
+     it, rather than hugging the label text. */
+  display: block;
   cursor: pointer;
   padding: 0.2rem 0.4rem;
   margin: -0.2rem -0.4rem;
