@@ -7,6 +7,7 @@ import {
   fetchFileRunEvents,
   type FileRunEvent,
 } from "@portal/api/fileRunEvents";
+import { HttpError } from "@portal/api/http";
 
 /** How many rows one page of the review surface asks for. */
 const PAGE_SIZE = 50;
@@ -18,6 +19,18 @@ const PAGE_SIZE = 50;
  */
 const POLL_INTERVAL_MS = 30_000;
 
+/**
+ * Answers that will not change by asking again: a build without the failure registry has no such
+ * route, and a member who is not a team leader may not read the queue. Anything else — a dropped
+ * connection, a restarting server, a gateway blip — is transient, and polling should ride it out
+ * rather than silently switching itself off for the rest of the session.
+ */
+function isPermanentRefusal(error: unknown): boolean {
+  return (
+    error instanceof HttpError && (error.status === 403 || error.status === 404)
+  );
+}
+
 /** Base query: recorded policy failures for the caller's team. */
 export function useFileRunEvents(): AsyncState<FileRunEvent[]> {
   return toAsyncState(
@@ -27,9 +40,10 @@ export function useFileRunEvents(): AsyncState<FileRunEvent[]> {
       // A build without the failure registry 404s and a non-leader gets a 403.
       // Neither improves on retry, and the caller renders nothing either way.
       retry: false,
-      // Stops once the route answers 404 or 403: that will not improve by asking again, and
-      // polling it forever would be a request every 30s for a surface rendering nothing.
-      refetchInterval: (query) => (query.state.error ? false : POLL_INTERVAL_MS),
+      // Give up polling only on those two, never on a transient failure: treating any error as
+      // permanent would let one dropped connection stop the list refreshing for the whole session.
+      refetchInterval: (query) =>
+        isPermanentRefusal(query.state.error) ? false : POLL_INTERVAL_MS,
       refetchIntervalInBackground: false,
     }),
   );
