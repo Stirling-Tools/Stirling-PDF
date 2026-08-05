@@ -19,6 +19,11 @@ import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
+import { MantineProvider } from "@mantine/core";
+import {
+  mantineTheme as editorMantineTheme,
+  editorCssVariablesResolver,
+} from "@core/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
@@ -199,6 +204,37 @@ const withLocale: Decorator = (Story, context) => {
   return <Story />;
 };
 
+/**
+ * Applies the Mantine theme the story's component actually runs under in the
+ * app: PortalApp wraps the Processor in SuiProvider, while the editor wraps
+ * everything else in its own ThemeProvider. Getting this wrong is not just
+ * cosmetic — the two themes carry different neutral ramps, so rendering an
+ * editor component under the Processor's theme drops it onto Mantine's stock
+ * greys and reports contrast failures the app doesn't have.
+ */
+function StoryTheme({
+  isPortalStory,
+  colorScheme,
+  children,
+}: {
+  isPortalStory: boolean;
+  colorScheme: "light" | "dark";
+  children: React.ReactNode;
+}) {
+  if (isPortalStory) {
+    return <SuiProvider colorScheme={colorScheme}>{children}</SuiProvider>;
+  }
+  return (
+    <MantineProvider
+      theme={editorMantineTheme}
+      cssVariablesResolver={editorCssVariablesResolver}
+      forceColorScheme={colorScheme}
+    >
+      {children}
+    </MantineProvider>
+  );
+}
+
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
   const linkState =
@@ -223,7 +259,7 @@ const withProviders: Decorator = (Story, context) => {
         <ThemeProvider>
           <SchemeSetup scheme={colorScheme} />
           <ThemeBridge theme={colorScheme}>
-            <SuiProvider colorScheme={colorScheme}>
+            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
               {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
               <LinkProvider key={linkState} initialState={linkState}>
@@ -241,7 +277,7 @@ const withProviders: Decorator = (Story, context) => {
                   </UIProvider>
                 </TierKey>
               </LinkProvider>
-            </SuiProvider>
+            </StoryTheme>
           </ThemeBridge>
         </ThemeProvider>
       </QueryClientProvider>

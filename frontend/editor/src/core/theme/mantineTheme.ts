@@ -3,6 +3,7 @@ import {
   MantineColorsTuple,
   MantineTheme,
   MantineThemeComponent,
+  type CSSVariablesResolver,
 } from "@mantine/core";
 
 // Define color tuples using CSS variables
@@ -45,6 +46,21 @@ const yellow: MantineColorsTuple = [
   "var(--color-yellow-900)",
 ];
 
+// Mantine falls back to its own palette for any colour name the theme does not
+// define, which is how stock reds/blues (failing contrast) reached the UI.
+const red: MantineColorsTuple = [
+  "var(--color-red-50)",
+  "var(--color-red-100)",
+  "var(--color-red-200)",
+  "var(--color-red-300)",
+  "var(--color-red-400)",
+  "var(--color-red-500)",
+  "var(--color-red-600)",
+  "var(--color-red-700)",
+  "var(--color-red-800)",
+  "var(--color-red-900)",
+];
+
 const gray: MantineColorsTuple = [
   "var(--color-gray-50)",
   "var(--color-gray-100)",
@@ -72,6 +88,23 @@ const dark: MantineColorsTuple = [
   "#050506", // dark-9  — deepest
 ];
 
+/**
+ * Mantine derives the "light" variant's text colour from the palette itself,
+ * landing around 3.7:1 on its own tint — too low for badge/button labels. Point
+ * each hue's light-variant text at the accessible on-light shade instead.
+ */
+export const editorCssVariablesResolver: CSSVariablesResolver = () => ({
+  variables: {},
+  light: {
+    "--mantine-color-primary-light-color": "var(--c-accent-text)",
+    "--mantine-color-blue-light-color": "var(--c-accent-text)",
+    "--mantine-color-red-light-color": "var(--color-red-dark)",
+    "--mantine-color-green-light-color": "var(--color-green-dark)",
+    "--mantine-color-yellow-light-color": "var(--color-amber-dark)",
+  },
+  dark: {},
+});
+
 export const mantineTheme = createTheme({
   // Primary color
   primaryColor: "primary",
@@ -79,6 +112,10 @@ export const mantineTheme = createTheme({
   // Color palette
   colors: {
     primary,
+    // `blue` is the same ramp as `primary`: components written against Mantine's
+    // default palette name still land on the app's accent instead of stock blue.
+    blue: primary,
+    red,
     green,
     yellow,
     gray,
@@ -124,6 +161,26 @@ export const mantineTheme = createTheme({
 
   // Component customizations
   components: {
+    // Mantine renders the modal/drawer dismiss control as an icon-only button
+    // with no text, so without a name it is unreachable by screen reader. The
+    // app's own Modal wrapper (@app/ui/Modal) names itself; this covers the
+    // components that still mount Mantine's Modal directly. Pass a translated
+    // aria-label at the call site where the control means more than "close".
+    Anchor: {
+      styles: {
+        root: {
+          // Mantine links default to the accent shade, which reads at 4.4:1 on
+          // the page; accent copy has its own deeper token.
+          color: "var(--c-accent-text)",
+        },
+      },
+    },
+    CloseButton: {
+      defaultProps: { "aria-label": "Close" },
+    },
+    Drawer: {
+      defaultProps: { closeButtonProps: { "aria-label": "Close" } },
+    },
     Button: {
       styles: {
         root: {
@@ -336,6 +393,7 @@ export const mantineTheme = createTheme({
     },
 
     Modal: {
+      defaultProps: { closeButtonProps: { "aria-label": "Close" } },
       styles: {
         content: {
           backgroundColor: "var(--c-surface)",

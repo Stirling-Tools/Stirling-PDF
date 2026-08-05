@@ -44,12 +44,16 @@
   --p-green-500: #22c55e;
   --p-green-600: #16a34a;
   --p-green-700: #15803d;
+  --p-green-800: #166534;
   --p-amber-400: #fbbf24;
   --p-amber-500: #f59e0b;
   --p-amber-600: #d97706;
+  --p-amber-700: #b45309;
+  --p-amber-800: #92400e;
   --p-red-400: #f87171;
   --p-red-500: #ef4444;
   --p-red-600: #dc2626;
+  --p-red-700: #b91c1c;
 
   /* Brand-red + ai-accent scales, consumed by core/ui/accents.css. */
   --p-brand-red-200: #d9a8a8;
@@ -63,6 +67,7 @@
   --p-indigo-300: #a5b4fc;
   --p-indigo-400: #818cf8;
   --p-indigo-500: #6366f1;
+  --p-indigo-600: #4f46e5;
   --p-indigo-800: #3730a3;
 
   /* Extended accent/status/neutral weights referenced by app CSS. */
