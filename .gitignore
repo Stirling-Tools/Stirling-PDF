@@ -1,19 +1,19 @@
 ```
-# Build artifacts
-build/
-dist/
-*.jar
-*.war
-*.class
-*.o
-*.obj
-
 # Dependencies
 .gradle/
 node_modules/
 venv/
 .venv/
 __pycache__/
+
+# Build artifacts
+build/
+dist/
+target/
+
+# Logs and temp files
+*.log
+*.tmp
 
 # Environment
 .env
@@ -23,19 +23,60 @@ __pycache__/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
-
-# Logs
-*.log
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Compiled
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Testing
+.mypy_cache/
+.pytest_cache/
+
+# Archives
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
 ```

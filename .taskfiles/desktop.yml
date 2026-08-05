@@ -188,7 +188,7 @@ tasks:
       # on incremental builds. Uses proper PowerShell syntax with $_ variable.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Path runtime/jre -Recurse -File | ForEach-Object { $_.IsReadOnly = $false }"
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Path 'runtime\\jre' -Recurse -File | ForEach-Object { $_.IsReadOnly = $false }"
         platforms: [windows]
     status:
       - test -f runtime/jre/release
