@@ -3,9 +3,11 @@ repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
-bootRun {
-    enabled = false
-}
+// NOTE: This module (:proprietary) is a library module, NOT a Spring Boot application.
+// The bootRun task should NOT be configured here. It is only configured in :stirling-pdf.
+// The Spring Boot plugin is applied to all subprojects from root build.gradle, but
+// bootJar is disabled for non-application modules (see root__build.gradle line 196-200).
+
 dependencies {
     implementation project(':common')
     api "com.google.guava:guava:${guavaVersion}"

@@ -1,8 +1,41 @@
 ```
-# Tauri build artifacts
-frontend/editor/src-tauri/target/
-# Rust compilation artifacts
-**/*.rs.bk
-# Cargo lock files (if not already in repo)
-Cargo.lock
+# Build artifacts
+build/
+dist/
+*.jar
+*.war
+*.class
+*.o
+*.obj
+
+# Dependencies
+.gradle/
+node_modules/
+venv/
+.venv/
+__pycache__/
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
 ```
