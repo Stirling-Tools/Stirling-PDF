@@ -1,9 +1,4 @@
 ```
-# Configuration and temporary files
-.taskfiles/*.tmp
-.taskfiles/*.log
-.taskfiles/*~
-
-# Preserve existing rule
-*.log
+# Configuration and task files
+.taskfiles/
 ```
