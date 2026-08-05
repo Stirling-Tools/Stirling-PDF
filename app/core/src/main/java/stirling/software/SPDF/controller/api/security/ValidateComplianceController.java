@@ -26,6 +26,8 @@ import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.model.api.security.ValidateComplianceRequest;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.ExceptionUtils;
 
 /**
@@ -54,6 +56,7 @@ public class ValidateComplianceController {
     private final VeraPDFService veraPDFService;
 
     @PostMapping(value = "/validate-compliance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ToolIO(produces = ToolFormat.PDF)
     public ResponseEntity<ByteArrayResource> validateCompliance(
             @ModelAttribute ValidateComplianceRequest request) throws IOException {
 

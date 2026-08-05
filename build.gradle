@@ -36,14 +36,17 @@ ext {
     okhttpBomVersion = "5.3.2"
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
-    jinjavaVersion = "2.8.3"
+    jinjavaVersion = "2.8.4"
     jackson2Version = "2.22.1"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.0.2"
+    jpdfiumVersion = "1.0.4"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.44.12"
+    jschVersion = "0.2.23"
+    commonsNetVersion = "3.11.1"
+    smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
@@ -292,6 +295,8 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        systemProperty 'java.awt.headless', 'true'
+        systemProperty 'apple.awt.UIElement', 'true'
         finalizedBy(jacocoReport)
     }
 
