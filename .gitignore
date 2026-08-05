@@ -1,31 +1,4 @@
 ```
-# Build artifacts
-build/
-target/
-
-# Dependencies
-.gradle/
-node_modules/
-venv/
-.venv/
-__pycache__/
-*.egg-info/
-
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editors
-.vscode/
-.idea/
-
-# OS generated files
-.DS_Store
-Thumbs.db
+# Configuration and task files
+.taskfiles/
 ```
