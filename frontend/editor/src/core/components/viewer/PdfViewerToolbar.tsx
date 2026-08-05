@@ -5,6 +5,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import "@app/components/viewer/PdfViewerToolbar.css";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -148,8 +149,7 @@ export function PdfViewerToolbar({
 
   return (
     <Paper
-      radius="xl xl 0 0"
-      shadow="sm"
+      className="pdf-viewer-toolbar"
       p={12}
       pb={12}
       style={{
@@ -159,11 +159,6 @@ export function PdfViewerToolbar({
         rowGap: 8,
         gap: 10,
         justifyContent: "center",
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-        boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
         pointerEvents: "auto",
       }}
     >

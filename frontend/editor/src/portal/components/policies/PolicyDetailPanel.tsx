@@ -204,10 +204,7 @@ export function PolicyDetailPanel({
       >
         {/* Status + trigger strip */}
         <div className="portal-policies__detail-status">
-          <StatusBadge
-            tone={isPaused ? "warning" : "success"}
-            pulse={!isPaused}
-          >
+          <StatusBadge tone={isPaused ? "warning" : "success"}>
             {isPaused
               ? t("portal.policies.status.paused")
               : t("portal.policies.status.active")}
