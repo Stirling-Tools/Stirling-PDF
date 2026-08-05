@@ -197,13 +197,15 @@ describe("PipelineGraph", () => {
         },
       ],
     });
-    // The warned wire trades its plus for the note, so the two unwarned wires keep theirs.
+    // The warned wire shows its note and keeps its plus, so a fixing step can still go between the
+    // ends that do not suit each other - every wire takes an insert.
     const inserts = screen.getAllByLabelText(
       "portal.pipelines.graph.insertHere",
     );
-    expect(inserts).toHaveLength(2);
+    expect(inserts).toHaveLength(3);
+    // The middle wire is the warned one (Add Password -> OCR); inserting there lands between them.
     fireEvent.click(inserts[1]);
-    expect(handlers.onInsertStep).toHaveBeenCalledWith(2);
+    expect(handlers.onInsertStep).toHaveBeenCalledWith(1);
   });
 
   it("marks a blocking pairing apart from a merely odd one", () => {

@@ -56,6 +56,21 @@ export function GraphEdge({
   });
   const open = edge.insertIndex !== null;
 
+  // The insert affordance is shown whenever the wire opens a slot - including on a warned wire, so a
+  // bad pairing can still take a fixing step between its ends rather than losing its only way in.
+  const insertButton = open ? (
+    <ActionIcon
+      variant="tertiary"
+      size="sm"
+      shape="circle"
+      className="portal-graph-edge__insert"
+      aria-label={t("portal.pipelines.graph.insertHere")}
+      onClick={() => onInsert(edge.insertIndex as number)}
+    >
+      <AddRoundedIcon style={{ fontSize: "0.875rem" }} />
+    </ActionIcon>
+  ) : null;
+
   return (
     <div
       ref={ref}
@@ -77,25 +92,17 @@ export function GraphEdge({
     >
       <span className="portal-graph-edge__line" aria-hidden />
       {warning ? (
-        <span className="portal-graph-edge__warning" title={warning.text}>
-          <WarningAmberRoundedIcon style={{ fontSize: "0.875rem" }} />
-          <span className="portal-graph-edge__warning-label">
-            {warning.text}
+        <span className="portal-graph-edge__note">
+          <span className="portal-graph-edge__warning" title={warning.text}>
+            <WarningAmberRoundedIcon style={{ fontSize: "0.875rem" }} />
+            <span className="portal-graph-edge__warning-label">
+              {warning.text}
+            </span>
           </span>
+          {insertButton}
         </span>
       ) : (
-        open && (
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            shape="circle"
-            className="portal-graph-edge__insert"
-            aria-label={t("portal.pipelines.graph.insertHere")}
-            onClick={() => onInsert(edge.insertIndex as number)}
-          >
-            <AddRoundedIcon style={{ fontSize: "0.875rem" }} />
-          </ActionIcon>
-        )
+        insertButton
       )}
     </div>
   );

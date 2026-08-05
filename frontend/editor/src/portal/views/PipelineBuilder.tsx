@@ -887,81 +887,93 @@ export function PipelineBuilder() {
   /** The editor for whatever node is selected. Undefined when nothing is. */
   function inspectorBody() {
     if (selected === "input") {
+      // Nothing to pick from yet: a dropdown of nothing helps no one, so offer only the way to make
+      // the first source. The trigger has no meaning without a source either, so it waits too.
+      const hasSources = availableSources.length > 0;
       return (
         <>
-          <FormField label={t("portal.pipelines.builder.inputSource")}>
-            <div className="portal-builder__input-row">
-              <div className="portal-builder__input-field">
+          {hasSources && (
+            <>
+              <FormField label={t("portal.pipelines.builder.inputSource")}>
+                <div className="portal-builder__input-row">
+                  <div className="portal-builder__input-field">
+                    <Select
+                      inputSize="sm"
+                      aria-label={t("portal.pipelines.builder.inputSource")}
+                      placeholder={t("portal.pipelines.builder.chooseSource")}
+                      value={input.sourceId || null}
+                      invalid={input.sourceId === ""}
+                      onChange={(value) => changeInputSource(value ?? "")}
+                      options={sourceOptions}
+                    />
+                  </div>
+                  <ActionIcon
+                    variant="tertiary"
+                    className="portal-builder__source-edit"
+                    aria-label={t("portal.pipelines.composer.editSource")}
+                    disabled={input.sourceId === ""}
+                    onClick={() =>
+                      setSourceModal({ open: true, sourceId: input.sourceId })
+                    }
+                  >
+                    <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+                  </ActionIcon>
+                </div>
+              </FormField>
+
+              <FormField label={t("portal.pipelines.builder.inputTrigger")}>
                 <Select
                   inputSize="sm"
-                  aria-label={t("portal.pipelines.builder.inputSource")}
-                  placeholder={t("portal.pipelines.builder.chooseSource")}
-                  value={input.sourceId || null}
-                  invalid={input.sourceId === ""}
-                  onChange={(value) => changeInputSource(value ?? "")}
-                  options={sourceOptions}
+                  aria-label={t("portal.pipelines.builder.inputTrigger")}
+                  value={
+                    input.triggerType === MANUAL
+                      ? MANUAL_OPTION
+                      : input.triggerType
+                  }
+                  disabled={input.sourceId === ""}
+                  onChange={(value) =>
+                    updateInput({
+                      triggerType:
+                        value && value !== MANUAL_OPTION ? value : MANUAL,
+                    })
+                  }
+                  options={triggerOptionsFor(input.sourceId)}
                 />
-              </div>
-              <ActionIcon
-                variant="tertiary"
-                className="portal-builder__source-edit"
-                aria-label={t("portal.pipelines.composer.editSource")}
-                disabled={input.sourceId === ""}
-                onClick={() =>
-                  setSourceModal({ open: true, sourceId: input.sourceId })
-                }
-              >
-                <EditOutlinedIcon style={{ fontSize: "1rem" }} />
-              </ActionIcon>
-            </div>
-          </FormField>
+              </FormField>
 
-          <FormField label={t("portal.pipelines.builder.inputTrigger")}>
-            <Select
-              inputSize="sm"
-              aria-label={t("portal.pipelines.builder.inputTrigger")}
-              value={
-                input.triggerType === MANUAL ? MANUAL_OPTION : input.triggerType
-              }
-              disabled={input.sourceId === ""}
-              onChange={(value) =>
-                updateInput({
-                  triggerType:
-                    value && value !== MANUAL_OPTION ? value : MANUAL,
-                })
-              }
-              options={triggerOptionsFor(input.sourceId)}
-            />
-          </FormField>
-
-          {input.triggerType === "schedule" && (
-            <div className="portal-pipelines__schedule">
-              <span className="portal-pipelines__muted">
-                {t("portal.pipelines.composer.scheduleEvery")}
-              </span>
-              <Input
-                inputSize="sm"
-                type="number"
-                min={1}
-                value={input.scheduleCount}
-                invalid={Number(input.scheduleCount) <= 0}
-                onChange={(e) => updateInput({ scheduleCount: e.target.value })}
-                className="portal-pipelines__schedule-count"
-              />
-              <Select
-                inputSize="sm"
-                value={input.scheduleUnit}
-                onChange={(value) =>
-                  value && updateInput({ scheduleUnit: value as ScheduleUnit })
-                }
-                options={SCHEDULE_UNITS.map((unit) => ({
-                  value: unit,
-                  label: t(
-                    `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
-                  ),
-                }))}
-              />
-            </div>
+              {input.triggerType === "schedule" && (
+                <div className="portal-pipelines__schedule">
+                  <span className="portal-pipelines__muted">
+                    {t("portal.pipelines.composer.scheduleEvery")}
+                  </span>
+                  <Input
+                    inputSize="sm"
+                    type="number"
+                    min={1}
+                    value={input.scheduleCount}
+                    invalid={Number(input.scheduleCount) <= 0}
+                    onChange={(e) =>
+                      updateInput({ scheduleCount: e.target.value })
+                    }
+                    className="portal-pipelines__schedule-count"
+                  />
+                  <Select
+                    inputSize="sm"
+                    value={input.scheduleUnit}
+                    onChange={(value) =>
+                      value &&
+                      updateInput({ scheduleUnit: value as ScheduleUnit })
+                    }
+                    options={SCHEDULE_UNITS.map((unit) => ({
+                      value: unit,
+                      label: t(
+                        `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
+                      ),
+                    }))}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <Button
@@ -972,12 +984,6 @@ export function PipelineBuilder() {
           >
             {t("portal.sources.actions.connectSource")}
           </Button>
-
-          {availableSources.length === 0 && (
-            <p className="portal-pipelines__muted">
-              {t("portal.pipelines.builder.noSources")}
-            </p>
-          )}
         </>
       );
     }

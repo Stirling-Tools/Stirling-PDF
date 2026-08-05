@@ -36,32 +36,39 @@ export function DestinationPicker({
 }: DestinationPickerProps) {
   const { t } = useTranslation();
   const chosen = value[0] ?? "";
+  const hasSources = sources.length > 0;
 
+  // Mirrors the input row: the dropdown-plus-edit sits in a field, and "Connect source" lives on its
+  // own line below rather than inline. With nowhere to write to yet, only the connect button shows.
   return (
-    <div className="portal-builder__input-row">
-      <div className="portal-builder__input-field">
-        <Select
-          inputSize="sm"
-          aria-label={t("portal.pipelines.composer.output")}
-          placeholder={t("portal.pipelines.builder.chooseDestination")}
-          value={value[0] ?? null}
-          invalid={value.length !== 1}
-          onChange={(id) => onChange(id ? [id] : [])}
-          options={sources.map((source) => ({
-            value: source.id,
-            label: source.name,
-          }))}
-        />
-      </div>
-      <ActionIcon
-        variant="tertiary"
-        className="portal-builder__source-edit"
-        aria-label={t("portal.pipelines.composer.editSource")}
-        disabled={chosen === ""}
-        onClick={() => onEdit(chosen)}
-      >
-        <EditOutlinedIcon style={{ fontSize: "1rem" }} />
-      </ActionIcon>
+    <>
+      {hasSources && (
+        <div className="portal-builder__input-row">
+          <div className="portal-builder__input-field">
+            <Select
+              inputSize="sm"
+              aria-label={t("portal.pipelines.composer.output")}
+              placeholder={t("portal.pipelines.builder.chooseDestination")}
+              value={value[0] ?? null}
+              invalid={value.length !== 1}
+              onChange={(id) => onChange(id ? [id] : [])}
+              options={sources.map((source) => ({
+                value: source.id,
+                label: source.name,
+              }))}
+            />
+          </div>
+          <ActionIcon
+            variant="tertiary"
+            className="portal-builder__source-edit"
+            aria-label={t("portal.pipelines.composer.editSource")}
+            disabled={chosen === ""}
+            onClick={() => onEdit(chosen)}
+          >
+            <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+          </ActionIcon>
+        </div>
+      )}
       <Button
         variant="tertiary"
         size="sm"
@@ -70,6 +77,6 @@ export function DestinationPicker({
       >
         {t("portal.sources.actions.connectSource")}
       </Button>
-    </div>
+    </>
   );
 }
