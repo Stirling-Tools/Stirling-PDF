@@ -23,7 +23,7 @@ class RecordFailurePrivacyTest {
 
     private static RecordFailure withDetail(String detail) {
         return RecordFailure.forRun(
-                FailureKind.UNKNOWN, 1L, "dana@example.com", "policy-1", "run-1", detail);
+                FailureKind.UNKNOWN, 1L, "dana@example.com", "policy-1", "run-1", null, detail);
     }
 
     @ParameterizedTest

@@ -28,8 +28,13 @@ public class PolicyFailureRecorder {
      * reported, kept verbatim so an {@link FailureKind#UNKNOWN} row is still diagnosable.
      */
     public void recordRunFailure(
-            String runId, String policyId, String actor, String detail, Throwable cause) {
-        record(classifier.classify(cause), runId, policyId, actor, detail);
+            String runId,
+            String policyId,
+            String actor,
+            String fileIdentity,
+            String detail,
+            Throwable cause) {
+        record(classifier.classify(cause), runId, policyId, actor, fileIdentity, detail);
     }
 
     /**
@@ -40,14 +45,20 @@ public class PolicyFailureRecorder {
      */
     public void recordRunFailureAs(
             FailureKind kind, String runId, String policyId, String actor, String detail) {
-        record(kind, runId, policyId, actor, detail);
+        record(kind, runId, policyId, actor, null, detail);
     }
 
     private void record(
-            FailureKind kind, String runId, String policyId, String actor, String detail) {
+            FailureKind kind,
+            String runId,
+            String policyId,
+            String actor,
+            String fileIdentity,
+            String detail) {
         try {
             store.record(
-                    RecordFailure.forRun(kind, teamFor(policyId), actor, policyId, runId, detail));
+                    RecordFailure.forRun(
+                            kind, teamFor(policyId), actor, policyId, runId, fileIdentity, detail));
         } catch (RuntimeException e) {
             // Deliberately swallowed: see the class comment.
             log.warn("Could not record failure event for run {} (kind {})", runId, kind.getId(), e);

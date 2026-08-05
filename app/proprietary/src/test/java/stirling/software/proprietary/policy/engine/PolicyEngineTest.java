@@ -221,7 +221,8 @@ class PolicyEngineTest {
         verify(taskManager, never()).setComplete(runId);
         // A failed run is recorded durably, so an admin can see it after the in-memory run expires.
         verify(failureRecorder)
-                .recordRunFailure(eq(runId), any(), any(), anyString(), any(Throwable.class));
+                .recordRunFailure(
+                        eq(runId), any(), any(), any(), anyString(), any(Throwable.class));
     }
 
     @Test
@@ -233,7 +234,8 @@ class PolicyEngineTest {
         when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
         doThrow(new RuntimeException("event store unavailable"))
                 .when(failureRecorder)
-                .recordRunFailure(anyString(), any(), any(), anyString(), any(Throwable.class));
+                .recordRunFailure(
+                        anyString(), any(), any(), any(), anyString(), any(Throwable.class));
 
         PolicyRunHandle handle =
                 engine.submit(

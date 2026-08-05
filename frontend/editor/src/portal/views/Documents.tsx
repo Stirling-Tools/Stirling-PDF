@@ -107,9 +107,10 @@ export function Documents() {
 
       <ReviewQueue documents={documents} loading={state.loading} />
 
-      {/* Recorded policy-run failures. Renders its own heading, and nothing at all
-          when there is nothing to show, so it is safe to mount unconditionally. */}
-      <FileRunEventList />
+      {/* Recorded policy-run failures. Not mounted outside dev: the endpoints are live and
+          gated, but the surface itself is unfinished (no polling, no paging, no filters).
+          Vite folds this to false in a build, so neither the view nor its fetch ships. */}
+      {import.meta.env.DEV && <FileRunEventList />}
     </div>
   );
 }

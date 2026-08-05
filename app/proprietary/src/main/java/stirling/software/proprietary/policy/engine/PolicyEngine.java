@@ -110,12 +110,26 @@ public class PolicyEngine {
         // async
         // worker.
         String principal = currentActingPrincipal();
-        return submitForPrincipal(principal, principal, policyId, definition, inputs, listener);
+        return submitForPrincipal(
+                principal, principal, policyId, definition, inputs, null, listener);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
     public PolicyRunHandle runPolicy(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
+        return runPolicy(policy, inputs, null, listener);
+    }
+
+    /**
+     * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, with the source's opaque
+     * reference to the document being run. Carried so a failure can say which document it was
+     * about, and so the same document failing again folds into one incident.
+     */
+    public PolicyRunHandle runPolicy(
+            Policy policy,
+            PolicyInputs inputs,
+            String fileIdentity,
+            PolicyProgressListener listener) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -132,7 +146,7 @@ public class PolicyEngine {
                 new PipelineDefinition(
                         policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), definition, inputs, listener);
+                policy.owner(), fileOwner, policy.id(), definition, inputs, fileIdentity, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -141,6 +155,7 @@ public class PolicyEngine {
             String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
+            String fileIdentity,
             PolicyProgressListener listener) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
@@ -150,7 +165,7 @@ public class PolicyEngine {
         if (policyId != null) {
             taskManager.putMetadata(runId, "policyId", policyId);
         }
-        PolicyRun run = new PolicyRun(runId, policyId, definition);
+        PolicyRun run = new PolicyRun(runId, policyId, definition, fileIdentity);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -331,6 +346,7 @@ public class PolicyEngine {
                 run.getRunId(),
                 run.getPolicyId(),
                 MDC.get(AUDIT_PRINCIPAL_MDC_KEY),
+                run.getFileIdentity(),
                 message,
                 cause);
     }

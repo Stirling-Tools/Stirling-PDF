@@ -173,6 +173,38 @@ class FileRunEventStoreDbTest {
     }
 
     @Test
+    @DisplayName("the same broken file folds across runs, and distinct files do not")
+    void repeatsFoldOnTheDocumentNotTheRun() {
+        // The point of the rollup. Each sweep starts a new run, so keying on the run id alone
+        // meant a file that failed every sweep opened a new incident every sweep, and several
+        // files failing in one run collapsed into one. Both are wrong; the document is the key.
+        RecordFailure firstSweep = locked("run-1", "file-hash-a");
+        RecordFailure secondSweep = locked("run-2", "file-hash-a");
+        RecordFailure otherFile = locked("run-1", "file-hash-b");
+
+        store.record(firstSweep);
+        store.record(otherFile);
+        FileRunEvent folded = store.record(secondSweep);
+
+        assertThat(folded.occurrences()).isEqualTo(2);
+        assertThat(store.list(TEAM, null, null, 10))
+                .as("one incident per document, however many runs it failed in")
+                .extracting(FileRunEvent::fileId)
+                .containsExactlyInAnyOrder("file-hash-a", "file-hash-b");
+    }
+
+    private RecordFailure locked(String runId, String fileId) {
+        return RecordFailure.forRun(
+                FailureKind.INPUT_PASSWORD_PROTECTED,
+                TEAM,
+                null,
+                "policy-1",
+                runId,
+                fileId,
+                "locked");
+    }
+
+    @Test
     @DisplayName("the kind filter applies before the limit, not after")
     void kindFilterAppliesBeforeTheLimit() {
         store.record(failure(FailureKind.UNKNOWN, TEAM, "old-unknown"));

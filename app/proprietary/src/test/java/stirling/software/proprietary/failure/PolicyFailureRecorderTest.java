@@ -90,6 +90,7 @@ class PolicyFailureRecorderTest {
                     "run-1",
                     "policy-1",
                     "dana@example.com",
+                    null,
                     "Policy run failed: locked",
                     passwordFailure());
 
@@ -110,6 +111,7 @@ class PolicyFailureRecorderTest {
             recorder.recordRunFailure(
                     "run-2",
                     "policy-1",
+                    null,
                     null,
                     "Policy run failed: java.lang.NullPointerException",
                     new RuntimeException("npe"));
@@ -139,9 +141,9 @@ class PolicyFailureRecorderTest {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(
-                    "run-1", "policy-1", "dana@example.com", "locked", passwordFailure());
+                    "run-1", "policy-1", "dana@example.com", null, "locked", passwordFailure());
             recorder.recordRunFailure(
-                    "run-2", "policy-1", "dana@example.com", "locked", passwordFailure());
+                    "run-2", "policy-1", "dana@example.com", null, "locked", passwordFailure());
 
             List<FileRunEvent> events = store.list(TEAM, null, null, 10);
             assertThat(events).hasSize(2);
@@ -156,9 +158,9 @@ class PolicyFailureRecorderTest {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(
-                    "run-1", "policy-1", "dana@example.com", "locked", passwordFailure());
+                    "run-1", "policy-1", "dana@example.com", null, "locked", passwordFailure());
             recorder.recordRunFailure(
-                    "run-1", "policy-1", "dana@example.com", "locked", passwordFailure());
+                    "run-1", "policy-1", "dana@example.com", null, "locked", passwordFailure());
 
             assertThat(store.list(TEAM, null, null, 10))
                     .singleElement()
@@ -175,7 +177,8 @@ class PolicyFailureRecorderTest {
         void takesTheTeamFromTheOriginatingPolicy() {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
-            recorder.recordRunFailure("run-1", "policy-1", null, "boom", new RuntimeException());
+            recorder.recordRunFailure(
+                    "run-1", "policy-1", null, null, "boom", new RuntimeException());
 
             assertThat(store.list(TEAM, null, null, 10)).hasSize(1);
         }
@@ -184,7 +187,7 @@ class PolicyFailureRecorderTest {
         void leavesAnAdHocRunUnteamedRatherThanGuessing() {
             // No stored policy means no team to attribute it to. Recorded unteamed rather than
             // attributed to whichever team happened to be nearby.
-            recorder.recordRunFailure("run-1", null, null, "boom", new RuntimeException());
+            recorder.recordRunFailure("run-1", null, null, null, "boom", new RuntimeException());
 
             assertThat(store.list(null, null, null, 10)).hasSize(1);
             assertThat(store.list(TEAM, null, null, 10)).isEmpty();
@@ -199,6 +202,7 @@ class PolicyFailureRecorderTest {
                                     recorder.recordRunFailure(
                                             "run-1",
                                             "policy-1",
+                                            null,
                                             null,
                                             "boom",
                                             new RuntimeException()))
@@ -233,6 +237,7 @@ class PolicyFailureRecorderTest {
                                             "run-1",
                                             "policy-1",
                                             null,
+                                            null,
                                             "Policy run failed: locked",
                                             passwordFailure()))
                     .doesNotThrowAnyException();
@@ -245,7 +250,7 @@ class PolicyFailureRecorderTest {
             assertThatCode(
                             () ->
                                     recorder.recordRunFailure(
-                                            "run-1", "policy-1", null, "no cause", null))
+                                            "run-1", "policy-1", null, null, "no cause", null))
                     .doesNotThrowAnyException();
             assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
                     .isEqualTo(FailureKind.UNKNOWN);
@@ -260,8 +265,10 @@ class PolicyFailureRecorderTest {
         void twoIdenticalRunFailuresFoldIntoOneIncident() {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
-            recorder.recordRunFailure("run-1", "policy-1", null, "boom", new IOException("x"));
-            recorder.recordRunFailure("run-1", "policy-1", null, "boom", new IOException("x"));
+            recorder.recordRunFailure(
+                    "run-1", "policy-1", null, null, "boom", new IOException("x"));
+            recorder.recordRunFailure(
+                    "run-1", "policy-1", null, null, "boom", new IOException("x"));
 
             List<FileRunEvent> events = store.list(TEAM, null, null, 10);
             assertThat(events).hasSize(1);
@@ -273,8 +280,10 @@ class PolicyFailureRecorderTest {
             // UNKNOWN is RUN-scoped, so the run id is what distinguishes them.
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
-            recorder.recordRunFailure("run-1", "policy-1", null, "boom", new IOException("x"));
-            recorder.recordRunFailure("run-2", "policy-1", null, "boom", new IOException("x"));
+            recorder.recordRunFailure(
+                    "run-1", "policy-1", null, null, "boom", new IOException("x"));
+            recorder.recordRunFailure(
+                    "run-2", "policy-1", null, null, "boom", new IOException("x"));
 
             assertThat(store.list(TEAM, null, null, 10)).hasSize(2);
         }

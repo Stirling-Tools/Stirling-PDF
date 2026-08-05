@@ -11,6 +11,13 @@ import {
 /** How many rows one page of the review surface asks for. */
 const PAGE_SIZE = 50;
 
+/**
+ * Failures arrive from background sweeps, not from anything the reviewer did, so the list has to
+ * refresh itself or it silently goes stale. Paused while the tab is hidden, since nobody is
+ * reading it then.
+ */
+const POLL_INTERVAL_MS = 30_000;
+
 /** Base query: recorded policy failures for the caller's team. */
 export function useFileRunEvents(): AsyncState<FileRunEvent[]> {
   return toAsyncState(
@@ -20,6 +27,10 @@ export function useFileRunEvents(): AsyncState<FileRunEvent[]> {
       // A build without the failure registry 404s and a non-leader gets a 403.
       // Neither improves on retry, and the caller renders nothing either way.
       retry: false,
+      // Stops once the route answers 404 or 403: that will not improve by asking again, and
+      // polling it forever would be a request every 30s for a surface rendering nothing.
+      refetchInterval: (query) => (query.state.error ? false : POLL_INTERVAL_MS),
+      refetchIntervalInBackground: false,
     }),
   );
 }
