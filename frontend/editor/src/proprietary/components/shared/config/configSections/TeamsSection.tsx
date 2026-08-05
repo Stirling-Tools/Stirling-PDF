@@ -631,7 +631,7 @@ export default function TeamsSection() {
               availableUsersForSelectedTeam.find(
                 (u) => u.id.toString() === selectedUserId,
               )?.team && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="var(--color-amber-dark)">
                   {t("workspace.teams.addMemberToTeam.willBeMoved")}
                 </Text>
               )}

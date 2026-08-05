@@ -305,7 +305,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                     </Text>
                   </Text>
                   {mismatchVersion && (
-                    <Text size="sm" c="red" mt={4}>
+                    <Text size="sm" c="var(--color-red-dark)" mt={4}>
                       {t(
                         "settings.general.updates.versionMismatch",
                         "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version.",
@@ -336,7 +336,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                       "Latest Version",
                     )}
                     :{" "}
-                    <Text component="span" fw={500} c="blue">
+                    <Text component="span" fw={500} c="var(--c-accent-text)">
                       {updateSummary.latest_version}
                     </Text>
                   </Text>

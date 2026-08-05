@@ -792,7 +792,7 @@ export const BookmarkSidebar = ({
 
           {bookmarkSupport && documentCacheKey && currentError && (
             <Stack gap="xs" align="center" className="sidebar-base__error">
-              <Text size="sm" c="red" ta="center">
+              <Text size="sm" c="var(--color-red-dark)" ta="center">
                 {currentError}
               </Text>
               <Button variant="secondary" size="sm" onClick={requestReload}>
@@ -882,7 +882,7 @@ export const BookmarkSidebar = ({
                   disabled={isSavingBookmark}
                 />
                 {addBookmarkError && (
-                  <Text size="xs" c="red">
+                  <Text size="xs" c="var(--color-red-dark)">
                     {addBookmarkError}
                   </Text>
                 )}

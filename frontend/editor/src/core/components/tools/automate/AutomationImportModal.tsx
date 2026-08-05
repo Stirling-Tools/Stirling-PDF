@@ -207,7 +207,7 @@ export default function AutomationImportModal({
                 })}
               </Text>
               {parsed.unresolvedOperations.length > 0 && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="var(--color-amber-dark)">
                   {t("automate.importModal.unresolved", "Unmapped: {{ops}}", {
                     ops: parsed.unresolvedOperations.join(", "),
                   })}

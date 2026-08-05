@@ -445,7 +445,7 @@ export const AttachmentSidebar = ({
 
           {attachmentSupport && documentCacheKey && currentError && (
             <Stack gap="xs" align="center" className="sidebar-base__error">
-              <Text size="sm" c="red" ta="center">
+              <Text size="sm" c="var(--color-red-dark)" ta="center">
                 {currentError}
               </Text>
               <ActionIcon
