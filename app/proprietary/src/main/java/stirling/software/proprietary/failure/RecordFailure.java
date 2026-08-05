@@ -93,7 +93,7 @@ public record RecordFailure(
         // An editor failure belongs to the person who hit it, so two colleagues hitting the same
         // thing are two incidents. Folding them would credit one actor for both and offer the
         // wrong person the row. Unattended runs have no such owner and are unaffected.
-        return origin == FailureOrigin.EDITOR ? nullToEmpty(actor) + "|" + about : about;
+        return origin == FailureOrigin.TOOL ? nullToEmpty(actor) + "|" + about : about;
     }
 
     /**

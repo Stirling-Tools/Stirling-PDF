@@ -28,6 +28,7 @@ export function FileRunEventList() {
   const { apply, refresh } = useFileRunEventActions();
   const [busy, setBusy] = useState<{ id: string; action: string } | null>(null);
   const [showJson, setShowJson] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   // A build without the proprietary module has no such route, and a caller who is
   // not a team leader gets a 403. Both mean there is nothing to show.
@@ -42,12 +43,40 @@ export function FileRunEventList() {
     }
   };
 
+  // Empties the queue so a test run starts from nothing. Sequential rather than
+  // concurrent: dismissing is cheap, and one request at a time keeps the failure
+  // obvious if the endpoint refuses one of them.
+  const dismissAll = async () => {
+    setClearing(true);
+    try {
+      for (const event of events ?? []) {
+        const dismiss = event.actions.find(
+          (action) => action.id === "DISMISS" && action.enabled,
+        );
+        if (dismiss) {
+          await apply(event.id, "DISMISS");
+        }
+      }
+    } finally {
+      setClearing(false);
+      await refresh();
+    }
+  };
+
   // Dev-only inspector for hand-checking classification against real uploads.
   // Vite folds `import.meta.env.DEV` to false, so builds drop this entirely.
   const debugPanel = !import.meta.env.DEV ? null : (
     <div className="portal-failures__debug">
       <Button variant="secondary" size="sm" onClick={() => void refresh()}>
         Refresh failures
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        disabled={clearing || (events?.length ?? 0) === 0}
+        onClick={() => void dismissAll()}
+      >
+        {clearing ? "Dismissing..." : `Dismiss all (${events?.length ?? 0})`}
       </Button>
       <Button
         variant="secondary"

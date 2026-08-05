@@ -124,7 +124,7 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
             Collection<FileRunEventStatus> allowedFrom) {
         int closed = 0;
         for (FileRunEventEntity entity : rows.values()) {
-            if (entity.getOrigin() != FailureOrigin.EDITOR
+            if (entity.getOrigin() != FailureOrigin.TOOL
                     || !sameTeam(entity, teamId)
                     || !Objects.equals(entity.getActor(), actor)
                     || entity.getFileId() == null

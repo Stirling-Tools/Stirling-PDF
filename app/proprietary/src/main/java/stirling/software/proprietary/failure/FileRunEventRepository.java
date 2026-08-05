@@ -101,7 +101,7 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
             "update FileRunEventEntity e set e.status ="
                     + " stirling.software.proprietary.failure.FileRunEventStatus.FILE_REMOVED,"
                     + " e.statusActor = :actor, e.statusAt = :now where e.origin ="
-                    + " stirling.software.proprietary.failure.FailureOrigin.EDITOR and ((:teamId is"
+                    + " stirling.software.proprietary.failure.FailureOrigin.TOOL and ((:teamId is"
                     + " null and e.teamId is null) or e.teamId = :teamId) and ((:actor is null and"
                     + " e.actor is null) or e.actor = :actor) and e.fileId in :fileIds and e.status in"
                     + " :allowedFrom")
