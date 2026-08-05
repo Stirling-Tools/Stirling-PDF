@@ -26,8 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.CsvConversionResponse;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
-import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
-import stirling.software.SPDF.pdf.parser.TabulaTableParser;
+import stirling.software.SPDF.pdf.parser.TableExtractionService;
+import stirling.software.SPDF.pdf.parser.TableExtractionService.PageTable;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -36,6 +36,8 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
@@ -44,7 +46,8 @@ import stirling.software.common.util.WebResponseUtils;
 public class ExtractCSVController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final TabulaTableParser tabulaTableParser;
+    private final TableExtractionService tableExtractionService;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             value = "/pdf/csv",
@@ -60,34 +63,54 @@ public class ExtractCSVController {
         String baseName = getBaseName(request.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 
-        try (PDDocument document = pdfDocumentFactory.load(request)) {
-            List<Integer> pages = request.getPageNumbersList(document, true);
-            CSVFormat format =
-                    CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
+        // The schema documents "all" as the default, but an omitted field arrives as null and
+        // parsePageList maps null to page 1 alone. Without this, converting a multi-page PDF
+        // silently returns just its first page.
+        if (request.getPageNumbers() == null || request.getPageNumbers().isBlank()) {
+            request.setPageNumbers("all");
+        }
 
-            for (int pageNum : pages) {
-                log.info("{}", pageNum);
-                List<TableFragment> fragments = tabulaTableParser.parse(document, pageNum);
+        // The word-grid fallback reads the PDF from disk, so keep a copy for the whole request.
+        try (TempFile tempInput = new TempFile(tempFileManager, ".pdf")) {
+            request.getFileInput().transferTo(tempInput.getFile());
 
-                for (int i = 0; i < fragments.size(); i++) {
+            try (PDDocument document = pdfDocumentFactory.load(tempInput.getFile())) {
+                List<Integer> pages = request.getPageNumbersList(document, true);
+                CSVFormat format =
+                        CSVFormat.EXCEL
+                                .builder()
+                                .setEscape('"')
+                                .setQuoteMode(QuoteMode.ALL)
+                                .build();
+
+                List<PageTable> tables =
+                        tableExtractionService.extract(document, pages, tempInput.getPath());
+
+                int indexOnPage = 0;
+                int previousPage = -1;
+                for (PageTable table : tables) {
+                    indexOnPage = table.pageNumber() == previousPage ? indexOnPage + 1 : 1;
+                    previousPage = table.pageNumber();
+
                     StringWriter sw = new StringWriter();
                     try (CSVPrinter printer = format.print(sw)) {
-                        for (List<String> row : fragments.get(i).rawRows()) {
+                        for (List<String> row : table.rows()) {
                             printer.printRecord(row);
                         }
                     }
                     csvEntries.add(
                             new CsvEntry(
-                                    generateEntryName(baseName, pageNum, i + 1), sw.toString()));
+                                    generateEntryName(baseName, table.pageNumber(), indexOnPage),
+                                    sw.toString()));
                 }
-            }
 
-            if (csvEntries.isEmpty()) {
-                return ResponseEntity.noContent().build();
-            } else if (csvEntries.size() == 1) {
-                return createCsvResponse(csvEntries.get(0), baseName);
-            } else {
-                return createZipResponse(csvEntries, baseName);
+                if (csvEntries.isEmpty()) {
+                    return ResponseEntity.noContent().build();
+                } else if (csvEntries.size() == 1) {
+                    return createCsvResponse(csvEntries.get(0), baseName);
+                } else {
+                    return createZipResponse(csvEntries, baseName);
+                }
             }
         }
     }
