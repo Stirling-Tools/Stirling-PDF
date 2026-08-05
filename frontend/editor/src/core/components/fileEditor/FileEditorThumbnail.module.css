@@ -279,3 +279,16 @@
   opacity: 0.5;
   pointer-events: auto;
 }
+
+/* Non-blocking policy run (e.g. classification tagging): small top-right pill
+ * with the policy's icon + a loader. Colour is set inline to the policy accent. */
+.backgroundPolicyPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border-radius: 8px;
+  background: color-mix(in srgb, currentColor 14%, var(--c-surface));
+  box-shadow: var(--shadow-md);
+  pointer-events: auto;
+}

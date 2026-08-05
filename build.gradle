@@ -41,7 +41,7 @@ ext {
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.0.2"
+    jpdfiumVersion = "1.0.4"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.44.12"
     jschVersion = "0.2.23"
