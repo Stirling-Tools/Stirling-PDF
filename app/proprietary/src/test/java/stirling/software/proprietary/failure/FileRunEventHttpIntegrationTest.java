@@ -124,7 +124,7 @@ class FileRunEventHttpIntegrationTest {
             assertThat(actions).hasSize(2);
             assertThat(actions.get(0).get("id").asString()).isEqualTo("ACKNOWLEDGE");
             assertThat(actions.get(0).get("labelKey").asString())
-                    .isEqualTo("portal.failures.action.acknowledgeUnlock");
+                    .isEqualTo("portal.failures.action.acknowledge");
             assertThat(actions.get(0).get("enabled").asBoolean()).isTrue();
             assertThat(actions.get(0).get("disabledReasonKey").isNull()).isTrue();
         }

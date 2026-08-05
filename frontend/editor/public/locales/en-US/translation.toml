@@ -7284,7 +7284,6 @@ title = "Failures"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-acknowledgeUnlock = "I'll unlock this"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"

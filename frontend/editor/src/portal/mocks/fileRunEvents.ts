@@ -52,7 +52,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     status: "NEW",
     statusActor: null,
     actions: [
-      acknowledgeOffer(true, "portal.failures.action.acknowledgeUnlock"),
+      acknowledgeOffer(true, "portal.failures.action.acknowledge"),
       dismissOffer(true, "portal.failures.action.dismissSkipFile"),
     ],
     createdAt: NOW - HOUR,
@@ -105,7 +105,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     status: "DISMISSED",
     statusActor: "ops@example.com",
     actions: [
-      acknowledgeOffer(false, "portal.failures.action.acknowledgeUnlock"),
+      acknowledgeOffer(false, "portal.failures.action.acknowledge"),
       dismissOffer(false, "portal.failures.action.dismissSkipFile"),
     ],
     createdAt: NOW - 30 * HOUR,

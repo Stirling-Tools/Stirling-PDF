@@ -33,7 +33,7 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
-            offer(ACKNOWLEDGE, "acknowledgeUnlock"),
+            offer(ACKNOWLEDGE),
             offer(DISMISS, "dismissSkipFile")),
 
     UNKNOWN(
