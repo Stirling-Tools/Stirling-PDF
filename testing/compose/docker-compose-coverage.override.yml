@@ -18,8 +18,8 @@ services:
     # so the volume mounts intentionally land on whichever service uses the
     # key "stirling-pdf" in the base file.
     volumes:
-      - ../../build/jacoco/jacocoagent.jar:/jacoco/jacocoagent.jar:ro
-      - ../../testing/cucumber-coverage:/jacoco-out:rw
+      - ../../../build/jacoco/jacocoagent.jar:/jacoco/jacocoagent.jar:ro
+      - ../../../testing/cucumber-coverage:/jacoco-out:rw
     environment:
       # append=false so an aborted re-run starts clean. dumponexit=true is
       # what flushes the .exec when SIGTERM hits the JVM (which happens on
