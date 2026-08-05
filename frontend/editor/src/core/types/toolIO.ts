@@ -381,21 +381,6 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SIMO",
   },
-  "/api/v1/integration/external-api-call": {
-    accepts: ["ANY"],
-    produces: "ANY",
-    arity: "SISO",
-  },
-  "/api/v1/integration/purview-apply-label": {
-    accepts: ["PDF"],
-    produces: "PDF",
-    arity: "SISO",
-  },
-  "/api/v1/integration/purview-read-label": {
-    accepts: ["PDF"],
-    produces: "PDF",
-    arity: "SISO",
-  },
   "/api/v1/misc/add-attachments": {
     accepts: ["PDF"],
     produces: "PDF",

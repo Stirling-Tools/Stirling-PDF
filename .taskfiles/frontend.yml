@@ -498,6 +498,12 @@ tasks:
     desc: "Generate tool API types from the Java OpenAPI spec"
     deps: [install, ":backend:swagger"]
     cmds:
+      - task: tool-models:_generate
+
+  tool-models:_generate:
+    internal: true
+    deps: [install]
+    cmds:
       - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts
     sources:
       - editor/scripts/generate-tool-api-types.mts

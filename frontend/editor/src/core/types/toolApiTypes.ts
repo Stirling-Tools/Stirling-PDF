@@ -537,33 +537,6 @@ export interface HTMLToPdfRequest {
    */
   zoom?: number;
 }
-export interface IntegrationExternalApiCallRequest {
-  bodyMode?: string;
-  bodyTemplate?: string;
-  connectionId: string;
-  fields?: string;
-  fileFieldName?: string;
-  headers?: string;
-  includeContext?: boolean;
-  includeFile?: boolean;
-  method?: string;
-  path?: string;
-  requireTrue?: string;
-  responseMode?: string;
-  responseSelect?: string;
-  resultUrlHeader?: string;
-  resultUrlPath?: string;
-}
-export interface IntegrationPurviewApplyLabelRequest {
-  connectionId: string;
-  contentBits?: number;
-  labelId: string;
-  labelName?: string;
-  method?: string;
-}
-export interface IntegrationPurviewReadLabelRequest {
-  connectionId: string;
-}
 export type ListAttachmentsRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
   /**
@@ -1275,26 +1248,6 @@ export interface ScannerEffectRequest {
    */
   yellowish?: boolean;
 }
-export interface SecurityCertSignSessionsRequest {
-  file: string;
-  request?: WorkflowCreationRequest;
-}
-export interface WorkflowCreationRequest {
-  documentName?: string;
-  dueDate?: string;
-  message?: string;
-  ownerEmail?: string;
-  participantEmails?: string[];
-  participantUserIds?: number[];
-  workflowMetadata?: string;
-  workflowType?: "SIGNING" | "REVIEW" | "APPROVAL";
-}
-export interface SecurityCertSignValidateCertificateRequest {
-  certType: string;
-  jksFile?: string;
-  p12File?: string;
-  password?: string;
-}
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
@@ -1494,9 +1447,6 @@ export type ToolEndpoint =
   | "/api/v1/general/split-pages"
   | "/api/v1/general/split-pdf-by-chapters"
   | "/api/v1/general/split-pdf-by-sections"
-  | "/api/v1/integration/external-api-call"
-  | "/api/v1/integration/purview-apply-label"
-  | "/api/v1/integration/purview-read-label"
   | "/api/v1/misc/add-attachments"
   | "/api/v1/misc/add-comments"
   | "/api/v1/misc/add-image"
@@ -1527,8 +1477,6 @@ export type ToolEndpoint =
   | "/api/v1/security/auto-redact"
   | "/api/v1/security/cert-sign"
   | "/api/v1/security/cert-sign/hardware/pkcs11-certificates"
-  | "/api/v1/security/cert-sign/sessions"
-  | "/api/v1/security/cert-sign/validate-certificate"
   | "/api/v1/security/get-info-on-pdf"
   | "/api/v1/security/redact"
   | "/api/v1/security/redact-execute"
@@ -1594,9 +1542,6 @@ export interface ToolApiParams {
   "/api/v1/general/split-pages": SplitPagesRequest;
   "/api/v1/general/split-pdf-by-chapters": SplitPdfByChaptersRequest;
   "/api/v1/general/split-pdf-by-sections": SplitPdfBySectionsRequest;
-  "/api/v1/integration/external-api-call": IntegrationExternalApiCallRequest;
-  "/api/v1/integration/purview-apply-label": IntegrationPurviewApplyLabelRequest;
-  "/api/v1/integration/purview-read-label": IntegrationPurviewReadLabelRequest;
   "/api/v1/misc/add-attachments": AddAttachmentRequest;
   "/api/v1/misc/add-comments": AddCommentsRequest;
   "/api/v1/misc/add-image": OverlayImageRequest;
@@ -1627,8 +1572,6 @@ export interface ToolApiParams {
   "/api/v1/security/auto-redact": RedactPdfRequest;
   "/api/v1/security/cert-sign": SignPDFWithCertRequest;
   "/api/v1/security/cert-sign/hardware/pkcs11-certificates": Pkcs11CertificatesRequest;
-  "/api/v1/security/cert-sign/sessions": SecurityCertSignSessionsRequest;
-  "/api/v1/security/cert-sign/validate-certificate": SecurityCertSignValidateCertificateRequest;
   "/api/v1/security/get-info-on-pdf": SecurityGetInfoOnPdfRequest;
   "/api/v1/security/redact": ManualRedactPdfRequest;
   "/api/v1/security/redact-execute": RedactExecuteRequest;
@@ -1695,9 +1638,6 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/general/split-pages",
   "/api/v1/general/split-pdf-by-chapters",
   "/api/v1/general/split-pdf-by-sections",
-  "/api/v1/integration/external-api-call",
-  "/api/v1/integration/purview-apply-label",
-  "/api/v1/integration/purview-read-label",
   "/api/v1/misc/add-attachments",
   "/api/v1/misc/add-comments",
   "/api/v1/misc/add-image",
@@ -1728,8 +1668,6 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/auto-redact",
   "/api/v1/security/cert-sign",
   "/api/v1/security/cert-sign/hardware/pkcs11-certificates",
-  "/api/v1/security/cert-sign/sessions",
-  "/api/v1/security/cert-sign/validate-certificate",
   "/api/v1/security/get-info-on-pdf",
   "/api/v1/security/redact",
   "/api/v1/security/redact-execute",
