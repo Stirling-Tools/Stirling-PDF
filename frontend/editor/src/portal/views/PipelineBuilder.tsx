@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import {
   ActionIcon,
   Banner,
@@ -78,6 +80,7 @@ import {
 } from "@portal/components/pipelines/graph/PipelineGraph";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import { BrandMark } from "@portal/components/BrandMarks";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import {
   integrationStepConfigured,
@@ -473,6 +476,19 @@ export function PipelineBuilder() {
     return entry?.name ?? humanizeOperation(step.operation);
   }
 
+  /**
+   * A step's glyph, matching how the tool picker draws it: an integration step carries its vendor's
+   * mark, a tool step its own icon. Without this every node falls back to the generic slider glyph,
+   * so a chain reads as a stack of identical cards.
+   */
+  function stepIcon(step: WorkingToolStep): ReactNode {
+    const op = stepOperation(step);
+    if (op)
+      return <BrandMark id={op.custom ? "api" : op.connectionTypeId} size={17} />;
+    if (isIntegrationStep(step)) return <BrandMark id="api" size={17} />;
+    return step.toolId ? allTools[step.toolId]?.icon : undefined;
+  }
+
   // Steps whose params carry an uploaded file can't be saved: the bytes aren't persisted with the
   // policy, so a later run would send null for that field (see stepRequiresUpload).
   const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
@@ -853,6 +869,7 @@ export function PipelineBuilder() {
   const graphSteps: GraphStepContent[] = steps.map((step, i) => ({
     label: stepLabel(step),
     detail: stepDetail(step),
+    icon: stepIcon(step),
     warning: stepWarning(step),
     inputWarning: stepInputWarning(i),
     runState: stepRunState(i),
@@ -944,8 +961,8 @@ export function PipelineBuilder() {
               </FormField>
 
               {input.triggerType === "schedule" && (
-                <div className="portal-pipelines__schedule">
-                  <span className="portal-pipelines__muted">
+                <div className="portal-builder__schedule">
+                  <span className="portal-builder__muted">
                     {t("portal.pipelines.composer.scheduleEvery")}
                   </span>
                   <Input
@@ -957,7 +974,7 @@ export function PipelineBuilder() {
                     onChange={(e) =>
                       updateInput({ scheduleCount: e.target.value })
                     }
-                    className="portal-pipelines__schedule-count"
+                    className="portal-builder__schedule-count"
                   />
                   <Select
                     inputSize="sm"
@@ -1119,6 +1136,15 @@ export function PipelineBuilder() {
                   ? stepLabel(selectedStep)
                   : undefined
           }
+          icon={
+            selected === "input" ? (
+              <MoveToInboxRoundedIcon style={{ fontSize: "1.125rem" }} />
+            ) : selected === "output" ? (
+              <SendRoundedIcon style={{ fontSize: "1.125rem" }} />
+            ) : selectedStep ? (
+              stepIcon(selectedStep)
+            ) : undefined
+          }
           error={
             chosenSteps.length === 1 &&
             testRun?.status === "FAILED" &&
@@ -1167,7 +1193,7 @@ export function PipelineBuilder() {
         width="sm"
         title={t("portal.pipelines.delete.title")}
         footer={
-          <div className="portal-pipelines__composer-footer">
+          <div className="portal-builder__composer-footer">
             <Button
               variant="tertiary"
               size="sm"
@@ -1196,7 +1222,7 @@ export function PipelineBuilder() {
         width="sm"
         title={t("portal.pipelines.builder.unsavedTitle")}
         footer={
-          <div className="portal-pipelines__composer-footer">
+          <div className="portal-builder__composer-footer">
             <Button
               variant="tertiary"
               size="sm"

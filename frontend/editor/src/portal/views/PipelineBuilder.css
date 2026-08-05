@@ -197,3 +197,31 @@
 .portal-builder__input-row .portal-builder__source-edit:hover:not(:disabled) {
   color: var(--c-accent-fg, var(--c-primary));
 }
+
+/* The input's schedule row, its number field, and a builder-owned muted line. These lived in
+   Pipelines.css and only rendered because the router bundles both views together; a code-split (or
+   any Storybook story of the builder alone) left them unstyled. Kept here so the builder is
+   self-contained. */
+.portal-builder__schedule {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-builder__schedule-count {
+  width: 5rem;
+}
+
+.portal-builder__muted {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  margin: 0;
+}
+
+/* The space-between button row shared by the builder's modal footers. */
+.portal-builder__composer-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
