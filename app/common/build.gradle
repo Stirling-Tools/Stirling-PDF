@@ -1,7 +1,10 @@
-// Configure bootRun to disable it or point to a main class
-bootRun {
-    enabled = false
-}
+// NOTE: This module (:common) is a library module, NOT a Spring Boot application.
+// The bootRun task should NOT be configured here. It is only configured in :stirling-pdf.
+// The Spring Boot plugin is applied to all subprojects from root build.gradle, but
+// bootJar is disabled for non-application modules (see root__build.gradle line 196-200).
+// Adding a bootRun block here causes Gradle to try to configure a task that shouldn't
+// exist for this module, resulting in "Could not find method bootRun()" errors.
+
 dependencies {
     api "com.google.guava:guava:${guavaVersion}"
     api 'org.springframework.boot:spring-boot-starter-webmvc'

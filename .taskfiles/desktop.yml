@@ -184,17 +184,11 @@ tasks:
       # the path, so the failure is opaque). Make the source writable here
       # so the staged destinations are writable and can be overwritten.
       #
-      # Trade-off: this task runs for both `task desktop:dev` and
-      # `task desktop:build`, so production bundles also ship mode-644
-      # JRE files instead of 444. Functionally harmless on POSIX (the
-      # `other` bit is `r--` either way, and on macOS code signing is the
-      # real integrity check) and on Windows the DOS read-only attribute
-      # isn't load-bearing for the bundled JDK. If we ever need strict
-      # 444 in production, split the chmod into a dev-only step and have
-      # `desktop:build` run `jlink:clean` first to force a fresh build.
+      # Make the JRE files writable so Tauri's resource copier can overwrite them
+      # on incremental builds. Uses proper PowerShell syntax with $_ variable.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Path runtime/jre -Recurse -File | ForEach-Object { $_.IsReadOnly = $false }"
         platforms: [windows]
     status:
       - test -f runtime/jre/release
