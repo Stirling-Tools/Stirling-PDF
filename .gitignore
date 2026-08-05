@@ -1,82 +1,31 @@
 ```
-# Gradle
-.gradle/
+# Build artifacts
 build/
+target/
 
 # Dependencies
+.gradle/
 node_modules/
-vendor/bundle/
+venv/
+.venv/
+__pycache__/
+*.egg-info/
 
-# Logs
+# Logs and temp files
 *.log
+*.tmp
+*.swp
 
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
-# IDE
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# OS
+# OS generated files
 .DS_Store
 Thumbs.db
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage*
-.nox/
-.pytest_cache/
-.mypy_cache/
-
-# Node
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-node_modules/
-jspm_packages/
-
-# Compiled
-*.class
-*.o
-*.a
-*.lib
-*.obj
-*.out
-*.dll
-*.so
-*.dylib
-*.exe
-
-# Archives
-*.zip
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.gz
-*.rar
-*.7z
-
-# Temporary
-*.tmp
-*.temp
-*~
 ```
