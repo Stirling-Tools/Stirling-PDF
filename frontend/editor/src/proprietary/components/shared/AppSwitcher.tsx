@@ -1,28 +1,29 @@
 import { useNavigate } from "react-router-dom";
-import { useMantineColorScheme } from "@mantine/core";
 import { useAuth } from "@app/auth/context";
-import { AppSwitch } from "@app/components/shared/AppSwitch";
+import { Logo } from "@app/ui/Logo";
+import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
+import { type AppSwitcherProps } from "@core/components/shared/AppSwitcher";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 
-/**
- * Sidebar app switcher between the editor and the admin portal. Both are
- * route-sets of one SPA (the portal mounts at PORTAL_BASENAME), so switching
- * is a client-side navigation. Hidden for users without portal access — they
- * have nowhere to switch to. Renders the same AppSwitch element as the
- * portal's sidebar.
- */
-export function AppSwitcher() {
+export function AppSwitcher({ collapsed }: AppSwitcherProps) {
   const { portalAccess } = useAuth();
   const navigate = useNavigate();
-  const { colorScheme } = useMantineColorScheme();
 
-  if (!portalAccess) return null;
+  if (!portalAccess) {
+    return (
+      <Logo
+        variant={collapsed ? "iconOnly" : "iconAndText"}
+        iconHeight="1.6rem"
+        textHeight="1.3rem"
+      />
+    );
+  }
 
   return (
-    <AppSwitch
+    <BrandSwitcher
       current="editor"
-      theme={colorScheme === "dark" ? "dark" : "light"}
       onSwitch={() => navigate(PORTAL_BASENAME)}
+      collapsed={collapsed}
     />
   );
 }

@@ -21,14 +21,21 @@ export function useExitWarning() {
     const handleCloseRequested = async (event: {
       preventDefault: () => void;
     }) => {
-      event.preventDefault();
-
       if (isClosingRef.current) {
         return;
       }
 
       const allStubs = selectorsRef.current.getStirlingFileStubs();
       const dirtyStubs = allStubs.filter((stub) => stub.isDirty);
+
+      // Nothing unsaved: don't preventDefault, so the window closes natively
+      // without depending on the JS dialog/destroy round-trip below.
+      if (dirtyStubs.length === 0) {
+        isClosingRef.current = true;
+        return;
+      }
+
+      event.preventDefault();
 
       if (dirtyStubs.length > 0) {
         const fileList = dirtyStubs.map((f) => `• ${f.name}`).join("\n");

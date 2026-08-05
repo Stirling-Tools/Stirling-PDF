@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { MetricCard, MetricStrip } from "@app/ui";
+import { PoliciesIcon } from "@portal/components/icons";
 import type { PoliciesResponse } from "@portal/api/policies";
 
 interface CatalogueSummaryProps {
@@ -16,7 +17,7 @@ export function CatalogueSummary({ data, loading }: CatalogueSummaryProps) {
   const { t } = useTranslation();
   const s = loading ? undefined : data?.summary;
   return (
-    <MetricStrip>
+    <MetricStrip layout="row" leading={<PoliciesIcon size={22} />}>
       <MetricCard
         label={t("portal.policies.summary.active.label")}
         value={s ? s.active : "—"}

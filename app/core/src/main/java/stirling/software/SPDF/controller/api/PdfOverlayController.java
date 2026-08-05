@@ -27,6 +27,9 @@ import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -46,11 +49,12 @@ public class PdfOverlayController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Overlay PDF files in various modes",
             description =
                     "Overlay PDF files onto a base PDF with different modes: Sequential,"
-                            + " Interleaved, or Fixed Repeat. Input:PDF Output:PDF Type:MIMO")
+                            + " Interleaved, or Fixed Repeat.")
     public ResponseEntity<Resource> overlayPdfs(@ModelAttribute OverlayPdfsRequest request)
             throws IOException {
         MultipartFile baseFile = request.getFileInput();

@@ -193,15 +193,23 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
               "--button-hover-color": "var(--c-text)",
               "--button-bd": "1px solid transparent",
             }
-          : {
-              "--button-bg": "transparent",
-              "--button-hover": "var(--_tint)",
-              "--button-color": "var(--_text)",
-              "--button-bd":
-                variant === "secondary"
-                  ? "1px solid var(--_bd)"
-                  : "1px solid transparent",
-            };
+          : variant === "secondary"
+            ? {
+                // Filled when the accent defines --_solid-2 (default = inverse
+                // ink/snow); otherwise falls back to the outlined look.
+                "--button-bg": "var(--_solid-2, transparent)",
+                "--button-hover": "var(--_solid-2-hover, var(--_tint))",
+                "--button-color": "var(--_on-2, var(--_text))",
+                "--button-bd": "1px solid var(--_bd-2, var(--_bd))",
+              }
+            : {
+                // tertiary (ghost) — neutral text + hover when the accent
+                // defines --_tert-* (default); otherwise the accent link colour.
+                "--button-bg": "transparent",
+                "--button-hover": "var(--_tert-tint, var(--_tint))",
+                "--button-color": "var(--_tert-text, var(--_text))",
+                "--button-bd": "1px solid transparent",
+              };
 
     // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
     const Comp = MantineButton as ElementType;

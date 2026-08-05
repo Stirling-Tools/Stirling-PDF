@@ -1,9 +1,12 @@
+/* Sits as a direct child of the sidebar, so the rail's own padding + gap
+   handle the spacing; a margin here would inset it narrower than the
+   sibling nav-surface boxes. Matches those boxes' surface treatment — the
+   brand mark in the header is what draws the eye, so no louder border. */
 .card {
-  margin: 0.5rem;
+  margin: 0;
   padding: 0.625rem 0.75rem 0.6875rem;
-  background: var(--mantine-color-body);
-  border: 1px solid
-    color-mix(in srgb, var(--mantine-color-default-border) 45%, transparent);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.625rem;
   box-shadow: none;
 }

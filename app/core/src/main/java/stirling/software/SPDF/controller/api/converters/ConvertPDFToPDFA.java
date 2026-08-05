@@ -91,6 +91,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -577,10 +579,13 @@ public class ConvertPDFToPDFA {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/pdfa",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
-                    "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript"
+                            + " (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for"
+                            + " long-term archiving, while PDF/X is optimized for print production.")
     public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();

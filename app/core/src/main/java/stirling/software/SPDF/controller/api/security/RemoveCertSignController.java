@@ -22,6 +22,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
@@ -39,11 +41,12 @@ public class RemoveCertSignController {
             value = "/remove-cert-sign",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove digital signature from PDF",
             description =
                     "This endpoint accepts a PDF file and returns the PDF file without the digital"
-                            + " signature. Input:PDF, Output:PDF Type:SISO")
+                            + " signature.")
     public ResponseEntity<Resource> removeCertSignPDF(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();

@@ -68,7 +68,7 @@ export function LinkedInstancesTable({
             {t("portal.accountLink.instances.revoked", "Revoked")}
           </StatusBadge>
         ) : (
-          <StatusBadge tone="success" size="sm" pulse>
+          <StatusBadge tone="success" size="sm">
             {t("portal.accountLink.instances.active", "Active")}
           </StatusBadge>
         ),

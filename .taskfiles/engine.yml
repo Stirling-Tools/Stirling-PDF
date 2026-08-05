@@ -102,12 +102,19 @@ tasks:
     desc: "Generate tool_models.py from Java OpenAPI spec (SwaggerDoc.json)"
     deps: [install, ":backend:swagger"]
     cmds:
-      - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py
+      - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py --io-output src/stirling/models/tool_io.py
     sources:
       - ../SwaggerDoc.json
       - scripts/generate_tool_models.py
     generates:
       - src/stirling/models/tool_models.py
+      - src/stirling/models/tool_io.py
+
+  tool-models:check:
+    desc: "Fail if the committed tool models are out of date"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py --io-output src/stirling/models/tool_io.py --check
 
   clean:
     desc: "Clean build artifacts"

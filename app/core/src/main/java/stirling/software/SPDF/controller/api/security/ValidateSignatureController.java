@@ -46,6 +46,8 @@ import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 
@@ -73,12 +75,12 @@ public class ValidateSignatureController {
     }
 
     @JsonDataResponse
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Validate PDF Digital Signature",
             description =
-                    "Validates the digital signatures in a PDF file using PKIX path building"
-                            + " and time-of-signing semantics. Supports custom trust anchors."
-                            + " Input:PDF Output:JSON Type:SISO")
+                    "Validates the digital signatures in a PDF file using PKIX path building and"
+                            + " time-of-signing semantics. Supports custom trust anchors.")
     @AutoJobPostMapping(
             value = "/validate-signature",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,

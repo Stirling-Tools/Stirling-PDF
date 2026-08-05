@@ -29,7 +29,6 @@ export default function Signup() {
   const { t } = useTranslation();
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showEmailForm, setShowEmailForm] = useState(false);
   const [name, setName] = useState(undefined as string | undefined);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -209,67 +208,26 @@ export default function Signup() {
         />
       </div>
 
-      {/* Email & Password button */}
-      <Button
-        variant="secondary"
-        disabled={isSigningUp}
-        onClick={() => setShowEmailForm((v) => !v)}
-        className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
-        style={{ marginTop: "2.5rem", marginBottom: "0.75rem" }}
-      >
-        <span className="oauth-btn-group">
-          <span className="auth-at-icon">@</span>
-          <span className="oauth-btn-label">{`${t("signup.signUpWith", "Sign up with")} email`}</span>
-        </span>
-      </Button>
-
-      {/* Email form — animated expand */}
-      <div
-        className={`auth-expand-grid ${showEmailForm ? "auth-expand-grid--open" : ""}`}
-      >
-        <div className="auth-expand-inner">
-          <div style={{ paddingBottom: "0.5rem" }}>
-            <SignupForm
-              name={name}
-              email={email}
-              password={password}
-              confirmPassword={confirmPassword}
-              agree={agree}
-              setName={setName}
-              setEmail={setEmail}
-              setPassword={setPassword}
-              setConfirmPassword={setConfirmPassword}
-              setAgree={setAgree}
-              onSubmit={handleSignUp}
-              isSubmitting={isSigningUp}
-              fieldErrors={fieldErrors}
-            />
-          </div>
-        </div>
+      {/* Sign-up form — always visible (no expander toggle) */}
+      <div style={{ marginTop: "2.5rem", paddingBottom: "0.5rem" }}>
+        <SignupForm
+          name={name}
+          email={email}
+          password={password}
+          confirmPassword={confirmPassword}
+          agree={agree}
+          setName={setName}
+          setEmail={setEmail}
+          setPassword={setPassword}
+          setConfirmPassword={setConfirmPassword}
+          setAgree={setAgree}
+          onSubmit={handleSignUp}
+          isSubmitting={isSigningUp}
+          fieldErrors={fieldErrors}
+        />
       </div>
 
-      {/* Skip */}
-      <div style={{ textAlign: "center", margin: "1rem 0" }}>
-        <Button
-          variant="tertiary"
-          onClick={handleAnonymousSignIn}
-          disabled={isSigningUp}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: 700,
-            color: "var(--c-text)",
-          }}
-        >
-          {isSigningUp
-            ? t("login.signingIn", "Signing in...")
-            : `${t("signup.skip", "Skip")} →`}
-        </Button>
-      </div>
-
-      {/* Bottom */}
+      {/* Already have an account — pushed to the bottom */}
       <div
         style={{
           textAlign: "center",
@@ -285,10 +243,31 @@ export default function Signup() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "var(--c-text-subtle)",
+            color: "var(--c-primary)",
           }}
         >
           {t("signup.alreadyHaveAccount", "I already have an account")}
+        </Button>
+      </div>
+
+      {/* Skip — small + muted, at the very bottom */}
+      <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
+        <Button
+          variant="tertiary"
+          onClick={handleAnonymousSignIn}
+          disabled={isSigningUp}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.8125rem",
+            fontWeight: 500,
+            color: "var(--c-text-subtle)",
+          }}
+        >
+          {isSigningUp
+            ? t("login.signingIn", "Signing in...")
+            : `${t("signup.skip", "Skip")} →`}
         </Button>
       </div>
     </AuthLayout>

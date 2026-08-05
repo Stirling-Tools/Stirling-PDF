@@ -185,25 +185,6 @@
   text-align: right;
 }
 
-/* Metric strip (audit) */
-.portal-infra__metrics {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-}
-
-@media (max-width: 50rem) {
-  .portal-infra__metrics {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 30rem) {
-  .portal-infra__metrics {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* ── API keys ───────────────────────────────────────────────────────────── */
 .portal-infra__keys {
   display: flex;

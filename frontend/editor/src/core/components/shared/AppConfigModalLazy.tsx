@@ -20,6 +20,8 @@ interface AppConfigModalLazyProps {
   initialSection?: NavKey | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
+  /** Registry section keys to drop, for hosts a section can't run in. */
+  hiddenSectionKeys?: NavKey[];
 }
 
 export default function AppConfigModalLazy({
@@ -28,6 +30,7 @@ export default function AppConfigModalLazy({
   urlSync,
   initialSection,
   extraSections,
+  hiddenSectionKeys,
 }: AppConfigModalLazyProps) {
   const [shouldMount, setShouldMount] = useState(false);
 
@@ -44,6 +47,7 @@ export default function AppConfigModalLazy({
           urlSync={urlSync}
           initialSection={initialSection}
           extraSections={extraSections}
+          hiddenSectionKeys={hiddenSectionKeys}
         />
       )}
     </Suspense>

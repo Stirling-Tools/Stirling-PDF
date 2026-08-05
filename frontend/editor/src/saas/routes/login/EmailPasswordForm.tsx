@@ -82,7 +82,7 @@ export default function EmailPasswordForm({
       <Button
         type="submit"
         disabled={isSubmitting || !email || (showPasswordField && !password)}
-        accent="brand"
+        accent="default"
         fullWidth
       >
         {submitButtonText}

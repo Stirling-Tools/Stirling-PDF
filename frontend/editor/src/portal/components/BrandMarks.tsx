@@ -383,6 +383,14 @@ const NEUTRAL: Record<string, ReactNode> = {
       <path d="m8.5 6.5 3.5-3 3.5 3" />
     </>
   ),
+  ftp: (
+    <>
+      <rect x="4" y="13" width="16" height="7" rx="1.5" />
+      <path d="M7.5 16.5h.01" />
+      <path d="M11 16.5h.01" />
+      <path d="M9 4.5h6l-2-2M15 8.5H9l2 2" />
+    </>
+  ),
   email: (
     <>
       <path d="M21 12.5V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5.5" />

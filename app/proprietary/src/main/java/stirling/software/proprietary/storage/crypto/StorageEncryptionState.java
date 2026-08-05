@@ -1,6 +1,7 @@
 package stirling.software.proprietary.storage.crypto;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
@@ -104,9 +105,28 @@ public class StorageEncryptionState {
                 && now - keysExistCheckedAtNanos < KEYS_EXIST_CACHE_TTL.toNanos()) {
             return keysExistCached;
         }
-        keysExistCached = keyRepository.count() > 0;
+        keysExistCached = countKeys().orElse(true /* unreadable registry: fail safe */);
         keysExistCheckedAtNanos = now;
         keysExistEverChecked = true;
         return keysExistCached;
+    }
+
+    /** True when key rows exist; empty when the registry could not be read. */
+    private Optional<Boolean> countKeys() {
+        try {
+            return Optional.of(keyRepository.count() > 0);
+        } catch (RuntimeException e) {
+            log.warn(
+                    "Could not read the storage encryption key registry ({}). Treating direct"
+                            + " downloads as unsafe; encrypted content is still decrypted on"
+                            + " demand.",
+                    e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /** Whether key rows exist, for the decrypt-only startup path; false if unreadable. */
+    public boolean encryptedContentMayExist() {
+        return countKeys().orElse(false);
     }
 }

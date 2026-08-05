@@ -7,6 +7,7 @@ import Login from "@app/routes/Login";
 import { useAuth } from "@app/auth/UseSession";
 import { springAuth } from "@app/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import apiClient from "@app/services/apiClient";
 import { configureSpringAuth } from "@app/auth/config";
 import type { AxiosInstance } from "axios";
@@ -92,11 +93,14 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-// Test wrapper with MantineProvider
+// AuthLayout renders <Footer>, which reads useFooterInfo. In the real router
+// /login sits inside AppProviders, which supplies the client.
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <MantineProvider>
-    <PreferencesProvider>{children}</PreferencesProvider>
-  </MantineProvider>
+  <TestQueryProvider>
+    <MantineProvider>
+      <PreferencesProvider>{children}</PreferencesProvider>
+    </MantineProvider>
+  </TestQueryProvider>
 );
 
 describe("Login", () => {

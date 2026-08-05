@@ -87,7 +87,6 @@ export function PolicyCategoryCard({
           <StatusBadge
             tone={status === "paused" ? "warning" : "success"}
             size="sm"
-            pulse={status !== "paused"}
           >
             {status === "paused"
               ? t("portal.policies.status.paused")

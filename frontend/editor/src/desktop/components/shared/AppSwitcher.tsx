@@ -1,9 +1,18 @@
+import { Logo } from "@app/ui/Logo";
+import { type AppSwitcherProps } from "@core/components/shared/AppSwitcher";
+
 /**
  * Desktop inherits proprietary's layers but does not ship the portal (see
- * desktop/routes/adminRouteExtensions), so shadow the switcher back to empty —
- * otherwise the desktop bundle would reference @portal via the proprietary
- * switcher's imports.
+ * desktop/routes/adminRouteExtensions), so there's nothing to switch to —
+ * shadow the brand header back to a plain logo. (Also avoids the desktop
+ * bundle referencing @portal via the proprietary switcher's imports.)
  */
-export function AppSwitcher() {
-  return null;
+export function AppSwitcher({ collapsed }: AppSwitcherProps) {
+  return (
+    <Logo
+      variant={collapsed ? "iconOnly" : "iconAndText"}
+      iconHeight="1.6rem"
+      textHeight="1.3rem"
+    />
+  );
 }

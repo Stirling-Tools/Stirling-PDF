@@ -4,15 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Base64;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -24,6 +28,7 @@ import stirling.software.proprietary.storage.crypto.EncryptingStorageProvider;
 import stirling.software.proprietary.storage.crypto.InMemoryKeyRepo;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionState;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
 /**
@@ -66,8 +71,8 @@ class StorageProviderConfigTest {
 
     @Test
     void decorator_flagOffButKeysExist_decryptOnlyModeStillMaterialises() throws Exception {
-        // Simulate the drifted-node case: another node already created keys.
-        StorageProviderConfig seedCfg = newConfig("local", License.SERVER, true);
+        // Drifted node: keys created elsewhere; storage on, as it must be to serve files.
+        StorageProviderConfig seedCfg = newConfig("local", License.SERVER, true, true);
         StorageEncryptionState seedState = seedCfg.storageEncryptionState(MASTER, false, txManager);
         Team team = new Team();
         team.setId(1L);
@@ -75,7 +80,7 @@ class StorageProviderConfigTest {
         owner.setTeam(team);
         seedState.keyService().activeKekForOwner(owner);
 
-        StorageProviderConfig cfg = newConfig("local", License.NORMAL, false);
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, false, true);
         StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
 
         assertThat(cfg.storageProvider(state, Optional.empty()))
@@ -102,6 +107,44 @@ class StorageProviderConfigTest {
         assertThatThrownBy(() -> cfg.storageEncryptionState(shortKey, false, txManager))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("32 bytes");
+    }
+
+    // ---- deployments that do not use storage (the SaaS shape) ---------------------------
+
+    @Test
+    void storageDisabled_neverQueriesTheKeyRegistry() {
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        assertThat(state.isWriteEnabled()).isFalse();
+        verify(keyRepo.mock, never()).count();
+    }
+
+    @Test
+    void storageDisabled_decoratorStillInstalledSoCiphertextIsNeverServedRaw() {
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, false);
+        StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
+
+        assertThat(cfg.storageProvider(state, Optional.empty()))
+                .isInstanceOf(EncryptingStorageProvider.class);
+    }
+
+    @Test
+    void unreadableKeyRegistry_stillStartsAndFailsSafeOnDirectDownloads() {
+        FileEncryptionKeyRepository broken = mock(FileEncryptionKeyRepository.class);
+        when(broken.count())
+                .thenThrow(new InvalidDataAccessResourceUsageException("no such table"));
+        StorageEncryptionState state = new StorageEncryptionState(false, () -> null, broken);
+
+        assertThat(state.encryptedContentMayExist()).isFalse();
+        assertThat(state.suppressDirectDownloads()).isTrue();
+    }
+
+    @Test
+    void storageEnabledWithoutEncryption_probesRegistry() {
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, false, true);
+        cfg.storageEncryptionState(MASTER, false, txManager);
+        verify(keyRepo.mock, atLeastOnce()).count();
     }
 
     // ---- backend licence gates (unchanged behaviour) ------------------------------------
@@ -161,9 +204,14 @@ class StorageProviderConfigTest {
 
     private StorageProviderConfig newConfig(
             String provider, License license, boolean encryptionEnabled) {
+        return newConfig(provider, license, encryptionEnabled, false);
+    }
+
+    private StorageProviderConfig newConfig(
+            String provider, License license, boolean encryptionEnabled, boolean storageEnabled) {
         ApplicationProperties props = new ApplicationProperties();
         props.getStorage().setProvider(provider);
-        props.getStorage().setEnabled(false); // local-fallback path skips dir creation
+        props.getStorage().setEnabled(storageEnabled);
         props.getStorage().getEncryption().setEnabled(encryptionEnabled);
         StoredFileBlobRepository repo = mock(StoredFileBlobRepository.class);
         LicenseKeyChecker checker = mock(LicenseKeyChecker.class);

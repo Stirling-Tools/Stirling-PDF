@@ -499,6 +499,7 @@ export default function HomePage() {
             gap={0}
             h="100%"
             className="flex-nowrap flex"
+            bg="var(--c-bg)"
           >
             <MyFilesAwareFileSidebar
               ref={quickAccessRef}

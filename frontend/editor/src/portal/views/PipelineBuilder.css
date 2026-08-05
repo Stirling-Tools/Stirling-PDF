@@ -164,6 +164,19 @@
   color: var(--c-text-subtle);
 }
 
+/* A step that cannot run on what the one before it produces. */
+.portal-builder__step-note--danger {
+  color: var(--c-danger);
+}
+
+/* A picker entry that cannot run on what the chain currently produces. */
+.portal-pipelines__picker-note {
+  margin-left: auto;
+  padding-left: 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
 .portal-builder__step-actions {
   display: flex;
   gap: 0.25rem;

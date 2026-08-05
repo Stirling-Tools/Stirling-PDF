@@ -31,6 +31,9 @@ import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -48,11 +51,11 @@ public class ExtractCSVController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @CsvConversionResponse
+    @ToolIO(produces = ToolFormat.CSV, arity = ToolArity.SIMO)
     @Operation(
             summary = "Extracts a CSV document from a PDF",
             description =
-                    "This operation takes an input PDF file and returns CSV file of whole page."
-                            + " Input:PDF Output:CSV Type:SISO")
+                    "This operation takes an input PDF file and returns CSV file of whole page.")
     public ResponseEntity<?> pdfToCsv(@ModelAttribute PDFWithPageNums request) throws Exception {
         String baseName = getBaseName(request.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();

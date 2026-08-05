@@ -1,13 +1,24 @@
+import type { Page } from "@playwright/test";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+
+/**
+ * The tool panel header shows a search *toggle*; the field only mounts once
+ * it's pressed. Open it and hand back the focused input.
+ */
+async function openToolSearch(page: Page) {
+  await page.getByRole("button", { name: /search tools/i }).click();
+  const searchBox = page.getByPlaceholder(/search|cari/i).first();
+  await expect(searchBox).toBeVisible({ timeout: 5000 });
+  return searchBox;
+}
 
 test.describe("3. Tool Search", () => {
   test.describe("3.1 Search - Happy Path", () => {
     test("should filter tools in real time based on search input", async ({
       page,
     }) => {
-      // Step 1: Click on the search box
-      const searchBox = page.getByPlaceholder(/search|cari/i).first();
-      await searchBox.click();
+      // Step 1: Open the search box from the header toggle
+      const searchBox = await openToolSearch(page);
 
       // Step 2: Type "merge"
       await searchBox.fill("merge");
@@ -31,9 +42,8 @@ test.describe("3. Tool Search", () => {
     test("should handle queries with no matching tools gracefully", async ({
       page,
     }) => {
-      // Step 1: Click on the search box
-      const searchBox = page.getByPlaceholder(/search|cari/i).first();
-      await searchBox.click();
+      // Step 1: Open the search box from the header toggle
+      const searchBox = await openToolSearch(page);
 
       // Step 2: Type xyznonexistent123
       await searchBox.fill("xyznonexistent123");
@@ -61,7 +71,7 @@ test.describe("3. Tool Search", () => {
   test.describe("3.3 Search - Special Characters", () => {
     test("should sanitize search input against XSS", async ({ page }) => {
       // Step 1: Type XSS payload into the search box
-      const searchBox = page.getByPlaceholder(/search|cari/i).first();
+      const searchBox = await openToolSearch(page);
       await searchBox.fill("<script>alert(1)</script>");
 
       // Step 2: Verify no script execution occurs (no alert dialog)

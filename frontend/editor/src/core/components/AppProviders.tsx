@@ -1,4 +1,6 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createAppQueryClient } from "@app/query/queryClient";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
@@ -119,70 +121,73 @@ export function AppProviders({
   appConfigRetryOptions,
   appConfigProviderProps,
 }: AppProvidersProps) {
+  const [queryClient] = useState(createAppQueryClient);
   return (
-    <PreferencesProvider>
-      <ThemeProvider>
-        <ErrorBoundary>
-          <BannerProvider>
-            <AppConfigProvider
-              retryOptions={appConfigRetryOptions}
-              {...appConfigProviderProps}
-            >
-              <PosthogTrackingInitializer />
-              <ScarfTrackingInitializer />
-              <AppConfigLoader />
-              <ServerDefaultsSync />
-              {/* Auto-popup on startup when a newer Stirling-PDF release is available.
-                  No-ops inside Tauri — the desktop popup handles that flow. */}
-              <UpdateStartupPopup />
-              <FileContextProvider
-                enableUrlSync={true}
-                enablePersistence={true}
+    <QueryClientProvider client={queryClient}>
+      <PreferencesProvider>
+        <ThemeProvider>
+          <ErrorBoundary>
+            <BannerProvider>
+              <AppConfigProvider
+                retryOptions={appConfigRetryOptions}
+                {...appConfigProviderProps}
               >
-                <FolderProvider>
-                  <AppInitializer />
-                  <BrandingAssetManager />
-                  <ToolRegistryProvider>
-                    <NavigationProvider>
-                      <FilesModalProvider>
-                        <ToolWorkflowProvider>
-                          <HotkeyProvider>
-                            <SidebarProvider>
-                              <ViewerProvider>
-                                <PageEditorProvider>
-                                  <SignatureProvider>
-                                    <SigningOverlayProvider>
-                                      <RedactionProvider>
-                                        <FormFillProvider>
-                                          <AnnotationProvider>
-                                            <WorkbenchBarProvider>
-                                              <TourOrchestrationProvider>
-                                                <AdminTourOrchestrationProvider>
-                                                  <FolderFileContextProvider>
-                                                    {children}
-                                                  </FolderFileContextProvider>
-                                                </AdminTourOrchestrationProvider>
-                                              </TourOrchestrationProvider>
-                                            </WorkbenchBarProvider>
-                                          </AnnotationProvider>
-                                        </FormFillProvider>
-                                      </RedactionProvider>
-                                    </SigningOverlayProvider>
-                                  </SignatureProvider>
-                                </PageEditorProvider>
-                              </ViewerProvider>
-                            </SidebarProvider>
-                          </HotkeyProvider>
-                        </ToolWorkflowProvider>
-                      </FilesModalProvider>
-                    </NavigationProvider>
-                  </ToolRegistryProvider>
-                </FolderProvider>
-              </FileContextProvider>
-            </AppConfigProvider>
-          </BannerProvider>
-        </ErrorBoundary>
-      </ThemeProvider>
-    </PreferencesProvider>
+                <PosthogTrackingInitializer />
+                <ScarfTrackingInitializer />
+                <AppConfigLoader />
+                <ServerDefaultsSync />
+                {/* Auto-popup on startup when a newer Stirling-PDF release is available.
+                  No-ops inside Tauri — the desktop popup handles that flow. */}
+                <UpdateStartupPopup />
+                <FileContextProvider
+                  enableUrlSync={true}
+                  enablePersistence={true}
+                >
+                  <FolderProvider>
+                    <AppInitializer />
+                    <BrandingAssetManager />
+                    <ToolRegistryProvider>
+                      <NavigationProvider>
+                        <FilesModalProvider>
+                          <ToolWorkflowProvider>
+                            <HotkeyProvider>
+                              <SidebarProvider>
+                                <ViewerProvider>
+                                  <PageEditorProvider>
+                                    <SignatureProvider>
+                                      <SigningOverlayProvider>
+                                        <RedactionProvider>
+                                          <FormFillProvider>
+                                            <AnnotationProvider>
+                                              <WorkbenchBarProvider>
+                                                <TourOrchestrationProvider>
+                                                  <AdminTourOrchestrationProvider>
+                                                    <FolderFileContextProvider>
+                                                      {children}
+                                                    </FolderFileContextProvider>
+                                                  </AdminTourOrchestrationProvider>
+                                                </TourOrchestrationProvider>
+                                              </WorkbenchBarProvider>
+                                            </AnnotationProvider>
+                                          </FormFillProvider>
+                                        </RedactionProvider>
+                                      </SigningOverlayProvider>
+                                    </SignatureProvider>
+                                  </PageEditorProvider>
+                                </ViewerProvider>
+                              </SidebarProvider>
+                            </HotkeyProvider>
+                          </ToolWorkflowProvider>
+                        </FilesModalProvider>
+                      </NavigationProvider>
+                    </ToolRegistryProvider>
+                  </FolderProvider>
+                </FileContextProvider>
+              </AppConfigProvider>
+            </BannerProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
+      </PreferencesProvider>
+    </QueryClientProvider>
   );
 }

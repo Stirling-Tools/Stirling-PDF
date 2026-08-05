@@ -25,6 +25,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -48,11 +50,10 @@ public class UnlockPDFFormsController {
             value = "/unlock-pdf-forms",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove read-only property from form fields",
-            description =
-                    "Removing read-only property from form fields making them fillable"
-                            + "Input:PDF, Output:PDF. Type:SISO")
+            description = "Removing read-only property from form fields making them fillable")
     public ResponseEntity<Resource> unlockPDFForms(@ModelAttribute PDFFile file) {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();

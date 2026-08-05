@@ -74,11 +74,7 @@ export function DeploymentsTab() {
       key: "status",
       header: t("portal.infrastructure.deployments.regionColumns.status"),
       render: (r) => (
-        <StatusBadge
-          tone={REGION_TONE[r.status]}
-          size="sm"
-          pulse={r.status === "healthy"}
-        >
+        <StatusBadge tone={REGION_TONE[r.status]} size="sm">
           {t(REGION_LABEL[r.status])}
         </StatusBadge>
       ),

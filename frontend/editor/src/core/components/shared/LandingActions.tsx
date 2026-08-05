@@ -33,6 +33,7 @@ export function LandingActions({
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
           className="landing-btn-primary"
+          px="xl"
           leftSection={
             <LocalIcon icon={icons.uploadIconName} width="1rem" height="1rem" />
           }
@@ -47,6 +48,7 @@ export function LandingActions({
         <Button
           variant="secondary"
           className="landing-btn-secondary"
+          px="xl"
           leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
           onClick={(e) => {
             e.stopPropagation();

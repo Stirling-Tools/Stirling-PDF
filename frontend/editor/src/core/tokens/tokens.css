@@ -326,16 +326,6 @@
     opacity: 0.5;
   }
 }
-@keyframes pulseRing {
-  0% {
-    transform: scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-}
 @keyframes spin {
   to {
     transform: rotate(360deg);

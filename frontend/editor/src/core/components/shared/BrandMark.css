@@ -1,0 +1,56 @@
+/* Morphing Stirling mark. At rest: the two-tone red brand parallelograms
+   (from the `d` attributes in the markup). When an ancestor marked
+   [data-brandmark-morph] is hovered / focused / open, each parallelogram is
+   transformed into one arm of a smaller, symmetric downward chevron in the
+   primary text colour.
+
+   The morph uses a CSS `transform` (not the `d` property) so it works in every
+   browser: both the logo shape and its target chevron arm are parallelograms,
+   and an affine matrix maps one exactly onto the other. The matrices below were
+   solved to send each path's 4 corners onto the chevron-arm corners:
+     arm A (left):  M13 27 L35.5 41 L35.5 53 L13 39 Z
+     arm B (right): M35.5 41 L58 27 L58 39 L35.5 53 Z
+   (mirror images — equal area + dimensions). */
+.sui-brandmark {
+  display: block;
+  width: auto;
+  overflow: visible;
+}
+
+.sui-brandmark__a,
+.sui-brandmark__b {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transition:
+    transform var(--motion-slow),
+    fill var(--motion-slow);
+}
+
+/* Rest state — brand mark. */
+.sui-brandmark__a {
+  fill: var(--c-brand-mark-soft);
+}
+.sui-brandmark__b {
+  fill: var(--c-brand-mark);
+}
+
+/* Morphed state — the two chevron arms, both in the primary text colour. */
+[data-brandmark-morph]:hover .sui-brandmark__a,
+[data-brandmark-morph]:focus-visible .sui-brandmark__a,
+[data-brandmark-morph].is-open .sui-brandmark__a {
+  fill: var(--c-text);
+  transform: matrix(0.483871, 0.584583, 0, 0.338028, 13, 13.8169);
+}
+[data-brandmark-morph]:hover .sui-brandmark__b,
+[data-brandmark-morph]:focus-visible .sui-brandmark__b,
+[data-brandmark-morph].is-open .sui-brandmark__b {
+  fill: var(--c-text);
+  transform: matrix(0.483871, -0.017568, 0, 0.338028, 23.887097, 26.886428);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-brandmark__a,
+  .sui-brandmark__b {
+    transition: none;
+  }
+}

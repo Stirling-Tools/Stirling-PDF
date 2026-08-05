@@ -24,6 +24,11 @@ import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
@@ -43,11 +48,10 @@ public class ConvertPDFToOffice {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/presentation",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PPT)
     @Operation(
             summary = "Convert PDF to Presentation format",
-            description =
-                    "This endpoint converts a given PDF file to a Presentation format. Input:PDF"
-                            + " Output:PPT Type:SISO")
+            description = "This endpoint converts a given PDF file to a Presentation format.")
     public ResponseEntity<Resource> processPdfToPresentation(
             @ModelAttribute PdfToPresentationRequest request)
             throws IOException, InterruptedException {
@@ -61,11 +65,16 @@ public class ConvertPDFToOffice {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/text",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(
+            produces = ToolFormat.TEXT,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "outputFormat", matches = "rtf"),
+                            produces = ToolFormat.WORD,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Convert PDF to Text or RTF format",
-            description =
-                    "This endpoint converts a given PDF file to Text or RTF format. Input:PDF"
-                            + " Output:TXT Type:SISO")
+            description = "This endpoint converts a given PDF file to Text or RTF format.")
     public ResponseEntity<Resource> processPdfToRTForTXT(
             @ModelAttribute PdfToTextOrRTFRequest request)
             throws IOException, InterruptedException {
@@ -94,11 +103,10 @@ public class ConvertPDFToOffice {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/word",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.WORD)
     @Operation(
             summary = "Convert PDF to Word document",
-            description =
-                    "This endpoint converts a given PDF file to a Word document format. Input:PDF"
-                            + " Output:WORD Type:SISO")
+            description = "This endpoint converts a given PDF file to a Word document format.")
     public ResponseEntity<Resource> processPdfToWord(@ModelAttribute PdfToWordRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -111,11 +119,10 @@ public class ConvertPDFToOffice {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/xml",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.XML)
     @Operation(
             summary = "Convert PDF to XML",
-            description =
-                    "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML"
-                            + " Type:SISO")
+            description = "This endpoint converts a PDF file to an XML file.")
     public ResponseEntity<Resource> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 

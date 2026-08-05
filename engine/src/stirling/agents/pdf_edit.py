@@ -27,7 +27,7 @@ from stirling.contracts import (
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, ToolChainStep, blocking, validate_tool_chain
 
 logger = logging.getLogger(__name__)
 
@@ -209,25 +209,42 @@ class PdfEditAgent:
         supported_operations, unavailable_operations = self._classify_operations(request)
         if not supported_operations:
             return EditCannotDoResponse(reason="No PDF edit operations are available on this server.")
-        selection = await self._select_plan(
-            request, supported_operations, unavailable_operations, allow_need_content=allow_need_content
-        )
-        if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
-            logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, Pretty(selection))
-            return selection
-        if isinstance(selection, PdfEditNeedContentSelection):
-            logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
-            return self._build_need_content_response(selection, request)
-        enabled = set(supported_operations)
-        unsupported = [op for op in selection.operations if op not in enabled]
-        if unsupported:
-            logger.warning("[pdf-edit] plan referenced unavailable operations: %s", [op.name for op in unsupported])
-            return EditCannotDoResponse(
-                reason=(
-                    "The following operations are not available on this server "
-                    "(either disabled by the administrator or not installed): "
-                    + ", ".join(op.name for op in unsupported)
+        # One retry, told exactly which transition fails. Cheaper than carrying the whole
+        # compatibility matrix in the prompt.
+        repair_note = ""
+        for attempt in range(2):
+            selection = await self._select_plan(
+                request,
+                supported_operations,
+                unavailable_operations,
+                allow_need_content=allow_need_content,
+                repair_note=repair_note,
+            )
+            if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
+                logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, Pretty(selection))
+                return selection
+            if isinstance(selection, PdfEditNeedContentSelection):
+                logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
+                return self._build_need_content_response(selection, request)
+            enabled = set(supported_operations)
+            unsupported = [op for op in selection.operations if op not in enabled]
+            if unsupported:
+                logger.warning("[pdf-edit] plan referenced unavailable operations: %s", [op.name for op in unsupported])
+                return EditCannotDoResponse(
+                    reason=(
+                        "The following operations are not available on this server "
+                        "(either disabled by the administrator or not installed): "
+                        + ", ".join(op.name for op in unsupported)
+                    )
                 )
+            problems = self._chain_problems(selection.operations)
+            if not problems:
+                break
+            logger.warning("[pdf-edit] plan rejected on attempt %d: %s", attempt + 1, problems)
+            repair_note = problems
+        else:
+            return EditCannotDoResponse(
+                reason=("No workable order of the available operations achieves this: " + repair_note)
             )
         logger.info("[pdf-edit] plan: %s", [op.name for op in selection.operations])
         steps: list[ToolOperationStep] = []
@@ -257,6 +274,7 @@ class PdfEditAgent:
         unavailable_operations: Iterable[ToolEndpoint],
         *,
         allow_need_content: bool = True,
+        repair_note: str = "",
     ) -> PdfEditPlanOutput:
         can_request_content = allow_need_content and not has_page_text(request.page_text)
         agent = self._build_selection_agent(
@@ -264,7 +282,9 @@ class PdfEditAgent:
             unavailable_operations,
             allow_need_content=can_request_content,
         )
-        return await agent.select(self._build_selection_prompt(request, supported_operations, unavailable_operations))
+        return await agent.select(
+            self._build_selection_prompt(request, supported_operations, unavailable_operations, repair_note)
+        )
 
     def _build_selection_agent(
         self,
@@ -311,7 +331,18 @@ class PdfEditAgent:
         request: PdfEditRequest,
         supported_operations: Iterable[ToolEndpoint],
         unavailable_operations: Iterable[ToolEndpoint],
+        repair_note: str = "",
     ) -> str:
+        repair_line = (
+            f"A previous attempt planned operations in an order that cannot run: {repair_note}\n"
+            "If running them in a different order still gives the user what they asked for, "
+            "return that plan. If it would not - reordering changes the result, or no order "
+            "works - return cannot_do and say plainly which step cannot accept the previous "
+            "step's output. This is the one case where cannot_do is right even though some "
+            "order of these operations would run.\n"
+            if repair_note
+            else ""
+        )
         unavailable_line = (
             "Unavailable operations (exist but not currently usable): "
             f"{self._get_operations_prompt(unavailable_operations)}\n"
@@ -324,6 +355,7 @@ class PdfEditAgent:
             f"Files: {format_file_names(request.files)}\n"
             f"Supported operations:\n{self._get_supported_operations_prompt(supported_operations)}\n"
             f"{unavailable_line}"
+            f"{repair_line}"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
@@ -352,6 +384,20 @@ class PdfEditAgent:
         supported = [op for op in request.enabled_endpoints if op not in self._AGENT_HIDDEN_ENDPOINTS]
         unavailable = [op for op in OPERATIONS if op not in enabled_set and op not in self._AGENT_HIDDEN_ENDPOINTS]
         return supported, unavailable
+
+    @staticmethod
+    def _chain_problems(operations: Iterable[ToolEndpoint]) -> str:
+        """Why this ordering cannot run, or empty if it can.
+
+        Only errors count: parameters are not chosen yet, so a conditional output merely warns and
+        acting on that would reject plans that are fine once configured.
+        """
+        diagnostics = validate_tool_chain([ToolChainStep(operation=op) for op in operations])
+        errors = blocking(diagnostics)
+        if not errors:
+            return ""
+        steps = list(operations)
+        return "; ".join(f"step {d.step_index + 1} ({steps[d.step_index].name}) {d.message}" for d in errors)
 
     @staticmethod
     def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:

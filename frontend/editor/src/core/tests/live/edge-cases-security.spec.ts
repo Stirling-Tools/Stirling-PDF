@@ -12,7 +12,9 @@ test.describe("20. Edge Cases and Security", () => {
     test("should prevent XSS via search input", async ({ page }) => {
       await loginAndSetup(page);
 
-      // Step 1: Enter XSS payload in the search box
+      // Step 1: Open the search box (the tool panel header shows a search
+      // toggle; the field only mounts once it's pressed) and enter the payload
+      await page.getByRole("button", { name: /search tools/i }).click();
       const searchBox = page.getByPlaceholder(/search|cari/i).first();
       await searchBox.fill('"><img src=x onerror=alert(1)>');
 

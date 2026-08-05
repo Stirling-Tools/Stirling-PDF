@@ -41,6 +41,9 @@ import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -265,12 +268,13 @@ public class MergeController {
             value = "/merge-pdfs",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Merge multiple PDF files into one",
             description =
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
-                            + " provided. Input:PDF Output:PDF Type:MISO")
+                            + " provided.")
     public ResponseEntity<Resource> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
