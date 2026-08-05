@@ -256,7 +256,7 @@ PDF Elite follows a modern, modular architecture designed for performance and ex
 - **Icons**: Custom icon set + Lucide React
 
 ### Backend (Optional)
-- **Runtime**: Java 25
+- **Runtime**: Java 21 (default toolchain; build with `-PjavaVersion=25` to opt into 25)
 - **Framework**: Spring Boot 4.0.6
 - **PDF Engine**: Apache PDFBox 3.0.0
 - **Office Integration**: LibreOffice 7.x
@@ -386,29 +386,62 @@ We welcome contributions from the community! Here's how you can help:
 
 ### Development Setup
 
+> ⚠️ PDF Elite ships as a **native desktop application**, not a browser-based
+> tool. `task dev` (below) starts the Spring Boot API on `:8080` and opens the
+> React UI in a browser tab at `:5173` — that combination is a **frontend
+> development convenience only** (fast hot-reload while editing UI code). It
+> is never what end users run, and it is not what produces `PDF Elite.exe`.
+> For the real desktop app, use the `task desktop:*` commands in the next
+> section.
+
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/pdf-elite/pdf-elite.git
-   cd pdf-elite
+   git clone https://github.com/sayedalve/PDF-Elite.git
+   cd PDF-Elite
    ```
 
-2. **Install frontend dependencies**
+2. **Install all dependencies** (frontend + backend prerequisites)
    ```bash
-   cd frontend/editor
-   npm install
+   task install
    ```
 
-3. **Start development server**
+3. **Start the web dev server** (browser-based UI hot-reload, for frontend work only)
    ```bash
-   npm run dev
+   task dev
    ```
 
-4. **Build for production**
+4. **Start the actual desktop app in dev mode** (native window, no browser — see below)
    ```bash
-   npm run build
+   task desktop:dev
    ```
 
 For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### 🖥️ Building the Windows Desktop App (`PDF Elite.exe`)
+
+The desktop shell already exists at `frontend/editor/src-tauri` (Tauri v2). It
+bundles a trimmed JRE and the backend jar as resources, launches the Java
+backend as an internal background process on a random local port the moment
+the app opens, and renders the editor in a native OS window — the user never
+sees a browser, a URL bar, or an API landing page.
+
+1. **Dev mode** — native window, live-reloads the frontend, backend auto-starts internally:
+   ```bash
+   task desktop:dev
+   ```
+
+2. **Production build** — produces a signed-ready Windows installer (NSIS) that installs and launches as `PDF Elite.exe`:
+   ```bash
+   task desktop:build:dev:windows
+   ```
+   Or, for the full release build across all bundle targets (MSI + auto-updater artifacts once you've configured your own updater signing key — see `tauri.conf.json`):
+   ```bash
+   task desktop:build
+   ```
+
+Output installer lands under `frontend/editor/src-tauri/target/release/bundle/`.
+Running it installs and launches **PDF Elite** as a normal Windows program —
+no terminal, no localhost, no browser involved at any point.
 
 ### Code of Conduct
 

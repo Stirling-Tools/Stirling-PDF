@@ -1,8 +1,8 @@
 [package]
-name = "stirling-pdf"
-version = "0.1.0"
-description = "Stirling-PDF Desktop Application"
-authors = ["Stirling-PDF Contributors"]
+name = "pdf-elite"
+version = "1.0.0"
+description = "PDF Elite Desktop Application"
+authors = ["PDF Elite Contributors"]
 license = ""
 repository = ""
 edition = "2021"

@@ -11,7 +11,7 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 **Stirling 2.0** is built using:
 
 **Backend:**
-- Spring Boot (requires JDK 25)
+- Spring Boot (requires JDK 21+; build defaults to JDK 21, override with `-PjavaVersion=25`)
 - PDFBox for core PDF operations
 - LibreOffice for document conversions
 - qpdf for PDF optimization
@@ -45,7 +45,7 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - [Task](https://taskfile.dev/installation/) — unified command runner (recommended)
 - Docker
 - Git
-- Java JDK 25
+- Java JDK 21
 - Node.js 18+ and npm (required for frontend development)
 - Gradle 7.0 or later (Included within the repo)
 - [uv](https://docs.astral.sh/uv/) — Python package manager (required for engine development)
@@ -72,7 +72,7 @@ These are not required to run the app but enable specific features. The app dete
    cd Stirling-PDF
    ```
 
-2. Install Docker and JDK 25 if not already installed.
+2. Install Docker and JDK 21 if not already installed.
 
 3. Install a recommended Java IDE such as Eclipse, IntelliJ, or VSCode
    1. Only VSCode

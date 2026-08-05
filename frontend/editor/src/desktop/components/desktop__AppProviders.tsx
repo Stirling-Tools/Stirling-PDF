@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
@@ -11,13 +11,17 @@ import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import { ToolActionsContext } from "@app/contexts/ToolActionsContext";
 import { useFirstLaunchCheck } from "@app/hooks/useFirstLaunchCheck";
 import { useBackendInitializer } from "@app/hooks/useBackendInitializer";
+import { DesktopStartupScreen } from "@app/components/DesktopStartupScreen";
 import { DESKTOP_DEFAULT_APP_CONFIG } from "@app/config/defaultAppConfig";
 import {
   connectionModeService,
   JWT_EXPIRED_PROMPTED_KEY,
 } from "@app/services/connectionModeService";
 import { STIRLING_SAAS_URL } from "@app/constants/connection";
-import { tauriBackendService } from "@app/services/tauriBackendService";
+import {
+  tauriBackendService,
+  type BackendStatus,
+} from "@app/services/tauriBackendService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { authService } from "@app/services/authService";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
@@ -55,6 +59,19 @@ export function AppProviders({ children }: { children: ReactNode }) {
   >(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [pendingSignIn, setPendingSignIn] = useState(false);
+  // Tracks the bundled Java backend so we can hold the editor (and the native
+  // window itself, see the show() effect below) off-screen until it's ready.
+  const [backendStatus, setBackendStatus] = useState<BackendStatus>(() =>
+    tauriBackendService.getBackendStatus(),
+  );
+  const [backendStartTimedOut, setBackendStartTimedOut] = useState(false);
+  // Latches true the first time the editor becomes ready to show. Startup
+  // readiness gates the *first* reveal only — if the backend later blips to
+  // "unhealthy" mid-session (a crash-and-restart), we must NOT unmount the
+  // already-open editor (that would discard in-progress, unsaved work).
+  // BackendHealthIndicator + the existing toast/auto-recovery flow handle
+  // that case instead.
+  const [editorUnlocked, setEditorUnlocked] = useState(false);
   // Prevent first-launch setup from running twice when connectionMode state update re-triggers the effect
   const firstLaunchInitiated = useRef(false);
   // Key incremented on every connection mode change after initial load — forces SaaS provider
@@ -83,6 +100,42 @@ export function AppProviders({ children }: { children: ReactNode }) {
       }
     });
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    return tauriBackendService.subscribeToStatus(setBackendStatus);
+  }, []);
+
+  // Self-hosted mode targets a remote server — the bundled local backend is
+  // an optional fallback there, so we don't gate the UI on it. Local/SaaS
+  // mode always route through the bundled backend, so the editor must wait.
+  const waitForLocalBackend =
+    connectionMode === "local" || connectionMode === "saas";
+  const backendReady = !waitForLocalBackend || backendStatus === "healthy";
+
+  // Latch the unlock — see the comment on editorUnlocked above.
+  useEffect(() => {
+    if (authChecked && backendReady) {
+      setEditorUnlocked(true);
+    }
+  }, [authChecked, backendReady]);
+
+  // Give the backend a generous grace period before offering a manual retry.
+  // A cold JVM start (first launch, slow disk, AV scanning the jar) can
+  // legitimately take a while; we don't want to flash an error during that.
+  // Only relevant before the first unlock — see editorUnlocked above.
+  useEffect(() => {
+    if (editorUnlocked || !waitForLocalBackend || backendReady) {
+      setBackendStartTimedOut(false);
+      return;
+    }
+    const timer = setTimeout(() => setBackendStartTimedOut(true), 45000);
+    return () => clearTimeout(timer);
+  }, [editorUnlocked, waitForLocalBackend, backendReady]);
+
+  const handleBackendRetry = useCallback(() => {
+    setBackendStartTimedOut(false);
+    void tauriBackendService.attemptRestart();
   }, []);
 
   useEffect(() => {
@@ -249,22 +302,38 @@ export function AppProviders({ children }: { children: ReactNode }) {
   }, [authChecked, pendingSignIn]);
 
   useEffect(() => {
-    if (!authChecked) {
-      return;
-    }
-
+    // Window is created with `visible: false` (tauri.conf.json) so the OS
+    // never shows a blank/white shell before React has painted anything.
+    // Reveal it on the frame right after mount — by then there is always
+    // real content behind it: either DesktopStartupScreen (auth/backend
+    // still resolving) or the finished editor (see the render branch
+    // below). The window is never shown with nothing in it, and it is
+    // never shown pointed at a URL — there's no address bar to point.
     if (!isTauri()) {
       return;
     }
-
     const currentWindow = getCurrentWindow();
-    currentWindow
-      .show()
-      .then(() => currentWindow.unminimize().catch(() => {}))
-      .then(() => currentWindow.setFocus().catch(() => {}))
-      .then(() => currentWindow.requestUserAttention(1).catch(() => {}))
+    const raf = requestAnimationFrame(() => {
+      currentWindow
+        .show()
+        .then(() => currentWindow.unminimize().catch(() => {}))
+        .then(() => currentWindow.setFocus().catch(() => {}))
+        .catch(() => {});
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  useEffect(() => {
+    // Fires once, the moment the editor first unlocks — pulls the window to
+    // the front and flashes the taskbar icon so a user who alt-tabbed away
+    // during a slow cold start notices the app finished loading.
+    if (!editorUnlocked || !isTauri()) {
+      return;
+    }
+    getCurrentWindow()
+      .requestUserAttention(1)
       .catch(() => {});
-  }, [authChecked]);
+  }, [editorUnlocked]);
 
   // Desktop auto-update popup (shown on startup if update available)
   const { state: popupState, actions: popupActions } = updatePopup;
@@ -298,7 +367,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
     />
   );
 
-  if (!authChecked) {
+  // Hold the editor back until it has unlocked at least once (auth resolved
+  // and, for local/SaaS mode, the bundled backend reported healthy).
+  // Everything the user could interact with — tool buttons, the workbench,
+  // menus — depends on one of those two things, so there is nothing correct
+  // to show before this is true.
+  if (!editorUnlocked) {
     return (
       <ProprietaryAppProviders
         appConfigRetryOptions={{
@@ -311,13 +385,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
           autoFetch: false,
         }}
       >
-        <div style={{ minHeight: "100vh" }} />
+        <DesktopStartupScreen
+          timedOut={authChecked && backendStartTimedOut}
+          onRetry={authChecked ? handleBackendRetry : undefined}
+        />
         {updatePopupModal}
       </ProprietaryAppProviders>
     );
   }
 
-  // Normal app flow
+  // Normal app flow — editor is ready to render, window is about to show.
   return (
     <ProprietaryAppProviders
       appConfigRetryOptions={{

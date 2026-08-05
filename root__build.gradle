@@ -50,7 +50,11 @@ ext {
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
-    modernJavaVersion = 25
+    // Default toolchain/target for this fork's desktop build. Override per-invocation
+    // with -PjavaVersion=25 if you have a JDK 25 available and want it (e.g. for the
+    // Compact Object Headers JVM tuning gated below in `bootRun`). See DeveloperGuide.md
+    // "Java version" section for the full compatibility rationale.
+    modernJavaVersion = 21
 }
 
 def buildJavaMajorVersion = (project.findProperty('javaVersion') ?: ext.modernJavaVersion).toString().toInteger()
@@ -478,9 +482,18 @@ subprojects {
                 "-XX:G1HeapRegionSize=4m",
                 "-XX:+ExplicitGCInvokesConcurrent",
                 "-XX:+UseStringDeduplication",
-                "-XX:+UseCompactObjectHeaders",
+                // --enable-native-access has existed since JDK 17, safe at any
+                // supported version.
                 "--enable-native-access=ALL-UNNAMED"
             ]
+            // Compact Object Headers (JEP 519) is a JDK 25+ *product* flag - the JVM
+            // rejects it outright as an unrecognized option on JDK 21-23, and it needs
+            // -XX:+UnlockExperimentalVMOptions alongside it on JDK 24. Only add it when
+            // actually compiling/running against 25+ (buildJavaMajorVersion tracks
+            // modernJavaVersion / -PjavaVersion, defined earlier in this file).
+            if (buildJavaMajorVersion >= 25) {
+                runtimeArgs.add("-XX:+UseCompactObjectHeaders")
+            }
 
             // Optional JaCoCo agent for e2e/cucumber backend coverage.
             //
