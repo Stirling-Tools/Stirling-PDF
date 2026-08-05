@@ -91,6 +91,7 @@ const FileGrid = ({
 
             {showSort && (
               <Select
+                aria-label={t("fileManager.sortBy", "Sort files")}
                 data={[
                   {
                     value: "date",

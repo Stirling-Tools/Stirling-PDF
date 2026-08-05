@@ -10,8 +10,9 @@ export interface ProgressBarProps {
   /** Optional override colour (CSS gradient or solid). Disables threshold behaviour. */
   color?: string;
   className?: string;
-  /** Accessible label for screen readers. */
-  label?: string;
+  /** Accessible name — describe what is being measured ("Storage used"), since
+   *  the bar carries no visible text of its own. */
+  label: string;
 }
 
 function clamp01(n: number) {

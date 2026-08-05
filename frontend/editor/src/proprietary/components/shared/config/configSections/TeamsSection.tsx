@@ -317,7 +317,11 @@ export default function TeamsSection() {
             >
               {t("workspace.teams.totalMembers")}
             </Table.Th>
-            <Table.Th style={{ width: 50 }}></Table.Th>
+            <Table.Th style={{ width: 50 }}>
+              <span className="sr-only">
+                {t("workspace.teams.teamActions", "Team actions")}
+              </span>
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>

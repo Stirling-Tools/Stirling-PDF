@@ -73,6 +73,7 @@ export function ReviewQueueTable({
               {d.sensitive && (
                 <span
                   className="portal-documents__lock"
+                  role="img"
                   title={t("portal.documents.table.sensitiveTitle")}
                   aria-label={t("portal.documents.table.sensitiveLabel")}
                 >
@@ -136,7 +137,11 @@ export function ReviewQueueTable({
       },
       {
         key: "actions",
-        header: "",
+        header: (
+          <span className="sr-only">
+            {t("portal.documents.table.columns.actions")}
+          </span>
+        ),
         width: "3rem",
         render: (d) => (
           <Button
@@ -163,6 +168,9 @@ export function ReviewQueueTable({
       rows={documents}
       rowKey={(d) => d.id}
       onRowClick={onRowClick}
+      // The row-actions button in the last column opens the same drawer, so it
+      // is the keyboard route in and the row itself stays a plain row.
+      rowActionInCell
       empty={t("portal.documents.table.empty")}
     />
   );

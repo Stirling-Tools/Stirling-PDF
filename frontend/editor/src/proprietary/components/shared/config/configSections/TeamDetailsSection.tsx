@@ -417,7 +417,11 @@ export default function TeamDetailsSection({
             <Table.Th style={{ fontWeight: 600 }} fz="sm" w={100}>
               {t("workspace.people.role")}
             </Table.Th>
-            <Table.Th w={50}></Table.Th>
+            <Table.Th w={50}>
+              <span className="sr-only">
+                {t("workspace.people.memberActions", "Member actions")}
+              </span>
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
