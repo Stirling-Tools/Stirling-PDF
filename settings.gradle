@@ -23,7 +23,7 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-rootProject.name = 'Stirling PDF'
+rootProject.name = 'pdf-elite'
 
 // Flavors: core | proprietary (default) | saas.
 // Selectable via STIRLING_FLAVOR or by setting DISABLE_ADDITIONAL_FEATURES/ENABLE_SAAS directly.
