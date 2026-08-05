@@ -144,8 +144,21 @@ tasks:
     deps: [jlink:jar]
     dir: editor/src-tauri
     cmds:
-      - rm -rf runtime/jre
-      - mkdir -p runtime
+      # --- CROSS-PLATFORM CLEANUP ---
+      - cmd: |
+          if (Test-Path "runtime/jre") { Remove-Item -Recurse -Force "runtime/jre" }
+        platforms: [windows]
+      - cmd: rm -rf runtime/jre
+        platforms: [linux, darwin]
+
+      # --- CROSS-PLATFORM DIRECTORY CREATION ---
+      - cmd: |
+          if (-not (Test-Path "runtime")) { New-Item -ItemType Directory -Force "runtime" | Out-Null }
+        platforms: [windows]
+      - cmd: mkdir -p runtime
+        platforms: [linux, darwin]
+
+      # --- CROSS-PLATFORM JLINK EXECUTION ---
       # Pin jlink to JAVA_HOME so the bundled JRE matches the JDK the build
       # uses. Bare `jlink` on PATH can resolve to an older system Java (the
       # ubuntu runner ships Java 11), producing a runtime jlink:verify rejects.
@@ -154,28 +167,41 @@ tasks:
       # hardware-backed cert signing) is a Windows-only module - it only exists in a Windows
       # JDK's jmods, so it is added on Windows only or jlink fails to resolve it elsewhere.
       - cmd: |
-          JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
-          $JLINK_OUTPUT = & "$JLINK" --help 2>&1 | Select-String -Pattern 'zip-\[0-9]\' -Quiet
-          $JLINK_COMPRESS = if ($JLINK_OUTPUT) { "zip-6" } else { "2" }
-          "$JLINK" \
-            --add-modules {{.JLINK_MODULES}},jdk.crypto.mscapi \
-            --strip-debug \
-            --compress="$JLINK_COMPRESS" \
-            --no-header-files \
-            --no-man-pages \
+          $JlinkExe = "{{if .JAVA_HOME}}{{.JAVA_HOME}}\\bin\\jlink{{else}}jlink{{end}}"
+          if (-not (Test-Path $JlinkExe)) { $JlinkExe = "jlink" }
+          
+          # Determine compression support (Windows safe grep alternative)
+          $HelpOutput = & $JlinkExe --help 2>&1
+          $SupportsZip = $HelpOutput -match 'zip-\[\d\]'
+          $CompressArg = if ($SupportsZip) { "--compress=zip-6" } else { "--compress=2" }
+          
+          & $JlinkExe `
+            --add-modules {{.JLINK_MODULES}},jdk.crypto.mscapi `
+            --strip-debug `
+            $CompressArg `
+            --no-man-pages `
+            --no-header-files `
             --output runtime/jre
         platforms: [windows]
       - cmd: |
-          JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
-          JLINK_COMPRESS="$(echo "$("$JLINK" --help 2>&1)" | grep -q 'zip-\[0-9]\' && echo zip-6 || echo 2)"
+          JLINK="{{if .JAVA_HOME}}{{.JAVA_HOME}}/bin/jlink{{else}}jlink{{end}}"
+          
+          # Determine compression support
+          if "$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]'; then
+            COMPRESS="--compress=zip-6"
+          else
+            COMPRESS="--compress=2"
+          fi
+
           "$JLINK" \
             --add-modules {{.JLINK_MODULES}} \
             --strip-debug \
-            --compress="$JLINK_COMPRESS" \
+            $COMPRESS \
             --no-header-files \
             --no-man-pages \
             --output runtime/jre
         platforms: [linux, darwin]
+
       # jlink emits its files mode 444 (read-only). Tauri's build-script
       # resource copier preserves source permissions when staging
       # `runtime/jre/**/*` into `target/<profile>/runtime/jre/...`, so the
@@ -189,7 +215,7 @@ tasks:
       # on incremental builds. Uses proper PowerShell syntax with $_ variable.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Path 'runtime\\jre' -Recurse -File | ForEach-Object { [System.IO.File]::SetAttributes($_, ([System.IO.File]::GetAttributes($_) -band -16)) }"
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Path 'runtime\\jre' -Recurse -File | ForEach-Object { [System.IO.File]::SetAttributes($_.FullName, ([System.IO.File]::GetAttributes($_.FullName) -band -bnot [System.IO.FileAttributes]::ReadOnly)) }"
         platforms: [windows]
     status:
       - test -f runtime/jre/release
