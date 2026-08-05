@@ -162,7 +162,11 @@ export function reorderMany(
   moving: readonly number[],
   insertIndex: number,
 ): number[] | null {
-  const lifted = [...new Set(moving)].sort((a, b) => a - b);
+  // Range-check: a stray index would survive into `next` and then read as an undefined step, so
+  // keep only positions that exist in the chain before lifting anything out.
+  const lifted = [...new Set(moving)]
+    .filter((i) => i >= 0 && i < stepCount)
+    .sort((a, b) => a - b);
   if (lifted.length === 0) return null;
 
   const staying: number[] = [];

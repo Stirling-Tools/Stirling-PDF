@@ -77,8 +77,8 @@ export interface PipelineGraphProps {
   onInsertStep: (index: number) => void;
   /** Remove every step given, in one go. */
   onRemoveSteps: (indices: number[]) => void;
-  /** Reorder the chain to the given original step indices. */
-  onReorderSteps: (order: number[]) => void;
+  /** Reorder the chain to the given original step indices; `moved` is what the drag carried. */
+  onReorderSteps: (order: number[], moved: readonly number[]) => void;
   onOpenStepError?: (index: number) => void;
 }
 

@@ -23,8 +23,8 @@ export interface GraphEdgeProps {
   /** Add a new step in the slot this wire opens. */
   onInsert: (index: number) => void;
   stepCount: number;
-  /** Given the chain's new order as original step indices. */
-  onReorder: (order: number[]) => void;
+  /** Given the chain's new order as original step indices, and which steps the drag carried. */
+  onReorder: (order: number[], moved: readonly number[]) => void;
   /** A step is in flight, so open wires advertise themselves as landing spots. */
   dragActive: boolean;
   /**

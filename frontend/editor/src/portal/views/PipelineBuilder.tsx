@@ -435,11 +435,13 @@ export function PipelineBuilder() {
   }
 
   /**
-   * Apply a reordered chain, given as the original step indices in their new positions. The moved
-   * steps stay selected where they land, so a set can be dragged again without re-picking it.
+   * Apply a reordered chain, given as the original step indices in their new positions. The steps
+   * the drag carried stay selected where they land, so a set can be dragged again without re-picking
+   * it - and dragging an unselected step selects it, rather than leaving the inspector on whatever
+   * was selected before.
    */
-  function reorderSteps(order: number[]) {
-    const moving = new Set(selectedSteps(selected));
+  function reorderSteps(order: number[], moved: readonly number[]) {
+    const moving = new Set(moved);
     setSteps((current) => order.map((i) => current[i]));
     const landed = order
       .map((original, position) => ({ original, position }))

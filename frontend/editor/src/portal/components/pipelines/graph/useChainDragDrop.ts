@@ -172,8 +172,12 @@ export interface UseEdgeDropOptions {
   /** The slot this wire opens; null for the wires either side of the empty-chain placeholder. */
   insertIndex: number | null;
   stepCount: number;
-  /** Given the chain's new order as original step indices. */
-  onReorder: (order: number[]) => void;
+  /**
+   * Given the chain's new order as original step indices, and the original indices of the steps the
+   * drag actually carried - so the caller can keep the dragged steps selected rather than guessing
+   * from the prior selection.
+   */
+  onReorder: (order: number[], moved: readonly number[]) => void;
 }
 
 export interface UseEdgeDropResult {
@@ -217,7 +221,7 @@ export function useEdgeDrop({
           source.data.moving,
           slot,
         );
-        if (order !== null) onReorderRef.current(order);
+        if (order !== null) onReorderRef.current(order, source.data.moving);
       },
     });
   }, []);

@@ -137,4 +137,11 @@ describe("reorderMany", () => {
   test("nothing selected moves nothing", () => {
     expect(reorderMany(3, [], 1)).toBeNull();
   });
+
+  test("ignores out-of-range indices rather than injecting undefined steps", () => {
+    // A stray index (negative or past the end) must be dropped, not carried into the new order.
+    expect(reorderMany(3, [0, 9], 2)).toEqual([1, 0, 2]);
+    expect(reorderMany(3, [-1], 2)).toBeNull();
+    expect(reorderMany(3, [5], 0)).toBeNull();
+  });
 });

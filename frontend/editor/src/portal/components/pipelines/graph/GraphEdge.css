@@ -41,8 +41,9 @@
 }
 
 /* Insert: the shared ActionIcon restyled to a small dot beside the wire (not on top of it, where it
-   hid the line). Solid, not faint - off to one side on the canvas it needs a real border and glyph
-   to be seen at all. */
+   hid the line). Hidden at rest - a solid plus on every wire reads as busy - and revealed only when
+   the pointer is over this wire's drop band (see the reveal rule below). When shown it is solid, not
+   faint: off to one side on the canvas it needs a real border and glyph to be seen at all. */
 .portal-graph-edge__insert.sui-ai {
   position: absolute;
   top: 50%;
@@ -59,7 +60,9 @@
   border: 1px solid var(--c-border-strong);
   background: var(--c-surface);
   color: var(--c-text-muted);
+  opacity: 0;
   transition:
+    opacity var(--motion-fast),
     color var(--motion-fast),
     border-color var(--motion-fast),
     background var(--motion-fast);
@@ -70,14 +73,22 @@
   display: block;
 }
 
-/* Inside the warning note the insert is a flow sibling of the pill, not offset from the wire. */
+/* On a warning wire the insert sits just past the pill, out of flow so the pill stays centred on the
+   wire whether or not the insert is showing (it reveals on hover like every other wire's). */
 .portal-graph-edge__note .portal-graph-edge__insert.sui-ai {
-  position: static;
-  transform: none;
+  left: 100%;
+  margin-left: 0.375rem;
+  transform: translateY(-50%);
 }
 
-/* Highlight only when the pointer is on the button itself - not anywhere in the wide drop band,
-   which lit it up blue while it was still nowhere near clickable. */
+/* Reveal the insert when the pointer is anywhere in this wire's drop band, or it has keyboard focus.
+   Revealing is not highlighting: it comes in at its resting weight and only goes primary once the
+   pointer is on the button itself (below) - not from anywhere in the wide band. */
+.portal-graph-edge:hover .portal-graph-edge__insert.sui-ai,
+.portal-graph-edge__insert.sui-ai:focus-visible {
+  opacity: 1;
+}
+
 .portal-graph-edge__insert.sui-ai:hover,
 .portal-graph-edge__insert.sui-ai:focus-visible {
   color: var(--c-accent-fg, var(--c-primary));
