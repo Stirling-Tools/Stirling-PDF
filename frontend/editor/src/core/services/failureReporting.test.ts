@@ -19,7 +19,7 @@ vi.mock("@app/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => transport(...args) },
 }));
 
-const { reportToolFailure, errorCodeOf } =
+const { reportToolFailure, reportFilesRemoved, errorCodeOf } =
   await import("@app/services/failureReporting");
 
 /** An axios-shaped rejection carrying a Problem Details body. */
@@ -192,6 +192,39 @@ describe("reportToolFailure", () => {
     await reportToolFailure({ operation: "compress", error, fileIds: ["f-1"] });
 
     expect(post).not.toHaveBeenCalled();
+  });
+
+  it("tells the server when files are deleted, so their failures leave the queue", async () => {
+    await reportFilesRemoved(["f-1", "f-2"]);
+
+    const [path, body] = post.mock.calls[0] as [
+      string,
+      Record<string, unknown>,
+    ];
+    expect(path).toBe("/api/v1/file-run-events/removed-files");
+    expect(body).toEqual({ fileIds: ["f-1", "f-2"] });
+  });
+
+  it("says nothing when no real file ids were deleted", async () => {
+    await reportFilesRemoved([]);
+    await reportFilesRemoved(["", "   "]);
+
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("swallows a failed deletion notice, since the file is gone locally either way", async () => {
+    transport = () => {
+      throw new Error("404 - no such route on a core build");
+    };
+
+    let threw = false;
+    try {
+      await reportFilesRemoved(["f-1"]);
+    } catch {
+      threw = true;
+    }
+
+    expect(threw).toBe(false);
   });
 
   it("does nothing without an operation to attribute the failure to", async () => {

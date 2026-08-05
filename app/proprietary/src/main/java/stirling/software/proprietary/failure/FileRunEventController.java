@@ -109,6 +109,19 @@ public class FileRunEventController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/removed-files")
+    @Operation(
+            summary = "Close the incidents about files deleted from the editor",
+            description =
+                    "Deleting the document leaves nothing to act on, so its incidents drop out of"
+                            + " the queue while the rows stay for audit. Open to any authenticated"
+                            + " user, and applies only to their own editor rows.")
+    public ResponseEntity<Void> filesRemoved(@RequestBody(required = false) RemovedFiles request) {
+        service.forgetFiles(request == null ? List.of() : request.safeFileIds());
+        // No body: the editor is telling the server, not asking it anything.
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/kinds")
     @Operation(
             summary = "List known failure kinds",
@@ -153,6 +166,14 @@ public class FileRunEventController {
 
     /** Wrapped rather than a bare array so pagination can be added without breaking clients. */
     public record FileRunEventsResponse(List<FileRunEventView> events) {}
+
+    /** Files gone from the caller's editor. Opaque ids only, as everywhere else on this API. */
+    public record RemovedFiles(List<String> fileIds) {
+
+        List<String> safeFileIds() {
+            return fileIds == null ? List.of() : fileIds;
+        }
+    }
 
     /** Inputs an action declared it needs. Empty for both actions that exist today. */
     public record ActionRequest(Map<String, String> inputs) {

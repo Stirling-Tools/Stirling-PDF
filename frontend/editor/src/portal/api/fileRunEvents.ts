@@ -35,7 +35,9 @@ export type FileRunEventStatus =
   | "NEW"
   | "ACKNOWLEDGED"
   | "DISMISSED"
-  | "RESOLVED";
+  | "RESOLVED"
+  /** Its document was deleted from the owner's editor, so there is nothing left to act on. */
+  | "FILE_REMOVED";
 
 /**
  * One button as offered for one row. `id` is a plain string rather than a union

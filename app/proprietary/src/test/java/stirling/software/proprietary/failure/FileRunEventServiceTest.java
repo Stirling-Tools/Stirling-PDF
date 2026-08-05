@@ -522,4 +522,120 @@ class FileRunEventServiceTest {
             assertThat(held).isNotEmpty().doesNotContainAnyElementsOf(forbidden);
         }
     }
+
+    @Nested
+    @DisplayName("editor incidents stay separate")
+    class EditorIncidentIdentity {
+
+        private void reportedBy(String actor, String fileId) {
+            when(userService.getCurrentUsername()).thenReturn(actor);
+            service.report(new EditorFailureReport("compress", null, List.of(fileId), "boom"));
+        }
+
+        @Test
+        void twoPeopleHittingTheSameUnclassifiedFailureAreTwoIncidents() {
+            // UNKNOWN is RUN scoped and an editor report has no run, so without the fallback every
+            // unclassified editor failure in a team collapsed into one row: one actor credited for
+            // everyone's, and the wrong person offered the row.
+            reportedBy("alice@example.com", "a-1");
+            reportedBy("bob@example.com", "b-1");
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .extracting(FileRunEvent::actor)
+                    .containsExactlyInAnyOrder("alice@example.com", "bob@example.com");
+        }
+
+        @Test
+        void onePersonsTwoBrokenFilesAreTwoIncidents() {
+            reportedBy("alice@example.com", "a-1");
+            reportedBy("alice@example.com", "a-2");
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .extracting(FileRunEvent::fileId)
+                    .containsExactlyInAnyOrder("a-1", "a-2");
+        }
+
+        @Test
+        void theSamePersonHittingTheSameFileTwiceIsOneIncident() {
+            reportedBy("alice@example.com", "a-1");
+            reportedBy("alice@example.com", "a-1");
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::occurrences)
+                    .isEqualTo(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("files deleted from the editor")
+    class RemovedFiles {
+
+        private void reported(String fileId) {
+            service.report(new EditorFailureReport("compress", "E004", List.of(fileId), "boom"));
+        }
+
+        @Test
+        void closeTheirIncidentsSoTheQueueStopsAskingAboutThem() {
+            reported("f-1");
+
+            assertThat(service.forgetFiles(List.of("f-1"))).isEqualTo(1);
+            assertThat(service.list(null, null, 10))
+                    .as("the open queue is what the reviewer works from")
+                    .isEmpty();
+        }
+
+        @Test
+        void theRowSurvivesForAudit() {
+            reported("f-1");
+            service.forgetFiles(List.of("f-1"));
+
+            assertThat(service.list(FileRunEventStatus.FILE_REMOVED, null, 10))
+                    .singleElement()
+                    .satisfies(
+                            event -> {
+                                assertThat(event.fileId()).isEqualTo("f-1");
+                                assertThat(event.detail()).contains("boom");
+                            });
+        }
+
+        @Test
+        void aReviewersDismissKeepsItsMeaningAndItsActor() {
+            reported("f-1");
+            FileRunEvent event = service.list(null, null, 10).getFirst();
+            service.dispatch(event.id(), "DISMISS", Map.of());
+
+            assertThat(service.forgetFiles(List.of("f-1")))
+                    .as("only open rows move; a closed one has already been decided")
+                    .isZero();
+            assertThat(service.list(FileRunEventStatus.DISMISSED, null, 10)).hasSize(1);
+        }
+
+        @Test
+        void aColleaguesIncidentIsUntouched() {
+            // File ids come from the client, so naming one must not close someone else's row.
+            store.record(
+                    RecordFailure.forEditor(
+                            FailureKind.UNKNOWN, TEAM, "employee@example.com", "f-1", "theirs"));
+
+            assertThat(service.forgetFiles(List.of("f-1"))).isZero();
+        }
+
+        @Test
+        void aProcessorIncidentIsUntouchedEvenOnTheSameFileId() {
+            // Nothing was deleted from an editor there, and the file may still be in the bucket.
+            given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f-1");
+
+            assertThat(service.forgetFiles(List.of("f-1"))).isZero();
+        }
+
+        @Test
+        void namingNoFilesClosesNothing() {
+            reported("f-1");
+
+            assertThat(service.forgetFiles(List.of())).isZero();
+            assertThat(service.forgetFiles(java.util.Arrays.asList(null, "  "))).isZero();
+            assertThat(service.list(null, null, 10)).hasSize(1);
+        }
+    }
 }

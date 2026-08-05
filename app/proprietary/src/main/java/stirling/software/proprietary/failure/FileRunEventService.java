@@ -71,6 +71,25 @@ public class FileRunEventService {
         return message.isBlank() ? report.operation() : report.operation() + ": " + message;
     }
 
+    /**
+     * Close the incidents about documents the caller has deleted from their editor. The queue means
+     * "needs attention", and a document that no longer exists needs none; the rows stay for audit.
+     *
+     * <p>Best-effort by nature: this only arrives if the browser that owns the file says so, and a
+     * cleared cache or another device never will. Rows left open that way are retention's problem,
+     * not this method's.
+     *
+     * @return how many incidents were closed
+     */
+    public int forgetFiles(List<String> fileIds) {
+        TeamScope scope = scope();
+        if (!scope.permitted()) {
+            return 0;
+        }
+        List<String> named = fileIds.stream().filter(id -> id != null && !id.isBlank()).toList();
+        return store.markFilesRemoved(scope.teamId(), currentActor(), named);
+    }
+
     /** The calling user's events, newest first. Empty when their team cannot be resolved. */
     public List<FileRunEvent> list(FileRunEventStatus status, String kindId, int limit) {
         TeamScope scope = scope();

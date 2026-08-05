@@ -192,6 +192,22 @@ public class FileRunEventStore {
     }
 
     /**
+     * Close this owner's open incidents about {@code fileIds}, because the documents are gone. The
+     * rows stay for audit; they just leave the queue. Only open rows move, so a reviewer's dismiss
+     * keeps its meaning and its actor.
+     *
+     * @return how many incidents were closed
+     */
+    @Transactional
+    public int markFilesRemoved(Long teamId, String actor, Collection<String> fileIds) {
+        if (fileIds.isEmpty()) {
+            return 0;
+        }
+        return repository.markFilesRemoved(
+                teamId, actor, fileIds, Instant.now(), FileRunEventStatus.open());
+    }
+
+    /**
      * Why the guarded UPDATE refused, worked out only once it has. Missing and closed are told
      * apart after the fact rather than before, so the answer describes the row the UPDATE saw.
      */

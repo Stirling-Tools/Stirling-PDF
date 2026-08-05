@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -112,6 +113,31 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         entity.setStatusActor(actor);
         entity.setStatusAt(now);
         return 1;
+    }
+
+    @Override
+    public int markFilesRemoved(
+            Long teamId,
+            String actor,
+            Collection<String> fileIds,
+            Instant now,
+            Collection<FileRunEventStatus> allowedFrom) {
+        int closed = 0;
+        for (FileRunEventEntity entity : rows.values()) {
+            if (entity.getOrigin() != FailureOrigin.EDITOR
+                    || !sameTeam(entity, teamId)
+                    || !Objects.equals(entity.getActor(), actor)
+                    || entity.getFileId() == null
+                    || !fileIds.contains(entity.getFileId())
+                    || !allowedFrom.contains(entity.getStatus())) {
+                continue;
+            }
+            entity.setStatus(FileRunEventStatus.FILE_REMOVED);
+            entity.setStatusActor(actor);
+            entity.setStatusAt(now);
+            closed++;
+        }
+        return closed;
     }
 
     @Override

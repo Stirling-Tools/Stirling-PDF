@@ -10,6 +10,7 @@ import apiClient from "@app/services/apiClient";
  */
 
 const REPORT_PATH = "/api/v1/file-run-events/reports";
+const REMOVED_FILES_PATH = "/api/v1/file-run-events/removed-files";
 
 interface ToolFailureReport {
   /** The tool that failed, e.g. `remove-password`. */
@@ -81,6 +82,26 @@ export async function reportToolFailure({
   } catch {
     // A core build has no such route, and a member's report can also be refused.
     // Either way the user already has the tool's own error on screen.
+  }
+}
+
+/**
+ * Tell the server a user deleted these files, so any failure recorded against them stops asking
+ * for attention. The rows stay for audit; they just leave the queue.
+ *
+ * <p>Best-effort like the reporter: a build without the failure registry has no such route, and
+ * deleting a file must not fail because the server could not be told.
+ */
+export async function reportFilesRemoved(fileIds: string[]): Promise<void> {
+  const named = fileIds.filter(
+    (id) => typeof id === "string" && id.trim() !== "",
+  );
+  if (named.length === 0) return;
+
+  try {
+    await apiClient.post(REMOVED_FILES_PATH, { fileIds: named });
+  } catch {
+    // The file is gone locally either way. A row left open is retention's problem.
   }
 }
 

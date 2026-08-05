@@ -79,14 +79,21 @@ public record RecordFailure(
      * reference are the same incident; see {@link #dedupKey()}.
      */
     public String scopeRef() {
-        return switch (kind.getScope()) {
-            case FILE -> nullToEmpty(policyId) + "|" + fileOrRun();
-            case RUN -> nullToEmpty(runId);
-            case POLICY -> nullToEmpty(policyId);
-            case SOURCE -> nullToEmpty(sourceId);
-            // One server-wide condition is one incident regardless of which run tripped over it.
-            case SERVER -> "";
-        };
+        String about =
+                switch (kind.getScope()) {
+                    case FILE -> nullToEmpty(policyId) + "|" + fileOrRun();
+                    // An editor report has no run, so a RUN-scoped kind would otherwise put every
+                    // such failure in a team into one incident: fall back to the document.
+                    case RUN -> isBlank(runId) ? fileOrRun() : nullToEmpty(runId);
+                    case POLICY -> nullToEmpty(policyId);
+                    case SOURCE -> nullToEmpty(sourceId);
+                    // One server-wide condition is one incident regardless of which run hit it.
+                    case SERVER -> "";
+                };
+        // An editor failure belongs to the person who hit it, so two colleagues hitting the same
+        // thing are two incidents. Folding them would credit one actor for both and offer the
+        // wrong person the row. Unattended runs have no such owner and are unaffected.
+        return origin == FailureOrigin.EDITOR ? nullToEmpty(actor) + "|" + about : about;
     }
 
     /**

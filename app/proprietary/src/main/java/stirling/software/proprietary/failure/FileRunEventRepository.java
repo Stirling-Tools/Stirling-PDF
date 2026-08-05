@@ -88,6 +88,31 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
             @Param("allowedFrom") Collection<FileRunEventStatus> allowedFrom);
 
     /**
+     * Close the incidents about documents their owner deleted from the editor: the queue is what
+     * needs attention, and a document that no longer exists needs none.
+     *
+     * <p>Restricted to that owner's own editor rows. File ids are minted by the client, so scoping
+     * on team alone would let one caller close a colleague's incidents by naming ids. Processor
+     * rows are excluded outright: nothing was deleted from an editor there.
+     */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(
+            "update FileRunEventEntity e set e.status ="
+                    + " stirling.software.proprietary.failure.FileRunEventStatus.FILE_REMOVED,"
+                    + " e.statusActor = :actor, e.statusAt = :now where e.origin ="
+                    + " stirling.software.proprietary.failure.FailureOrigin.EDITOR and ((:teamId is"
+                    + " null and e.teamId is null) or e.teamId = :teamId) and ((:actor is null and"
+                    + " e.actor is null) or e.actor = :actor) and e.fileId in :fileIds and e.status in"
+                    + " :allowedFrom")
+    int markFilesRemoved(
+            @Param("teamId") Long teamId,
+            @Param("actor") String actor,
+            @Param("fileIds") Collection<String> fileIds,
+            @Param("now") Instant now,
+            @Param("allowedFrom") Collection<FileRunEventStatus> allowedFrom);
+
+    /**
      * The most recent row for this exact failure, so the rollup can increment an existing incident
      * instead of opening a new one. Team-scoped, so the same failure in two teams stays two rows.
      */
