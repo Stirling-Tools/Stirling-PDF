@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -108,6 +109,8 @@ public class ConvertPDFToPDFA {
     private static final Pattern NON_PRINTABLE_ASCII = Pattern.compile("[^\\x20-\\x7E]");
     private final RuntimePathConfig runtimePathConfig;
     private final stirling.software.SPDF.service.VeraPDFService veraPDFService;
+    private final stirling.software.SPDF.service.ua.PdfaAccessibilityService
+            pdfaAccessibilityService;
     private final TempFileManager tempFileManager;
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
@@ -604,7 +607,10 @@ public class ConvertPDFToPDFA {
             return handlePdfXConversion(inputFile, outputFormat);
         } else {
             return handlePdfAConversion(
-                    inputFile, outputFormat, request.getStrict() != null && request.getStrict());
+                    inputFile,
+                    outputFormat,
+                    request.getStrict() != null && request.getStrict(),
+                    request.getPdfUa() != null && request.getPdfUa());
         }
     }
 
@@ -1815,8 +1821,46 @@ public class ConvertPDFToPDFA {
         return Files.readAllBytes(outputPdf);
     }
 
+    /**
+     * Tags a converted PDF/A file so it can claim conformance level A.
+     *
+     * <p>Runs last because Ghostscript discards the structure tree, so anything tagged earlier in
+     * the pipeline would not survive the conversion.
+     */
+    private byte[] applyLevelA(
+            byte[] converted, PdfaProfile profile, String baseFileName, boolean declarePdfUa) {
+        if (!profile.requiresTagging()) {
+            return converted;
+        }
+        // The document's own title and language win. Hardcoding "en" and the upload filename
+        // relabelled a German report as English and destroyed its real title.
+        String language = null;
+        String title = null;
+        try (PDDocument probe = Loader.loadPDF(converted)) {
+            language = probe.getDocumentCatalog().getLanguage();
+            title = probe.getDocumentInformation().getTitle();
+        } catch (IOException e) {
+            log.debug("Could not read existing title/language: {}", e.getMessage());
+        }
+        stirling.software.SPDF.service.ua.PdfaAccessibilityService.Result result =
+                pdfaAccessibilityService.upgradeToLevelA(
+                        converted,
+                        profile.getPart(),
+                        language,
+                        title != null && !title.isBlank() ? title : baseFileName,
+                        declarePdfUa);
+        result.warnings().forEach(warning -> log.info("PDF/A level A: {}", warning));
+        if (!result.levelA()) {
+            log.warn(
+                    "{} requested but the document could not be tagged; returning level B",
+                    profile.getDisplayName());
+        }
+        return result.pdfBytes();
+    }
+
     private ResponseEntity<Resource> handlePdfAConversion(
-            MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
+            MultipartFile inputFile, String outputFormat, boolean strict, boolean declarePdfUa)
+            throws Exception {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
 
         // Get the original filename without extension
@@ -1841,6 +1885,7 @@ public class ConvertPDFToPDFA {
                 log.info("Using Ghostscript for PDF/A conversion to {}", profile.getDisplayName());
                 try {
                     converted = convertWithGhostscript(inputPath, workingDir, profile);
+                    converted = applyLevelA(converted, profile, baseFileName, declarePdfUa);
                     String outputFilename = baseFileName + profile.outputSuffix();
 
                     validateAndWarnPdfA(converted, profile, "Ghostscript");
@@ -1867,6 +1912,7 @@ public class ConvertPDFToPDFA {
             }
 
             converted = convertWithPdfBoxMethod(inputPath, profile);
+            converted = applyLevelA(converted, profile, baseFileName, declarePdfUa);
             String outputFilename = baseFileName + profile.outputSuffix();
 
             // Validate with PDFBox preflight and warn if issues found
@@ -1889,11 +1935,29 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    /** True for a PDF/UA or WCAG result, which says nothing about archival conformance. */
+    private static boolean isAccessibilityProfile(
+            stirling.software.SPDF.model.api.security.PDFVerificationResult result) {
+        String profile = result.getValidationProfile();
+        if (profile == null) {
+            return false;
+        }
+        String normalised = profile.toLowerCase(Locale.ROOT);
+        return normalised.contains("ua") || normalised.contains("wcag");
+    }
+
     private void verifyStrictCompliance(byte[] pdfBytes) throws IOException {
         try (InputStream is = new ByteArrayInputStream(pdfBytes)) {
             List<stirling.software.SPDF.model.api.security.PDFVerificationResult> results =
                     veraPDFService.validatePDF(is);
-            boolean isCompliant = results.stream().anyMatch(result -> result.isCompliant());
+            // Only archival results count. Every document is now also checked against PDF/UA, and
+            // a compliant UA result must never satisfy a strict PDF/A request.
+            boolean isCompliant =
+                    results.stream()
+                            .filter(result -> !isAccessibilityProfile(result))
+                            .anyMatch(
+                                    stirling.software.SPDF.model.api.security.PDFVerificationResult
+                                            ::isCompliant);
             if (!isCompliant) {
                 String details =
                         results.stream()
@@ -2466,11 +2530,17 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfaProfile {
-        PDF_A_1B(1, "PDF/A-1b", "_PDFA-1b.pdf", "1.4", Format.PDF_A1B, "pdfa-1"),
-        PDF_A_2B(2, "PDF/A-2b", "_PDFA-2b.pdf", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
-        PDF_A_3B(3, "PDF/A-3b", "_PDFA-3b.pdf", "1.7", null, "pdfa-3", "pdfa-3b");
+        PDF_A_1B(1, "B", "PDF/A-1b", "_PDFA-1b.pdf", "1.4", Format.PDF_A1B, "pdfa-1"),
+        PDF_A_2B(2, "B", "PDF/A-2b", "_PDFA-2b.pdf", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
+        PDF_A_3B(3, "B", "PDF/A-3b", "_PDFA-3b.pdf", "1.7", null, "pdfa-3", "pdfa-3b"),
+        // Level A adds the accessibility requirements on top of level B: a tagged structure tree,
+        // a declared language and Unicode-mappable text. Tagging runs after the conversion.
+        PDF_A_1A(1, "A", "PDF/A-1a", "_PDFA-1a.pdf", "1.4", Format.PDF_A1B, "pdfa-1a"),
+        PDF_A_2A(2, "A", "PDF/A-2a", "_PDFA-2a.pdf", "1.7", null, "pdfa-2a"),
+        PDF_A_3A(3, "A", "PDF/A-3a", "_PDFA-3a.pdf", "1.7", null, "pdfa-3a");
 
         private final int part;
+        private final String conformanceLevel;
         private final String displayName;
         private final String suffix;
         private final String compatibilityLevel;
@@ -2479,12 +2549,14 @@ public class ConvertPDFToPDFA {
 
         PdfaProfile(
                 int part,
+                String conformanceLevel,
                 String displayName,
                 String suffix,
                 String compatibilityLevel,
                 Format preflightFormat,
                 String... requestTokens) {
             this.part = part;
+            this.conformanceLevel = conformanceLevel;
             this.displayName = displayName;
             this.suffix = suffix;
             this.compatibilityLevel = compatibilityLevel;
@@ -2493,6 +2565,10 @@ public class ConvertPDFToPDFA {
                     Arrays.stream(requestTokens)
                             .map(token -> token.toLowerCase(Locale.ROOT))
                             .toList();
+        }
+
+        boolean requiresTagging() {
+            return "A".equals(conformanceLevel);
         }
 
         static PdfaProfile fromRequest(String requestToken) {

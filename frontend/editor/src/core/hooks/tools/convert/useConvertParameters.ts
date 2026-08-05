@@ -46,6 +46,12 @@ export interface ConvertParameters extends BaseParameters {
     outputFormat: string;
     strict?: boolean;
   };
+  pdfUaOptions: {
+    profile: string;
+    language: string;
+    title: string;
+    embedFonts: boolean;
+  };
   pdfxOptions: {
     outputFormat: string;
   };
@@ -107,6 +113,12 @@ export const defaultParameters: ConvertParameters = {
   pdfaOptions: {
     outputFormat: "pdfa-2b",
     strict: false,
+  },
+  pdfUaOptions: {
+    profile: "ua1",
+    language: "en-GB",
+    title: "",
+    embedFonts: true,
   },
   pdfxOptions: {
     outputFormat: "pdfx",

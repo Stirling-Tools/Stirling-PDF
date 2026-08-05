@@ -29,6 +29,10 @@ const ConvertToPdfaSettings = ({
     { value: "pdfa-1", label: "PDF/A-1b" },
     { value: "pdfa-2b", label: "PDF/A-2b" },
     { value: "pdfa-3b", label: "PDF/A-3b" },
+    // Level A is level B plus accessibility: it additionally tags the document.
+    { value: "pdfa-1a", label: "PDF/A-1a (accessible)" },
+    { value: "pdfa-2a", label: "PDF/A-2a (accessible)" },
+    { value: "pdfa-3a", label: "PDF/A-3a (accessible)" },
   ];
 
   return (

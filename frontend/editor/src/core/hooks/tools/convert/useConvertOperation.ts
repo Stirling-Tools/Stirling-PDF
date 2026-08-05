@@ -88,6 +88,7 @@ export const buildConvertFormData = (
     htmlOptions,
     emailOptions,
     pdfaOptions,
+    pdfUaOptions,
     pdfxOptions,
     cbrOptions,
     pdfToCbrOptions,
@@ -149,6 +150,14 @@ export const buildConvertFormData = (
   } else if (fromExtension === "pdf" && toExtension === "pdfa") {
     formData.append("outputFormat", pdfaOptions.outputFormat);
     formData.append("strict", String(!!pdfaOptions.strict));
+  } else if (fromExtension === "pdf" && toExtension === "pdfua") {
+    formData.append("profile", pdfUaOptions.profile);
+    formData.append("language", pdfUaOptions.language);
+    formData.append("embedFonts", String(pdfUaOptions.embedFonts));
+    // Sent only when set, so the backend can fall back to the first heading then the filename.
+    if (pdfUaOptions.title.trim()) {
+      formData.append("title", pdfUaOptions.title.trim());
+    }
   } else if (fromExtension === "pdf" && toExtension === "pdfx") {
     // Use PDF/A endpoint with PDF/X format parameter
     formData.append("outputFormat", pdfxOptions?.outputFormat || "pdfx");
