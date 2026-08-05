@@ -41,7 +41,10 @@ function FieldInputInner({
             size="xs"
             value={value}
             onChange={(e) => onChange(e.currentTarget.value)}
-            placeholder={field.tooltip || `Enter ${field.label}`}
+            placeholder={
+              field.tooltip ||
+              `${t("formFill.placeholderEnter", "Enter")} ${field.label}`
+            }
             disabled={field.readOnly}
             autosize
             minRows={2}

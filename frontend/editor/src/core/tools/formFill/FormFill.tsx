@@ -590,7 +590,10 @@ const FormFill = (_props: BaseToolProps) => {
                 <div className={styles.emptyState}>
                   <DescriptionIcon className={styles.emptyStateIcon} />
                   <span className={styles.emptyStateText}>
-                    No fillable form fields found in this PDF.
+                    {t(
+                      "formFill.noFields",
+                      "No fillable form fields found in this PDF.",
+                    )}
                   </span>
                 </div>
               )}
