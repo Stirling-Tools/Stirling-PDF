@@ -198,7 +198,11 @@ html[data-app-theme="custom"] {
   --color-primary-300: color-mix(in srgb, var(--c-primary) 55%, var(--p-white));
   --color-primary-400: color-mix(in srgb, var(--c-primary) 78%, var(--p-white));
   --color-primary-500: var(--c-primary);
-  --color-primary-600: color-mix(in srgb, var(--c-primary) 88%, var(--p-black));
+  /* Shade 600 is the ramp's text-capable step — Mantine maps it to shade 6,
+     which drives link colour and the tuple's default text. At 88% it lands
+     at 4.2:1 on the page, so it mixes further down. Filled surfaces read
+     from --mantine-primary-color-filled (= --c-primary) and are unaffected. */
+  --color-primary-600: color-mix(in srgb, var(--c-primary) 75%, var(--p-black));
   --color-primary-700: color-mix(in srgb, var(--c-primary) 74%, var(--p-black));
   --color-primary-800: color-mix(in srgb, var(--c-primary) 60%, var(--p-black));
   --color-primary-900: color-mix(in srgb, var(--c-primary) 46%, var(--p-black));

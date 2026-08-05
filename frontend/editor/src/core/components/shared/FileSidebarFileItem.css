@@ -183,7 +183,7 @@
 }
 
 .file-sidebar-file-item.selected .file-sidebar-file-name {
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
 }
 
 .file-sidebar-file-meta-row {

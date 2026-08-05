@@ -96,11 +96,20 @@ const dark: MantineColorsTuple = [
 export const editorCssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
   light: {
+    // Link colour: Mantine derives it from the accent's shade 6.
+    "--mantine-color-anchor": "var(--c-accent-text)",
     "--mantine-color-primary-light-color": "var(--c-accent-text)",
     "--mantine-color-blue-light-color": "var(--c-accent-text)",
     "--mantine-color-red-light-color": "var(--color-red-dark)",
     "--mantine-color-green-light-color": "var(--color-green-dark)",
     "--mantine-color-yellow-light-color": "var(--color-amber-dark)",
+    // Colour names the app never registers still reach Mantine's own palette
+    // through `color="..."` props, so pin their light-variant text too.
+    "--mantine-color-orange-light-color": "var(--color-amber-dark)",
+    "--mantine-color-indigo-light-color": "var(--p-indigo-600)",
+    "--mantine-color-grape-light-color": "var(--color-purple-dark)",
+    "--mantine-color-teal-light-color": "var(--color-green-dark)",
+    "--mantine-color-cyan-light-color": "var(--c-accent-text)",
   },
   dark: {},
 });
