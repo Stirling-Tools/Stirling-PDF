@@ -190,9 +190,11 @@ tasks:
 
   tool-models:
     desc: "Generate all API models from the Java OpenAPI spec"
+    deps:
+    - backend:swagger
     cmds:
-      - task: frontend:tool-models
-      - task: engine:tool-models
+      - task: frontend:tool-models:_generate
+      - task: engine:tool-models:_generate
 
   tool-models:check:
     desc: "Fail if any committed API model is out of date"
