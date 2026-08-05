@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -95,6 +96,26 @@ class PdfMarkdownConverterTest {
         assertTrue(
                 columns.isEmpty(),
                 "implausible page span should disable column detection, not allocate from it");
+    }
+
+    @Test
+    @Timeout(20)
+    void gutterScanTerminatesOnCoordinatesBeyondFloatPrecision() {
+        // Past 2^24 a float cannot represent x + 1, so a float-stepped scan over a crafted text
+        // matrix stops advancing and spins forever - wedging the process-wide jpdfium lock with it.
+        List<TextLine> rows = new ArrayList<>();
+        for (int r = 0; r < 10; r++) {
+            float y = 400f - r * 12f;
+            float x = 20_000_000f;
+            TextWord w = new TextWord(List.of(), x, y, 200f, 10f);
+            rows.add(new TextLine(List.of(w), x, y, 200f, 10f));
+        }
+
+        List<Float> gutters =
+                assertDoesNotThrow(() -> PdfMarkdownConverter.detectGuttersFromLines(rows));
+        assertTrue(
+                gutters.isEmpty(),
+                "implausible page span should disable gutter detection, not scan it");
     }
 
     private void assertConversionMatchesGolden(String pdfName, String mdName) throws IOException {
