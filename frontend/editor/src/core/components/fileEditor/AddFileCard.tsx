@@ -181,11 +181,11 @@ const AddFileCard = ({
 
           {/* Instruction Text */}
           <span
-            className="text-[var(--c-primary)]"
             style={{
               fontSize: ".8rem",
               textAlign: "center",
               marginTop: "0.5rem",
+              color: "var(--c-text-muted)",
             }}
           >
             {terminology.dropFilesHere}

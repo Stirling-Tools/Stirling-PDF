@@ -72,7 +72,9 @@ class PolicyRunRoutesTest {
     private static final Map<String, Boolean> EXPECTED_ID_EXECUTES =
             Map.of(
                     "/api/v1/policies/{policyId}/run", true,
-                    "/api/v1/policies/{policyId}/trigger", true);
+                    "/api/v1/policies/{policyId}/trigger", true,
+                    // Checks whether a chain could run; runs and stores nothing, so not billable.
+                    "/api/v1/policies/validate", false);
 
     /**
      * Fail-safe: this matcher is the sole billing gate, so an unmatched execute route would run

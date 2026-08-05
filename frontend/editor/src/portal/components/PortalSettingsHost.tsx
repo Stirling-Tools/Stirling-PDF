@@ -75,6 +75,10 @@ export function PortalSettingsHost() {
               urlSync={false}
               initialSection={initialSection}
               extraSections={extraSections}
+              // TODO: opening Keyboard Shortcuts in the portal white-screens
+              // the app (the section expects editor-only context). Hidden here
+              // as a stopgap; fix the section properly and drop this.
+              hiddenSectionKeys={["hotkeys"]}
             />
           </ThemeProvider>
         </PreferencesProvider>
