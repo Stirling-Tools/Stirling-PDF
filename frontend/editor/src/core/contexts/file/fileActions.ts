@@ -13,7 +13,7 @@ import {
   ProcessedFileMetadata,
 } from "@app/types/fileContext";
 import { FileId, ToolOperation } from "@app/types/file";
-import { generateThumbnailWithMetadata } from "@app/utils/thumbnailUtils";
+import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
 import { StirlingFile } from "@app/types/fileContext";
@@ -125,11 +125,20 @@ export async function generateProcessedFileMetadata(
   }
 
   try {
-    // Generate unrotated thumbnails for PageEditor (rotation applied via CSS)
-    const unrotatedResult = await generateThumbnailWithMetadata(file, false);
+    // One parse produces both variants: unrotated thumbnails for PageEditor
+    // (rotation applied via CSS) and the rotated one for file manager display.
+    const { unrotated: unrotatedResult, rotated: rotatedResult } =
+      await generateThumbnailPairWithMetadata(file);
 
-    // Generate rotated thumbnail for file manager display
-    const rotatedResult = await generateThumbnailWithMetadata(file, true);
+    // Large PDF whose linearized-prefix attempt failed: report "no metadata"
+    // (the tolerated failure shape) rather than a bogus zero-page document.
+    if (
+      !unrotatedResult.thumbnail &&
+      unrotatedResult.pageCount === 0 &&
+      !unrotatedResult.isEncrypted
+    ) {
+      return undefined;
+    }
 
     const processedFile = createProcessedFile(
       unrotatedResult.pageCount,
