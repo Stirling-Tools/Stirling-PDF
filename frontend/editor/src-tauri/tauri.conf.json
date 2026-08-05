@@ -7,8 +7,8 @@
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "npx vite --mode desktop",
-    "beforeBuildCommand": "npx vite build --mode desktop"
+    "beforeDevCommand": "npm ci && npx vite --mode desktop",
+    "beforeBuildCommand": "npm ci && npx vite build --mode desktop"
   },
   "app": {
     "windows": [
@@ -97,7 +97,7 @@
         "https://github.com/sayedalve/PDF-Elite/releases/latest/download/latest.json"
       ],
       "dialog": false,
-      "pubkey": "REPLACE_WITH_YOUR_OWN_TAURI_SIGNER_PUBKEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVEQTUxNTc2NzMyMjczMDcxCnJXUnRhRzRvMWlKbG9PZUxLb3lKNmFwTnBqNzhwbEhFRjhCcjZaQ0t4S0ZQeUdDcldQdXJZdjcK",
       "windows": {
         "installMode": "passive"
       }

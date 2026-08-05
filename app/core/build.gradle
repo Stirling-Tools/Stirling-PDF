@@ -49,7 +49,7 @@ dependencies {
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:${rootProject.ext.pdfboxVersion}"
     implementation "org.apache.pdfbox:xmpbox:${rootProject.ext.pdfboxVersion}"
-    implementation "org.apache.pdfbox:pdfbox-examples:3.0.7"
+    implementation "org.apache.pdfbox:pdfbox-examples:${rootProject.ext.pdfboxVersion}"
 
     implementation 'org.verapdf:validation-model:1.30.2'
     // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
@@ -177,9 +177,9 @@ def frontendBuildTask = "frontend:build:${frontendMode}"
 // future portal). Editor-specific paths (src, public, dist, tauri) live one
 // level deeper under frontend/editor/. When the portal lands as an embedded
 // app, add a sibling frontendPortalDir / frontendPortalDistDir alongside.
-def frontendDir = file('../../frontend')
-def frontendEditorDir = file('../../frontend/editor')
-def frontendEditorDistDir = file('../../frontend/editor/dist')
+def frontendDir = rootProject.file("frontend")
+def frontendEditorDir = rootProject.file("frontend/editor")
+def frontendEditorDistDir = rootProject.file("frontend/editor/dist")
 def resourcesStaticDir = file('src/main/resources/static')
 def generatedFrontendPaths = [
     'assets',
@@ -345,8 +345,14 @@ if (buildWithFrontend) {
 
 bootJar.dependsOn ':common:jar'
 if (!gradle.ext.disableAdditional) {
-    bootJar.dependsOn ':proprietary:jar'
+    def proprietaryProject = findProject(':proprietary')
+    if (proprietaryProject != null) {
+        bootJar.dependsOn ':proprietary:jar'
+    }
 }
 if (gradle.ext.enableSaas) {
-    bootJar.dependsOn ':saas:jar'
+    def saasProject = findProject(':saas')
+    if (saasProject != null) {
+        bootJar.dependsOn ':saas:jar'
+    }
 }

@@ -23,13 +23,13 @@ ext {
     pdfboxVersion = "3.0.8"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.46"
-    bouncycastleVersion = "1.85"
+    bouncycastleVersion = "1.78"
     springSecuritySamlVersion = "7.0.5"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
-    googleJavaFormatVersion = "1.35.0"
+    googleJavaFormatVersion = "1.22.0"
     logback = "1.5.32"
-    commonsIoVersion = "2.22.0"
+    commonsIoVersion = "2.15.1"
     commonsLang3 = "3.20.0"
     rhinoVersion = "1.9.1"
     okhttpBomVersion = "5.3.2"
@@ -48,17 +48,14 @@ ext {
     smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
-    // junit-platform-launcher version managed by Spring Boot BOM
-    // Default toolchain/target for this fork's desktop build. Override per-invocation
-    // with -PjavaVersion=25 if you have a JDK 25 available and want it (e.g. for the
-    // Compact Object Headers JVM tuning gated below in `bootRun`). See DeveloperGuide.md
-    // "Java version" section for the full compatibility rationale.
+    // Standardized on Java 21 across the entire repository
     modernJavaVersion = 21
 }
 
+// Enforce Java 21 toolchain at root level
 def buildJavaMajorVersion = (project.findProperty('javaVersion') ?: ext.modernJavaVersion).toString().toInteger()
-def buildJavaLanguageVersion = JavaLanguageVersion.of(buildJavaMajorVersion)
-def buildJavaVersion = JavaVersion.toVersion(buildJavaMajorVersion.toString())
+def buildJavaLanguageVersion = JavaLanguageVersion.of(21)
+def buildJavaVersion = JavaVersion.VERSION_21
 
 java {
     sourceCompatibility = buildJavaVersion
@@ -558,8 +555,11 @@ licenseReport {
 }
 
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module
-tasks.named('forkedSpringBootRun') {
+tasks.register('forkedSpringBootRun') {
+    group = 'application'
+    description = 'Delegates to :stirling-pdf:bootRun'
     dependsOn ':stirling-pdf:bootRun'
+
     doFirst {
         println "Delegating forkedSpringBootRun to :stirling-pdf:bootRun"
     }
@@ -626,12 +626,6 @@ dependencies {
     if (rootProject.ext.isSecurityDisabled()) {
         implementation project(':proprietary')
     }
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-
-    testImplementation platform("com.squareup.okhttp3:okhttp-bom:${okhttpBomVersion}")
-    testImplementation "com.squareup.okhttp3:mockwebserver"
 }
 
 tasks.named("test") {
@@ -657,6 +651,17 @@ tasks.register('bootRun') {
 
     doFirst {
         println "Delegating to :stirling-pdf:bootRun"
+    }
+}
+
+// Root bootJar task that delegates to :stirling-pdf:bootJar for desktop builds
+tasks.register('bootJar') {
+    group = 'build'
+    description = 'Delegates to :stirling-pdf:bootJar'
+    dependsOn ':stirling-pdf:bootJar'
+
+    doFirst {
+        println "Delegating to :stirling-pdf:bootJar"
     }
 }
 
