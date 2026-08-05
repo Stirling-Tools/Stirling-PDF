@@ -7278,9 +7278,11 @@ retry = "Try again"
 title = "Something went wrong on this page"
 
 [portal.failures]
+fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
 runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs, with the actions you can take."
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
 [portal.failures.action]
@@ -7304,6 +7306,11 @@ title = "Password-protected document"
 [portal.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
 
 [portal.failures.stage]
 blocked = "Blocked"

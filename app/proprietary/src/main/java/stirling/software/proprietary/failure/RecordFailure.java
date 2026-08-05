@@ -38,17 +38,40 @@ public record RecordFailure(
         detail = truncate(detail);
     }
 
-    /** A processor-side failure with no file or source context, e.g. a run that failed outright. */
+    /**
+     * A processor-side run failure. {@code sourceId} says which folder, bucket or webhook fed the
+     * run, and is the only attribution an unattended failure has: there is no user to name. {@code
+     * fileId} is the source's opaque reference to the document, already hashed upstream.
+     */
     public static RecordFailure forRun(
             FailureKind kind,
             Long teamId,
             String actor,
             String policyId,
             String runId,
+            String sourceId,
             String fileId,
             String detail) {
         return new RecordFailure(
-                kind, FailureOrigin.POLICY, teamId, actor, policyId, runId, null, fileId, detail);
+                kind,
+                FailureOrigin.POLICY,
+                teamId,
+                actor,
+                policyId,
+                runId,
+                sourceId,
+                fileId,
+                detail);
+    }
+
+    /**
+     * A failure a user hit in their own editor. There is no policy, run or source: the user is the
+     * attribution, and {@code fileId} may be null when the report named no file.
+     */
+    public static RecordFailure forEditor(
+            FailureKind kind, Long teamId, String actor, String fileId, String detail) {
+        return new RecordFailure(
+                kind, FailureOrigin.TOOL, teamId, actor, null, null, null, fileId, detail);
     }
 
     /**

@@ -54,16 +54,6 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
     }
 
     @Override
-    public List<FileRunEventEntity> findByTeam(Long teamId, String kindId, Pageable pageable) {
-        return page(
-                newestFirst(
-                        rows.values().stream()
-                                .filter(e -> sameTeam(e, teamId) && sameKind(e, kindId))
-                                .toList()),
-                pageable);
-    }
-
-    @Override
     public List<FileRunEventEntity> findByTeamAndStatus(
             Long teamId, FileRunEventStatus status, String kindId, Pageable pageable) {
         return page(
@@ -122,6 +112,21 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         entity.setStatusActor(actor);
         entity.setStatusAt(now);
         return 1;
+    }
+
+    @Override
+    public List<FileRunEventEntity> findByTeamAndStatusIn(
+            Long teamId, List<FileRunEventStatus> statuses, String kindId, Pageable pageable) {
+        return page(
+                newestFirst(
+                        rows.values().stream()
+                                .filter(
+                                        e ->
+                                                sameTeam(e, teamId)
+                                                        && statuses.contains(e.getStatus())
+                                                        && sameKind(e, kindId))
+                                .toList()),
+                pageable);
     }
 
     @Override

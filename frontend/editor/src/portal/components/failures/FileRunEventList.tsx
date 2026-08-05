@@ -157,7 +157,31 @@ function FailureBody({
                 })}
               </span>
             )}
+            <span className="portal-failures__origin">
+              {t(
+                `portal.failures.origin.${event.origin.toLowerCase()}`,
+                event.origin,
+              )}
+            </span>
           </div>
+
+          {/* Who or what it came from. An unattended file has no user, so the source
+            is the only attribution there is. */}
+          {event.actor ? (
+            <div className="portal-failures__actor">
+              {t("portal.failures.reportedBy", "Hit by {{actor}}", {
+                actor: event.actor,
+              })}
+            </div>
+          ) : (
+            event.sourceId && (
+              <div className="portal-failures__actor">
+                {t("portal.failures.fromSource", "From source {{source}}", {
+                  source: event.sourceId,
+                })}
+              </div>
+            )
+          )}
 
           {/* A reference, not a name. The record deliberately holds no document
             identity, so a reviewer sees which run failed, never which file. */}

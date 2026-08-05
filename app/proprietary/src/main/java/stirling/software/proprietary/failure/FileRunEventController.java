@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -89,6 +90,23 @@ public class FileRunEventController {
         } catch (FailureActionException e) {
             throw new ResponseStatusException(statusFor(e.getReason()), e.getMessage(), e);
         }
+    }
+
+    @PostMapping("/reports")
+    @Operation(
+            summary = "Report a failure hit in the editor",
+            description =
+                    "For failures the server never sees, because the editor calls tools directly."
+                            + " Open to any authenticated user, unlike the read and triage endpoints:"
+                            + " whoever's work failed can say so, and a leader reviews it.")
+    public ResponseEntity<Void> report(@RequestBody EditorFailureReport report) {
+        if (report == null || !report.hasOperation()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "operation is required to report a failure");
+        }
+        service.report(report);
+        // No body: the editor reports and moves on, and has nothing to do with the row.
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/kinds")

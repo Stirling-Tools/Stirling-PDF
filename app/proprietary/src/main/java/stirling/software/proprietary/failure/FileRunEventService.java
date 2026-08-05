@@ -31,6 +31,46 @@ public class FileRunEventService {
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
 
+    /**
+     * Record a failure a user hit in the editor. One incident per named file, so each document
+     * stays separately actionable; one unattributed incident when the report names none.
+     *
+     * <p>The team and actor come from the session rather than the report, and the kind is
+     * classified from the reported code, falling back to {@link FailureKind#UNKNOWN} for a code no
+     * kind claims.
+     */
+    public List<FileRunEvent> report(EditorFailureReport report) {
+        FailureKind kind = FailureKind.byErrorCode(report.errorCode()).orElse(FailureKind.UNKNOWN);
+        Long teamId = scope().teamId();
+        String actor = currentActor();
+        String detail = detailFor(report);
+
+        List<String> fileIds =
+                report.fileIds().stream().filter(id -> id != null && !id.isBlank()).toList();
+        if (fileIds.isEmpty()) {
+            return List.of(recordReported(kind, teamId, actor, null, detail));
+        }
+        // Every named file gets its row. An earlier cap silently dropped the rest, which lost
+        // failures a reviewer needed and was inconsistent with the processor path, where a sweep
+        // records one row per failing file with no limit at all.
+        return fileIds.stream()
+                .map(fileId -> recordReported(kind, teamId, actor, fileId, detail))
+                .toList();
+    }
+
+    private FileRunEvent recordReported(
+            FailureKind kind, Long teamId, String actor, String fileId, String detail) {
+        return store.record(RecordFailure.forEditor(kind, teamId, actor, fileId, detail));
+    }
+
+    /**
+     * The operation is the context a reviewer needs, since an editor failure has no policy or run.
+     */
+    private String detailFor(EditorFailureReport report) {
+        String message = report.detail() == null ? "" : report.detail();
+        return message.isBlank() ? report.operation() : report.operation() + ": " + message;
+    }
+
     /** The calling user's events, newest first. Empty when their team cannot be resolved. */
     public List<FileRunEvent> list(FileRunEventStatus status, String kindId, int limit) {
         TeamScope scope = scope();

@@ -111,25 +111,27 @@ public class PolicyEngine {
         // worker.
         String principal = currentActingPrincipal();
         return submitForPrincipal(
-                principal, principal, policyId, definition, inputs, null, listener);
+                principal, principal, policyId, definition, inputs, listener, null, null);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
     public PolicyRunHandle runPolicy(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
-        return runPolicy(policy, inputs, null, listener);
+        return runPolicy(policy, inputs, listener, null, null);
     }
 
     /**
-     * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, with the source's opaque
-     * reference to the document being run. Carried so a failure can say which document it was
-     * about, and so the same document failing again folds into one incident.
+     * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, recording which source
+     * fed the run and its opaque reference to the document. The first says where an unattended
+     * failure came from; the second says which document, and is what lets the same document failing
+     * again fold into one incident. Both null for a user's upload.
      */
     public PolicyRunHandle runPolicy(
             Policy policy,
             PolicyInputs inputs,
-            String fileIdentity,
-            PolicyProgressListener listener) {
+            PolicyProgressListener listener,
+            String sourceId,
+            String fileIdentity) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -146,7 +148,14 @@ public class PolicyEngine {
                 new PipelineDefinition(
                         policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), definition, inputs, fileIdentity, listener);
+                policy.owner(),
+                fileOwner,
+                policy.id(),
+                definition,
+                inputs,
+                listener,
+                sourceId,
+                fileIdentity);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -155,8 +164,9 @@ public class PolicyEngine {
             String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
-            String fileIdentity,
-            PolicyProgressListener listener) {
+            PolicyProgressListener listener,
+            String sourceId,
+            String fileIdentity) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
@@ -165,7 +175,7 @@ public class PolicyEngine {
         if (policyId != null) {
             taskManager.putMetadata(runId, "policyId", policyId);
         }
-        PolicyRun run = new PolicyRun(runId, policyId, definition, fileIdentity);
+        PolicyRun run = new PolicyRun(runId, policyId, definition, sourceId, fileIdentity);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -331,7 +341,12 @@ public class PolicyEngine {
             // No exception to classify here: nothing was thrown by a tool, the run simply was not
             // admitted. Record it explicitly so a run lost to load pressure is still accounted for.
             failureRecorder.recordRunFailureAs(
-                    FailureKind.UNKNOWN, run.getRunId(), run.getPolicyId(), null, message);
+                    FailureKind.UNKNOWN,
+                    run.getRunId(),
+                    run.getPolicyId(),
+                    run.getSourceId(),
+                    null,
+                    message);
             completion.complete(run);
         }
         return null;
@@ -345,8 +360,9 @@ public class PolicyEngine {
         failureRecorder.recordRunFailure(
                 run.getRunId(),
                 run.getPolicyId(),
-                MDC.get(AUDIT_PRINCIPAL_MDC_KEY),
+                run.getSourceId(),
                 run.getFileIdentity(),
+                MDC.get(AUDIT_PRINCIPAL_MDC_KEY),
                 message,
                 cause);
     }

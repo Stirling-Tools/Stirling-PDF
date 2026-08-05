@@ -98,6 +98,7 @@ public class FileRunEventStore {
         entity.setOrigin(command.origin());
         entity.setPolicyId(command.policyId());
         entity.setRunId(command.runId());
+        entity.setSourceId(command.sourceId());
         entity.setFileId(command.fileId());
         entity.setDetail(command.detail());
         entity.setDedupKey(dedupKey);
@@ -112,9 +113,14 @@ public class FileRunEventStore {
     }
 
     /**
-     * A page of incidents, newest first, optionally narrowed to one status and one kind. The kind
-     * filter lives in the query, before the limit: filtering a already-limited page could return
-     * nothing while matching rows exist.
+     * A page of incidents, newest first, optionally narrowed to one status and one kind.
+     *
+     * <p>With no status asked for this is the <em>open</em> queue rather than every row ever
+     * recorded: a dismissed failure has been dealt with, and leaving it in the default view means
+     * the list can never be cleared. Ask for a status to see closed rows.
+     *
+     * <p>Both filters live in the query, before the limit: filtering an already-limited page could
+     * return nothing while matching rows exist.
      */
     @Transactional(readOnly = true)
     public List<FileRunEvent> list(
@@ -122,7 +128,8 @@ public class FileRunEventStore {
         Pageable page = PageRequest.of(0, Math.max(1, limit));
         List<FileRunEventEntity> rows =
                 status == null
-                        ? repository.findByTeam(teamId, kindId, page)
+                        ? repository.findByTeamAndStatusIn(
+                                teamId, FileRunEventStatus.open(), kindId, page)
                         : repository.findByTeamAndStatus(teamId, status, kindId, page);
         return rows.stream().map(FileRunEvent::of).toList();
     }

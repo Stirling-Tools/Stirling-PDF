@@ -64,6 +64,8 @@ export interface FileRunEvent {
   detail: string | null;
   policyId: string | null;
   runId: string | null;
+  /** Which folder, bucket or webhook fed the run. Null when a user supplied the file. */
+  sourceId: string | null;
   /**
    * Opaque reference, never a name. Only the owner's own client can resolve it to
    * something readable, from its local file store.

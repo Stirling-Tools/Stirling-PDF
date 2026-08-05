@@ -222,7 +222,41 @@ class PolicyEngineTest {
         // A failed run is recorded durably, so an admin can see it after the in-memory run expires.
         verify(failureRecorder)
                 .recordRunFailure(
-                        eq(runId), any(), any(), any(), anyString(), any(Throwable.class));
+                        eq(runId), any(), any(), any(), any(), anyString(), any(Throwable.class));
+    }
+
+    @Test
+    void recordsWhichSourceFedAFailedRun() throws Exception {
+        // The source is threaded onto the run so an unattended failure is attributable: there is no
+        // user to name for a file that arrived from a bucket.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+
+        PolicyRunHandle handle =
+                engine.runPolicy(
+                        new Policy(
+                                "p1",
+                                "rotate",
+                                "owner",
+                                true,
+                                List.of(),
+                                List.of(new PipelineStep(ROTATE, Map.of())),
+                                OutputSpec.inline()),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP,
+                        "src-s3-invoices",
+                        "file-hash-1");
+        handle.completion().get(10, TimeUnit.SECONDS);
+
+        verify(failureRecorder)
+                .recordRunFailure(
+                        anyString(),
+                        any(),
+                        eq("src-s3-invoices"),
+                        eq("file-hash-1"),
+                        any(),
+                        anyString(),
+                        any(Throwable.class));
     }
 
     @Test
@@ -235,7 +269,7 @@ class PolicyEngineTest {
         doThrow(new RuntimeException("event store unavailable"))
                 .when(failureRecorder)
                 .recordRunFailure(
-                        anyString(), any(), any(), any(), anyString(), any(Throwable.class));
+                        anyString(), any(), any(), any(), any(), anyString(), any(Throwable.class));
 
         PolicyRunHandle handle =
                 engine.submit(

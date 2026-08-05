@@ -198,6 +198,7 @@ class FileRunEventStoreDbTest {
                 FailureKind.INPUT_PASSWORD_PROTECTED,
                 TEAM,
                 null,
+                null,
                 "policy-1",
                 runId,
                 fileId,

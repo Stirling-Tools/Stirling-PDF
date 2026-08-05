@@ -76,7 +76,7 @@ class FileRunEventServiceTest {
 
         @Test
         void movesANewEventToAcknowledgedAndStampsTheActor() {
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
             FileRunEvent updated = service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
 
@@ -87,7 +87,7 @@ class FileRunEventServiceTest {
 
         @Test
         void isANoOpWhenAlreadyAcknowledgedSoOwnershipIsNotStolen() {
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
             FileRunEvent first = service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
             Instant originalAt = first.statusAt();
 
@@ -114,7 +114,7 @@ class FileRunEventServiceTest {
 
         @Test
         void closesAnAcknowledgedEvent() {
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
             service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
 
             assertThat(service.dispatch(event.id(), "DISMISS", Map.of()).status())
@@ -225,7 +225,7 @@ class FileRunEventServiceTest {
 
         @Test
         void aClosedEventCannotBeActedOnAgain() {
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
             service.dispatch(event.id(), "DISMISS", Map.of());
 
             assertThatThrownBy(() -> service.dispatch(event.id(), "ACKNOWLEDGE", Map.of()))
@@ -286,8 +286,7 @@ class FileRunEventServiceTest {
 
             assertThat(service.availableActions(event))
                     .extracting(FileRunEventService.AvailableAction::labelKey)
-                    .containsExactlyInAnyOrder(
-                            "portal.failures.action.acknowledge", "portal.failures.action.dismiss");
+                    .containsExactly("portal.failures.action.dismiss");
         }
     }
 
@@ -388,6 +387,139 @@ class FileRunEventServiceTest {
             for (FailureActionId id : FailureActionId.values()) {
                 assertThat(complete.find(id)).isPresent();
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("reporting a failure the user hit in the editor")
+    class Reporting {
+
+        @Test
+        void classifiesTheReportedCodeAndStampsItAsEditorOrigin() {
+            service.report(
+                    new EditorFailureReport("remove-password", "E004", List.of("f-1"), "boom"));
+
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            assertThat(event.kind()).isEqualTo(FailureKind.INPUT_PASSWORD_PROTECTED);
+            assertThat(event.origin()).isEqualTo(FailureOrigin.TOOL);
+            assertThat(event.fileId()).isEqualTo("f-1");
+            assertThat(event.detail()).contains("boom");
+        }
+
+        @Test
+        void takesTheTeamAndActorFromThePrincipalNotTheReport() {
+            // The report carries no team or actor field at all; both come from the caller's
+            // session.
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            assertThat(event.teamId()).isEqualTo(TEAM);
+            assertThat(event.actor()).isEqualTo(ACTOR);
+        }
+
+        @Test
+        void recordsAnUnrecognisedCodeAsUnknownRatherThanDroppingIt() {
+            service.report(new EditorFailureReport("ocr", "E999", List.of("f-1"), "no idea"));
+
+            assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
+                    .isEqualTo(FailureKind.UNKNOWN);
+        }
+
+        @Test
+        void recordsAnAbsentCodeAsUnknown() {
+            service.report(new EditorFailureReport("ocr", null, List.of("f-1"), "network died"));
+
+            assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
+                    .isEqualTo(FailureKind.UNKNOWN);
+        }
+
+        @Test
+        void recordsOneIncidentPerFileSoEachDocumentStaysActionable() {
+            service.report(
+                    new EditorFailureReport(
+                            "compress", "E004", List.of("f-1", "f-2", "f-3"), "boom"));
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .hasSize(3)
+                    .extracting(FileRunEvent::fileId)
+                    .containsExactlyInAnyOrder("f-1", "f-2", "f-3");
+        }
+
+        @Test
+        void foldsARepeatOfTheSameFileIntoTheExistingIncident() {
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+            service.report(
+                    new EditorFailureReport("compress", "E004", List.of("f-1"), "boom again"));
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::occurrences)
+                    .isEqualTo(2);
+        }
+
+        @Test
+        void recordsOneUnattributedIncidentWhenNoFileWasNamed() {
+            service.report(new EditorFailureReport("compress", "E004", List.of(), "boom"));
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::fileId)
+                    .isNull();
+        }
+
+        @Test
+        void recordsEveryFileInALargeBatchRatherThanTrimmingIt() {
+            // A cap here used to drop the overflow silently, so a reviewer saw 25 of 60 failures
+            // with nothing indicating the rest existed. The processor path has never had one.
+            List<String> many =
+                    java.util.stream.IntStream.range(0, 60).mapToObj(i -> "f-" + i).toList();
+
+            service.report(new EditorFailureReport("compress", "E004", many, "boom"));
+
+            assertThat(store.list(TEAM, null, null, 200)).hasSize(60);
+        }
+
+        @Test
+        void keepsTheOperationNameOutOfTheStoredDocumentReferences() {
+            // The operation is context for the reviewer, not a document reference: it belongs in
+            // detail, never in fileId.
+            service.report(
+                    new EditorFailureReport("remove-password", "E004", List.of("f-1"), "boom"));
+
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            assertThat(event.detail()).contains("remove-password");
+            assertThat(event.fileId()).isEqualTo("f-1");
+        }
+
+        @Test
+        void storesTheReportedMessageVerbatimAlongsideTheOperation() {
+            // The user's own error about their own file. The operation is prefixed because an
+            // editor failure has no run to give a reviewer context.
+            service.report(
+                    new EditorFailureReport(
+                            "compress", "E004", List.of("f-1"), "Failed on Q4 report.pdf"));
+
+            assertThat(store.list(TEAM, null, null, 10).getFirst().detail())
+                    .isEqualTo("compress: Failed on Q4 report.pdf");
+        }
+
+        @Test
+        void theServiceHoldsNothingThatCouldReachADocument() {
+            // Asserted structurally rather than with verifyNoInteractions on unwired mocks, which
+            // is how the version of this test on the other branch passed without proving anything.
+            List<Class<?>> forbidden =
+                    List.of(
+                            stirling.software.proprietary.policy.ledger.ProcessedLedger.class,
+                            stirling.software.common.service.FileStorage.class,
+                            stirling.software.proprietary.policy.output.PolicyOutputSink.class);
+
+            List<Class<?>> held =
+                    Arrays.stream(FileRunEventService.class.getDeclaredFields())
+                            .filter(field -> !field.isSynthetic())
+                            .map(Field::getType)
+                            .toList();
+
+            assertThat(held).isNotEmpty().doesNotContainAnyElementsOf(forbidden);
         }
     }
 }
