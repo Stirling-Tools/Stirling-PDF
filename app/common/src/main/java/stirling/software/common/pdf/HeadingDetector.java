@@ -134,13 +134,18 @@ final class HeadingDetector {
      *       names an illustration, not a section, so it is never promoted however it is set.
      * </ul>
      *
-     * <p>Boldness is deliberately <em>not</em> a heading signal — a bold-but-not-larger line is
-     * emphasis, not a heading (see {@link #isBoldLabel}); promoting it to {@code #}/{@code ##} is
-     * the main source of false-positive headings.
+     * <p><b>Boldness is a signal, but never on its own.</b> Headings in real documents are
+     * frequently set at body size and distinguished only by weight, so size alone misses them. A
+     * bold line is promoted only when it is also short, vertically isolated and word-bearing, and
+     * the bold signal is vetoed outright when the line's font is the document's own body face —
+     * without that veto a document whose body text is set in a bold-named face has every line
+     * promoted. A bold line that fails those tests is emphasis, not a heading (see {@link
+     * #isBoldLabel}).
      *
      * <ul>
      *   <li>size &gt; baseline * 1.4 → {@code "# "}
-     *   <li>size &gt; baseline * 1.2 → {@code "## "}
+     *   <li>size &gt; baseline * 1.3 → {@code "## "}
+     *   <li>bold, short, isolated, word-bearing, not the body face → {@code "### "}
      *   <li>otherwise → {@code ""}
      * </ul>
      */

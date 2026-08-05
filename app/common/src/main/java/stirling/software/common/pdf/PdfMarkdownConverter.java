@@ -130,8 +130,24 @@ public class PdfMarkdownConverter {
      * split across a page break are stitched and reported against the page they start on.
      */
     public List<ExtractedTable> extractTables(PdfDocument doc) throws IOException {
+        return extractTables(doc, null);
+    }
+
+    /**
+     * As {@link #extractTables(PdfDocument)}, but only analyses the pages asked for.
+     *
+     * <p>Layout analysis is the dominant cost of extraction, so converting a whole document to
+     * answer a single-page request wastes almost all of it - and because callers hold the
+     * process-wide jpdfium lock while they do, that waste blocks every other native PDF operation.
+     * The page before each wanted one is still analysed, because a table can begin there and be
+     * stitched forward.
+     *
+     * @param wantedPages 1-based page numbers, or {@code null} for the whole document
+     */
+    public List<ExtractedTable> extractTables(PdfDocument doc, Set<Integer> wantedPages)
+            throws IOException {
         List<ExtractedTable> tables = new ArrayList<>();
-        for (Object e : buildElements(doc)) {
+        for (Object e : buildElements(doc, wantedPages)) {
             if (!(e instanceof TableBlock tb)) {
                 continue;
             }
@@ -190,6 +206,16 @@ public class PdfMarkdownConverter {
     }
 
     private List<Object> buildElements(PdfDocument doc) throws IOException {
+        return buildElements(doc, null);
+    }
+
+    /**
+     * @param wantedPages 1-based pages to analyse, or {@code null} for all of them. A page is also
+     *     analysed when the page after it is wanted, so a table starting on it can be stitched
+     *     forward into the requested page.
+     */
+    private List<Object> buildElements(PdfDocument doc, Set<Integer> wantedPages)
+            throws IOException {
         List<PageText> allPageText = PdfTextExtractor.extractAll(doc);
         float medianSize = HeadingDetector.medianFontSize(allPageText);
         float medianHeight = HeadingDetector.medianLineHeight(allPageText);
@@ -206,6 +232,10 @@ public class PdfMarkdownConverter {
         String prevPageTrailingTableHeader = null;
 
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+            if (!pageIsWanted(wantedPages, pageIndex)) {
+                prevPageTrailingTableHeader = null;
+                continue;
+            }
             PageLines page = pageLines(doc, allPageText, pageIndex);
             if (page.lines().isEmpty()) {
                 emitImages(doc, pageIndex, output);
@@ -234,6 +264,15 @@ public class PdfMarkdownConverter {
         // Stitch tables split across page breaks. Elements are either rendered text (String) or a
         // structured TableBlock; callers decide how to realise them.
         return stitchTables(output);
+    }
+
+    /** True when {@code pageIndex} is requested, or immediately precedes a requested page. */
+    private static boolean pageIsWanted(Set<Integer> wantedPages, int pageIndex) {
+        if (wantedPages == null) {
+            return true;
+        }
+        int oneBased = pageIndex + 1;
+        return wantedPages.contains(oneBased) || wantedPages.contains(oneBased + 1);
     }
 
     /**
@@ -2198,35 +2237,6 @@ public class PdfMarkdownConverter {
      * from synthetic {@link TextLine}s to exercise degenerate-coordinate handling (the crash path
      * an extreme text matrix can produce) without needing a binary PDF fixture.
      */
-    /** Prototype diagnostic: how the two-column guard and fragment merge see each page. */
-    static List<String> columnReport(PdfDocument doc) throws IOException {
-        List<String> out = new ArrayList<>();
-        List<PageText> pages = PdfTextExtractor.extractAll(doc);
-        for (int i = 0; i < pages.size(); i++) {
-            List<Line> stitched = stitchGlyphs(pages.get(i).lines());
-            List<Float> before = detectGutters(stitched);
-            int nBefore = stitched.size();
-            List<Line> mergedLines = mergeLineFragments(stitched, before);
-            List<Float> after = detectGutters(mergedLines);
-            out.add(
-                    String.format(
-                            "page %d: lines %d -> %d, gutters before=%s after=%s",
-                            i, nBefore, mergedLines.size(), before, after));
-            for (Line l : mergedLines) {
-                out.add(
-                        String.format(
-                                "   x=%7.2f y=%7.2f w=%7.2f h=%5.2f frags=%d [%s]",
-                                l.x,
-                                l.y,
-                                l.width,
-                                l.height,
-                                1 + l.merged.size(),
-                                l.text.length() > 90 ? l.text.substring(0, 90) : l.text));
-            }
-        }
-        return out;
-    }
-
     static List<float[]> findColumnRangesFromLines(List<TextLine> rows) {
         return findColumnRanges(rows.stream().map(Line::new).collect(Collectors.toList()));
     }
@@ -2557,40 +2567,6 @@ public class PdfMarkdownConverter {
 
     /** Fraction of a block's own lines that must run the page's width, not a column's. */
     private static final float SPANNING_LINES = 0.6f;
-
-    /**
-     * True when most of the block's own lines individually run the width of the page. A table row
-     * crosses a two-column page's gutter; a line of prose in either column never does.
-     */
-    private static boolean linesSpanPage(TableBlock block, List<Line> lines) {
-        float pageLo = Float.MAX_VALUE;
-        float pageHi = -Float.MAX_VALUE;
-        for (Line l : lines) {
-            pageLo = Math.min(pageLo, l.x);
-            pageHi = Math.max(pageHi, l.x + l.width);
-        }
-        if (pageHi <= pageLo) {
-            return false;
-        }
-        float wide = (pageHi - pageLo) * FULL_WIDTH;
-        int total = 0;
-        int spanning = 0;
-        for (List<Line> row : block.rows()) {
-            for (Line l : row) {
-                total++;
-                if (l.width >= wide) {
-                    spanning++;
-                }
-            }
-        }
-        return total > 0 && spanning >= total * SPANNING_LINES;
-    }
-
-    /** Columns the block resolves to, or 0 when it fails the table guards. */
-    private static int columnCount(TableBlock block) {
-        List<String[]> cells = block.cells();
-        return cells.isEmpty() ? 0 : cells.get(0).length;
-    }
 
     /** Keep an unruled full-width table on a multi-column page (round 1 required ruling lines). */
     private static final boolean WIDE_UNRULED_TABLES =

@@ -60,13 +60,16 @@ class TableExtractionServiceTest {
                 null);
     }
 
-    /** A real borderless-table PDF: ruled extraction finds nothing here, word-grid does. */
-    private Path borderlessFixture() throws IOException {
-        Path out = tmp.resolve("multi-column-test_lorem.pdf");
+    /**
+     * A real table-bearing PDF used to drive the fallback. Tabula is mocked out by the caller, so
+     * this exercises the word-grid path regardless of whether the fixture itself is ruled.
+     */
+    private Path fallbackFixture() throws IOException {
+        Path out = tmp.resolve("wrapped-cell-test_expense-report.pdf");
         try (InputStream in =
                 getClass()
                         .getResourceAsStream(
-                                "/pdf-ingestion-fixtures/bordered-table-test_widget.pdf")) {
+                                "/pdf-ingestion-fixtures/wrapped-cell-test_expense-report.pdf")) {
             Files.copy(in, out);
         }
         return out;
@@ -98,7 +101,7 @@ class TableExtractionServiceTest {
 
         List<PageTable> tables;
         try (PDDocument doc = docWithPages(1)) {
-            tables = svc.extract(doc, List.of(1), borderlessFixture());
+            tables = svc.extract(doc, List.of(1), fallbackFixture());
         }
 
         assertThat(tables).isNotEmpty();
@@ -131,7 +134,7 @@ class TableExtractionServiceTest {
 
         List<PageTable> tables;
         try (PDDocument doc = docWithPages(2)) {
-            tables = svc.extract(doc, List.of(1, 2), borderlessFixture());
+            tables = svc.extract(doc, List.of(1, 2), fallbackFixture());
         }
 
         assertThat(tables).isNotEmpty();

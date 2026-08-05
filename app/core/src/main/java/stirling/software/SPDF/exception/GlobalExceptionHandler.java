@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.jpdfium.exception.JPDFiumException;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -389,6 +390,33 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with appropriate HTTP status
      */
+    /**
+     * Catches anything jpdfium throws that a controller did not translate.
+     *
+     * <p>{@code JPDFiumException} is unchecked, so a {@code catch (IOException)} never sees it, and
+     * its message carries the absolute path of the server-side temp file. Left alone it reaches the
+     * client as a 500 with that path in the body. Translating it here covers every native call site
+     * at once, including any added later, rather than relying on each controller to remember.
+     */
+    @ExceptionHandler(JPDFiumException.class)
+    public ResponseEntity<ProblemDetail> handleJpdfium(
+            JPDFiumException ex, HttpServletRequest request) {
+        // Log with the throwable so the temp path stays diagnosable server-side; the client only
+        // ever sees the translated message.
+        log.warn("Unhandled jpdfium failure on {}", request.getRequestURI(), ex);
+        BaseAppException translated =
+                ExceptionUtils.handleJpdfiumException(ex, "while reading the PDF");
+        if (translated instanceof PdfPasswordException pwd) {
+            return handlePdfPassword(pwd, request);
+        }
+        if (translated instanceof PdfCorruptedException
+                || translated instanceof PdfEncryptionException
+                || translated instanceof OutOfMemoryDpiException) {
+            return handlePdfAndDpiExceptions(translated, request);
+        }
+        return handleBaseApp(translated, request);
+    }
+
     @ExceptionHandler({
         PdfCorruptedException.class,
         PdfEncryptionException.class,

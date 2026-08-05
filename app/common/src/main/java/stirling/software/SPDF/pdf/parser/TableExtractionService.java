@@ -90,15 +90,18 @@ public class TableExtractionService {
     }
 
     /**
-     * Word-grid tables restricted to the given pages. The converter runs once over the whole
-     * document because column and heading detection are document-wide, then results are filtered.
+     * Word-grid tables restricted to the given pages.
+     *
+     * <p>Only the requested pages are analysed. Layout analysis dominates conversion cost, and this
+     * runs while holding the process-wide jpdfium lock, so converting a 500-page document to answer
+     * a one-page request would block every other native PDF operation for the duration.
      */
     private List<PageTable> wordGridTables(Path pdfPath, Set<Integer> wantedPages) {
         List<PageTable> out = new ArrayList<>();
         try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
                 PdfDocument doc = PdfDocument.open(pdfPath)) {
             for (PdfMarkdownConverter.ExtractedTable t :
-                    new PdfMarkdownConverter().extractTables(doc)) {
+                    new PdfMarkdownConverter().extractTables(doc, wantedPages)) {
                 if (wantedPages.contains(t.pageNumber()) && !t.rows().isEmpty()) {
                     out.add(new PageTable(t.pageNumber(), t.rows(), Strategy.WORD_GRID));
                 }
@@ -110,8 +113,9 @@ public class TableExtractionService {
             }
         } catch (Exception e) {
             // The fallback is best-effort: a failure here must not fail the whole request, the
-            // caller still has whatever ruled extraction produced.
-            log.warn("Word-grid table fallback failed: {}", e.getMessage());
+            // caller still has whatever ruled extraction produced. Logged with the throwable so a
+            // converter bug is diagnosable rather than reading as "this document has no tables".
+            log.warn("Word-grid table fallback failed for {}", pdfPath.getFileName(), e);
         }
         return out;
     }
