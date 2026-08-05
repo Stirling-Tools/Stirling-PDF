@@ -2,73 +2,33 @@
 # Dependencies
 .gradle/
 node_modules/
-venv/
-.venv/
-__pycache__/
-.mypy_cache/
-.pytest_cache/
 
 # Build artifacts
 build/
 dist/
 target/
 
-# Compiled files
-*.class
-*.pyc
-*.o
-*.obj
-*.exe
-*.dll
-*.so
-*.a
-*.out
+# Logs
+*.log
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Editors
+# IDE
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
-# System
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+.env
+.env.local
+.env.*
 ```
