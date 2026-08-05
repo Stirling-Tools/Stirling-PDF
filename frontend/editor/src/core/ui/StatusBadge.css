@@ -2,35 +2,21 @@
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border-radius: var(--radius-pill);
   font-family: var(--font-sans);
   font-weight: 500;
   letter-spacing: 0.01em;
-  border: 1px solid transparent;
   line-height: 1;
   color: var(--sui-status-c, var(--c-text-subtle));
-  background: color-mix(
-    in srgb,
-    var(--sui-status-c, var(--c-text-subtle)) 12%,
-    transparent
-  );
-  border-color: color-mix(
-    in srgb,
-    var(--sui-status-c, var(--c-text-subtle)) 28%,
-    transparent
-  );
 }
+
 .sui-status--sm {
   font-size: 0.6875rem;
-  padding: 0.125rem 0.5rem;
 }
 .sui-status--md {
   font-size: 0.75rem;
-  padding: 0.1875rem 0.625rem;
 }
 .sui-status--lg {
   font-size: 0.8125rem;
-  padding: 0.3125rem 0.75rem;
 }
 
 .sui-status__dot {
@@ -38,25 +24,40 @@
   height: 0.375rem;
   border-radius: 50%;
   background: currentColor;
-  position: relative;
-}
-.sui-status__dot--pulse::after {
-  content: "";
-  position: absolute;
-  inset: -0.125rem;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  animation: pulseRing 1.4s ease-out infinite;
 }
 
-/* Neutral keeps the plain muted surface rather than an accent tint. */
+.sui-status--pill {
+  border-radius: var(--radius-pill);
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--sui-status-c, var(--c-text-subtle)) 28%,
+      transparent
+    );
+  background: color-mix(
+    in srgb,
+    var(--sui-status-c, var(--c-text-subtle)) 12%,
+    transparent
+  );
+}
+.sui-status--pill.sui-status--sm {
+  padding: 0.125rem 0.5rem;
+}
+.sui-status--pill.sui-status--md {
+  padding: 0.1875rem 0.625rem;
+}
+.sui-status--pill.sui-status--lg {
+  padding: 0.3125rem 0.75rem;
+}
+
 .sui-status--neutral {
   color: var(--c-text-subtle);
+}
+.sui-status--pill.sui-status--neutral {
   background: var(--c-surface-sunken);
   border-color: var(--c-border-subtle);
 }
-/* Tones only pick the accent; the base rule builds the fill + border. `-dark`
-   is theme-adaptive, so text stays legible on the pale fill in both themes. */
+
 .sui-status--success {
   --sui-status-c: var(--color-green-dark);
 }

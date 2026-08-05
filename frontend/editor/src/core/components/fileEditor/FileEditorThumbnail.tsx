@@ -45,6 +45,7 @@ import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryMod
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { FileEditorStatusDot } from "@app/components/fileEditor/FileEditorStatusDot";
 
@@ -553,6 +554,9 @@ const FileEditorThumbnail = ({
                 isLoading={
                   !isEncrypted &&
                   !displayThumbnail &&
+                  // No thumbnail is ever produced at/above the parse limit, so
+                  // without this the spinner has no terminal state.
+                  file.size < LARGE_PDF_PARSE_LIMIT &&
                   (isThumbGenerating ||
                     file.type?.startsWith("application/pdf") ||
                     file.type?.startsWith("image/"))
