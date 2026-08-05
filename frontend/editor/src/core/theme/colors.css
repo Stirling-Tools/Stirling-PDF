@@ -166,6 +166,10 @@ html[data-app-theme="custom"] {
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
   --c-text-on-primary: var(--p-white);
   --c-accent-fg: var(--c-primary);
+  /* Accent used as TEXT: --c-primary and its 80% hover both land under
+     4.5:1 on the accent-tinted surfaces they appear on (chips, links,
+     outline buttons), so accent copy takes a deeper step of the hue. */
+  --c-accent-text: var(--p-blue-700);
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
   --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-paper));
@@ -280,6 +284,7 @@ html[data-app-theme="custom"] {
 
 /* ── DARK — editor dark theme: neutral text/borders/icons + accent-tinted surfaces (default override opts out). After :root so it wins for dark. ── */
 html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
+  --c-accent-text: var(--p-blue-400);
   /* Neutral text / borders / overlay (not accent-tinted). */
   --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);

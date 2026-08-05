@@ -118,6 +118,13 @@ export const mantineTheme = createTheme({
     amber,
     purple,
   },
+  components: {
+    // Icon-only dismiss controls carry no text; name them so screen readers
+    // can reach them (see the editor theme for the same defaults).
+    CloseButton: { defaultProps: { "aria-label": "Close" } },
+    Modal: { defaultProps: { closeButtonProps: { "aria-label": "Close" } } },
+    Drawer: { defaultProps: { closeButtonProps: { "aria-label": "Close" } } },
+  },
   fontFamily: "var(--font-sans)",
   fontFamilyMonospace: "var(--font-mono)",
   defaultRadius: "var(--radius-md)",
