@@ -20,7 +20,6 @@ import {
   Spinner,
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
 import {
   deserializeToolStep,
   getExecutableTools,
@@ -68,7 +67,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
-import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
+import {
+  PipelineStepSettings,
+  type ParamsUpdate,
+} from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import {
@@ -374,17 +376,22 @@ export function PipelineBuilder() {
     setSelectedIndex((cur) => (cur === index ? index + delta : cur));
   }
 
-  function updateStepParams(index: number, params: ErasedToolParams) {
+  function updateStepParams(index: number, update: ParamsUpdate) {
     setSteps((current) =>
-      current.map((step, i) =>
+      current.map((step, i) => {
         // Integration steps are deliberately toolId-less, so they must be editable too; only a
-        // genuinely unrecognised step has no editor to send changes from. updateWorkingStepParams
-        // also re-resolves the endpoint for a format-routed tool (convert's from/to) so validation
-        // below reflects the edit; it's a no-op on the operation for fixed-endpoint steps.
-        i === index && (step.toolId !== null || isIntegrationStep(step))
-          ? updateWorkingStepParams(step, params, allTools)
-          : step,
-      ),
+        // genuinely unrecognised step has no editor to send changes from.
+        if (i !== index || (step.toolId === null && !isIntegrationStep(step)))
+          return step;
+        // Resolve the update against the CURRENT step params, so a settings UI firing several
+        // single-field changes in one tick (convert's source-format change resets target + options)
+        // accumulates instead of each merge clobbering a stale snapshot. updateWorkingStepParams
+        // also re-resolves the endpoint for a format-routed tool so validation reflects the edit;
+        // it's a no-op on the operation for fixed-endpoint steps.
+        const nextParams =
+          typeof update === "function" ? update(step.params) : update;
+        return updateWorkingStepParams(step, nextParams, allTools);
+      }),
     );
   }
 
@@ -1043,9 +1050,9 @@ export function PipelineBuilder() {
               <PipelineStepSettings
                 step={selectedStep}
                 registry={allTools}
-                onChange={(params) =>
+                onChange={(update) =>
                   selectedIndex !== null &&
-                  updateStepParams(selectedIndex, params)
+                  updateStepParams(selectedIndex, update)
                 }
               />
             ) : (
