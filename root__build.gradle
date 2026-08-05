@@ -197,6 +197,76 @@ subprojects {
         bootJar {
             enabled = false
         }
+    } else {
+        // Only configure bootRun for the main application module (:stirling-pdf)
+        // Library modules (:common, :proprietary, :saas) should not have bootRun configured
+        tasks.named("bootRun") {
+            def runtimeArgs = [
+                "-XX:+UseG1GC",
+                "-XX:MaxGCPauseMillis=200",
+                "-XX:G1HeapRegionSize=4m",
+                "-XX:+ExplicitGCInvokesConcurrent",
+                "-XX:+UseStringDeduplication",
+                // --enable-native-access has existed since JDK 17, safe at any
+                // supported versions.
+                "--enable-native-access=ALL-UNNAMED"
+            ]
+            // Compact Object Headers (JEP 519) is a JDK 25+ *product* flag - the JVM
+            // rejects it outright as an unrecognized option on JDK 21-23, and it needs
+            // -XX:+UnlockExperimentalVMOptions alongside it on JDK 24. Only add it when
+            // actually compiling/running against 25+ (buildJavaMajorVersion tracks
+            // modernJavaVersion / -PjavaVersion, defined earlier in this file).
+            if (buildJavaMajorVersion >= 25) {
+                runtimeArgs.add("-XX:+UseCompactObjectHeaders")
+            }
+
+            // Optional JaCoCo agent for e2e/cucumber backend coverage.
+            //
+            // Enabled with `-PjacocoAgent=true`. The default destfile lives
+            // outside the source tree so it doesn't poison a normal bootRun
+            // for a developer who forgot to pass the property. Override
+            // both with `-PjacocoExec=/path/to.exec` if you need a custom
+            // location (e.g. when sharing it with the Playwright runner).
+            if (rootProject.hasProperty('jacocoAgent') &&
+                rootProject.property('jacocoAgent').toString() == 'true') {
+                def agentJar = rootProject.layout.buildDirectory
+                        .file('jacoco/jacocoagent.jar').get().asFile.absolutePath
+                def execFile = (rootProject.findProperty('jacocoExec') ?:
+                        rootProject.layout.projectDirectory
+                                .file('.test-state/playwright/jacoco.exec').asFile.absolutePath
+                        ).toString()
+                // The JaCoCo agent argument is a comma-separated key=value list,
+                // so a path that itself contains ',' or '=' would smuggle extra
+                // agent options (e.g. -PjacocoExec='out.exec,sessionid=evil').
+                // Today the value only comes from our own CI workflows, but
+                // validating defensively is cheap and silences Aikido.
+                //
+                // Control characters are checked via String.contains rather
+                // than inside a slashy regex character class - a literal NULL
+                // accidentally landing in the regex killed Groovy parsing on
+                // the previous attempt.
+                def hasBadChar = execFile.find(/[,= ]/) != null ||
+                        execFile.contains('\r') ||
+                        execFile.contains('\n') ||
+                        execFile.contains('\t')
+                if (hasBadChar) {
+                    throw new GradleException(
+                            "jacocoExec='" + execFile + "' contains characters " +
+                            "(',', '=', whitespace, or control chars) that " +
+                            "would break -javaagent option parsing. Choose " +
+                            "a different path."
+                    )
+                }
+                runtimeArgs.add("-javaagent:${agentJar}=destfile=${execFile},output=file,append=false,dumponexit=true")
+                dependsOn(rootProject.tasks.named('copyJacocoAgent'))
+                doFirst {
+                    new File(execFile).parentFile?.mkdirs()
+                    logger.lifecycle("JaCoCo agent attached: ${execFile}")
+                }
+            }
+
+            jvmArgs = runtimeArgs
+        }
     }
 
     repositories {
@@ -474,74 +544,6 @@ subprojects {
             finalizedBy("copySwaggerDoc")
             doNotTrackState("OpenAPI plugin writes outside build directory")
         }
-
-        tasks.named("bootRun") {
-            def runtimeArgs = [
-                "-XX:+UseG1GC",
-                "-XX:MaxGCPauseMillis=200",
-                "-XX:G1HeapRegionSize=4m",
-                "-XX:+ExplicitGCInvokesConcurrent",
-                "-XX:+UseStringDeduplication",
-                // --enable-native-access has existed since JDK 17, safe at any
-                // supported version.
-                "--enable-native-access=ALL-UNNAMED"
-            ]
-            // Compact Object Headers (JEP 519) is a JDK 25+ *product* flag - the JVM
-            // rejects it outright as an unrecognized option on JDK 21-23, and it needs
-            // -XX:+UnlockExperimentalVMOptions alongside it on JDK 24. Only add it when
-            // actually compiling/running against 25+ (buildJavaMajorVersion tracks
-            // modernJavaVersion / -PjavaVersion, defined earlier in this file).
-            if (buildJavaMajorVersion >= 25) {
-                runtimeArgs.add("-XX:+UseCompactObjectHeaders")
-            }
-
-            // Optional JaCoCo agent for e2e/cucumber backend coverage.
-            //
-            // Enabled with `-PjacocoAgent=true`. The default destfile lives
-            // outside the source tree so it doesn't poison a normal bootRun
-            // for a developer who forgot to pass the property. Override
-            // both with `-PjacocoExec=/path/to.exec` if you need a custom
-            // location (e.g. when sharing it with the Playwright runner).
-            if (rootProject.hasProperty('jacocoAgent') &&
-                rootProject.property('jacocoAgent').toString() == 'true') {
-                def agentJar = rootProject.layout.buildDirectory
-                        .file('jacoco/jacocoagent.jar').get().asFile.absolutePath
-                def execFile = (rootProject.findProperty('jacocoExec') ?:
-                        rootProject.layout.projectDirectory
-                                .file('.test-state/playwright/jacoco.exec').asFile.absolutePath
-                        ).toString()
-                // The JaCoCo agent argument is a comma-separated key=value list,
-                // so a path that itself contains ',' or '=' would smuggle extra
-                // agent options (e.g. -PjacocoExec='out.exec,sessionid=evil').
-                // Today the value only comes from our own CI workflows, but
-                // validating defensively is cheap and silences Aikido.
-                //
-                // Control characters are checked via String.contains rather
-                // than inside a slashy regex character class - a literal NULL
-                // accidentally landing in the regex killed Groovy parsing on
-                // the previous attempt.
-                def hasBadChar = execFile.find(/[,= ]/) != null ||
-                        execFile.contains('\r') ||
-                        execFile.contains('\n') ||
-                        execFile.contains('\t')
-                if (hasBadChar) {
-                    throw new GradleException(
-                            "jacocoExec='" + execFile + "' contains characters " +
-                            "(',', '=', whitespace, or control chars) that " +
-                            "would break -javaagent option parsing. Choose " +
-                            "a different path."
-                    )
-                }
-                runtimeArgs.add("-javaagent:${agentJar}=destfile=${execFile},output=file,append=false,dumponexit=true")
-                dependsOn(rootProject.tasks.named('copyJacocoAgent'))
-                doFirst {
-                    new File(execFile).parentFile?.mkdirs()
-                    logger.lifecycle("JaCoCo agent attached: ${execFile}")
-                }
-            }
-
-            jvmArgs = runtimeArgs
-        }
     }
 }
 
@@ -662,7 +664,10 @@ tasks.register('printVersion') {
     }
 }
 
-tasks.named('bootRun') {
+// Configure the root project's bootRun task to delegate to :stirling-pdf
+// This is needed because the Spring Boot plugin is applied to all subprojects,
+// but only :stirling-pdf is the actual application module.
+tasks.register('bootRun') {
     group = 'application'
     description = 'Delegates to :stirling-pdf:bootRun'
     dependsOn ':stirling-pdf:bootRun'
