@@ -98,7 +98,8 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
     name: "prerender-og",
     apply: "build" as const,
     async closeBundle() {
-      const { prerenderOg } = await import("./scripts/og-prerender.mjs");
+      const { prerenderOg, buildSitemap } =
+        await import("./scripts/og-prerender.mjs");
       const ogBase = (
         process.env.VITE_OG_BASE_URL ||
         process.env.CF_PAGES_URL ||
@@ -107,6 +108,7 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
       // Absolute deploy base for nested routes' <base href> (matches vite `base`).
       const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
       const baseHref = subpath ? `/${subpath}/` : "/";
+      const pathPrefix = baseHref.replace(/\/+$/, ""); // "" or "/app"
       let manifest;
       try {
         manifest = JSON.parse(
@@ -127,6 +129,27 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
             ? ` (absolute URLs, base=${ogBase})`
             : " (root-relative URLs)"),
       );
+
+      // Sitemaps need absolute URLs, so only emit when a canonical origin is
+      // known (custom domain or Cloudflare Pages). Self-hosted builds skip it.
+      const sitemap = buildSitemap(manifest, { ogBase, pathPrefix });
+      if (sitemap) {
+        await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
+        // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
+        const robotsPath = path.join(distDir, "robots.txt");
+        try {
+          let robots = await fs.readFile(robotsPath, "utf8");
+          if (!/^\s*Sitemap:/im.test(robots)) {
+            robots =
+              robots.replace(/\s*$/, "\n") +
+              `Sitemap: ${ogBase}${pathPrefix}/sitemap.xml\n`;
+            await fs.writeFile(robotsPath, robots);
+          }
+        } catch {
+          // no robots.txt in dist - nothing to link
+        }
+        console.log(`[prerender-og] wrote sitemap.xml (base=${ogBase})`);
+      }
     },
   };
 }
