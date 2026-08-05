@@ -114,7 +114,28 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
       fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
     },
   } as unknown as ToolRegistryEntry;
-  const allTools = { compress } as unknown as ToolRegistryCatalog["allTools"];
+  // Produces images, so nothing downstream that wants a PDF can follow it.
+  const extractImages = {
+    name: "Extract images",
+    icon: null,
+    component: null,
+    description: "",
+    categoryId: "recommendedTools",
+    subcategoryId: "general",
+    operationConfig: {
+      operationType: "extractImages",
+      toolType: 0,
+      endpoint: "/api/v1/misc/extract-images",
+      defaultParameters: {},
+      buildFormData: () => new FormData(),
+      toApiParams: (params: Record<string, unknown>) => ({ ...params }),
+      fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
+    },
+  } as unknown as ToolRegistryEntry;
+  const allTools = {
+    compress,
+    extractImages,
+  } as unknown as ToolRegistryCatalog["allTools"];
   const catalog: ToolRegistryCatalog = {
     regularTools: allTools,
     superTools: allTools,
@@ -261,6 +282,55 @@ describe("PipelineBuilder", () => {
       }),
     );
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
+  });
+
+  it("blocks saving a chain whose steps can't run on each other", async () => {
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      { target: { value: "Broken chain" } },
+    );
+    await pickInputSource("Claims intake");
+    fireEvent.click(screen.getByText("pick output"));
+
+    // Extract images emits images; compress only takes a PDF, so it can never run.
+    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(await screen.findByText("Extract images"));
+    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(await screen.findByText("Compress"));
+
+    expect(
+      await screen.findByText("portal.pipelines.builder.stepsIncompatible"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("allows a chain whose steps line up", async () => {
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      { target: { value: "Fine chain" } },
+    );
+    await pickInputSource("Claims intake");
+    fireEvent.click(screen.getByText("pick output"));
+
+    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(await screen.findByText("Compress"));
+
+    expect(
+      screen.queryByText("portal.pipelines.builder.stepsIncompatible"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).not.toBeDisabled();
   });
 
   it("requires at least one source and one destination before saving", async () => {

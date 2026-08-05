@@ -174,12 +174,14 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
-    # PR smoke build: macOS + Windows (the platforms our developers use). 
+    # PR smoke build: macOS + Windows (the platforms our developers use).
+    # sign: true only reaches macOS - tauri-build's per-platform gate keeps
+    # Windows/Linux signing on main, and an unsigned .dmg cannot be opened.
     # The full signed multi-OS matrix runs on release;
     # nightly still warms the Rust cache with all-OS defaults.
     with:
       platform: windows-macos
-      sign: false
+      sign: true
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
