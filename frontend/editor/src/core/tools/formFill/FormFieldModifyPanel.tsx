@@ -115,6 +115,17 @@ export function FormFieldModifyPanel({
     }
   }, [selectedFieldName]);
 
+  // Escape clears the selection. Lives here (single instance) so it still works
+  // when the selected field's page has scrolled out of view and unmounted.
+  useEffect(() => {
+    if (!selectedFieldName) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedField(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedFieldName, setSelectedField]);
+
   const changeCount =
     Object.keys(modifiedFields).length + deletedFieldNames.length;
 

@@ -316,13 +316,11 @@ export function FormFieldEditOverlay({
     ],
   );
 
-  // Escape clears the selection; arrow keys nudge the selected field.
-  // (Each visible page mounts this overlay, but only the page whose widget
-  // matches selectedField resolves a rect, so a nudge applies exactly once.)
-  // Don't gate this on selectedField: Escape must still clear a selection
-  // whose page has scrolled out of view and unmounted.
+  // Arrow keys nudge the selected field; Escape cancels an in-progress drag.
+  // Only the page owning the selection listens, so a key is handled once.
+  // FormFieldModifyPanel keeps Escape-to-deselect working off-screen.
   useEffect(() => {
-    if (mode !== "modify") return;
+    if (mode !== "modify" || !selectedField) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         interactionRef.current = null;
