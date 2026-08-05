@@ -4,12 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Recovers merged cells from a flattened cell grid, and renders a table as HTML.
- *
- * <p>A GFM pipe table is rectangular, so a cell that spans several columns or rows survives
- * flattening only as a shape: its text lands in one band and the bands it also covers come out
- * empty. That shape alone is ambiguous - a genuinely empty cell leaves the same hole - so a merge
- * is only asserted where the page's own ruling lines say the boundary was never drawn.
+ * Recovers merged cells from a flattened cell grid and renders it as HTML. An empty band is
+ * ambiguous, so a merge is asserted only where the page's ruling lines omit the boundary.
  */
 final class TableSpans {
 
@@ -24,15 +20,13 @@ final class TableSpans {
     /** Slack at each end of a band when testing whether rules cover it. */
     private static final float BAND_SLACK = 1.5f;
 
-    /** Ablation: restrict the banner-row merge to rows whose text starts at column 0. */
+    /** Restricts the banner-row merge to rows whose text starts at column 0. */
     private static final boolean BANNER_FROM_FIRST_COLUMN =
             Boolean.parseBoolean(System.getProperty("stirling.md.bannerFirstColumn", "true"));
 
     /**
-     * Off by default. A row carrying a single cell of text looks like a spanning banner, and
-     * merging it does score better here, but measured against the ground truth it fires on 11
-     * tables that carry no merged cell at all and on only 2 that do: the shape it recognises is
-     * usually a table this converter over-segmented, not a span the page drew.
+     * Off by default: measured against ground truth it mostly fires on tables this converter
+     * over-segmented, not on spans the page drew.
      */
     private static final boolean BANNER_ROW =
             Boolean.parseBoolean(System.getProperty("stirling.md.bannerRow", "false"));
@@ -44,9 +38,8 @@ final class TableSpans {
     record Band(float lo, float hi) {}
 
     /**
-     * Infers merged cells. {@code columns} and {@code bands} are the x and y extents of the grid's
-     * columns and rows; either may be null, in which case only the unambiguous whole-row merge is
-     * applied.
+     * Infers merged cells. {@code columns} and {@code bands} give the grid's x and y extents;
+     * either may be null, leaving only the unambiguous whole-row merge.
      */
     static List<List<Cell>> infer(
             List<String[]> grid,
@@ -76,11 +69,8 @@ final class TableSpans {
                         && bands.size() == nr;
 
         if (geo) {
-            // A merged cell is not "no rule here"; it is "the rule that separates this row from the
-            // next stops short of this column". So a boundary must exist - be drawn across some
-            // other column - before its absence at one column means anything. A table whose rows
-            // are only whitespace-separated draws no boundary at all and merges nothing; a fully
-            // ruled one draws every boundary everywhere and merges nothing either.
+            // A merge is "the boundary stops short here", so it must be drawn somewhere else
+            // first: unruled and fully ruled tables alike then merge nothing.
             boolean[][] hDrawn = new boolean[nr][nc];
             boolean[][] vDrawn = new boolean[nr][nc];
             boolean[] rowBoundary = new boolean[nr];
@@ -100,9 +90,8 @@ final class TableSpans {
                 }
             }
 
-            // Row merges first: a column's cell continues downwards while the row rule below it
-            // stops short of that column. Doing this before column merges keeps a cell that spans
-            // both axes anchored on the row it starts in.
+            // Row merges first: doing them before column merges keeps a cell spanning both axes
+            // anchored on the row it starts in.
             for (int c = 0; c < nc; c++) {
                 int r = 0;
                 while (r < nr) {
@@ -144,9 +133,8 @@ final class TableSpans {
             }
         }
 
-        // A row carrying exactly one cell of text is a banner: a section label, a caption row or a
-        // spanning header. Its emptiness is not a hole in the data, it is the merge itself, and no
-        // ruling line is needed to see that.
+        // A row carrying one cell of text is a banner (section label, caption or spanning header),
+        // so its emptiness is the merge itself and needs no ruling line.
         for (int r = 0; BANNER_ROW && r < nr; r++) {
             int filled = -1;
             int count = 0;
@@ -165,9 +153,8 @@ final class TableSpans {
             if (count != 1 || nc < 2 || rs[r][filled] != 1) {
                 continue;
             }
-            // Only a row whose text starts at the first column. A row that is blank on the left and
-            // filled further right is the other common shape - a header whose corner cell is empty
-            // above the row labels - and merging that one invents a span the page never drew.
+            // A row blank on the left and filled further right is a header with an empty corner
+            // cell above the row labels, not a span the page drew.
             if (BANNER_FROM_FIRST_COLUMN && filled != 0) {
                 continue;
             }
@@ -231,9 +218,8 @@ final class TableSpans {
     }
 
     /**
-     * True when rules at {@code pos} cover the interval {@code lo..hi}. Segments are merged first:
-     * a grid drawn as per-cell strokes lays one segment per cell along a boundary and no single one
-     * of them covers a whole band.
+     * True when rules at {@code pos} cover {@code lo..hi}. Segments are merged first: a grid drawn
+     * as per-cell strokes covers a boundary with several short rules, never one long one.
      */
     private static boolean covers(List<PageRules.Rule> rules, float pos, float lo, float hi) {
         float span = hi - lo;
@@ -241,8 +227,8 @@ final class TableSpans {
             return false;
         }
         List<float[]> segments = new ArrayList<>();
-        // Half the tolerance either side of pos: a boundary sits midway between two bands, so a
-        // wider window would also catch the rules that bound the neighbouring band.
+        // The window stays tight around pos: a boundary sits midway between two bands, so a wider
+        // one also catches the rules bounding the neighbouring band.
         for (PageRules.Rule r : rules) {
             if (Math.abs(r.pos() - pos) <= POS_TOLERANCE
                     && r.hi() >= lo - BAND_SLACK
@@ -284,9 +270,8 @@ final class TableSpans {
     }
 
     /**
-     * Renders as an HTML table. The layout matches the serialisation the corpus and most HTML
-     * writers use - one tag per line, two-space cell indent - so the markup reads as a table when a
-     * human opens the file.
+     * Renders as an HTML table, one tag per line with a two-space cell indent, matching the corpus
+     * so the markup still reads as a table to a human.
      */
     static String renderHtml(List<List<Cell>> grid) {
         StringBuilder sb = new StringBuilder("<table>");

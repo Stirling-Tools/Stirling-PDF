@@ -48,9 +48,8 @@ public class PdfMarkdownConverter {
     private static final float GLYPH_WIDTH = 7.5f;
 
     /**
-     * Fraction of the word-grid's rows a ruled grid must also find before its own rows are trusted
-     * over the word-grid's. Below it the table is only partly ruled and the rules would merge
-     * several text rows into one band.
+     * Fraction of the word-grid's rows a ruled grid must also find before its rows are trusted;
+     * below it the table is only partly ruled and its rules would merge several rows into one band.
      */
     private static final float COMPLETE_LATTICE =
             Float.parseFloat(System.getProperty("stirling.md.completeLattice", "0.5"));
@@ -58,12 +57,11 @@ public class PdfMarkdownConverter {
     /** Fraction of the page's text width a table must span to override two-column layout. */
     private static final float FULL_WIDTH = 0.6f;
 
-    // --- Prototype switches -------------------------------------------------
-    // Prototype only: a shipped version would surface these as request parameters plus a server
-    // default, not JVM system properties. Read once at class load so a benchmark run is stable.
-    // Defaults are the combined configuration; set the property to restore shipped behaviour.
+    // --- Tuning switches ----------------------------------------------------
+    // Read once at class load, so a run is stable. Defaults are the combined configuration; set a
+    // property to restore the older behaviour.
 
-    /** {@code placeholder} (shipped behaviour), {@code none}, or {@code reference}. */
+    /** {@code placeholder} (the default), {@code none}, or {@code reference}. */
     private static final String IMAGE_MODE =
             System.getProperty("stirling.md.imageMode", "placeholder");
 
@@ -123,24 +121,16 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Extracts every detected table as a rectangular cell grid, in document order.
-     *
-     * <p>This is the same detection that backs {@link #convert(PdfDocument)}, so it finds
-     * borderless and whitespace-aligned tables that ruled-line extraction alone cannot see. Tables
-     * split across a page break are stitched and reported against the page they start on.
+     * Extracts every detected table as a cell grid, in document order. Same detection as {@link
+     * #convert(PdfDocument)}, so borderless tables are found and page-split ones stitched.
      */
     public List<ExtractedTable> extractTables(PdfDocument doc) throws IOException {
         return extractTables(doc, null);
     }
 
     /**
-     * As {@link #extractTables(PdfDocument)}, but only analyses the pages asked for.
-     *
-     * <p>Layout analysis is the dominant cost of extraction, so converting a whole document to
-     * answer a single-page request wastes almost all of it - and because callers hold the
-     * process-wide jpdfium lock while they do, that waste blocks every other native PDF operation.
-     * The page before each wanted one is still analysed, because a table can begin there and be
-     * stitched forward.
+     * As {@link #extractTables(PdfDocument)}, but only analyses the pages asked for. Callers hold
+     * the process-wide jpdfium lock, so wasted layout analysis blocks all other native PDF work.
      *
      * @param wantedPages 1-based page numbers, or {@code null} for the whole document
      */
@@ -168,14 +158,8 @@ public class PdfMarkdownConverter {
     public record ExtractedTable(int pageNumber, List<List<String>> rows) {}
 
     /**
-     * Converts each page to markdown independently, indexed by 1-based page number.
-     *
-     * <p>Intended for consumers that must keep page attribution, such as RAG ingestion where a
-     * retrieved chunk cites its page. Because pages are rendered in isolation, a table or paragraph
-     * spanning a page break is not stitched: each page holds its own portion. Use {@link
-     * #convert(PdfDocument)} when the document is wanted as one continuous piece.
-     *
-     * <p>Pages with no extractable text are omitted rather than mapped to an empty string.
+     * Converts each page to markdown independently, indexed by 1-based page number. Nothing is
+     * stitched across a page break, and pages with no extractable text are omitted, not empty.
      */
     public Map<Integer, String> convertPages(PdfDocument doc) throws IOException {
         List<PageText> allPageText = PdfTextExtractor.extractAll(doc);
@@ -210,9 +194,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * @param wantedPages 1-based pages to analyse, or {@code null} for all of them. A page is also
-     *     analysed when the page after it is wanted, so a table starting on it can be stitched
-     *     forward into the requested page.
+     * @param wantedPages 1-based pages to analyse, or {@code null} for all. The page before a
+     *     wanted one is analysed too, so a table starting there is stitched forward.
      */
     private List<Object> buildElements(PdfDocument doc, Set<Integer> wantedPages)
             throws IOException {
@@ -261,8 +244,7 @@ public class PdfMarkdownConverter {
             prevPageTrailingTableHeader = trailingTableHeader(pageItems);
         }
 
-        // Stitch tables split across page breaks. Elements are either rendered text (String) or a
-        // structured TableBlock; callers decide how to realise them.
+        // Stitch tables split across page breaks; callers decide how to realise the elements.
         return stitchTables(output);
     }
 
@@ -276,11 +258,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * One page's assembled lines plus the layout verdict taken before any text repair.
-     *
-     * <p>The verdict must be taken on the unmerged lines: fragment merging reduces the line count
-     * and the two-column guard's threshold scales with that count, so measuring after a repair
-     * would let it flip a two-column page into a single-column one.
+     * One page's lines plus the layout verdict, which must be taken before text repair: merging
+     * reduces the line count the two-column guard's threshold scales with.
      */
     private record PageLines(List<Line> lines, List<Float> gutters) {
         boolean twoColumnLayout() {
@@ -289,12 +268,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Assembled lines for one page, or an empty list when the page carries no text.
-     *
-     * <p>Stray glyph fragments (apostrophes, asterisks, superscripts, bullets) are stitched into
-     * their host lines, extractor fragments of one visual line are rejoined, AcroForm values with
-     * no glyphs of their own are synthesised at their widget rectangles, then lines are sorted
-     * top-to-bottom (PDF y=0 is the bottom of the page).
+     * Assembled lines for one page, sorted top-to-bottom (PDF y=0 is the page bottom), or empty
+     * when the page carries no text.
      */
     private static PageLines pageLines(PdfDocument doc, List<PageText> allPageText, int pageIndex) {
         List<TextLine> rawLines =
@@ -337,20 +312,14 @@ public class PdfMarkdownConverter {
                         && lines.stream()
                                 .anyMatch(l -> normaliseSpace(l.text).equals(continuationHeader));
 
-        // The layout verdict is taken before text repair, on the unmerged lines, because merging
-        // changes the line count the thresholds scale with. It is applied after repair, though, so
-        // re-check it here: merging widens lines, and a gutter that only a few unmerged fragments
-        // crossed can end up straddled by most of the finished lines. Ordering by a gutter the text
-        // no longer respects cuts a band at nearly every line and degenerates to plain y-order with
-        // the columns interleaved, which is worse than not splitting at all.
+        // Merging widens lines, so re-check the pre-repair verdict here: ordering by a gutter the
+        // finished lines no longer respect is worse than not splitting at all.
         List<Float> gutters = tableContinuation ? List.of() : page.gutters();
         boolean twoColumn = !gutters.isEmpty();
         boolean respected = twoColumn && gutterRespected(lines, gutters);
 
-        // Tables are detected two ways. Ruling lines, when the page draws any, give exact row and
-        // column boundaries and find tables whose cells hold single words (which the word-grid
-        // detector cannot see). Whatever the rules do not cover falls to the word-grid detector,
-        // which handles borderless and whitespace-aligned tables.
+        // Two detectors: ruling lines give exact boundaries and see single-word cells; the word
+        // grid covers what the rules do not, i.e. borderless and whitespace-aligned tables.
         Set<String> tableRowTexts = new HashSet<>();
         PageRules rules = RULED_TABLES ? readRules(doc, pageIndex) : PageRules.EMPTY;
         List<TableBlock> blocks = findTableBlocks(lines, rules, pageIndex + 1);
@@ -384,14 +353,8 @@ public class PdfMarkdownConverter {
             }
         }
         if (twoColumn) {
-            // A multi-column page still carries full-width tables, and only a block that spans the
-            // page is one: anything narrower sits inside a column, and treating the page as
-            // single-column for its sake would scramble the surrounding prose. Round 1 additionally
-            // required ruling lines, which lost every unruled full-width table on a two-column
-            // paper; the cell-shape test replaces that, keeping a real grid while still rejecting
-            // the block whose "columns" are the layout gutter read across.
-            // Round 2 additionally keeps a ruled block that owns its vertical band:
-            // nothing sits beside it, so there is no column layout for it to be inside.
+            // On a multi-column page only a full-width block is a table; anything narrower sits
+            // inside a column. A ruled block owning its own band has no column layout to sit in.
             blocks =
                     blocks.stream()
                             .filter(
@@ -415,9 +378,8 @@ public class PdfMarkdownConverter {
         List<Object> pageItems = new ArrayList<>();
         List<List<Line>> segments = segmentsAround(lines, blocks, tableLines);
         if (twoColumn) {
-            // A full-width table on a two-column page interrupts both columns. Splitting the page
-            // at the table's own vertical band keeps the prose above and below it in column order
-            // while the table is rebuilt whole.
+            // A full-width table interrupts both columns, so splitting at its own vertical band
+            // keeps the prose above and below it in column order.
             for (int s = 0; s < segments.size(); s++) {
                 List<List<Line>> groups =
                         BAND_ORDER && respected
@@ -554,10 +516,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Removes U+00AD SOFT HYPHEN. It is a "you may break the word here" marker, not a character:
-     * typesetters embed it in the content stream and PDFium hands it back verbatim, so words come
-     * out as {@code ar<AD>e} and a break opportunity at the start of a word arrives as its own
-     * zero-width line. Neither belongs in extracted text.
+     * Removes U+00AD SOFT HYPHEN: a break-opportunity marker, not a character, which PDFium hands
+     * back verbatim so words come out as {@code ar<AD>e}.
      */
     private static String stripSoftHyphens(String text) {
         if (!SOFT_HYPHEN_FIX || text.indexOf('­') < 0) {
@@ -576,22 +536,14 @@ public class PdfMarkdownConverter {
             Float.parseFloat(System.getProperty("stirling.md.maxMergeGap", "1.60"));
 
     /**
-     * Rejoins extractor fragments that are really one visual line.
-     *
-     * <p>PDFium groups characters into lines by their bounding boxes, and a run with no ascender or
-     * descender (say {@code rou}) reports a shorter, higher box than the run that follows it
-     * ({@code ghly ...}). The two land in separate {@link TextLine}s, paragraph assembly joins them
-     * with a space, and the output reads {@code rou ghly}. The fix is geometric: two fragments
-     * whose vertical extents overlap and which are horizontally adjacent are one line. Whether a
-     * space belongs at the seam is decided by the size of the gap relative to the line's own
-     * average character width - a word space is roughly 0.6 of one, a mid-word seam roughly 0.1.
+     * Rejoins extractor fragments that are really one visual line: PDFium splits on bounding box,
+     * so a run with no ascender ({@code rou}) lands apart from the rest ({@code ghly ...}).
      */
     private static List<Line> mergeLineFragments(List<Line> lines, List<Float> gutters) {
         if (!MERGE_FRAGMENTS || lines.size() < 2) {
             return lines;
         }
-        // A fragment belongs to a column. On a multi-column page, merge inside each column so a
-        // line ending near the gutter is never joined to the line starting the next column.
+        // Merge within each column, so a line ending at the gutter never joins the next column's.
         if (!gutters.isEmpty()) {
             List<List<Line>> columns = splitIntoColumns(lines, gutters);
             if (columns.size() > 1) {
@@ -613,10 +565,8 @@ public class PdfMarkdownConverter {
         // Top edge first, so fragments of one visual line arrive together whatever their heights.
         ordered.sort(Comparator.comparingDouble((Line l) -> -(l.y + l.height)));
 
-        // Group into visual rows by vertical overlap, then walk each row left to right. Grouping
-        // before merging is what makes the seam test meaningful: a fragment's continuation is its
-        // right-hand neighbour on the same row, not whichever line the extractor happened to emit
-        // next.
+        // Group into rows first: a fragment's continuation is its right-hand neighbour on the same
+        // row, not whichever line the extractor happened to emit next.
         List<List<Line>> rows = new ArrayList<>();
         for (Line line : ordered) {
             List<Line> row = null;
@@ -665,9 +615,8 @@ public class PdfMarkdownConverter {
 
     /** True when {@code next} sits close enough to {@code host} to be the same visual line. */
     private static boolean adjacentOnRow(Line host, Line next) {
-        // Merging walks a row left to right and concatenates in that order, which is the reading
-        // order of an LTR script only. On an RTL line the fragments would be joined back to front,
-        // so leave the extractor's own grouping alone there.
+        // Merging concatenates left to right, which is reading order for LTR only; RTL fragments
+        // would be joined back to front.
         if (hasStrongRtl(host.text) || hasStrongRtl(next.text)) {
             return false;
         }
@@ -705,9 +654,8 @@ public class PdfMarkdownConverter {
         host.height = top - host.y;
     }
 
-    // Edges are measured from glyphs, not word boxes: a word box can carry the trailing space
-    // character, which would put the right edge a whole space past the last real glyph and make a
-    // word boundary look like a mid-word seam.
+    // Edges come from glyphs, not word boxes: a word box can carry its trailing space, putting the
+    // right edge a whole space past the last real glyph.
 
     private static float wordRightEdge(Line l) {
         float edge = -Float.MAX_VALUE;
@@ -830,10 +778,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Records a fragment whose text has been folded into {@code host} so the host's word list still
-     * covers its whole extent. Without this, a line whose right-hand half was absorbed by glyph
-     * stitching reports a right edge at the seam, and fragment merging then sees a gap that is not
-     * there. Only tracked when fragment merging is on, so the shipped path is untouched.
+     * Records a fragment folded into {@code host} so the host's word list still covers its whole
+     * extent; without it the host reports a right edge at the seam and merging sees a false gap.
      */
     private static void absorb(Line host, TextLine fragment) {
         if (MERGE_FRAGMENTS) {
@@ -850,7 +796,7 @@ public class PdfMarkdownConverter {
 
     // --- Column detection ---------------------------------------------------
 
-    /** Restores the round-1 central-band two-column guard, for ablation. */
+    /** Ablation switch: off restores the older central-band two-column guard. */
     private static final boolean GUTTER_SCAN =
             Boolean.parseBoolean(System.getProperty("stirling.md.gutterScan", "true"));
 
@@ -874,17 +820,8 @@ public class PdfMarkdownConverter {
     private static final int MAX_COLUMNS = 4;
 
     /**
-     * Finds the page's column gutters, or an empty list for a single-column page.
-     *
-     * <p>Gutters are read from a whitespace projection over the lines' glyph extents: an x band
-     * that few lines cross, wide enough to be a layout gutter rather than a word space, with a real
-     * column of text on each side.
-     *
-     * <p>The scan runs across a <em>robust</em> text extent - the 5th and 95th percentile of the
-     * lines' left and right edges - not the raw minimum and maximum. One line with a degenerate
-     * bounding box (a rotated running head reports x=-503 w=1003 on {@code 01030000000036})
-     * otherwise drags the search window off the page and hides a gutter that every other line
-     * agrees on.
+     * Finds the page's column gutters, or empty for a single column. The scan runs over the 5th to
+     * 95th percentile of line edges, so one degenerate bounding box cannot drag it off the page.
      */
     private static List<Float> detectGutters(List<Line> lines) {
         if (lines.size() < 8) {
@@ -939,8 +876,7 @@ public class PdfMarkdownConverter {
             bands.add(new float[] {start, hi - MIN_COLUMN});
         }
 
-        // Widest first, so when several bands qualify the strongest separation wins; then keep only
-        // those that stay MIN_COLUMN apart from the ones already taken.
+        // Widest first, so the strongest separation wins; then keep only bands MIN_COLUMN apart.
         bands.sort(Comparator.comparingDouble((float[] b) -> b[1] - b[0]).reversed());
         List<Float> gutters = new ArrayList<>();
         for (float[] b : bands) {
@@ -964,28 +900,19 @@ public class PdfMarkdownConverter {
         return FALLBACK_GUTTER ? centralGutter(lines, los, his, lo, hi) : List.of();
     }
 
-    /** Keep round 1's central-band verdict as a fallback when the projection finds no gutter. */
+    /** Fall back to the central-band verdict when the projection finds no gutter. */
     private static final boolean FALLBACK_GUTTER =
             Boolean.parseBoolean(System.getProperty("stirling.md.fallbackGutter", "true"));
 
     /**
-     * Round 1's two-column test, re-expressed over the robust extent and returning the gutter it
-     * found rather than a bare verdict.
-     *
-     * <p>It survives as a fallback because it accepts layouts the projection deliberately rejects:
-     * a slide or chart page whose two halves hold scattered labels rather than running text has no
-     * column that reads as prose, yet the ground truth still reads it half by half.
-     */
-    /**
-     * Rejects page geometry too wide to be real. A crafted text matrix can place a glyph millions
-     * of points out; past 2^24 a float can no longer represent x + 1, so any scan stepping by a
-     * constant stops advancing. The 2000pt bound matches the guards in {@code findColumnRanges} and
-     * {@code ColumnAccumulator}.
+     * Rejects page geometry too wide to be real: past 2^24 a float cannot represent x + 1, so a
+     * constant-step scan stops advancing. The 2000pt bound matches {@code findColumnRanges}.
      */
     private static boolean plausibleSpan(float lo, float hi) {
         return Float.isFinite(lo) && Float.isFinite(hi) && (hi - lo) <= 2000f;
     }
 
+    /** Fallback: accepts halves of scattered labels, which read as columns but not as prose. */
     private static List<Float> centralGutter(
             List<Line> lines, float[] los, float[] his, float lo, float hi) {
         int n = lines.size();
@@ -1029,18 +956,12 @@ public class PdfMarkdownConverter {
             Integer.parseInt(System.getProperty("stirling.md.bodyLines", "4"));
 
     /**
-     * True when every carved-out column reads as a block of running text set to that column's own
-     * measure.
-     *
-     * <p>The projection alone cannot tell a column of prose from any other vertical lane of
-     * whitespace. A bar chart's scattered numeric labels leave wide empty lanes between the bars
-     * and are otherwise read as three columns ({@code 01030000000039}); a column of body text, by
-     * contrast, is mostly lines that run the full measure.
+     * True when every carved-out column reads as running text. The projection alone cannot tell
+     * prose from any other empty lane, such as the gaps between a bar chart's labels.
      */
     private static boolean columnsLookLikeText(List<Line> lines, List<Float> gutters) {
-        // Judge on the lines that actually sit inside a column. A spanning line (title, running
-        // head, full-width caption) is assigned to a column by its centre, and its width would
-        // otherwise set a measure no real body line of that column could reach.
+        // Judge only lines inside a column: a spanning line is assigned to one by its centre, and
+        // its width would set a measure no real body line could reach.
         List<Line> inside =
                 lines.stream().filter(l -> !spansGutter(l, gutters)).collect(Collectors.toList());
         List<List<Line>> columns = splitIntoColumns(inside, gutters);
@@ -1068,7 +989,7 @@ public class PdfMarkdownConverter {
         return true;
     }
 
-    /** The round-1 guard, kept behind {@link #GUTTER_SCAN} so the change can be ablated. */
+    /** The older whole-page guard, kept behind {@link #GUTTER_SCAN} for ablation. */
     private static boolean legacyTwoColumn(List<Line> lines) {
         float minX = Float.MAX_VALUE;
         float maxX = -Float.MAX_VALUE;
@@ -1127,9 +1048,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Splits lines into columns at the given gutters. A line that crosses a gutter belongs to the
-     * column its own centre falls in, so it is never duplicated; band ordering is what keeps such a
-     * line in the right place relative to the columns it spans.
+     * Splits lines into columns at the given gutters. A line crossing a gutter goes to the column
+     * its centre falls in, never duplicated; band ordering then places it correctly.
      */
     private static List<List<Line>> splitIntoColumns(List<Line> lines, List<Float> gutters) {
         if (gutters.isEmpty()) {
@@ -1156,13 +1076,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * True when the finished lines still respect the gutters the unmerged lines showed.
-     *
-     * <p>The verdict is taken before text repair, because merging changes the line count the
-     * thresholds scale with, but it is applied after. Merging widens lines, so a gutter only a few
-     * fragments crossed can end up straddled by half the finished lines. Band ordering would then
-     * cut a band at nearly every line and collapse to plain y-order with the columns interleaved,
-     * so such a page falls back to round 1's whole-column split instead.
+     * True when the finished lines still respect the gutters the unmerged lines showed. Merging
+     * widens lines, and band-ordering on a gutter half of them straddle interleaves the columns.
      */
     private static boolean gutterRespected(List<Line> lines, List<Float> gutters) {
         List<Line> real = lines.stream().filter(l -> !l.synthetic).toList();
@@ -1177,7 +1092,7 @@ public class PdfMarkdownConverter {
     private static final float BAND_CROSSING =
             Float.parseFloat(System.getProperty("stirling.md.bandCrossing", "0.35"));
 
-    /** Round 1's column split: cut at the widest gap between the lines' left edges. */
+    /** Fallback column split: cut at the widest gap between the lines' left edges. */
     private static List<List<Line>> legacySplit(List<Line> lines) {
         List<Float> xs =
                 lines.stream()
@@ -1212,10 +1127,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Ablation switch: keep a run of consecutive gutter-spanning lines in one group. A full-width
-     * block on a multi-column page — a banner heading, a standfirst, a wide caption — is several
-     * lines, and emitting each as its own group breaks it into that many paragraphs and denies a
-     * wrapped heading any line to join to.
+     * Keep a run of gutter-spanning lines in one group: a full-width banner heading is several
+     * lines, and one group each would break it into that many paragraphs.
      */
     private static final boolean SPAN_RUNS =
             Boolean.parseBoolean(System.getProperty("stirling.md.spanRuns", "true"));
@@ -1240,15 +1153,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Orders a multi-column region: a one-level XY cut.
-     *
-     * <p>Lines that span a gutter (a title, a section heading running across the page, a full-width
-     * figure caption) cut the region into horizontal bands. Inside a band the columns are emitted
-     * one after another, top to bottom; a spanning line is emitted where it sits between them.
-     * Round 1 applied a single verdict to the whole page and split every line by x, which put a
-     * mid-page spanning heading into whichever column its left edge happened to fall in, and
-     * appended the whole right column after the whole left column even when a full-width block
-     * separated them.
+     * Orders a multi-column region as a one-level XY cut: gutter-spanning lines cut it into
+     * horizontal bands, and each band's columns are emitted in turn.
      */
     private static List<List<Line>> orderByBand(List<Line> lines, List<Float> gutters) {
         List<Line> ordered = new ArrayList<>(lines);
@@ -1262,15 +1168,14 @@ public class PdfMarkdownConverter {
                     out.addAll(splitIntoColumns(band, gutters));
                     band = new ArrayList<>();
                 } else if (!headingLength(l) || !headingLength(spanning.get(spanning.size() - 1))) {
-                    // Only a run of heading-length lines is kept together. A full-width paragraph
-                    // or list is also a run of spanning lines, and merging those into one group
-                    // runs their items together.
+                    // Only heading-length lines are kept together: a full-width paragraph or list
+                    // is also a run of spanning lines, and merging those runs its items together.
                     out.add(new ArrayList<>(spanning));
                     spanning.clear();
                 }
                 spanning.add(l);
                 if (!SPAN_RUNS) {
-                    // One group per spanning line: the shipped behaviour, kept for ablation.
+                    // One group per spanning line: the older behaviour, kept for ablation.
                     out.add(new ArrayList<>(spanning));
                     spanning.clear();
                 }
@@ -1335,9 +1240,8 @@ public class PdfMarkdownConverter {
                                     bodyFont,
                                     prevHeight <= 0f || paragraphBreak);
             if (prefix.isEmpty() && !structural && contentsTitle(lines, inContents, i)) {
-                // The line a contents list runs on from is its heading, whatever type it is set in:
-                // a contents page is often set entirely in one face, leaving no size or weight for
-                // the title to stand out with.
+                // The line a contents list runs on from is its heading: a contents page is often
+                // set in one face, leaving no size or weight to promote it on.
                 prefix = "# ";
             }
             boolean isBullet = startsWithBullet(text);
@@ -1354,9 +1258,8 @@ public class PdfMarkdownConverter {
                     Line next = lines.get(k);
                     String nt = repairHyphens(next.text).strip();
                     if (nt.isEmpty()) {
-                        // An empty extractor record, not a break in the text: the vertical gap
-                        // below decides whether the heading ended, not whether a stray
-                        // zero-height artefact was recorded between its lines.
+                        // An empty extractor record is not a break in the text; the vertical
+                        // gap below decides whether the heading ended.
                         k++;
                         continue;
                     }
@@ -1446,12 +1349,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * True when {@code next} is the continuation of a display heading that wrapped rather than a
-     * new one. A heading set larger than the body runs out of measure and wraps like any other
-     * text, but each visual line reaches the converter separately, so an unjoined heading is
-     * emitted as two or three headings whose texts match no section: the true heading is lost and
-     * its fragments are counted as spurious. The continuation has to sit on the very next baseline
-     * of the same column, in the same type size, and carry the same display typography.
+     * True when {@code next} continues a wrapped heading rather than starting a new one: each
+     * visual line arrives separately, so an unjoined heading emits as several spurious ones.
      */
     private static boolean wrapsHeading(
             Line head,
@@ -1481,9 +1380,8 @@ public class PdfMarkdownConverter {
         if (next.x >= head.x + head.width || head.x >= next.x + next.width) {
             return false;
         }
-        // A heading does not run to a full stop and then start another sentence. The bold run-in
-        // lead-in of the paragraph under a heading does exactly that, and is otherwise set in the
-        // same face on the very next baseline, so nothing else tells the two apart.
+        // A heading does not run to a full stop and then start another sentence; the bold run-in
+        // lead-in below it does, and nothing else tells the two apart.
         if (SENTENCE_BREAK.matcher(next.text).find()) {
             return false;
         }
@@ -1512,9 +1410,8 @@ public class PdfMarkdownConverter {
     private static final int MIN_CONTENTS_RUN = 3;
 
     /**
-     * Marks the lines that belong to a contents list. An entry is a title joined to its page number
-     * by a leader run; a run of them is a table of contents, whose entries carry the typography of
-     * the sections they point at without being those sections.
+     * Marks the lines of a contents list: a run of titles joined to page numbers by leader dots,
+     * which carry the typography of the sections they point at without being those sections.
      */
     private static boolean[] contentsRun(List<Line> lines) {
         boolean[] entry = new boolean[lines.size()];
@@ -1560,9 +1457,8 @@ public class PdfMarkdownConverter {
     // --- Word-grid table detection -----------------------------------------
 
     /**
-     * How much of a block's row structure the page itself drew. The stronger the evidence, the less
-     * the cell grid has to be inferred from whitespace, and the weaker the false-positive guards
-     * need to be.
+     * How much of a block's row structure the page itself drew; the stronger the evidence, the
+     * weaker the false-positive guards need to be.
      */
     private enum RowSource {
         /** Rows inferred from word geometry alone; nothing on the page confirms a table. */
@@ -1683,17 +1579,15 @@ public class PdfMarkdownConverter {
             return word;
         }
 
-        // Where both detectors see the same table, keep the word-grid's row grouping — it reads
-        // rows from the text, so it is right even when only some row boundaries are drawn — but
-        // take the columns from the rules, which are exact where projection only guesses.
+        // Where both detectors see the same table, keep the word-grid's rows (read from the text)
+        // but take the columns from the rules, which are exact where projection only guesses.
         List<TableBlock> all = new ArrayList<>();
         Set<TableBlock> usedRules = new HashSet<>();
         for (TableBlock w : word) {
             TableBlock match = null;
             for (TableBlock r : ruled) {
-                // Only a grid with real column rules can improve on the word-grid. One ruled only
-                // across its rows contributes detection, never geometry, so it never displaces a
-                // table the word-grid already found.
+                // Only a grid with real column rules can improve on the word-grid; one ruled
+                // across its rows alone contributes detection, never geometry.
                 if (r.cols() != null && covers(w, r)) {
                     match = r;
                     break;
@@ -1724,16 +1618,13 @@ public class PdfMarkdownConverter {
                                     w.page()));
                 }
             } else if (match.rows().size() >= w.rows().size() * COMPLETE_LATTICE) {
-                // The rules account for (nearly) every row the text shows, so the table is fully
-                // ruled: take the whole grid from the rules, which also keeps a cell wrapped over
-                // several lines inside its own row. One ruled grid can cover several word-grid
-                // blocks (it does not split where they do), so emit it only once.
+                // The rules cover nearly every row, so take the whole grid from them; one ruled
+                // grid can span several word-grid blocks, so emit it only once.
                 if (usedRules.add(match)) {
                     all.add(match);
                 }
             } else {
-                // Only some row boundaries are drawn. Rows come from the text, columns from the
-                // rules.
+                // Only some row boundaries are drawn: rows from the text, columns from the rules.
                 usedRules.add(match);
                 all.add(
                         new TableBlock(
@@ -1746,8 +1637,8 @@ public class PdfMarkdownConverter {
                                 w.page()));
             }
         }
-        // A ruled table the word-grid never saw — single-word cells, or cells wrapped over several
-        // lines, leave no wide gap for it to anchor on — is emitted from its rules alone.
+        // A ruled table the word-grid never saw (single-word or wrapped cells leave it no wide gap
+        // to anchor on) is emitted from its rules alone.
         for (TableBlock r : ruled) {
             if (usedRules.contains(r)) {
                 continue;
@@ -1800,9 +1691,8 @@ public class PdfMarkdownConverter {
         }
         anchorGroups.add(current);
 
-        // Synthetic form values are excluded from the table path entirely: they must not seed a
-        // column layout, and letting them be absorbed as wrapped cells re-derives the grid around
-        // text that was never in the content stream.
+        // Synthetic form values are kept out of the table path: they must not seed a column layout
+        // or be absorbed as wrapped cells, as they were never in the content stream.
         List<Line> nonCandidates =
                 lines.stream()
                         .filter(l -> !l.synthetic && !isTableCandidate(l.words()))
@@ -1844,10 +1734,8 @@ public class PdfMarkdownConverter {
             if (base.isEmpty()) {
                 continue;
             }
-            // A header row often has no wide gap between its cells - long words nearly fill each
-            // column - so the anchor test does not see it and the table starts one row late. The
-            // line directly above the block is offered as a header and kept only if the grid it
-            // produces has the same shape, so a caption or a line of prose cannot be pulled in.
+            // A header row often has no wide gap between its cells, so the anchor test misses it.
+            // The line above is kept only if its grid has the same shape, excluding captions.
             Line header = headerAbove(nonCandidates, top, medianGap);
             if (header != null) {
                 List<List<Line>> withHeader = new ArrayList<>();
@@ -1871,9 +1759,8 @@ public class PdfMarkdownConverter {
             Float.parseFloat(System.getProperty("stirling.md.headerGap", "1.6"));
 
     /**
-     * Number of runs of words in a line separated by more than a cell gutter. A header row has one
-     * run per cell; a caption written across the table's width is a single run however many columns
-     * its words happen to fall in, which is what tells the two apart.
+     * Runs of words in a line separated by more than a cell gutter: a header row has one per cell,
+     * a caption written across the table is a single run, which is what tells the two apart.
      */
     private static int wordGroups(List<Line> row) {
         List<TextWord> words = new ArrayList<>();
@@ -1945,9 +1832,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Resolves a table block into a rectangular cell grid, or an empty list when the block fails
-     * the false-positive guards. Shared by markdown rendering and by structured consumers such as
-     * CSV export, so both see exactly the same cells.
+     * Resolves a table block into a cell grid, or empty when it fails the false-positive guards.
+     * Shared by markdown rendering and CSV export, so both see exactly the same cells.
      */
     private static List<String[]> buildCells(
             List<List<Line>> rowGroups, List<float[]> ruledColumns, RowSource rowSource) {
@@ -1955,9 +1841,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * A resolved table: its cells plus the x band each column occupies. The bands are what a span
-     * emitter needs to ask the page whether a boundary between two cells was ever drawn, and they
-     * are not recoverable from the cells alone once empty columns have been dropped.
+     * A resolved table: its cells plus each column's x band. The bands let a span emitter ask
+     * whether a boundary was drawn, and are lost once empty columns have been dropped.
      */
     private record CellGrid(List<String[]> cells, List<float[]> columns) {
         static final CellGrid EMPTY = new CellGrid(List.of(), List.of());
@@ -1971,9 +1856,8 @@ public class PdfMarkdownConverter {
         // sit in their own x-band. Projection asks "which x-bands are occupied across many rows",
         // which is stable under those conditions.
         List<Line> flat = rowGroups.stream().flatMap(List::stream).collect(Collectors.toList());
-        // Inside a region the page's own rules already declare to be a table, a narrower gutter
-        // still separates columns: the wide-gutter floor exists to stop ordinary word spacing
-        // splitting an unruled block, and here the rules have already ruled that out.
+        // Inside a region the rules already declare a table, a narrower gutter still separates
+        // columns: the wide floor only exists to stop word spacing splitting an unruled block.
         List<float[]> columns =
                 ruledColumns != null
                         ? ruledColumns
@@ -1981,25 +1865,16 @@ public class PdfMarkdownConverter {
                                 flat,
                                 rowSource.ruleConfirmed() ? RULED_GUTTER_CHARS : GUTTER_CHARS,
                                 rowSource.ruleConfirmed() ? RULED_GUTTER_FLOOR : GUTTER_FLOOR);
-        // One column is a table only when the page drew every row boundary across the table's
-        // own width - a stack of boxed rows. Anything weaker (a rule above and below a block of
-        // text, a column of chart-legend swatches) is not enough: a single column inferred from
-        // whitespace is just a run of centred lines.
-        // A column only the header occupies is invisible to the projection, which asks that a
-        // band be shared by several rows. That is right for an unruled block, where cross-row
-        // alignment is the only evidence a column exists, and wrong inside a region the page has
-        // ruled as a table: a worksheet whose answer column is blank by design still has two
-        // columns, and its header is the one row that shows where the second begins.
+        // A column only the header occupies is invisible to the projection, which needs a band
+        // shared by several rows; but inside a ruled region a blank answer column is still one.
         boolean headerOnlyColumn = false;
         if (columns.size() < 2
                 && ruledColumns == null
                 && rowSource.ruleConfirmed()
                 && HEADER_ONLY_COLUMNS) {
             List<float[]> retry = findColumnRanges(flat, RULED_GUTTER_CHARS, RULED_GUTTER_FLOOR, 1);
-            // Only the worksheet shape is recovered: exactly one row - the first - reaches past
-            // the supported column. Anything else (a contents list, a slide's body text inside a
-            // background rectangle) has several rows out there, and reading it as a table both
-            // invents a column and swallows the headings around it.
+            // Only the worksheet shape: exactly one row, the first, reaches past the supported
+            // column. Anything else would invent a column and swallow the headings around it.
             if (retry.size() >= 2 && retry.size() <= 15) {
                 float edge = retry.get(0)[1];
                 int beyond = 0;
@@ -2026,6 +1901,8 @@ public class PdfMarkdownConverter {
                 }
             }
         }
+        // Only a drawn lattice can be a one-column table; inferred from whitespace it is just a
+        // run of centred lines.
         int minColumns = rowSource == RowSource.LATTICE ? 1 : 2;
         if (columns.size() < minColumns || columns.size() > 15) {
             return CellGrid.EMPTY;
@@ -2070,9 +1947,8 @@ public class PdfMarkdownConverter {
         // the
         // column count is real, not an artefact), and that most rows are genuinely multi-column.
         if (ruledColumns != null) {
-            // A rule that is not really a column separator (a cell outline, a shading edge) leaves
-            // a column with nothing in it. Those cost accuracy and carry no information, so drop
-            // them rather than emitting empty columns across every row.
+            // A rule that is not a column separator (a cell outline, a shading edge) leaves an
+            // empty column; drop those rather than emitting them across every row.
             List<Integer> keep = new ArrayList<>();
             for (int c = 0; c < cols; c++) {
                 final int col = c;
@@ -2080,9 +1956,8 @@ public class PdfMarkdownConverter {
                     keep.add(c);
                 }
             }
-            // Two is the floor here whatever the rows are: if the vertical rules did describe
-            // columns and only one of them holds anything, the "grid" was a box outline round a
-            // single block of text, not a table.
+            // Two is the floor whatever the rows say: one filled column means the rules drew a box
+            // round a single block of text, not a table.
             if (keep.size() < 2) {
                 return CellGrid.EMPTY;
             }
@@ -2106,9 +1981,8 @@ public class PdfMarkdownConverter {
         }
 
         if (cols == 1) {
-            // A one-column table carries no cross-row alignment to check, so the evidence has to
-            // come from the rules that produced the rows plus the shape of the run itself: enough
-            // rows to be a table at all, and nearly all of them carrying text.
+            // A one-column table has no cross-row alignment to check, so the evidence is the rules
+            // plus the shape of the run: enough rows, nearly all carrying text.
             long filled = rows.stream().filter(r -> !r[0].isEmpty()).count();
             return rows.size() >= SINGLE_COLUMN_ROWS && filled >= rows.size() * SINGLE_COLUMN_FILLED
                     ? new CellGrid(rows, columns)
@@ -2118,11 +1992,8 @@ public class PdfMarkdownConverter {
         int anchorWidth = Math.max(2, Math.round(cols * 0.6f));
         long anchorRows = rows.stream().filter(r -> filledCells(r) >= anchorWidth).count();
         long multiColumnRows = rows.stream().filter(r -> filledCells(r) >= 2).count();
-        // The multi-column tests ask whether a grid inferred from whitespace is real. When both
-        // the rows and the columns are drawn on the page there is nothing to infer, and demanding
-        // that most rows be multi-column then rejects the commonest fully-ruled table of all: a
-        // blank worksheet, whose answer columns are empty by design and whose header is the only
-        // row with more than one value.
+        // The multi-column tests ask whether a grid inferred from whitespace is real; when rows
+        // and columns are both drawn there is nothing to infer, and a blank worksheet would fail.
         boolean drawnGrid =
                 headerOnlyColumn
                         || (DRAWN_GRID_SPARSE
@@ -2171,20 +2042,8 @@ public class PdfMarkdownConverter {
     private static final Pattern DOT_LEADER = Pattern.compile("(\\.\\s*){4,}|…");
 
     /**
-     * True when a detected block is running text the word grid mistook for a table.
-     *
-     * <p>Three shapes, all measured on the benchmark corpus and all scored as tables against a
-     * ground truth that has none:
-     *
-     * <ul>
-     *   <li>a contents list - two columns, most rows ending in a page number - which the leader gap
-     *       between title and folio makes look exactly like a two-cell row;
-     *   <li>a contents list drawn with dot leaders, where the leader itself is the gap;
-     *   <li>two columns of body prose, where the block's "cells" are whole sentences.
-     * </ul>
-     *
-     * <p>Only unruled blocks are tested. A block whose columns come from drawn rules is a table
-     * because the document says so, however long its cells.
+     * True when a block is running text the word grid mistook for a table: a contents list, with or
+     * without dot leaders, or two columns of prose whose "cells" are whole sentences.
      */
     private static boolean isProseNotTable(List<String[]> rows, int cols) {
         if (!PROSE_GUARD || rows.isEmpty()) {
@@ -2514,9 +2373,8 @@ public class PdfMarkdownConverter {
     // --- Page-level emission helpers ---------------------------------------
 
     /**
-     * Splits a page's non-table lines into the bands between its table blocks: band {@code s} holds
-     * the lines above block {@code s}, and the last band the lines below every block. Blocks must
-     * already be in top-to-bottom order.
+     * Splits a page's non-table lines into the bands between its table blocks, band {@code s}
+     * holding the lines above block {@code s}. Blocks must already be in top-to-bottom order.
      */
     private static List<List<Line>> segmentsAround(
             List<Line> lines, List<TableBlock> blocks, Set<Line> tableLines) {
@@ -2568,7 +2426,7 @@ public class PdfMarkdownConverter {
     /** Fraction of a block's own lines that must run the page's width, not a column's. */
     private static final float SPANNING_LINES = 0.6f;
 
-    /** Keep an unruled full-width table on a multi-column page (round 1 required ruling lines). */
+    /** Keep an unruled full-width table on a multi-column page. */
     private static final boolean WIDE_UNRULED_TABLES =
             Boolean.parseBoolean(System.getProperty("stirling.md.wideUnruledTables", "true"));
 
@@ -2581,12 +2439,8 @@ public class PdfMarkdownConverter {
             Float.parseFloat(System.getProperty("stirling.md.gridCell", "25"));
 
     /**
-     * True when an unruled block on a multi-column page really is a table that spans the columns.
-     *
-     * <p>The two candidates look identical to the word grid: a full-width data table, and the
-     * page's own column gutter read as a cell boundary. They differ in their cells. A data table
-     * has several narrow columns of short values; the gutter produces a couple of columns holding
-     * whole sentences of body prose.
+     * True when an unruled full-width block is really a table, not the page's own column gutter
+     * read as a cell boundary: a data table's cells are short values, the gutter's are sentences.
      */
     private static boolean looksLikeGrid(TableBlock block) {
         if (!WIDE_UNRULED_TABLES) {
@@ -2670,15 +2524,8 @@ public class PdfMarkdownConverter {
     // --- AcroForm field values ---------------------------------------------
 
     /**
-     * Builds pseudo text lines for AcroForm values that exist only in the field dictionary.
-     *
-     * <p>A form filled programmatically with {@code NeedAppearances true} has no glyphs in the page
-     * content stream, so text extraction returns the blank form. The value lives in {@code /V}.
-     * Each value is emitted at its widget rectangle so it lands in normal reading order - beside
-     * the printed label it belongs to - rather than in an appendix at the end of the document.
-     *
-     * <p>A value that the viewer has already baked into an appearance stream is skipped: the
-     * extractor found it in the content stream, so emitting it again would duplicate it.
+     * Builds pseudo text lines for AcroForm values that exist only in {@code /V}, placed at their
+     * widget rectangles so they land in reading order; values already in the content are skipped.
      */
     private static List<Line> formValueLines(PdfDocument doc, int pageIndex, List<Line> existing) {
         List<FormField> fields;
@@ -2872,9 +2719,8 @@ public class PdfMarkdownConverter {
                         }
                     }
                     merged.addAll(tail);
-                    // Keep the earlier block's page and column geometry: a stitched table belongs
-                    // to where it started, and its ruled columns describe the whole run. It keeps
-                    // no ruling lines: they are one page's, and the tail rows are another's.
+                    // A stitched table belongs to where it started, so keep the earlier block's
+                    // page and columns; its ruling lines are dropped as they are one page's only.
                     out.set(
                             out.size() - 1,
                             new TableBlock(
@@ -2896,12 +2742,8 @@ public class PdfMarkdownConverter {
     }
 
     /**
-     * Incremental form of {@link #findColumnRanges(List)} for the block a stitched table is
-     * accumulating into. The projection is a per-line coverage histogram plus four running scalars,
-     * all of which fold forward, so appending a page costs O(page) instead of re-deriving the
-     * geometry of every row seen so far. Column bands are recomputed from the histogram on demand
-     * (O(span), bounded at 2001 buckets), so the accumulated result is bit-for-bit what
-     * findColumnRanges would return for the same lines in the same order.
+     * Incremental {@link #findColumnRanges(List)} for a stitched table: appending a page costs
+     * O(page), and the result is bit-for-bit what findColumnRanges would give for the same lines.
      */
     private static final class ColumnAccumulator {
 
@@ -3120,12 +2962,8 @@ public class PdfMarkdownConverter {
     // --- Ruled table detection ----------------------------------------------
 
     /**
-     * Builds table blocks from a page's ruling lines.
-     *
-     * <p>Whitespace projection can only see a table whose cells are separated by wide gaps on the
-     * same text line. A ruled table whose cells each hold a single word, or whose cells wrap onto
-     * several lines, is invisible to it. Ruling lines carry the grid explicitly, so the cells can
-     * be read off the drawn geometry instead of inferred from the gaps between words.
+     * Builds table blocks from a page's ruling lines, which carry the grid explicitly: whitespace
+     * projection cannot see single-word or wrapped cells, as they leave no wide gap.
      */
     private static final class RuledTables {
 
@@ -3168,10 +3006,8 @@ public class PdfMarkdownConverter {
                 Boolean.parseBoolean(System.getProperty("stirling.md.rowspanRules", "true"));
 
         /**
-         * Interior row rules needed before the drawn bands are preferred to text baselines. One is
-         * enough: a rule between a table's header and its body is a row boundary as surely as ten
-         * are, and reading the two bands it makes keeps a multi-line cell whole, where falling back
-         * to baselines splits every wrapped cell into a row of its own.
+         * Interior row rules needed before drawn bands beat text baselines. One is enough: bands
+         * keep a multi-line cell whole, where baselines split every wrapped cell into its own row.
          */
         private static final int MIN_INTERIOR_RULES =
                 Integer.parseInt(System.getProperty("stirling.md.minInteriorRules", "1"));
@@ -3225,10 +3061,7 @@ public class PdfMarkdownConverter {
             }
 
             // Horizontal rules no grid block claimed can still be a booktabs table: rows ruled,
-            // columns not drawn at all. That reading used to be tried only when the whole page had
-            // fewer than two vertical rules, so a chart's axis or a fraction bar in a formula
-            // elsewhere on the page hid every such table. Whatever the grid did not take is
-            // offered to it instead.
+            // columns not drawn at all. Whatever the grid did not take is offered to that reading.
             List<Level> unclaimed = new ArrayList<>();
             for (Level h : hLevels) {
                 boolean claimed = false;
@@ -3262,9 +3095,8 @@ public class PdfMarkdownConverter {
         }
 
         /**
-         * Blocks for a page ruled only across its rows - the booktabs style, with a rule above the
-         * header, below it and at the foot. There is no column geometry to recover, so these carry
-         * no columns and exist only to find a table the word-grid could not anchor on.
+         * Blocks for a page ruled only across its rows (booktabs style). No column geometry exists
+         * to recover, so these only serve to find a table the word-grid could not anchor on.
          */
         private static List<TableBlock> rowsOnly(List<Level> levels, List<Line> lines, int page) {
             List<Level> hLevels = new ArrayList<>(levels);
@@ -3276,10 +3108,8 @@ public class PdfMarkdownConverter {
             for (int i = 1; i < hLevels.size(); i++) {
                 Level prev = current.get(current.size() - 1);
                 Level l = hLevels.get(i);
-                // The rules of one booktabs table are drawn to the same extent: \toprule,
-                // \midrule and \bottomrule all span the table's width. Two tables stacked with a
-                // caption between them differ in width, and grouping them together would merge
-                // both into one region whose columns then project to a single band.
+                // One booktabs table rules to a single extent; two stacked tables differ in width,
+                // and grouping them would project their columns into a single band.
                 if (prev.pos() - l.pos() > ROWS_ONLY_GAP
                         || Math.abs(prev.lo() - l.lo()) > EXTENT_TOLERANCE
                         || Math.abs(prev.hi() - l.hi()) > EXTENT_TOLERANCE) {
@@ -3310,9 +3140,8 @@ public class PdfMarkdownConverter {
                         inside.add(l);
                     }
                 }
-                // Enough text to be a table: either several rows, or - for a two-row table -
-                // a third rule, which is the header separator a booktabs table draws and a lone
-                // pair of decorative rules does not.
+                // Enough text to be a table: several rows, or for a two-row table a third rule,
+                // the header separator a lone pair of decorative rules does not draw.
                 if (inside.size() < 2 || (inside.size() < ROWS_ONLY_LINES && g.size() < 3)) {
                     continue;
                 }
@@ -3328,9 +3157,8 @@ public class PdfMarkdownConverter {
         }
 
         /**
-         * Merges rules at the same position into levels. Segments are only merged while they stay
-         * contiguous: a grid drawn as per-cell strokes joins into one level, but two tables that
-         * happen to rule at the same x stay separate instead of being bridged into one region.
+         * Merges rules at the same position into levels, but only while they stay contiguous, so
+         * two tables that happen to rule at the same x are not bridged into one region.
          */
         private static List<Level> cluster(List<PageRules.Rule> rules) {
             List<PageRules.Rule> sorted = new ArrayList<>(rules);
@@ -3365,13 +3193,8 @@ public class PdfMarkdownConverter {
         }
 
         /**
-         * Groups the page's rules into candidate tables: connected components of rules that cross
-         * one another. A grid is connected by construction, and two tables on the same page — or a
-         * table and an unrelated underline — share no crossing, so they come out separately.
-         *
-         * <p>Returns one int[] per component; entry i is the component id of {@code hLevels[i]},
-         * entry {@code hLevels.size()+j} of {@code vLevels[j]}, and the last entry names the
-         * component this array describes.
+         * Connected components of crossing rules, one int[] each: entry i is the component id of
+         * {@code hLevels[i]}, then of {@code vLevels[j]}, and the last entry names this component.
          */
         private static List<int[]> partition(List<Level> hLevels, List<Level> vLevels) {
             int n = hLevels.size() + vLevels.size();
@@ -3435,9 +3258,8 @@ public class PdfMarkdownConverter {
             hL.sort(Comparator.comparingDouble(Level::pos).reversed());
             vL.sort(Comparator.comparingDouble(Level::pos));
 
-            // The grid's extent is the union of both families: a table ruled only between its
-            // columns takes its top and bottom from the vertical rules, and one ruled only between
-            // its rows takes its left and right from the horizontal rules.
+            // The extent is the union of both families: a table ruled only between its columns
+            // takes its top and bottom from the verticals, and vice versa.
             float top = hL.get(0).pos();
             float bottom = hL.get(hL.size() - 1).pos();
             float left = vL.get(0).pos();
@@ -3466,25 +3288,12 @@ public class PdfMarkdownConverter {
                 return dbgNull("inside<2");
             }
 
-            // Null columns mean the grid is ruled between its rows but not its columns; the block
-            // is still worth building (it finds tables the word-grid misses) but its columns then
-            // come from whitespace projection, exactly as an unruled table's would.
+            // Null columns mean the grid is ruled between its rows only; the block is still worth
+            // building, but its columns then come from whitespace projection.
             List<float[]> cols = columns(vL, left, right, top, bottom);
 
-            // A row boundary is a y position, not a segment: a grid drawn as per-cell rectangles
-            // reports the same boundary once per cell, so positions are collapsed before they
-            // become bands. Without this the band count counts cells across, every duplicate
-            // contributes an empty band, and the filled-band guard below rejects a real table.
-            // A row boundary runs the table's width. Generators that draw each cell as its own
-            // filled rectangle also box every *wrapped line* inside a cell, and those short
-            // segments are not row boundaries: taken as bands they split one row into one band
-            // per line of text, which both invents rows and leaves most bands empty.
-            //
-            // The exception is a spanning cell. A table whose first column spans three rows rules
-            // the other columns between those rows and not the first, so a genuine boundary can be
-            // one column wide. It is told from a line box by two things: it starts and ends on the
-            // grid's own vertical rules (a line box is inset within its cell), and the columns it
-            // does not cross carry the spanning cell's text beside it.
+            // A row boundary is a y position, not a segment, and runs the table's width: per-cell
+            // rectangles report it once per cell and also box each wrapped line inside a cell.
             float rowRuleWidth = (right - left) * ROW_RULE_SPAN;
             List<Float> interiorH = new ArrayList<>();
             List<Level> bandRules = new ArrayList<>();
@@ -3529,9 +3338,8 @@ public class PdfMarkdownConverter {
                 bands.addAll(interiorH);
                 bands.add(bottom);
                 List<List<Line>> filled = latticeRows(bands, inside);
-                // Most bands must carry text. A chart's axis ticks, or a zebra table's stripes,
-                // produce many rules with nothing between them; reading those as a table both
-                // invents rows and steals lines from the prose around them.
+                // Most bands must carry text: a chart's axis ticks or a zebra table's stripes rule
+                // many empty bands, and reading those as a table steals lines from the prose.
                 if (filled.size() < (bands.size() - 1) * FILLED_BANDS) {
                     return dbgNull("filled " + filled.size() + " of bands " + (bands.size() - 1));
                 }
@@ -3546,9 +3354,8 @@ public class PdfMarkdownConverter {
                 return dbgNull("rows<2");
             }
 
-            // A grid is often ruled around its body only, leaving the header row drawn just above
-            // the top rule. It is still the table's header: take it when it sits immediately above,
-            // lies within the grid's own width, and resolves into the grid's own columns.
+            // A grid is often ruled around its body only, leaving the header just above the top
+            // rule; take it when it fits the grid's width and resolves into its columns.
             if (HEADER_ABOVE && cols != null) {
                 // The header's cells are separate lines when they sit far apart, so the whole
                 // band above the grid is taken, not the nearest line.
@@ -3601,13 +3408,8 @@ public class PdfMarkdownConverter {
         }
 
         /**
-         * Splits a band whose every baseline is a complete row back into those rows.
-         *
-         * <p>A drawn grid is often ruled only around groups of rows - a rule under the header and
-         * one at the foot, with the body left unruled - and reading its bands then merges every
-         * body row into one. The tell is what the extra baselines look like: a cell wrapped over
-         * several lines leaves the other columns empty on its continuation lines, whereas a run of
-         * unruled rows fills every column on every line. Only the second is split.
+         * Splits a band whose every baseline is a complete row back into those rows: a wrapped cell
+         * leaves the other columns empty on its continuation lines, a run of rows does not.
          */
         private static List<List<Line>> splitCompleteBands(
                 List<List<Line>> bands, List<float[]> cols) {
@@ -3662,11 +3464,8 @@ public class PdfMarkdownConverter {
                 Float.parseFloat(System.getProperty("stirling.md.columnRun", "0.5"));
 
         /**
-         * True when a rule narrower than the table is still a row boundary because a spanning cell
-         * sits beside it: it runs from one of the grid's vertical rules to another, and the columns
-         * it does not cross carry text in the band above it. A line box drawn inside a wrapped cell
-         * fails both tests - it is inset within its column, and the neighbouring columns are empty
-         * across the lines it separates.
+         * True when a rule narrower than the table is still a row boundary: it ends on the grid's
+         * own verticals and the columns it misses carry a spanning cell's text beside it.
          */
         private static boolean spanningNeighbour(
                 Level rule,
@@ -3678,10 +3477,8 @@ public class PdfMarkdownConverter {
             if (!ROWSPAN_RULES) {
                 return false;
             }
-            // Both ends must sit on a *column* rule. A line box inside a wrapped cell draws its
-            // own short verticals at its own inset edges, so the test is not that a vertical is
-            // there but that the vertical runs the table: a column boundary is shared by every
-            // cell above and below it, a line box's edge exists only within that one cell.
+            // The vertical must run the table, not merely be there: a line box inside a wrapped
+            // cell draws its own short verticals at its inset edges.
             float columnRun = height * COLUMN_RUN;
             boolean loOnRule = false;
             boolean hiOnRule = false;
@@ -3699,9 +3496,8 @@ public class PdfMarkdownConverter {
             if (!loOnRule || !hiOnRule) {
                 return false;
             }
-            // The spanning cell's own text must sit beside the rule, anywhere in the row the last
-            // full-width boundary opened - a cell that spans three sub-rows is written once, at
-            // the top of the span, so the band immediately above the rule is not enough.
+            // The spanning cell's text must sit beside the rule anywhere in the row the last
+            // full-width boundary opened: it is written once, at the top of the span.
             for (Line l : inside) {
                 float cy = l.y + l.height / 2f;
                 float cx = l.x + l.width / 2f;
@@ -3713,9 +3509,8 @@ public class PdfMarkdownConverter {
         }
 
         /**
-         * True when every horizontal rule of the region runs (nearly) its full width, so the rules
-         * really are the row boundaries of one table. A stack of chart-legend swatches, or the
-         * per-cell outlines of one narrow column, rules only a fraction of the width and is not.
+         * True when every horizontal rule runs nearly the region's full width, so the rules really
+         * are one table's row boundaries; legend swatches and per-cell outlines do not.
          */
         private static boolean fullWidthRules(List<Level> hL, float left, float right) {
             float width = right - left;
@@ -3731,17 +3526,14 @@ public class PdfMarkdownConverter {
         }
 
         /**
-         * Column bands from the vertical rules that span the region, bounded by its own edges.
-         * Returns null when no interior vertical rule survives, because then the columns would have
-         * to be guessed from whitespace anyway and the word-grid detector does that better.
+         * Column bands from the vertical rules that span the region. Null when no interior rule
+         * survives, since the word-grid detector guesses from whitespace better.
          */
         private static List<float[]> columns(
                 List<Level> vLevels, float left, float right, float top, float bottom) {
             float height = top - bottom;
-            // A column boundary drawn as per-cell strokes is one rule per row, and a single row
-            // that draws no cell boxes - a spanning row, a blank row - breaks the run in two. Each
-            // half can then be shorter than the coverage floor and the column is lost, so the
-            // strokes at one x are measured together rather than as separate runs.
+            // Per-cell strokes give one rule per row, and a row that draws no boxes breaks the run
+            // in two, so strokes at one x are measured together rather than as separate runs.
             List<Level> sorted = new ArrayList<>(vLevels);
             sorted.sort(Comparator.comparingDouble(Level::pos));
             List<Float> xs = new ArrayList<>();

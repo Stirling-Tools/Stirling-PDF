@@ -61,10 +61,8 @@ public class ConvertPDFToMarkdown {
                     PdfDocument doc = PdfDocument.open(tempInput.getPath())) {
                 markdown = new PdfMarkdownConverter().convert(doc);
             } catch (IOException | JPDFiumException e) {
-                // jpdfium puts the temp file path in its message and its exceptions are unchecked,
-                // so nothing upstream catches them and the raw text is echoed by the job runner.
-                // Re-raise as a typed exception so the RFC 7807 handler answers with the same
-                // user-facing text /pdf/csv already returns and no server path reaches the client.
+                // jpdfium's exceptions are unchecked and embed the temp file path, so the job
+                // runner would echo it; translate to keep server paths out of the response.
                 throw ExceptionUtils.handleJpdfiumException(e, "during Markdown conversion");
             }
         }

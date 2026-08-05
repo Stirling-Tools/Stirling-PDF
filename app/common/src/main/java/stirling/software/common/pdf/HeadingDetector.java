@@ -31,17 +31,14 @@ final class HeadingDetector {
     };
 
     /**
-     * URW/Nimbus name their bold face "-Medi"; TeX uses CMBX/CMSSBX for bold extended. "Medium" is
-     * excluded: it is a weight lighter than bold, and matching it marks whole CJK body paragraphs
-     * (HYSMyeongJo-Medium, HeiseiKakuGo) as bold labels.
+     * URW/Nimbus bold is "-Medi", TeX bold extended is CMBX/CMSSBX. "Medium" is excluded: it is
+     * lighter than bold, and matching it makes whole CJK body paragraphs bold.
      */
     private static final Pattern OTHER_BOLD = Pattern.compile("medi(?!um)|cm(ss)?bx");
 
     /**
-     * A caption: the label of a float (a figure, a table, a chart) followed by its number. A float
-     * caption is set in the same display typography as a heading — larger, bold, on its own line —
-     * but it names an illustration, not a section, so it must never open one. "Table of contents"
-     * does not match: the label has to be followed by a number.
+     * A float label followed by its number. Set like a heading but names an illustration, not a
+     * section; "Table of contents" is safe because a number has to follow.
      */
     private static final Pattern CAPTION =
             Pattern.compile(
@@ -53,16 +50,8 @@ final class HeadingDetector {
     private static final Pattern CLAUSE = Pattern.compile("^\\d{1,2}(\\.\\d{1,2})*\\.?\\s+\\p{Lu}");
 
     /**
-     * A sentence that ends and is followed by another: an ordinary word, a full stop, then a
-     * capital. A heading names a section, so it is a phrase; it never runs two sentences together.
-     * The line this rejects is the opening of a paragraph whose first phrase is set in bold — a
-     * run-in lead-in — which otherwise reads as a bold, isolated, short line and is promoted.
-     *
-     * <p>The word before the stop must end in three lower-case letters, which is what keeps the
-     * pattern off the section numbers and abbreviations that headings really do contain: {@code 4.
-     * Entropy}, {@code III. Regulatory cholesterol}, {@code Print vs. Digital}, {@code Activity 5.
-     * Calculating versus estimating CEC}. Measured over the benchmark ground truth this matches
-     * none of its 193 headings.
+     * Two sentences in a row: a bold run-in lead-in, not a heading. The three lower-case letters
+     * before the stop keep it off section numbers and abbreviations ({@code 4. Entropy}).
      */
     private static final Pattern RUNS_ON = Pattern.compile("\\p{Ll}{3}[.!?][\\s\\u00a0]+\\p{Lu}");
 
@@ -72,10 +61,7 @@ final class HeadingDetector {
     /** Size ratio at which a line is a level-2 heading on size alone. */
     private static final float H2_RATIO = 1.3f;
 
-    /**
-     * Prototype ablation switch: when false the shipped size-only rules apply, so the combined
-     * build can be measured with heading detection alone removed.
-     */
+    /** Ablation switch: when false only the original size-only rules apply. */
     private static final boolean ENABLED =
             Boolean.parseBoolean(System.getProperty("stirling.md.headings", "true"));
 
@@ -92,18 +78,15 @@ final class HeadingDetector {
             Boolean.parseBoolean(System.getProperty("stirling.md.allCaps", "true"));
 
     /**
-     * A section number that ends in a period: {@code 3.}, {@code 7.2.}. Stricter than {@link
-     * #CLAUSE} on purpose — the rule it guards has no typography behind it, so the leading page
-     * number of a running header ({@code 68 APPLIED FLUID MECHANICS LAB MANUAL}) has to be told
-     * apart from a real clause by the period alone.
+     * A section number ending in a period. Stricter than {@link #CLAUSE}: this rule has no
+     * typography behind it, so only the period tells a clause from a header's page number.
      */
     private static final Pattern NUMBERED_CLAUSE =
             Pattern.compile("^\\d{1,2}(\\.\\d{1,2})*\\.\\s+\\p{Lu}");
 
     /**
-     * True when every cased letter on the line is a capital and the line is really made of words.
-     * Digits, punctuation and uncased scripts do not count either way, so {@code BIO 181} and
-     * {@code 3. RECOLLECTION OF NATIONAL INITIATIVES} both qualify.
+     * True when every cased letter is a capital. Digits, punctuation and uncased scripts do not
+     * count either way, so {@code BIO 181} qualifies.
      */
     private static boolean isAllCaps(String text) {
         int upper = 0;
@@ -120,34 +103,8 @@ final class HeadingDetector {
     }
 
     /**
-     * Returns the Markdown heading prefix for a line. The decision combines several signals, never
-     * text matching, so a plain line that merely shares text with a heading is never promoted:
-     *
-     * <ul>
-     *   <li><b>Size</b> — dominant glyph font size vs. the document body median (primary signal).
-     *       Some PDFs encode visual size in the text matrix, so every glyph reports ~1.0; for those
-     *       {@link #glyphHeight} measures the line from its glyph boxes instead.
-     *   <li><b>Brevity</b> — headings are short labels; a line over {@value #MAX_HEADING_WORDS}
-     *       words is body text regardless of size.
-     *   <li><b>Not a sentence</b> — a line ending in {@code . ! ?} reads as prose, not a heading.
-     *   <li><b>Words</b> — a heading names something, so it is made of letters; a float caption
-     *       names an illustration, not a section, so it is never promoted however it is set.
-     * </ul>
-     *
-     * <p><b>Boldness is a signal, but never on its own.</b> Headings in real documents are
-     * frequently set at body size and distinguished only by weight, so size alone misses them. A
-     * bold line is promoted only when it is also short, vertically isolated and word-bearing, and
-     * the bold signal is vetoed outright when the line's font is the document's own body face —
-     * without that veto a document whose body text is set in a bold-named face has every line
-     * promoted. A bold line that fails those tests is emphasis, not a heading (see {@link
-     * #isBoldLabel}).
-     *
-     * <ul>
-     *   <li>size &gt; baseline * 1.4 → {@code "# "}
-     *   <li>size &gt; baseline * 1.3 → {@code "## "}
-     *   <li>bold, short, isolated, word-bearing, not the body face → {@code "### "}
-     *   <li>otherwise → {@code ""}
-     * </ul>
+     * Markdown heading prefix from size, brevity, isolation and weight, never text matching. Bold
+     * is vetoed on the body face itself: a bold-named body font would promote every line.
      */
     static String headingPrefix(
             TextLine line,
@@ -166,8 +123,8 @@ final class HeadingDetector {
     }
 
     /**
-     * Geometry-only overload so a line assembled from several extractor fragments can be judged on
-     * its merged text, height and words rather than on whichever fragment happened to come first.
+     * Geometry-only overload, so a line merged from several extractor fragments is judged on the
+     * merged text, height and words rather than on the first fragment.
      *
      * @param bodyFont the document's dominant (body) font, so boldness only counts when it differs
      * @param isolated true when the line starts its own block, i.e. a blank gap precedes it
@@ -257,22 +214,14 @@ final class HeadingDetector {
     }
 
     /**
-     * Quantile of a line's glyph heights taken as its size. In Latin text roughly a quarter to a
-     * third of the glyphs reach cap or ascender height, so the upper quintile lands on that band:
-     * high enough to measure the face rather than the x-height, low enough that one rogue glyph box
-     * — a symbol or a control code borrowed from another font — cannot set the line's size.
+     * Quantile of a line's glyph heights taken as its size: high enough to sit on the cap band
+     * rather than the x-height, low enough that one rogue glyph box cannot set the line's size.
      */
     private static final float GLYPH_HEIGHT_QUANTILE = 0.8f;
 
     /**
-     * A line's type size, measured from its glyphs. Used when the PDF encodes visual size in the
-     * text matrix, so every glyph reports the same nominal font size and only geometry is left.
-     *
-     * <p>The line's own bounding box cannot serve here. It spans the tallest ascender down to the
-     * deepest descender, so an otherwise identical line grows by a quarter as soon as it happens to
-     * contain a {@code g} or a comma — enough on its own to clear the heading ratio. A quantile of
-     * the glyph boxes sits on the cap/ascender band instead, which is the same on every line set in
-     * the same face and scales with a face that really is larger.
+     * A line's type size from its glyphs, for PDFs that encode visual size in the text matrix. The
+     * line box runs ascender to descender, so a stray {@code g} can clear the heading ratio.
      */
     private static float glyphHeight(List<TextWord> words) {
         int capacity = 0;
@@ -289,9 +238,8 @@ final class HeadingDetector {
                 if (ch.isWhitespace() || ch.isNewline()) {
                     continue;
                 }
-                // Letters and digits only. A bracket, a slash or a maths operator is drawn taller
-                // than the cap height on purpose, so a line of them — an equation, an equation
-                // number — would measure as display type set in the body face.
+                // Letters and digits only: brackets and maths operators are drawn taller than the
+                // cap height, so an equation would measure as display type.
                 if (!Character.isLetterOrDigit(ch.toChar())) {
                     continue;
                 }
@@ -342,13 +290,8 @@ final class HeadingDetector {
     }
 
     /**
-     * A heading names something, so it is made of words: at least two letters, and letters are at
-     * least half of what is on the line.
-     *
-     * <p>Counting letters rather than looking for a run of them keeps letter-spaced display type
-     * ({@code H O W C A N Y O U H E L P ?}) eligible, while the majority test still rejects the
-     * lines that carry heading typography without being headings — equation fragments, equation
-     * numbers, and the value labels scattered over a chart.
+     * A heading is made of words: at least two letters, and letters at least half the glyphs.
+     * Counting rather than requiring a run keeps letter-spaced display type eligible.
      */
     private static boolean hasWord(String text) {
         int letters = 0;
@@ -445,15 +388,8 @@ final class HeadingDetector {
     }
 
     /**
-     * The body baseline the height path compares a line against: the median of the per-line glyph
-     * height, weighted by how much text each line carries. Measured exactly as {@link #glyphHeight}
-     * measures a line, so the two are commensurable.
-     *
-     * <p>Weighting by characters rather than by lines matters on a page of charts. A chart
-     * contributes dozens of two-character axis labels set in the smallest type on the page; an
-     * unweighted median follows them rather than the prose, and every body line then reads as
-     * display type. Weighting the same way {@link #medianFontSize} does keeps the baseline on the
-     * text the document is mostly made of.
+     * Body baseline for the height path: the median per-line {@link #glyphHeight}, weighted by
+     * glyph count so a chart's many tiny axis labels cannot drag the baseline below the prose.
      */
     static float medianLineHeight(List<PageText> allPages) {
         List<float[]> weighted = new ArrayList<>();

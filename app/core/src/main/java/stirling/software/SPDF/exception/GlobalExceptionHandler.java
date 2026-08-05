@@ -391,18 +391,13 @@ public class GlobalExceptionHandler {
      * @return ProblemDetail with appropriate HTTP status
      */
     /**
-     * Catches anything jpdfium throws that a controller did not translate.
-     *
-     * <p>{@code JPDFiumException} is unchecked, so a {@code catch (IOException)} never sees it, and
-     * its message carries the absolute path of the server-side temp file. Left alone it reaches the
-     * client as a 500 with that path in the body. Translating it here covers every native call site
-     * at once, including any added later, rather than relying on each controller to remember.
+     * Catches jpdfium failures no controller translated; the exceptions are unchecked and carry the
+     * server-side temp path, which would otherwise reach the client in the 500 body.
      */
     @ExceptionHandler(JPDFiumException.class)
     public ResponseEntity<ProblemDetail> handleJpdfium(
             JPDFiumException ex, HttpServletRequest request) {
-        // Log with the throwable so the temp path stays diagnosable server-side; the client only
-        // ever sees the translated message.
+        // Log the throwable so the temp path stays diagnosable server-side.
         log.warn("Unhandled jpdfium failure on {}", request.getRequestURI(), ex);
         BaseAppException translated =
                 ExceptionUtils.handleJpdfiumException(ex, "while reading the PDF");

@@ -8,22 +8,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Serialises all use of the jpdfium native layer, which is not thread-safe.
- *
- * <p>PDFium keeps process-global state and tolerates only one thread inside the library at a time.
- * Two overlapping documents corrupt that state permanently: every later {@code docOpen} throws
- * {@code PdfCorruptException} and {@code pageOpen} throws {@code Resource not found} for the rest
- * of the JVM's life, and the process can die inside pdfium.dll. Serialising open and close alone is
- * not enough, so a scope must span a whole document session.
- *
- * <p>Usage, with the guard listed first so it is released last:
- *
- * <pre>{@code
- * try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
- *         PdfDocument doc = PdfDocument.open(path)) {
- *     ...
- * }
- * }</pre>
+ * Serialises the non-thread-safe jpdfium native layer: overlapping documents corrupt PDFium's
+ * process-global state for the life of the JVM, so a scope must span a whole document session.
  */
 @Slf4j
 public final class JpdfiumGuard {
@@ -54,10 +40,8 @@ public final class JpdfiumGuard {
     }
 
     /**
-     * Acquires exclusive use of the native layer, giving up after {@code timeout}.
-     *
-     * <p>For callers that must not block a response thread indefinitely. Returns empty when the
-     * budget expires, leaving the caller to degrade rather than queue behind a long conversion.
+     * Acquires exclusive use of the native layer, giving up after {@code timeout} so a response
+     * thread can degrade instead of queueing behind a long conversion.
      */
     public static Optional<Scope> tryAcquire(Duration timeout) {
         try {

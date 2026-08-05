@@ -20,21 +20,8 @@ import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.jpdfium.PdfDocument;
 
 /**
- * Extracts tables using the strongest available strategy per page.
- *
- * <h3>Why two strategies</h3>
- *
- * Tabula's lattice mode reads ruling lines directly, so it is the most faithful option for tables
- * that have visible borders, and it is the only one that reliably keeps every row of a long ruled
- * table intact. It is also completely blind to borderless tables: financial statements, whitespace
- * aligned price lists and academic booktabs tables all yield nothing at all.
- *
- * <p>{@link PdfMarkdownConverter}'s word-grid detection derives columns from cross-row whitespace
- * alignment, so it sees those borderless tables, at the cost of being slightly less exact on
- * heavily ruled ones.
- *
- * <p>Running lattice first and falling back per page keeps the accuracy of ruled extraction while
- * removing the "no tables found" cliff on borderless documents.
+ * Extracts tables per page: Tabula lattice mode is the most faithful on ruled tables but blind to
+ * borderless ones, so pages it misses fall back to {@link PdfMarkdownConverter}'s word grid.
  */
 @Service
 @Slf4j
@@ -90,11 +77,8 @@ public class TableExtractionService {
     }
 
     /**
-     * Word-grid tables restricted to the given pages.
-     *
-     * <p>Only the requested pages are analysed. Layout analysis dominates conversion cost, and this
-     * runs while holding the process-wide jpdfium lock, so converting a 500-page document to answer
-     * a one-page request would block every other native PDF operation for the duration.
+     * Word-grid tables restricted to the given pages. Layout analysis is costly and runs under the
+     * process-wide jpdfium lock, so analysing unrequested pages would block every other caller.
      */
     private List<PageTable> wordGridTables(Path pdfPath, Set<Integer> wantedPages) {
         List<PageTable> out = new ArrayList<>();
@@ -112,9 +96,8 @@ public class TableExtractionService {
                         out.size());
             }
         } catch (Exception e) {
-            // The fallback is best-effort: a failure here must not fail the whole request, the
-            // caller still has whatever ruled extraction produced. Logged with the throwable so a
-            // converter bug is diagnosable rather than reading as "this document has no tables".
+            // Best-effort: the caller still has the ruled results. Logged with the throwable so a
+            // converter bug is diagnosable rather than reading as "no tables".
             log.warn("Word-grid table fallback failed for {}", pdfPath.getFileName(), e);
         }
         return out;

@@ -27,9 +27,8 @@ import stirling.software.SPDF.pdf.parser.TableExtractionService.PageTable;
 import stirling.software.SPDF.pdf.parser.TableExtractionService.Strategy;
 
 /**
- * The point of this service is the fallback: ruled extraction wins where it fires, and pages it
- * finds nothing on get a second chance from word-grid detection instead of silently yielding no
- * tables.
+ * The point of the service is the fallback: ruled extraction wins where it fires, and pages with
+ * none get a second chance from word-grid detection.
  */
 @ExtendWith(MockitoExtension.class)
 class TableExtractionServiceTest {
@@ -60,10 +59,7 @@ class TableExtractionServiceTest {
                 null);
     }
 
-    /**
-     * A real table-bearing PDF used to drive the fallback. Tabula is mocked out by the caller, so
-     * this exercises the word-grid path regardless of whether the fixture itself is ruled.
-     */
+    /** Tabula is mocked out by the caller, so this fixture always drives the word-grid path. */
     private Path fallbackFixture() throws IOException {
         Path out = tmp.resolve("wrapped-cell-test_expense-report.pdf");
         try (InputStream in =

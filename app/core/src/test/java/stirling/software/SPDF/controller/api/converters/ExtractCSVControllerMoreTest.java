@@ -40,8 +40,7 @@ import stirling.software.common.util.TempFileRegistry;
 
 /**
  * Additional coverage for {@link ExtractCSVController}. Table extraction is mocked so deterministic
- * tables drive the single-table, multi-table and no-table response branches; documents are built
- * in-memory.
+ * tables drive the single-, multi- and no-table response branches.
  */
 @ExtendWith(MockitoExtension.class)
 class ExtractCSVControllerMoreTest {

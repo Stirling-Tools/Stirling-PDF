@@ -63,9 +63,8 @@ public class ExtractCSVController {
         String baseName = getBaseName(request.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 
-        // The schema documents "all" as the default, but an omitted field arrives as null and
-        // parsePageList maps null to page 1 alone. Without this, converting a multi-page PDF
-        // silently returns just its first page.
+        // An omitted pageNumbers arrives as null, which parsePageList maps to page 1 alone, so a
+        // multi-page PDF would silently convert only its first page.
         if (request.getPageNumbers() == null || request.getPageNumbers().isBlank()) {
             request.setPageNumbers("all");
         }
