@@ -361,9 +361,10 @@ describe("convert (format-routed custom tool)", () => {
 
     const back = deserializeToolStep(api, convertRegistry);
     expect(back.operation).toBe("/api/v1/convert/pdf/img");
-    const params = back.params as typeof convertDefaults;
-    expect(params.toExtension).toBe("png");
-    expect(params.imageOptions.dpi).toBe(600);
+    expect(back.params).toMatchObject({
+      toExtension: "png",
+      imageOptions: { dpi: 600 },
+    });
   });
 
   test("round-trips an image -> PDF step, restoring the from-image options", () => {
@@ -390,10 +391,10 @@ describe("convert (format-routed custom tool)", () => {
       autoRotate: "false",
     });
 
-    const params = deserializeToolStep(api, convertRegistry)
-      .params as typeof convertDefaults;
-    expect(params.imageOptions.fitOption).toBe("fillPage");
-    expect(params.imageOptions.autoRotate).toBe(false);
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.params).toMatchObject({
+      imageOptions: { fitOption: "fillPage", autoRotate: false },
+    });
   });
 
   test("routes PDF/X through the shared PDF/A endpoint and recovers the PDF/X target", () => {
@@ -411,9 +412,10 @@ describe("convert (format-routed custom tool)", () => {
 
     const back = deserializeToolStep(api, convertRegistry);
     expect(back.operation).toBe("/api/v1/convert/pdf/pdfa");
-    const params = back.params as typeof convertDefaults;
-    expect(params.toExtension).toBe("pdfx");
-    expect(params.pdfxOptions.outputFormat).toBeDefined();
+    expect(back.params).toMatchObject({
+      toExtension: "pdfx",
+      pdfxOptions: { outputFormat: "pdfx" },
+    });
   });
 });
 

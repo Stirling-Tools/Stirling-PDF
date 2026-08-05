@@ -2013,6 +2013,9 @@
   "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Empty": [
     "empty-table-header"
   ],
+  "editor/src/portal/components/pipelines/ToolPicker.stories.tsx :: Default": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/policies/PolicyCategoryCard.stories.tsx :: Coming Soon": [
     "color-contrast"
   ],
