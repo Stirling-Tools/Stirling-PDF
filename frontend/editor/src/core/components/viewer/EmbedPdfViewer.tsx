@@ -1364,9 +1364,12 @@ const EmbedPdfViewerContent = ({
       {/* Bottom Toolbar Overlay */}
       {effectiveFile && (
         <div
+          className="pdf-viewer-toolbar-dock"
           style={{
             position: "fixed",
-            bottom: 0,
+            // Gutter matching the workbench rails, so the bar reads as a
+            // floating card rather than one welded to the viewport edge.
+            bottom: "0.5rem",
             left: 0,
             right: 0,
             zIndex: 50,
