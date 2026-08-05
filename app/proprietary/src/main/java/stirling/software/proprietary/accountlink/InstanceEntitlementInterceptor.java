@@ -7,9 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,6 +29,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
@@ -221,7 +224,19 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         if (!isPdf(file)) {
             return 0;
         }
-        try (PdfDocument doc = PdfDocument.open(path)) {
+        // This runs on the response path, so it must not queue behind a long conversion holding
+        // the process-wide native lock. Give up quickly and meter on bytes instead.
+        Optional<JpdfiumGuard.Scope> guard = JpdfiumGuard.tryAcquire(PAGE_COUNT_LOCK_BUDGET);
+        if (guard.isEmpty()) {
+            log.warn(
+                    "Timed out after {} waiting for jpdfium to count pages of {}; metering on bytes"
+                            + " only, so this operation is under-counted",
+                    PAGE_COUNT_LOCK_BUDGET,
+                    file.getOriginalFilename());
+            return 0;
+        }
+        try (JpdfiumGuard.Scope held = guard.get();
+                PdfDocument doc = PdfDocument.open(path)) {
             return doc.pageCount();
         } catch (RuntimeException e) {
             // Malformed / encrypted → byte axis only, matching the SaaS classifier.
@@ -231,6 +246,9 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             return 0;
         }
     }
+
+    /** How long the response path will wait for the native lock before metering on bytes alone. */
+    private static final Duration PAGE_COUNT_LOCK_BUDGET = Duration.ofMillis(500);
 
     /** Order-independent signature of the input set: sorted per-file hashes, hashed together. */
     private static String opSignature(List<String> hashes) {
