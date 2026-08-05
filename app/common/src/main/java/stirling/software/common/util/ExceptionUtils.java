@@ -1051,6 +1051,42 @@ public class ExceptionUtils {
     }
 
     /**
+     * Maps a jpdfium (PDFium) failure onto a typed exception.
+     *
+     * <p>jpdfium's own exceptions are unchecked ({@code JPDFiumException extends
+     * RuntimeException}), so a plain {@code catch (IOException)} never sees them and the raw
+     * message reaches the client through the generic job-failure path.
+     *
+     * <p>jpdfium reports failures as {@code "<reason> - <operation>: <argument>"}, and for document
+     * open the argument is the absolute path of the file it was handed. That message must not reach
+     * the client, so the mapping is by reason only and the returned exception carries the
+     * user-facing text from the message bundle. Anything unrecognised becomes a corrupted-PDF
+     * exception rather than the original: a jpdfium message never has client-safe detail.
+     *
+     * @param e the IOException thrown by jpdfium
+     * @param context operation context for the message, e.g. "during Markdown conversion"
+     * @return a typed exception whose message is free of server-side detail
+     */
+    public static BaseAppException handleJpdfiumException(Exception e, String context) {
+        requireNonNull(e, "exception");
+
+        if (e instanceof stirling.software.jpdfium.exception.PdfPasswordException) {
+            return createPdfPasswordException(e);
+        }
+        if (e instanceof IOException io) {
+            IOException typed = handlePdfException(io, context);
+            if (typed instanceof BaseAppException app) {
+                return app;
+            }
+        }
+        String message = e.getMessage() == null ? "" : e.getMessage();
+        if (message.contains("Password required") || message.contains("password")) {
+            return createPdfPasswordException(e);
+        }
+        return createPdfCorruptedException(context, e);
+    }
+
+    /**
      * Log an exception with appropriate level based on its type. Returns the exception for fluent
      * log-and-throw pattern.
      *
