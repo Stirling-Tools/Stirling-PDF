@@ -11,6 +11,7 @@ updates:
       - "/app/common"
       - "/app/core"
       - "/app/proprietary"
+      - "/app/saas"
     schedule:
       interval: "weekly"
     cooldown:

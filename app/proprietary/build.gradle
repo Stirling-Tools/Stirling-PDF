@@ -13,8 +13,8 @@ dependencies {
     api 'org.springframework:spring-jdbc'
     api 'org.springframework:spring-webmvc'
     api 'org.springframework.session:spring-session-core'
-    api "org.springframework.security:spring-security-core:${rootProject.ext.springSecuritySamlVersion}"
-    api "org.springframework.security:spring-security-saml2-service-provider:${rootProject.ext.springSecuritySamlVersion}"
+    api "org.springframework.security:spring-security-core:${libs.versions.springSecuritySaml2.get()}"
+    api "org.springframework.security:spring-security-saml2-service-provider:${libs.versions.springSecuritySaml2.get()}"
     api 'org.springframework.boot:spring-boot-starter-jetty'
     api 'org.springframework.boot:spring-boot-starter-security'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -27,24 +27,24 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    api "io.swagger.core.v3:swagger-core-jakarta:${rootProject.ext.swaggerCoreVersion}"
-    implementation "com.bucket4j:bucket4j_jdk17-core:${rootProject.ext.bucket4jVersion}"
+    api "io.swagger.core.v3:swagger-core-jakarta:${libs.versions.swaggerCore.get()}"
+    implementation "com.bucket4j:bucket4j_jdk17-core:${libs.versions.bucket4j.get()}"
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
     // boundary doubling).
-    implementation "com.bucket4j:bucket4j_jdk17-lettuce:${rootProject.ext.bucket4jVersion}"
+    implementation "com.bucket4j:bucket4j_jdk17-lettuce:${libs.versions.bucket4j.get()}"
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
-    implementation "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
+    implementation "org.bouncycastle:bcprov-jdk18on:${libs.versions.bouncycastle.get()}"
 
-    implementation "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
+    implementation "com.google.code.gson:gson:${libs.versions.gson.get()}"
 
     // jinjava/jjwt transitively request older Jackson 2 versions; declare the current
     // version directly so it is selected consistently (root build.gradle pins are the fallback).
-    api "com.fasterxml.jackson.core:jackson-core:${rootProject.ext.jackson2Version}"
-    api "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jackson2Version}"
+    api "com.fasterxml.jackson.core:jackson-core:${libs.versions.jacksonV2.get()}"
+    api "com.fasterxml.jackson.core:jackson-databind:${libs.versions.jacksonV2.get()}"
 
-    implementation("com.hubspot.jinjava:jinjava:${rootProject.ext.jinjavaVersion}") {
+    implementation("com.hubspot.jinjava:jinjava:${libs.versions.jinjava.get()}") {
         // Compile-time-only annotation artifacts (class-retention annotations, not needed at
         // runtime) whose declared licences (LGPL / none) fail the licence compatibility check.
         exclude group: 'com.google.code.findbugs', module: 'annotations'
@@ -55,26 +55,26 @@ dependencies {
 
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
-    implementation "io.jsonwebtoken:jjwt-api:${rootProject.ext.jwtVersion}"
-    runtimeOnly "io.jsonwebtoken:jjwt-impl:${rootProject.ext.jwtVersion}"
-    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${rootProject.ext.jwtVersion}"
-    runtimeOnly "com.h2database:h2:${rootProject.ext.h2Version}" // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
-    runtimeOnly "org.postgresql:postgresql:${rootProject.ext.postgresqlVersion}"
-    implementation('com.coveo:saml-client:5.0.0') {
+    implementation "io.jsonwebtoken:jjwt-api:${libs.versions.jwt.get()}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${libs.versions.jwt.get()}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${libs.versions.jwt.get()}"
+    runtimeOnly "com.h2database:h2:${libs.versions.h2.get()}" // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
+    runtimeOnly "org.postgresql:postgresql:${libs.versions.postgresql.get()}"
+    implementation("com.coveo:saml-client:${libs.versions.samlClient.get()}") {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
 
-    implementation "software.amazon.awssdk:s3:${rootProject.ext.awsSdkVersion}"
-    implementation "software.amazon.awssdk:url-connection-client:${rootProject.ext.awsSdkVersion}"
+    implementation "software.amazon.awssdk:s3:${libs.versions.awsSdk.get()}"
+    implementation "software.amazon.awssdk:url-connection-client:${libs.versions.awsSdk.get()}"
 
     // Network policy sources (SFTP/FTP/SMB drop folders). All permissively licensed:
     // jsch fork BSD, commons-net Apache-2.0, smbj Apache-2.0 (BouncyCastle already on classpath).
-    implementation "com.github.mwiede:jsch:${jschVersion}"
-    implementation "commons-net:commons-net:${commonsNetVersion}"
-    implementation "com.hierynomus:smbj:${smbjVersion}"
+    implementation "com.github.mwiede:jsch:${libs.versions.jsch.get()}"
+    implementation "commons-net:commons-net:${libs.versions.commonsNet.get()}"
+    implementation "com.hierynomus:smbj:${libs.versions.smbj.get()}"
 
     // Streaming AEAD (AES-GCM-HKDF segments) for storage encryption at rest. Apache-2.0.
-    implementation "com.google.crypto.tink:tink:${tinkVersion}"
+    implementation "com.google.crypto.tink:tink:${libs.versions.tink.get()}"
 
     // @DataJpaTest slice (Boot 4 ships test slices as separate starters, like webmvc-test at the
     // root) so policy.source repositories can be exercised against embedded H2.
@@ -82,11 +82,11 @@ dependencies {
 
     // Testcontainers: real MinIO/LocalStack (S3) and Valkey for integration tests in CI without
     // manually-started instances. Tests skip cleanly when Docker is unavailable.
-    testImplementation "org.testcontainers:testcontainers:${rootProject.ext.testcontainersMinioVersion}"
-    testImplementation "org.testcontainers:minio:${rootProject.ext.testcontainersMinioVersion}"
-    testImplementation "org.testcontainers:localstack:${rootProject.ext.testcontainersMinioVersion}"
-    testImplementation "org.testcontainers:postgresql:${rootProject.ext.testcontainersMinioVersion}"
-    testImplementation "org.testcontainers:junit-jupiter:${rootProject.ext.testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:testcontainers:${libs.versions.testcontainers.get()}"
+    testImplementation "org.testcontainers:minio:${libs.versions.testcontainers.get()}"
+    testImplementation "org.testcontainers:localstack:${libs.versions.testcontainers.get()}"
+    testImplementation "org.testcontainers:postgresql:${libs.versions.testcontainers.get()}"
+    testImplementation "org.testcontainers:junit-jupiter:${libs.versions.testcontainers.get()}"
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}
