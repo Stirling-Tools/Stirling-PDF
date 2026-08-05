@@ -69,11 +69,7 @@ export function InstanceHealthTable({ instances }: Props) {
       key: "status",
       header: t("portal.editorAdmin.health.columns.status"),
       render: (i) => (
-        <StatusBadge
-          tone={INSTANCE_STATUS_TONE[i.status]}
-          size="sm"
-          pulse={i.status === "healthy"}
-        >
+        <StatusBadge tone={INSTANCE_STATUS_TONE[i.status]} size="sm">
           {t(INSTANCE_STATUS_LABEL[i.status])}
         </StatusBadge>
       ),
