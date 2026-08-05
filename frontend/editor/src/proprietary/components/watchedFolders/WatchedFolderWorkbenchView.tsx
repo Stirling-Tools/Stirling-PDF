@@ -1866,7 +1866,7 @@ export function WatchedFolderWorkbenchView({
                                 {meta?.errorMessage && (
                                   <Text
                                     size="xs"
-                                    c="red"
+                                    c="var(--color-red-dark)"
                                     style={{
                                       flex: 1,
                                       minWidth: 0,
@@ -2005,7 +2005,7 @@ export function WatchedFolderWorkbenchView({
                 >
                   {t("watchedFolders.workbench.failed", "Failed")}
                 </Text>
-                <Text size="xl" fw={800} c="red">
+                <Text size="xl" fw={800} c="var(--color-red-dark)">
                   {dashboardStats.failed}
                 </Text>
               </Box>

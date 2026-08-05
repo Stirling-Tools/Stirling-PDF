@@ -350,7 +350,7 @@ export default function TeamDetailsSection({
   if (!team) {
     return (
       <Stack align="center" py="xl">
-        <Text size="sm" c="red">
+        <Text size="sm" c="var(--color-red-dark)">
           {t("workspace.teams.teamNotFound", "Team not found")}
         </Text>
         <Button variant="secondary" onClick={onBack}>
@@ -749,7 +749,7 @@ export default function TeamDetailsSection({
               availableUsersForTeam.find(
                 (u) => u.id.toString() === selectedUserId,
               )?.team && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="var(--color-amber-dark)">
                   {t("workspace.teams.addMemberToTeam.willBeMoved")}
                 </Text>
               )}

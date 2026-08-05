@@ -1155,7 +1155,10 @@ export function CommentsSidebar({
                                                       );
                                                     }}
                                                   >
-                                                    <Text size="xs" c="blue">
+                                                    <Text
+                                                      size="xs"
+                                                      c="var(--c-accent-text)"
+                                                    >
                                                       {t(
                                                         "annotation.editText",
                                                         "Edit",

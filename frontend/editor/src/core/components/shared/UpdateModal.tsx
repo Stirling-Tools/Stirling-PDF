@@ -319,7 +319,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   {t("update.latest", "Latest Version")}
                 </Text>
                 <Group gap="sm" align="center">
-                  <Text fw={800} fz={32} c="blue" lh={1.1}>
+                  <Text fw={800} fz={32} c="var(--c-accent-text)" lh={1.1}>
                     {updateSummary.latest_version}
                   </Text>
                   {(isStable || updateSummary.latest_stable_version) && (
@@ -439,7 +439,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   onClick={handleExternalLink(
                     `https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${updateSummary.latest_version}`,
                   )}
-                  c="blue"
+                  c="var(--c-accent-text)"
                   style={{
                     textDecoration: "none",
                     display: "inline-flex",
