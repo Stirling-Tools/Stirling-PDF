@@ -45,6 +45,8 @@ export interface PipelineHeaderProps {
   onEnabledChange: (enabled: boolean) => void;
   /** False for a pipeline that has never been saved: it cannot yet be run, cleared or deleted. */
   isEdit: boolean;
+  /** How many steps the chain has, so an empty pipeline cannot offer a test that does nothing. */
+  stepCount: number;
 
   canSave: boolean;
   saving: boolean;
@@ -83,6 +85,7 @@ export function PipelineHeader({
   enabled,
   onEnabledChange,
   isEdit,
+  stepCount,
   canSave,
   saving,
   onSave,
@@ -162,6 +165,8 @@ export function PipelineHeader({
           size="sm"
           accept="application/pdf"
           loading={testing}
+          // A chain with no steps would hand the file straight back, reading as a silent no-op.
+          disabled={stepCount === 0}
           onChange={(file) => file && onTest(file)}
           leftSection={<ScienceOutlinedIcon style={{ fontSize: "1.125rem" }} />}
         >
@@ -272,7 +277,14 @@ function RunResultStrip({ result, onDownload }: RunResultStripProps) {
         </span>
       </div>
 
-      {/* The failing step's own message is shown on its node; this is the run-level summary. */}
+      {/* The reason it failed, where the failure is announced - not only on the node, which the user
+          has to know to click. */}
+      {result.status === "failed" && result.error && (
+        <span className="portal-pipeline-header__result-error">
+          {result.error}
+        </span>
+      )}
+
       {outputs.map((output) => (
         <Button
           key={output.fileId}

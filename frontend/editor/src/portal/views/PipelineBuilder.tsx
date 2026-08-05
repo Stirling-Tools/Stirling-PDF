@@ -484,7 +484,9 @@ export function PipelineBuilder() {
   function stepIcon(step: WorkingToolStep): ReactNode {
     const op = stepOperation(step);
     if (op)
-      return <BrandMark id={op.custom ? "api" : op.connectionTypeId} size={17} />;
+      return (
+        <BrandMark id={op.custom ? "api" : op.connectionTypeId} size={17} />
+      );
     if (isIntegrationStep(step)) return <BrandMark id="api" size={17} />;
     return step.toolId ? allTools[step.toolId]?.icon : undefined;
   }
@@ -822,9 +824,12 @@ export function PipelineBuilder() {
     if (input.triggerType === MANUAL)
       return t("portal.pipelines.composer.triggerManual");
     if (input.triggerType === "schedule")
-      return `${t("portal.pipelines.composer.scheduleEvery")} ${input.scheduleCount} ${t(
-        `portal.pipelines.composer.unit.${input.scheduleUnit.toLowerCase()}`,
-      )}`;
+      // One counted phrase per unit, so it reads "Runs every hour" / "Runs every 3 hours" rather
+      // than the ungrammatical, untranslatable "Run every 1 hours".
+      return t(
+        `portal.pipelines.composer.runsEvery.${input.scheduleUnit.toLowerCase()}`,
+        { count: Number(input.scheduleCount) || 1 },
+      );
     return t(`portal.pipelines.trigger.${input.triggerType}`, {
       defaultValue: input.triggerType,
     });
@@ -1040,6 +1045,7 @@ export function PipelineBuilder() {
         enabled={enabled}
         onEnabledChange={setEnabled}
         isEdit={isEdit}
+        stepCount={steps.length}
         canSave={canSave}
         saving={submitting}
         onSave={() => save(listPath)}

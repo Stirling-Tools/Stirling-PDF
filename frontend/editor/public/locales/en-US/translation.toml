@@ -7849,6 +7849,14 @@ scheduleEvery = "Run every"
 trigger = "Trigger"
 triggerManual = "Manual only"
 
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
+
 [portal.pipelines.composer.unit]
 days = "days"
 hours = "hours"

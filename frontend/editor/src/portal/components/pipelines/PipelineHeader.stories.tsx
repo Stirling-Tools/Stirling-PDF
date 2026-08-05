@@ -31,6 +31,7 @@ function Playground({
   testing?: boolean;
   running?: boolean;
   canSave?: boolean;
+  stepCount?: number;
 }) {
   const [name, setName] = useState(initialName);
   const [enabled, setEnabled] = useState(initialEnabled);
@@ -41,6 +42,7 @@ function Playground({
       enabled={enabled}
       onEnabledChange={setEnabled}
       isEdit={isEdit}
+      stepCount={rest.stepCount ?? 2}
       canSave={rest.canSave ?? true}
       saving={rest.saving ?? false}
       onSave={noop}

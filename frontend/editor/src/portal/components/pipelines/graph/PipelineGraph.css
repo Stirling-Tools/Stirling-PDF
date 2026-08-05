@@ -35,6 +35,12 @@
   pointer-events: none;
 }
 
+/* transform has no logical form, so mirror it by hand: in RTL the hint clears the wire on the other
+   side rather than reaching back across it onto the chain. */
+[dir="rtl"] .portal-graph__drag-hint {
+  transform: translate(-1.75rem, -50%);
+}
+
 /* What follows the cursor when several steps are dragged at once: a copy of each card, stacked, so
    the drag shows what is actually moving rather than only the card that was grabbed. Cloned nodes
    keep their own styling; they are inert copies, hence no pointer events. */

@@ -36,6 +36,7 @@ function renderHeader(overrides: Partial<PipelineHeaderProps> = {}) {
       name="Claims redaction"
       enabled
       isEdit
+      stepCount={2}
       canSave
       saving={false}
       testing={false}
@@ -101,6 +102,25 @@ describe("PipelineHeader", () => {
     expect(input).not.toBeNull();
     fireEvent.change(input as HTMLInputElement, { target: { files: [file] } });
     expect(handlers.onTest).toHaveBeenCalledWith(file);
+  });
+
+  it("will not offer a test run on a chain with no steps", () => {
+    renderHeader({ stepCount: 0 });
+    expect(
+      screen.getByText("portal.pipelines.builder.testRun").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("shows why a test run failed, not only that it did", () => {
+    renderHeader({
+      runResult: {
+        status: "failed",
+        completedSteps: 1,
+        stepCount: 3,
+        error: "OCR failed: unreadable page",
+      },
+    });
+    expect(screen.getByText("OCR failed: unreadable page")).toBeInTheDocument();
   });
 
   it("runs and deletes from the row, clears history from the tray", () => {

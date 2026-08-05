@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import { ActionIcon, Button, Select } from "@app/ui";
+import { ActionIcon, Button, FormField, Select } from "@app/ui";
 
 /**
  * Picks the saved source a pipeline delivers its output to. A destination is just a
@@ -43,31 +43,33 @@ export function DestinationPicker({
   return (
     <>
       {hasSources && (
-        <div className="portal-builder__input-row">
-          <div className="portal-builder__input-field">
-            <Select
-              inputSize="sm"
-              aria-label={t("portal.pipelines.composer.output")}
-              placeholder={t("portal.pipelines.builder.chooseDestination")}
-              value={value[0] ?? null}
-              invalid={value.length !== 1}
-              onChange={(id) => onChange(id ? [id] : [])}
-              options={sources.map((source) => ({
-                value: source.id,
-                label: source.name,
-              }))}
-            />
+        <FormField label={t("portal.pipelines.composer.output")}>
+          <div className="portal-builder__input-row">
+            <div className="portal-builder__input-field">
+              <Select
+                inputSize="sm"
+                aria-label={t("portal.pipelines.composer.output")}
+                placeholder={t("portal.pipelines.builder.chooseDestination")}
+                value={value[0] ?? null}
+                invalid={value.length !== 1}
+                onChange={(id) => onChange(id ? [id] : [])}
+                options={sources.map((source) => ({
+                  value: source.id,
+                  label: source.name,
+                }))}
+              />
+            </div>
+            <ActionIcon
+              variant="tertiary"
+              className="portal-builder__source-edit"
+              aria-label={t("portal.pipelines.composer.editSource")}
+              disabled={chosen === ""}
+              onClick={() => onEdit(chosen)}
+            >
+              <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+            </ActionIcon>
           </div>
-          <ActionIcon
-            variant="tertiary"
-            className="portal-builder__source-edit"
-            aria-label={t("portal.pipelines.composer.editSource")}
-            disabled={chosen === ""}
-            onClick={() => onEdit(chosen)}
-          >
-            <EditOutlinedIcon style={{ fontSize: "1rem" }} />
-          </ActionIcon>
-        </div>
+        </FormField>
       )}
       <Button
         variant="tertiary"

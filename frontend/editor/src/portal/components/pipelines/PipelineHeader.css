@@ -123,3 +123,11 @@
 .portal-pipeline-header__result-icon.is-bad {
   color: var(--c-danger);
 }
+
+/* Why the run failed, shown inline in the strip. Neutral text (the icon already carries the tone);
+   it may wrap to keep a long backend message readable rather than clipping it. */
+.portal-pipeline-header__result-error {
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+  min-width: 0;
+}
