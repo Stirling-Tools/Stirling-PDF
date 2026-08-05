@@ -15,7 +15,8 @@ describe.each(I18N_PROJECTS)(
   (project) => {
     test(
       "fails if any en-US key has no source references",
-      { timeout: 30_000 },
+      // Scans/parses the whole source tree: generous headroom for a loaded CPU.
+      { timeout: 60_000 },
       () => {
         expect(fs.existsSync(project.localeFile)).toBe(true);
 

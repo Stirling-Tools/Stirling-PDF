@@ -32,12 +32,14 @@ import {
 } from "@portal/components/sources/sourceTypes";
 import { BrandMark } from "@portal/components/BrandMarks";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
+import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
 import { ConnectionForm } from "@portal/components/sources/ConnectionForm";
 import {
   CREATABLE_CONNECTION_TYPES,
   buildConnectionConfig,
   connectionFormValid,
   emptyConnectionValues,
+  type CreatableConnectionType,
 } from "@portal/components/sources/connectionTypes";
 import { createIntegration } from "@portal/api/integrations";
 import "@portal/components/sources/SourceModal.css";
@@ -75,6 +77,14 @@ type Stage = "type" | "configure" | "reveal" | "delete" | "connection";
 const S3_CONNECTION_TYPE = CREATABLE_CONNECTION_TYPES.find(
   (entry) => entry.id === "s3",
 )!;
+
+/** A connection-catalogue entry by id, for the inline create form a source field opens. */
+function connectionTypeById(id: string): CreatableConnectionType {
+  return (
+    CREATABLE_CONNECTION_TYPES.find((entry) => entry.id === id) ??
+    S3_CONNECTION_TYPE
+  );
+}
 
 interface SourceModalProps {
   open: boolean;
@@ -129,7 +139,10 @@ export function SourceModal({
     webhookId: string;
     secret: string;
   } | null>(null);
-  // In-place connection create (swaps the stage; never stacks a second modal).
+  // In-place connection create (swaps the stage; never stacks a second modal). The type is set
+  // per field, so a source that wants an SFTP connection opens the SFTP form, not always S3.
+  const [connType, setConnType] =
+    useState<CreatableConnectionType>(S3_CONNECTION_TYPE);
   const [connValues, setConnValues] = useState<Record<string, string>>(() =>
     emptyConnectionValues(S3_CONNECTION_TYPE),
   );
@@ -192,24 +205,27 @@ export function SourceModal({
     onClose();
   }
 
-  function openConnectionStage(fieldKey: string) {
-    setConnValues(emptyConnectionValues(S3_CONNECTION_TYPE));
+  function openConnectionStage(
+    fieldKey: string,
+    type: CreatableConnectionType,
+  ) {
+    setConnType(type);
+    setConnValues(emptyConnectionValues(type));
     setConnField(fieldKey);
     setError(null);
     setStage("connection");
   }
 
   async function saveConnection() {
-    if (connSaving || !connectionFormValid(S3_CONNECTION_TYPE, connValues))
-      return;
+    if (connSaving || !connectionFormValid(connType, connValues)) return;
     setConnSaving(true);
     setError(null);
     try {
       const created = await createIntegration({
-        integrationType: S3_CONNECTION_TYPE.integrationType,
+        integrationType: connType.integrationType,
         name: connValues.name.trim(),
         scope: "TEAM",
-        config: buildConnectionConfig(S3_CONNECTION_TYPE, connValues),
+        config: buildConnectionConfig(connType, connValues),
       });
       // Back to the source form with the fresh connection selected; the picker
       // remounts and refetches, so the new name is in its list.
@@ -277,7 +293,7 @@ export function SourceModal({
       ? t("portal.sources.builder.createTitle")
       : stage === "connection"
         ? t("portal.connections.createTitleFor", {
-            name: t(S3_CONNECTION_TYPE.labelKey),
+            name: t(connType.labelKey),
           })
         : stage === "reveal"
           ? t("portal.sources.types.webhook.reveal.title")
@@ -346,7 +362,7 @@ export function SourceModal({
             <Button
               size="sm"
               loading={connSaving}
-              disabled={!connectionFormValid(S3_CONNECTION_TYPE, connValues)}
+              disabled={!connectionFormValid(connType, connValues)}
               onClick={() => void saveConnection()}
             >
               {t("portal.connections.picker.save")}
@@ -512,7 +528,28 @@ export function SourceModal({
                       onChange={(connectionId) =>
                         setOption(field.key, connectionId)
                       }
-                      onCreateNew={() => openConnectionStage(field.key)}
+                      onCreateNew={() =>
+                        openConnectionStage(field.key, S3_CONNECTION_TYPE)
+                      }
+                    />
+                  ) : field.control === "connection" ? (
+                    <ConnectionPicker
+                      value={options[field.key] ?? ""}
+                      onChange={(connectionId) =>
+                        setOption(field.key, connectionId)
+                      }
+                      integrationType={
+                        connectionTypeById(field.connectionTypeId ?? "")
+                          .integrationType
+                      }
+                      createTypeId={field.connectionTypeId ?? ""}
+                      presetId={field.connectionTypeId}
+                      onCreateNew={() =>
+                        openConnectionStage(
+                          field.key,
+                          connectionTypeById(field.connectionTypeId ?? ""),
+                        )
+                      }
                     />
                   ) : field.control === "select" ? (
                     <Select
@@ -593,7 +630,7 @@ export function SourceModal({
       {stage === "connection" && (
         <div className="portal-source-modal__form">
           <ConnectionForm
-            type={S3_CONNECTION_TYPE}
+            type={connType}
             values={connValues}
             onChange={setConnValues}
           />

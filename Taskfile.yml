@@ -194,6 +194,12 @@ tasks:
       - task: frontend:tool-models
       - task: engine:tool-models
 
+  tool-models:check:
+    desc: "Fail if any committed API model is out of date"
+    cmds:
+      - task: frontend:tool-models:check
+      - task: engine:tool-models:check
+
   # ============================================================
   # Quality Gate
   # ============================================================
