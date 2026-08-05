@@ -1,10 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
+import { useEffect, useState } from "react";
 import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { WorkingToolStep } from "@app/hooks/tools/shared/toolAutomation";
-import { asRegistryConfig } from "@app/hooks/tools/shared/toolOperationTypes";
+import {
+  asRegistryConfig,
+  type ErasedToolParams,
+  type ToolAutomationSettingsProps,
+} from "@app/hooks/tools/shared/toolOperationTypes";
 import ConvertSettings from "@app/components/tools/convert/ConvertSettings";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
 import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
@@ -87,5 +92,59 @@ describe("PipelineStepSettings", () => {
       ),
     ).not.toThrow();
     expect(screen.getByText(/Convert from/)).toBeInTheDocument();
+  });
+
+  // Reproduces the convert-in-pipeline bug: picking a source format fires several onParameterChange
+  // calls in one tick (set fromExtension, auto-target, reset options). If each rebuilt from the
+  // step snapshot captured at render they'd clobber each other and the earlier field would be lost.
+  it("accumulates several synchronous field changes instead of keeping only the last", () => {
+    function DoubleWriteSettings({
+      onParameterChange,
+    }: ToolAutomationSettingsProps<ErasedToolParams>) {
+      // Fire once on mount, mimicking a source-format change's burst of synchronous updates.
+      useEffect(() => {
+        onParameterChange("fromExtension", "pdf");
+        onParameterChange("toExtension", "docx");
+      }, []);
+      return null;
+    }
+
+    const registry = {
+      doubleWrite: { automationSettings: DoubleWriteSettings },
+    } as unknown as Partial<ToolRegistry>;
+
+    function Harness() {
+      const [params, setParams] = useState<ErasedToolParams>({});
+      const step = {
+        toolId: "doubleWrite",
+        support: "editable",
+        operation: "/api/v1/x",
+        params,
+      } as unknown as WorkingToolStep;
+      return (
+        <>
+          <PipelineStepSettings
+            step={step}
+            registry={registry}
+            onChange={(update) =>
+              setParams((prev) =>
+                typeof update === "function" ? update(prev) : update,
+              )
+            }
+          />
+          <span data-testid="out">{JSON.stringify(params)}</span>
+        </>
+      );
+    }
+
+    render(
+      <MantineProvider>
+        <Harness />
+      </MantineProvider>,
+    );
+    expect(JSON.parse(screen.getByTestId("out").textContent ?? "{}")).toEqual({
+      fromExtension: "pdf",
+      toExtension: "docx",
+    });
   });
 });
