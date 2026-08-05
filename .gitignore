@@ -2,33 +2,83 @@
 # Dependencies
 .gradle/
 node_modules/
+venv/
+.venv/
+__pycache__/
 
 # Build artifacts
 build/
 dist/
 target/
 
-# Logs
-*.log
-
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
-# IDE
+# Logs
+*.log
+
+# Editors
 .vscode/
 .idea/
 
+# OS
+.DS_Store
+Thumbs.db
+
 # Python
-__pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
-venv/
-.venv/
-.env
-.env.local
-.env.*
+*.py.class
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.hprof
+
+# Gradle
+.gradle/
+!gradle.properties
+!build.gradle
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Temporary files
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+
+# Archives
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 ```

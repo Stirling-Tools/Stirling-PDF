@@ -48,14 +48,14 @@ ext {
     smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
-    // Standardized on Java 21 across the entire repository
-    modernJavaVersion = 21
+    // Standardized on Java 25 across the entire repository
+    modernJavaVersion = 25
 }
 
-// Enforce Java 21 toolchain at root level
+// Enforce Java 25 toolchain at root level
 def buildJavaMajorVersion = (project.findProperty('javaVersion') ?: ext.modernJavaVersion).toString().toInteger()
-def buildJavaLanguageVersion = JavaLanguageVersion.of(21)
-def buildJavaVersion = JavaVersion.VERSION_21
+def buildJavaLanguageVersion = JavaLanguageVersion.of(25)
+def buildJavaVersion = JavaVersion.VERSION_25
 
 java {
     sourceCompatibility = buildJavaVersion
