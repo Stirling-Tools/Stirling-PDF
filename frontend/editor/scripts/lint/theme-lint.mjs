@@ -744,7 +744,6 @@ const PRIMITIVE_LAYER = [
   /^editor\/src\/core\/theme\//,
   /^editor\/src\/core\/styles\/theme\.css$/,
   /^editor\/src\/core\/tokens\/tokens\.css$/,
-  /^editor\/src\/saas\/styles\/saas-theme\.css$/,
   /^editor\/src\/proprietary\/auth\/ui\/auth-theme\.css$/,
   /^editor\/src\/core\/ui\/accents\.css$/,
 ];
