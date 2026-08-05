@@ -29,7 +29,7 @@ class FileRunEventStoreTest {
     private RecordFailure failure(FailureKind kind, Long teamId, String fileId, String detail) {
         return new RecordFailure(
                 kind,
-                FailureOrigin.PROCESSOR,
+                FailureOrigin.POLICY,
                 teamId,
                 "ethan@example.com",
                 "policy-1",
@@ -60,7 +60,7 @@ class FileRunEventStoreTest {
             assertThat(event.policyId()).isEqualTo("policy-1");
             assertThat(event.runId()).isEqualTo("run-1");
             assertThat(event.fileId()).isEqualTo("file-1");
-            assertThat(event.origin()).isEqualTo(FailureOrigin.PROCESSOR);
+            assertThat(event.origin()).isEqualTo(FailureOrigin.POLICY);
             assertThat(event.status()).isEqualTo(FileRunEventStatus.NEW);
             assertThat(event.occurrences()).isEqualTo(1);
             assertThat(event.createdAt()).isNotNull();
@@ -189,7 +189,7 @@ class FileRunEventStoreTest {
                 store.record(
                         new RecordFailure(
                                 FailureKind.UNKNOWN,
-                                FailureOrigin.PROCESSOR,
+                                FailureOrigin.POLICY,
                                 TEAM,
                                 "ethan@example.com",
                                 "policy-1",
@@ -261,7 +261,7 @@ class FileRunEventStoreTest {
         private RecordFailure withoutFileId(String runId) {
             return new RecordFailure(
                     FailureKind.INPUT_PASSWORD_PROTECTED,
-                    FailureOrigin.PROCESSOR,
+                    FailureOrigin.POLICY,
                     TEAM,
                     "ethan@example.com",
                     "policy-1",

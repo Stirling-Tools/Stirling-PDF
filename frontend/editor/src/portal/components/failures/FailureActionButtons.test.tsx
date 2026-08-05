@@ -62,7 +62,7 @@ function event(actions: FailureActionOffer[]): FileRunEvent {
     stage: "INTERNAL",
     severity: "ERROR",
     scope: "RUN",
-    origin: "PROCESSOR",
+    origin: "POLICY",
     remedy: "PERMANENT",
     titleKey: "portal.failures.kind.unknown.title",
     descriptionKey: "portal.failures.kind.unknown.description",

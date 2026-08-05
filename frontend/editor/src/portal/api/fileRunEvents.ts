@@ -29,7 +29,7 @@ export type FailureRemedy =
 
 export type FailureScope = "FILE" | "RUN" | "POLICY" | "SOURCE" | "SERVER";
 
-export type FailureOrigin = "EDITOR" | "PROCESSOR" | "API";
+export type FailureOrigin = "TOOL" | "POLICY" | "PIPELINE";
 
 export type FileRunEventStatus =
   | "NEW"

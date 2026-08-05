@@ -56,7 +56,7 @@ class FileRunEventStoreDbTest {
     private RecordFailure failure(FailureKind kind, Long teamId, String fileId) {
         return new RecordFailure(
                 kind,
-                FailureOrigin.PROCESSOR,
+                FailureOrigin.POLICY,
                 teamId,
                 "author@example.com",
                 "policy-1",
@@ -286,7 +286,7 @@ class FileRunEventStoreDbTest {
         duplicate.setStage(FailureStage.INTERNAL);
         duplicate.setSeverity(FailureSeverity.ERROR);
         duplicate.setScope(FailureScope.RUN);
-        duplicate.setOrigin(FailureOrigin.PROCESSOR);
+        duplicate.setOrigin(FailureOrigin.POLICY);
         duplicate.setDedupKey(dedupKey);
         duplicate.setOccurrences(1);
         duplicate.setStatus(FileRunEventStatus.NEW);

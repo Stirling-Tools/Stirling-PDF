@@ -64,15 +64,7 @@ public record RecordFailure(
             String fileId,
             String detail) {
         return new RecordFailure(
-                kind,
-                FailureOrigin.PROCESSOR,
-                teamId,
-                actor,
-                policyId,
-                runId,
-                null,
-                fileId,
-                detail);
+                kind, FailureOrigin.POLICY, teamId, actor, policyId, runId, null, fileId, detail);
     }
 
     /**

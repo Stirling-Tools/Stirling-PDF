@@ -64,7 +64,7 @@ class FileRunEventControllerTest {
         return store.record(
                 new RecordFailure(
                         kind,
-                        FailureOrigin.PROCESSOR,
+                        FailureOrigin.POLICY,
                         teamId,
                         "author@example.com",
                         "policy-1",

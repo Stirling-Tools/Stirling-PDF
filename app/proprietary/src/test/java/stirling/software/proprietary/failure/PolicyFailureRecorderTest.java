@@ -99,7 +99,7 @@ class PolicyFailureRecorderTest {
             assertThat(event.runId()).isEqualTo("run-1");
             assertThat(event.policyId()).isEqualTo("policy-1");
             assertThat(event.actor()).isEqualTo("dana@example.com");
-            assertThat(event.origin()).isEqualTo(FailureOrigin.PROCESSOR);
+            assertThat(event.origin()).isEqualTo(FailureOrigin.POLICY);
             // The run's message, not the exception's: that is what the operator saw.
             assertThat(event.detail()).isEqualTo("Policy run failed: locked");
         }

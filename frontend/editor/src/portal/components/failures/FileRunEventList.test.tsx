@@ -53,7 +53,7 @@ function event(overrides: Partial<FileRunEvent> = {}): FileRunEvent {
     stage: "INPUT",
     severity: "ERROR",
     scope: "FILE",
-    origin: "PROCESSOR",
+    origin: "POLICY",
     remedy: "NEEDS_USER_INPUT",
     titleKey: "portal.failures.kind.inputPasswordProtected.title",
     descriptionKey: "portal.failures.kind.inputPasswordProtected.description",

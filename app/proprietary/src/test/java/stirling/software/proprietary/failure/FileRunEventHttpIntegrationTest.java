@@ -64,7 +64,7 @@ class FileRunEventHttpIntegrationTest {
         return store.record(
                         new RecordFailure(
                                 kind,
-                                FailureOrigin.PROCESSOR,
+                                FailureOrigin.POLICY,
                                 teamId,
                                 "author@example.com",
                                 "policy-1",
@@ -109,7 +109,7 @@ class FileRunEventHttpIntegrationTest {
             assertThat(row.get("stage").asString()).isEqualTo("INPUT");
             assertThat(row.get("severity").asString()).isEqualTo("ERROR");
             assertThat(row.get("scope").asString()).isEqualTo("FILE");
-            assertThat(row.get("origin").asString()).isEqualTo("PROCESSOR");
+            assertThat(row.get("origin").asString()).isEqualTo("POLICY");
             assertThat(row.get("remedy").asString()).isEqualTo("NEEDS_USER_INPUT");
             assertThat(row.get("titleKey").asString())
                     .isEqualTo("portal.failures.kind.inputPasswordProtected.title");

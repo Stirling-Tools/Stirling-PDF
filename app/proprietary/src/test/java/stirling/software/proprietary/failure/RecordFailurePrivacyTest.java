@@ -108,7 +108,7 @@ class RecordFailurePrivacyTest {
         RecordFailure a =
                 new RecordFailure(
                         FailureKind.INPUT_PASSWORD_PROTECTED,
-                        FailureOrigin.PROCESSOR,
+                        FailureOrigin.POLICY,
                         1L,
                         null,
                         "policy-1",
@@ -119,7 +119,7 @@ class RecordFailurePrivacyTest {
         RecordFailure b =
                 new RecordFailure(
                         FailureKind.INPUT_PASSWORD_PROTECTED,
-                        FailureOrigin.PROCESSOR,
+                        FailureOrigin.POLICY,
                         1L,
                         null,
                         "policy-1",
