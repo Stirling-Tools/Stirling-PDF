@@ -11,7 +11,7 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 **Stirling 2.0** is built using:
 
 **Backend:**
-- Spring Boot (requires JDK 21+; build defaults to JDK 21, override with `-PjavaVersion=25`)
+- Spring Boot (requires JDK 21+; build defaults to JDK 25, override with `-PjavaVersion=21`)
 - PDFBox for core PDF operations
 - LibreOffice for document conversions
 - qpdf for PDF optimization

@@ -459,7 +459,7 @@ The frontend is organized with a clear separation of concerns:
 
 ## Important Notes
 
-- **Java Version**: JDK 21 (build default — `modernJavaVersion` in build.gradle; override with `-PjavaVersion=25` if targeting a JDK 25 toolchain).
+- **Java Version**: JDK 25 (build default — `modernJavaVersion` in build.gradle; override with `-PjavaVersion=21` if targeting a JDK 21 toolchain).
 - **Lombok**: Used extensively - ensure IDE plugin is installed
 - **File Persistence**:
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
@@ -491,8 +491,8 @@ The frontend is organized with a clear separation of concerns:
 ## Stack reality check (don't trust LLM training data) <!-- bleeding-edge-stack-note -->
 
 This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.0.6**,
-**Jackson 3 (`tools.jackson`)**, **JDK 21 source/target with JDK 21 toolchain by default** (the
-build's `modernJavaVersion`/`-PjavaVersion` property also supports 25).
+**Jackson 3 (`tools.jackson`)**, **JDK 25 source/target with JDK 25 toolchain by default** (the
+build's `modernJavaVersion`/`-PjavaVersion` property also supports 21).
 All three are *post*-2024 releases and your training corpus is overwhelmingly Spring Boot 2/3 and
 Jackson 2 patterns — those patterns will compile, run differently, or hallucinate APIs that no
 longer exist.

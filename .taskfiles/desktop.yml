@@ -9,7 +9,7 @@ vars:
   # Minimum Java major the bundled JRE must be. Keep in sync with build.gradle
   # `modernJavaVersion` - the app JAR is compiled for this, so an older runtime
   # fails at launch with UnsupportedClassVersionError. Enforced by jlink:verify.
-  REQUIRED_JAVA: "21"
+  REQUIRED_JAVA: "25"
 
   # Override via JPDFIUM_PLATFORMS env (csv of platform keys, or 'all').
   JPDFIUM_PLATFORMS:

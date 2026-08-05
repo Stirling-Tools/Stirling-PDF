@@ -256,7 +256,7 @@ PDF Elite follows a modern, modular architecture designed for performance and ex
 - **Icons**: Custom icon set + Lucide React
 
 ### Backend (Optional)
-- **Runtime**: Java 21 (default toolchain; build with `-PjavaVersion=25` to opt into 25)
+- **Runtime**: Java 25 (default toolchain; build with `-PjavaVersion=21` to opt into 21)
 - **Framework**: Spring Boot 4.0.6
 - **PDF Engine**: Apache PDFBox 3.0.0
 - **Office Integration**: LibreOffice 7.x
