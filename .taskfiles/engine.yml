@@ -102,12 +102,6 @@ tasks:
     desc: "Generate tool_models.py from Java OpenAPI spec (SwaggerDoc.json)"
     deps: [install, ":backend:swagger"]
     cmds:
-      - task: tool-models:_generate
-
-  tool-models:_generate:
-    internal: true
-    deps: [install]
-    cmds:
       - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py --io-output src/stirling/models/tool_io.py
     sources:
       - ../SwaggerDoc.json
