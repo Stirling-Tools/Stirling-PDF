@@ -9,7 +9,7 @@ interface AuthSignupPromptProps {
 
 /**
  * "Don't have an account? Sign up" row shown beneath the login form. The prompt
- * is muted; the action reads as a brand-coloured link.
+ * is muted; the action reads as a blue link so it pops.
  */
 export default function AuthSignupPrompt({ onSignUp }: AuthSignupPromptProps) {
   const { t } = useTranslation();
@@ -19,7 +19,7 @@ export default function AuthSignupPrompt({ onSignUp }: AuthSignupPromptProps) {
       <Button
         type="button"
         variant="quiet"
-        accent="brand"
+        accent="default"
         onClick={onSignUp}
         className="auth-signup-link"
       >
