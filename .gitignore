@@ -1,82 +1,82 @@
 ```
-# Dependencies
+# Gradle
 .gradle/
-node_modules/
-venv/
-.venv/
-__pycache__/
-
-# Build artifacts
 build/
-dist/
-target/
 
-# Logs and temp files
+# Dependencies
+node_modules/
+vendor/bundle/
+
+# Logs
 *.log
-*.tmp
 
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
-# Editors
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Python
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-
-# Java
-*.class
-*.jar
-*.war
-*.ear
-
-# Compiled
-*.o
-*.obj
-*.a
-*.lib
-*.dll
-*.so
-*.dylib
-*.exe
 
 # Coverage
 coverage/
 htmlcov/
 .coverage
 
-# Testing
-.mypy_cache/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage*
+.nox/
 .pytest_cache/
+.mypy_cache/
+
+# Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+jspm_packages/
+
+# Compiled
+*.class
+*.o
+*.a
+*.lib
+*.obj
+*.out
+*.dll
+*.so
+*.dylib
+*.exe
 
 # Archives
 *.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
 *.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
 *.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
+*.7z
+
+# Temporary
+*.tmp
+*.temp
+*~
 ```
