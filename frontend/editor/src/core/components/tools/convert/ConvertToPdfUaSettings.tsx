@@ -112,7 +112,7 @@ const ConvertToPdfUaSettings = ({
         <Text size="sm">
           {t(
             "convert.pdfUaAltTextNotice",
-            "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Run the accessibility report to see which images still need one.",
+            "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified.",
           )}
         </Text>
       </Alert>

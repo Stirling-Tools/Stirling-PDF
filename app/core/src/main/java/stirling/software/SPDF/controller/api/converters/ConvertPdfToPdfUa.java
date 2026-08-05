@@ -1,8 +1,12 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -20,9 +24,13 @@ import stirling.software.SPDF.service.ua.PdfUaConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.pdf.ua.PdfUaProfile;
 import stirling.software.common.pdf.ua.TaggingOptions;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 /**
@@ -43,25 +51,25 @@ public class ConvertPdfToPdfUa {
     private static final String HEADER_WARNINGS = "X-Stirling-UA-Warnings";
 
     /** Any line ending, so descriptions pasted from any platform parse the same. */
-    private static final java.util.regex.Pattern NEWLINE = java.util.regex.Pattern.compile("\\R");
+    private static final Pattern NEWLINE = Pattern.compile("\\R");
 
     private final PdfUaConversionService conversionService;
-    private final stirling.software.common.util.TempFileManager tempFileManager;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/ua",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a PDF to PDF/UA-1 or PDF/UA-2",
             description =
                     "Tags the document, marks decorative content as artifacts, embeds fonts and"
                             + " applies the document-level requirements of PDF/UA, then validates"
                             + " the result. A conformance declaration is written only if validation"
-                            + " passes, so the returned file never claims more than it delivers."
-                            + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<org.springframework.core.io.Resource> pdfToPdfUa(
-            @ModelAttribute PdfToPdfUaRequest request) throws IOException {
+                            + " passes, so the returned file never claims more than it delivers.")
+    public ResponseEntity<Resource> pdfToPdfUa(@ModelAttribute PdfToPdfUaRequest request)
+            throws IOException {
 
         MultipartFile input = request.getFileInput();
         if (input == null || input.isEmpty()) {
@@ -101,15 +109,14 @@ public class ConvertPdfToPdfUa {
         // Streamed from a managed temp file rather than returned as a heap byte[], so a large
         // conversion does not hold another whole copy of the document until Spring writes it.
         String suffix = outcome.declared() ? "_pdfua" + profile.part() : "_tagged";
-        stirling.software.common.util.TempFile tempOut =
-                tempFileManager.createManagedTempFile(".pdf");
+        TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
         try {
-            java.nio.file.Files.write(tempOut.getPath(), outcome.pdfBytes());
+            Files.write(tempOut.getPath(), outcome.pdfBytes());
         } catch (IOException e) {
             tempOut.close();
             throw e;
         }
-        ResponseEntity<org.springframework.core.io.Resource> response =
+        ResponseEntity<Resource> response =
                 WebResponseUtils.pdfFileToWebResponse(tempOut, stem + suffix + ".pdf");
 
         return ResponseEntity.status(response.getStatusCode())
@@ -136,7 +143,7 @@ public class ConvertPdfToPdfUa {
         if (raw == null || raw.isBlank()) {
             return Map.of();
         }
-        Map<String, String> parsed = new java.util.LinkedHashMap<>();
+        Map<String, String> parsed = new LinkedHashMap<>();
         for (String line : NEWLINE.split(raw)) {
             int split = line.indexOf('=');
             if (split <= 0) {

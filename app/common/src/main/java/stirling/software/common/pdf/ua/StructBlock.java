@@ -2,6 +2,7 @@ package stirling.software.common.pdf.ua;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -91,7 +92,7 @@ public class StructBlock {
     }
 
     /** Depth-first walk over this block and all descendants. */
-    public void visit(java.util.function.Consumer<StructBlock> visitor) {
+    public void visit(Consumer<StructBlock> visitor) {
         visitor.accept(this);
         for (StructBlock child : children) {
             child.visit(visitor);

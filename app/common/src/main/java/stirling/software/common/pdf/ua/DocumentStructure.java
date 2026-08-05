@@ -2,6 +2,7 @@ package stirling.software.common.pdf.ua;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -38,7 +39,7 @@ public class DocumentStructure {
         }
     }
 
-    public void visit(java.util.function.Consumer<StructBlock> visitor) {
+    public void visit(Consumer<StructBlock> visitor) {
         blocks.forEach(block -> block.visit(visitor));
     }
 

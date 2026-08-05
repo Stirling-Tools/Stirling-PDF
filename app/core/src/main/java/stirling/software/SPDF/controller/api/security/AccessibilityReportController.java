@@ -18,6 +18,8 @@ import stirling.software.SPDF.service.ua.AccessibilityAuditService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.pdf.ua.PdfUaProfile;
 import stirling.software.common.util.ExceptionUtils;
 
@@ -29,12 +31,13 @@ public class AccessibilityReportController {
 
     private final AccessibilityAuditService auditService;
 
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Report a document's accessibility standing",
             description =
                     "Validates the document against PDF/UA and reports what fails, which failures"
                             + " can be fixed automatically, and which checks still need a person."
-                            + " Does not modify the file. Input:PDF Output:JSON Type:SISO")
+                            + " Does not modify the file.")
     @AutoJobPostMapping(
             value = "/accessibility-report",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,

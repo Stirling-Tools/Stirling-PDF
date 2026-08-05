@@ -124,6 +124,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
             )
         ],
     ),
+    ToolEndpoint.PDF_TO_UA: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_VECTOR: ToolIOSpec(
         accepts=[ToolFormat.PDF],
         produces=ToolFormat.IMAGE,
@@ -236,6 +237,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.SCANNER_EFFECT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.UNLOCK_PDF_FORMS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.UPDATE_METADATA: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.ACCESSIBILITY_REPORT: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.JSON, arity=ToolArity.SISO
+    ),
     ToolEndpoint.ADD_PASSWORD: ToolIOSpec(
         accepts=[ToolFormat.PDF],
         produces=ToolFormat.PDF_ENCRYPTED,

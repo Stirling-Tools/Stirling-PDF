@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
@@ -170,7 +171,7 @@ public class PdfUaConversionService {
             }
             String message = cause.getMessage();
             if (message != null) {
-                String lower = message.toLowerCase(java.util.Locale.ROOT);
+                String lower = message.toLowerCase(Locale.ROOT);
                 if (lower.contains("password") || lower.contains("decrypt")) {
                     return true;
                 }

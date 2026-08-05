@@ -1,11 +1,15 @@
 package stirling.software.common.pdf.ua;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
@@ -332,8 +336,7 @@ public class LayoutAnalyzer {
 
         // Identity set, not List.contains: TextLineInfo is a record whose equals walks its word
         // list, so a linear scan per line is quadratic with a deep comparison inside it.
-        java.util.Set<TextLineInfo> marginSet =
-                java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        java.util.Set<TextLineInfo> marginSet = Collections.newSetFromMap(new IdentityHashMap<>());
         marginSet.addAll(marginArtifacts);
         List<TextLineInfo> body =
                 page.lines().stream()
@@ -382,7 +385,7 @@ public class LayoutAnalyzer {
         // Text drawn inside a form XObject is attributed to the Do that invoked it, so that
         // operator
         // is already tagged as prose. Emitting a Figure for it too would double-claim the content.
-        java.util.Set<Integer> claimed = new java.util.HashSet<>();
+        Set<Integer> claimed = new HashSet<>();
         for (StructBlock block : blocks) {
             block.visit(
                     node ->
@@ -764,12 +767,12 @@ public class LayoutAnalyzer {
      * diagram or a vector logo, all of which carry meaning and need a description. Thin paths are
      * rules and table borders, and a short run is ornament.
      */
-    private static java.util.Set<Integer> vectorFigureOrdinals(
+    private static Set<Integer> vectorFigureOrdinals(
             PageContent page, java.util.Set<Integer> claimed) {
         // Text sitting inside the region is the tell. A chart's plot area is mostly empty; shaded
         // table rows and highlight boxes sit behind the very text they decorate. Without this,
         // every table with filled cell backgrounds demanded alternative text for its shading.
-        java.util.Set<Integer> result = new java.util.HashSet<>();
+        Set<Integer> result = new HashSet<>();
         List<MarkableOp> run = new ArrayList<>();
         BBox extent = BBox.EMPTY;
 

@@ -1,6 +1,7 @@
 package stirling.software.SPDF.service.ua;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -185,7 +186,7 @@ public class FontEmbeddingService {
     private static long contentBytes(PDDocument document) {
         long total = 0;
         for (PDPage page : document.getPages()) {
-            try (java.io.InputStream in = page.getContents()) {
+            try (InputStream in = page.getContents()) {
                 if (in != null) {
                     byte[] buffer = new byte[8192];
                     int read;
