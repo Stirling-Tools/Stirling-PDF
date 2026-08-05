@@ -16,6 +16,9 @@ interface InsertAtModule {
   ) => boolean;
 }
 
+/** One warning per session, not one per apply() - a drag can fire dozens. */
+let warnedMissingInsertAt = false;
+
 /**
  * Re-order a text run or image within its page's content-stream stack.
  * PDF's painter model means later objects render on top of earlier
@@ -23,7 +26,7 @@ interface InsertAtModule {
  * object list. The op uses `FPDFPage_RemoveObject` + the newer
  * `FPDFPage_InsertObjectAtIndex` binding (when available). If the
  * binding isn't exposed by this PDFium build the command becomes a
- * no-op (a diagnostic warning is logged on each attempt).
+ * no-op (a diagnostic warning is logged once per session).
  *
  * Merged/paragraph runs are backed by MULTIPLE page objects; the whole
  * member group moves as a contiguous block (relative paint order kept).
@@ -59,7 +62,8 @@ export class ChangeZOrderCommand implements Command {
     const m = doc.module;
     const ext = m as unknown as InsertAtModule;
     if (!ext.FPDFPage_InsertObjectAtIndex) {
-      if (typeof console !== "undefined") {
+      if (typeof console !== "undefined" && !warnedMissingInsertAt) {
+        warnedMissingInsertAt = true;
         console.warn(
           "[v2.z-order] FPDFPage_InsertObjectAtIndex unavailable - ChangeZOrderCommand is a no-op for this PDFium build",
         );

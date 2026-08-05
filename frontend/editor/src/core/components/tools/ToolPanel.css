@@ -11,11 +11,20 @@
 
 .tool-panel {
   position: relative;
+  background: var(--c-surface);
   transition:
     width 0.3s ease,
     max-width 0.3s ease;
   view-transition-name: tool-rail;
   user-select: none;
+}
+
+.tool-panel--floating {
+  margin: var(--nav-gutter) var(--nav-gutter) var(--nav-gutter) 0;
+  height: calc(100vh - (var(--nav-gutter) * 2));
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-nav);
 }
 
 .tool-panel__collapsed-strip {
@@ -151,8 +160,21 @@
   box-sizing: border-box;
 }
 
-.tool-panel__compact-header .tool-panel__expand-btn {
+.tool-panel__compact-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.tool-panel__compact-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .tool-panel__compact-header-search {

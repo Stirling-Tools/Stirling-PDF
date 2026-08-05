@@ -559,7 +559,18 @@ public class PdfTextEditorV2CharcodeController {
         } else {
             key = sha256Hex(pdfBytes) + "|p" + pageIndex + "|c|" + locatorChar;
         }
-        return REVERSE_MAP_CACHE.computeIfAbsent(key, k -> computeReverseUnicodeMap(font));
+        // Compound get/put under the map's own monitor. The 0..0xFFFF probe runs OUTSIDE the
+        // lock so one slow build can't block every other request on the shared cache.
+        java.util.Map<String, Long> cached;
+        synchronized (REVERSE_MAP_CACHE) {
+            cached = REVERSE_MAP_CACHE.get(key);
+        }
+        if (cached != null) return cached;
+        java.util.Map<String, Long> built = computeReverseUnicodeMap(font);
+        synchronized (REVERSE_MAP_CACHE) {
+            java.util.Map<String, Long> raced = REVERSE_MAP_CACHE.putIfAbsent(key, built);
+            return raced != null ? raced : built;
+        }
     }
 
     /** Lowercase hex SHA-256 of the PDF bytes; used as the reverse-map cache key. */

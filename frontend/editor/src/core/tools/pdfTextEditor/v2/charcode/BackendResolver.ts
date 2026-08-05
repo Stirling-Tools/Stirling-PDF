@@ -29,7 +29,10 @@ import { getCachedFontProgramSha256 } from "@app/tools/pdfTextEditor/v2/charcode
  * See `PdfTextEditorV2CharcodeController.java`.
  */
 
-/** Cache: per (fontPtr, char) → charcode integer (or null = missing). */
+/**
+ * Cache: per (fontPtr, char) → charcode integer (or null = missing). Browser-side
+ * and per-tab; cleared per document by `resetBackendResolverCaches`.
+ */
 const charCache = new Map<string, number | null>();
 
 /**
