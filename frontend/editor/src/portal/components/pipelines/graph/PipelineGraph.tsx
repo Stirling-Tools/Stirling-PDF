@@ -1,4 +1,6 @@
 import {
+  useLayoutEffect,
+  useRef,
   useState,
   type KeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -18,6 +20,7 @@ import {
   NODE_HEIGHT,
   NODE_WIDTH,
   layoutChain,
+  reorderMany,
   stepIndexOf,
 } from "@portal/components/pipelines/graph/pipelineLayout";
 import { useStepDraggable } from "@portal/components/pipelines/graph/useChainDragDrop";
@@ -109,6 +112,22 @@ export function PipelineGraph({
     stepCount: steps.length,
   });
 
+  const graphRef = useRef<HTMLDivElement | null>(null);
+  // A keyboard reorder renumbers the nodes, so the focused card is no longer under the cursor's
+  // hand: without moving focus to where the step landed, a second Alt+Arrow would act on whatever
+  // now sits at the old position. Set by the handler, applied once the new order has rendered.
+  const focusStepAfterRender = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const position = focusStepAfterRender.current;
+    if (position === null) return;
+    focusStepAfterRender.current = null;
+    graphRef.current
+      ?.querySelector<HTMLElement>(
+        `[data-step-index="${position}"] .sui-node-card__select`,
+      )
+      ?.focus();
+  });
+
   // A wire carries the warning belonging to the node it arrives at.
   const arrivalWarning = (nodeId: string): ChainWarning | undefined => {
     if (nodeId === "output") return output?.inputWarning;
@@ -158,11 +177,41 @@ export function PipelineGraph({
   }
 
   /**
+   * Move the selected step(s) one slot along the chain - the keyboard alternative to dragging, which
+   * pointer-only users cannot reach. Alt with an arrow, so a plain arrow is still free for anything
+   * that later wants it. The moved block stays selected and takes focus with it, so it can be walked
+   * several slots in a row.
+   */
+  function moveSelection(direction: "up" | "down"): boolean {
+    if (chosen.length === 0) return false;
+    const min = chosen[0];
+    const max = chosen[chosen.length - 1];
+    // reorderMany's slot is against the original chain: a step's own neighbouring slots are no-ops,
+    // so up aims one before the block and down one past it.
+    const slot = direction === "up" ? min - 1 : max + 2;
+    const order = reorderMany(steps.length, chosen, slot);
+    if (order === null) return false; // already at that end of the chain
+    focusStepAfterRender.current = order.indexOf(min);
+    onReorderSteps(order, chosen);
+    return true;
+  }
+
+  /**
    * Delete removes whatever is selected: every selected step, or an end of the chain (which returns
-   * its row to a placeholder, exactly as that node's X does). Scoped to the graph, so typing in the
-   * inspector's fields is never intercepted.
+   * its row to a placeholder, exactly as that node's X does). Alt + Up/Down reorders the selection.
+   * Scoped to the graph, so typing in the inspector's fields is never intercepted.
    */
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (
+      event.altKey &&
+      (event.key === "ArrowUp" || event.key === "ArrowDown")
+    ) {
+      // Ends do not reorder (chosen is empty for them), so this only fires for a step selection.
+      if (moveSelection(event.key === "ArrowUp" ? "up" : "down")) {
+        event.preventDefault();
+      }
+      return;
+    }
     if (event.key !== "Delete" && event.key !== "Backspace") return;
     if (selected === "input" || selected === "output") {
       event.preventDefault();
@@ -176,6 +225,7 @@ export function PipelineGraph({
 
   return (
     <div
+      ref={graphRef}
       className="portal-graph"
       onKeyDown={onKeyDown}
       onClick={onBackgroundClick}

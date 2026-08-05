@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   fireEvent,
@@ -7,6 +8,7 @@ import {
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import {
   PipelineGraph,
+  type GraphSelection,
   type PipelineGraphProps,
 } from "@portal/components/pipelines/graph/PipelineGraph";
 
@@ -291,6 +293,98 @@ describe("PipelineGraph", () => {
     fireEvent.keyDown(screen.getByText("OCR"), { key: "Delete" });
     expect(handlers.onRemoveSteps).not.toHaveBeenCalled();
     expect(handlers.onRemoveEnd).not.toHaveBeenCalled();
+  });
+
+  it("moves the selected step down the chain with Alt+ArrowDown", () => {
+    const handlers = renderGraph({ selected: { steps: [0] } });
+    fireEvent.keyDown(screen.getByText("OCR"), {
+      key: "ArrowDown",
+      altKey: true,
+    });
+    // [OCR, Redact] with OCR moved down -> [Redact, OCR]; the dragged step is the reorder payload.
+    expect(handlers.onReorderSteps).toHaveBeenCalledWith([1, 0], [0]);
+  });
+
+  it("moves the selected step up the chain with Alt+ArrowUp", () => {
+    const handlers = renderGraph({ selected: { steps: [1] } });
+    fireEvent.keyDown(screen.getByText("Redact"), {
+      key: "ArrowUp",
+      altKey: true,
+    });
+    // [OCR, Redact] with Redact moved up -> [Redact, OCR].
+    expect(handlers.onReorderSteps).toHaveBeenCalledWith([1, 0], [1]);
+  });
+
+  it("moves a multi-step selection together, keeping it as the payload", () => {
+    const handlers = renderGraph({
+      selected: { steps: [0, 1] },
+      steps: [{ label: "OCR" }, { label: "Redact" }, { label: "Compress" }],
+    });
+    fireEvent.keyDown(screen.getByText("OCR"), {
+      key: "ArrowDown",
+      altKey: true,
+    });
+    // [OCR, Redact, Compress] with [OCR, Redact] moved down -> [Compress, OCR, Redact].
+    expect(handlers.onReorderSteps).toHaveBeenCalledWith([2, 0, 1], [0, 1]);
+  });
+
+  it("does not reorder past the end of the chain", () => {
+    const handlers = renderGraph({ selected: { steps: [0] } });
+    fireEvent.keyDown(screen.getByText("OCR"), {
+      key: "ArrowUp",
+      altKey: true,
+    });
+    expect(handlers.onReorderSteps).not.toHaveBeenCalled();
+  });
+
+  it("leaves a bare arrow alone, so only the modifier reorders", () => {
+    const handlers = renderGraph({ selected: { steps: [0] } });
+    fireEvent.keyDown(screen.getByText("OCR"), { key: "ArrowDown" });
+    expect(handlers.onReorderSteps).not.toHaveBeenCalled();
+  });
+
+  it("carries focus to the moved step so it can be walked several slots", () => {
+    // A real reorder renumbers the nodes, so focus has to follow the step or a second key press
+    // would act on whatever now sits where it started. Drive it through a stateful host.
+    function Host() {
+      const [steps, setSteps] = useState([
+        { label: "OCR" },
+        { label: "Redact" },
+        { label: "Compress" },
+      ]);
+      const [selected, setSelected] = useState<GraphSelection>({ steps: [0] });
+      return (
+        <PipelineGraph
+          input={{ label: "Claims intake" }}
+          output={{ label: "Archive bucket" }}
+          steps={steps}
+          selected={selected}
+          onSelect={setSelected}
+          onAddEnd={vi.fn()}
+          onRemoveEnd={vi.fn()}
+          onInsertStep={vi.fn()}
+          onRemoveSteps={vi.fn()}
+          onReorderSteps={(order, moved) => {
+            setSteps((current) => order.map((i) => current[i]));
+            const landed = order
+              .map((original, position) => ({ original, position }))
+              .filter(({ original }) => moved.includes(original))
+              .map(({ position }) => position);
+            setSelected({ steps: landed });
+          }}
+        />
+      );
+    }
+    render(<Host />);
+    fireEvent.keyDown(screen.getByText("OCR"), {
+      key: "ArrowDown",
+      altKey: true,
+    });
+    // OCR now sits at position 1, and its card's select button holds focus.
+    expect(document.activeElement?.textContent).toContain("OCR");
+    expect(
+      document.activeElement?.closest("[data-step-index]"),
+    ).toHaveAttribute("data-step-index", "1");
   });
 
   describe("an end the pipeline has not asked for yet", () => {
