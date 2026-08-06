@@ -35,6 +35,7 @@ import {
   removePolicy,
 } from "@app/services/policyBackend";
 import { reorderPolicies as reorderBackendPolicies } from "@app/services/policyApi";
+import { pinClassificationLast } from "@app/data/policyCategories";
 import type { PolicyToStore } from "@app/services/policyPipeline";
 import type {
   PoliciesByCategory,
@@ -326,9 +327,12 @@ export function usePolicies() {
    * first for an instant re-render; the next reconcile re-reads the server order.
    */
   const reorderPolicies = useCallback((orderedCategoryIds: string[]) => {
-    persistPolicyOrder(orderedCategoryIds);
+    // Pin classification last so the persisted/server order matches execution
+    // (it always runs last — see usePolicyAutoRun).
+    const ordered = pinClassificationLast(orderedCategoryIds);
+    persistPolicyOrder(ordered);
     const current = loadPolicies();
-    const backendIds = orderedCategoryIds
+    const backendIds = ordered
       .map((categoryId) => current[categoryId]?.backendId)
       .filter((id): id is string => !!id);
     if (backendIds.length > 0) {
