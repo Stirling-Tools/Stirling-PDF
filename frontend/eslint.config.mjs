@@ -258,12 +258,7 @@ export default defineConfig(
   // can't represent. Exempt ONLY the raw-<button> rule; the Mantine import bans
   // stay. Migrate these alongside the procurement buttons.
   {
-    files: [
-      "editor/src/portal/components/EditorStatusCard.tsx",
-      "editor/src/portal/components/SetupChecklist.tsx",
-      "editor/src/portal/components/WelcomeBanner.tsx",
-      "editor/src/portal/components/DownloadEditorModal.tsx",
-    ],
+    files: ["editor/src/portal/components/DownloadEditorModal.tsx"],
     rules: {
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
     },
