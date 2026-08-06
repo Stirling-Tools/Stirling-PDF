@@ -761,6 +761,7 @@ public class UserController {
                 List<SessionInformation> sessionsInformation =
                         sessionRegistry.getAllSessions(principal, false);
                 switch (principal) {
+                    case null -> {}
                     case UserDetails detailsUser -> userNameP = detailsUser.getUsername();
                     case OAuth2User oAuth2User -> userNameP = oAuth2User.getName();
                     case CustomSaml2AuthenticatedPrincipal saml2User ->

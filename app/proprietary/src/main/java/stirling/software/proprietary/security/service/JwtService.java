@@ -390,7 +390,8 @@ public class JwtService implements JwtServiceInterface {
 
             byte[] headerBytes = Base64.getUrlDecoder().decode(tokenParts[0]);
             Map<String, Object> header =
-                    objectMapper.readValue(headerBytes, new TypeReference<>() {});
+                    objectMapper.readValue(
+                            headerBytes, new TypeReference<Map<String, Object>>() {});
             Object keyId = header.get("kid");
             return keyId instanceof String ? (String) keyId : null;
         } catch (IllegalArgumentException e) {

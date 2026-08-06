@@ -635,6 +635,7 @@ public class UserService implements UserServiceInterface {
             for (SessionInformation sessionsInformation :
                     sessionRegistry.getAllSessions(principal, false)) {
                 switch (principal) {
+                    case null -> {}
                     case UserDetails detailsUser -> usernameP = detailsUser.getUsername();
                     case OAuth2User oAuth2User -> usernameP = oAuth2User.getName();
                     case CustomSaml2AuthenticatedPrincipal saml2User ->
