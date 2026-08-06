@@ -85,7 +85,6 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
   const switchOnAction = isLeader ? (
     <Button
       variant="primary"
-      accent="premium"
       onClick={flow.status === "none" ? openActivation : resumeBundle}
       disabled={wallet.teamId == null}
     >

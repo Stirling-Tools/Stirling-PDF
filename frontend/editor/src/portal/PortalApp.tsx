@@ -30,8 +30,6 @@ function ThemedSuiProvider({ children }: { children: ReactNode }) {
  * self-hosted mounts the account-link layer, SaaS does not.
  */
 export function PortalApp() {
-  // One client for the portal's lifetime. Sits above the router so its cache
-  // survives view navigation. Cheap and inert when no query hooks are mounted.
   const [queryClient] = useState(createPortalQueryClient);
   return (
     <QueryClientProvider client={queryClient}>
