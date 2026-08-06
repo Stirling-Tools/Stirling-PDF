@@ -557,7 +557,7 @@
    page; when the shared-component move lands, these dedupe to one stylesheet. */
 .scc {
   --scc-accent: var(--c-primary);
-  --scc-accent-text: var(--c-primary);
+  --scc-accent-text: var(--c-accent-text);
   --scc-accent-soft: color-mix(in srgb, var(--c-primary) 12%, transparent);
   --scc-accent-border: color-mix(in srgb, var(--c-primary) 25%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
@@ -572,7 +572,7 @@
   margin-top: 0.75rem;
 }
 [data-theme="dark"] .scc {
-  --scc-accent-text: var(--c-primary);
+  --scc-accent-text: var(--c-accent-text);
   --scc-accent-soft: color-mix(in srgb, var(--c-primary) 16%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
   --scc-chip-border: var(--c-border);
