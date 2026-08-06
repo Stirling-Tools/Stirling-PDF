@@ -25,6 +25,14 @@
   --color-text-on-accent: #ffffff;
 
   /* Brand / status */
+  --color-blue: var(--p-blue-500);
+  --color-blue-light: color-mix(in srgb, var(--p-blue-500) 13%, var(--p-white));
+  --color-blue-border: color-mix(
+    in srgb,
+    var(--p-blue-500) 40%,
+    var(--p-white)
+  );
+  --color-blue-dark: var(--p-blue-700);
   --color-purple: var(--p-blue-400);
   --color-purple-light: color-mix(
     in srgb,
@@ -188,6 +196,10 @@
   /* Bumped from #475569 (fails AA) — see light-theme note. */
   --color-text-placeholder: var(--p-gray-600);
 
+  --color-blue: var(--p-blue-500);
+  --color-blue-light: var(--p-zinc-750);
+  --color-blue-border: var(--p-zinc-600);
+  --color-blue-dark: var(--p-blue-400);
   --color-purple: var(--p-blue-400);
   --color-purple-light: var(--p-zinc-750);
   --color-purple-border: var(--p-zinc-600);

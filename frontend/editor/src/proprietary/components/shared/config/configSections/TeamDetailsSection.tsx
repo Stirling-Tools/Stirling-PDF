@@ -484,7 +484,9 @@ export default function TeamDetailsSection({
                               maw={200}
                               style={{
                                 lineHeight: 1.3,
-                                opacity: user.enabled ? 1 : 0.6,
+                                color: user.enabled
+                                  ? undefined
+                                  : "var(--c-text-muted)",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
