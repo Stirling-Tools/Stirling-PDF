@@ -14,12 +14,12 @@ import { withThemeByDataAttribute } from "@storybook/addon-themes";
 void React;
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TierProvider, type Tier } from "@portal/contexts/TierContext";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
-import { UIProvider } from "@portal/contexts/UIContext";
-import { SuiProvider } from "@portal/theme/SuiProvider";
-import { handlers } from "@portal/mocks/handlers";
+import { TierProvider, type Tier } from "@processor/contexts/TierContext";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
+import { UIProvider } from "@processor/contexts/UIContext";
+import { SuiProvider } from "@processor/theme/SuiProvider";
+import { handlers } from "@processor/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -36,7 +36,7 @@ import "@core/tokens/base.css";
 // async fetch (Storybook has no backend to serve /locales/). t(key) then renders
 // the shipped copy (e.g. "No sources connected yet") rather than the raw key.
 const localeModules = import.meta.glob<string>(
-  "../editor/public/locales/*/translation.toml",
+  "../public/locales/*/translation.toml",
   { query: "?raw", import: "default", eager: true },
 );
 

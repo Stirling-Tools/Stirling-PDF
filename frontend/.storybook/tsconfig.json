@@ -1,15 +1,15 @@
 {
   // Extends the same tsconfig main.ts feeds to vite-tsconfig-paths, so the
   // alias map can't drift from the one Storybook actually bundles with, and
-  // stories are checked under that resolution (@app/* = proprietary -> core).
+  // stories are checked under that resolution (@editor/* = proprietary -> core).
   // The per-layer typecheck projects also cover story files, but each resolves
-  // @app/* its own way - not the way the single Storybook build renders them.
-  "extends": "../editor/tsconfig.proprietary.vite.json",
+  // @editor/* its own way - not the way the single Storybook build renders them.
+  "extends": "../tsconfig.proprietary.vite.json",
   "exclude": [],
   "include": [
     "./**/*",
-    "../editor/src/global.d.ts",
-    "../editor/src/**/*.stories.ts",
-    "../editor/src/**/*.stories.tsx"
+    "../src/global.d.ts",
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.tsx"
   ]
 }
