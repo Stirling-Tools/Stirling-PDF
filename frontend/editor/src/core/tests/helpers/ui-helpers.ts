@@ -87,7 +87,12 @@ export async function uploadFiles(
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
   await page.getByTestId("files-button").click();
-  await page.locator('[data-testid="file-input"]').setInputFiles(paths);
+  // Scope to the sidebar's own input. FileManager mounts a second
+  // `file-input` (HiddenFileInput) with the My Files view, so the unscoped
+  // locator is a strict-mode violation the moment both are on the page.
+  await page
+    .locator('[data-sidebar="file-sidebar"] [data-testid="file-input"]')
+    .setInputFiles(paths);
   // Sync point: wait until at least one file lands in the sidebar's file
   // list. The list only renders once `addFiles` has resolved (which awaits
   // the IDB write). Use first() so multi-file uploads pass too.
@@ -140,9 +145,20 @@ export async function runToolAndWaitForReview(
  * Open the global Settings dialog. Returns the dialog locator so callers can
  * scope further queries to it.
  */
+/**
+ * The settings modal specifically. `.mantine-Modal-content` on its own also
+ * matches the unsaved-changes confirm (UnsavedChangesContext) and any other
+ * open Mantine modal, so `.first()` picks by DOM order rather than identity.
+ */
+export function settingsDialog(page: Page): Locator {
+  return page.locator(
+    '.mantine-Modal-content:has([data-tour="settings-modal"])',
+  );
+}
+
 export async function openSettings(page: Page): Promise<Locator> {
   await page.locator('[data-testid="config-button"]').first().click();
-  const dialog = page.locator(".mantine-Modal-content").first();
+  const dialog = settingsDialog(page);
   await expect(dialog).toBeVisible({ timeout: 5_000 });
   return dialog;
 }
@@ -152,11 +168,14 @@ export async function openSettings(page: Page): Promise<Locator> {
  * dialog is fully dismissed before returning.
  */
 export async function closeSettings(page: Page): Promise<void> {
-  const closeBtn = page.locator('[aria-label="Close"]').first();
+  const dialog = settingsDialog(page);
+  // Scope the Close control to the settings modal: Modal, Drawer and
+  // SettingsShell all render their own `aria-label="Close"`, so an unscoped
+  // `.first()` can click a different dialog's close button entirely.
+  const closeBtn = dialog.locator('[aria-label="Close"]').first();
+  await expect(closeBtn).toBeVisible({ timeout: 5_000 });
   await closeBtn.click();
-  await expect(page.locator(".mantine-Modal-content").first()).not.toBeVisible({
-    timeout: 5_000,
-  });
+  await expect(dialog).toBeHidden({ timeout: 5_000 });
 }
 
 /**
