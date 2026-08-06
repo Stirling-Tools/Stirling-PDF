@@ -76,6 +76,10 @@ export const mantineTheme = createTheme({
   // Primary color
   primaryColor: "primary",
 
+  // Pinned: Mantine 9 changed the default from sm to md, which would restyle
+  // every component that does not set an explicit radius.
+  defaultRadius: "sm",
+
   // Color palette
   colors: {
     primary,

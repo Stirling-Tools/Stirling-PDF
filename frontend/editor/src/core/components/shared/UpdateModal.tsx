@@ -650,7 +650,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                           )}
                         </Group>
                       </Group>
-                      <Collapse in={isExpanded}>
+                      <Collapse expanded={isExpanded}>
                         <Box
                           px="sm"
                           pb="sm"

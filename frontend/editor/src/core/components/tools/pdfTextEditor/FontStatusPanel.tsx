@@ -125,7 +125,7 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
           </Group>
         </Flex>
 
-        <Collapse in={expanded}>
+        <Collapse expanded={expanded}>
           <Stack gap={4} mt={4}>
             {/* Font Details */}
             <Box>

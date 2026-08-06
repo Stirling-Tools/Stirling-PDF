@@ -298,7 +298,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
             )}
           </Button>
 
-          <Collapse in={showAdvanced}>
+          <Collapse expanded={showAdvanced}>
             <Stack gap="sm">
               <TextInput
                 label={t(

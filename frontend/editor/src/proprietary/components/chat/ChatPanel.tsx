@@ -286,7 +286,7 @@ function CompletedProgressLogDropdown({
           </Text>
         </Group>
       </Button>
-      <Collapse in={expanded}>
+      <Collapse expanded={expanded}>
         <ol className="chat-completed-log__tools">
           {toolSteps.map((step, i) => {
             const endpoint = step.tool ?? "";

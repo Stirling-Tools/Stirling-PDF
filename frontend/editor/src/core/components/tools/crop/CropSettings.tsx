@@ -154,7 +154,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   if (!selectedStub || !pdfBounds) {
     return (
       <Center style={{ height: "200px" }}>
-        <Text color="dimmed">
+        <Text c="dimmed">
           {t("crop.noFileSelected", "Select a PDF file to begin cropping")}
         </Text>
       </Center>

@@ -186,7 +186,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
       case "period-selection":
         return (
           <Stack gap="lg" style={{ padding: "1rem 2rem" }}>
-            <Grid gutter="xl" style={{ marginTop: "1rem" }}>
+            <Grid gap="xl" style={{ marginTop: "1rem" }}>
               {/* Monthly Option */}
               <Grid.Col span={6}>
                 <Paper

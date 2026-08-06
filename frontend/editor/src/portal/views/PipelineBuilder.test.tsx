@@ -218,7 +218,7 @@ describe("PipelineBuilder", () => {
   // Choose the given source in the (pre-seeded) input row's dropdown.
   async function pickInputSource(sourceName: string) {
     fireEvent.click(
-      await screen.findByRole("textbox", {
+      await screen.findByRole("combobox", {
         name: "portal.pipelines.builder.inputSource",
       }),
     );
@@ -231,7 +231,7 @@ describe("PipelineBuilder", () => {
     // The input row is a fixed part of the form: its source dropdown is present from the
     // start, and there is nothing to add or remove.
     expect(
-      await screen.findAllByRole("textbox", {
+      await screen.findAllByRole("combobox", {
         name: "portal.pipelines.builder.inputSource",
       }),
     ).toHaveLength(1);
