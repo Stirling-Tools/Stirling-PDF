@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import { playwright } from "@vitest/browser-playwright";
 
 /**
  * Dedicated Vitest config that turns every story into a browser test: it mounts
@@ -65,7 +66,8 @@ export default defineConfig({
           browser: {
             enabled: true,
             headless: true,
-            provider: "playwright",
+            // vitest 4 dropped the string provider form; providers ship as packages now.
+            provider: playwright(),
             instances: [{ browser: "chromium" }],
           },
           setupFiles: [resolve(__dirname, "vitest.setup.ts")],
