@@ -23,32 +23,16 @@ public record RecordFailure(
         String detail) {
 
     /**
-     * Anything shaped like a file name: a run of name characters ending in one to three short
-     * extensions. Matched by shape rather than an extension allowlist, so a newly supported format
-     * needs no maintenance here.
+     * Anything shaped like a file name: name characters ending in one to three short extensions.
+     * Matched by shape, so a newly supported format needs no maintenance here.
      *
-     * <p>Covers what document names actually look like: brackets, {@code %} escapes, ampersands and
-     * apostrophes, non-ASCII scripts, and stacked extensions such as {@code .tar.gz}.
+     * <p>Best-effort, and deliberately so in one place: spaces are crossed only when the name is
+     * delimited, because an undelimited one cannot be told from the sentence around it. {@code
+     * RecordFailurePrivacyTest} pins exactly what is and is not caught.
      *
-     * <p>Spaces are only crossed when the name is delimited, by a quote, an opening bracket or a
-     * path separator. An undelimited spaced name is indistinguishable from the sentence around it,
-     * so {@code Failed on Q3 Layoff List.pdf} keeps its leading words rather than have the whole
-     * message swallowed. That is the deliberate limit of this pass.
-     *
-     * <p>An extension that is all digits is not one, which keeps version strings like {@code
-     * v2.14.2} intact, and the surrounding lookarounds keep it off dotted identifiers so {@code
-     * java.lang.Foo} survives a stack trace. Known cost: {@code Foo.java:120} becomes {@code
-     * <file>:120}.
-     *
-     * <p>Best-effort even so. The engine's own messages never include a name; this only tidies what
-     * downstream tools embed.
-     *
-     * <p>TODO: harden this so a document name cannot reach the server at all, rather than being
-     * scrubbed once it has. Matching prose by shape will always leave gaps like the undelimited
-     * spaced name above. The durable fix is to stop forwarding a downstream tool's message
-     * verbatim: keep our own wording plus the error code, and only pass through a body whose kind
-     * we classify and whose text we therefore know carries no name. Accepted as a known limitation
-     * for now.
+     * <p>TODO: store the parsed Problem Details fields rather than the stringified exception, so
+     * this is a backstop instead of the mechanism. We own the producer; we should not be reading
+     * our own structured data back out of prose.
      */
     private static final Pattern FILE_PATH_OR_NAME =
             Pattern.compile(
