@@ -43,7 +43,7 @@ jobs:
         # ::warning:: annotations + a job summary; never fails the job.
         if: always()
         working-directory: frontend
-        run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
+        run: npx tsx scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
       - name: Upload Playwright report

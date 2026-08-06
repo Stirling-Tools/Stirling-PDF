@@ -93,7 +93,7 @@ jobs:
         # ::warning:: annotations + a job summary; never fails the job.
         if: always()
         working-directory: frontend
-        run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
+        run: npx tsx scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
       - name: Generate JaCoCo report from e2e:live .exec
@@ -230,8 +230,8 @@ jobs:
         run: |
           echo "::group::Playwright output dirs"
           # Playwright anchors its default outputDir + HTML report to the
-          # nearest package.json, which is frontend/ (frontend/editor has
-          # none), so artifacts land under frontend/, not frontend/editor/.
+          # nearest package.json, which is frontend/ (frontend has
+          # none), so artifacts land under frontend/, not frontend/.
           ls -la frontend/playwright-report 2>/dev/null \
             || echo "no playwright-report at frontend/"
           ls -la frontend/test-results 2>/dev/null \
@@ -246,7 +246,7 @@ jobs:
           # test-results/ holds the per-test trace.zip (with browser console
           # logs) + screenshots/video; playwright-report/ is the HTML report.
           # Both live under frontend/ (Playwright anchors them to the nearest
-          # package.json, which is frontend/; frontend/editor has none).
+          # package.json, which is frontend/; frontend has none).
           path: |
             frontend/playwright-report/
             frontend/test-results/

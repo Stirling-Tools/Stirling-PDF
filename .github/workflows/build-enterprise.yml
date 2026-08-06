@@ -294,7 +294,7 @@ jobs:
         if: always()
         working-directory: frontend
         run: >
-          npx tsx editor/scripts/report-flaky-tests.mts
+          npx tsx scripts/report-flaky-tests.mts
           "${{ github.workspace }}/frontend/playwright-report/results-oauth.json"
           "${{ github.workspace }}/frontend/playwright-report/results-saml.json"
           "${{ github.workspace }}/frontend/playwright-report/results-feature.json"

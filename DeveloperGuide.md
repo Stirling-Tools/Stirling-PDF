@@ -458,7 +458,7 @@ For Stirling 2.0, new features are built as React components:
 
 1. **Create the React Component:**
    ```typescript
-   // frontend/editor/src/tools/NewTool.tsx
+   // frontend/src/tools/NewTool.tsx
    import { useState } from 'react';
    import { Button, FileInput, Container } from '@mantine/core';
 
