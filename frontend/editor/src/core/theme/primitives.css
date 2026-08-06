@@ -12,9 +12,10 @@
   --p-gray-400: #9ca3af;
   --p-gray-500: #6b7280;
   /* Subtle body text in light mode. gray-500 clears 4.5:1 on pure white but
-     only reaches 4.39:1 on the --p-paper canvas; this is the same hue nudged
-     dark enough to pass (4.87:1) while staying lighter than gray-600. */
-  --p-gray-550: #646b76;
+     falls under it on the --p-paper canvas; this is the same hue nudged dark
+     enough to pass on the tinted surfaces too (4.94:1 on the blue banner tint,
+     the darkest ground it lands on) while staying lighter than gray-600. */
+  --p-gray-550: #5d636d;
   --p-gray-600: #4b5563;
   --p-gray-700: #374151;
   --p-gray-800: #1f2937;
