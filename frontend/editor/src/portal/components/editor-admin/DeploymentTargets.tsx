@@ -70,11 +70,7 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
                   {target.tagline}
                 </p>
               </div>
-              <StatusBadge
-                tone={STATE_BADGE_TONE[target.state]}
-                size="sm"
-                pulse={target.state === "running"}
-              >
+              <StatusBadge tone={STATE_BADGE_TONE[target.state]} size="sm">
                 {t(`portal.editorAdmin.targets.state.${target.state}`)}
               </StatusBadge>
             </div>
