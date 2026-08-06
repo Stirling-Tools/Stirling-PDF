@@ -164,55 +164,18 @@ class RecordFailurePrivacyTest {
     }
 
     @Nested
-    @DisplayName("the shapes a document name actually takes")
-    class RealisticNames {
+    @DisplayName("redaction is applied on the way in")
+    class Redaction {
 
-        /** Raised in review: the first pass only handled a single hyphenated ASCII token. */
-        @ParameterizedTest
-        @ValueSource(
-                strings = {
-                    "Failed on report (final).pdf",
-                    "Failed on \"Q3 Layoff List.pdf\"",
-                    "Failed on /srv/in/Q3 Layoff List.pdf",
-                    "Failed on severance-agreement.pdf.gz",
-                    "Failed on termination.tar.gz",
-                    "Failed on \u5c65\u6b74\u66f8.pdf",
-                    "Failed on \u043e\u0442\u0447\u0451\u0442-\u0437\u0430\u0440\u043f\u043b\u0430\u0442\u0430.pdf",
-                    "Failed on payslip%20march.pdf",
-                    "Failed on invoice_2024.pdf",
-                    "Failed on 'end of year (2024).xlsx'",
-                    "Failed on C:\\Users\\dana\\Q4 Report.docx",
-                    "Failed on Smith & Co - agreement.pdf",
-                    "Failed on ../tmp/upload.PDF",
-                })
-        void areRedacted(String message) {
-            assertThat(withDetail(message).detail()).doesNotContain(".pdf").contains("<file>");
-        }
-
+        /**
+         * Which shapes are caught is {@code FilenameRedactionTest}'s job, in the module that owns
+         * the rule. All this needs to know is that no row is written without it.
+         */
         @Test
-        void anUndelimitedSpacedNameIsOnlyPartlyRedacted() {
-            // The deliberate limit: crossing spaces without a delimiter would swallow the sentence
-            // too, and "<file>" alone tells a reviewer nothing about what failed. So the extension
-            // and the token carrying it go, and the leading words stay.
-            //
-            // TODO: harden. This asserts a known gap rather than desired behaviour — "Q3 Layoff"
-            // is still a fragment of a real document name. When the server stops forwarding a
-            // downstream tool's message verbatim, this should assert full redaction instead.
-            String stored = withDetail("Failed on Q3 Layoff List.pdf").detail();
+        void everyStoredMessageGoesThroughIt() {
+            String stored = withDetail("Failed on \"Q3 Layoff List.pdf\"").detail();
 
-            assertThat(stored).doesNotContain(".pdf").doesNotContain("List");
-            assertThat(stored).as("a fragment of the name survives, for now").contains("Q3 Layoff");
-        }
-
-        @ParameterizedTest
-        @ValueSource(
-                strings = {
-                    "Policy run failed: java.lang.NullPointerException",
-                    "version v2.14.2 released",
-                    "The PDF Document is passworded",
-                })
-        void areLeftAlone(String message) {
-            assertThat(withDetail(message).detail()).isEqualTo(message);
+            assertThat(stored).doesNotContain("Q3 Layoff List.pdf").contains("<file>");
         }
     }
 }

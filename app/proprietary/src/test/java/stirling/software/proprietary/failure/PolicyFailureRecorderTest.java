@@ -100,8 +100,28 @@ class PolicyFailureRecorderTest {
             assertThat(event.policyId()).isEqualTo("policy-1");
             assertThat(event.actor()).isEqualTo("dana@example.com");
             assertThat(event.origin()).isEqualTo(FailureOrigin.POLICY);
-            // The run's message, not the exception's: that is what the operator saw.
-            assertThat(event.detail()).isEqualTo("Policy run failed: locked");
+            // A recognised kind carries its own copy, so the downstream text is dropped: it adds
+            // nothing a reviewer needs and is where a document name would otherwise survive.
+            assertThat(event.detail()).isNull();
+        }
+
+        @Test
+        void keepsTheMessageForAFailureItCouldNotClassify() {
+            // The opposite case, and the reason the message is stored at all: with no kind to
+            // describe it, this text is the only thing telling a reviewer what went wrong.
+            when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
+
+            recorder.recordRunFailure(
+                    "run-1",
+                    "policy-1",
+                    "dana@example.com",
+                    null,
+                    "Policy run failed: something we do not recognise",
+                    new RuntimeException("boom"));
+
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            assertThat(event.kind()).isEqualTo(FailureKind.UNKNOWN);
+            assertThat(event.detail()).contains("something we do not recognise");
         }
 
         @Test

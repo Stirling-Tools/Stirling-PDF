@@ -4,7 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.regex.Pattern;
+
+import stirling.software.common.util.FilenameRedaction;
 
 /**
  * Everything needed to record one failure. Every reference field is nullable, because a failure can
@@ -22,26 +23,6 @@ public record RecordFailure(
         String fileId,
         String detail) {
 
-    /**
-     * Anything shaped like a file name: name characters ending in one to three short extensions.
-     * Matched by shape, so a newly supported format needs no maintenance here.
-     *
-     * <p>Best-effort, and deliberately so in one place: spaces are crossed only when the name is
-     * delimited, because an undelimited one cannot be told from the sentence around it. {@code
-     * RecordFailurePrivacyTest} pins exactly what is and is not caught.
-     *
-     * <p>TODO: store the parsed Problem Details fields rather than the stringified exception, so
-     * this is a backstop instead of the mechanism. We own the producer; we should not be reading
-     * our own structured data back out of prose.
-     */
-    private static final Pattern FILE_PATH_OR_NAME =
-            Pattern.compile(
-                    "(?<![\\w.])(?:(?<=[\"'(\\[/\\\\])[\\p{L}\\p{N}_%+&'()\\[\\]\\-]+"
-                            + "(?:[ ][\\p{L}\\p{N}_%+&'()\\[\\]\\-]+){0,6}"
-                            + "|[\\p{L}\\p{N}_%+&'()\\[\\]\\-]+)"
-                            + "(?:\\.(?![0-9]+(?:\\b|\\.))[\\p{L}\\p{N}]{1,8}){1,3}(?![\\w.])",
-                    Pattern.UNICODE_CHARACTER_CLASS);
-
     /** Upper bound on a stored message, so one enormous stack trace cannot fill the column. */
     private static final int MAX_DETAIL_LENGTH = 2_000;
 
@@ -54,7 +35,7 @@ public record RecordFailure(
         }
         // Sanitised here rather than at each call site, since this record is the only way a row is
         // written. Capped too: an unclassified failure carries a raw message of unbounded length.
-        detail = truncate(withoutFileNames(detail));
+        detail = truncate(FilenameRedaction.attemptRedaction(detail));
     }
 
     /** A processor-side failure with no file or source context, e.g. a run that failed outright. */
@@ -111,14 +92,6 @@ public record RecordFailure(
             // SHA-256 is mandated by the JDK; unreachable outside a broken runtime.
             throw new IllegalStateException("SHA-256 unavailable", e);
         }
-    }
-
-    /**
-     * Strip file paths and names out of a failure message. The engine's own messages already omit
-     * them; a message forwarded from a downstream tool is outside this package's control.
-     */
-    private static String withoutFileNames(String detail) {
-        return detail == null ? null : FILE_PATH_OR_NAME.matcher(detail).replaceAll("<file>");
     }
 
     private static String truncate(String detail) {

@@ -48,6 +48,15 @@ public class PolicyFailureRecorder {
         record(kind, runId, policyId, actor, null, detail);
     }
 
+    /**
+     * The downstream message is kept only for a failure we could not classify, where it is the one
+     * thing telling a reviewer what went wrong. A recognised kind already carries its own copy, so
+     * the raw text adds nothing except somewhere for a document name to hide.
+     */
+    private static String diagnosticFor(FailureKind kind, String detail) {
+        return kind == FailureKind.UNKNOWN ? detail : null;
+    }
+
     private void record(
             FailureKind kind,
             String runId,
@@ -58,7 +67,13 @@ public class PolicyFailureRecorder {
         try {
             store.record(
                     RecordFailure.forRun(
-                            kind, teamFor(policyId), actor, policyId, runId, fileIdentity, detail));
+                            kind,
+                            teamFor(policyId),
+                            actor,
+                            policyId,
+                            runId,
+                            fileIdentity,
+                            diagnosticFor(kind, detail)));
         } catch (RuntimeException e) {
             // Deliberately swallowed: see the class comment.
             log.warn("Could not record failure event for run {} (kind {})", runId, kind.getId(), e);
