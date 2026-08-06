@@ -33,10 +33,17 @@ function PaneWithToc({
 }) {
   const scrollRef = useRef<HTMLElement | null>(null);
   return (
-    <div style={{ display: "flex", gap: "2rem", height: "70vh", padding: "1rem" }}>
+    <div
+      style={{ display: "flex", gap: "2rem", height: "70vh", padding: "1rem" }}
+    >
       <article
         ref={scrollRef}
-        style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "1rem" }}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          overflowY: "auto",
+          paddingRight: "1rem",
+        }}
       >
         <MarkdownDoc markdown={markdown} onNavigate={() => {}} />
       </article>
@@ -63,7 +70,9 @@ export const FewHeadings: Story = {
 
 /** No headings at all: nothing to spy on, nothing to list. */
 export const NoHeadings: Story = {
-  render: () => <PaneWithToc markdown="Just prose, no headings." headings={[]} />,
+  render: () => (
+    <PaneWithToc markdown="Just prose, no headings." headings={[]} />
+  ),
 };
 
 /** Long heading text, to check the entries wrap or truncate inside the rail

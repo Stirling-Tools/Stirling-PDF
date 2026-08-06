@@ -74,7 +74,12 @@ export const LastStep: Story = {
 
 /** A flow is not limited to three or four steps; the bar divides evenly. */
 export const ManySteps: Story = {
-  args: { title: "Map your fields", step: 5, total: 9, stepLabel: "Step 5 of 9" },
+  args: {
+    title: "Map your fields",
+    step: 5,
+    total: 9,
+    stepLabel: "Step 5 of 9",
+  },
 };
 
 /** No title: the host modal already renders its own heading. */

@@ -46,7 +46,15 @@ export const Large: Story = {
   args: {
     label: "Build your quote",
     size: "lg",
-    header: <StepModalHeader brand title="Build your quote" step={1} total={4} stepLabel="Step 1 of 4" />,
+    header: (
+      <StepModalHeader
+        brand
+        title="Build your quote"
+        step={1}
+        total={4}
+        stepLabel="Step 1 of 4"
+      />
+    ),
     footer: <Button>Continue</Button>,
     children: <Body />,
   },

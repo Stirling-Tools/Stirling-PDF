@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
 import { Button } from "@app/ui/Button";
