@@ -79,6 +79,18 @@ const config: StorybookConfig = {
       "@public": resolve(__dirname, "../editor/public"),
     };
     config.plugins = config.plugins ?? [];
+    // Storybook's builder-vite auto-loads the app's vite.config.ts and merges in
+    // its plugins, but a Storybook build is not an app build. Drop the app's
+    // build-only plugins that emit deploy artifacts against a dist/ that a
+    // Storybook build never produces (prerender-og would otherwise throw ENOENT).
+    const APP_BUILD_ONLY = new Set(["prerender-og", "compress-static-copy"]);
+    config.plugins = config.plugins.filter((p) => {
+      const name =
+        p && typeof p === "object" && "name" in p
+          ? (p as { name?: unknown }).name
+          : undefined;
+      return typeof name !== "string" || !APP_BUILD_ONLY.has(name);
+    });
     config.plugins.push(iconSvgr());
     config.plugins.push(editorPathAliases());
     // Reads the audit's "before" glyphs from the icon packages, so none of their artwork is checked in.
