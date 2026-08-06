@@ -14,7 +14,6 @@ export type ViewId =
   | "infrastructure"
   | "usage"
   | "docs"
-  | "procurement"
   | "settings";
 
 export const VIEW_PATHS: Record<ViewId, string> = {
@@ -29,7 +28,6 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
-  procurement: "/procurement",
   settings: "/settings",
 };
 
