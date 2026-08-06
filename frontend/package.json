@@ -67,7 +67,7 @@
     "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
     "pixelmatch": "^7.1.0",
-    "posthog-js": "^1.268.0",
+    "posthog-js": "^1.405.2",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -81,6 +81,7 @@
     "signature_pad": "^5.0.4",
     "smol-toml": "^1.4.2",
     "tailwindcss": "^4.1.13",
+    "use-sync-external-store": "^1.6.0",
     "web-vitals": "^5.1.0"
   },
   "scripts": {
@@ -131,6 +132,7 @@
     "@types/node": "^24.5.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.1.9",
+    "@types/use-sync-external-store": "^0.0.6",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@typescript/native": "npm:typescript@^7.0.2",
@@ -139,7 +141,7 @@
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
-    "eslint": "^10.0.2",
+    "eslint": "^10.8.0",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.0",
     "json-schema-to-typescript": "^15.0.4",

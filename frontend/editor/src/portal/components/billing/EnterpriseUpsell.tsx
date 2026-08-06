@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button, Card } from "@app/ui";
+import { useUI } from "@portal/contexts/UIContext";
 import { useView } from "@portal/contexts/ViewContext";
 
 interface Props {
@@ -9,12 +10,13 @@ interface Props {
 
 /**
  * Volume-discount / Enterprise upsell, shared by the free and subscribed billing
- * views. The CTA opens the procurement journey (/procurement auto-opens the quote
- * builder in the takeover modal).
+ * views. The CTA lands the buyer on Home with the trial-setup step raised — the deal lives there,
+ * so there is nowhere else to send them.
  */
 export function EnterpriseUpsell({ bare = false }: Props) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
+  const { requestTrialSetup } = useUI();
   const body = (
     <>
       <span className="portal-billing__eyebrow">
@@ -38,7 +40,12 @@ export function EnterpriseUpsell({ bare = false }: Props) {
         <Button
           size="sm"
           variant="secondary"
-          onClick={() => setActiveView("procurement")}
+          onClick={() => {
+            // The deal lives on Home; raise the request there rather than sending the buyer to a
+            // separate view that only mirrors it.
+            requestTrialSetup();
+            setActiveView("home");
+          }}
         >
           {t("portal.billing.enterpriseUpsell.cta", "Explore Enterprise")}
         </Button>

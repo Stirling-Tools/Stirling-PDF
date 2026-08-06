@@ -12,7 +12,12 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import LockIcon from "@mui/icons-material/Lock";
 
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import {
+  useAllFiles,
+  useFileSelector,
+  useFileSelectors,
+  useFileActions,
+} from "@app/contexts/FileContext";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
@@ -259,9 +264,9 @@ const EmbedPdfViewerContent = ({
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
 
   // Get current file from FileContext
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
   const { actions } = useFileActions();
-  const activeFiles = selectors.getFiles();
+  const { files: activeFiles } = useAllFiles();
   const activeFilesRef = useRef(activeFiles);
   activeFilesRef.current = activeFiles;
   const activeFileIds = activeFiles.map((f) => f.fileId);
@@ -392,11 +397,11 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
-  const isCurrentFileEncrypted = React.useMemo(() => {
-    if (!currentFile || !isStirlingFile(currentFile)) return false;
-    const stub = selectors.getStirlingFileStub(currentFile.fileId);
-    return stub?.processedFile?.isEncrypted === true;
-  }, [currentFile, selectors]);
+  const isCurrentFileEncrypted = useFileSelector((s) =>
+    currentFile && isStirlingFile(currentFile)
+      ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
+      : false,
+  );
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
