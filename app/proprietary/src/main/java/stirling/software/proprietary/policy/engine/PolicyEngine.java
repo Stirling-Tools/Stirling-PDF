@@ -16,6 +16,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
+import jakarta.annotation.PreDestroy;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,6 +84,21 @@ public class PolicyEngine {
     private final JobQueue jobQueue;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
+
+    /** Stop the service-owned executor when the application context is closed or restarted. */
+    @PreDestroy
+    void shutdown() {
+        log.debug("Shutting down policy engine executor");
+        asyncExecutor.shutdown();
+        try {
+            if (!asyncExecutor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                asyncExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            asyncExecutor.shutdownNow();
+        }
+    }
 
     /**
      * Submit a pipeline to run asynchronously. The handle's run id scopes a {@link TaskManager} job
