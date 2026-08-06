@@ -2,15 +2,14 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
-  Card,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
   MetricCard,
   MetricStrip,
   StatusBadge,
-  Table,
   Tabs,
   type TabItem,
-  type TableColumn,
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useSectionFlags } from "@portal/hooks/useAsync";
@@ -22,7 +21,6 @@ import {
 } from "@portal/api/infrastructure";
 import { AuditExportModal } from "@portal/components/infrastructure/AuditExportModal";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
-import { TableSkeleton } from "@portal/components/infrastructure/TableSkeleton";
 import {
   AUDIT_CAT_LABEL,
   AUDIT_CAT_TONE,
@@ -57,7 +55,7 @@ export function AuditTab() {
     },
   ];
 
-  const cols: TableColumn<AuditEvent>[] = [
+  const cols: DataTableColumn<AuditEvent>[] = [
     {
       key: "timestamp",
       header: t("portal.infrastructure.audit.columns.timestamp"),
@@ -171,31 +169,31 @@ export function AuditTab() {
         />
       )}
 
-      <Card padding="none">
-        {isLoading && <TableSkeleton rows={6} cols={6} />}
-        {!isLoading && forbidden && (
-          <EmptyState
-            size="compact"
-            title={t("portal.infrastructure.audit.forbidden.title")}
-            description={t("portal.infrastructure.audit.forbidden.description")}
-          />
-        )}
-        {!isLoading && !forbidden && isEmpty && (
-          <EmptyState
-            size="compact"
-            title={t("portal.infrastructure.audit.empty.title")}
-            description={t("portal.infrastructure.audit.empty.description")}
-          />
-        )}
-        {!isEmpty && data && (
-          <Table
-            columns={cols}
-            rows={rows}
-            rowKey={(e) => e.id}
-            empty={t("portal.infrastructure.audit.noEventsInCategory")}
-          />
-        )}
-      </Card>
+      <DataTable
+        columns={cols}
+        rows={rows}
+        rowKey={(e) => e.id}
+        loading={isLoading}
+        empty={
+          forbidden ? (
+            <EmptyState
+              size="compact"
+              title={t("portal.infrastructure.audit.forbidden.title")}
+              description={t(
+                "portal.infrastructure.audit.forbidden.description",
+              )}
+            />
+          ) : isEmpty ? (
+            <EmptyState
+              size="compact"
+              title={t("portal.infrastructure.audit.empty.title")}
+              description={t("portal.infrastructure.audit.empty.description")}
+            />
+          ) : (
+            t("portal.infrastructure.audit.noEventsInCategory")
+          )
+        }
+      />
     </div>
   );
 }

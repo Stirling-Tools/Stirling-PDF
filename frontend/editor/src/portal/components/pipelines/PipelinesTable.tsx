@@ -4,10 +4,10 @@ import AccountTreeRounded from "@mui/icons-material/AccountTreeRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
   Chip,
+  DataTable,
+  type DataTableColumn,
   StatusBadge,
   type StatusTone,
-  Table,
-  type TableColumn,
 } from "@app/ui";
 import type { PipelineStatus, PipelineView } from "@portal/api/pipelines";
 
@@ -24,7 +24,7 @@ interface PipelinesTableProps {
 
 export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
   const { t } = useTranslation();
-  const columns = useMemo<TableColumn<PipelineView>[]>(
+  const columns = useMemo<DataTableColumn<PipelineView>[]>(
     () => [
       {
         key: "name",
@@ -98,12 +98,13 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
   );
 
   return (
-    <Table<PipelineView>
+    <DataTable<PipelineView>
       className="portal-pipelines__table"
       columns={columns}
       rows={pipelines}
       rowKey={(p) => p.id}
       onRowClick={onRowClick}
+      card={false}
     />
   );
 }

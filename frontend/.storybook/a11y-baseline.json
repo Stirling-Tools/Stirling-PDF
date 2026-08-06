@@ -1399,6 +1399,11 @@
     "scrollable-region-focusable"
   ],
   "editor/src/core/ui/CodeBlock.stories.tsx :: Playground": ["color-contrast"],
+  "editor/src/core/ui/DataTable.stories.tsx :: Basic": ["color-contrast"],
+  "editor/src/core/ui/DataTable.stories.tsx :: Compact Bare": ["color-contrast"],
+  "editor/src/core/ui/DataTable.stories.tsx :: Interactive": ["color-contrast"],
+  "editor/src/core/ui/DataTable.stories.tsx :: Sortable": ["color-contrast"],
+  "editor/src/core/ui/DataTable.stories.tsx :: With Toolbar": ["color-contrast"],
   "editor/src/core/ui/Drawer.stories.tsx :: Playground": [
     "aria-allowed-role",
     "color-contrast"

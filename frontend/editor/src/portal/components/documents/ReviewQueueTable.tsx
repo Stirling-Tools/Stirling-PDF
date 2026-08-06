@@ -1,7 +1,13 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import LockRounded from "@mui/icons-material/LockRounded";
-import { Button, Chip, StatusBadge, Table, type TableColumn } from "@app/ui";
+import {
+  Button,
+  Chip,
+  DataTable,
+  type DataTableColumn,
+  StatusBadge,
+} from "@app/ui";
 import {
   classificationTone,
   DOCUMENT_STATUS_LABEL,
@@ -51,7 +57,7 @@ export function ReviewQueueTable({
   onRowClick,
 }: ReviewQueueTableProps) {
   const { t } = useTranslation();
-  const columns = useMemo<TableColumn<ReviewDocument>[]>(
+  const columns = useMemo<DataTableColumn<ReviewDocument>[]>(
     () => [
       {
         key: "document",
@@ -157,13 +163,14 @@ export function ReviewQueueTable({
   );
 
   return (
-    <Table<ReviewDocument>
+    <DataTable<ReviewDocument>
       className="portal-documents__table"
       columns={columns}
       rows={documents}
       rowKey={(d) => d.id}
       onRowClick={onRowClick}
       empty={t("portal.documents.table.empty")}
+      card={false}
     />
   );
 }
