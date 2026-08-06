@@ -3,6 +3,32 @@
    All custom properties are defined in theme.css.
    ============================================================ */
 
+/* ── Entrance animation (editor empty state) ─────────────────
+   Logo fades/slides up first (0.2s), then the actions after it finishes
+   (0.2s delay + 0.2s) — 0.4s total. */
+@keyframes landing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.landing-logo-enter {
+  animation: landing-fade-up 0.2s ease-out both;
+}
+.landing-actions-enter {
+  animation: landing-fade-up 0.2s ease-out 0.2s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-logo-enter,
+  .landing-actions-enter {
+    animation: none;
+  }
+}
+
 /* ── Hero text ───────────────────────────────────────────── */
 .landing-title {
   margin: 1.75rem 0 1.5rem;
@@ -110,31 +136,21 @@
 }
 
 /* ── Action buttons ──────────────────────────────────────── */
-.landing-btn-primary {
-  background: var(--landing-hero-gradient) !important;
-  color: var(--c-text-on-primary) !important;
-  border: none !important;
-  border-radius: 0.75rem !important;
-  font-weight: 600 !important;
-}
-
+.landing-btn-primary,
 .landing-btn-secondary {
   border-radius: 0.75rem !important;
   font-weight: 600 !important;
-  border-color: var(--landing-button-border, var(--c-border)) !important;
-  background-color: var(--landing-button-bg, var(--c-surface)) !important;
-  color: var(--c-accent-fg, var(--c-text)) !important;
-}
-.landing-btn-secondary:hover {
-  background-color: var(
-    --landing-button-hover-bg,
-    var(--landing-button-bg, var(--c-surface))
-  ) !important;
 }
 
-/* Icon-only variant: accent colour instead of button text colour */
+.landing-btn-primary,
+.landing-btn-secondary,
 .landing-btn-icon {
-  color: var(--c-primary) !important;
+  min-height: 3rem !important;
+}
+.landing-btn-icon {
+  width: 3rem !important;
+  min-width: 3rem !important;
+  border-radius: 0.75rem !important;
 }
 
 /* Dropzone accept/reject outlines. Mantine 8 no longer supports nested

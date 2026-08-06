@@ -3,18 +3,24 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import {
   DocumentsIcon,
+  DownloadIcon,
   PoliciesIcon,
   UsersIcon,
 } from "@portal/components/icons";
 import { money } from "@portal/components/procurement/format";
 import {
   buildQuote,
+  recordLegalConsent,
   type QuoteConfigInput,
   type QuoteResult,
 } from "@portal/api/procurement";
+import { LegalDocumentModal } from "@portal/components/procurement/ProcurementExtras";
+import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import "@portal/views/Procurement.css";
 
-const STEPS = ["volume", "plan", "details"] as const;
+const STEPS = ["volume", "plan", "details", "review"] as const;
+const DETAILS_STEP = 2;
+const REVIEW_STEP = 3;
 const TERM_DISCOUNT = [0, 0.03, 0.05, 0.06, 0.07]; // 1..5 years — meter-only discount (D71)
 // Governance posture: the intensity (runs per PDF) fed to the committed-volume curve.
 const POSTURES = [
@@ -30,22 +36,57 @@ const SIZE_TIERS = [
 ] as const;
 
 /**
- * The enterprise quote builder — volume → commitment &amp; service → details. A client-side preview
- * drives the live footer total; the backend is authoritative. Completing the form generates the
- * quote directly (build + issue in one step) — the issued quote is then shown as the milestone, so
- * there's no redundant in-builder preview.
+ * The enterprise quote builder — volume → commitment &amp; service → details → review. A client-side
+ * preview drives the live footer total; the backend is authoritative. Generating builds and issues in
+ * one go, and the issued quote comes back as the fourth step: the buyer reads the real itemised paper
+ * and can download it, but does not accept here. Accepting is a decision taken from the deal card,
+ * deliberately, so circulating the quote internally is not a dead end in a modal.
  */
 export function QuoteBuilder({
   deployment,
   seats = 0,
+  email,
+  onClose,
+  dealDetails,
   initial,
+  eulaAlreadyAgreed = false,
   onGenerate,
+  issued,
+  downloading = false,
+  onDownload,
 }: {
   deployment: string;
   /** Seat count from the trial setup; seeds the users field + volume estimate on a fresh quote. */
   seats?: number;
+  /** Linked-account email; prefills the contact email on a fresh quote's details step. */
+  email?: string | null;
+  /** Dismiss the dialog. The builder draws its own header, so it carries the close too. */
+  onClose?: () => void;
+  /**
+   * The buying entity captured at trial setup. Seeds a fresh quote's details step so it confirms
+   * what is already known rather than asking twice; the buyer can still correct it here, since a
+   * deal can change hands between trial and quote.
+   */
+  dealDetails?: {
+    businessName?: string | null;
+    contactName?: string | null;
+    contactEmail?: string | null;
+  };
   /** Seed the builder from an existing quote's config (re-editing a quote). */
   initial?: QuoteConfigInput;
+  /**
+   * The issued quote, which is what the review step shows. Its arrival is also what opens that step:
+   * the parent issues the quote and it lands by snapshot refresh, so there is no synchronous result
+   * to advance on. Null while re-editing, so editing reopens the form rather than the paper.
+   */
+  issued?: QuoteResult | null;
+  downloading?: boolean;
+  onDownload?: () => void;
+  /**
+   * The buyer already accepted the EULA (e.g. at trial start). When true, the EULA clickwrap is
+   * hidden here and no consent is recorded at quote time — it's only collected once.
+   */
+  eulaAlreadyAgreed?: boolean;
   /** Called with the priced DRAFT quote; the parent issues it as a Stripe Quote. */
   onGenerate: (quote: QuoteResult) => void;
 }) {
@@ -65,9 +106,9 @@ export function QuoteBuilder({
       indemnification: false,
       training: false,
       qbr: false,
-      businessName: "",
-      contactName: "",
-      contactEmail: "",
+      businessName: dealDetails?.businessName ?? "",
+      contactName: dealDetails?.contactName ?? "",
+      contactEmail: dealDetails?.contactEmail ?? email ?? "",
       addressLine1: "",
       addressLine2: "",
       city: "",
@@ -79,29 +120,81 @@ export function QuoteBuilder({
   );
   // A seeded quote carries a volume but no user count, so treat it as manually set.
   const [manualVolume, setManualVolume] = useState(initial != null);
-  const [eula, setEula] = useState(initial != null);
+  // Never pre-ticked, even when re-editing a quote: a consent the buyer did not tick in this session
+  // is not a consent, and recordLegalConsent would have logged one as though they had.
+  const [eula, setEula] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Only surface field errors once the buyer tries to generate — no red fields on first sight.
+  const [showErrors, setShowErrors] = useState(false);
 
   function set<K extends keyof QuoteConfigInput>(k: K, v: QuoteConfigInput[K]) {
     setCfg((c) => ({ ...c, [k]: v }));
   }
 
-  // Re-editing an existing quote: everything is seeded, so jump to the last step (details) with the
+  // Required buyer details before a quote can be generated (Order Form / invoice need these).
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    (cfg.contactEmail ?? "").trim(),
+  );
+  const valid = {
+    businessName: cfg.businessName.trim().length > 0,
+    contactName: (cfg.contactName ?? "").trim().length > 0,
+    contactEmail: emailOk,
+    addressLine1: (cfg.addressLine1 ?? "").trim().length > 0,
+    city: (cfg.city ?? "").trim().length > 0,
+    region: (cfg.region ?? "").trim().length > 0,
+    postalCode: (cfg.postalCode ?? "").trim().length > 0,
+  };
+  const detailsValid = Object.values(valid).every(Boolean);
+  const eulaOk = eulaAlreadyAgreed || eula;
+  const canGenerate = detailsValid && eulaOk;
+
+  // Re-editing an existing quote: everything is seeded, so jump to the details step with the
   // agreement pre-accepted — one click re-generates, or Back to change a field. No walking from step 1.
   // Mount-only: seed the step from `initial` once (deliberately no deps).
   useEffect(() => {
-    if (initial) setStep(STEPS.length - 1);
+    if (initial) setStep(DETAILS_STEP);
   }, []);
+
+  // Issuing lands by snapshot refresh rather than as a return value, so the arrival of the issued
+  // quote is what opens the review step. Keyed on the quote's id, not the object: React Query hands
+  // back a fresh object on every refetch, which would yank a buyer who had walked Back to the form.
+  useEffect(() => {
+    if (issued) setStep(REVIEW_STEP);
+  }, [issued?.quoteId]);
 
   const preview = previewAnnualMinor(cfg);
   const tcvPreview = preview * cfg.termYears + (cfg.training ? 750_000 : 0);
 
+  // On the review step the footer quotes the issued figures rather than the client-side preview, so
+  // the running total never disagrees with the paper directly above it.
+  const onPaper = issued != null && step === REVIEW_STEP;
+  const running = onPaper
+    ? {
+        annual: money(issued.annualNetMinor, issued.currency),
+        years: issued.config.termYears,
+        tcv: money(issued.tcvMinor, issued.currency),
+      }
+    : {
+        annual: money(preview),
+        years: cfg.termYears,
+        tcv: money(tcvPreview),
+      };
+
   // Fully filled → price + hand the draft to the parent to issue as a Stripe Quote (which then shows
   // as the milestone). No separate in-builder preview step.
   async function generate() {
+    if (!canGenerate) {
+      setShowErrors(true);
+      return;
+    }
     setBusy(true);
     try {
-      onGenerate(await buildQuote(cfg));
+      const quote = await buildQuote(cfg);
+      // Record the EULA clickwrap only when it's collected here — i.e. the buyer didn't already
+      // accept it at trial start. Best-effort.
+      if (!eulaAlreadyAgreed) void recordLegalConsent("eula", "quote");
+      onGenerate(quote);
     } finally {
       setBusy(false);
     }
@@ -109,22 +202,16 @@ export function QuoteBuilder({
 
   return (
     <div className="portal-qb">
-      <div className="portal-qb__head">
-        <h3 className="portal-qb__title">
-          {t("portal.procurement.builder.title")}
-        </h3>
-        <span className="portal-qb__stepchip">
-          {t("portal.procurement.builder.stepOf", {
-            n: step + 1,
-            total: STEPS.length,
-          })}
-        </span>
-      </div>
-      <div className="portal-qb__progress">
-        {STEPS.map((s, i) => (
-          <span key={s} data-on={i <= step || undefined} />
-        ))}
-      </div>
+      <StepModalHeader
+        title={t("portal.procurement.builder.title")}
+        step={step + 1}
+        total={STEPS.length}
+        stepLabel={t("portal.procurement.builder.stepOf", {
+          n: step + 1,
+          total: STEPS.length,
+        })}
+        onClose={onClose}
+      />
 
       <div className="portal-qb__body">
         {step === 0 && (
@@ -171,15 +258,6 @@ export function QuoteBuilder({
                   ? t("portal.procurement.builder.volManual")
                   : t("portal.procurement.builder.volNoUsers")}
             </p>
-          </Step>
-        )}
-
-        {step === 1 && (
-          <Step
-            icon={<PoliciesIcon size={22} />}
-            title={t("portal.procurement.builder.s2Title")}
-            sub={t("portal.procurement.builder.s2Sub")}
-          >
             <Field label={t("portal.procurement.builder.posture")}>
               <div className="portal-qb__opts">
                 {POSTURES.map((p) => (
@@ -209,7 +287,15 @@ export function QuoteBuilder({
                 ))}
               </div>
             </Field>
+          </Step>
+        )}
 
+        {step === 1 && (
+          <Step
+            icon={<PoliciesIcon size={22} />}
+            title={t("portal.procurement.builder.s2Title")}
+            sub={t("portal.procurement.builder.s2Sub")}
+          >
             <Field label={t("portal.procurement.builder.term")}>
               <div className="portal-qb__pills">
                 {[1, 2, 3, 4, 5].map((y) => (
@@ -287,7 +373,11 @@ export function QuoteBuilder({
             sub={t("portal.procurement.builder.s3Sub")}
           >
             <div className="portal-qb__row">
-              <Field label={t("portal.procurement.builder.businessName")}>
+              <Field
+                label={t("portal.procurement.builder.businessName")}
+                required
+                invalid={showErrors && !valid.businessName}
+              >
                 <input
                   placeholder={t(
                     "portal.procurement.builder.businessNamePlaceholder",
@@ -296,7 +386,11 @@ export function QuoteBuilder({
                   onChange={(e) => set("businessName", e.target.value)}
                 />
               </Field>
-              <Field label={t("portal.procurement.builder.contactName")}>
+              <Field
+                label={t("portal.procurement.builder.contactName")}
+                required
+                invalid={showErrors && !valid.contactName}
+              >
                 <input
                   placeholder={t(
                     "portal.procurement.builder.contactNamePlaceholder",
@@ -306,7 +400,11 @@ export function QuoteBuilder({
                 />
               </Field>
             </div>
-            <Field label={t("portal.procurement.builder.contactEmail")}>
+            <Field
+              label={t("portal.procurement.builder.contactEmail")}
+              required
+              invalid={showErrors && !valid.contactEmail}
+            >
               <input
                 type="email"
                 placeholder={t(
@@ -316,7 +414,11 @@ export function QuoteBuilder({
                 onChange={(e) => set("contactEmail", e.target.value)}
               />
             </Field>
-            <Field label={t("portal.procurement.builder.addressLine1")}>
+            <Field
+              label={t("portal.procurement.builder.addressLine1")}
+              required
+              invalid={showErrors && !valid.addressLine1}
+            >
               <input
                 placeholder={t(
                   "portal.procurement.builder.addressLine1Placeholder",
@@ -335,14 +437,22 @@ export function QuoteBuilder({
               />
             </Field>
             <div className="portal-qb__row">
-              <Field label={t("portal.procurement.builder.city")}>
+              <Field
+                label={t("portal.procurement.builder.city")}
+                required
+                invalid={showErrors && !valid.city}
+              >
                 <input
                   placeholder={t("portal.procurement.builder.cityPlaceholder")}
                   value={cfg.city ?? ""}
                   onChange={(e) => set("city", e.target.value)}
                 />
               </Field>
-              <Field label={t("portal.procurement.builder.region")}>
+              <Field
+                label={t("portal.procurement.builder.region")}
+                required
+                invalid={showErrors && !valid.region}
+              >
                 <input
                   placeholder={t(
                     "portal.procurement.builder.regionPlaceholder",
@@ -351,7 +461,11 @@ export function QuoteBuilder({
                   onChange={(e) => set("region", e.target.value)}
                 />
               </Field>
-              <Field label={t("portal.procurement.builder.postalCode")}>
+              <Field
+                label={t("portal.procurement.builder.postalCode")}
+                required
+                invalid={showErrors && !valid.postalCode}
+              >
                 <input
                   placeholder={t(
                     "portal.procurement.builder.postalCodePlaceholder",
@@ -379,25 +493,133 @@ export function QuoteBuilder({
                 />
               </Field>
             </div>
-            <label className="portal-qb__eula">
-              <input
-                type="checkbox"
-                checked={eula}
-                onChange={(e) => setEula(e.target.checked)}
-              />
-              <span>{t("portal.procurement.builder.eula")}</span>
-            </label>
+            {!eulaAlreadyAgreed && (
+              <label className="portal-qb__eula">
+                <input
+                  type="checkbox"
+                  checked={eula}
+                  onChange={(e) => setEula(e.target.checked)}
+                />
+                <span>
+                  {t("portal.procurement.builder.eula")}{" "}
+                  <button
+                    type="button"
+                    className="portal-legal__link"
+                    onClick={() => setLegalDoc("eula")}
+                  >
+                    {t("portal.procurement.builder.viewEula")}
+                  </button>
+                </span>
+              </label>
+            )}
+            {showErrors && !canGenerate && (
+              <p className="portal-qb__error">
+                {t("portal.procurement.builder.completeRequired")}
+              </p>
+            )}
           </Step>
+        )}
+
+        {/* No step heading here, unlike the form steps: the quote is the content, and a heading over
+            it only repeats what the paper already says. The real issued figures, not the footer's
+            client-side preview — this is the document the buyer circulates, so it has to match the
+            PDF and the Stripe quote exactly. */}
+        {step === REVIEW_STEP && issued && (
+          <div className="portal-qb__papertray">
+            <div className="portal-qb__paper">
+              <div className="portal-qb__paper-head">
+                <div>
+                  <div className="portal-qb__paper-brand">Stirling PDF</div>
+                  <div className="portal-qb__paper-eyebrow">
+                    {t("portal.procurement.builder.paperEyebrow")}
+                  </div>
+                </div>
+                <div className="portal-qb__paper-meta">
+                  <div className="portal-qb__quote-number">
+                    {issued.quoteNumber}
+                  </div>
+                  {issued.validUntil && (
+                    <div>
+                      {t("portal.procurement.review.validUntil", {
+                        date: new Date(issued.validUntil).toLocaleDateString(),
+                      })}
+                    </div>
+                  )}
+                  {/* On the document rather than in the footer: it downloads this paper, so it
+                        belongs to it, and the footer stays the flow's own Back/Done. */}
+                  <Button
+                    variant="tertiary"
+                    size="sm"
+                    className="portal-qb__paper-download"
+                    leftSection={<DownloadIcon size={14} />}
+                    loading={downloading}
+                    onClick={onDownload}
+                  >
+                    {t("portal.procurement.review.downloadCta")}
+                  </Button>
+                </div>
+              </div>
+
+              {issued.config.businessName?.trim() && (
+                <div className="portal-qb__paper-for">
+                  <div className="portal-qb__paper-eyebrow">
+                    {t("portal.procurement.builder.paperFor")}
+                  </div>
+                  <div className="portal-qb__paper-company">
+                    {issued.config.businessName}
+                  </div>
+                </div>
+              )}
+
+              <ul className="portal-qb__lines">
+                {issued.lineItems.map((li) => (
+                  <li key={li.key} data-kind={li.kind}>
+                    <span>{li.label}</span>
+                    <span>{money(li.amountMinor, issued.currency)}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="portal-qb__total">
+                <div>
+                  <div className="portal-qb__total-label">
+                    {t("portal.procurement.review.annual")}
+                  </div>
+                  <div className="portal-qb__total-tcv">
+                    {t("portal.procurement.review.tcv", {
+                      years: issued.config.termYears,
+                      tcv: money(issued.tcvMinor, issued.currency),
+                    })}
+                  </div>
+                  <div className="portal-qb__total-tcv">
+                    {t("portal.procurement.review.renewal", {
+                      amount: money(
+                        issued.renewalAnnualNetMinor,
+                        issued.currency,
+                      ),
+                      pct: issued.cpiRatePct,
+                    })}
+                  </div>
+                  {issued.config.poNumber?.trim() && (
+                    <div className="portal-qb__total-tcv">
+                      {t("portal.procurement.review.poNumber", {
+                        po: issued.config.poNumber.trim(),
+                      })}
+                    </div>
+                  )}
+                </div>
+                <div className="portal-qb__total-num">
+                  {money(issued.annualNetMinor, issued.currency)}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
       <div className="portal-qb__foot">
         <span className="portal-qb__running">
-          {t("portal.procurement.builder.running", {
-            annual: money(preview),
-            years: cfg.termYears,
-            tcv: money(tcvPreview),
-          })}
+          {t("portal.procurement.builder.running", running)}
         </span>
         <div className="portal-qb__foot-btns">
           {step > 0 && (
@@ -408,7 +630,6 @@ export function QuoteBuilder({
           {step === 0 && (
             <Button
               variant="primary"
-              accent="premium"
               disabled={cfg.volume <= 0}
               onClick={() => setStep(1)}
             >
@@ -416,27 +637,26 @@ export function QuoteBuilder({
             </Button>
           )}
           {step === 1 && (
-            <Button
-              variant="primary"
-              accent="premium"
-              onClick={() => setStep(2)}
-            >
+            <Button variant="primary" onClick={() => setStep(2)}>
               {t("portal.procurement.builder.continue")}
             </Button>
           )}
-          {step === 2 && (
-            <Button
-              variant="primary"
-              accent="premium"
-              loading={busy}
-              disabled={!eula}
-              onClick={generate}
-            >
+          {step === DETAILS_STEP && (
+            <Button variant="primary" loading={busy} onClick={generate}>
               {t("portal.procurement.builder.generate")}
+            </Button>
+          )}
+          {/* No Accept here: the review step ends on the deal card, where accepting is one of two
+              deliberate choices rather than the only way out of a modal. Download lives on the
+              document itself. */}
+          {step === REVIEW_STEP && (
+            <Button variant="primary" onClick={onClose}>
+              {t("portal.procurement.builder.done")}
             </Button>
           )}
         </div>
       </div>
+      <LegalDocumentModal docId={legalDoc} onClose={() => setLegalDoc(null)} />
     </div>
   );
 }
@@ -470,14 +690,25 @@ function Step({
 
 function Field({
   label,
+  required,
+  invalid,
   children,
 }: {
   label: string;
+  required?: boolean;
+  invalid?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <label className="portal-qb__field">
-      <span className="portal-qb__field-label">{label}</span>
+    <label className="portal-qb__field" data-invalid={invalid || undefined}>
+      <span className="portal-qb__field-label">
+        {label}
+        {required && (
+          <span className="portal-qb__req" aria-hidden>
+            {" *"}
+          </span>
+        )}
+      </span>
       {children}
     </label>
   );
