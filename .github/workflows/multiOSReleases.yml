@@ -434,6 +434,25 @@ jobs:
       # Windows cert store first. --keypair-alias goes direct through PKCS11 and works
       # without certsync. All real-world working Tauri+smctl examples use this flag.
       #
+      # Tauri's bundler needs signtool.exe to VERIFY bundled dlls/exes even when a
+      # custom signCommand does the signing; its auto-lookup fails on arm64 hosts.
+      - name: Locate signtool for Tauri
+        if: ${{ startsWith(matrix.platform, 'windows') && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        shell: pwsh
+        run: |
+          $signtool = (Get-Command signtool.exe -ErrorAction SilentlyContinue).Source
+          if (-not $signtool) {
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -match '\\(arm64|x64)\\' } |
+              Sort-Object FullName | Select-Object -Last 1 -ExpandProperty FullName
+          }
+          if ($signtool) {
+            Write-Host "Using signtool: $signtool"
+            echo "TAURI_WINDOWS_SIGNTOOL_PATH=$signtool" >> $env:GITHUB_ENV
+          } else {
+            Write-Error "signtool.exe not found on runner"
+          }
+
       # smctl reads SM_HOST, SM_API_KEY, SM_CLIENT_CERT_FILE, SM_CLIENT_CERT_PASSWORD
       # from env (set by prior DigiCert setup step). No --config-file needed.
       - name: Configure Windows code signing
