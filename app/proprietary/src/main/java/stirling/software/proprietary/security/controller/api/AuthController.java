@@ -254,7 +254,7 @@ public class AuthController {
      *
      * @return Current authenticated user information
      */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
@@ -288,7 +288,7 @@ public class AuthController {
      * @param response HTTP response
      * @return Success message
      */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -314,7 +314,7 @@ public class AuthController {
      * @param response HTTP response to set new JWT cookie
      * @return New token information
      */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -418,7 +418,7 @@ public class AuthController {
         }
     }
 
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @GetMapping("/mfa/setup")
     public ResponseEntity<?> setupMfa(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -454,7 +454,7 @@ public class AuthController {
         }
     }
 
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/mfa/enable")
     public ResponseEntity<?> enableMfa(
             @RequestBody MfaCodeRequest request, Authentication authentication) {
@@ -506,7 +506,7 @@ public class AuthController {
         }
     }
 
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/mfa/disable")
     public ResponseEntity<?> disableMfa(
             @RequestBody MfaCodeRequest request, Authentication authentication) {
@@ -561,7 +561,7 @@ public class AuthController {
         }
     }
 
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/mfa/setup/cancel")
     public ResponseEntity<?> cancelMfaSetup(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
