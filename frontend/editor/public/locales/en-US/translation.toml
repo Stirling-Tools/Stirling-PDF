@@ -2195,6 +2195,7 @@ applied = "{{degrees}}° CW"
 confidenceValue = "Confidence {{value}}"
 noChange = "No change"
 pageLabel = "Page {{number}}"
+pages = "Per-page results"
 summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
 title = "Detection report"
 
