@@ -378,10 +378,10 @@
 }
 
 .portal-policies__activity-icon--success {
-  color: var(--color-green);
+  color: var(--color-green-dark);
 }
 .portal-policies__activity-icon--warning {
-  color: var(--color-amber);
+  color: var(--color-amber-dark);
 }
 .portal-policies__activity-icon--info {
   color: var(--c-accent-text);

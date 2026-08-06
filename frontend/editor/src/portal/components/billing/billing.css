@@ -119,7 +119,7 @@
 /* Free grant still offsetting spend — reads as a positive credit note, pulled up
    under the "PDFs processed" line. */
 .portal-billing__free-remaining {
-  color: var(--color-green);
+  color: var(--color-green-dark);
   margin-top: -0.5rem;
 }
 
@@ -380,7 +380,7 @@
 
 .portal-billing__plan-features li::before {
   content: "✓";
-  color: var(--color-green);
+  color: var(--color-green-dark);
   position: absolute;
   left: 0;
   font-weight: 600;
@@ -754,7 +754,7 @@
   margin-bottom: 8px;
 }
 .portal-billing__planhead-lbl--free {
-  color: var(--color-green);
+  color: var(--color-green-dark);
 }
 .portal-billing__planhead-lbl--meter {
   color: var(--c-accent-text);
@@ -1456,7 +1456,7 @@
   color: var(--c-text);
 }
 .portal-billing__bundle-receipt-price {
-  color: var(--c-primary) !important;
+  color: var(--c-accent-text) !important;
 }
 .portal-billing__bundle-consent {
   padding-top: 0.75rem;

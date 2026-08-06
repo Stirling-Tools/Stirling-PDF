@@ -1038,7 +1038,7 @@ export function WatchedFolderWorkbenchView({
                   <FolderOpenIcon
                     style={{
                       fontSize: "1.125rem",
-                      color: "var(--mantine-color-blue-filled)",
+                      color: "var(--c-accent-text)",
                     }}
                   />
                 }
@@ -1176,7 +1176,7 @@ export function WatchedFolderWorkbenchView({
                       <Text
                         style={{
                           fontSize: "0.625rem",
-                          color: "var(--mantine-color-blue-filled)",
+                          color: "var(--c-accent-text)",
                         }}
                       >
                         {t("watchedFolders.workbench.countProcessing", {
@@ -1350,7 +1350,7 @@ export function WatchedFolderWorkbenchView({
                   <Text
                     size="xs"
                     fw={600}
-                    style={{ color: "var(--mantine-color-blue-filled)" }}
+                    style={{ color: "var(--c-accent-text)" }}
                   >
                     {t("watchedFolders.workbench.countSelected", {
                       count: selectedActivityIds.size,

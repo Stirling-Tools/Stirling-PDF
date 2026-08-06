@@ -884,7 +884,7 @@ export const BookmarkSidebar = ({
                 icon="bookmark-add-rounded"
                 width="0.95rem"
                 height="0.95rem"
-                style={{ color: "var(--mantine-color-blue-5)" }}
+                style={{ color: "var(--c-accent-text)" }}
               />
               <Text
                 size="xs"
