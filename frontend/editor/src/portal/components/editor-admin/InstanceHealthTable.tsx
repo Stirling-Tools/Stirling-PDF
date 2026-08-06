@@ -1,12 +1,10 @@
 import { useTranslation } from "react-i18next";
 import {
-  Card,
-  Chip,
   type ChipAccent,
+  column,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
-  StatusBadge,
-  Table,
-  type TableColumn,
 } from "@app/ui";
 import {
   INSTANCE_STATUS_LABEL,
@@ -37,69 +35,60 @@ interface Props {
 export function InstanceHealthTable({ instances }: Props) {
   const { t } = useTranslation();
 
-  const cols: TableColumn<EditorInstance>[] = [
-    {
+  const cols: DataTableColumn<EditorInstance>[] = [
+    column.entity({
       key: "host",
       header: t("portal.editorAdmin.health.columns.host"),
-      render: (i) => (
-        <div className="portal-editor__cell-stack">
-          <span className="portal-editor__cell-strong">{i.host}</span>
-          <span className="portal-editor__cell-muted">
-            <Chip
-              size="sm"
-              accent={TARGET_CHIP_ACCENT[TARGET_META[i.target].tone]}
-            >
-              {TARGET_LABEL[i.target]}
-            </Chip>
-          </span>
-        </div>
-      ),
-    },
-    {
+      primary: (i) => i.host,
+      tags: (i) => [
+        {
+          label: TARGET_LABEL[i.target],
+          accent: TARGET_CHIP_ACCENT[TARGET_META[i.target].tone],
+        },
+      ],
+    }),
+    column.mono({
       key: "version",
       header: t("portal.editorAdmin.health.columns.version"),
-      render: (i) => <code className="portal-editor__mono">{i.version}</code>,
-    },
-    {
+      get: (i) => i.version,
+    }),
+    column.mono({
       key: "region",
       header: t("portal.editorAdmin.health.columns.region"),
-      render: (i) => <span className="portal-editor__mono">{i.region}</span>,
-    },
-    {
+      get: (i) => i.region,
+    }),
+    column.badge({
       key: "status",
       header: t("portal.editorAdmin.health.columns.status"),
-      render: (i) => (
-        <StatusBadge tone={INSTANCE_STATUS_TONE[i.status]} size="sm">
-          {t(INSTANCE_STATUS_LABEL[i.status])}
-        </StatusBadge>
-      ),
-    },
-    {
+      get: (i) => ({
+        tone: INSTANCE_STATUS_TONE[i.status],
+        label: t(INSTANCE_STATUS_LABEL[i.status]),
+      }),
+    }),
+    column.muted({
       key: "lastSeen",
       header: t("portal.editorAdmin.health.columns.lastSeen"),
-      render: (i) => <span className="portal-editor__muted">{i.lastSeen}</span>,
-    },
-    {
+      get: (i) => i.lastSeen,
+    }),
+    column.number({
       key: "activeUsers",
       header: t("portal.editorAdmin.health.columns.activeUsers"),
-      align: "right",
-      render: (i) => (
-        <span className="portal-editor__mono">{i.activeUsers}</span>
-      ),
-    },
+      get: (i) => i.activeUsers,
+    }),
   ];
 
   return (
-    <Card padding="none">
-      {instances.length === 0 ? (
+    <DataTable<EditorInstance>
+      columns={cols}
+      rows={instances}
+      rowKey={(i) => i.id}
+      empty={
         <EmptyState
           size="compact"
           title={t("portal.editorAdmin.health.empty.title")}
           description={t("portal.editorAdmin.health.empty.description")}
         />
-      ) : (
-        <Table columns={cols} rows={instances} rowKey={(i) => i.id} />
-      )}
-    </Card>
+      }
+    />
   );
 }

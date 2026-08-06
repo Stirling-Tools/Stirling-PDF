@@ -1,5 +1,5 @@
 /*
- * DataTable — the one Stirling table. Appearance is owned entirely here: the
+ * DataTable: the one Stirling table. Appearance is owned entirely here: the
  * canonical surface, the header/row grammar, the standardized loading / empty /
  * error states, and every cell KIND (`sui-dtc__*`). Call-sites choose a kind and
  * supply data; they never style a cell. This is what lets every table look and
@@ -10,7 +10,7 @@
   width: 100%;
 }
 
-/* The one canonical surface — every table wears it; call-sites don't wrap it. */
+/* The one canonical surface: every table wears it; call-sites don't wrap it. */
 .sui-datatable__frame {
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
@@ -167,7 +167,7 @@
 }
 
 /*
- * Cell kinds (sui-dtc__*) — the locked cell vocabulary. These absorb the
+ * Cell kinds (sui-dtc__*): the locked cell vocabulary. These absorb the
  * per-namespace portal-*__ cell styles (mono / muted / cell-stack / name-cell /
  * caret …) that every table used to re-implement.
  */
@@ -251,4 +251,48 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.25rem;
+}
+
+.sui-dtc__note--mono {
+  font-family: var(--font-mono);
+}
+
+.sui-dtc__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sui-dtc__progress-bar {
+  display: block;
+  width: 5rem;
+}
+.sui-dtc__progress-pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-muted);
+  min-width: 2.5rem;
+}
+
+.sui-dtc__links {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+.sui-dtc__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--c-accent-fg, var(--c-primary));
+  text-decoration: none;
+  font-weight: 500;
+}
+.sui-dtc__link:hover {
+  text-decoration: underline;
+}
+.sui-dtc__link-icon {
+  display: inline-flex;
+}
+
+.sui-dtc__select {
+  min-width: 13rem;
 }

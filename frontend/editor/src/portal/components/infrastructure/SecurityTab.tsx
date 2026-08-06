@@ -5,13 +5,14 @@ import {
   Button,
   Card,
   Chip,
+  column,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
   RadioGroup,
+  type RadioOption,
   Skeleton,
   StatusBadge,
-  Table,
-  type RadioOption,
-  type TableColumn,
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -78,28 +79,27 @@ export function SecurityTab() {
     },
   ];
 
-  const ipCols: TableColumn<SecurityConfig["ipAllowlist"][number]>[] = [
-    {
+  const ipCols: DataTableColumn<SecurityConfig["ipAllowlist"][number]>[] = [
+    column.text({
       key: "label",
       header: t("portal.infrastructure.security.ipColumns.label"),
-      render: (e) => e.label,
-    },
-    {
+      get: (e) => e.label,
+    }),
+    column.mono({
       key: "cidr",
       header: t("portal.infrastructure.security.ipColumns.cidr"),
-      render: (e) => <code className="portal-infra__cell-code">{e.cidr}</code>,
-    },
-    {
+      get: (e) => e.cidr,
+    }),
+    column.mono({
       key: "addedBy",
       header: t("portal.infrastructure.security.ipColumns.addedBy"),
-      render: (e) => <span className="portal-infra__mono">{e.addedBy}</span>,
-    },
-    {
+      get: (e) => e.addedBy,
+    }),
+    column.muted({
       key: "added",
       header: t("portal.infrastructure.security.ipColumns.added"),
-      align: "right",
-      render: (e) => <span className="portal-infra__muted">{e.added}</span>,
-    },
+      get: (e) => e.added,
+    }),
   ];
 
   // Local mirrors so the radios are interactive without a backend round-trip,
@@ -327,14 +327,12 @@ export function SecurityTab() {
             )}
           />
         ) : (
-          <Card padding="none">
-            <Table
-              columns={ipCols}
-              rows={data.ipAllowlist}
-              rowKey={(e) => e.id}
-              empty={t("portal.infrastructure.security.ipAllowlist.empty")}
-            />
-          </Card>
+          <DataTable
+            columns={ipCols}
+            rows={data.ipAllowlist}
+            rowKey={(e) => e.id}
+            empty={t("portal.infrastructure.security.ipAllowlist.empty")}
+          />
         )}
       </section>
     </div>

@@ -2,11 +2,13 @@ import type { ReactNode } from "react";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { Chip, type ChipAccent } from "@app/ui/Chip";
 import { Button } from "@app/ui/Button";
+import { ProgressBar } from "@app/ui/ProgressBar";
+import { Select, type SelectOption } from "@app/ui/Select";
 
 /**
  * The column vocabulary for {@link DataTable}. Call-sites pick a cell KIND and
  * supply the data + semantics; the component owns 100% of the appearance. There
- * is no raw-JSX / className escape hatch by design — a cell can only look the
+ * is no raw-JSX / className escape hatch by design; a cell can only look the
  * way the design system draws its kind, so every table looks and behaves the
  * same. Rich cells compose from the richer kinds (`entity`, `badgeText`) rather
  * than from bespoke markup.
@@ -31,7 +33,7 @@ export interface DataTableColumn<T> {
 }
 
 /** A small, closed set of design-system glyphs cells may use. */
-export type CellGlyph = "bolt" | "lock" | "kebab";
+export type CellGlyph = "bolt" | "lock" | "kebab" | "external" | "download";
 
 function Glyph({ name }: { name: CellGlyph }) {
   if (name === "bolt") {
@@ -45,6 +47,20 @@ function Glyph({ name }: { name: CellGlyph }) {
     return (
       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z" />
+      </svg>
+    );
+  }
+  if (name === "external") {
+    return (
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" />
+      </svg>
+    );
+  }
+  if (name === "download") {
+    return (
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16" />
       </svg>
     );
   }
@@ -137,7 +153,7 @@ function muted<T>(
 function number<T>(
   o: Common & {
     get: (row: T) => number | null | undefined;
-    format?: (n: number) => string;
+    format?: (n: number, row: T) => string;
     mutedWhenZero?: boolean;
     placeholder?: string;
   },
@@ -150,12 +166,16 @@ function number<T>(
     renderCell: (r) => {
       const n = o.get(r);
       if (n == null) {
-        return <span className="sui-dtc__num sui-dtc__muted">{o.placeholder ?? "-"}</span>;
+        return (
+          <span className="sui-dtc__num sui-dtc__muted">
+            {o.placeholder ?? "-"}
+          </span>
+        );
       }
       const dim = n === 0 && o.mutedWhenZero;
       return (
         <span className={dim ? "sui-dtc__num sui-dtc__muted" : "sui-dtc__num"}>
-          {o.format ? o.format(n) : String(n)}
+          {o.format ? o.format(n, r) : String(n)}
         </span>
       );
     },
@@ -165,6 +185,8 @@ function number<T>(
 function badge<T>(
   o: Common & {
     get: (row: T) => { tone: StatusTone; label: string };
+    /** Drop the status dot for a plain toned pill (e.g. a confidence %). */
+    showDot?: boolean;
     sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
@@ -176,7 +198,7 @@ function badge<T>(
     renderCell: (r) => {
       const b = o.get(r);
       return (
-        <StatusBadge tone={b.tone} size="sm">
+        <StatusBadge tone={b.tone} size="sm" showDot={o.showDot}>
           {b.label}
         </StatusBadge>
       );
@@ -247,8 +269,10 @@ function entity<T>(
     tags?: (row: T) => CellChip[];
     /** Inline marker glyphs after the name (e.g. a lock). */
     markers?: (row: T) => CellGlyph[];
-    /** Secondary muted line under the name. */
+    /** Secondary line under the name. */
     note?: (row: T) => string | null | undefined;
+    /** Render the secondary line monospaced (ids, codes). */
+    noteMono?: boolean;
     sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
@@ -279,7 +303,15 @@ function entity<T>(
                 </span>
               ))}
             </div>
-            {note && <span className="sui-dtc__note">{note}</span>}
+            {note && (
+              <span
+                className={
+                  o.noteMono ? "sui-dtc__note sui-dtc__note--mono" : "sui-dtc__note"
+                }
+              >
+                {note}
+              </span>
+            )}
           </div>
         </div>
       );
@@ -322,6 +354,160 @@ function actions<T>(
   };
 }
 
+function progress<T>(
+  o: Common & { get: (row: T) => { value: number; label?: string } },
+): DataTableColumn<T> {
+  return base<T>(o, {
+    align: "left",
+    nowrap: true,
+    fit: false,
+    sortValue: (r) => o.get(r).value,
+    renderCell: (r) => {
+      const p = o.get(r);
+      return (
+        <div className="sui-dtc__progress">
+          <span className="sui-dtc__progress-bar">
+            <ProgressBar value={p.value} thresholded height={6} />
+          </span>
+          <span className="sui-dtc__progress-pct">
+            {p.label ?? `${Math.round(p.value * 100)}%`}
+          </span>
+        </div>
+      );
+    },
+  });
+}
+
+/** An external link inside a cell. */
+export interface CellLink {
+  label: string;
+  href: string;
+  glyph?: CellGlyph;
+  ariaLabel?: string;
+}
+
+function links<T>(o: {
+  key: string;
+  header?: ReactNode;
+  get: (row: T) => CellLink[];
+}): DataTableColumn<T> {
+  return {
+    key: o.key,
+    header: o.header ?? "",
+    align: "right",
+    nowrap: true,
+    fit: true,
+    sortable: false,
+    renderCell: (r) => (
+      <div className="sui-dtc__links">
+        {o.get(r).map((l) => (
+          <a
+            key={l.label}
+            className="sui-dtc__link"
+            href={l.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={l.ariaLabel}
+          >
+            {l.label}
+            {l.glyph && (
+              <span className="sui-dtc__link-icon" aria-hidden>
+                <Glyph name={l.glyph} />
+              </span>
+            )}
+          </a>
+        ))}
+      </div>
+    ),
+  };
+}
+
+function select<T>(o: {
+  key: string;
+  header: ReactNode;
+  get: (row: T) => {
+    value?: string | null;
+    defaultValue?: string;
+    options: SelectOption[];
+    ariaLabel?: string;
+  };
+  /** Omit for an uncontrolled select (local UI state only). */
+  onChange?: (row: T, value: string | null) => void;
+}): DataTableColumn<T> {
+  return {
+    key: o.key,
+    header: o.header,
+    align: "left",
+    nowrap: true,
+    fit: false,
+    sortable: false,
+    renderCell: (r) => {
+      const s = o.get(r);
+      const change = o.onChange;
+      return (
+        <div className="sui-dtc__select">
+          <Select
+            options={s.options}
+            value={s.value}
+            defaultValue={s.defaultValue}
+            onChange={change ? (v) => change(r, v) : undefined}
+            aria-label={s.ariaLabel}
+            inputSize="sm"
+          />
+        </div>
+      );
+    },
+  };
+}
+
+/** One of a status badge, an info chip, or a call-to-action button per row. */
+export type CellStatus =
+  | { kind: "badge"; tone: StatusTone; label: string }
+  | { kind: "chip"; label: string; accent?: ChipAccent }
+  | { kind: "action"; label: string; onClick: () => void };
+
+function status<T>(
+  o: { key: string; header: ReactNode; get: (row: T) => CellStatus },
+): DataTableColumn<T> {
+  return {
+    key: o.key,
+    header: o.header,
+    align: "right",
+    nowrap: true,
+    fit: false,
+    sortable: false,
+    renderCell: (r) => {
+      const s = o.get(r);
+      if (s.kind === "badge") {
+        return (
+          <StatusBadge tone={s.tone} size="sm">
+            {s.label}
+          </StatusBadge>
+        );
+      }
+      if (s.kind === "chip") {
+        return (
+          <Chip accent={s.accent ?? "neutral"} size="sm" showDot={false}>
+            {s.label}
+          </Chip>
+        );
+      }
+      return (
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={(e) => {
+            e.stopPropagation();
+            s.onClick();
+          }}
+        >
+          {s.label}
+        </Button>
+      );
+    },
+  };
+}
+
 /**
  * The DataTable column vocabulary. Each builder produces a locked-appearance
  * column; call-sites choose the kind + supply data, never styling.
@@ -336,4 +522,8 @@ export const column = {
   chips,
   entity,
   actions,
+  progress,
+  links,
+  select,
+  status,
 };

@@ -59,7 +59,7 @@ const meta: Meta<typeof DataTable> = {
 export default meta;
 type Story = StoryObj<typeof DataTable>;
 
-/** Columns come from the `column` vocabulary — call-sites never style a cell. */
+/** Columns come from the `column` vocabulary; call-sites never style a cell. */
 export const Basic: Story = {
   render: () => <DataTable<Region> columns={COLUMNS} rows={REGIONS} rowKey={(r) => r.id} />,
 };
@@ -84,7 +84,7 @@ export const Interactive: Story = {
       return (
         <>
           <p style={{ marginBottom: "0.75rem", fontSize: "0.8125rem", color: "var(--c-text-muted)" }}>
-            {clicked ? `Clicked: ${clicked.name} (${clicked.code})` : "Click a row — it fires onRowClick."}
+            {clicked ? `Clicked: ${clicked.name} (${clicked.code})` : "Click a row to fire onRowClick."}
           </p>
           <DataTable<Region>
             columns={COLUMNS}

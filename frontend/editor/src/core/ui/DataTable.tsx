@@ -137,14 +137,15 @@ export function DataTable<T extends RowData>({
         nowrap: true,
         fit: true,
         sortable: false,
-        renderCell: () => (
-          <span className="sui-datatable__chevron" aria-hidden>
-            <ChevronGlyph />
-          </span>
-        ),
+        renderCell: (row) =>
+          (isRowInteractive?.(row) ?? true) ? (
+            <span className="sui-datatable__chevron" aria-hidden>
+              <ChevronGlyph />
+            </span>
+          ) : null,
       },
     ];
-  }, [columns, showChevron]);
+  }, [columns, showChevron, isRowInteractive]);
 
   const tanstackColumns = useMemo<ColumnDef<DataTableFeatures, T>[]>(() => {
     const helper = createColumnHelper<DataTableFeatures, T>();

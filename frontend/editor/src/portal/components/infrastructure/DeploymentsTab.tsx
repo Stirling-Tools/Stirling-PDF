@@ -1,12 +1,9 @@
 import { useTranslation } from "react-i18next";
 import {
-  Card,
-  Chip,
+  column,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
-  ProgressBar,
-  StatusBadge,
-  Table,
-  type TableColumn,
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -17,7 +14,6 @@ import {
   type RecentDeployment,
 } from "@portal/api/infrastructure";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
-import { TableSkeleton } from "@portal/components/infrastructure/TableSkeleton";
 import {
   DEPLOY_LABEL,
   DEPLOY_TONE,
@@ -34,147 +30,106 @@ export function DeploymentsTab() {
     [tier],
   );
   const { data } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
+  const { isLoading } = useSectionFlags(state);
 
-  const regionCols: TableColumn<DeploymentRegion>[] = [
-    {
+  const regionCols: DataTableColumn<DeploymentRegion>[] = [
+    column.entity({
       key: "name",
       header: t("portal.infrastructure.deployments.regionColumns.region"),
-      render: (r) => (
-        <div className="portal-infra__cell-stack">
-          <span className="portal-infra__cell-strong">{r.name}</span>
-          <code className="portal-infra__cell-code">{r.code}</code>
-        </div>
-      ),
-    },
-    {
+      primary: (r) => r.name,
+      note: (r) => r.code,
+      noteMono: true,
+    }),
+    column.number({
       key: "latency",
       header: t("portal.infrastructure.deployments.regionColumns.latency"),
-      align: "right",
-      render: (r) => (
-        <span className="portal-infra__mono">
-          {t("portal.infrastructure.deployments.msValue", {
-            value: r.latencyMs,
-          })}
-        </span>
-      ),
-    },
-    {
+      get: (r) => r.latencyMs,
+      format: (n) => t("portal.infrastructure.deployments.msValue", { value: n }),
+    }),
+    column.progress({
       key: "load",
       header: t("portal.infrastructure.deployments.regionColumns.load"),
-      width: "9rem",
-      render: (r) => (
-        <div className="portal-infra__load">
-          <ProgressBar value={r.load} thresholded height={6} />
-          <span className="portal-infra__load-pct">{pct(r.load)}</span>
-        </div>
-      ),
-    },
-    {
+      get: (r) => ({ value: r.load, label: pct(r.load) }),
+    }),
+    column.badge({
       key: "status",
       header: t("portal.infrastructure.deployments.regionColumns.status"),
-      render: (r) => (
-        <StatusBadge tone={REGION_TONE[r.status]} size="sm">
-          {t(REGION_LABEL[r.status])}
-        </StatusBadge>
-      ),
-    },
-    {
+      get: (r) => ({ tone: REGION_TONE[r.status], label: t(REGION_LABEL[r.status]) }),
+    }),
+    column.mono({
       key: "version",
       header: t("portal.infrastructure.deployments.regionColumns.version"),
-      render: (r) => (
-        <code className="portal-infra__cell-code">{r.version}</code>
-      ),
-    },
-    {
+      get: (r) => r.version,
+    }),
+    column.number({
       key: "uptime",
       header: t("portal.infrastructure.deployments.regionColumns.uptime"),
-      align: "right",
-      render: (r) => (
-        <span className="portal-infra__mono">{pct(r.uptime, 3)}</span>
-      ),
-    },
-    {
+      get: (r) => r.uptime,
+      format: (n) => pct(n, 3),
+    }),
+    column.number({
       key: "instances",
       header: t("portal.infrastructure.deployments.regionColumns.instances"),
-      align: "right",
-      render: (r) => <span className="portal-infra__mono">{r.instances}</span>,
-    },
-    {
+      get: (r) => r.instances,
+    }),
+    column.number({
       key: "throughput",
       header: t("portal.infrastructure.deployments.regionColumns.throughput"),
-      align: "right",
-      render: (r) => (
-        <span className="portal-infra__mono">
-          {t("portal.infrastructure.deployments.throughputValue", {
-            value: r.throughput.toLocaleString(),
-          })}
-        </span>
-      ),
-    },
-    {
+      get: (r) => r.throughput,
+      format: (n) =>
+        t("portal.infrastructure.deployments.throughputValue", {
+          value: n.toLocaleString(),
+        }),
+    }),
+    column.number({
       key: "p99",
       header: t("portal.infrastructure.deployments.regionColumns.p99"),
-      align: "right",
-      render: (r) => (
-        <span className="portal-infra__mono">
-          {t("portal.infrastructure.deployments.msValue", { value: r.p99Ms })}
-        </span>
-      ),
-    },
+      get: (r) => r.p99Ms,
+      format: (n) => t("portal.infrastructure.deployments.msValue", { value: n }),
+    }),
   ];
 
-  const deployCols: TableColumn<RecentDeployment>[] = [
-    {
+  const deployCols: DataTableColumn<RecentDeployment>[] = [
+    column.mono({
       key: "version",
       header: t("portal.infrastructure.deployments.deployColumns.version"),
-      render: (d) => (
-        <code className="portal-infra__cell-code">{d.version}</code>
-      ),
-    },
-    {
+      get: (d) => d.version,
+    }),
+    column.chips({
       key: "environment",
       header: t("portal.infrastructure.deployments.deployColumns.environment"),
-      render: (d) => (
-        <Chip
-          accent={
+      get: (d) => [
+        {
+          label: d.environment,
+          accent:
             d.environment === "production"
               ? "default"
               : d.environment === "canary"
                 ? "premium"
-                : "neutral"
-          }
-          size="sm"
-        >
-          {d.environment}
-        </Chip>
-      ),
-    },
-    {
+                : "neutral",
+        },
+      ],
+    }),
+    column.text({
       key: "product",
       header: t("portal.infrastructure.deployments.deployColumns.product"),
-      render: (d) => d.product,
-    },
-    {
+      get: (d) => d.product,
+    }),
+    column.badge({
       key: "status",
       header: t("portal.infrastructure.deployments.deployColumns.status"),
-      render: (d) => (
-        <StatusBadge tone={DEPLOY_TONE[d.status]} size="sm">
-          {t(DEPLOY_LABEL[d.status])}
-        </StatusBadge>
-      ),
-    },
-    {
+      get: (d) => ({ tone: DEPLOY_TONE[d.status], label: t(DEPLOY_LABEL[d.status]) }),
+    }),
+    column.mono({
       key: "deployedBy",
       header: t("portal.infrastructure.deployments.deployColumns.deployedBy"),
-      render: (d) => <span className="portal-infra__mono">{d.deployedBy}</span>,
-    },
-    {
+      get: (d) => d.deployedBy,
+    }),
+    column.muted({
       key: "timestamp",
       header: t("portal.infrastructure.deployments.deployColumns.when"),
-      align: "right",
-      render: (d) => <span className="portal-infra__muted">{d.timestamp}</span>,
-    },
+      get: (d) => d.timestamp,
+    }),
   ];
 
   return (
@@ -184,9 +139,12 @@ export function DeploymentsTab() {
           title={t("portal.infrastructure.deployments.regions.heading")}
           sub={t("portal.infrastructure.deployments.regions.subheading")}
         />
-        <Card padding="none">
-          {isLoading && <TableSkeleton rows={3} cols={9} />}
-          {isEmpty && (
+        <DataTable
+          columns={regionCols}
+          rows={data?.regions ?? []}
+          rowKey={(r) => r.code}
+          loading={isLoading}
+          empty={
             <EmptyState
               size="compact"
               title={t("portal.infrastructure.deployments.regions.empty.title")}
@@ -194,15 +152,8 @@ export function DeploymentsTab() {
                 "portal.infrastructure.deployments.regions.empty.description",
               )}
             />
-          )}
-          {!isEmpty && data && data.regions.length > 0 && (
-            <Table
-              columns={regionCols}
-              rows={data.regions}
-              rowKey={(r) => r.code}
-            />
-          )}
-        </Card>
+          }
+        />
       </section>
 
       <section>
@@ -210,16 +161,16 @@ export function DeploymentsTab() {
           title={t("portal.infrastructure.deployments.recent.heading")}
           sub={t("portal.infrastructure.deployments.recent.subheading")}
         />
-        <Card padding="none">
-          {isLoading && <TableSkeleton rows={4} cols={6} />}
-          {data && data.recent.length > 0 && (
-            <Table
-              columns={deployCols}
-              rows={data.recent}
-              rowKey={(d) => d.id}
-            />
+        <DataTable
+          columns={deployCols}
+          rows={data?.recent ?? []}
+          rowKey={(d) => d.id}
+          loading={isLoading}
+          empty={t(
+            "portal.infrastructure.deployments.recent.empty",
+            "No recent deployments",
           )}
-        </Card>
+        />
       </section>
     </div>
   );

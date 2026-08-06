@@ -1568,8 +1568,6 @@
   "editor/src/core/ui/StepIndicator.stories.tsx :: Step 3": [
     "aria-progressbar-name"
   ],
-  "editor/src/core/ui/Table.stories.tsx :: Basic": ["color-contrast"],
-  "editor/src/core/ui/Table.stories.tsx :: Interactive": ["color-contrast"],
   "editor/src/core/ui/Tabs.stories.tsx :: In Context Document Verticals": [
     "color-contrast"
   ],
@@ -1690,6 +1688,9 @@
     "color-contrast",
     "empty-table-header"
   ],
+  "editor/src/portal/components/account-link/LinkedInstancesTable.stories.tsx :: Empty": [
+    "empty-table-header"
+  ],
   "editor/src/portal/components/billing/ActivationChoiceModal.stories.tsx :: Default": [
     "color-contrast"
   ],
@@ -1711,7 +1712,8 @@
     "color-contrast"
   ],
   "editor/src/portal/components/billing/InvoicesList.stories.tsx :: Default": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/billing/LinkAccountPrompt.stories.tsx :: Default": [
     "color-contrast"
