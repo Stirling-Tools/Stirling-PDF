@@ -56,7 +56,7 @@
 .portal-policies__setup-link {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -165,7 +165,7 @@
 .portal-policies__card-cta {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-policies__chevron-right {
@@ -297,7 +297,7 @@
   padding: 0;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   cursor: pointer;
 }
 
@@ -384,7 +384,7 @@
   color: var(--color-amber);
 }
 .portal-policies__activity-icon--info {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 @keyframes portal-policies-spin {
