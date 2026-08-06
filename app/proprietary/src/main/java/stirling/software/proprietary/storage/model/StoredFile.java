@@ -103,6 +103,14 @@ public class StoredFile implements Serializable {
     @Enumerated(EnumType.STRING)
     private FilePurpose purpose;
 
+    /**
+     * file_encryption_keys id under which this file's blobs (main/history/audit) were encrypted;
+     * null = stored plaintext. The per-blob truth is each blob's own header — this column exists
+     * for reporting and the encrypt-existing migration. Nullable so ddl-auto upgrades cleanly.
+     */
+    @Column(name = "encryption_key_id", length = 36)
+    private String encryptionKeyId;
+
     @OneToMany(
             mappedBy = "file",
             fetch = FetchType.LAZY,

@@ -73,6 +73,7 @@ export async function runStoredPolicy(
   const res = await apiClient.post<JobResponse>(
     `/api/v1/policies/${encodeURIComponent(id)}/run`,
     form,
+    { suppressErrorToast: true },
   );
   return res.data.jobId;
 }

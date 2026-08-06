@@ -263,6 +263,7 @@ public class WorkflowSessionService {
         storedFile.setContentType(storedObject.getContentType());
         storedFile.setSizeBytes(storedObject.getSizeBytes());
         storedFile.setStorageKey(storedObject.getStorageKey());
+        storedFile.setEncryptionKeyId(storedObject.getEncryptionKeyId());
         storedFile.setPurpose(purpose);
 
         return storedFileRepository.save(storedFile);

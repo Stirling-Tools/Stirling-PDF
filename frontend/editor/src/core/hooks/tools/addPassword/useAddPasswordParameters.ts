@@ -2,6 +2,7 @@ import {
   ChangePermissionsParameters,
   ChangePermissionsParametersHook,
   useChangePermissionsParameters,
+  validateChangePermissionsParameters,
 } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 import { BaseParameters } from "@app/types/parameters";
 import {
@@ -29,6 +30,16 @@ export const defaultParameters: AddPasswordParameters = {
   ownerPassword: "",
   keyLength: 128,
 };
+
+/**
+ * Whether these parameters are complete enough to run.
+ * Add Password requires nothing of its own, so delegate to Change Permissions.
+ */
+export function validateAddPasswordParameters(
+  params: AddPasswordFullParameters,
+): boolean {
+  return validateChangePermissionsParameters(params.permissions);
+}
 
 export const useAddPasswordParameters = (): AddPasswordParametersHook => {
   const permissions = useChangePermissionsParameters();
