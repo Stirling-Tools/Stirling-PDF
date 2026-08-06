@@ -1,19 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
+import { fetchGroupEnabled } from "@app/api/config";
+import { qk } from "@app/query/keys";
+import { CONFIG_STALE_TIME } from "@app/query/staleTime";
+import type { GroupEnabledResult } from "@app/types/groupEnabled";
+
+export type { GroupEnabledResult };
 import type { GroupEnabledResult } from "@app/types/groupEnabled";
 import { editorQk } from "@app/queries/keys";
 import { fetchGroupEnabled } from "@app/queries/endpoints";
 
 export type { GroupEnabledResult };
 
+/** Null while loading; a failed check reads as disabled. */
 export function useGroupEnabled(group: string): GroupEnabledResult {
-  const query = useQuery({
-    queryKey: editorQk.groupEnabled(group),
+  const { data, isPending } = useQuery({
+    queryKey: qk.groupEnabled(group),
     queryFn: () => fetchGroupEnabled(group),
-    enabled: !!group,
+    staleTime: CONFIG_STALE_TIME,
   });
 
-  if (!group) return { enabled: null, unavailableReason: null };
-  if (query.isPending) return { enabled: null, unavailableReason: null };
-  if (query.isError) return { enabled: false, unavailableReason: null };
-  return { enabled: query.data ?? false, unavailableReason: null };
+  return {
+    enabled: isPending ? null : (data ?? false),
+    unavailableReason: null,
+  };
 }
