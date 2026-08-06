@@ -15,10 +15,18 @@ export const defaultParameters: ExtractPagesParameters = {
 export type ExtractPagesParametersHook =
   BaseParametersHook<ExtractPagesParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings hook
+ * and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateExtractPagesParameters(
+  params: ExtractPagesParameters,
+): boolean {
+  return (params.pageNumbers || "").trim().length > 0;
+}
+
 export const useExtractPagesParameters = (): ExtractPagesParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "rearrange-pages",
-    validateFn: (p) => (p.pageNumbers || "").trim().length > 0,
+    validateFn: validateExtractPagesParameters,
   });
 };

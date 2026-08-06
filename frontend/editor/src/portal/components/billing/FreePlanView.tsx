@@ -85,7 +85,6 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
   const switchOnAction = isLeader ? (
     <Button
       variant="primary"
-      accent="premium"
       onClick={flow.status === "none" ? openActivation : resumeBundle}
       disabled={wallet.teamId == null}
     >
@@ -184,9 +183,11 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       )}
 
       {/* Prepay reuses the bundle modal (free team → first-purchase copy, no cap
-          step). On completion the webhook credits the pool AND silently creates
-          the metered subscription off the saved card, so we poll like the payg
-          path to flip the wallet to subscribed. */}
+          step). On completion the webhook credits the pool; we still poll onSubscribed
+          like the payg path, but flipping the wallet to subscribed depends on the
+          metered-subscription auto-provisioning off the saved card, a known follow-up
+          that's NOT yet wired — so for a prepay-only team this poll can just time out
+          until then. */}
       {wallet.teamId != null && (
         <BundleCheckoutModal
           open={step === "prepay"}

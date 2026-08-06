@@ -199,9 +199,13 @@ export function bundleListMinor(
 }
 
 /**
- * Discounted price of a prepaid pool in minor units: units × rate × paid/granted.
- * Mirror of the Stripe coupon. Null when the rate is unknown (the caller hides the
- * figure and falls back to the server total).
+ * Discounted price of a prepaid pool in minor units: the list subtotal minus the
+ * rounded 12-for-10 discount. Computed the SAME way as the edge fn that mints the
+ * Stripe coupon (create-payg-bundle-quote: round the DISCOUNT, then subtract it —
+ * not round the discounted price), so this pre-mint estimate matches the amount_off
+ * Stripe charges, and the total persisted on the quote, to the penny. The two methods
+ * diverge by a minor unit on exact-half ties. Null when the rate is unknown (the
+ * caller hides the figure and falls back to the server total).
  */
 export function bundlePriceMinor(
   units: number,
@@ -209,11 +213,12 @@ export function bundlePriceMinor(
   monthsPaid: number = PREPAID_MONTHS_PAID,
   monthsGranted: number = PREPAID_MONTHS_GRANTED,
 ): number | null {
-  const rate =
-    ratePerUnitMinor != null && ratePerUnitMinor > 0 ? ratePerUnitMinor : null;
-  return rate != null
-    ? Math.round((units * rate * monthsPaid) / monthsGranted)
-    : null;
+  const subtotal = bundleListMinor(units, ratePerUnitMinor);
+  if (subtotal == null) return null;
+  const discount = Math.round(
+    (subtotal * (monthsGranted - monthsPaid)) / monthsGranted,
+  );
+  return subtotal - discount;
 }
 
 /** Inputs to {@link computeBundleQuote} — team size + the finer-setting multipliers. */

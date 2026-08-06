@@ -67,8 +67,6 @@ public class PdfCommentAgentController {
 
                     The annotated PDF is streamed back in the response body with
                     Content-Type: application/pdf.
-
-                    Input: PDF + prompt  Output: PDF  Type: SISO
                     """)
     public ResponseEntity<Resource> pdfCommentAgent(
             @Parameter(description = "The PDF document to annotate", required = true)

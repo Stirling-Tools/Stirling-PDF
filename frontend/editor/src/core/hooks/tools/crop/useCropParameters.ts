@@ -45,15 +45,19 @@ export type CropParametersHook = BaseParametersHook<CropParameters> & {
   ) => void;
 };
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateCropParameters(params: CropParameters): boolean {
+  const rect = params.cropArea;
+  // Basic validation - coordinates and dimensions must be positive
+  return rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0;
+}
+
 export const useCropParameters = (): CropParametersHook => {
   const baseHook = useBaseParameters({
     defaultParameters,
     endpointName: "crop",
-    validateFn: (params) => {
-      const rect = params.cropArea;
-      // Basic validation - coordinates and dimensions must be positive
-      return rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0;
-    },
+    validateFn: validateCropParameters,
   });
 
   // Get current crop area as CropArea object

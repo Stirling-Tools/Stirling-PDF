@@ -30,6 +30,8 @@ import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
@@ -50,12 +52,12 @@ public class RearrangePagesPDFController {
             value = "/remove-pages",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove pages from a PDF file",
             description =
                     "This endpoint removes specified pages from a given PDF file. Users can provide"
-                            + " a comma-separated list of page numbers or ranges to delete. Input:PDF"
-                            + " Output:PDF Type:SISO")
+                            + " a comma-separated list of page numbers or ranges to delete.")
     public ResponseEntity<Resource> deletePages(@ModelAttribute PDFWithPageNums request)
             throws IOException {
 
@@ -234,13 +236,13 @@ public class RearrangePagesPDFController {
             value = "/rearrange-pages",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Rearrange pages in a PDF file",
             description =
                     "This endpoint rearranges pages in a given PDF file based on the specified page"
-                            + " order or custom mode. Users can provide a page order as a"
-                            + " comma-separated list of page numbers or page ranges, or a custom mode."
-                            + " Input:PDF Output:PDF")
+                            + " order or custom mode. Users can provide a page order as a comma-separated list"
+                            + " of page numbers or page ranges, or a custom mode.")
     public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();

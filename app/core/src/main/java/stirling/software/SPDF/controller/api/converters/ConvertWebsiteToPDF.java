@@ -34,6 +34,8 @@ import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -62,11 +64,11 @@ public class ConvertWebsiteToPDF {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/url/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(accepts = ToolFormat.NONE, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a URL to a PDF",
             description =
-                    "This endpoint fetches content from a URL and converts it to a PDF format."
-                            + " Input:N/A Output:PDF Type:SISO")
+                    "This endpoint fetches content from a URL and converts it to a PDF format.")
     public ResponseEntity<?> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
