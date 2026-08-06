@@ -49,6 +49,8 @@ import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/u
 import { signOperationConfig } from "@app/hooks/tools/sign/useSignOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
 import { removeAnnotationsOperationConfig } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
+import { removeImageOperationConfig } from "@app/hooks/tools/removeImage/useRemoveImageOperation";
+import { pageLayoutOperationConfig } from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
 import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
 import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
@@ -525,6 +527,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         maxFiles: -1,
         endpoints: ["validate-signature"],
         synonyms: getSynonyms(t, "validateSignature"),
+        // Reports on signatures rather than transforming the PDF, and its hook is
+        // not on the operationConfig seam, so it cannot run as an automation step.
+        supportsAutomate: false,
         automationSettings: null,
       },
 
@@ -729,6 +734,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
         endpoints: ["multi-page-layout"],
+        operationConfig: asRegistryConfig(pageLayoutOperationConfig),
         automationSettings: lazySettings(
           () => import("@app/components/tools/pageLayout/PageLayoutSettings"),
         ),
@@ -941,7 +947,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
         endpoints: ["remove-image-pdf"],
-        operationConfig: undefined,
+        operationConfig: asRegistryConfig(removeImageOperationConfig),
         synonyms: getSynonyms(t, "removeImage"),
         automationSettings: null,
       },
@@ -1170,6 +1176,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         endpoints: ["scanner-effect"],
         synonyms: getSynonyms(t, "scannerEffect"),
+        // No frontend implementation yet (component is null), so it has no
+        // operationConfig to execute as an automation step.
+        supportsAutomate: false,
         automationSettings: null,
       },
 
