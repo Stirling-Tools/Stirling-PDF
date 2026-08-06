@@ -30,6 +30,15 @@ on:
         options:
           - "true"
           - "false"
+      prerelease:
+        description: "GitHub release prerelease flag (keep = leave the release as-is)"
+        required: false
+        default: "keep"
+        type: choice
+        options:
+          - "keep"
+          - "true"
+          - "false"
   release:
     types: [created]
 
@@ -299,13 +308,13 @@ jobs:
         run: |
           Write-Host "Setting up DigiCert KeyLocker environment..."
 
-          # Decode client certificate
+          # Decode client certificate (RUNNER_TEMP: arm64 runners have no D: drive)
           $certBytes = [Convert]::FromBase64String("${{ secrets.SM_CLIENT_CERT_FILE_B64 }}")
-          $certPath = "D:\Certificate_pkcs12.p12"
+          $certPath = Join-Path $env:RUNNER_TEMP "Certificate_pkcs12.p12"
           [IO.File]::WriteAllBytes($certPath, $certBytes)
 
           # Set environment variables
-          echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_FILE=$certPath" >> $env:GITHUB_ENV
           echo "SM_HOST=${{ secrets.SM_HOST }}" >> $env:GITHUB_ENV
           echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> $env:GITHUB_ENV
           echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> $env:GITHUB_ENV
@@ -916,4 +925,6 @@ jobs:
             ./artifacts/**/*.AppImage
             ./artifacts/latest.json
           draft: false
-          prerelease: false
+          # Empty = keep the release's existing prerelease flag (action treats
+          # empty as undefined); dispatch input can force true/false.
+          prerelease: ${{ github.event.inputs.prerelease != 'keep' && github.event.inputs.prerelease || '' }}
