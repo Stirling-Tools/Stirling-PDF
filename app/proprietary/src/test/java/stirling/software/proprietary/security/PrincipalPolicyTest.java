@@ -23,6 +23,11 @@ class PrincipalPolicyTest {
     }
 
     @Test
+    void doesNotTreatMissingAuthenticationAsInternal() {
+        assertFalse(policy.isInternalApiUser(null));
+    }
+
+    @Test
     void rejectsUnauthenticatedAuthentication() {
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken("peter", "password");
@@ -60,12 +65,16 @@ class PrincipalPolicyTest {
                 authenticated(
                         "peter", new SimpleGrantedAuthority(Role.INTERNAL_API_USER.getRoleId()));
 
+        assertTrue(policy.isInternalApiUser(authentication));
         assertFalse(policy.isHumanUser(authentication));
     }
 
     @Test
     void rejectsInternalApiUsernameEvenWithoutAuthority() {
-        assertFalse(policy.isHumanUser(authenticated(Role.INTERNAL_API_USER.getRoleId())));
+        Authentication authentication = authenticated(Role.INTERNAL_API_USER.getRoleId());
+
+        assertTrue(policy.isInternalApiUser(authentication));
+        assertFalse(policy.isHumanUser(authentication));
     }
 
     @Test

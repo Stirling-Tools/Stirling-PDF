@@ -9,16 +9,21 @@ import stirling.software.common.model.enumeration.Role;
 @Component("principalPolicy")
 public class PrincipalPolicy {
 
+    public boolean isInternalApiUser(Authentication authentication) {
+        return authentication != null
+                && (Role.INTERNAL_API_USER.getRoleId().equals(authentication.getName())
+                        || authentication.getAuthorities().stream()
+                                .anyMatch(
+                                        authority ->
+                                                Role.INTERNAL_API_USER
+                                                        .getRoleId()
+                                                        .equals(authority.getAuthority())));
+    }
+
     public boolean isHumanUser(Authentication authentication) {
         return authentication != null
                 && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getName())
-                && !Role.INTERNAL_API_USER.getRoleId().equals(authentication.getName())
-                && authentication.getAuthorities().stream()
-                        .noneMatch(
-                                authority ->
-                                        Role.INTERNAL_API_USER
-                                                .getRoleId()
-                                                .equals(authority.getAuthority()));
+                && !isInternalApiUser(authentication);
     }
 }

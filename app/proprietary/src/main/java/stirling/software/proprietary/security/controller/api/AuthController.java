@@ -254,7 +254,7 @@ public class AuthController {
      *
      * @return Current authenticated user information
      */
-    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
@@ -288,7 +288,7 @@ public class AuthController {
      * @param response HTTP response
      * @return Success message
      */
-    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -314,7 +314,7 @@ public class AuthController {
      * @param response HTTP response to set new JWT cookie
      * @return New token information
      */
-    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
         try {
