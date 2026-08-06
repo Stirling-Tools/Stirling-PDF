@@ -8,8 +8,8 @@ dependencies {
 
     // Markdown -> HTML for rendering versioned legal documents (agreement) to PDF via the
     // shared FileToPdf/WeasyPrint path in :common. Same library the core Markdown-to-PDF tool uses.
-    implementation "org.commonmark:commonmark:$commonmarkVersion"
-    implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
+    implementation "org.commonmark:commonmark:${libs.versions.commonmark.get()}"
+    implementation "org.commonmark:commonmark-ext-gfm-tables:${libs.versions.commonmark.get()}"
 
     api 'org.springframework.boot:spring-boot-starter-security'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
