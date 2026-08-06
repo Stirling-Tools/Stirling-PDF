@@ -870,13 +870,17 @@
   margin: 0.25rem 0;
 }
 
+/* Underlined, not just tinted: a link sitting inside a paragraph is only
+   1.12:1 against the prose around it, so colour alone does not mark it as a
+   link for a reader who cannot separate the two hues. */
 .portal-docs__md a {
   color: var(--c-accent-text);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .portal-docs__md a:hover {
-  text-decoration: underline;
+  text-decoration-thickness: 2px;
 }
 
 .portal-docs__md code {
