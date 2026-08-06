@@ -8,6 +8,10 @@ vi.mock("@app/api/config", () => ({ fetchGroupEnabled: vi.fn() }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_k: string, fallback: string) => fallback }),
+  initReactI18next: {
+    type: "3rdParty",
+    init: vi.fn(),
+  },
 }));
 
 let status = "online";
