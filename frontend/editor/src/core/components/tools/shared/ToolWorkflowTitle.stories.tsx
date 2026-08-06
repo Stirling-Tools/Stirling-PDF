@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ToolWorkflowTitle } from "@app/components/tools/shared/ToolWorkflowTitle";
 
 /** The heading every tool panel opens with, optionally with a description line
@@ -8,15 +7,6 @@ const meta: Meta<typeof ToolWorkflowTitle> = {
   title: "Tools/Shared/ToolWorkflowTitle",
   component: ToolWorkflowTitle,
   parameters: { layout: "padded" },
-  // The tooltip renders the branded header, which reads the user's logo
-  // preference — so the title needs the preferences context to mount.
-  decorators: [
-    (Story) => (
-      <PreferencesProvider>
-        <Story />
-      </PreferencesProvider>
-    ),
-  ],
 };
 export default meta;
 
