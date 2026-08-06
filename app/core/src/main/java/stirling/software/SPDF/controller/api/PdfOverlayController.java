@@ -57,6 +57,7 @@ public class PdfOverlayController {
         int overlayPos = request.getOverlayPosition();
 
         MultipartFile[] overlayFiles = request.getOverlayFiles();
+        validateOverlayFiles(overlayFiles);
         File[] overlayPdfFiles = new File[overlayFiles.length];
         List<File> tempFiles = new ArrayList<>(); // List to keep track of temporary files
 
@@ -116,10 +117,29 @@ public class PdfOverlayController {
         }
     }
 
+    // Both fields are declared required, but @ModelAttribute binding leaves them null when the
+    // caller omits them, which would otherwise surface as a 500 instead of a 400.
+    private void validateOverlayFiles(MultipartFile[] overlayFiles) {
+        if (overlayFiles == null || overlayFiles.length == 0) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.overlayFilesRequired", "At least one overlay file is required");
+        }
+        for (MultipartFile overlayFile : overlayFiles) {
+            if (overlayFile == null || overlayFile.isEmpty()) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.overlayFileEmpty", "Overlay files must not be empty");
+            }
+        }
+    }
+
     private Map<Integer, String> prepareOverlayGuide(
             int basePageCount, File[] overlayFiles, String mode, int[] counts, List<File> tempFiles)
             throws IOException {
         Map<Integer, String> overlayGuide = new HashMap<>();
+        if (mode == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat", "Invalid {0} format: {1}", "overlay mode", "null");
+        }
         switch (mode) {
             case "SequentialOverlay":
                 sequentialOverlay(overlayGuide, overlayFiles, basePageCount, tempFiles);
