@@ -219,7 +219,9 @@ html[data-app-theme="custom"] {
     var(--c-primary) 18%,
     transparent
   );
-  --mantine-primary-color-light-color: var(--c-primary);
+  /* Text of the light/subtle variants — the fill value only reaches ~3:1 on
+     its own tint, so accent copy takes the deeper step. */
+  --mantine-primary-color-light-color: var(--c-accent-text);
 
   /* Brand-tint family — re-derived from --c-primary so legacy accents harmonise to the chosen hue. */
 

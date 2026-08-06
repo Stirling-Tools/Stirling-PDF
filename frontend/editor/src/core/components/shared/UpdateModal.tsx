@@ -437,7 +437,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                     <StarIcon
                       style={{
                         fontSize: 18,
-                        color: "var(--mantine-color-blue-filled)",
+                        color: "var(--c-accent-text)",
                       }}
                     />
                     <Text fw={600} size="sm">

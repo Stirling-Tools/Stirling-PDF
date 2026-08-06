@@ -31,5 +31,5 @@
 }
 
 .sui-field--error .sui-field__help {
-  color: var(--color-red);
+  color: var(--color-red-dark);
 }

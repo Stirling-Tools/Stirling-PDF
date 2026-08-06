@@ -218,7 +218,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 icon="admin-panel-settings-rounded"
                 width="1.2rem"
                 height="1.2rem"
-                style={{ color: "var(--mantine-color-blue-6)" }}
+                style={{ color: "var(--c-accent-text)" }}
               />
               <Text
                 fw={600}
