@@ -46,10 +46,8 @@ filesSelected = "فایل‌ها انتخاب شدند"
 font = "فونت"
 fontSizeTooltip = "اندازه متن شماره صفحه بر حسب پوینت. اعداد بزرگ‌تر متن بزرگ‌تری ایجاد می‌کنند."
 fontTypeTooltip = "خانواده فونت برای شماره صفحات. بر اساس سبک سند خود انتخاب کنید."
-genericSubmit = "ارسال"
 green = "سبز"
 help = "راهنما"
-imgPrompt = "انتخاب تصویر(ها)"
 incorrectPasswordMessage = "رمز عبور فعلی نادرست است."
 info = "اطلاعات"
 invalidUndoData = "امکان واگردانی نیست: داده‌های عملیات نامعتبر است"
@@ -62,7 +60,6 @@ loginAgreementTitle = "توافق‌نامهٔ ورود"
 logOut = "خروج از حساب"
 marginTooltip = "فاصله بین شماره صفحه و لبه صفحه."
 moreOptions = "گزینه‌های بیشتر"
-multiPdfPrompt = "انتخاب فایل‌های PDF (دو یا بیشتر)"
 never = "هرگز"
 no = "خیر"
 noFileSelected = "هیچ فایلی انتخاب نشده است. لطفاً یک فایل بارگذاری کنید."
@@ -80,7 +77,6 @@ pageOrderPrompt = "ترتیب صفحات سفارشی (یک لیست از شما
 pages = "صفحات"
 pageSelectionPrompt = "انتخاب صفحات سفارشی (یک لیست از شماره صفحات به صورت جدا شده با کاما وارد کنید مانند 1,5,6 یا از توابعی مانند 2n+1 استفاده کنید):"
 password = "رمز عبور"
-pdfPrompt = "انتخاب فایل(های) PDF"
 pin = "سنجاق کردن فایل (پس از اجرای ابزار فعال بماند)"
 pro = "نسخه حرفه‌ای"
 processingComplete = "فایل شما آماده است."
@@ -356,6 +352,7 @@ text = "این مجوزها کنترل می‌کنند کاربران چه کا�
 title = "تغییر مجوزها"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -691,6 +688,165 @@ manualLinks = "دانلود دستی: روی پیوندها کلیک کنید و
 noLanguages = "هیچ زبان tessdata در پوشهٔ پیکربندی‌شده یافت نشد."
 permissionNotice = "مسیر tessdata قابل نوشتن نیست. دانلودها در مرورگر باز می‌شوند؛ لطفاً فایل‌های .traineddata را به‌صورت دستی در پوشهٔ tessdata ذخیره کنید."
 
+[admin.settings.ai.documents]
+description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
+title = "Documents & RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments."
+generic = "Embedding API key"
+openai = "OpenAI API key"
+setPlaceholder = "Saved - leave blank to keep the current key"
+voyageai = "VoyageAI API key"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "Base URL of the OpenAI-compatible / Ollama embeddings endpoint, e.g. http://ollama:11434/v1. Must point at a trusted internal endpoint (SSRF-sensitive)."
+label = "Embedding base URL"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Embedding model name. Free text; suggestions are hints only."
+label = "Embedding model"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Provider used to turn document text into vector embeddings."
+label = "Embedding provider"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Maximum number of retrieval searches the agent may run per request."
+label = "Max searches"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Changing the embedding model takes effect immediately, but documents indexed with the previous model must be re-indexed for search to return correct results."
+title = "Re-index required"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "If you changed the embedding model, re-index existing documents so search uses the new model."
+
+[admin.settings.ai.documents.topK]
+description = "Number of most-relevant chunks retrieved per search."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart."
+title = "AI Engine"
+
+[admin.settings.ai.general.capabilities]
+description = "Turn individual AI features on or off. Disabled features are hidden in the app."
+title = "Capabilities"
+
+[admin.settings.ai.general.enabled]
+description = "Master switch. When off, no AI tools, agents, or engine calls are available."
+label = "Enable AI"
+
+[admin.settings.ai.general.features.chat]
+description = "Conversational assistant for working with PDFs."
+label = "Chat assistant"
+
+[admin.settings.ai.general.features.classify]
+description = "Automatically categorise documents by type or content."
+label = "Document classification"
+
+[admin.settings.ai.general.features.createPdf]
+description = "Generate a new PDF (e.g. from HTML) via an AI agent."
+label = "Create PDF from prompt"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Ask questions and get answers grounded in an uploaded document."
+label = "Document questions"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Review documents for mathematical and numerical errors."
+label = "Math auditor"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "Add AI-authored review comments and annotations to a PDF."
+label = "PDF comment agent"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Timeout for heavier agent operations such as document generation."
+label = "Long-running timeout (seconds)"
+
+[admin.settings.ai.general.note]
+body = "The AI engine runs as a separate service. Its shared secret"
+body2 = "is set via a container environment variable. Provider API keys can be entered on these pages or supplied as engine environment variables; keys entered here are pushed to the engine when saved."
+title = "About the AI engine"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Timeout for streamed (token-by-token) chat responses."
+label = "Stream timeout (seconds)"
+
+[admin.settings.ai.general.test]
+button = "Test connection"
+failBody = "The AI engine did not respond. Check the URL, that the engine container is running, and that AI is enabled (a restart is needed after enabling)."
+failTitle = "AI engine unreachable"
+okBody = "The AI engine responded to a health check."
+okTitle = "AI engine reachable"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Timeout for standard AI requests to the engine."
+label = "Request timeout (seconds)"
+
+[admin.settings.ai.general.url]
+description = "Internal URL of the Python AI engine, e.g. http://stirling-pdf-engine:5001."
+label = "AI engine URL"
+
+[admin.settings.ai.limits]
+description = "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved."
+title = "Limits & Performance"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Guardrail: reject AI requests whose extracted text exceeds this length."
+label = "Max characters per request"
+
+[admin.settings.ai.limits.maxPages]
+description = "Guardrail: reject AI requests over this many PDF pages."
+label = "Max pages per request"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Maximum simultaneous in-flight model calls across the whole engine."
+label = "Model max concurrency"
+
+[admin.settings.ai.models]
+description = "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved."
+title = "Models & Providers"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Anthropic API key"
+description = "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments."
+generic = "API key"
+openai = "OpenAI API key"
+setPlaceholder = "Saved - leave blank to keep the current key"
+
+[admin.settings.ai.models.baseUrl]
+description = "Base URL of the OpenAI-compatible / Ollama endpoint, e.g. http://ollama:11434/v1."
+label = "Provider base URL"
+warning = "The base URL must point at a trusted internal endpoint. The engine will make server-side requests to it, so an untrusted value is SSRF-sensitive."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Maximum output tokens for the fast model."
+label = "Fast model max tokens"
+
+[admin.settings.ai.models.fastModel]
+description = "Cheaper, faster model for lightweight tasks. Free text; suggestions are hints only."
+label = "Fast model"
+
+[admin.settings.ai.models.provider]
+description = "Which LLM provider the engine talks to."
+label = "Provider"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Maximum output tokens for the smart model."
+label = "Smart model max tokens"
+
+[admin.settings.ai.models.smartModel]
+description = "High-capability model for complex reasoning. Free text; suggestions are hints only."
+label = "Smart model"
+
+[admin.settings.ai.saved]
+body = "Changes are pushed to the AI engine automatically."
+bodyNoPush = "Settings saved. They will apply the next time the AI engine picks up its configuration."
+title = "AI settings saved"
+
 [admin.settings.badge]
 clickToUpgrade = "برای مشاهده جزئیات طرح کلیک کنید"
 
@@ -937,6 +1093,25 @@ label = "تولید مجدد هنگام راه‌اندازی"
 [admin.settings.features.serverCertificate.validity]
 description = "تعداد روزهای اعتبار گواهی"
 label = "اعتبار گواهی (روز)"
+
+[admin.settings.folderAccess]
+description = "Directories that folder sources and folder outputs are allowed to read from and write to. This is a security boundary: automations can never be pointed at a server path outside this list."
+securityNote = "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory is always off-limits."
+title = "Folder Access"
+
+[admin.settings.folderAccess.implied]
+description = "These Stirling-managed directories are always permitted and can't be changed here."
+serverStorage = "Server file storage"
+title = "Always allowed"
+watchedFolder = "Pipeline watched folder"
+
+[admin.settings.folderAccess.roots]
+add = "Add"
+empty = "No folders allowed. Folder sources and outputs are currently disabled."
+hint = "Enter absolute paths, for example /data/inbox."
+label = "Allowed folder roots"
+placeholder = "/data/inbox"
+remove = "Remove folder root"
 
 [admin.settings.general]
 description = "پیکربندی تنظیمات سراسری برنامه شامل برندینگ و رفتار پیش‌فرض."
@@ -1842,6 +2017,15 @@ export = "برون‌بری"
 accessDenied = "دسترسی رد شد"
 insufficientPermissions = "شما مجوز انجام این اقدام را ندارید."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "مهمان"
 user = "کاربر"
@@ -1986,6 +2170,73 @@ secureWorkflowDesc = "اسناد PDF را با حذف محتوای بالقوه 
 [autoRename]
 description = "این ابزار فایل‌های PDF را بر اساس محتوایشان به‌صورت خودکار تغییر نام می‌دهد. سند را تحلیل می‌کند تا مناسب‌ترین عنوان را از متن بیابد."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+
+[autoRotate]
+submit = "Auto Rotate"
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Confidence threshold"
+
+[autoRotate.detectionMode]
+auto = "Auto"
+osd = "OCR only"
+text = "Text only"
+title = "Detection method"
+
+[autoRotate.error]
+failed = "An error occurred while auto-rotating the PDF."
+
+[autoRotate.inferUndetected]
+title = "Rotate low confidence pages to match"
+
+[autoRotate.report]
+applied = "{{degrees}}° CW"
+confidenceValue = "Confidence {{value}}"
+noChange = "No change"
+pageLabel = "Page {{number}}"
+summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
+title = "Detection report"
+
+[autoRotate.report.method]
+inferred = "Matched"
+none = "Skipped"
+osd = "OCR"
+text = "Text"
+
+[autoRotate.report.note]
+belowThreshold = "Below threshold"
+blankPage = "Page is blank"
+inferredFromDocument = "Same as the other pages"
+noDominantDirection = "Mixed text directions"
+osdFailed = "No readable text found"
+osdNoVerdict = "Could not tell which way up"
+tesseractUnavailable = "OCR not installed"
+tooFewGlyphs = "Too little text"
+
+[autoRotate.results]
+title = "Auto Rotate Results"
+
+[autoRotate.settings]
+title = "Settings"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "How certain the check has to be before a page is turned. Lower it to rotate more pages, raise it to leave more pages untouched."
+title = "Confidence threshold"
+
+[autoRotate.tooltip.description]
+text = "Works out which way up each page should be and turns it the right way round. Pages that are already upright are left alone."
+
+[autoRotate.tooltip.detectionMode]
+text = "Auto reads the text on the page first, then looks at the page as an image if that is not enough. Text only skips the image check, which is quickest for documents that were never scanned. OCR only treats every page as an image."
+title = "Detection method"
+
+[autoRotate.tooltip.header]
+title = "Auto Rotate"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Blank or nearly blank pages cannot be checked on their own. When every page that could be read needs the same turn, these pages are turned to match them."
+title = "Rotate low confidence pages to match"
 
 [autoSizeSplitPDF]
 tags = "PDF، تقسیم، سند، سازماندهی"
@@ -2188,33 +2439,6 @@ title = "مبانی نحو"
 keywords = "کلیدواژه‌ها: odd, even"
 numbers = "اعداد/بازه‌ها: 5, 10-20"
 progressions = "پیشروی‌ها: 3n، 4n+1"
-
-[certificateChoice.tooltip]
-header = "انواع گواهی"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "مدیریت‌شده توسط مدیران سیستم"
-bullet2 = "مشترک بین کاربران مجاز"
-bullet3 = "نمایانگر هویت شرکت، نه فرد"
-bullet4 = "مناسب برای: اسناد رسمی، امضاهای تیمی"
-description = "یک گواهی مشترک که توسط سازمان شما ارائه می‌شود. برای اختیار امضای سراسری شرکت استفاده می‌شود."
-title = "گواهی سازمان"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "در اولین استفاده به‌طور خودکار ایجاد می‌شود"
-bullet2 = "به حساب کاربری شما متصل است"
-bullet3 = "قابل اشتراک با دیگر کاربران نیست"
-bullet4 = "مناسب برای: اسناد شخصی، پاسخ‌گویی فردی"
-description = "یک گواهی منحصربه‌فرد که به‌طور خودکار برای حساب کاربری شما ایجاد می‌شود. مناسب برای امضاهای فردی."
-title = "گواهی شخصی"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "نیازمند فایل و گذرواژه P12/PFX"
-bullet2 = "می‌تواند توسط مراجع صدور گواهی خارجی صادر شود"
-bullet3 = "سطح اعتماد بالاتر برای اسناد حقوقی"
-bullet4 = "مناسب برای: قراردادهای الزام‌آور قانونی، اعتبارسنجی خارجی"
-description = "از فایل گواهی PKCS#12 خود استفاده کنید. کنترل کامل روی ویژگی‌های گواهی را فراهم می‌کند."
-title = "بارگذاری P12 سفارشی"
 
 [certSign]
 awaitingSignatures = "در انتظار امضاها"
@@ -2542,34 +2766,6 @@ server = "سرور"
 stepTitle = "منبع گواهی"
 upload = "بارگذاری"
 
-[certSign.tooltip.header]
-title = "درباره مدیریت امضاها"
-
-[certSign.tooltip.overview]
-bullet1 = "بررسی امضاهای موجود و اعتبار آن‌ها"
-bullet2 = "مشاهده اطلاعات دقیق درباره امضاکنندگان و گواهی‌ها"
-bullet3 = "افزودن امضاهای دیجیتال جدید برای ایمن‌سازی اسناد شما"
-bullet4 = "پشتیبانی از چندین فایل با پیمایش آسان"
-text = "این ابزار به شما امکان می‌دهد بررسی کنید آیا PDFهای شما به‌صورت دیجیتال امضا شده‌اند و امضاهای دیجیتال جدید اضافه کنید. امضاهای دیجیتال ثابت می‌کنند چه کسی سند را ایجاد یا تأیید کرده است و نشان می‌دهند از زمان امضا تغییر کرده یا نه."
-title = "این ابزار چه می‌کند؟"
-
-[certSign.tooltip.signing]
-bullet1 = "پشتیبانی از فرمت‌های PEM، PKCS12، JKS و گواهی سرور"
-bullet2 = "گزینه‌ای برای نمایش یا پنهان کردن امضا روی PDF"
-bullet3 = "افزودن دلیل، موقعیت و نام امضاکننده"
-bullet4 = "انتخاب صفحه‌ای که امضای قابل‌نمایش روی آن قرار می‌گیرد"
-bullet5 = "استفاده از گواهی سرور برای گزینه ساده 'Sign with Stirling-PDF'"
-text = "برای امضای یک PDF، به یک گواهی دیجیتال (مانند PEM، PKCS12 یا JKS) نیاز دارید. می‌توانید امضا را روی سند قابل‌نمایش کنید یا آن را فقط برای امنیت نامرئی نگه دارید."
-title = "افزودن امضاها"
-
-[certSign.tooltip.validation]
-bullet1 = "نمایش معتبر یا نامعتبر بودن امضاها"
-bullet2 = "نمایش اطلاعات امضاکننده و تاریخ امضا"
-bullet3 = "بررسی اینکه آیا سند پس از امضا ویرایش شده است یا خیر"
-bullet4 = "امکان استفاده از گواهی‌های سفارشی برای اعتبارسنجی"
-text = "وقتی امضاها را بررسی می‌کنید، ابزار به شما می‌گوید آیا معتبرند، چه کسی سند را امضا کرده، چه زمانی امضا شده و اینکه آیا سند از زمان امضا تغییر کرده است یا نه."
-title = "بررسی امضاها"
-
 [changeCreds]
 changeUsername = "نام کاربری خود را به‌روزرسانی کنید. پس از به‌روزرسانی از حساب خارج خواهید شد."
 credsUpdated = "حساب به‌روزرسانی شد"
@@ -2824,6 +3020,7 @@ next = "بعدی"
 preview = "پیش‌نمایش"
 previous = "قبلی"
 refresh = "تازه‌سازی"
+remaining = "Remaining"
 retry = "تلاش مجدد"
 save = "ذخیره"
 
@@ -3264,24 +3461,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "پایش پیشرفته"
-allInOneWorkspace = "فضای کاری یکپارچه PDF (نمایشگر، ابزارها و عامل)"
-apiSandbox = "محیط آزمایشی API"
-dedicatedSupportSlas = "پشتیبانی اختصاصی و SLAها"
-fasterThroughput = "توان عبوری ۱۰ برابری"
-fullyPrivateFiles = "فایل‌ها کاملاً خصوصی"
-largeFileProcessing = "پردازش فایل‌های بزرگ"
-orgWideAccess = "کنترل‌های دسترسی در سطح سازمان"
-premiumAiModels = "مدل‌های هوش مصنوعی پریمیوم"
-prioritySupport = "پشتیبانی اولویت‌دار"
-privateDocCloud = "ابر اسناد خصوصی"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "دسترسی امن API"
-standardThroughput = "توان عبوری استاندارد"
-unlimitedApiAccess = "دسترسی نامحدود به API"
-unlimitedSeats = "کاربران نامحدود"
-
 [crop]
 autoCrop = "برش خودکار فضاهای خالی"
 noFileSelected = "برای شروع برش یک فایل PDF انتخاب کنید"
@@ -3346,6 +3525,7 @@ message = "تنظیم برنامه پیش‌فرض PDF ناموفق بود"
 title = "خطا"
 
 [defaultApp.prompt]
+dontRemind = "Don't remind me again"
 message = "Stirling PDF را برنامه پیش‌فرض خود برای باز کردن فایل‌های PDF کنید."
 
 [defaultApp.settingsOpened]
@@ -3697,10 +3877,10 @@ customizeGroups = "سفارشی‌سازی گروه‌ها"
 dropHint = "برای شروع فایل‌ها را باز کنید"
 dropToAdd = "Drop files to add"
 expand = "گسترش نوار کناری"
-files = "فایل‌ها"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive پیکربندی نشده است"
 leaveMyFiles = "خروج از فایل‌های من"
+library = "PDF Library"
 myFiles = "فایل‌های من"
 noFiles = "هنوز فایلی نیست"
 openFileManager = "باز کردن مدیریت فایل"
@@ -3723,19 +3903,8 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "افزودن"
-addLabel = "افزودن برچسب…"
-categoryIconAria = "انتخاب آیکون برای {{name}}"
-createCategory = "ایجاد دسته"
-delete = "حذف دسته"
 done = "انجام شد"
-hide = "پنهان کردن دسته"
-newCategory = "نام دسته جدید…"
-removeLabel = "حذف {{name}}"
-rename = "تغییر نام"
 reset = "بازنشانی به پیش‌فرض‌ها"
-search = "جستجوی برچسب‌ها…"
-show = "نمایش دسته"
 subtitle = "فایل‌های خود را در دسته‌های والد گروه‌بندی کنید. برچسب‌های موجود یا جدید را به یک دسته اضافه کنید، نام آن را تغییر دهید، یا دسته خودتان را بسازید. فایل‌هایی که در هیچ‌یک از دسته‌های شما نیستند زیر «سایر» نمایش داده می‌شوند."
 title = "دسته‌های نوار کناری"
 
@@ -4072,10 +4241,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "مسطح‌سازی پس از پرکردن"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "اسکن دوبارهٔ فیلدها"
 rescanFormFields = "اسکن دوبارهٔ فیلدهای فرم"
 save = "ذخیره"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "بستن نوار کناری"
@@ -4308,6 +4484,11 @@ title = "اتوماسیون"
 desc = "به‌طور خودکار نام فایل PDF را بر اساس سربرگ شناسایی‌شده تغییر می‌دهد"
 tags = "تشخیص خودکار,بر پایه سربرگ,سازمان‌دهی,نام‌گذاری مجدد"
 title = "تغییر نام خودکار فایل PDF"
+
+[home.autoRotate]
+desc = "Detect each page's orientation and rotate it upright automatically."
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+title = "Auto Rotate"
 
 [home.autoSizeSplitPDF]
 tags = "خودکار,تفکیک,اندازه"
@@ -4608,12 +4789,12 @@ hint = "یک فایل تصویر PNG، JPG، SVG یا تصویر دیگر را �
 label = "بارگذاری تصویر"
 placeholder = "انتخاب فایل تصویر"
 
-[imageToPdf]
-tags = "تبدیل،عکس،jpg،تصویر،عکس"
-
 [imageToPDF]
 header = "تبدیل تصویر به PDF"
 title = "تبدیل تصویر به PDF"
+
+[imageToPdf]
+tags = "تبدیل،عکس،jpg،تصویر،عکس"
 
 [infoBanner]
 dismiss = "بستن"
@@ -4647,11 +4828,9 @@ welcomeTitle = "شما دعوت شده‌اید!"
 
 [landing]
 addFiles = "افزودن فایل‌ها"
-heroSubtitle = "برای شروع یک PDF موجود را بکشید و رها کنید یا اضافه کنید."
 mobileUpload = "آپلود از موبایل"
 openFromComputer = "باز کردن از رایانه"
 uploadFromComputer = "بارگذاری از رایانه"
-workbenchEmptyStateHero = "یک PDF را هرجا رها کنید"
 
 [language]
 direction = "rtl"
@@ -4696,6 +4875,7 @@ login = "ورود"
 magicLinkSent = "لینک جادویی به {{email}} ارسال شد! ایمیل خود را بررسی کرده و برای ورود روی لینک کلیک کنید."
 mfaCode = "کد احراز هویت"
 mfaRequired = "کد احراز هویت دومرحله‌ای لازم است"
+noAccount = "Don't have an account?"
 or = "یا"
 password = "گذرواژه"
 passwordChangedSuccess = "گذرواژه با موفقیت تغییر کرد! لطفاً با گذرواژه جدید خود وارد شوید."
@@ -4715,25 +4895,9 @@ signInWith = "ورود با"
 title = "ورود"
 unexpectedError = "خطای غیرمنتظره: {{message}}"
 updatePassword = "به‌روزرسانی گذرواژه"
-useEmailInstead = "ورود با ایمیل"
 useMagicLink = "به‌جای آن از لینک جادویی استفاده کنید"
 username = "نام کاربری"
 youAreLoggedIn = "وارد شده‌اید!"
-
-[login.slides.edit]
-alt = "ویرایش PDFها"
-subtitle = "با بیش از دوازده ابزار برای پنهان‌سازی، امضا، خواندن و دستکاری PDFها، مطمئناً آنچه می‌خواهید را پیدا می‌کنید."
-title = "ویرایش PDFها برای نمایش/ایمن‌سازی اطلاعات موردنظر شما"
-
-[login.slides.overview]
-alt = "نمای کلی Stirling PDF"
-subtitle = "یک مجموعه ابری با اولویت حریم خصوصی برای PDFها که امکان تبدیل، امضا، پنهان‌سازی و مدیریت اسناد را به‌همراه 50+ ابزار قدرتمند دیگر فراهم می‌کند."
-title = "همه نیازهای PDF شما در یک‌جا."
-
-[login.slides.secure]
-alt = "ایمن‌سازی PDFها"
-subtitle = "به‌سادگی گذرواژه اضافه کنید، محتوا را پنهان‌سازی کنید و گواهی‌ها را مدیریت کنید."
-title = "از اطلاعات حساس در PDFهای خود محافظت کنید"
 
 [margin]
 large = "بزرگ"
@@ -4976,6 +5140,7 @@ pinButton = "اگر می‌خواهید فایل‌ها پس از اجرای ا�
 results = "پس از پایان اجرای ابزار، گام <strong>Review</strong> پیش‌نمایشی از نتایج را در این پنل نشان می‌دهد و به شما اجازه می‌دهد عملیات را واگردانی یا فایل را دانلود کنید."
 runButton = "پس از پیکربندی ابزار، این دکمه اجازه می‌دهد ابزار را روی همه PDFهای انتخاب‌شده اجرا کنید."
 selectCropTool = "بیایید ابزار <strong>Crop</strong> را انتخاب کنیم تا نحوه استفاده از یکی از ابزارها را نشان دهیم."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "این رابط ابزار <strong>Crop</strong> است. همان‌طور که می‌بینید فعلاً چیز زیادی آن‌جا نیست چون هنوز فایل‌های PDF برای کار اضافه نکرده‌ایم."
 workbench = "این <strong>Workbench</strong> است - ناحیه اصلی که در آن PDFهای خود را مشاهده و ویرایش می‌کنید."
 wrapUp = "همه‌چیز آماده است! شما با نواحی اصلی برنامه و نحوه استفاده از آن‌ها آشنا شدید. هر زمان خواستید برای مشاهده دوباره این تور روی دکمه <strong>راهنما</strong> کلیک کنید."
@@ -4988,6 +5153,26 @@ showMeAround = "راهنمایی کن"
 skipForNow = "فعلاً رد کن"
 skipTheTour = "از تور بگذر"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "Stirling به‌صورت برنامه دسکتاپ بهترین عملکرد را دارد. می‌توانید آفلاین از آن استفاده کنید، سریع‌تر به اسناد دسترسی داشته باشید و ویرایش‌ها را به‌صورت محلی روی رایانه انجام دهید."
 selectOs = "انتخاب سیستم‌عامل"
@@ -4996,7 +5181,21 @@ titleWithOs = "دانلود برای {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "کد احراز هویت"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "در حال تولید کد QR شما…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "وقتی حالت لاگین را فعال کنید، می‌توانید کاربران را مدیریت کنید، تنظیمات را پیکربندی کنید و سلامت سرور را پایش کنید. نخستین <strong>{{freeTierLimit}}</strong> نفر روی سرور شما به‌صورت رایگان از Stirling استفاده می‌کنند."
@@ -5004,6 +5203,11 @@ adminBodyLoginEnabled = "به‌عنوان ادمین می‌توانید کار
 adminTitle = "نمای کلی ادمین"
 userBody = "هم‌تیمی‌ها را دعوت کنید، نقش‌ها را اختصاص دهید و اسناد را در یک فضای کار امن منسجم نگه دارید. هر زمان آماده رشد فراتر از استفاده فردی بودید، حالت لاگین را فعال کنید."
 userTitle = "نمای کلی پلن"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5400,6 +5604,28 @@ askLeader = "Only your team owner can change the cap."
 docs = "PDFs"
 subtitle = "Billable PDFs each teammate has processed this period."
 title = "Team member usage"
+
+[payg.prepaid]
+chip = "Prepaid year"
+
+[payg.prepaid.banner]
+exhausted = "Your prepaid capacity is used up; metered billing has resumed. Top up to keep the discount."
+expiring_one = "Your prepaid year ends in {{count}} day. Unused capacity expires — top up to start a fresh year."
+expiring_other = "Your prepaid year ends in {{count}} days. Unused capacity expires — top up to start a fresh year."
+low = "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted."
+
+[payg.prepaid.card]
+subtitle = "Used before metered billing and outside your spend cap."
+title = "Prepaid capacity"
+
+[payg.prepaid.meter]
+capSuffix = "of {{total}} prepaid credits"
+expires = "Expires {{date}}"
+
+[payg.prepaid.state]
+exhausted = "Used up"
+healthy = "Plenty left"
+low = "Running low"
 
 [payg.role]
 leader = "Team owner"
@@ -5937,48 +6163,11 @@ keyDescription = "کلید لایسنس موجود در ایمیل خود را �
 success = "لایسنس فعال شد!"
 successMessage = "لایسنس شما با موفقیت فعال شد. اکنون می‌توانید این پنجره را ببندید."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "اعمال شد"
-enforcing = "در حال اعمال..."
-failed = "اعمال ناموفق بود"
 outputsUnavailable = "خروجی‌های خط‌مشی دیگر برای دانلود در دسترس نیستند."
 partialOutputsUnavailable = "برخی از خروجی‌های خط‌مشی دیگر برای دانلود در دسترس نیستند."
-retrying = "مشغول است، تلاش مجدد..."
 runNotFound = "اجرای اعمال دیگر یافت نمی‌شود."
-step = "مرحله {{current}}/{{total}}"
 timedOut = "مهلت اعمال پیش از پایان اجرا به اتمام رسید."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "بستن"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "در حال اعمال {{names}}"
@@ -5989,61 +6178,16 @@ failureBody = "{{failures}} از {{total}} فایل پردازش نشدند و �
 failureTitle = "صدور بدون اعمال کامل"
 printPolicyAppliedBody = "این PDF برای برآورده‌کردن یک خط‌مشی به‌روزرسانی شد. تغییرات را بررسی کرده و سپس دوباره چاپ کنید."
 printPolicyAppliedTitle = "خط‌مشی پیش از چاپ اعمال شد"
-queued = "+{{count}} در صف"
 successTitle = "{{names}} اعمال شد"
 summaryMore = "{{first}}، {{second}} و {{more}} مورد دیگر"
 summaryTwo = "{{first}} و {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "اعمال پیش از تبدیل"
-default = "در حال اعمال"
-export = "اعمال پیش از صدور"
-input = "اعمال هنگام وارد کردن"
-print = "اعمال پیش از چاپ"
-
-[policies.field]
-accessLog = "گزارش دسترسی"
-archiveAfter = "بایگانی پس از"
-auditTrail = "ردیابی حسابرسی"
-belowThreshold = "زیر آستانه"
-destination = "مقصد"
-frameworks = "چارچوب‌ها"
-immutableHold = "نگهداری تغییرناپذیر"
-keepFor = "نگهداری برای"
-minConfidence = "حداقل اطمینان"
-notify = "اعلان هنگام مسیریابی"
-onViolation = "هنگام عدم انطباق"
-webhookUrl = "URL Webhook"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
-
 [policies.labels]
-add = "افزودن"
-addPlaceholder = "افزودن برچسب…"
-customNote = "برای تیم شما سفارشی شده است."
-defaultNote = "استفاده از پیش‌فرض داخلی، مشترک با تیم شما."
-duplicate = "\"{{name}}\" از قبل وجود دارد."
-edit = "ویرایش برچسب‌ها"
-empty = "هنوز برچسبی وجود ندارد."
-export = "خروجی JSON"
-iconAria = "انتخاب آیکون برای {{name}}"
-import = "وارد کردن JSON"
-importError = "امکان وارد کردن آن فایل وجود نداشت."
-managedNote = "برچسب‌های تیم توسط رهبر تیم شما مدیریت می‌شوند."
-modalSubtitle = "با کل تیم شما مشترک است. طبقه‌بند برچسب‌هایی را انتخاب می‌کند که با هر سند مطابقت دارند."
-modalTitle = "برچسب‌های طبقه‌بندی"
-pickIcon = "استفاده از آیکون {{label}}"
-removeAria = "حذف {{name}}"
-resetToDefault = "بازنشانی به پیش‌فرض"
-saveForTeam = "ذخیره برای تیم"
-saving = "در حال ذخیره…"
-sectionLabel = "برچسب‌های طبقه‌بندی"
-startFromScratch = "شروع از ابتدا"
-teamCount = "برچسب‌های تیم"
-tooLong = "برچسب‌ها حداکثر می‌توانند {{max}} نویسه باشند."
-ungrouped = "گروه‌بندی‌نشده"
-view = "مشاهده برچسب‌ها"
+categoryCount = "categories"
+hideCategory = "Hide category"
+labelCount = "labels"
+sharedNote = "These labels are built in and shared across your whole team."
+showCategory = "Show category"
 
 [policies.pii]
 account = "شماره‌های حساب (برچسب‌دار)"
@@ -6056,93 +6200,10 @@ placeholder = "Select PII types"
 routing = "شماره‌های مسیریابی بانکی ایالات متحده (ABA)"
 ssn = "شماره‌های تأمین اجتماعی"
 
-[policies.settings]
-noneExport = "در حال حاضر هیچ خط‌مشی‌ای هنگام خروجی اجرا نمی‌شود."
-noneUpload = "در حال حاضر هیچ خط‌مشی‌ای هنگام بارگذاری اجرا نمی‌شود."
-onExport = "هنگام خروجی"
-onUpload = "هنگام بارگذاری"
-reorderHandle = "برای تغییر ترتیب بکشید"
-runOrderDesc = "وقتی بیش از یک خط‌مشی روی یک ماشه اجرا می‌شود، به این ترتیب اجرا می‌شوند — هرکدام روی خروجی خط‌مشی قبلی. برای تغییر ترتیب بکشید."
-title = "تنظیمات خط‌مشی"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "گزینه‌های خط‌مشی"
-policySettings = "تنظیمات خط‌مشی"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "تلاش دوباره برای خط‌مشی‌های ناموفق ({{count}})"
-rowProgress = "{{completed}} از {{total}} فایل پردازش شد"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "خط‌مشی چیست؟"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "به‌طور خودکار جزئیات حساس — مانند شماره‌های تأمین اجتماعی و کارت — را پیدا کرده و سیاه می‌کند تا در سند قابل خواندن نباشند."
-sanitize = "کدهای JavaScript پنهان را از فایل حذف می‌کند تا هنگام باز کردن فایل، هیچ‌چیز به‌صورت خودکار اجرا نشود."
-watermark = "یک نشان قابل مشاهده (مثلاً \"Confidential\") را روی هر صفحه درج می‌کند."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "בستن"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} در حال اعمال..."
 badgeRan = "خط‌مشی {{name}} روی این فایل اجرا شد"
+badgeRunning = "{{name}} running..."
 blockingAction = "{{action}} هنگام اعمال خط‌مشی مسدود شد، لطفاً صبر کنید..."
 dismiss = "بستن پوشش"
 enforcingTitle = "در حال اعمال خط‌مشی..."
@@ -6151,6 +6212,7 @@ viewAnyway = "مشاهده فایل (خط‌مشی همچنان در حال اع
 [policyOption]
 autoRedactPhi = "حذف خودکار PHI"
 blockExport = "مسدود کردن خروجی"
+ccpa = "CCPA"
 contracts = "قراردادها"
 documents = "اسناد"
 fedramp = "FedRAMP"
@@ -6269,86 +6331,6 @@ free = "طرح Editor"
 subscribed = "طرح Processor"
 unlinked = "پیوند داده نشده"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "راه‌اندازی اولیه از سند"
-sectionsAriaLabel = "بخش‌های سازنده عامل"
-selectorAriaLabel = "عامل‌ها"
-subtitle = "عامل‌های AI را طراحی، آزمایش و منتشر کنید که اسناد شما را طبقه‌بندی می‌کنند، از آن‌ها استخراج می‌کنند و مسیریابی می‌کنند. سناریوها را تعریف کنید، دسترسی ابزار را محدود کنید، یک مجموعه طلایی اجرا کنید و یک نسخه منتشر کنید."
-title = "سازنده عامل"
-
-[portal.agentBuilder.bootstrap]
-cancel = "لغو"
-dropzoneText = "یک سند نمونه انتخاب کنید (PDF یا تصویر)"
-lead = "یک سند نمونه رها کنید تا سناریوها و یک شِمای استخراج پیشنهاد کنیم که بتوانید اصلاحش کنید. تا زمانی که آن را بازبینی نکنید چیزی منتشر نمی‌شود."
-submit = "راه‌اندازی اولیه عامل"
-subtitle = "آغاز یک عامل جدید از یک فایل نماینده"
-title = "راه‌اندازی اولیه از یک سند"
-
-[portal.agentBuilder.empty]
-description = "یک عامل را از یک سند نمونه راه‌اندازی اولیه کنید تا سناریوها و شِمای استخراج آن آغاز شود، سپس اصلاح و منتشر کنید."
-title = "هنوز عاملی وجود ندارد"
-
-[portal.agentBuilder.evals]
-casesPassing = "موارد موفق"
-columnCase = "مورد ارزیابی"
-columnLatency = "تأخیر"
-columnResult = "نتیجه"
-fail = "ناموفق"
-goldenSetPassRate = "نرخ موفقیت مجموعه طلایی"
-latencyMs = "{{ms}} ms"
-notRun = "اجرا نشده"
-pass = "موفق"
-passRate = "نرخ موفقیت"
-runEvals = "اجرای ارزیابی‌ها"
-
-[portal.agentBuilder.evals.empty]
-description = "ارزیابی‌ها سناریوهای شما را به یک مجموعه طلایی تکرارپذیر تبدیل می‌کنند. ارتقا دهید تا نرخ موفقیت را در طول زمان ثبت کنید و انتشارها را بر اساس آن کنترل کنید."
-title = "هنوز مجموعه طلایی وجود ندارد"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "در سراسر مجموعه‌های طلایی"
-activeAgents = "عامل‌های فعال"
-avgPassRate = "میانگین نرخ موفقیت ارزیابی"
-fleetWide = "در کل ناوگان"
-latestPublished = "آخرین منتشرشده"
-scenarios = "سناریوها"
-testCases = "موارد آزمون"
-totalDescription_one = "در مجموع {{count}}"
-totalDescription_other = "در مجموع {{count}}"
-
-[portal.agentBuilder.scenarios]
-add = "افزودن"
-addScenario = "افزودن سناریو"
-enable = "فعال‌سازی"
-expectationLabel = "رفتار مورد انتظار"
-expectationPlaceholder = "عامل باید چه کاری انجام دهد"
-inEval = "در ارزیابی"
-mute = "بی‌صدا کردن"
-muted = "بی‌صدا شده"
-nameLabel = "نام"
-namePlaceholder = "مثلاً تشدید انطباق"
-
-[portal.agentBuilder.tabs]
-evals = "ارزیابی‌ها"
-scenarios = "سناریوها"
-tools = "ابزارها"
-versions = "نسخه‌ها"
-
-[portal.agentBuilder.tools]
-broadAccess = "دسترسی گسترده"
-deniedHint = "ابزارهای انتخاب‌شده مسدود هستند. همه موارد دیگر همچنان قابل فراخوانی می‌مانند."
-deniedTools = "ابزارهای ردشده"
-governanceGate = "حاکمیت ابزار در طرح Enterprise در دسترس است."
-restricted = "محدود"
-restrictedAccess = "دسترسی محدود به ابزار"
-restrictedDescription = "همه ابزارها را به‌جز مواردی که در زیر رد می‌کنید مجاز کنید."
-
-[portal.agentBuilder.versions]
-current = "فعلی"
-historyGate = "تاریخچه کامل نسخه‌ها و بازگشت به عقب در طرح Enterprise در دسترس است."
-publish = "انتشار"
-rollBack = "بازگشت به عقب"
-
 [portal.assistant]
 close = "بستن دستیار"
 error = "امکان دسترسی به دستیار وجود نداشت."
@@ -6365,15 +6347,43 @@ typing = "در حال تایپ"
 loading = "در حال بارگیری"
 redirectingToEditor = "در حال هدایت به ویرایشگر..."
 
+[portal.billing.activation]
+maybeLater = "Maybe later"
+title = "Switch on the Processor"
+
+[portal.billing.activation.payg]
+sub = "Set a monthly limit. Pay for what you run."
+title = "Pay as you go"
+
+[portal.billing.activation.prepay]
+badge = "2 months free"
+sub = "One invoice, card or bank transfer."
+title = "Prepay a year"
+
 [portal.billing.checkout]
 noClientSecret = "تابع Edge مقدار client_secret برنگرداند."
-subtitle = "برای ادامه پس از اعتبار رایگان طرح Editor، یک کارت اضافه کنید. Stripe بقیه کارها را انجام می‌دهد."
 title = "فعال کردن طرح Processor"
 
 [portal.billing.checkout.activationSlow]
 body = "پرداخت شما موفق بود، اما فعال‌سازی کمی بیشتر از معمول طول می‌کشد. به‌طور خودکار فعال می‌شود - این را ببندید و به‌زودی اینجا نمایش داده می‌شود."
 close = "بستن"
 title = "تقریباً تمام شد"
+
+[portal.billing.checkout.cap]
+amountAria = "Monthly spend limit"
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post monthly. Cancel anytime."
+noLimit = "No limit"
+note = "You're never billed past your limit. Processing just pauses."
+perMonth = "/ mo"
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
 
 [portal.billing.checkout.error]
 title = "امکان شروع پرداخت وجود نداشت"
@@ -6383,10 +6393,9 @@ body = "پرداخت شما انجام شد. ما در حال فعال‌ساز�
 hint = "لطفاً این پنجره را باز نگه دارید."
 title = "در حال فعال‌سازی طرح Processor شما..."
 
-[portal.billing.checkout.notConfigured]
-bodyAfter = "در env پورتال تنظیم کنید تا پرداخت درون‌برنامه‌ای فعال شود."
-bodyBefore = "تنظیم کنید"
-title = "Stripe پیکربندی نشده است"
+[portal.billing.checkout.pay]
+limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
+limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
 [portal.billing.enterpriseUpsell]
 cta = "پیشنهاد قیمت Enterprise خود را بسازید"
@@ -6409,10 +6418,12 @@ currentPlan = "طرح فعلی"
 freeForever = "برای همیشه رایگان"
 noTeamResolved = "هنوز هیچ تیمی در کیف پول شما شناسایی نشده است — تازه‌سازی کنید و دوباره تلاش کنید."
 ownerOnly = "فقط مالک تیم می‌تواند طرح Processor را فعال کند."
+payInvoice = "Pay invoice to complete"
 planName = "Editor"
 ssoIncluded = "SSO شامل است"
 switchOnProcessor = "فعال کردن Processor →"
 unlimitedUsers = "کاربران نامحدود"
+viewQuote = "View quote"
 
 [portal.billing.invoices]
 columnAmount = "مبلغ"
@@ -6465,7 +6476,111 @@ segmentApiDesc = "درخواست‌های مستقیم API"
 segmentApiLabel = "API"
 segmentAutomationDesc = "اتوماسیون‌ها و خط لوله‌ها"
 segmentAutomationLabel = "اتوماسیون"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFهای اندازه‌گیری‌شده"
+unitsPending_one = "{{units}} meter unit pending sync from linked instances"
+unitsPending_other = "{{units}} meter units pending sync from linked instances"
+
+[portal.billing.prepaid]
+capSuffix = "of {{total}} prepaid credits"
+expires = "Expires {{date}}"
+eyebrow = "Prepaid capacity"
+note = "Used before metered billing and outside your spend limit."
+topUp = "Top up"
+
+[portal.billing.prepaid.buy]
+back = "Back"
+calcTitle = "Calculate your annual payment"
+cancel = "Cancel"
+cancelPurchase = "Cancel purchase"
+close = "Close"
+continueToPayment = "Continue to payment"
+finalise = "Finalise"
+invoiceErrorTitle = "Couldn't generate the invoice"
+loadingTitle = "Loading your quote"
+payTitle = "Pay for your year"
+step = "Step {{current}} of {{total}}"
+
+[portal.billing.prepaid.calc]
+change = "Change"
+deployRow = "Deployment"
+done = "Done"
+enterpriseHint = "This is enterprise scale. At this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes."
+governanceRow = "Governance"
+governanceValue = "{{label}} · {{count}} policies"
+handlesLabel = "Your Processor"
+handlesValue = "handles {{volume}} credits / mo"
+pipelinesLabel = "Pipelines"
+policiesMeta = "{{count}} policies"
+poolCaption = "One pool of {{credits}} credits for the year. Heavy months borrow from light ones."
+priceLabel = "Your year · 12 months for the price of 10"
+rateUnknown = "We'll show the exact price at checkout."
+savings = "You save {{amount}} · 2 months free."
+sizingRow = "Sizing"
+sizingValue = "{{label}} · {{desc}}"
+usersLabel = "Total users"
+
+[portal.billing.prepaid.consent]
+label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Managed by Stirling. Live in minutes."
+cloudValue = "Stirling Cloud · Managed"
+selfhost = "Self-hosted"
+selfhostDesc = "Runs on private infrastructure. Same rate."
+selfhostValue = "Self-hosted · Private infrastructure"
+
+[portal.billing.prepaid.offer]
+cta = "Review offer"
+subtitle = "Prepay a year of PDF processing and get two months free, used before metered billing, outside your spend limit."
+title = "Get 12 months for the price of 10"
+
+[portal.billing.prepaid.pay]
+accountName = "Account holder name"
+accountNamePlaceholder = "e.g. Jane Smith"
+companyName = "Company name (optional)"
+companyNamePlaceholder = "e.g. Acme Inc."
+downloadInvoice = "Download invoice"
+payOnline = "Pay online"
+poNumber = "PO number (optional)"
+poNumberPlaceholder = "e.g. PO-2026-0142"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Advanced"
+advancedDesc = "Pipelines drive most of your processing."
+none = "None"
+noneDesc = "Not running pipelines yet. Turn them on any time."
+standard = "Standard"
+standardDesc = "A few pipelines re-process arriving PDFs."
+
+[portal.billing.prepaid.posture]
+essentials = "Essentials"
+essentialsDesc = "Classification, the default, plus Sharing"
+governed = "Governed"
+governedDesc = "Adds Security and Routing"
+regulated = "Regulated"
+regulatedDesc = "Every category, incl. Compliance, Retention, Ingestion"
+
+[portal.billing.prepaid.review]
+download = "Download quote (PDF)"
+downloading = "Preparing…"
+share = "share for approval"
+
+[portal.billing.prepaid.size]
+compact = "Compact"
+compactDesc = "Files under 25 MB, no data charges"
+heavy = "Heavy"
+heavyDesc = "Scanned or image-heavy, routinely 50 MB+"
+standard = "Standard"
+standardDesc = "Mostly small, some scans past 25 MB"
+
+[portal.billing.prepaid.state]
+exhausted = "Used up"
+healthy = "Plenty left"
+low = "Running low"
 
 [portal.billing.spendLimit]
 adjustLimit = "تنظیم حد"
@@ -6494,6 +6609,8 @@ label = "پیش‌بینی می‌شود از حد عبور کند."
 
 [portal.billing.spendThisMonth]
 eyebrow = "هزینه این ماه"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF پردازش شد."
 processed_other = "{{formattedCount}} PDF پردازش شد."
 processedWithRate_one = "{{formattedCount}} PDF پردازش شد، هرکدام با {{rate}}."
@@ -6533,6 +6650,350 @@ signature = "امضا"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
+
+[portal.connections]
+createTitle = "New connection"
+createTitleFor = "Connect {{name}}"
+delete = "Delete"
+edit = "Edit"
+editTitle = "Edit connection"
+unsupportedType = "This connection type cannot be edited here."
+
+[portal.connections.categories.advanced]
+description = "For a service we do not support yet."
+label = "Advanced"
+
+[portal.connections.categories.audit]
+description = "Record what happened to a document, where your auditors already look."
+label = "Audit & compliance logging"
+
+[portal.connections.categories.notify]
+description = "Tell another system that something happened."
+label = "Notify & workflow"
+
+[portal.connections.categories.security]
+description = "Scan or label a document before it moves on."
+label = "Security & classification"
+
+[portal.connections.categories.signing]
+description = "Send a document out to be signed or notarized."
+label = "E-signature & notarization"
+
+[portal.connections.categories.storage]
+description = "Where processed documents end up - a bucket, a drive, a ticket or a page."
+label = "File & attach"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Stirling stores this encrypted and never shows it again."
+label = "Access token"
+
+[portal.connections.commonFields.apiKey]
+label = "API key"
+
+[portal.connections.commonFields.apiToken]
+label = "API token"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Steps using this connection can only call paths under this URL, never another host."
+label = "Server URL"
+
+[portal.connections.commonFields.email]
+label = "Email"
+
+[portal.connections.commonFields.host]
+label = "Host"
+
+[portal.connections.commonFields.password]
+label = "Password"
+
+[portal.connections.commonFields.port]
+label = "Port"
+
+[portal.connections.commonFields.username]
+label = "Username"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Paste the URL the service gave you. Only paths under it can be called."
+label = "Webhook URL"
+
+[portal.connections.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Production"
+
+[portal.connections.picker]
+cancel = "Cancel"
+createNew = "New connection..."
+placeholder = "Select a connection"
+save = "Save connection"
+
+[portal.connections.picker2]
+back = "Change integration"
+heading = "What do you want to connect?"
+noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
+noResultsTitle = "Nothing matches \"{{query}}\""
+searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
+
+[portal.connections.types.api]
+description = "Call any HTTP API from a policy. You choose the URL, authentication and payload."
+label = "Custom API"
+
+[portal.connections.types.api.fields.authType]
+label = "Authentication"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "Username and password"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Token in a custom header"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Log in for a token"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Steps using this connection can only call paths under this URL, never another host."
+label = "Base URL"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Header name"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Login path"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Password"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "If the API replies with a download link, only these hosts may be fetched. Separate with commas. Leave blank to allow only the base URL's own host."
+label = "Allowed result hosts"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Send the token as this header"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "The response header the login call returns the token in, e.g. X-Auth-Token."
+label = "Token response header"
+
+[portal.connections.types.api.fields.username]
+label = "Username"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "Scan documents for malware on a server you run - nothing leaves your network."
+label = "ClamAV (self-hosted)"
+
+[portal.connections.types.cloudmersive]
+description = "Virus and content scanning for documents in a policy."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Block documents containing macros, executables, scripts or embedded objects - not just known malware."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Attach processed documents to a Confluence page."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Send documents to ConsignO Cloud (Notarius) for electronic signature and notarization."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "Your ConsignO Cloud environment, including /api/v1."
+label = "Server URL"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "API key"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "API secret"
+
+[portal.connections.types.consigno.fields.password]
+label = "Password"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Only needed if your organisation uses tenants."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "Username"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Post a message to Discord when a policy processes a document."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Index an audit event in Elasticsearch each time a policy handles a document."
+label = "Elasticsearch"
+
+[portal.connections.types.ftp]
+description = "Poll an FTP or FTPS server for new documents."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Connection mode"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Active"
+passive = "Passive (recommended)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "Plain FTP sends credentials and files unencrypted; choose FTPS if the server supports it."
+label = "Encryption"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explicit / AUTH TLS)"
+implicit = "FTPS (implicit)"
+none = "None (plain FTP)"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Post a message to a Google Chat space when a policy runs."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Attach processed documents to a Jira issue."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "Email a document or a notification when a policy runs."
+label = "Mailgun"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "File processed documents into Nextcloud."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "App password"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "Detect personal data in document text using a Presidio server you run."
+label = "Presidio (self-hosted)"
+
+[portal.connections.types.purview]
+description = "Read and apply Microsoft Purview sensitivity labels on PDFs."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "Optional. Only needed to pick labels by name; labelling works without it."
+label = "Application (client) ID"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Stamped onto every label as its SiteId, so Purview-aware tools know which organisation applied it."
+label = "Directory (tenant) ID"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "An S3 bucket that sources can read from and pipeline outputs can write to."
+label = "S3 storage"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "Leave blank for AWS. Set this for MinIO or another S3-compatible store."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Region"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
+[portal.connections.types.sendgrid]
+description = "Email a document or a notification when a policy runs."
+label = "SendGrid"
+
+[portal.connections.types.sftp]
+description = "Poll an SFTP (SSH) server for new documents."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Optional. The server's SHA-256 host key fingerprint (from `ssh-keyscan host | ssh-keygen -lf -`). When set, only a server presenting this key is accepted; when blank, the key seen on first connect is pinned and later changes are refused."
+label = "Host key fingerprint"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key passphrase"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Leave blank if you authenticate with a private key instead."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Optional. Paste an OpenSSH private key to authenticate with a key instead of a password."
+label = "Private key"
+
+[portal.connections.types.slack]
+description = "Post a message to Slack when a policy processes a document."
+label = "Slack"
+
+[portal.connections.types.smb]
+description = "Watch an SMB / CIFS network share (Windows or Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Network share"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Optional. The Windows domain or workgroup, if your server uses one."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Send an audit event to Splunk each time a policy handles a document."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Send an audit event to a Sumo Logic HTTP collector."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Post a message to a Teams channel when a policy runs."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Post each document, or just the details, to a URL you choose."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Trigger a Zap or Make scenario from a policy."
+label = "Zapier & Make"
+
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "هر درخواست"
@@ -6619,10 +7080,18 @@ title = "SDKهای رسمی"
 beta = "Beta"
 deprecated = "منسوخ‌شده"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "مهارت‌ها"
 lead = "قابلیت‌های بسته‌بندی‌شده و نام‌دار که عامل شما به‌عنوان یک ابزار واحد فراخوانی می‌کند. هر مهارت یک زنجیره عملیات قطعی با ارزیابی‌های پیوست‌شده است."
 title = "مهارت‌های عامل"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6697,6 +7166,8 @@ type = "نوع"
 user = "کاربر"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "وقتی منابع اسناد را وارد پایپ‌لاین‌های شما کنند، برای بازبینی اینجا نمایش داده می‌شوند."
 title = "هیچ سندی در صف نیست"
 
@@ -6806,12 +7277,70 @@ description = "این نما با خطای غیرمنتظره‌ای روبه‌
 retry = "دوباره تلاش کنید"
 title = "در این صفحه مشکلی پیش آمد"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
-activeUsers = "{{n}} فعال"
-invite = "دعوت از هم‌تیمی‌ها"
+activeOfDeployed = "{{active}} of {{total}} active this month"
 name = "Stirling PDF Editor"
 open = "باز کردن در مرورگر"
 updated = "به‌روزرسانی‌شده {{time}}"
+
+[portal.home.editor.deploy]
+finish = "Finish deployment"
+options = "View deployment options"
+start = "Deploy the Editor"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
@@ -6822,49 +7351,6 @@ kubernetes = "خودمیزبان · Kubernetes"
 afternoon = "عصر بخیر"
 evening = "شب بخیر"
 morning = "صبح بخیر"
-
-[portal.home.onboarding]
-dismiss = "رد کردن راه‌اندازی"
-notStarted = "شروع‌نشده"
-progress = "{{done}} از {{total}} انجام شد"
-title = "تکمیل راه‌اندازی"
-
-[portal.home.onboarding.enterprise]
-body = "SSO + SCIM + RBAC در سطح سازمان، قیمت‌گذاری حجمی تعهدی، و استقرار air-gapped."
-cta = "شروع دوره آزمایشی"
-ctaQuote = "دریافت پیش‌فاکتور"
-lead = "برای بیش از ۲۵۰ کارمند."
-tag = "Enterprise"
-
-[portal.home.onboarding.steps.editor]
-blurb = "برنامه دسکتاپ را مستقر کنید، برای همیشه رایگان."
-title = "دانلود PDF Editor"
-
-[portal.home.onboarding.steps.policies]
-blurb = "{{active}} فعال · {{recommended}} پیشنهادی"
-chip = "{{active}} فعال"
-title = "فعال کردن سیاست‌ها"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} متصل · هر PDF در محل ورود تحت حاکمیت است"
-chip = "{{connected}} متصل"
-title = "اتصال منابع"
-
-[portal.home.quickActions]
-subtitle = "کارهای اصلی امروز"
-title = "اقدامات سریع"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "سازنده ۳ مرحله‌ای روی کتابخانه عملیات تایپ‌شده"
-title = "ساخت یک پایپ‌لاین"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3، agentها، webhookها، پوشه‌های پایش‌شده"
-title = "اتصال یک منبع"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "کلید محدودشده با rate limit و IP allowlist"
-title = "صدور کلید API"
 
 [portal.infrastructure]
 manageEditorDeployment = "مدیریت استقرار ویرایشگر"
@@ -6878,19 +7364,29 @@ heading = "کلیدهای API"
 subheading = "اعتبارنامه‌های محدودشده با rate limit، مجوزها و IP allowlist برای هر کلید."
 
 [portal.infrastructure.apiKeys.card]
-allowedIps = "IPهای مجاز"
-anyIp = "هر IP (بدون allowlist)"
 created = "ایجادشده"
 lastUsed = "آخرین استفاده"
-permissions = "مجوزها"
-rateLimit = "Rate limit"
-rateLimitValue = "{{value}} درخواست/دقیقه"
+revoke = "Revoke key"
 usageMonth = "مصرف این ماه"
 usageToday = "مصرف امروز"
 
 [portal.infrastructure.apiKeys.empty]
 description = "برای شروع فراخوانی Stirling API یک کلید محدودشده ایجاد کنید."
 title = "هنوز کلید API وجود ندارد"
+
+[portal.infrastructure.apiKeys.error]
+load = "Couldn't load your API keys. Please try again."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Revoke \"{{name}}\"? Any integration still using this key will immediately start receiving 401 errors. This can't be undone."
+cancel = "Cancel"
+confirm = "Revoke key"
+title = "Revoke API key"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "فیلتر کردن رویدادهای حسابرسی بر اساس دسته"
@@ -6935,6 +7431,7 @@ all = "همه"
 auth = "احراز هویت"
 config = "پیکربندی"
 elevation = "ارتقای دسترسی"
+policy = "Policy"
 processing = "پردازش"
 security = "امنیت"
 
@@ -6944,25 +7441,47 @@ title = "شما دسترسی ندارید"
 
 [portal.infrastructure.audit.metrics]
 config = "پیکربندی"
-elevation = "ارتقای دسترسی"
+policy = "Policy"
 processing = "پردازش"
 totalEvents = "کل رویدادها · ۲۴ ساعت"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "لغو"
 createKey = "ایجاد کلید"
 done = "انجام شد"
-ipAllowlistHelper = "محدوده‌های CIDR جداشده با ویرگول. برای مجاز بودن هر IP خالی بگذارید."
-ipAllowlistLabel = "IP allowlist"
 keyNameLabel = "نام کلید"
 keyNamePlaceholder = "مثلاً Production · ingest"
-permissionsLabel = "مجوزها"
 secretKeyCaption = "کلید محرمانه"
 secretWarning = "این را در یک secrets manager ذخیره کنید. Stirling فقط یک hash ذخیره می‌کند — هیچ راهی برای بازیابی آن در آینده وجود ندارد."
 subtitle = "دامنه کلید را به حداقل نیاز آن محدود کنید. هر زمان می‌توانید آن را بچرخانید یا لغو کنید."
 subtitleCreated = "این secret را اکنون کپی کنید — دوباره نمایش داده نخواهد شد."
 title = "ایجاد کلید API"
 titleCreated = "کلید ایجاد شد"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6999,6 +7518,15 @@ subheading = "سلامت زنده برای هر Stirling region مستقرشده
 description = "پس از تأمین فضای کاری شما، regionهای مستقرشده اینجا نمایش داده می‌شوند."
 title = "هیچ regionی مستقر نشده است"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "مدل‌ها"
 msValue = "{{value}} ms"
@@ -7026,6 +7554,10 @@ status = "وضعیت"
 type = "نوع"
 version = "نسخه"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "مدل‌های فعال"
 avgLatency = "میانگین latency"
@@ -7048,6 +7580,17 @@ docType = "نوع سند"
 modelForAria = "مدل برای {{operation}}"
 operation = "عملیات"
 routedTo = "هدایت‌شده به"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "یک کلید از KMS خودتان ارائه دهید. Stirling با آن رمزنگاری می‌کند اما همچنان می‌تواند بخواند."
@@ -7174,6 +7717,47 @@ models = "مدل‌ها"
 security = "امنیت"
 storage = "ذخیره‌سازی"
 
+[portal.integrations]
+addAnother = "Add another"
+availableHeading = "Available"
+comingSoonHeading = "Coming soon"
+connect = "Connect"
+connectedHeading = "Connected"
+connectionCount_one = "{{count}} connection"
+connectionCount_other = "{{count}} connections"
+customApi = "Custom API"
+searchPlaceholder = "Search integrations"
+subtitle = "Everything Stirling can talk to. Credentials are created once here, then referenced by sources, policies and pipelines."
+title = "Integrations"
+typedName = "{{tool}} name"
+
+[portal.integrations.filters]
+all = "All"
+audit = "Audit"
+connected = "Connected"
+notify = "Notify"
+security = "Security"
+signing = "Signing"
+storage = "Storage"
+
+[portal.integrations.status]
+connected = "Connected"
+
+[portal.integrations.table]
+integration = "Integration"
+worksWith = "Works with"
+
+[portal.integrations.worksWith]
+pipelines = "Pipelines"
+policies = "Policies"
+sources = "Sources"
+
+[portal.legal]
+draft = "{{label}} · draft"
+loadError = "Could not load this document. Please try again."
+loading = "Loading…"
+title = "Legal document"
+
 [portal.nav]
 agent-builder = "سازنده Agent"
 components = "کامپوننت‌ها"
@@ -7182,6 +7766,7 @@ documents = "اسناد"
 editor = "ویرایشگر"
 home = "خانه"
 infrastructure = "زیرساخت"
+integrations = "Integrations"
 pipelines = "پایپ‌لاین‌ها"
 policies = "سیاست‌ها"
 procurement = "تدارکات"
@@ -7190,25 +7775,9 @@ sources = "منابع"
 usage = "مصرف و صورت‌حساب"
 users = "کاربران"
 
-[portal.notifications]
-markAllRead = "علامت‌گذاری همه به‌عنوان خوانده‌شده"
-title = "اعلان‌ها"
-viewAll = "مشاهده همه"
-
-[portal.notifications.ariaLabel]
-none = "اعلان‌ها، خوانده‌نشده‌ای نیست"
-unread_one = "اعلان‌ها، {{count}} خوانده‌نشده"
-unread_other = "اعلان‌ها، {{count}} خوانده‌نشده"
-
-[portal.notifications.count]
-allRead = "همه خوانده‌شده"
-loading = "در حال بارگذاری"
-new_one = "{{count}} جدید"
-new_other = "{{count}} جدید"
-
-[portal.notifications.empty]
-description = "اعلان جدیدی وجود ندارد."
-title = "همه چیز به‌روز است"
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "هر پایپ‌لاین سند خودکار در backend: زنجیره‌ای مرتب از عملیات روی مجموعه‌ای از منابع که با یک trigger اجرا می‌شود. برای دیدن مراحل و منابع، روی یک ردیف کلیک کنید."
@@ -7220,15 +7789,28 @@ newPipeline = "پایپ‌لاین جدید"
 [portal.pipelines.builder]
 addStep = "افزودن ابزار"
 back = "بازگشت به پایپ‌لاین‌ها"
+cannotFollow = "Can't take {{produced}}"
+chooseAccount = "Choose an account"
+chooseDestination = "Choose a destination"
+chooseOperation = "Choose what this step does"
+chooseSource = "Choose a source"
 discard = "دور انداختن تغییرات"
 enabled = "فعال"
+inputs = "Input"
+inputSource = "Input source"
+inputTrigger = "Trigger"
 keepEditing = "ادامه ویرایش"
+needsConfiguring = "Needs setting up"
 needsUpload = "به یک فایل آپلودشده نیاز دارد"
+noSources = "No sources connected yet. Create one to use it as an input."
 noToolMatches = "هیچ ابزاری با جستجوی شما مطابقت ندارد."
 pipelineSettings = "تنظیمات پایپ‌لاین"
 searchTools = "جستجوی ابزارها"
 selectToolBody = "برای ساخت پایپ‌لاین خود، یک ابزار اضافه کنید."
 selectToolTitle = "هنوز ابزاری وجود ندارد"
+sendToSystem = "Send to another system"
+stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
+stepsNeedSetup = "These steps still need setting up before saving: {{tools}}."
 toolSettings = "تنظیمات ابزار"
 unknownStep = "عملیات ناشناخته، بدون تغییر نگه داشته شد."
 unsavedBody = "تغییرات ذخیره‌نشده دارید. پیش از خروج آن‌ها را ذخیره می‌کنید یا دور می‌اندازید؟"
@@ -7236,19 +7818,24 @@ unsavedTitle = "تغییرات ذخیره‌نشده"
 uploadUnsupported = "فایل‌های آپلودشده هنوز در پایپ‌لاین‌ها پشتیبانی نمی‌شوند، بنابراین این مراحل قابل ذخیره نیستند: {{tools}}."
 usesDefaults = "با تنظیمات پیش‌فرض اجرا می‌شود"
 
+[portal.pipelines.builder.diagnostic]
+fan-in = "Combines every file from the previous step"
+fan-out = "Runs once per file from the previous step"
+format-mismatch = "Needs {{accepts}}, but the previous step produces {{produced}}"
+output-uncertain = "May not run: the previous step's output depends on how it's set up"
+source-mismatch = "Needs {{accepts}}, but this pipeline's input is {{produced}}"
+undeclared-operation = "Can't check what this step accepts"
+
 [portal.pipelines.composer]
 addTool = "افزودن ابزار"
 cancel = "لغو"
 chainEmpty = "برای شروع ساخت پایپ‌لاین خود، یک ابزار اضافه کنید."
 create = "ایجاد پایپ‌لاین"
-directory = "پوشه خروجی"
-directoryHelp = "مسیر مطلق روی سرور. باید داخل پوشه‌های مجاز پیکربندی‌شده باشد."
 editingUnsupported = "نمایش این params ابزار برای ویرایش هنوز پشتیبانی نمی‌شود."
 moveDown = "انتقال به پایین"
 moveUp = "انتقال به بالا"
 name = "نام"
 namePlaceholder = "مثلاً Redaction sweep"
-noSources = "هنوز هیچ منبعی متصل نیست. پایپ‌لاین همچنان می‌تواند روی فایل‌هایی که مستقیماً به آن داده می‌شوند اجرا شود."
 noToolSettings = "این ابزار تنظیمات قابل پیکربندی ندارد."
 operations_one = "عملیات ({{count}})"
 operations_other = "عملیات ({{count}})"
@@ -7273,11 +7860,13 @@ confirm = "حذف"
 title = "پایپ‌لاین حذف شود؟"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "حذف پایپ‌لاین"
 run = "اکنون اجرا کن"
 
 [portal.pipelines.empty]
 action = "ایجاد یک پایپ‌لاین"
+connectSource = "Connect a source"
 description = "اولین پایپ‌لاین خود را ایجاد کنید: منابعی را که روی آن‌ها اجرا می‌شود انتخاب کنید، عملیات را زنجیره کنید و محل خروجی را انتخاب کنید."
 title = "هنوز پایپ‌لاینی وجود ندارد"
 
@@ -7286,15 +7875,17 @@ active = "فعال"
 paused = "متوقف‌شده"
 total = "پایپ‌لاین‌ها"
 
-[portal.pipelines.output]
-folder = "نوشتن در پوشه"
-inline = "بازگرداندن فایل‌ها"
-
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "اجرا کامل شد."
 completed_other = "همه {{count}} اجرا کامل شد."
 empty = "چیزی برای اجرا نیست: منابع سندی برای پردازش نداشتند."
 failed = "اجرا ناموفق بود: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "اجرا شروع شد؛ هنوز در حال پیشرفت است."
 timeout = "اجرا بیشتر از حد انتظار طول می‌کشد؛ ممکن است همچنان در پس‌زمینه کامل شود."
 
@@ -7314,12 +7905,18 @@ manual = "دستی"
 schedule = "زمان‌بندی‌شده"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "اتوماسیون‌های دائمی که یک پایپ‌لاین ابزار را روی هر سند اعمال می‌کنند. هر سیاست هنگام آپلود یا export اجرا می‌شود، زنجیره ابزار خود را اجرا می‌کند و نسخه اعمال‌شده را کنار نسخه اصلی ذخیره می‌کند."
 title = "سیاست‌ها"
 
 [portal.policies.card]
 comingSoon = "ارتقا به Enterprise"
 notSetUp = "راه‌اندازی نشده"
+requiresAiEngine = "Requires AI engine"
+
+[portal.policies.categories.classification]
+desc = "Identify each document's type on upload and tag its metadata for filing and search."
+label = "Classification"
 
 [portal.policies.categories.compliance]
 desc = "الزامات HIPAA، GDPR، SOC 2 یا FedRAMP را روی هر سند اعمال کنید."
@@ -7343,6 +7940,13 @@ label = "امنیت"
 
 [portal.policies.config]
 scopeAll = "همه اسناد"
+
+[portal.policies.config.classification]
+summary = "Classifies every uploaded document against your team's labels and tags its metadata."
+
+[portal.policies.config.classification.rules]
+0 = "Classify"
+1 = "Tag metadata"
 
 [portal.policies.config.compliance]
 summary = "اسناد را پیش از خروج از سیستم در برابر چارچوب‌های مقرراتی اعتبارسنجی می‌کند."
@@ -7370,6 +7974,29 @@ minConfidence = "حداقل اطمینان"
 1 = "استخراج"
 2 = "نام‌گذاری"
 3 = "نرمال‌سازی"
+
+[portal.policies.config.purview]
+label = "Apply a Microsoft Purview sensitivity label"
+
+[portal.policies.config.purview.fields]
+connection = "Purview tenant"
+labelId = "Label ID"
+labelIdHelp = "The label's GUID, from the Purview portal. Applying a label writes its metadata onto the PDF; it cannot encrypt, which needs the Microsoft client."
+labelName = "Label name (optional)"
+labelNameHelp = "Recorded alongside the ID so people and tools can recognise the label."
+
+[portal.policies.config.purview.fields.method]
+help = "Purview distinguishes a label a policy applied from one a person chose."
+label = "How the label is recorded"
+privileged = "As chosen by a person"
+standard = "As applied automatically"
+
+[portal.policies.config.purviewRead]
+label = "Read a Microsoft Purview label"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Purview tenant"
+connectionHelp = "Reads the label the document already carries, so later steps can act on it."
 
 [portal.policies.config.retention]
 summary = "مدت نگه‌داری اسناد، زمان آرشیو و زمان حذف را اعمال می‌کند."
@@ -7438,6 +8065,7 @@ title = "هنوز فعالیتی وجود ندارد"
 [portal.policies.endpoints]
 addWatermark = "واترمارک"
 autoRedact = "حذف PII"
+classifyAndLabel = "Classify"
 compressPdf = "فشرده‌سازی"
 flatten = "تخت کردن"
 ocrPdf = "OCR"
@@ -7447,6 +8075,183 @@ sanitizePdf = "حذف JavaScript"
 description = "خط‌مشی‌های شما ذخیره شده‌اند و پس از بازیابی اتصال نمایش داده می‌شوند."
 retry = "تلاش دوباره"
 title = "Backend در دسترس نیست"
+
+[portal.policies.operations]
+change = "Change what this step does"
+noResults = "No step matches that. Try a product name, or \"scan\", \"notify\", \"attach\"."
+searchPlaceholder = "Search steps - try \"scan\", \"attach\" or a product name"
+
+[portal.policies.operations.bodyMode]
+binary = "Raw file bytes"
+json = "Inside a JSON payload"
+multipart = "As a file upload (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "Your own ClamAV server checks the document; nothing leaves your network."
+label = "Scan for viruses (self-hosted)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Rejects documents carrying macros, executables, scripts or embedded objects."
+label = "Block active content"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Cloudmersive checks the document and the run stops if it is not clean."
+label = "Scan for viruses"
+
+[portal.policies.operations.confluenceAttach]
+description = "Files the processed document onto a page."
+label = "Attach to a Confluence page"
+
+[portal.policies.operations.consignoSubmit]
+description = "Submits the document to ConsignO Cloud for signing."
+label = "Send for signature (ConsignO)"
+note = "Submits the document. Retrieving the signed copy is not yet supported, because a step cannot pass a result to a later step."
+
+[portal.policies.operations.customApiCall]
+description = "Author the call yourself: path, method, body and response handling."
+label = "Call a custom API"
+
+[portal.policies.operations.discordNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Discord"
+
+[portal.policies.operations.elasticIndex]
+description = "Records what the policy did as a searchable document."
+label = "Index an audit event in Elasticsearch"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Multipart suits upload APIs; JSON suits APIs that want the file inside a payload; binary sends the raw bytes."
+label = "How to send the document"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "A JSON body sent as-is. {{document.base64}} carries the file; {{document.*}} and {{run.*}} are filled in per document."
+label = "JSON body"
+
+[portal.policies.operations.fields.connection]
+label = "Account"
+
+[portal.policies.operations.fields.domain]
+label = "Mailgun domain"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "The form field the API expects the document under."
+label = "File field name"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "From"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "A JSON object of header name/value pairs. The connection's credential is added for you."
+label = "Headers"
+
+[portal.policies.operations.fields.index]
+label = "Index"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Issue key"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "Sent as the message body. {{document.*}} and {{run.*}} are filled in per document."
+label = "Message"
+
+[portal.policies.operations.fields.method]
+label = "Method"
+
+[portal.policies.operations.fields.pageId]
+label = "Page ID"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "Appended to the connection's base URL. It can never reach another host."
+label = "Path"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "Where in the drive to write it. {{document.filename}} is filled in per document."
+label = "Destination path"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Report leaves the document untouched. Replace swaps it for whatever comes back."
+label = "What to do with the reply"
+
+[portal.policies.operations.fields.signerEmail]
+label = "Signer's email"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Subject"
+placeholder = "Processed: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Presidio analyses this text. Use {{document.title}} or paste the text you want checked."
+label = "Text to check"
+
+[portal.policies.operations.fields.to]
+label = "To"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Nextcloud username"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Tells a space that the policy handled a document."
+label = "Post a message to Google Chat"
+
+[portal.policies.operations.jiraAttach]
+description = "Files the processed document onto an issue."
+label = "Attach to a Jira issue"
+
+[portal.policies.operations.mailgunEmail]
+description = "Sends the processed document as an attachment."
+label = "Email the document (Mailgun)"
+
+[portal.policies.operations.nextcloudUpload]
+description = "Writes the processed document into a folder."
+label = "Upload to Nextcloud"
+
+[portal.policies.operations.presidioAnalyze]
+description = "Your own Presidio server reports the personal data it finds."
+label = "Detect personal data"
+note = "Presidio reads text, not files. Give it the text you want checked — the document itself is not uploaded."
+
+[portal.policies.operations.responseMode]
+replace = "Replace the document with the reply"
+report = "Keep the document, record the reply"
+
+[portal.policies.operations.sendgridEmail]
+description = "Sends the processed document as an attachment."
+label = "Email the document (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Slack"
+
+[portal.policies.operations.splunkEvent]
+description = "Records what the policy did, where your auditors already look."
+label = "Send an audit event to Splunk"
+
+[portal.policies.operations.sumologicEvent]
+description = "Records what the policy did to an HTTP collector."
+label = "Send an audit event to Sumo Logic"
+
+[portal.policies.operations.teamsNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Teams"
+
+[portal.policies.operations.webhookPost]
+description = "Sends the document itself to a URL you choose."
+label = "Post the document to a webhook"
+
+[portal.policies.operations.zapierNotify]
+description = "Hands the run's details to your automation."
+label = "Trigger a Zap or Make scenario"
 
 [portal.policies.stats]
 activeFor = "فعال"
@@ -7473,12 +8278,23 @@ label = "اسناد اعمال‌شده"
 description = "پیکربندی شده اما اجرا نمی‌شود"
 label = "متوقف"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "بازگشت"
 cancel = "لغو"
 continue = "ادامه"
 enablePolicy = "فعال کردن خط‌مشی"
 saveChanges = "ذخیره تغییرات"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
+label = "Classify the document"
 
 [portal.policies.wizard.capability.compress]
 desc = "سند را به اندازه فایل کوچک‌تر فشرده می‌کند."
@@ -7500,9 +8316,17 @@ label = "حذف اطلاعات حساس"
 desc = "JavaScript پنهان را حذف می‌کند تا هنگام باز شدن سند چیزی به‌صورت خودکار اجرا نشود."
 label = "حذف محتوای فعال"
 
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server."
+label = "Add a trusted timestamp"
+
 [portal.policies.wizard.capability.watermark]
 desc = "یک نشان قابل مشاهده (مثلاً «محرمانه») را روی همه صفحات درج می‌کند."
 label = "اعمال واترمارک"
+
+[portal.policies.wizard.classification]
+description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
+labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "ابتدا حداقل یک ابزار را در گردش کار فعال کنید."
@@ -7548,73 +8372,118 @@ setUp = "راه‌اندازی خط‌مشی {{category}}"
 [portal.policies.wizard.workflow]
 description = "انتخاب کنید این خط‌مشی با هر سندی که پردازش می‌کند چه کاری انجام دهد."
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} فعال"
-noRule = "هنوز هیچ قاعده‌ای اعمال نشده است"
-subtitle = "اتوماسیون‌های دائمی که هر سند از آن‌ها عبور می‌کند، فارغ از اینکه کدام پایپ‌لاین آن را مدیریت می‌کند."
-title = "آنچه روی PDFهای شما اجرا می‌شود"
-
 [portal.policySummary.action]
-comingSoon = "ارتقا به Enterprise"
-configure = "پیکربندی"
 setUp = "راه‌اندازی"
 
-[portal.policySummary.column]
-activeRule = "قاعده فعال"
-policy = "خط‌مشی"
-status = "وضعیت"
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
 
-[portal.policySummary.empty]
-description = "پس از پیکربندی خط‌مشی‌ها، دسته‌ها اینجا نمایش داده می‌شوند."
-title = "هنوز خط‌مشی‌ای وجود ندارد"
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
 
-[portal.policySummary.state]
-active = "فعال"
-off = "خاموش"
-soon = "به‌زودی"
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
 
-[portal.processingStatus]
-managePlan = "مدیریت طرح"
-volumeSuffix = "PDFهای پردازش‌شده · ۳۰ روز گذشته"
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
+soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
 
 [portal.procurement]
-reset = "بازنشانی خرید سازمانی (دمو)"
 subtitle = "تیم خود را ارزیابی، قراردادبندی و راه‌اندازی کنید. همه اسناد در یک مکان."
 title = "خرید سازمانی"
 
-[portal.procurement.action]
-download = "دانلود"
-pay = "اکنون پرداخت کنید"
-request = "درخواست"
-sign = "بررسی و امضا"
-upload = "آپلود"
-
 [portal.procurement.agreement]
 agreeCta = "موافقت و اشتراک"
+confidential = "Confidential"
 confirm = "من توافق‌نامه Stirling Enterprise را خوانده‌ام و با آن موافقم."
-eyebrow = "توافق‌نامه"
-intro = "یک توافق‌نامه ترکیبی معامله شما را پوشش می‌دهد: Master Service Agreement، Order Form، EULA و Data Processing Agreement. آن را بررسی کنید، سپس موافقت کنید تا پیشنهاد قیمت را به‌عنوان یک اشتراک متعهد بپذیرید."
-title = "توافق‌نامه Enterprise خود را بررسی کنید"
+docName = "Stirling Enterprise Agreement"
+docSub = "MSA, Order Form, EULA and DPA, combined into one signature."
+download = "Download"
+downloadDraftError = "Could not generate the agreement PDF - the document renderer is unavailable. Please try again shortly or contact support."
+downloadError = "Could not download the signed agreement. Please try again."
+legalName = "Legal entity name"
+legalNamePlaceholder = "The legal entity that will sign"
+loadError = "Could not load the agreement. Please try again."
+loading = "Loading the agreement..."
+ref = "Ref {{ref}} · {{version}}"
+requestChanges = "Request changes"
+scrollHint = "Scroll to review"
+signatory = "Signatory name"
+signatoryPlaceholder = "Full name"
+signatoryTitle = "Signatory title"
+signatoryTitlePlaceholder = "e.g. General Counsel"
+signError = "Could not record your signature. Please try again."
 
 [portal.procurement.builder]
 addons = "افزونه‌ها"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "بازگشت"
 businessName = "نام کسب‌وکار"
 businessNamePlaceholder = "شرکت شما"
+city = "City"
+cityPlaceholder = "San Francisco"
+completeRequired = "Please complete the required fields (marked *) with a valid email before generating the quote."
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "ادامه"
-country = "کشور"
-countryEuro = "منطقه یورو (EUR €)"
-countryUK = "بریتانیا (GBP £)"
-countryUS = "ایالات متحده (USD $)"
+done = "Done"
 eula = "من EULA مربوط به Stirling Enterprise را خوانده‌ام و با آن موافقم. این سند بر توافق‌نامه‌ای که از این پیشنهاد قیمت ایجاد می‌شود حاکم است."
 generate = "ایجاد پیشنهاد قیمت"
-included = "شامل"
 indemnification = "غرامت IP"
 indemnificationSub = "طبق EULA، از ادعاهای واجد شرایط IP دفاع می‌کنیم"
-offlineLicense = "مجوز آفلاین / air-gapped"
-offlineLicenseSub = "یک فایل مجوز قابل دانلود برای یک نمونه self-hosted و air-gapped"
+paperEyebrow = "Enterprise quote"
+paperFor = "Prepared for"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "بازبینی‌های فصلی کسب‌وکار"
 qbrSub = "SE شما هر فصل استفاده و نقشه راه را بررسی می‌کند"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / سال · {{years}} ساله {{tcv}}"
 s1Sub = "تیم شما و PDFهایی که انتظار دارید هر سال اجرا شوند."
 s1Title = "چه مقدار پردازش خواهید کرد؟"
@@ -7623,6 +8492,12 @@ s2Title = "تعهد و سرویس"
 s3Sub = "برای پیشنهاد قیمت و توافق‌نامه‌ای که ایجاد می‌کند."
 s3Title = "جزئیات شما"
 serviceLevel = "سطح سرویس"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "اختصاصی"
 slDedicatedSub = "۴ ساعت کاری · مدیر حساب اختصاصی · +۳۰٪"
 slPriority = "اولویت‌دار"
@@ -7630,6 +8505,8 @@ slPrioritySub = "همان روز کاری · CSM مشخص · +۱۵٪"
 slStandard = "استاندارد"
 slStandardSub = "روز کاری بعد · CSM مشترک · شامل"
 stepOf = "مرحله {{n}} از {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "دوره"
 termDiscount = "{{pct}}٪ تخفیف تعهد چندساله اعمال شد"
 title = "ساخت پیشنهاد قیمت"
@@ -7637,6 +8514,7 @@ training = "راه‌اندازی و آموزش"
 trainingSub = "جلسات زنده برای شروع کار تیم شما"
 users = "کل کاربران"
 usersPlaceholder = "مثلاً 250"
+viewEula = "Read it"
 volEstimated = "برآورد شده از {{count}} کاربر (حدود ۲٬۰۰۰ PDF برای هر نفر، شامل اتوماسیون). اگر عدد دقیق‌تری می‌دانید ویرایش کنید."
 volManual = "از عدد شما استفاده می‌شود. هر زمان می‌توانید بر اساس اندازه تیم دوباره برآورد کنید."
 volNoUsers = "مطمئن نیستید؟ اندازه تیم خود را وارد کنید تا برایتان برآورد کنیم."
@@ -7645,55 +8523,55 @@ volumePlaceholder = "مثلاً 1,000,000"
 years_one = "{{count}} سال"
 years_other = "{{count}} سال"
 
-[portal.procurement.docs]
-count_one = "{{count}} سند"
-count_other = "{{count}} سند"
-done = "انجام شد"
-here = "اینجا هستید"
-hide = "پنهان کردن"
-optional = "اختیاری"
-paidAddon = "افزونه پولی"
-show = "نمایش"
-subtitle = "هر چیزی که در هر مرحله از مسیر نیاز دارید، هم‌زمان با پیشرفت معامله نمایش داده می‌شود."
-supportingSubtitle = "SOC 2، بازبینی‌های امنیتی، فرم‌های مالیاتی و موارد بیشتر، آماده زمانی که تیم امنیت یا خرید شما درخواست کند. برخی هزینه یک‌باره دارند."
-supportingTitle = "پشتیبانی از ارزیابی شما"
-title = "اسناد"
-upcoming = "پیش‌رو"
+[portal.procurement.documents]
+agreement = "Enterprise Agreement"
+agreementSub = "MSA, Order Form and DPA in one signature."
+download = "Download"
+eula = "EULA & Commercial Terms"
+eulaSub = "The software and self-serve commercial terms."
+invoice = "Invoice"
+invoiceSub = "Your first subscription invoice."
+laterInvoice = "Available after you accept"
+laterQuote = "Available once your quote is issued"
+quote = "Quote"
+quoteSub = "Your itemised enterprise quote."
+sla = "SLA Exhibit"
+slaSub = "Support tiers and response targets."
+subprocessors = "Subprocessors"
+subprocessorsSub = "Third parties that process data on your behalf."
+subtitle = "Your deal paperwork, available any time."
+title = "Documents"
+view = "View"
 
 [portal.procurement.error]
 title = "مشکلی پیش آمد"
 
 [portal.procurement.hero]
-company = "معامله Enterprise شما"
+barAria = "Stage {{current}} of {{total}}"
 ctaAgreement = "بررسی و امضای توافق‌نامه"
-ctaLive = "شما فعال هستید"
-ctaPayment = "افزودن پرداخت"
+ctaExploring = "Set up your trial"
 ctaQuote = "بررسی پیشنهاد قیمت"
+ctaReviewQuote = "Review quote"
 ctaTrial = "ساخت پیشنهاد قیمت"
+documents = "Documents"
 eyebrow = "خرید سازمانی Enterprise"
+eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "دعوت از هم‌تیمی‌ها"
-keyDocs = "اسناد کلیدی"
-nextStep = "مرحله بعد: {{action}}"
-notStarted = "شروع نشده"
+licenseKey = "Licence key"
+liveSub = "Your organization is provisioned and your licence is active."
+liveTitle = "You are live on Stirling Enterprise"
+next = "Next: {{stage}}"
 open = "باز کردن خرید سازمانی"
 scheduleCall = "زمان‌بندی تماس"
-setup1Sub = "هم‌تیمی‌های خود را دعوت کنید"
-setup1Title = "استقرار ویرایشگر PDF"
-setup2Sub = "پردازش را در ویرایشگرها و منابع دیگر فعال کنید"
-setup2Title = "اتصال پردازشگر PDF"
-setup3Sub = "در صورت نیاز، Security، Compliance، Routing یا Retention را فعال کنید"
-setup3Title = "افزودن خط‌مشی‌های پیشنهادی"
+sentenceAgreement = "review and sign the agreement"
+sentenceLive = "provisioning and rollout"
+sentencePayment = "purchase order and payment"
+sentenceQuote = "review and accept your quote"
+sentenceTrial = "set up your trial workspace"
 
 [portal.procurement.journey]
 daysLeft_one = "{{count}} روز باقی مانده"
 daysLeft_other = "{{count}} روز باقی مانده"
-engineerLabel = "مهندس راهکارهای شما"
-eyebrow = "استقرار شما"
-live = "شما در Stirling Enterprise فعال هستید"
-nextStep = "مرحله بعد: {{action}}"
-subtitle = "مهندس راهکارهای شما در همه مراحل همراه است. هر بار یک اقدام بعدی؛ فهرست کامل در پایین آمده است."
-title = "از دوره آزمایشی تا اجرا، یک مسیر هدایت‌شده"
-trialTitle = "دوره آزمایشی Enterprise"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "یک امضا MSA، فرم سفارش، EULA و DPA را پوشش می‌دهد."
@@ -7727,6 +8605,9 @@ downloadError = "هنوز امکان ایجاد فایل مجوز آفلاین �
 downloadOffline = "دانلود مجوز آفلاین (.lic)"
 hint = "این کلید را برای فعال‌سازی در یک نمونه self-hosted وارد کنید، یا برای سوابق خود نگه دارید. آن را امن نگه دارید."
 label = "کلید مجوز شما"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "پیوند دادن حساب"
@@ -7739,65 +8620,62 @@ description = "اشتراک شما فعال است و مجوز شما صادر �
 eyebrow = "فعال"
 title = "شما در Stirling Enterprise فعال هستید"
 
-[portal.procurement.locked]
-description = "کلیدهای آزمایشی، پیشنهادهای قیمت با حجم متعهد، توافق‌نامه تک‌امضایی، پرداخت و دفتر اسناد شما پس از شروع ارزیابی Enterprise همه اینجا قرار می‌گیرند."
-eyebrow = "فقط Enterprise"
-talkToSales = "صحبت با فروش"
-title = "مسیر خرید سازمانی با Enterprise باز می‌شود"
-
 [portal.procurement.milestone]
-accept = "پذیرش و ادامه"
-description = "PDF را دانلود کنید تا با تیم خود به اشتراک بگذارید، وقتی آماده بودید برای پذیرش برگردید، یا تغییرات ایجاد کنید."
-download = "دانلود PDF"
 downloadError = "هنوز امکان دانلود PDF پیشنهاد قیمت وجود ندارد — لطفاً چند لحظه دیگر دوباره تلاش کنید."
-edit = "ویرایش پیشنهاد قیمت"
-eyebrow = "پیشنهاد قیمت {{number}}"
-perYear = " / سال"
-preparedFor = "تهیه‌شده برای {{company}}"
-tcv = "{{value}} ارزش کل قرارداد"
-title = "پیشنهاد قیمت شما آماده است"
-
-[portal.procurement.modal]
-cancel = "لغو"
-chooseFile = "انتخاب فایل"
-close = "بستن"
-downloadBody = "دانلود شما به‌زودی آغاز می‌شود."
-downloadCta = "دانلود"
-downloadTitle = "دانلود"
-noFile = "هیچ فایلی انتخاب نشده است"
-payBody = "قرارداد متعهد خود را از طریق Stripe با کارت یا انتقال بانکی پرداخت کنید. فضای کاری شما به‌محض تسویه پرداخت آماده می‌شود."
-payCta = "ادامه به Stripe"
-payTitle = "تأیید پرداخت"
-requestBodyFree = "ما این مورد را بنا به درخواست ایجاد می‌کنیم. تأیید کنید تا مهندس راهکارهای شما به‌زودی آن را ارسال کند."
-requestBodyPaid = "این یک افزونه پولی است. تأیید کنید تا مهندس راهکارهای شما آن را برآورد کرده و مدارک را ارسال کند."
-requestCta = "درخواست"
-requestTitle = "درخواست این سند"
-signBody = "توافق‌نامه Stirling Enterprise را برای امضای الکترونیکی باز می‌کند: یک امضا MSA، فرم سفارش، EULA و DPA را پوشش می‌دهد. ما به‌صورت خودکار امضای متقابل می‌کنیم و شما به مرحله پرداخت می‌روید."
-signCta = "باز کردن برای امضا"
-signTitle = "توافق‌نامه خود را بررسی و امضا کنید"
-uploadBody = "PO خود را برای ما بفرستید و ما مطابق شرایط شما فاکتور صادر می‌کنیم. PDF را بکشید و رها کنید یا از پایین یک فایل انتخاب کنید."
-uploadCta = "آپلود سفارش خرید"
-uploadTitle = "آپلود سفارش خرید شما"
 
 [portal.procurement.payment]
 description = "پیشنهاد قیمت شما پذیرفته شده و مجوز شما از قبل فعال است — تیم شما می‌تواند بلافاصله شروع کند. هر زمان آماده بودید اولین فاکتور را پرداخت کنید؛ می‌توانید آن را اینجا پرداخت یا دانلود کنید، بدون نیاز به ایمیل."
+downloadAgreement = "Download signed agreement"
 downloadInvoice = "دانلود فاکتور"
-simulate = "شبیه‌سازی دریافت پرداخت (دمو)"
+eyebrow = "Payment"
 title = "اشتراک ایجاد شد"
 viewInvoice = "مشاهده و پرداخت فاکتور"
+
+[portal.procurement.review]
+acceptCta = "Accept quote"
+annual = "Annual fee (year 1)"
+downloadCta = "Download quote"
+poNumber = "Purchase order: {{po}}"
+renewal = "Renews at {{amount}}/year after the term (+{{pct}}% CPI)"
+tcv = "{{years}}-year term, paid in full up front: {{tcv}}"
+validUntil = "Valid until {{date}}"
 
 [portal.procurement.schedule]
 fallback = "زمان‌بند بارگیری نشد."
 fallbackLink = "باز کردن زمان‌بندی در برگه جدید"
+loading = "Loading scheduler..."
 subtitle = "مهندس راهکارهای شما تیم‌تان را در طول استقرار راهنمایی می‌کند. زمانی را انتخاب کنید که برای شما مناسب است."
 title = "زمان‌بندی تماس"
 
-[portal.procurement.status]
-action = "اقدام لازم است"
-available = "در دسترس"
-complete = "کامل"
-pending = "در انتظار"
-request = "در صورت درخواست"
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Sealed, no outbound"
+back = "Back"
+businessName = "Business name"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "Managed, fastest start"
+continue = "Continue"
+deployment = "Where should it deploy?"
+eula = "I agree to the Stirling EULA & Commercial Terms."
+fullName = "Full name"
+fullNamePlaceholder = "Your name"
+invites = "Invite teammates · optional"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Schedule a call"
+seats = "People testing"
+seatsPlaceholder = "e.g. 15"
+selfhost = "Self-hosted"
+selfhostSub = "Docker or Kubernetes"
+start = "Start trial"
+stepOf = "Step {{n}} of {{total}}"
+subtitle = "Free for 14 days, no card required."
+subtitleDetails = "A few details for your quote and agreement."
+talkFirst = "Prefer to talk first?"
+title = "Set up your trial"
+viewEula = "Read it"
+workEmail = "Work email"
+workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "تمدید، ۷ روز اضافه می‌کند و به مهندس راهکارهای شما اطلاع می‌دهد."
@@ -7807,20 +8685,6 @@ extend = "تمدید ۷ روز"
 maxed = "به سقف رسیده"
 subtitle = "دوره آزمایشی رایگان شما تا {{date}} ادامه دارد. کارت لازم نیست."
 title = "دوره آزمایشی Enterprise"
-
-[portal.procurement.upsell]
-homeBadge = "Enterprise"
-homeBody = "قیمت‌گذاری حجم متعهد، SSO + SCIM + RBAC در سطح سازمان، ممیزی تغییرناپذیر ۹۰ روزه و SE اختصاصی."
-homeCta = "شروع دوره آزمایشی →"
-homeHeadline = "میلیون‌ها PDF را پردازش کنید."
-
-[portal.recentActivity]
-title = "فعالیت اخیر"
-viewAll = "مشاهده همه"
-
-[portal.recentActivity.empty]
-description = "اجرای پایپ‌لاین‌ها، استقرارها و رویدادهای عامل اینجا نمایش داده می‌شوند."
-title = "هنوز چیزی اینجا نیست"
 
 [portal.search]
 ariaLabel = "جستجو"
@@ -7838,57 +8702,49 @@ admin = "مدیر"
 [portal.settings.sections]
 account-link = "پیوند حساب"
 
-[portal.shell.header]
-accountFallback = "حساب"
-accountMenu = "منوی حساب"
-darkMode = "حالت تاریک"
-lightMode = "حالت روشن"
-search = "جستجو"
-searchPlaceholder = "جستجو…"
-signOut = "خروج"
-switchToDark = "تغییر به پوسته تاریک"
-switchToLight = "تغییر به پوسته روشن"
-
 [portal.shell.sidebar]
 appEditor = "ویرایشگر"
 appProcessor = "پردازشگر"
-brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} سند"
 linkAccount = "پیوند حساب Stirling"
-planEditor = "طرح ویرایشگر"
-planEnterprise = "طرح Enterprise"
-planProcessor = "طرح پردازشگر"
 primaryNav = "ناوبری اصلی"
 switchApp = "تغییر برنامه"
+
+[portal.shell.topbar]
+closeNav = "Close navigation"
+openNav = "Open navigation"
+search = "Search"
 
 [portal.sources]
 subtitle = "اتصالات ورودی قابل استفاده مجدد که اسناد را به Stirling وارد می‌کنند. یک اتصال را یک‌بار پیکربندی کنید، سپس از آن در هر تعداد خط‌مشی استفاده کنید. برای پیکربندی و دیدن خط‌مشی‌هایی که از آن استفاده می‌کنند، روی یک ردیف کلیک کنید."
 title = "منابع"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "اتصال منبع"
+
+[portal.sources.builder]
+back = "Back to sources"
+backToTypes = "All source types"
+cancel = "Cancel"
+chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
+comingSoon = "Coming soon"
+comingSoonHeading = "Coming soon"
+create = "Create source"
+createTitle = "Connect a source"
+delete = "Delete"
+editTitle = "Edit source"
+enabled = "Enabled"
+save = "Save changes"
+
+[portal.sources.builder.folderAccess]
+description = "Folder automations can only use folders an administrator has allowed. Add it under Folder Access settings, then try again."
+openSettings = "Folder Access settings"
+title = "This folder isn't allowed"
 
 [portal.sources.delete]
 body = "«{{name}}» حذف شود؟ این کار قابل بازگشت نیست. خط‌مشی‌هایی که به آن ارجاع می‌دهند باید به‌روزرسانی شوند."
 cancel = "لغو"
 confirm = "حذف"
 title = "منبع حذف شود؟"
-
-[portal.sources.detail]
-closeAriaLabel = "بستن جزئیات"
-delete = "حذف منبع"
-docs24h = "۲۴ ساعت گذشته"
-docs30d = "۳۰ روز گذشته"
-docsTotal = "کل مشاهده‌شده"
-docsTrend = "اسناد در ۳۰ روز گذشته"
-documents = "اسناد"
-edit = "ویرایش"
-notReferenced = "هیچ خط‌مشی‌ای به آن ارجاع نمی‌دهد، بنابراین حذف آن امن است."
-pause = "مکث"
-resume = "ادامه"
-subtitle = "{{type}} · {{status}}"
-usedBy = "استفاده‌شده توسط"
 
 [portal.sources.empty]
 description = "یک پوشه (و به‌زودی فضای ذخیره‌سازی ابری) را متصل کنید تا خط‌مشی‌های شما جایی برای دریافت اسناد داشته باشند."
@@ -7899,18 +8755,57 @@ inUse = "در حال استفاده"
 total = "اتصالات"
 unused = "استفاده‌نشده"
 
+[portal.sources.networkFields.connection]
+helperText = "The stored connection with the server address and credentials. Reused by every source that references it."
+label = "Connection"
+
+[portal.sources.networkFields.directory]
+helperText = "Folder on the server to poll, relative to the login home or share root. Leave blank for the root."
+label = "Folder"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume removes each file from the server once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: process each file once"
+snapshot = "Snapshot: re-read the folder every run"
+
+[portal.sources.networkFields.recursive]
+label = "Folder depth"
+
+[portal.sources.networkFields.recursive.options]
+all = "Include subfolders"
+top = "Top level only"
+
 [portal.sources.status]
 active = "فعال"
 disabled = "غیرفعال"
 unused = "استفاده‌نشده"
 
 [portal.sources.table]
+documents = "Documents"
 source = "منبع"
 status = "وضعیت"
 usedBy = "خط‌مشی‌ها"
 
+[portal.sources.types.box]
+description = "Pull documents from Box folders your team already shares."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Pull documents from a shared Dropbox folder."
+label = "Dropbox"
+
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "ویرایشگر"
+noPolicies = "No policies run from the editor yet."
+
+[portal.sources.types.email]
+description = "Turn attachments sent to a dedicated mailbox into documents."
+label = "Email inbox"
 
 [portal.sources.types.folder]
 description = "یک دایرکتوری روی سرور را برای اسناد جدید پایش کنید."
@@ -7943,25 +8838,80 @@ label = "عمق پوشه"
 all = "شامل زیرپوشه‌ها"
 top = "فقط سطح بالا"
 
+[portal.sources.types.ftp]
+description = "Poll an FTP or FTPS server folder for new documents."
+label = "FTP"
+
+[portal.sources.types.googledrive]
+description = "Pull documents from shared Google Drive folders."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Watch an SMB network share for new documents."
+label = "Network drive"
+
+[portal.sources.types.onedrive]
+description = "Watch OneDrive folders for new documents."
+label = "OneDrive"
+
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+label = "Connection"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Poll an SFTP drop folder for new documents."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "Pull documents from SharePoint document libraries."
+label = "SharePoint"
+
 [portal.sources.types.unknown]
 label = "منبع"
 
+[portal.sources.types.webhook]
+createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."
+description = "Receive documents by signed HTTP POST from any external system."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "Delivery URL"
+secretNote = "The signing secret is shown once, when the webhook is created. Recreate the source to roll it."
+
+[portal.sources.types.webhook.reveal]
+copy = "Copy"
+done = "Done"
+secret = "Signing secret"
+secretHelp = "Sign each delivery's raw body with this key (HMAC-SHA256) and send it as the X-Stirling-Signature header."
+secretWarning = "Copy the signing secret now. For your security it is shown only once and cannot be retrieved later."
+title = "Webhook created"
+url = "Delivery URL"
+usage = "POST each document as the raw request body to the delivery URL with a binary content type (application/pdf or application/octet-stream). Referencing policies run automatically on arrival."
+
 [portal.sources.wizard]
-back = "بازگشت"
-cancel = "لغو"
-continue = "ادامه"
-editTitle = "ویرایش منبع"
 name = "نام"
 namePlaceholder = "مثلاً دریافت ادعاها"
-save = "ذخیره تغییرات"
-subtitle = "مرحله {{current}} از {{total}} · {{label}}"
-title = "اتصال یک منبع"
 type = "نوع"
 
-[portal.sources.wizard.steps]
-chooseType = "انتخاب نوع"
-configure = "پیکربندی"
-review = "بررسی و اتصال"
+[portal.stepModal]
+close = "Close"
 
 [portal.usage]
 managePayment = "مدیریت پرداخت"
@@ -8021,16 +8971,9 @@ summary = "مالک یک تیم است — منابع اعضا و پیکربند
 2 = "دسترسی پورتال از طریق خط‌مشی پیش‌فرض"
 3 = "هر کاری که عضو می‌تواند انجام دهد"
 
-[portal.welcome]
-ariaLabel = "به Stirling PDF خوش آمدید"
-badge = "Open-source"
-installEditor = "نصب ویرایشگر"
-inviteTeammates = "دعوت از هم‌تیمی‌ها"
-openInBrowser = "باز کردن در مرورگر"
-perks = "همیشه رایگان · قابل self-host"
-subtitle = "امن‌ترین ویرایشگر PDF جهان برای تیم‌ها با هر اندازه‌ای رایگان است. شامل بیش از ۶۰ عملیات PDF و SSO."
-title = "خوش آمدید به"
-titleAccent = "Stirling PDF"
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
 
 [printFile]
 title = "چاپ فایل"
@@ -8654,11 +9597,11 @@ label = "حذف فراداده XMP"
 [sanitize.steps]
 settings = "تنظیمات"
 
-[sanitizePdf]
-tags = "پاکسازی،امن،ایمن،حذف تهدیدها"
-
 [sanitizePDF]
 title = "پاکسازی PDF"
+
+[sanitizePdf]
+tags = "پاکسازی،امن،ایمن،حذف تهدیدها"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
@@ -8666,18 +9609,6 @@ title = "تنظیم مقیاس صفحه"
 
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[ScannerImageSplit.selectText]
-1 = "آستانه زاویه:"
-10 = "اندازه حاشیه اضافه‌شده و حذف‌شده برای جلوگیری از حاشیه‌های سفید در خروجی را تنظیم می‌کند (پیش‌فرض: ۱)."
-2 = "حداقل زاویه مطلق مورد نیاز برای چرخاندن تصویر را تنظیم می‌کند (پیش‌فرض: ۱۰)."
-3 = "تحمل‌پذیری:"
-4 = "دامنه تغییر رنگ در اطراف رنگ پس‌زمینه تخمین‌زده‌شده را تعیین می‌کند (پیش‌فرض: ۳۰)."
-5 = "حداقل ناحیه:"
-6 = "آستانه حداقل ناحیه برای یک عکس را تنظیم می‌کند (پیش‌فرض: ۱۰۰۰۰)."
-7 = "حداقل ناحیه کانتور:"
-8 = "آستانه حداقل ناحیه کانتور برای یک عکس را تنظیم می‌کند"
-9 = "اندازه حاشیه:"
 
 [scannerImageSplit]
 submit = "استخراج اسکن‌های تصویر"
@@ -8710,6 +9641,18 @@ whatThisDoes = "این ابزار چه می‌کند"
 whatThisDoesDesc = "به‌صورت خودکار هر عکس را از یک صفحه اسکن‌شده یا تصویر مرکب پیدا و استخراج می‌کند—بدون برش دستی."
 whenToUse = "زمان استفاده"
 
+[ScannerImageSplit.selectText]
+1 = "آستانه زاویه:"
+10 = "اندازه حاشیه اضافه‌شده و حذف‌شده برای جلوگیری از حاشیه‌های سفید در خروجی را تنظیم می‌کند (پیش‌فرض: ۱)."
+2 = "حداقل زاویه مطلق مورد نیاز برای چرخاندن تصویر را تنظیم می‌کند (پیش‌فرض: ۱۰)."
+3 = "تحمل‌پذیری:"
+4 = "دامنه تغییر رنگ در اطراف رنگ پس‌زمینه تخمین‌زده‌شده را تعیین می‌کند (پیش‌فرض: ۳۰)."
+5 = "حداقل ناحیه:"
+6 = "آستانه حداقل ناحیه برای یک عکس را تنظیم می‌کند (پیش‌فرض: ۱۰۰۰۰)."
+7 = "حداقل ناحیه کانتور:"
+8 = "آستانه حداقل ناحیه کانتور برای یک عکس را تنظیم می‌کند"
+9 = "اندازه حاشیه:"
+
 [search]
 noResults = "هیچ نتیجه‌ای یافت نشد"
 placeholder = "عبارت جستجو را وارد کنید..."
@@ -8727,46 +9670,22 @@ toolNotAvailableLocally = "سرور Stirling-PDF شما آفلاین است و \
 [session]
 expired = "نشست شما به پایان رسیده است. لطفاً صفحه را تازه‌سازی کرده و دوباره تلاش کنید."
 
-[sessionManagement.tooltip]
-header = "مدیریت نشست‌های امضا"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "شرکت‌کنندگان جدید به انتهای ترتیب امضا اضافه می‌شوند"
-bullet2 = "پس از نهایی‌سازی نشست، نمی‌توان شرکت‌کننده اضافه کرد"
-bullet3 = "هر شرکت‌کننده وقتی نوبتش شود اعلان دریافت می‌کند"
-description = "می‌توانید هر زمان پیش از نهایی‌سازی، شرکت‌کنندگان بیشتری به یک نشست فعال اضافه کنید."
-title = "افزودن شرکت‌کنندگان"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>نهایی‌سازی کامل</b>: همه شرکت‌کنندگان امضا کرده‌اند"
-bullet2 = "<b>نهایی‌سازی جزئی</b>: برخی شرکت‌کنندگان هنوز امضا نکرده‌اند"
-bullet3 = "شرکت‌کنندگان امضانشده از سند نهایی حذف می‌شوند"
-bullet4 = "پس از نهایی‌سازی، می‌توانید PDF امضاشده را در فایل‌های فعال بارگذاری کنید"
-description = "نهایی‌سازی، همه امضاها را در یک PDF امضاشده واحد ترکیب می‌کند. این اقدام قابل بازگشت نیست."
-title = "نهایی‌سازی نشست"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "نمی‌توان شرکت‌کنندگانی را که قبلاً امضا کرده‌اند حذف کرد"
-bullet2 = "شرکت‌کنندگان حذف‌شده دیگر اعلان دریافت نخواهند کرد"
-bullet3 = "ترتیب امضا به‌صورت خودکار تنظیم می‌شود"
-description = "پیش از امضا می‌توان شرکت‌کنندگان را از نشست‌ها حذف کرد."
-title = "حذف شرکت‌کنندگان"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "هر امضا به‌صورت ترتیبی روی PDF اعمال می‌شود"
-bullet2 = "امضاکنندگان بعدی می‌توانند امضاهای قبلی را ببینند"
-bullet3 = "برای فرایندهای تأیید و زنجیره‌های حفظ و انتقال قانونی حیاتی است"
-description = "ترتیبی که هنگام ایجاد نشست مشخص می‌کنید، تعیین می‌کند چه کسی ابتدا امضا کند."
-title = "ترتیب امضا"
-
 [settings]
 close = "بستن"
+
+[settings.ai]
+documents = "Documents & RAG"
+general = "General"
+limits = "Limits & Performance"
+models = "Models & Providers"
+title = "AI"
 
 [settings.configuration]
 advanced = "پیشرفته"
 database = "پایگاه داده"
 endpoints = "نقاط پایانی"
 features = "قابلیت‌ها"
+folderAccess = "Folder Access"
 mcp = "MCP Server"
 storageSharing = "ذخیره‌سازی فایل و اشتراک‌گذاری"
 systemSettings = "تنظیمات سیستم"
@@ -8800,6 +9719,8 @@ defaultPdfEditor = "ویرایشگر پیش‌فرض PDF"
 defaultPdfEditorActive = "Stirling PDF ویرایشگر پیش‌فرض PDF شماست"
 defaultPdfEditorChecking = "در حال بررسی..."
 defaultPdfEditorInactive = "برنامه دیگری به‌عنوان پیش‌فرض تنظیم شده است"
+defaultPdfEditorRemind = "Remind me to set as default"
+defaultPdfEditorRemindDescription = "Show a banner when Stirling PDF is not your default PDF application."
 defaultPdfEditorSet = "از پیش پیش‌فرض است"
 defaultStartupView = "نمای پیش‌فرض هنگام اجرا"
 defaultStartupViewDescription = "انتخاب کنید هنگام شروع برنامه کدام زبانه در ستون چپ فعال باشد"
@@ -8817,9 +9738,18 @@ languageDescription = "زبان نمایش را انتخاب کنید"
 logout = "خروج"
 setAsDefault = "تنظیم به‌عنوان پیش‌فرض"
 theme = "تم"
+themeAccent = "Accent colour"
+themeAccentCustom = "Custom colour"
+themeAccentCustomHint = "Custom (defaults recommended)"
+themeAccentDark = "Dark mode accent colour"
+themeAccentDefault = "Default"
+themeAccentDefaultHint = "Default theme (recommended)"
+themeAccentDescription = "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active."
+themeAccentLight = "Light mode accent colour"
 themeDark = "تیره"
 themeDescription = "میان حالت روشن و تیره جابه‌جا شوید"
 themeLight = "روشن"
+themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "عمومی"
 user = "کاربر"
@@ -8832,6 +9762,12 @@ dismiss = "رد کردن"
 intro = "احراز هویت کاربر، مدیریت تیم و قابلیت‌های فضای کار را برای سازمان خود فعال کنید."
 learnMore = "بیشتر در مستندات بیاموزید"
 title = "برای مدیران سیستم"
+
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
 
 [settings.general.mode]
 fullscreen = "تمام‌صفحه"
@@ -9040,6 +9976,11 @@ connections = "اتصالات"
 security = "امنیت"
 telegram = "Telegram"
 title = "امنیت و احراز هویت"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "تیم"
@@ -9657,6 +10598,9 @@ uploadButton = "بارگذاری در سرور"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,مستندات,swagger,پایانه‌ها,توسعه"
 title = "مستندات API"
 
@@ -9764,14 +10708,42 @@ selectFilesHint = "برای اجرای این ابزار، پرونده‌ها �
 singleFileScope = "فقط اعمال می‌شود روی: {{fileName}}"
 viewerMode = "برای انتخاب چندین پرونده به ویرایشگر پرونده بروید."
 
+[toolFormat]
+ANY = "any file"
+CBR = "a comic book archive (CBR)"
+CBZ = "a comic book archive (CBZ)"
+CSV = "a CSV file"
+EBOOK = "an ebook"
+EMAIL = "an email"
+EXCEL = "a spreadsheet"
+HTML = "a web page"
+IMAGE = "images"
+JAVASCRIPT = "a JavaScript file"
+JSON = "a JSON file"
+MARKDOWN = "a Markdown file"
+NONE = "no file"
+PCL = "a PCL print file"
+PDF = "a PDF"
+PDF_ENCRYPTED = "a password-protected PDF"
+POSTSCRIPT = "a PostScript file"
+PPT = "a presentation"
+TEXT = "a text file"
+VIDEO = "a video"
+WORD = "a Word document"
+XML = "an XML file"
+XPS = "an XPS document"
+ZIP = "a ZIP archive"
+
 [toolPanel]
 alpha = "آلفا"
 backToAllTools = "بازگشت به همهٔ ابزارها"
 collapse = "جمع کردن پنل"
 expand = "گسترش پنل"
 goBack = "بازگشت"
+pdfTools = "PDF Tools"
 placeholder = "برای شروع یک ابزار انتخاب کنید"
 premiumFeature = "ویژگی پرمیوم:"
+searchTools = "Search tools"
 toolsHeader = "ابزارها"
 viewAllTools = "مشاهدهٔ همهٔ ابزارها"
 
@@ -9805,11 +10777,6 @@ allTools = "همه ابزارها"
 noToolsFound = "ابزاری یافت نشد"
 quickAccess = "دسترسی سریع"
 searchPlaceholder = "جستجوی ابزارها..."
-
-[toolPicker.categories]
-advancedTools = "ابزارهای پیشرفته"
-recommendedTools = "ابزارهای پیشنهادی"
-standardTools = "ابزارهای استاندارد"
 
 [toolPicker.subcategories]
 advancedFormatting = "قالب‌بندی پیشرفته"
@@ -9950,15 +10917,30 @@ title = "کاربران"
 you = "(شما)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "حذف تیم"
 disableMfa = "بازنشانی MFA"
 move = "انتقال به تیم"
 reinstate = "بازگردانی"
 remove = "حذف از سازمان"
+removeTeam = "Remove from team"
 rename = "تغییر نام تیم"
 resetPw = "بازنشانی رمز عبور"
 suspend = "تعلیق"
 unlock = "باز کردن قفل حساب"
+
+[users.activity]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "Just now"
+minutesAgo = "{{count}}m ago"
+monthsAgo_one = "{{count}} month ago"
+monthsAgo_other = "{{count}} months ago"
+never = "Never"
+weeksAgo_one = "{{count}} week ago"
+weeksAgo_other = "{{count}} weeks ago"
+yearsAgo_one = "{{count}} year ago"
+yearsAgo_other = "{{count}} years ago"
 
 [users.cap]
 addProcessor = "+ پردازشگر"
@@ -9967,11 +10949,14 @@ editor = "ویرایشگر"
 processor = "پردازشگر"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "تیم {{name}} حذف شود؟ ابتدا تیم باید خالی باشد - اعضای آن را به تیم دیگری منتقل کنید و نباید همچنان مالک هیچ پیکربندی یکپارچه‌سازی باشد."
 deleteTeamTitle = "حذف تیم"
 disableMfaBody = "ثبت‌نام MFA برای {{name}} حذف شود؟ اگر لازم باشد، در ورود بعدی دوباره آن را راه‌اندازی می‌کنند."
 disableMfaTitle = "بازنشانی MFA"
 removeBody = "{{name}} برای همیشه از سازمان حذف شود؟ این کار قابل بازگشت نیست."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "حذف عضو"
 
 [users.empty]
@@ -10021,6 +11006,16 @@ title = "دعوت از افراد"
 username = "نام کاربری"
 usernameError = "نام کاربری باید حداقل ۳ نویسه باشد"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expiresInDays_one = "Expires in {{count}} day"
+expiresInDays_other = "Expires in {{count}} days"
+expiresToday = "Expires today"
+title = "Pending invitations"
 
 [users.loadError]
 description = "در برقراری ارتباط با بک‌اند مشکلی پیش آمد، یا شما دسترسی ندارید. دوباره تلاش کنید."
@@ -10212,9 +11207,11 @@ title = "پیوست‌ها"
 
 [viewer.bookmarks]
 bookmarkTitle = "عنوان نشانک"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "بستن نوار کناری نشانک‌ها"
 collapseAll = "جمع کردن همه نشانک‌ها"
 expandAll = "باز کردن همه نشانک‌ها"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "افزودن نظر"
@@ -10604,30 +11601,6 @@ title = "متن واترمارک"
 [watermark.watermarkType]
 image = "تصویر"
 text = "متن"
-
-[wetSignature.tooltip]
-header = "روش‌های ایجاد امضا"
-
-[wetSignature.tooltip.draw]
-bullet1 = "سفارشی‌سازی رنگ و ضخامت قلم"
-bullet2 = "پاک کنید و تا رسیدن به نتیجه مطلوب دوباره رسم کنید"
-bullet3 = "روی دستگاه‌های لمسی (تبلت‌ها، گوشی‌ها) کار می‌کند"
-description = "با استفاده از ماوس یا صفحه‌نمایش لمسی یک امضای دست‌نویس بسازید. بهترین گزینه برای امضاهای شخصی و اصیل."
-title = "رسم امضا"
-
-[wetSignature.tooltip.type]
-bullet1 = "انتخاب از میان چندین فونت"
-bullet2 = "سفارشی‌سازی اندازه و رنگ متن"
-bullet3 = "مناسب برای امضاهای استاندارد"
-description = "از متن تایپ‌شده امضا تولید کنید. سریع و یکنواخت، مناسب اسناد تجاری."
-title = "تایپ امضا"
-
-[wetSignature.tooltip.upload]
-bullet1 = "از PNG، JPG و سایر فرمت‌های تصویری پشتیبانی می‌کند"
-bullet2 = "برای بهترین نتیجه پس‌زمینه‌های شفاف توصیه می‌شود"
-bullet3 = "تصویر برای تناسب با ناحیه امضا تغییر اندازه می‌یابد"
-description = "یک تصویر امضای ازپیش‌ساخته را بارگذاری کنید. ایده‌آل اگر امضای اسکن‌شده یا نشان شرکت دارید."
-title = "بارگذاری تصویر امضا"
 
 [workbenchBar]
 activeFiles = "فایل‌های فعال"
