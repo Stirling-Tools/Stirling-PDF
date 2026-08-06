@@ -168,6 +168,8 @@
   --code-bg-alt: var(--p-c-eef1f4);
   --code-bg-header: var(--p-c-eaeef2);
   --code-text: var(--p-c-1f2328);
+  /* Both sit on --code-bg-header, the darkest of the code grounds, so they run
+     deeper than a plain "dim/muted" pair would on white. */
   --code-dim: var(--p-c-656d76);
   --code-muted: var(--p-c-8c959f);
   --code-keyword: var(--p-c-cf222e);

@@ -208,7 +208,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 /* ---- Folder membership tags ---- */
@@ -302,7 +302,7 @@
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-name {
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-check {
@@ -321,7 +321,7 @@
 /* Always show eye for the currently viewed file */
 .file-sidebar-file-item.viewed .file-sidebar-eye-btn {
   opacity: 1;
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 
 .file-sidebar-eye-btn:hover {

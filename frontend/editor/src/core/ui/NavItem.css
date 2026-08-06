@@ -76,7 +76,7 @@
   background: var(--color-red);
 }
 .sui-navitem[data-accent="blue"] .sui-navitem__icon {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .sui-navitem[data-accent="purple"] .sui-navitem__icon {
   color: var(--color-purple);

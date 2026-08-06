@@ -48,7 +48,7 @@
   background: color-mix(in srgb, var(--color-red) 14%, transparent);
 }
 .sui-listrow__leading[data-tone="info"] {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   background: color-mix(in srgb, var(--c-primary) 14%, transparent);
 }
 .sui-listrow__leading[data-tone="purple"] {

@@ -42,7 +42,7 @@
   padding: 0.3rem 0.7rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   background: var(--color-bg-subtle);
   border: 1px solid var(--c-border);
   border-radius: 999px;
@@ -723,7 +723,7 @@
 }
 .portal-billing__role-pill[data-leader="true"] {
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   border: 1px solid color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
 .portal-billing__role-pill[data-leader="false"] {
@@ -757,7 +757,7 @@
   color: var(--color-green);
 }
 .portal-billing__planhead-lbl--meter {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .portal-billing__planhead-title {
   margin: 0;
@@ -871,7 +871,7 @@
   border-radius: 0.65rem;
   background: var(--color-bg-subtle);
   border: 1px solid var(--c-border);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 /* Identity, stats, and the "Invite teammates" action all sit on one line; the
    metric cells render flat (no per-stat box) and are divided by hairlines, so
@@ -1173,7 +1173,7 @@
 .portal-billing__caplimit-chip[data-selected="true"] {
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
   border-color: var(--c-primary);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .portal-billing__caplimit-chip:disabled {
   opacity: 0.45;
@@ -1370,7 +1370,7 @@
 .portal-billing__bundle-row-change {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   flex-shrink: 0;
 }
 .portal-billing__bundle-row-body {
@@ -1410,7 +1410,7 @@
   color: var(--c-text);
 }
 .portal-billing__bundle-card--active .portal-billing__bundle-card-title {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .portal-billing__bundle-card-meta {
   font-size: 0.6875rem;
@@ -1419,7 +1419,7 @@
   flex-shrink: 0;
 }
 .portal-billing__bundle-card--active .portal-billing__bundle-card-meta {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .portal-billing__bundle-card-desc {
   margin-top: 0.1875rem;
@@ -1498,7 +1498,7 @@
   font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-align: left;
 }
 .portal-billing__bundle-download-share {
@@ -1555,7 +1555,7 @@
   flex-shrink: 0;
   font-size: 11px;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   background: var(--c-surface);
   padding: 2px 8px;
   border-radius: 8px;

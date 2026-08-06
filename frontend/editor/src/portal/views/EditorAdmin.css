@@ -96,7 +96,7 @@
 }
 .portal-editor__target-icon--blue {
   background: var(--c-primary-tint);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .portal-editor__target-icon--purple {
   background: var(--color-purple-light);
@@ -192,7 +192,7 @@
 
 .portal-editor__pairing-icon--blue {
   background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .portal-editor__pairing-icon--purple {
   background: var(--color-purple-light);

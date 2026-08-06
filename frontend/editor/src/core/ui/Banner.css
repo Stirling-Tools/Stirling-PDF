@@ -45,7 +45,7 @@
 }
 
 .sui-banner--info .sui-banner__icon {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .sui-banner--success .sui-banner__icon {
   color: var(--color-green);
