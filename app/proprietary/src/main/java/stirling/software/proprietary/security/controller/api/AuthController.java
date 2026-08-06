@@ -254,8 +254,7 @@ public class AuthController {
      *
      * @return Current authenticated user information
      */
-    @PreAuthorize(
-            "!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
