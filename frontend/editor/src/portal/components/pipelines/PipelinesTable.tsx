@@ -1,12 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import AccountTreeRounded from "@mui/icons-material/AccountTreeRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
-  Chip,
+  column,
   DataTable,
   type DataTableColumn,
-  StatusBadge,
   type StatusTone,
 } from "@app/ui";
 import type { PipelineStatus, PipelineView } from "@portal/api/pipelines";
@@ -26,85 +24,50 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
   const { t } = useTranslation();
   const columns = useMemo<DataTableColumn<PipelineView>[]>(
     () => [
-      {
+      column.entity({
         key: "name",
         header: t("portal.pipelines.table.name"),
-        render: (p) => (
-          <div className="portal-pipelines__name-cell">
-            <span className="portal-pipelines__pipe-dot" aria-hidden>
-              <AccountTreeRounded style={{ fontSize: "1.2rem" }} />
-            </span>
-            <div className="portal-pipelines__name-text">
-              <strong>{p.name}</strong>
-              <Chip accent="neutral" size="sm">
-                {t(`portal.pipelines.trigger.${p.trigger}`, {
-                  defaultValue: p.trigger,
-                })}
-              </Chip>
-            </div>
-          </div>
-        ),
-      },
-      {
+        icon: () => <AccountTreeRounded />,
+        primary: (p) => p.name,
+        tags: (p) => [
+          {
+            label: t(`portal.pipelines.trigger.${p.trigger}`, {
+              defaultValue: p.trigger,
+            }),
+          },
+        ],
+      }),
+      column.badge({
         key: "status",
         header: t("portal.pipelines.table.status"),
-        render: (p) => (
-          <StatusBadge tone={STATUS_TONE[p.status]} size="sm">
-            {t(`portal.pipelines.status.${p.status}`)}
-          </StatusBadge>
-        ),
-      },
-      {
+        get: (p) => ({
+          tone: STATUS_TONE[p.status],
+          label: t(`portal.pipelines.status.${p.status}`),
+        }),
+      }),
+      column.number({
         key: "steps",
         header: t("portal.pipelines.table.steps"),
-        align: "right",
-        render: (p) => (
-          <span
-            className={
-              p.steps.length === 0 ? "portal-pipelines__muted" : undefined
-            }
-          >
-            {p.steps.length}
-          </span>
-        ),
-      },
-      {
+        get: (p) => p.steps.length,
+        mutedWhenZero: true,
+      }),
+      column.number({
         key: "sources",
         header: t("portal.pipelines.table.sources"),
-        align: "right",
-        render: (p) => (
-          <span
-            className={
-              p.sources.length === 0 ? "portal-pipelines__muted" : undefined
-            }
-          >
-            {p.sources.length}
-          </span>
-        ),
-      },
-      {
-        key: "open",
-        header: "",
-        align: "right",
-        width: "2.5rem",
-        render: () => (
-          <span className="portal-pipelines__caret" aria-hidden>
-            <ChevronRightRoundedIcon style={{ fontSize: "1.25rem" }} />
-          </span>
-        ),
-      },
+        get: (p) => p.sources.length,
+        mutedWhenZero: true,
+      }),
     ],
     [t],
   );
 
   return (
     <DataTable<PipelineView>
-      className="portal-pipelines__table"
       columns={columns}
       rows={pipelines}
       rowKey={(p) => p.id}
       onRowClick={onRowClick}
-      card={false}
+      rowAffordance="chevron"
     />
   );
 }

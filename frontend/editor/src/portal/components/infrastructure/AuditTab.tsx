@@ -2,12 +2,12 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
+  column,
   DataTable,
   type DataTableColumn,
   EmptyState,
   MetricCard,
   MetricStrip,
-  StatusBadge,
   Tabs,
   type TabItem,
 } from "@app/ui";
@@ -56,54 +56,45 @@ export function AuditTab() {
   ];
 
   const cols: DataTableColumn<AuditEvent>[] = [
-    {
+    column.mono({
       key: "timestamp",
       header: t("portal.infrastructure.audit.columns.timestamp"),
-      render: (e) => <span className="portal-infra__mono">{e.timestamp}</span>,
-    },
-    {
+      get: (e) => e.timestamp,
+    }),
+    column.badgeText({
       key: "event",
       header: t("portal.infrastructure.audit.columns.event"),
-      render: (e) => (
-        <div className="portal-infra__event">
-          <StatusBadge tone={AUDIT_CAT_TONE[e.category]} size="sm">
-            {t(AUDIT_CAT_LABEL[e.category])}
-          </StatusBadge>
-          <span>{e.action}</span>
-        </div>
-      ),
-    },
-    {
+      get: (e) => ({
+        tone: AUDIT_CAT_TONE[e.category],
+        label: t(AUDIT_CAT_LABEL[e.category]),
+        text: e.action,
+      }),
+    }),
+    column.mono({
       key: "actor",
       header: t("portal.infrastructure.audit.columns.actor"),
-      render: (e) => <span className="portal-infra__mono">{e.actor}</span>,
-    },
-    {
+      get: (e) => e.actor,
+    }),
+    column.text({
       key: "target",
       header: t("portal.infrastructure.audit.columns.target"),
-      render: (e) => e.target,
-    },
-    {
+      get: (e) => e.target,
+    }),
+    column.badge({
       key: "status",
       header: t("portal.infrastructure.audit.columns.status"),
-      render: (e) => (
-        <StatusBadge tone={AUDIT_TONE[e.status]} size="sm">
-          {t(AUDIT_STATUS_LABEL[e.status])}
-        </StatusBadge>
-      ),
-    },
-    {
+      get: (e) => ({
+        tone: AUDIT_TONE[e.status],
+        label: t(AUDIT_STATUS_LABEL[e.status]),
+      }),
+    }),
+    column.number({
       key: "latency",
       header: t("portal.infrastructure.audit.columns.latency"),
-      align: "right",
-      render: (e) => (
-        <span className="portal-infra__mono">
-          {t("portal.infrastructure.audit.latencyValue", {
-            value: e.latencyMs,
-          })}
-        </span>
-      ),
-    },
+      get: (e) => e.latencyMs,
+      format: (n) =>
+        t("portal.infrastructure.audit.latencyValue", { value: n }),
+    }),
   ];
 
   const state = useAuditLog(tier);

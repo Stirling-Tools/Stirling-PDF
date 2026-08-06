@@ -1,18 +1,17 @@
 /*
- * DataTable — the TanStack-backed SUI table. Shares the visual grammar of the
- * older presentational `Table` (see Table.css) so migrated tables don't shift,
- * and adds the chrome that used to be re-implemented per feature: standardized
- * loading / empty / error states, an optional toolbar and card surface, a
- * sortable-header affordance, sticky headers, and a density switch.
+ * DataTable — the one Stirling table. Appearance is owned entirely here: the
+ * canonical surface, the header/row grammar, the standardized loading / empty /
+ * error states, and every cell KIND (`sui-dtc__*`). Call-sites choose a kind and
+ * supply data; they never style a cell. This is what lets every table look and
+ * behave the same.
  */
 
 .sui-datatable {
   width: 100%;
 }
 
-/* Bare (no Card): the scroll area owns the bordered, rounded surface — the old
- * `.sui-table-wrap` treatment. Carded: the surrounding Card owns it. */
-.sui-datatable--bare .sui-datatable__frame {
+/* The one canonical surface — every table wears it; call-sites don't wrap it. */
+.sui-datatable__frame {
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   background: var(--c-surface);
@@ -59,23 +58,13 @@
   border-bottom: 1px solid var(--c-border);
   white-space: nowrap;
 }
-.sui-datatable__th--right,
-.sui-datatable__td--right {
+.sui-datatable__th--right {
   text-align: right;
 }
-.sui-datatable__th--center,
-.sui-datatable__td--center {
-  text-align: center;
+.sui-datatable__th--fit {
+  width: 1%;
 }
 
-.sui-datatable--sticky .sui-datatable__th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--c-surface);
-}
-
-/* Sortable header: a button that fills the cell and inherits the label styling. */
 .sui-datatable__sort {
   display: inline-flex;
   align-items: center;
@@ -101,7 +90,6 @@
   outline-offset: 0.125rem;
   border-radius: var(--radius-sm);
 }
-
 .sui-datatable__sort-icon {
   display: inline-flex;
   color: var(--c-text-subtle);
@@ -130,8 +118,18 @@
 .sui-datatable__table tbody tr:last-child .sui-datatable__td {
   border-bottom: none;
 }
+.sui-datatable__td--right {
+  text-align: right;
+}
+.sui-datatable__td--nowrap {
+  white-space: nowrap;
+}
+.sui-datatable__td--fit {
+  width: 1%;
+  white-space: nowrap;
+}
 
-/* Density */
+/* Density (the compact variant) */
 .sui-datatable--compact .sui-datatable__th,
 .sui-datatable--compact .sui-datatable__td {
   padding: 0.375rem 0.625rem;
@@ -150,7 +148,12 @@
   outline-offset: -0.125rem;
 }
 
-/* Full-width state cell (empty / error / message row) */
+.sui-datatable__chevron {
+  display: inline-flex;
+  color: var(--c-text-subtle);
+}
+
+/* Full-width state cell (empty / error) */
 .sui-datatable__state {
   padding: 2rem;
   text-align: center;
@@ -159,8 +162,93 @@
 .sui-datatable__state--error {
   color: var(--c-danger);
 }
-/* When the state slot hosts a full node (e.g. <EmptyState>), drop the padding
- * so the node controls its own spacing. */
 .sui-datatable__state--node {
   padding: 0;
+}
+
+/*
+ * Cell kinds (sui-dtc__*) — the locked cell vocabulary. These absorb the
+ * per-namespace portal-*__ cell styles (mono / muted / cell-stack / name-cell /
+ * caret …) that every table used to re-implement.
+ */
+.sui-dtc__text {
+  color: var(--c-text-muted);
+}
+.sui-dtc__mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+.sui-dtc__muted {
+  color: var(--c-text-subtle);
+}
+.sui-dtc__num {
+  font-variant-numeric: tabular-nums;
+}
+
+.sui-dtc__badgetext {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sui-dtc__chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* entity: leading icon + bold name + inline tags/markers + optional note */
+.sui-dtc__entity {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+.sui-dtc__entity-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-sunken, var(--c-hover));
+  color: var(--c-text-muted);
+}
+/* The component sizes whatever icon the call-site supplies. */
+.sui-dtc__entity-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.sui-dtc__entity-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  min-width: 0;
+}
+.sui-dtc__entity-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.sui-dtc__entity-name {
+  font-weight: 600;
+  color: var(--c-text);
+}
+.sui-dtc__note {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+.sui-dtc__marker {
+  display: inline-flex;
+  align-items: center;
+  color: var(--c-text-subtle);
+}
+
+.sui-dtc__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
 }
