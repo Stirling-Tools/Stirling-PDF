@@ -100,9 +100,9 @@ class PolicyFailureRecorderTest {
             assertThat(event.policyId()).isEqualTo("policy-1");
             assertThat(event.actor()).isEqualTo("dana@example.com");
             assertThat(event.origin()).isEqualTo(FailureOrigin.POLICY);
-            // A recognised kind carries its own copy, so the downstream text is dropped: it adds
-            // nothing a reviewer needs and is where a document name would otherwise survive.
-            assertThat(event.detail()).isNull();
+            // The run's message, not the exception's: that is what the operator saw. Stored
+            // verbatim, including for a kind we recognise, so the row says what actually happened.
+            assertThat(event.detail()).isEqualTo("Policy run failed: locked");
         }
 
         @Test

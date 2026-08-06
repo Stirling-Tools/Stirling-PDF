@@ -10,76 +10,21 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * The privacy contract: a recorded failure carries no document identity. There is no name column,
- * so these tests cover the other route in — a name embedded in a raw failure message, which can
- * arrive from any downstream tool.
+ * The privacy contract: a recorded failure carries no document identity of its own. There is no
+ * name column and the dedup key is built only from opaque ids, so nothing here derives from what a
+ * document is called.
+ *
+ * <p>The message itself is stored verbatim. It is the user's own error about their own file, and
+ * scrubbing it made rows harder to act on without making them meaningfully safer.
  */
-@DisplayName("a recorded failure carries no document identity")
+@DisplayName("a recorded failure carries no document identity of its own")
 class RecordFailurePrivacyTest {
 
     private static RecordFailure withDetail(String detail) {
         return RecordFailure.forRun(
                 FailureKind.UNKNOWN, 1L, "dana@example.com", "policy-1", "run-1", null, detail);
-    }
-
-    @ParameterizedTest
-    @ValueSource(
-            strings = {
-                "Step /api/v1/misc/ocr-pdf accepts [pdf] but received 'payslip-march.docx'",
-                "Could not read /var/watched/HR/termination-letter.pdf",
-                "s3://bucket/private/salary-review.XLSX could not be fetched",
-                "attachment scan-0001.JPEG rejected",
-                "Failed on medical-report.pdf and x-ray.png"
-            })
-    void redactsDocumentNamesOutOfTheFailureMessage(String message) {
-        String stored = withDetail(message).detail();
-
-        assertThat(stored).doesNotContainIgnoringCase("payslip");
-        assertThat(stored).doesNotContainIgnoringCase("termination");
-        assertThat(stored).doesNotContainIgnoringCase("salary");
-        assertThat(stored).doesNotContainIgnoringCase("medical");
-        assertThat(stored).doesNotContainIgnoringCase("x-ray");
-        assertThat(stored).doesNotContainIgnoringCase("scan-0001");
-        assertThat(stored).contains("<file>");
-    }
-
-    @Test
-    void keepsTheDiagnosticPartsThatMakeAnUnknownFailureReadable() {
-        // The whole value of UNKNOWN is the raw message, so redaction must be surgical. Fully
-        // qualified names and endpoint paths survive: neither identifies a document.
-        String stored =
-                withDetail(
-                                "Policy run failed: java.lang.NullPointerException at"
-                                        + " stirling.software.proprietary.policy.engine.PolicyExecutor"
-                                        + ".executeStep(PolicyExecutor.java:120) calling"
-                                        + " /api/v1/misc/ocr-pdf")
-                        .detail();
-
-        assertThat(stored).contains("java.lang.NullPointerException");
-        assertThat(stored).contains("stirling.software.proprietary.policy.engine.PolicyExecutor");
-        assertThat(stored).contains("/api/v1/misc/ocr-pdf");
-        // The accepted trade: a source file in a trace reads as <file>, and the line number that
-        // actually locates the fault survives.
-        assertThat(stored).contains("<file>:120");
-    }
-
-    @Test
-    void redactsAnExtensionNobodyListedAnywhere() {
-        // Matched by shape rather than a list of known formats, so supporting a new file type
-        // needs no redaction list kept up to date.
-        assertThat(withDetail("could not parse quarterly-report.wibble").detail())
-                .isEqualTo("could not parse <file>");
-    }
-
-    @Test
-    void doesNotMangleVersionNumbersOrOrdinaryProse() {
-        String stored = withDetail("Ghostscript 10.05.1 failed. Retry attempt 2.").detail();
-
-        assertThat(stored).isEqualTo("Ghostscript 10.05.1 failed. Retry attempt 2.");
     }
 
     @Test
@@ -160,22 +105,6 @@ class RecordFailurePrivacyTest {
             assertThat(new String(stored.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8))
                     .as("a round-trip through UTF-8 mangles an unpaired surrogate")
                     .isEqualTo(stored);
-        }
-    }
-
-    @Nested
-    @DisplayName("redaction is applied on the way in")
-    class Redaction {
-
-        /**
-         * Which shapes are caught is {@code FilenameRedactionTest}'s job, in the module that owns
-         * the rule. All this needs to know is that no row is written without it.
-         */
-        @Test
-        void everyStoredMessageGoesThroughIt() {
-            String stored = withDetail("Failed on \"Q3 Layoff List.pdf\"").detail();
-
-            assertThat(stored).doesNotContain("Q3 Layoff List.pdf").contains("<file>");
         }
     }
 }

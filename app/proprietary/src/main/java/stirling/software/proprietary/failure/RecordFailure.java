@@ -5,8 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
-import stirling.software.common.util.FilenameRedaction;
-
 /**
  * Everything needed to record one failure. Every reference field is nullable, because a failure can
  * happen before a file or policy is known and with no user at all (a trigger-fired run on a
@@ -33,9 +31,11 @@ public record RecordFailure(
         if (origin == null) {
             throw new IllegalArgumentException("origin is required");
         }
-        // Sanitised here rather than at each call site, since this record is the only way a row is
-        // written. Capped too: an unclassified failure carries a raw message of unbounded length.
-        detail = truncate(FilenameRedaction.attemptRedaction(detail));
+        // Capped here rather than at each call site, since this record is the only way a row is
+        // written, and an unclassified failure carries a raw message of unbounded length. Stored
+        // verbatim otherwise: it is the user's own error about their own file, and hiding parts of
+        // it makes the row harder to act on without making it meaningfully safer.
+        detail = truncate(detail);
     }
 
     /** A processor-side failure with no file or source context, e.g. a run that failed outright. */
