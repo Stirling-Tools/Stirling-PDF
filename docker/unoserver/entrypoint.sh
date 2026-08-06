@@ -58,13 +58,20 @@ start_unoserver() {
   log "Starting unoserver on ${INTERFACE}:${PORT} (uno-port ${UNO_PORT}, timeout ${CONVERSION_TIMEOUT}s, profile ${PROFILE_DIR})"
   # Pass --user-installation as a plain path; unoserver 3.6 wraps it itself
   # and crashes if pre-wrapped as a file:// URI.
+  local demand_file="/tmp/uno-last-used"
   unoserver \
     --interface "$INTERFACE" \
     --port "$PORT" \
     --uno-port "$UNO_PORT" \
     --user-installation "${PROFILE_DIR}" \
     --conversion-timeout "$CONVERSION_TIMEOUT" \
-    2> >(grep --line-buffered -v "POST /RPC2" >&2) \
+    2> >(while read -r line; do
+          if [[ "$line" == *"POST /RPC2"* ]]; then
+            date +%s > "$demand_file" 2>/dev/null || true
+          else
+            printf '%s\n' "$line" >&2
+          fi
+        done) \
     &
   UNOSERVER_PID=$!
 }
@@ -90,7 +97,7 @@ recycle_supervisor() {
   fi
 
   if [ "$IDLE_TIMEOUT" -gt 0 ]; then
-    log "Idle shutdown enabled: stop after ${IDLE_TIMEOUT}s of inactivity"
+    log "Idle shutdown enabled: stop after ${IDLE_TIMEOUT}s of inactivity (Note: remote clients cannot wake an idle-stopped standalone instance over TCP)"
   fi
 
   # Track last activity via demand file (Java writes to this)

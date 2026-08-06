@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.LockSupport;
 
 import io.github.pixee.security.BoundedLineReader;
 
@@ -548,54 +547,19 @@ public class ProcessExecutor {
 
     /**
      * Signal the on-demand unoserver manager that a conversion is needed. Writes the current epoch
-     * timestamp to /tmp/uno-last-used. The demand manager watches this file and:
+     * timestamp to /tmp/uno-last-used. The demand manager watches this file. Skips writing when
+     * configured purely with remoteunoserver endpoints.
      */
     private static void signalUnoServerDemand() {
+        if (unoServerPool != null && !unoServerPool.hasLocalEndpoints()) {
+            return;
+        }
         try {
             Path demandFile = Path.of("/tmp/uno-last-used");
             String epoch = String.valueOf(System.currentTimeMillis() / 1000);
             Files.writeString(demandFile, epoch);
-
-            // waitForUnoServerReady(30);
         } catch (IOException e) {
             log.debug("Could not write unoserver demand file: {}", e.getMessage());
-        }
-    }
-
-    /**
-     * Wait for at least one unoserver endpoint to accept connections. Uses a simple TCP connect
-     * probe to the first configured endpoint.
-     */
-    private static void waitForUnoServerReady(int maxWaitSeconds) {
-        if (unoServerPool == null || unoServerPool.isEmpty()) {
-            return;
-        }
-        // Try a quick TCP probe to the first endpoint
-        try {
-            var lease = unoServerPool.acquireEndpoint(1, TimeUnit.MILLISECONDS);
-            var endpoint = lease.getEndpoint();
-            lease.close();
-
-            String host = endpoint.getHost();
-            int port = endpoint.getPort();
-            if (host == null || host.isBlank()) host = "127.0.0.1";
-            if (port <= 0) port = 2003;
-
-            for (int i = 0; i < maxWaitSeconds; i++) {
-                try (var socket = new java.net.Socket()) {
-                    socket.connect(new java.net.InetSocketAddress(host, port), 1000);
-                    log.debug("unoserver ready on {}:{}", host, port);
-                    return;
-                } catch (IOException e) {
-                    // Not ready yet, wait
-                    LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
-                }
-            }
-            log.warn("unoserver not ready after {}s, proceeding anyway", maxWaitSeconds);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch (TimeoutException e) {
-            // Pool fully occupied, unoserver is likely running
         }
     }
 
