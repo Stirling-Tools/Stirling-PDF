@@ -5,11 +5,6 @@ import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import type { GroupEnabledResult } from "@app/types/groupEnabled";
 
 export type { GroupEnabledResult };
-import type { GroupEnabledResult } from "@app/types/groupEnabled";
-import { editorQk } from "@app/queries/keys";
-import { fetchGroupEnabled } from "@app/queries/endpoints";
-
-export type { GroupEnabledResult };
 
 /** Null while loading; a failed check reads as disabled. */
 export function useGroupEnabled(group: string): GroupEnabledResult {
