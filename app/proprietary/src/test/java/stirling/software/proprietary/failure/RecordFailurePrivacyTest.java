@@ -162,4 +162,47 @@ class RecordFailurePrivacyTest {
                     .isEqualTo(stored);
         }
     }
+
+    @Nested
+    @DisplayName("the shapes a document name actually takes")
+    class RealisticNames {
+
+        /** Raised in review: the first pass only handled a single hyphenated ASCII token. */
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "Failed on report (final).pdf",
+                    "Failed on \"Q3 Layoff List.pdf\"",
+                    "Failed on /srv/in/Q3 Layoff List.pdf",
+                    "Failed on severance-agreement.pdf.gz",
+                    "Failed on termination.tar.gz",
+                    "Failed on \u5c65\u6b74\u66f8.pdf",
+                    "Failed on \u043e\u0442\u0447\u0451\u0442-\u0437\u0430\u0440\u043f\u043b\u0430\u0442\u0430.pdf",
+                    "Failed on payslip%20march.pdf",
+                    "Failed on invoice_2024.pdf",
+                })
+        void areRedacted(String message) {
+            assertThat(withDetail(message).detail()).doesNotContain(".pdf").contains("<file>");
+        }
+
+        @Test
+        void anUndelimitedSpacedNameKeepsItsLeadingWords() {
+            // The deliberate limit: crossing spaces without a delimiter would swallow the sentence
+            // too, and "<file>" alone tells a reviewer nothing about what failed.
+            String stored = withDetail("Failed on Q3 Layoff List.pdf").detail();
+
+            assertThat(stored).doesNotContain(".pdf").contains("Failed on");
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "Policy run failed: java.lang.NullPointerException",
+                    "version v2.14.2 released",
+                    "The PDF Document is passworded",
+                })
+        void areLeftAlone(String message) {
+            assertThat(withDetail(message).detail()).isEqualTo(message);
+        }
+    }
 }
