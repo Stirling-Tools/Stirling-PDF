@@ -42,6 +42,13 @@ public record RecordFailure(
      *
      * <p>Best-effort even so. The engine's own messages never include a name; this only tidies what
      * downstream tools embed.
+     *
+     * <p>TODO: harden this so a document name cannot reach the server at all, rather than being
+     * scrubbed once it has. Matching prose by shape will always leave gaps like the undelimited
+     * spaced name above. The durable fix is to stop forwarding a downstream tool's message
+     * verbatim: keep our own wording plus the error code, and only pass through a body whose kind
+     * we classify and whose text we therefore know carries no name. Accepted as a known limitation
+     * for now.
      */
     private static final Pattern FILE_PATH_OR_NAME =
             Pattern.compile(

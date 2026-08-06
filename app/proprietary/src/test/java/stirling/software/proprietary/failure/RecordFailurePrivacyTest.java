@@ -180,18 +180,28 @@ class RecordFailurePrivacyTest {
                     "Failed on \u043e\u0442\u0447\u0451\u0442-\u0437\u0430\u0440\u043f\u043b\u0430\u0442\u0430.pdf",
                     "Failed on payslip%20march.pdf",
                     "Failed on invoice_2024.pdf",
+                    "Failed on 'end of year (2024).xlsx'",
+                    "Failed on C:\\Users\\dana\\Q4 Report.docx",
+                    "Failed on Smith & Co - agreement.pdf",
+                    "Failed on ../tmp/upload.PDF",
                 })
         void areRedacted(String message) {
             assertThat(withDetail(message).detail()).doesNotContain(".pdf").contains("<file>");
         }
 
         @Test
-        void anUndelimitedSpacedNameKeepsItsLeadingWords() {
+        void anUndelimitedSpacedNameIsOnlyPartlyRedacted() {
             // The deliberate limit: crossing spaces without a delimiter would swallow the sentence
-            // too, and "<file>" alone tells a reviewer nothing about what failed.
+            // too, and "<file>" alone tells a reviewer nothing about what failed. So the extension
+            // and the token carrying it go, and the leading words stay.
+            //
+            // TODO: harden. This asserts a known gap rather than desired behaviour — "Q3 Layoff"
+            // is still a fragment of a real document name. When the server stops forwarding a
+            // downstream tool's message verbatim, this should assert full redaction instead.
             String stored = withDetail("Failed on Q3 Layoff List.pdf").detail();
 
-            assertThat(stored).doesNotContain(".pdf").contains("Failed on");
+            assertThat(stored).doesNotContain(".pdf").doesNotContain("List");
+            assertThat(stored).as("a fragment of the name survives, for now").contains("Q3 Layoff");
         }
 
         @ParameterizedTest
