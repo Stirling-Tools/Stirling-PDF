@@ -80,14 +80,17 @@ public class PolicyValidator {
     }
 
     /**
-     * A stored policy's step file bindings must reference stored assets in the policy's own team,
-     * so a saved pipeline can't fail its later (principal-less) runs on a missing file, and a
-     * client can't bind another team's asset by id. Only for stored policies: an ad-hoc run's
-     * {@code fileParameters} keys name the multipart assets supplied with that run instead.
+     * A step binding that names stored assets ({@code asset:<id>}) must resolve in the policy's own
+     * team, so a saved pipeline can't fail its later (principal-less) runs on a missing file, and a
+     * client can't bind another team's asset by id. A binding without that prefix names a file
+     * supplied with the run instead, and is only checked when the run arrives.
      */
     private void validateAssetReferences(Policy policy) {
         for (PipelineStep step : policy.steps()) {
             for (Map.Entry<String, String> binding : step.fileParameters().entrySet()) {
+                if (!PolicyAssetRefs.isAssetRef(binding.getValue())) {
+                    continue;
+                }
                 List<String> ids = PolicyAssetRefs.assetIds(binding.getValue());
                 if (ids.isEmpty()) {
                     throw new IllegalArgumentException(

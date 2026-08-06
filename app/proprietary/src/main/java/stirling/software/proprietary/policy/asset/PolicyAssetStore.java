@@ -24,6 +24,9 @@ public interface PolicyAssetStore {
     /** All assets, for team-scoping-off (login-disabled) reads. */
     List<PolicyAsset> all();
 
+    /** Ids of assets uploaded before {@code cutoff} (epoch millis), for orphan reclamation. */
+    List<String> idsCreatedBefore(long cutoff);
+
     /** Remove an asset. Returns false if the id was unknown. */
     boolean delete(String id);
 }

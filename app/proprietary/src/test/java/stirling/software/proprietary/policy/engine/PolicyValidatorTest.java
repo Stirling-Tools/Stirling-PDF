@@ -25,6 +25,7 @@ import stirling.software.common.model.tool.ToolIOSpec;
 import stirling.software.common.service.ToolChainValidator;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAsset;
+import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -134,7 +135,17 @@ class PolicyValidatorTest {
                         new PolicyAsset(null, "logo.png", null, 0, "owner", null, 1L),
                         new byte[] {1});
 
-        validator.validate(withFileBinding(asset.id(), null));
+        validator.validate(withFileBinding(PolicyAssetRefs.PREFIX + asset.id(), null));
+    }
+
+    @Test
+    void acceptsARunSuppliedFileKey() {
+        // No asset: prefix, so the binding names a file uploaded with the run - it existed before
+        // stored assets did, and pausing such a policy must not start failing.
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+
+        validator.validate(withFileBinding("company-logo", null));
     }
 
     @Test
@@ -144,7 +155,10 @@ class PolicyValidatorTest {
         IllegalArgumentException ex =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validator.validate(withFileBinding("missing-asset", null)));
+                        () ->
+                                validator.validate(
+                                        withFileBinding(
+                                                PolicyAssetRefs.PREFIX + "missing-asset", null)));
         assertTrue(ex.getMessage().contains("unknown stored file"));
     }
 
@@ -156,21 +170,35 @@ class PolicyValidatorTest {
                         new PolicyAsset(null, "secret.p12", null, 0, "owner", 99L, 1L),
                         new byte[] {1});
 
-        // Policy has no team; the asset belongs to team 99 — must read as unknown, not leak.
+        // Policy has no team; the asset belongs to team 99 - must read as unknown, not leak.
         IllegalArgumentException ex =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validator.validate(withFileBinding(foreign.id(), null)));
+                        () ->
+                                validator.validate(
+                                        withFileBinding(
+                                                PolicyAssetRefs.PREFIX + foreign.id(), null)));
         assertTrue(ex.getMessage().contains("unknown stored file"));
     }
 
-    /** A manual-only policy whose single step binds a file field to the given asset id. */
-    private Policy withFileBinding(String assetId, Long teamId) {
+    @Test
+    void rejectsAnAssetBindingWithNoIds() {
+        when(inputSource.supports(any())).thenReturn(true);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withFileBinding(PolicyAssetRefs.PREFIX, null)));
+        assertTrue(ex.getMessage().contains("empty file binding"));
+    }
+
+    /** A manual-only policy whose single step binds a file field to the given asset key. */
+    private Policy withFileBinding(String assetKey, Long teamId) {
         PipelineStep step =
                 new PipelineStep(
                         "/api/v1/security/add-watermark",
                         Map.of(),
-                        Map.of("watermarkImage", assetId));
+                        Map.of("watermarkImage", assetKey));
         return new Policy(
                 "p1",
                 "p",

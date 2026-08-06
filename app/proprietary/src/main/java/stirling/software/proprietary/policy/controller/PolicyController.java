@@ -543,8 +543,9 @@ public class PolicyController {
             description =
                     "Runs the stored policy's pipeline on the supplied files (primary documents"
                             + " under 'fileInput', supporting files under 'assets[i].key' /"
-                            + " 'assets[i].file'). Runs regardless of the policy's enabled flag,"
-                            + " which only gates automatic triggering. Returns a run id.")
+                            + " 'assets[i].file' - only for bindings the policy does not already"
+                            + " store). Runs regardless of the policy's enabled flag, which only"
+                            + " gates automatic triggering. Returns a run id.")
     public ResponseEntity<JobResponse<Void>> runStoredPolicy(
             @PathVariable String policyId, @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {

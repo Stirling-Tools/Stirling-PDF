@@ -476,6 +476,22 @@ class PolicyControllerTest {
             assertThat(response.getBody().owner()).isEqualTo("origOwner");
             assertThat(response.getBody().teamId()).isEqualTo(3L);
         }
+
+        @Test
+        @DisplayName("hands the pre-save version to the asset cleaner")
+        void cleansUpAssetsTheEditDropped() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy existing =
+                    new Policy("p2", "name", "owner", true, List.of(), List.of(), null, 3L);
+            when(policyStore.get("p2")).thenReturn(Optional.of(existing));
+            when(policyAccessGuard.canAccess(existing)).thenReturn(true);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            controller.savePolicy(
+                    new Policy("p2", "name", "owner", true, List.of(), List.of(), null, 3L));
+
+            verify(assetCleaner).cleanupAfterSave(eq(existing), any());
+        }
     }
 
     @Nested
@@ -560,6 +576,7 @@ class PolicyControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
             verify(processedLedger).clearPolicy("a");
+            verify(assetCleaner).cleanupAfterDelete(p);
             verify(policyTriggerManager).notifyPoliciesChanged();
         }
 

@@ -222,7 +222,7 @@ class PolicyAssetControllerTest {
                 new PolicyAsset(null, fileName, null, 0, null, teamId, 1L), content.getBytes());
     }
 
-    private static Policy policyBinding(String assetKey) {
+    private static Policy policyBinding(String assetIds) {
         return new Policy(
                 "p1",
                 "p",
@@ -233,7 +233,7 @@ class PolicyAssetControllerTest {
                         new PipelineStep(
                                 "/api/v1/security/cert-sign",
                                 Map.of(),
-                                Map.of("certFile", assetKey))),
+                                Map.of("certFile", PolicyAssetRefs.PREFIX + assetIds))),
                 OutputSpec.inline());
     }
 

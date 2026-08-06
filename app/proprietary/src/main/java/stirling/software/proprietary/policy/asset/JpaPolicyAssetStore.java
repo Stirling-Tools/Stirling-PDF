@@ -9,7 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-/** Durable {@link PolicyAssetStore} backed by JPA; the runtime store. */
+import stirling.software.proprietary.integration.crypto.CredentialEncryption;
+
+/**
+ * Durable {@link PolicyAssetStore} backed by JPA; the runtime store. Bytes are encrypted at rest
+ * here rather than by an attribute converter, so the metadata reads (list, validate, clean up)
+ * never decrypt - only {@link #content} does.
+ */
 @Service
 @RequiredArgsConstructor
 public class JpaPolicyAssetStore implements PolicyAssetStore {
@@ -27,35 +33,43 @@ public class JpaPolicyAssetStore implements PolicyAssetStore {
         entity.setId(id);
         entity.setFileName(asset.fileName());
         entity.setContentType(asset.contentType());
-        entity.setSize(content.length);
+        // Plaintext length: it is the size the UI shows, not the stored ciphertext's.
+        entity.setFileSize(content.length);
         entity.setOwner(asset.owner());
         entity.setTeamId(asset.teamId());
         entity.setCreatedAt(asset.createdAt());
-        entity.setData(content);
+        entity.setData(CredentialEncryption.encryptBytes(content));
         repository.save(entity);
         return toAsset(entity);
     }
 
     @Override
     public Optional<PolicyAsset> get(String id) {
-        return repository.findById(id).map(JpaPolicyAssetStore::toAsset);
+        return repository.findMetaById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<byte[]> content(String id) {
-        // Read inside a transaction: the data column is a lazily-fetched LOB.
-        return repository.findById(id).map(PolicyAssetEntity::getData);
+        // The only read of the data column, and so the only decrypt.
+        return repository
+                .findById(id)
+                .map(entity -> CredentialEncryption.decryptBytes(entity.getData()));
     }
 
     @Override
     public List<PolicyAsset> findByTeam(Long teamId) {
-        return repository.findByTeam(teamId).stream().map(JpaPolicyAssetStore::toAsset).toList();
+        return repository.findMetaByTeam(teamId);
     }
 
     @Override
     public List<PolicyAsset> all() {
-        return repository.findAll().stream().map(JpaPolicyAssetStore::toAsset).toList();
+        return repository.findAllMeta();
+    }
+
+    @Override
+    public List<String> idsCreatedBefore(long cutoff) {
+        return repository.findIdsCreatedBefore(cutoff);
     }
 
     @Override
@@ -73,7 +87,7 @@ public class JpaPolicyAssetStore implements PolicyAssetStore {
                 entity.getId(),
                 entity.getFileName(),
                 entity.getContentType(),
-                entity.getSize(),
+                entity.getFileSize(),
                 entity.getOwner(),
                 entity.getTeamId(),
                 entity.getCreatedAt());

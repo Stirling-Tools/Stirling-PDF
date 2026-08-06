@@ -36,8 +36,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 /**
  * Stored supporting files for pipelines: the certificate/image/overlay a step needs beyond its
  * document stream. Uploaded when a pipeline is built, persisted server-side, and referenced from a
- * step's {@code fileParameters} by asset id — so triggered and scheduled runs have the file without
- * anyone re-supplying it. Team-scoped exactly like the policies that reference them.
+ * step's {@code fileParameters} as {@code asset:<id>} - so triggered and scheduled runs have the
+ * file without anyone re-supplying it. Team-scoped exactly like the policies that reference them.
  */
 @RestController
 @RequestMapping("/api/v1/policies/assets")
@@ -60,8 +60,8 @@ public class PolicyAssetController {
             summary = "Upload a pipeline supporting file",
             description =
                     "Stores a supporting file (multipart field 'file') for pipeline steps to"
-                            + " reference from their fileParameters, and returns its metadata"
-                            + " including the assigned id.")
+                            + " reference from their fileParameters as 'asset:<id>', and returns"
+                            + " its metadata including the assigned id.")
     public ResponseEntity<PolicyAsset> upload(@RequestPart("file") MultipartFile file)
             throws IOException {
         requirePolicyEditingAllowed();

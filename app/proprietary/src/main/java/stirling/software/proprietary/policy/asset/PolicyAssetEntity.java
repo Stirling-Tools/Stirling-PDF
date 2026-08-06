@@ -2,10 +2,8 @@ package stirling.software.proprietary.policy.asset;
 
 import java.io.Serializable;
 
-import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
@@ -39,9 +37,10 @@ public class PolicyAssetEntity implements Serializable {
     @Column(name = "content_type")
     private String contentType;
 
-    // Not "size": a reserved word in Oracle, one of the supported providers.
+    // Not "size": a reserved word in Oracle, and an HQL keyword the metadata projections would
+    // read as the collection-size function.
     @Column(name = "file_size")
-    private long size;
+    private long fileSize;
 
     @Column(name = "owner")
     private String owner;
@@ -52,8 +51,8 @@ public class PolicyAssetEntity implements Serializable {
     @Column(name = "created_at")
     private long createdAt;
 
+    // Ciphertext; JpaPolicyAssetStore is the only place these bytes are encrypted or decrypted.
     @Lob
-    @Basic(fetch = FetchType.LAZY)
     @Column(name = "data", nullable = false, columnDefinition = "bytea")
     private byte[] data;
 }

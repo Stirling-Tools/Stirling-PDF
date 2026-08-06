@@ -61,6 +61,14 @@ public class InProcessPolicyAssetStore implements PolicyAssetStore {
     }
 
     @Override
+    public List<String> idsCreatedBefore(long cutoff) {
+        return assets.values().stream()
+                .filter(asset -> asset.createdAt() < cutoff)
+                .map(PolicyAsset::id)
+                .toList();
+    }
+
+    @Override
     public boolean delete(String id) {
         contents.remove(id);
         return assets.remove(id) != null;
