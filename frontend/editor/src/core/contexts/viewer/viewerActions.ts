@@ -190,7 +190,7 @@ export function createViewerActions({
         const currentState = getZoomState();
         const newPercent = Math.min(
           Math.round(currentState.zoomPercent * 1.2),
-          300,
+          1000,
         );
         triggerImmediateZoomUpdate(newPercent);
         api.zoomIn();

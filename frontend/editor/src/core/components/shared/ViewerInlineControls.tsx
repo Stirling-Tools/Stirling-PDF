@@ -29,7 +29,7 @@ export function ViewerInlineControls() {
 
   if (workbench !== "viewer") return null;
 
-  const sliderValue = Math.min(Math.max(zoomPercent, 20), 500);
+  const sliderValue = Math.min(Math.max(zoomPercent, 20), 1000);
 
   return (
     <div className="viewer-inline-controls">
@@ -50,7 +50,7 @@ export function ViewerInlineControls() {
         <Slider
           value={sliderValue}
           min={20}
-          max={500}
+          max={1000}
           step={5}
           onChange={(val) => {
             viewer.zoomActions.setZoomLevel?.(val / 100);

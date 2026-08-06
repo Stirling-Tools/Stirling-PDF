@@ -329,9 +329,9 @@ export function PdfViewerToolbar({
             <ZoomOutIcon fontSize="small" />
           </ActionIcon>
           <Slider
-            value={Math.min(Math.max(displayZoomPercent, 20), 500)}
+            value={Math.min(Math.max(displayZoomPercent, 20), 1000)}
             min={20}
-            max={500}
+            max={1000}
             step={5}
             onChange={(val) => zoomActions.setZoomLevel?.(val / 100)}
             size="xs"

@@ -338,7 +338,7 @@ export function LocalEmbedPDF({
       createPluginRegistration(ZoomPluginPackage, {
         defaultZoomLevel: ZoomMode.FitWidth, // Start with FitWidth, will be adjusted in ZoomAPIBridge
         minZoom: 0.2,
-        maxZoom: 5.0,
+        maxZoom: 10.0,
       }),
 
       // Register tiling plugin (depends on Render, Scroll, Viewport)
