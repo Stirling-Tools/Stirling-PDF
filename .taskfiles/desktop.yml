@@ -196,10 +196,10 @@ tasks:
       # so the staged destinations are writable and can be overwritten.
       #
       # Make the JRE files writable so Tauri's resource copier can overwrite them
-      # on incremental builds. Uses proper PowerShell syntax with $_ variable.
+      # on incremental builds. Escape $_ as `$_.FullName` to prevent Task/shell interpolation.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Path 'runtime\\jre' -Recurse -File | ForEach-Object { [System.IO.File]::SetAttributes($_.FullName, ([System.IO.File]::GetAttributes($_.FullName) -band -bnot [System.IO.FileAttributes]::ReadOnly)) }"
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Path 'runtime\\jre' -Recurse -File | ForEach-Object { [System.IO.File]::SetAttributes(`$_.FullName, ([System.IO.File]::GetAttributes(`$_.FullName) -band -bnot [System.IO.FileAttributes]::ReadOnly)) }"
         platforms: [windows]
     status:
       - test -f runtime/jre/release
