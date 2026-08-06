@@ -50,11 +50,11 @@
   --_tint: color-mix(in srgb, var(--color-green) 12%, transparent);
 }
 .sui-acc-warning {
-  /* Amber is a light hue: darkening the fill enough for white text turns it
-     brown, so the filled variant keeps the amber and takes dark ink instead. */
-  --_solid: var(--color-amber);
-  --_solid-hover: var(--color-amber-dark);
-  --_on: var(--p-ink);
+  /* Deepened so the white label clears 4.5:1, matching how danger and success
+     resolve the same problem — every filled accent reads white-on-colour. */
+  --_solid: var(--p-amber-700);
+  --_solid-hover: var(--p-amber-800);
+  --_on: #ffffff;
   --_text: var(--color-amber-dark);
   --_bd: var(--color-amber-border);
   --_tint: color-mix(in srgb, var(--color-amber) 12%, transparent);
