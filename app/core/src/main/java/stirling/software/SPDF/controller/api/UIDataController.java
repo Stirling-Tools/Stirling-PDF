@@ -125,18 +125,14 @@ public class UIDataController {
                     pipelineConfigs.add(content);
                 }
 
-                for (int i = 0; i < pipelineConfigs.size(); i++) {
+                for (int i = 0; i < jsonFiles.size(); i++) {
                     String config = pipelineConfigs.get(i);
                     Map<String, Object> jsonContent =
                             objectMapper.readValue(
                                     config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
                     if (name == null || name.isEmpty()) {
-                        String filename =
-                                jsonFiles
-                                        .get(pipelineConfigs.indexOf(config))
-                                        .getFileName()
-                                        .toString();
+                        String filename = jsonFiles.get(i).getFileName().toString();
                         name = filename.substring(0, filename.lastIndexOf('.'));
                     }
                     Map<String, String> configWithName = new HashMap<>();
