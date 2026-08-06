@@ -1,4 +1,10 @@
-import { useEffect, useId, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
 import { Button } from "@app/ui/Button";
@@ -22,6 +28,29 @@ export interface ModalProps {
   children?: ReactNode;
 }
 
+/**
+ * A body that scrolls but contains no control of its own (a terms document, a
+ * long receipt) is unreachable by keyboard, so it takes a tab stop of its own
+ * — but only while it actually overflows, so the ordinary modal full of
+ * buttons gains no stray stop.
+ */
+function useScrollableWhenOverflowing() {
+  const [node, setNode] = useState<HTMLElement | null>(null);
+  const [overflows, setOverflows] = useState(false);
+
+  useEffect(() => {
+    if (!node) return;
+    const measure = () => setOverflows(node.scrollHeight > node.clientHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    for (const child of Array.from(node.children)) observer.observe(child);
+    return () => observer.disconnect();
+  }, [node]);
+
+  return { ref: useCallback(setNode, []), overflows };
+}
+
 /** Tab focus trapping and restoration are delegated to Mantine's FocusTrap. */
 export function Modal({
   open,
@@ -37,6 +66,8 @@ export function Modal({
   children,
 }: ModalProps) {
   const titleId = useId();
+  const { ref: bodyRef, overflows: bodyOverflows } =
+    useScrollableWhenOverflowing();
 
   useEffect(() => {
     if (!open || disableEscapeClose) return;
@@ -119,7 +150,14 @@ export function Modal({
               />
             </header>
           )}
-          <div className="sui-modal__body">{children}</div>
+          <div
+            ref={bodyRef}
+            className="sui-modal__body"
+            tabIndex={bodyOverflows ? 0 : undefined}
+            role={bodyOverflows ? "group" : undefined}
+          >
+            {children}
+          </div>
           {footer && <footer className="sui-modal__footer">{footer}</footer>}
         </div>
       </FocusTrap>

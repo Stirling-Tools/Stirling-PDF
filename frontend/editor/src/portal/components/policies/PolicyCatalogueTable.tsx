@@ -124,10 +124,15 @@ export function PolicyCatalogueTable({
       columns={columns}
       rows={entries}
       rowKey={(e) => e.category.id}
-      onRowClick={(entry) =>
-        entry.category.comingSoon || isLocked?.(entry)
-          ? undefined
-          : onOpen(entry)
+      onRowClick={onOpen}
+      // Only a configured row is itself the control. An unconfigured row
+      // renders its own "Set up" button, so making the row a button too would
+      // nest one widget inside another; locked and coming-soon rows have no
+      // action at all. Both stay inert and are reached through the cell.
+      isRowInteractive={(entry) =>
+        Boolean(entry.policy) &&
+        !entry.category.comingSoon &&
+        !isLocked?.(entry)
       }
     />
   );
