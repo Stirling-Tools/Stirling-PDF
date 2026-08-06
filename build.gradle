@@ -6,7 +6,9 @@ plugins {
     alias(libs.plugins.springdocOpenapi)
     alias(libs.plugins.swaggerhub)
     alias(libs.plugins.spotless)
-    alias(libs.plugins.licenseReport)
+    // The plugin is supplied by buildSrc; applying it with a versioned catalog
+    // alias conflicts with the already-loaded, unversioned buildSrc classpath.
+    id "com.github.jk1.dependency-license-report"
     //id "nebula.lint" version "19.0.3"
     alias(libs.plugins.sonarqube)
 }
