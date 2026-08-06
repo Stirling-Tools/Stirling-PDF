@@ -47,6 +47,8 @@ interface AppConfigModalProps {
   initialSection?: NavKey | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
+  /** Registry section keys to drop, for hosts a section can't run in. */
+  hiddenSectionKeys?: NavKey[];
 }
 
 // Extract section from URL path (e.g., /settings/people -> people)
@@ -65,6 +67,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   urlSync = true,
   initialSection,
   extraSections,
+  hiddenSectionKeys,
 }) => {
   const { t } = useTranslation();
   // Initialize from the URL so a deep link (`/settings/people`) lands on the
@@ -165,13 +168,13 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
 
   const colors = useMemo(
     () => ({
-      navBg: "var(--modal-nav-bg)",
-      sectionTitle: "var(--modal-nav-section-title)",
+      navBg: "var(--c-bg-raised)",
+      sectionTitle: "var(--c-text-subtle)",
       navItem: "var(--modal-nav-item)",
-      navItemActive: "var(--modal-nav-item-active)",
-      navItemActiveBg: "var(--modal-nav-item-active-bg)",
-      contentBg: "var(--modal-content-bg)",
-      headerBorder: "var(--modal-header-border)",
+      navItemActive: "var(--c-accent-fg)",
+      navItemActiveBg: "var(--c-primary-subtle)",
+      contentBg: "var(--c-surface)",
+      headerBorder: "var(--c-border-subtle)",
     }),
     [],
   );
@@ -218,13 +221,17 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     handleCloseSync,
     config?.showSettingsWhenNoLogin ?? true,
   );
-  const configNavSections = useMemo(
-    () =>
-      extraSections?.length
-        ? [...registrySections, ...extraSections]
-        : registrySections,
-    [registrySections, extraSections],
-  );
+  const configNavSections = useMemo(() => {
+    const base = hiddenSectionKeys?.length
+      ? registrySections
+          .map((s) => ({
+            ...s,
+            items: s.items.filter((i) => !hiddenSectionKeys.includes(i.key)),
+          }))
+          .filter((s) => s.items.length > 0)
+      : registrySections;
+    return extraSections?.length ? [...base, ...extraSections] : base;
+  }, [registrySections, extraSections, hiddenSectionKeys]);
 
   const activeLabel = useMemo(() => {
     for (const section of configNavSections) {

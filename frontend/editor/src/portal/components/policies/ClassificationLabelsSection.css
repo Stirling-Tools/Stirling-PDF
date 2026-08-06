@@ -8,11 +8,11 @@
   display: flex;
   gap: var(--space-3);
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 .classification-summary-note {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* Expandable category → labels list. */
@@ -24,10 +24,10 @@
   flex-direction: column;
 }
 .classification-category {
-  border-top: 1px solid var(--border-default);
+  border-top: 1px solid var(--c-border);
 }
 .classification-category:last-child {
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--c-border);
 }
 .classification-category-header {
   min-height: 2.5rem;
@@ -43,7 +43,7 @@
 }
 .classification-category-count {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 .classification-category-labels {
   display: flex;

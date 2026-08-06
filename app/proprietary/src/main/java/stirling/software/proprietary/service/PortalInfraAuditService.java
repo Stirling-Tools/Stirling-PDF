@@ -224,7 +224,7 @@ public class PortalInfraAuditService {
             if (word.isEmpty()) {
                 continue;
             }
-            if (sb.length() > 0) {
+            if (!sb.isEmpty()) {
                 sb.append(' ');
             }
             String lower = word.toLowerCase(Locale.ROOT);

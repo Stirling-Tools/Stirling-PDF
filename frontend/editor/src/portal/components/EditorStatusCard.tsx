@@ -3,19 +3,12 @@ import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
-import { useView } from "@portal/contexts/ViewContext";
-import { useAsync } from "@portal/hooks/useAsync";
+import { EDITOR_URL } from "@portal/auth/editorUrl";
 import {
-  fetchEditorDeployment,
-  type EditorDeploymentResponse,
-  type EditorInstance,
-} from "@portal/api/editorDeploy";
-import {
-  DownloadIcon,
-  ExternalLinkIcon,
-  UsersIcon,
-  UserPlusIcon,
-} from "@portal/components/icons";
+  useEditorDeployment,
+  useFleetStats,
+} from "@portal/queries/infrastructure";
+import { type EditorInstance } from "@portal/api/editorDeploy";
 import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
 import "@portal/components/EditorStatusCard.css";
 
@@ -28,7 +21,7 @@ function StirlingMark() {
       fill="none"
       aria-hidden
     >
-      <rect width="256" height="256" rx="58" fill="#8E3131" />
+      <rect width="256" height="256" rx="58" fill="var(--c-brand-mark)" />
       <path
         d="M39.2638 127.834L155.374 32L155.375 121.499L39.2638 217.333L39.2638 127.834Z"
         fill="white"
@@ -52,44 +45,64 @@ function primaryInstance(instances: EditorInstance[]): EditorInstance | null {
   );
 }
 
+/**
+ * The rail's primary action matures with adoption rather than deployment alone (marketing note
+ * D243): the loud ask only stands while the org is still one person on an undeployed editor. Once
+ * a deployment is in flight, finishing it takes over; once teammates are in, the ask goes quiet.
+ */
+type DeployAsk = "finish" | "start" | "options";
+
+function deployAsk(
+  instances: EditorInstance[],
+  activeUsers: number,
+): DeployAsk {
+  const deployed = instances.some((i) => i.status === "healthy");
+  if (!deployed && instances.some((i) => i.status === "pairing"))
+    return "finish";
+  if (!deployed && activeUsers <= 1) return "start";
+  return "options";
+}
+
 interface EditorStatusCardProps {
-  /**
-   * Rendered as an attached footer strip inside the card (e.g. the "Finish
-   * setting up" checklist), matching the free-tier hero's footer seam.
-   */
+  /** Attached footer strip inside the card — the deal-status hero while a deal is underway. */
   footer?: ReactNode;
-  /**
-   * Hide the active-users / invite chips. Used on enterprise, where the
-   * attached procurement deal hero already owns the invite action.
-   */
-  hideChips?: boolean;
 }
 
 /**
- * Subscribed/enterprise home hero: a status card for the org's deployed PDF
- * Editor. Reads the same `/v1/editor/deployment` data as the Editor admin view
- * (host, version, live users, deployment shape) and headlines the busiest
- * instance, with a single "Open in browser" action to the workspace URL.
+ * The Home hero: the deployment rail for the org's PDF Editor. Host and build meta come from the
+ * same `/v1/editor/deployment` data as the Editor admin view, headlining the busiest instance; the
+ * adoption count is the figure Usage & Billing reports. The rail always renders — it carries the
+ * deploy ask itself — and each figure stands down independently when its source can't supply it.
  */
-export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
+export function EditorStatusCard({ footer }: EditorStatusCardProps) {
   const { t } = useTranslation();
   const { tier } = useTier();
-  const { setActiveView } = useView();
   const [installOpen, setInstallOpen] = useState(false);
-  const { data, loading } = useAsync<EditorDeploymentResponse>(
-    () => fetchEditorDeployment(tier),
-    [tier],
-  );
+  const { data, loading } = useEditorDeployment(tier);
+  // The adoption figure is the same one Usage & Billing reports, read through the shared cache so
+  // the two agree and only one request is made. Either field is null when the backend can't compute
+  // it (e.g. EE auditing off), in which case the rail states no figure rather than a misleading 0.
+  const { data: fleet } = useFleetStats();
+  const adoption =
+    fleet?.activeThisMonth != null && fleet.editorsDeployed != null
+      ? { active: fleet.activeThisMonth, total: fleet.editorsDeployed }
+      : null;
 
   const view = useMemo(() => {
     if (!data) return null;
-    const primary = primaryInstance(data.instances);
-    if (!primary) return null;
     const activeUsers = data.instances.reduce((s, i) => s + i.activeUsers, 0);
+    const ask = deployAsk(data.instances, activeUsers);
+    const primary = primaryInstance(data.instances);
+    // Nothing deployed yet: the rail still shows, carrying the deploy ask. Only the host and
+    // build meta are instance-derived, so they simply stand down.
+    if (!primary) {
+      return { host: null, activeUsers, ask, meta: [] as string[] };
+    }
     const targetLabel = t(`portal.home.editor.target.${primary.target}`);
     return {
       host: primary.host,
       activeUsers,
+      ask,
       workspaceUrl: data.summary.workspaceUrl,
       meta: [
         // Skip the deployment label when it just repeats the host (e.g. the
@@ -102,21 +115,8 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
     };
   }, [data, t]);
 
-  const ready = !loading && !!view;
-  // The editor-deployment endpoint isn't implemented on every backend yet.
-  // When it's unavailable (finished loading with no data — e.g. a 404), skip
-  // the status row entirely and fall back to just the footer (the setup
-  // checklist, which reads supported endpoints). It lights up automatically
-  // once the backend serves /v1/editor/deployment.
-  const unavailable = !loading && !view;
-
-  if (unavailable) {
-    return footer ? (
-      <section className="portal-editor-hero portal-editor-hero--footer-only">
-        {footer}
-      </section>
-    ) : null;
-  }
+  // Only the deploy ask can go loud; unknown deployment state keeps it quiet.
+  const loudAsk = !!view && view.ask !== "options";
 
   return (
     <section
@@ -129,7 +129,10 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
         </div>
 
         <div className="portal-editor-hero__info">
-          {!ready || !view ? (
+          {/* Each figure stands down on its own: the host and build meta need the deployment
+              endpoint, the adoption count needs fleet stats. Neither absence blanks the rail, and
+              nothing is asserted that its own source could not supply. */}
+          {loading ? (
             <>
               <Skeleton width="12rem" height="1.25rem" />
               <Skeleton width="22rem" height="0.75rem" />
@@ -140,64 +143,59 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
                 <span className="portal-editor-hero__name">
                   {t("portal.home.editor.name")}
                 </span>
-                {!hideChips && (
-                  <button
-                    type="button"
-                    className="portal-editor-hero__chip"
-                    onClick={() => setActiveView("users")}
-                  >
-                    <UsersIcon size={13} />
-                    {t("portal.home.editor.activeUsers", {
-                      n: view.activeUsers,
-                    })}
-                  </button>
+                {view?.host && (
+                  <span className="portal-editor-hero__host">{view.host}</span>
+                )}
+                {adoption && (
+                  <>
+                    <span className="portal-editor-hero__dot" aria-hidden />
+                    <span className="portal-editor-hero__actives">
+                      {t("portal.home.editor.activeOfDeployed", adoption)}
+                    </span>
+                  </>
                 )}
               </div>
-              <div className="portal-editor-hero__meta">
-                <span className="portal-editor-hero__host">{view.host}</span>
-                {view.meta.map((item, i) => (
-                  <Fragment key={i}>
-                    <span className="portal-editor-hero__meta-sep">·</span>
-                    <span>{item}</span>
-                  </Fragment>
-                ))}
-              </div>
+              {view && view.meta.length > 0 && (
+                <div className="portal-editor-hero__meta">
+                  {view.meta.map((item, i) => (
+                    <Fragment key={i}>
+                      {i > 0 && (
+                        <span className="portal-editor-hero__meta-sep">·</span>
+                      )}
+                      <span>{item}</span>
+                    </Fragment>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>
 
+        {/* Open in browser is a left-seated secondary in every state, and carries no arrow
+            (marketing note D244); the deploy ask beside it is the only button that can go loud.
+            Reaching the editor never depends on deployment data — it falls back to the configured
+            editor URL — so this stays live even when the deployment endpoint is unavailable. */}
         <div className="portal-editor-hero__action">
-          {!hideChips && (
-            <button
-              type="button"
-              className="portal-editor-hero__icon-btn"
-              onClick={() => setActiveView("users")}
-              aria-label={t("portal.home.editor.invite")}
-              title={t("portal.home.editor.invite")}
-            >
-              <UserPlusIcon size={16} />
-            </button>
-          )}
-          <button
-            type="button"
-            className="portal-editor-hero__icon-btn"
-            onClick={() => setInstallOpen(true)}
-            aria-label={t("portal.home.editor.install")}
-            title={t("portal.home.editor.install")}
-          >
-            <DownloadIcon size={16} />
-          </button>
           <Button
-            variant="primary"
-            className="portal-editor-hero__cta"
-            leftSection={<ExternalLinkIcon size={13} />}
-            disabled={!ready || !view}
+            variant="secondary"
+            size="sm"
             onClick={() => {
-              if (view)
-                window.open(view.workspaceUrl, "_blank", "noopener,noreferrer");
+              window.open(
+                view?.workspaceUrl || EDITOR_URL,
+                "_blank",
+                "noopener,noreferrer",
+              );
             }}
           >
             {t("portal.home.editor.open")}
+          </Button>
+          <Button
+            variant={loudAsk ? "primary" : "secondary"}
+            accent={loudAsk ? "neutral" : "default"}
+            size="sm"
+            onClick={() => setInstallOpen(true)}
+          >
+            {t(`portal.home.editor.deploy.${view?.ask ?? "options"}`)}
           </Button>
         </div>
       </div>

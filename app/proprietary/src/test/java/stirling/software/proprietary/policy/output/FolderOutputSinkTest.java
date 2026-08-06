@@ -19,6 +19,7 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
@@ -49,7 +50,10 @@ class FolderOutputSinkTest {
         sink =
                 new FolderOutputSink(
                         new FolderAccessGuard(
-                                properties, new StandardEnvironment(), new InProcessSourceStore()),
+                                properties,
+                                new RuntimePathConfig(properties),
+                                new StandardEnvironment(),
+                                new InProcessSourceStore()),
                         ledger);
     }
 
@@ -113,7 +117,10 @@ class FolderOutputSinkTest {
         FolderOutputSink orderedSink =
                 new FolderOutputSink(
                         new FolderAccessGuard(
-                                properties, new StandardEnvironment(), new InProcessSourceStore()),
+                                properties,
+                                new RuntimePathConfig(properties),
+                                new StandardEnvironment(),
+                                new InProcessSourceStore()),
                         orderedLedger);
 
         orderedSink.deliver(

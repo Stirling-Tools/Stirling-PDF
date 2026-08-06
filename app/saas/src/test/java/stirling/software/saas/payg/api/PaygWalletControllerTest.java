@@ -39,6 +39,7 @@ import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.model.BillingCategory;
@@ -69,6 +70,7 @@ class PaygWalletControllerTest {
     @Mock private WalletLedgerRepository ledgerRepo;
     @Mock private PaygShadowChargeRepository shadowRepo;
     @Mock private UserRepository userRepository;
+    @Mock private PrepaidBundleService prepaidBundleService;
 
     private PaygWalletController controller;
 
@@ -83,7 +85,8 @@ class PaygWalletControllerTest {
                         policyRepo,
                         ledgerRepo,
                         shadowRepo,
-                        userRepository);
+                        userRepository,
+                        prepaidBundleService);
     }
 
     /**

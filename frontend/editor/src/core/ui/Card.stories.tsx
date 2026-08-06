@@ -7,14 +7,14 @@ import { StatusBadge } from "@app/ui/StatusBadge";
 function CardBody({ color }: { color: string }) {
   return (
     <div>
-      <h3 style={{ margin: 0, fontSize: 14, color: "var(--color-text-1)" }}>
+      <h3 style={{ margin: 0, fontSize: 14, color: "var(--c-text)" }}>
         {color} card
       </h3>
       <p
         style={{
           margin: "4px 0 0",
           fontSize: 12,
-          color: "var(--color-text-3)",
+          color: "var(--c-text-subtle)",
         }}
       >
         Surface treatment with the {color} accent strip.
@@ -126,7 +126,7 @@ export const InContext_ProductGrid: Story = {
           style={{
             margin: "6px 0 14px",
             fontSize: 13,
-            color: "var(--color-text-3)",
+            color: "var(--c-text-subtle)",
           }}
         >
           Attach pipelines where PDFs already live.
@@ -153,7 +153,7 @@ export const InContext_ProductGrid: Story = {
           style={{
             margin: "0 0 14px",
             fontSize: 13,
-            color: "var(--color-text-3)",
+            color: "var(--c-text-subtle)",
           }}
         >
           Compose document workflows from typed operations.
@@ -168,7 +168,7 @@ export const InContext_ProductGrid: Story = {
           style={{
             margin: "6px 0 14px",
             fontSize: 13,
-            color: "var(--color-text-3)",
+            color: "var(--c-text-subtle)",
           }}
         >
           Wire your agent via MCP, REST, or tool definitions.
