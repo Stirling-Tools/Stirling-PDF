@@ -310,6 +310,14 @@ const preview: Preview = {
       // any violation. Context is left at the addon default (the document root)
       // so it resolves under both the Storybook UI and the Vitest browser mount.
       test: "error",
+      context: {
+        // Nodes carrying this attribute render a facsimile of the user's own
+        // document — their stamp text, their watermark, in the colour and
+        // opacity they chose. WCAG contrast governs the interface, not the
+        // content authored through it, and the controls that set those values
+        // are checked normally.
+        exclude: ["[data-user-content-preview]"],
+      },
     },
   },
   globalTypes: {

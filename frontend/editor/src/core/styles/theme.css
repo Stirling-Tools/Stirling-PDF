@@ -88,9 +88,9 @@
   --color-primary-900: var(--p-blue-700);
 
   /* Success (green) */
-  --color-green-50: var(--p-green-500);
-  --color-green-100: var(--p-green-500);
-  --color-green-200: var(--p-green-500);
+  --color-green-50: var(--p-green-50);
+  --color-green-100: var(--p-green-100);
+  --color-green-200: var(--p-green-200);
   --color-green-300: var(--p-green-500);
   --color-green-400: var(--p-green-500);
   --color-green-500: var(--p-green-500);
@@ -100,9 +100,9 @@
   --color-green-900: var(--p-green-700);
 
   /* Warning (yellow) */
-  --color-yellow-50: var(--p-amber-400);
-  --color-yellow-100: var(--p-amber-400);
-  --color-yellow-200: var(--p-amber-400);
+  --color-yellow-50: var(--p-amber-50);
+  --color-yellow-100: var(--p-amber-100);
+  --color-yellow-200: var(--p-amber-200);
   --color-yellow-300: var(--p-amber-400);
   --color-yellow-400: var(--p-amber-400);
 
@@ -133,9 +133,9 @@
   --color-yellow-800: var(--p-amber-600);
   --color-yellow-900: var(--p-amber-600);
 
-  --color-red-50: var(--p-red-400);
-  --color-red-100: var(--p-red-400);
-  --color-red-200: var(--p-red-400);
+  --color-red-50: var(--p-red-50);
+  --color-red-100: var(--p-red-100);
+  --color-red-200: var(--p-red-200);
   --color-red-300: var(--p-red-400);
   --color-red-400: var(--p-red-400);
   --color-red-500: var(--p-red-500);
@@ -586,7 +586,7 @@
 
 /* Plan section button colors */
 .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: var(--p-azure-500) !important;
+  background-color: var(--p-azure-700) !important;
 }
 
 [data-mantine-color-scheme="dark"]

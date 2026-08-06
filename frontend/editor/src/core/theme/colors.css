@@ -36,6 +36,15 @@ html[data-app-theme="light"] {
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
   --c-warning: var(--p-amber-600);
+  /* Solid fills that carry a white label. Deeper than the --c-<tone> values
+     above, which are picked for surfaces, borders and icons where the 3:1
+     non-text floor applies. Scheme-independent: a filled badge reads white on
+     either ground. */
+  --c-success-solid: var(--p-green-700);
+  --c-danger-solid: var(--p-red-600);
+  --c-warning-solid: var(--p-amber-700);
+  --c-neutral-solid: var(--p-gray-600);
+  --c-accent-solid: var(--p-blue-600);
   /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
   --c-highlight: var(--p-flash-yellow);
   /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */

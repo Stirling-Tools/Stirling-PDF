@@ -86,15 +86,15 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
       }}
     >
       <Box
-        bg="gray.4"
         p="sm"
         style={{
+          background: "var(--c-surface-raised)",
           borderTopLeftRadius: "var(--mantine-radius-md)",
           borderTopRightRadius: "var(--mantine-radius-md)",
           flexShrink: 0,
         }}
       >
-        <Text size="sm" fw={500} ta="center" c="white">
+        <Text size="sm" fw={500} ta="center">
           {t("fileManager.details", "File Details")}
         </Text>
       </Box>

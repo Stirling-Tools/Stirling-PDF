@@ -70,7 +70,10 @@
 }
 
 .portal-policies__card--locked {
-  opacity: 0.7;
+  /* Recede via surface and ink rather than opacity, which would fade the
+     card's own text below the contrast floor. */
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
 }
 
 .portal-policies__card-identity {

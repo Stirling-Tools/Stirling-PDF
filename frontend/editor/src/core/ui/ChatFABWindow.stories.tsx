@@ -54,7 +54,7 @@ function MockChat() {
               maxWidth: "80%",
               background:
                 m.role === "user"
-                  ? "var(--c-primary)"
+                  ? "var(--c-accent-text)"
                   : "var(--c-surface-sunken)",
               color: m.role === "user" ? "#fff" : "inherit",
               borderRadius: 10,
@@ -129,7 +129,7 @@ export const Toggle: Story = {
             position: "absolute",
             bottom: -48,
             right: 0,
-            background: "var(--c-primary)",
+            background: "var(--c-accent-text)",
             color: "#fff",
             border: "none",
             borderRadius: 8,

@@ -95,6 +95,34 @@ export const suiCssVariablesResolver: CSSVariablesResolver = () => ({
     "--mantine-color-gray-0": "var(--c-hover)",
     // Dropdown border
     "--mantine-color-gray-2": "var(--c-border)",
+    // Every slot Mantine paints text with defaults to the hue's fill, which is
+    // chosen to carry white and is therefore too light to read on a surface.
+    // The -dark shades are the SUI tokens meant for ink.
+    "--mantine-color-anchor": "var(--color-blue-dark)",
+    "--mantine-color-blue-light-color": "var(--color-blue-dark)",
+    "--mantine-color-blue-text": "var(--color-blue-dark)",
+    "--mantine-color-blue-outline": "var(--color-blue-dark)",
+    "--mantine-color-green-light-color": "var(--color-green-dark)",
+    "--mantine-color-green-text": "var(--color-green-dark)",
+    "--mantine-color-green-outline": "var(--color-green-dark)",
+    "--mantine-color-red-light-color": "var(--color-red-dark)",
+    "--mantine-color-red-text": "var(--color-red-dark)",
+    "--mantine-color-red-outline": "var(--color-red-dark)",
+    "--mantine-color-red-filled": "var(--c-danger-solid)",
+    "--mantine-color-amber-light-color": "var(--color-amber-dark)",
+    "--mantine-color-amber-text": "var(--color-amber-dark)",
+    "--mantine-color-amber-outline": "var(--color-amber-dark)",
+    "--mantine-color-purple-light-color": "var(--color-purple-dark)",
+    "--mantine-color-purple-text": "var(--color-purple-dark)",
+    "--mantine-color-purple-outline": "var(--color-purple-dark)",
+    "--mantine-color-error": "var(--color-red-dark)",
+    "--mantine-color-dimmed": "var(--c-text-muted)",
+    // Solid fills that must carry a white label.
+    "--mantine-color-blue-filled": "var(--c-accent-solid)",
+    "--mantine-color-purple-filled": "var(--color-purple-dark)",
+    "--mantine-color-green-filled": "var(--c-success-solid)",
+    "--mantine-color-amber-filled": "var(--c-warning-solid)",
+    "--mantine-color-gray-filled": "var(--c-neutral-solid)",
   },
   dark: {
     // Popover/dropdown background (dark-6 is the floating surface in dark mode)
