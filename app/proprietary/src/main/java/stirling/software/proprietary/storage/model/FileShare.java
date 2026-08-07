@@ -71,6 +71,14 @@ public class FileShare implements Serializable {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
+    /** Job-storage id of the processed copy; cache only, re-derived if swept. */
+    @Column(name = "egress_file_id")
+    private String egressFileId;
+
+    /** Identity of that copy (policies + steps + source version); a mismatch means it is stale. */
+    @Column(name = "egress_fingerprint", length = 64)
+    private String egressFingerprint;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

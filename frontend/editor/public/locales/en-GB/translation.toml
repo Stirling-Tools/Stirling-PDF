@@ -6149,10 +6149,14 @@ enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
 
 [policyOption]
+allow = "Allow"
 autoRedactPhi = "Auto-redact PHI"
+block = "Block"
 blockExport = "Block export"
+commenter = "Commenter"
 contracts = "Contracts"
 documents = "Documents"
+editor = "Editor"
 fedramp = "FedRAMP"
 financialReports = "Financial reports"
 flagForReview = "Flag for review"
@@ -6161,6 +6165,7 @@ hipaa = "HIPAA"
 hold = "Hold"
 hrRecords = "HR records"
 indefinite = "Indefinite"
+inherit = "Use the system default"
 insurance = "Insurance"
 invoices = "Invoices"
 iso27001 = "ISO 27001"
@@ -6168,6 +6173,7 @@ legalFilings = "Legal filings"
 medicalPhi = "Medical / PHI"
 never = "Never"
 ninetyDays = "90 days"
+oneDay = "1 day"
 oneYear = "1 year"
 p60 = "60%"
 p70 = "70%"
@@ -6176,14 +6182,19 @@ p90 = "90%"
 p95 = "95%"
 pciDss = "PCI DSS"
 quarantineDocument = "Quarantine document"
+restrict = "Restrict"
+restricted = "Restricted"
 routeToBucket = "Route to bucket"
 s3Bucket = "S3 bucket"
+sevenDays = "7 days"
 sevenYears = "7 years"
 sharePoint = "SharePoint"
 soc2 = "SOC 2"
 taxDocuments = "Tax documents"
 thirtyDays = "30 days"
+threeDays = "3 days"
 threeYears = "3 years"
+viewOnly = "View only"
 webhook = "Webhook"
 
 [portal]
@@ -7359,6 +7370,15 @@ label = "Routing"
 desc = "Detect PII, redact, strip active content, and watermark documents."
 label = "Security"
 
+[portal.policies.categories.sharing]
+desc = "Govern how documents are shared: default access, external recipients, and watermarking."
+label = "Sharing"
+
+[portal.policies.channels]
+emailShare = "Email shares"
+shareLink = "Share links"
+userShare = "Shares with people"
+
 [portal.policies.config]
 scopeAll = "All documents"
 
@@ -7423,8 +7443,32 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 1 = "Remove JavaScript"
 2 = "Watermark"
 
+[portal.policies.config.sharing]
+summary = "Governs how stored documents are shared out: who may receive them, what access they get, and what the copy that leaves looks like."
+
+[portal.policies.config.sharing.fields]
+defaultAccess = "Default access"
+defaultAccessHelper = "The most access any new share may grant. Recipients can be given less, never more."
+downloads = "Downloads"
+downloadsHelper = "View-only serves the document for reading in the browser and refuses attachment downloads."
+externalRecipients = "External recipients"
+externalRecipientsHelper = "How to treat recipients outside your organisation. Restrict grants read-only, view-only access on a one-day link."
+internalDomains = "Internal domains"
+internalDomainsHelper = "Email domains counted as inside your organisation. Leave empty to use the file owner's own domain."
+internalDomainsPlaceholder = "example.com"
+linkExpiry = "Share link expiry"
+linkExpiryHelper = "The longest a share link may live. A policy can only shorten the configured expiry, never extend it."
+
+[portal.policies.config.sharing.rules]
+0 = "Default access"
+1 = "External recipients"
+2 = "Watermark shared copies"
+
 [portal.policies.detail]
+atEgress = "At egress, whenever a document is shared"
+channels = "Runs on"
 enforces = "Enforces"
+everyChannel = "Every channel"
 onEveryExport = "On every export"
 onEveryUpload = "On every upload"
 outputAsNewFile = "as a new file"
@@ -7522,6 +7566,11 @@ label = "Strip active content"
 desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
 label = "Apply a watermark"
 
+[portal.policies.wizard.channels]
+all = "Every channel unless narrowed."
+heading = "Runs on"
+narrowed = "Only the channels selected below."
+
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
 saveFailed = "Couldn't save the policy. Please try again."
@@ -7565,6 +7614,7 @@ setUp = "Set up {{category}} policy"
 
 [portal.policies.wizard.workflow]
 description = "Choose what this policy does to every document it processes."
+egressDescription = "Choose what happens to the copy that leaves. Recipients get the processed copy; the original is untouched. Leave these off to govern access only."
 
 [portal.policySummary]
 activeSummary = "{{active}} / {{total}} active"

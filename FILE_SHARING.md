@@ -15,6 +15,7 @@ The File Sharing feature enables users to store files server-side and share them
 - Storage quotas (per-user and total)
 - Pluggable storage backend (local filesystem or database BLOB)
 - Integration with the Shared Signing workflow
+- Policy enforcement at egress (who may receive a document, on what terms, and what the copy that leaves looks like)
 
 ## Architecture
 
@@ -29,6 +30,7 @@ The File Sharing feature enables users to store files server-side and share them
 
 **`file_shares`**
 - One record per sharing relationship
+- `egress_file_id` / `egress_fingerprint` — cache of the processed copy a Sharing policy produced for this share (see [Sharing Policies](#sharing-policies-egress-enforcement))
 - Two share types, distinguished by which fields are set:
   - **User share**: `shared_with_user_id` is set, `share_token` is null
   - **Link share**: `share_token` is set (UUID), `shared_with_user_id` is null
@@ -295,6 +297,52 @@ GET /api/v1/storage/files/{fileId}/shares/links/{token}/accesses
 ```
 
 Returns per-user access history (username, VIEW/DOWNLOAD, timestamp), sorted descending by time.
+
+## Sharing Policies (egress enforcement)
+
+A **Sharing** policy governs how documents leave the workspace. It is an ordinary stored policy (`/api/v1/policies`) authored under the `sharing` category, so it is created and edited in the portal's Policies page like any other - but it has no input source and nothing sweeps or polls for it. The sharing endpoints evaluate it inline, on the request that grants or delivers a share.
+
+The governing policies are always the **file owner's team's**, never the accessor's.
+
+### Where it fires
+
+| Moment | Endpoint | What the policy can do |
+|--------|----------|------------------------|
+| Share with a user | `POST /files/{id}/shares/users` | refuse the share; cap the access role |
+| Create a share link | `POST /files/{id}/shares/links` | refuse; cap the role; cap the link's lifetime |
+| Email share | `POST /files/{id}/shares/users` (email address) | as above, judged as its own channel |
+| Recipient opens it | `GET /share-links/{token}`, `GET /files/{id}/download` | force view-only; serve a processed copy |
+
+The owner downloading their own file is not egress and is never gated.
+
+### Settings
+
+| Setting | Effect |
+|---------|--------|
+| Default access | Ceiling on the role any new share may grant (`restricted` → `VIEWER`). Only tightens; it never promotes a weaker request. |
+| External recipients | `allow` / `restrict` / `block`. Restrict grants read-only, view-only access on a one-day link. |
+| Internal domains | Email domains counted as inside the org. Empty falls back to the file owner's own domain. |
+| Share link expiry | Ceiling on link lifetime. Can only shorten the configured `linkExpirationDays`, never extend it. |
+| Downloads | `viewOnly` serves the document inline and refuses attachment downloads (`403`). |
+
+Narrowing: **Runs on** limits the policy to particular share channels (`userShare`, `shareLink`, `emailShare`); empty means every channel.
+
+Narrowing by document type is deliberately not offered. The `scopeTypes` field still round-trips in the stored format, but nothing sets or reads it: classification labels are written into the PDF only by the AI classify endpoint, and only into the editor's copy, so a file uploaded straight to storage carries none. A document-type rule would silently match nothing — worse than not having the control. It can return once stored files carry classification.
+
+Several sharing policies compose to the most restrictive outcome: lowest role, shortest link life, view-only if any says so, blocked if any blocks.
+
+### The processed copy
+
+If the policy has any enabled tools (watermark, redact, strip active content), the recipient gets a **processed copy**; the stored original is untouched. It is derived on first delivery and cached against the share (`file_shares.egress_file_id`), keyed by a fingerprint over the transforming policies, their steps, and the source document's version — so editing the policy or replacing the document invalidates it automatically. The copy lives in the shared job file store, so it inherits that store's retention sweep and does not count against the owner's quota.
+
+Two behaviours worth knowing:
+
+- **Fails closed.** If the tool chain errors or does not finish inside 120s, the delivery is refused rather than falling back to the unprocessed original.
+- **No signed-URL shortcut.** When a policy applies view-only or a transform, delivery always streams through the application. A provider-signed URL points straight at the stored object and would bypass both.
+
+### Configuration
+
+Nothing extra. Sharing policies are inert unless the storage sharing feature is on (`storage.sharing.enabled`), and a deployment with no sharing policy behaves exactly as it did before.
 
 ## Workflow Share Integration
 

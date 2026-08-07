@@ -10,6 +10,7 @@ import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
 import AltRouteOutlinedIcon from "@mui/icons-material/AltRouteOutlined";
 import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
+import IosShareOutlinedIcon from "@mui/icons-material/IosShareOutlined";
 
 type MuiIcon = React.ComponentType<{ sx?: SxProps<Theme>; className?: string }>;
 
@@ -18,6 +19,7 @@ const POLICY_CATEGORY_ICONS: Record<string, MuiIcon> = {
   ingestion: LayersOutlinedIcon,
   security: ShieldOutlinedIcon,
   classification: LabelOutlinedIcon,
+  sharing: IosShareOutlinedIcon,
   compliance: CheckCircleOutlinedIcon,
   routing: AltRouteOutlinedIcon,
   retention: ScheduleOutlinedIcon,

@@ -107,15 +107,17 @@ export function PolicyCatalogueTable({
               </StatusBadge>
             );
           }
+          // A span, not a button: the row is already the control, so a real
+          // button here would nest one interactive element inside another.
           return (
-            <Button size="sm" variant="secondary" onClick={() => onOpen(entry)}>
+            <Button as="span" size="sm" variant="secondary">
               {t("portal.policySummary.action.setUp")}
             </Button>
           );
         },
       },
     ],
-    [t, onOpen, isLocked, lockedLabel],
+    [t, isLocked, lockedLabel],
   );
 
   return (
