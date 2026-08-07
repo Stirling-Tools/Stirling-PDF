@@ -71,8 +71,13 @@ export default function MobileSignatureModal({
         "sign.mobile.pollingError",
         "Error checking for the signature",
       ),
+      // In dev the backend-advertised frontendUrl is the backend origin, which
+      // serves no SPA — the phone must open the Vite origin this page runs on,
+      // so let the URL builder fall back to it. An explicit server_url still
+      // wins, as an escape hatch.
       configuredUrl:
-        localStorage.getItem("server_url") || config?.frontendUrl || "",
+        localStorage.getItem("server_url") ||
+        (import.meta.env.DEV ? "" : config?.frontendUrl || ""),
     });
 
   return (
