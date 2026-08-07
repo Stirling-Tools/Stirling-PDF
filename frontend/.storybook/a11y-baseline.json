@@ -1,2624 +1,2634 @@
 {
-  "editor/src/core/components/StorageStatsCard.stories.tsx :: Default": [
+  "src/editor/core/components/StorageStatsCard.stories.tsx :: Default": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/core/components/StorageStatsCard.stories.tsx :: Nearing Quota": [
+  "src/editor/core/components/StorageStatsCard.stories.tsx :: Nearing Quota": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/core/components/StorageStatsCard.stories.tsx :: No Quota": [
+  "src/editor/core/components/StorageStatsCard.stories.tsx :: No Quota": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/shared/ColorPicker.stories.tsx :: Default": [
+  "src/editor/core/components/annotation/shared/ColorPicker.stories.tsx :: Default": [
     "aria-input-field-name",
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/shared/ColorPicker.stories.tsx :: With Opacity": [
+  "src/editor/core/components/annotation/shared/ColorPicker.stories.tsx :: With Opacity": [
     "aria-input-field-name",
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/shared/DrawingCanvas.stories.tsx :: Default": [
+  "src/editor/core/components/annotation/shared/DrawingCanvas.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/shared/DrawingCanvas.stories.tsx :: Disabled": [
+  "src/editor/core/components/annotation/shared/DrawingCanvas.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/shared/DrawingControls.stories.tsx :: Default": [
+  "src/editor/core/components/annotation/shared/DrawingControls.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/shared/ImageUploader.stories.tsx :: Default": [
+  "src/editor/core/components/annotation/shared/ImageUploader.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/shared/ImageUploader.stories.tsx :: With Background Removal": [
+  "src/editor/core/components/annotation/shared/ImageUploader.stories.tsx :: With Background Removal": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/shared/ImageUploader.stories.tsx :: With Label And Hint": [
+  "src/editor/core/components/annotation/shared/ImageUploader.stories.tsx :: With Label And Hint": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/tools/DrawingTool.stories.tsx :: Default": [
+  "src/editor/core/components/annotation/tools/DrawingTool.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/tools/DrawingTool.stories.tsx :: Disabled": [
+  "src/editor/core/components/annotation/tools/DrawingTool.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/tools/ImageTool.stories.tsx :: Default": [
+  "src/editor/core/components/annotation/tools/ImageTool.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/annotation/tools/ImageTool.stories.tsx :: Disabled": [
+  "src/editor/core/components/annotation/tools/ImageTool.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/fileManager/CompactFileDetails.stories.tsx :: Default": [
+  "src/editor/core/components/fileManager/CompactFileDetails.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/fileManager/CompactFileDetails.stories.tsx :: Multiple Files": [
+  "src/editor/core/components/fileManager/CompactFileDetails.stories.tsx :: Multiple Files": [
     "color-contrast"
   ],
-  "editor/src/core/components/fileManager/FileDetails.stories.tsx :: Compact": [
+  "src/editor/core/components/fileManager/FileDetails.stories.tsx :: Compact": [
     "color-contrast"
   ],
-  "editor/src/core/components/fileManager/FileDetails.stories.tsx :: Default": [
+  "src/editor/core/components/fileManager/FileDetails.stories.tsx :: Default": [
     "color-contrast",
     "scrollable-region-focusable"
   ],
-  "editor/src/core/components/fileManager/FileDetails.stories.tsx :: Empty": [
+  "src/editor/core/components/fileManager/FileDetails.stories.tsx :: Empty": [
     "color-contrast",
     "scrollable-region-focusable"
   ],
-  "editor/src/core/components/filesPage/DeleteFilesDialog.stories.tsx :: Cloud Only": [
+  "src/editor/core/components/filesPage/DeleteFilesDialog.stories.tsx :: Cloud Only": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/DeleteFilesDialog.stories.tsx :: Default": [
+  "src/editor/core/components/filesPage/DeleteFilesDialog.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/DeleteFilesDialog.stories.tsx :: Local And Cloud Choice": [
+  "src/editor/core/components/filesPage/DeleteFilesDialog.stories.tsx :: Local And Cloud Choice": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/DeleteFolderDialog.stories.tsx :: Default": [
+  "src/editor/core/components/filesPage/DeleteFolderDialog.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/DeleteFolderDialog.stories.tsx :: With Files": [
+  "src/editor/core/components/filesPage/DeleteFolderDialog.stories.tsx :: With Files": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FileDetailsPanel.stories.tsx :: Default": [
+  "src/editor/core/components/filesPage/FileDetailsPanel.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FileDetailsPanel.stories.tsx :: In Folder": [
+  "src/editor/core/components/filesPage/FileDetailsPanel.stories.tsx :: In Folder": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FileDetailsPanel.stories.tsx :: Local Only With Save To Server": [
+  "src/editor/core/components/filesPage/FileDetailsPanel.stories.tsx :: Local Only With Save To Server": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FileDetailsPanel.stories.tsx :: Multi Select": [
+  "src/editor/core/components/filesPage/FileDetailsPanel.stories.tsx :: Multi Select": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FileGrid.stories.tsx :: Empty": [
+  "src/editor/core/components/filesPage/FileGrid.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FileGrid.stories.tsx :: List Mode": [
+  "src/editor/core/components/filesPage/FileGrid.stories.tsx :: List Mode": [
     "aria-required-children"
   ],
-  "editor/src/core/components/filesPage/FileOriginBadge.stories.tsx :: Cloud": [
+  "src/editor/core/components/filesPage/FileOriginBadge.stories.tsx :: Cloud": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FileOriginBadge.stories.tsx :: Shared With Me": [
+  "src/editor/core/components/filesPage/FileOriginBadge.stories.tsx :: Shared With Me": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FolderNameDialog.stories.tsx :: Default": [
+  "src/editor/core/components/filesPage/FolderNameDialog.stories.tsx :: Default": [
     "button-name"
   ],
-  "editor/src/core/components/filesPage/FolderNameDialog.stories.tsx :: Rename": [
+  "src/editor/core/components/filesPage/FolderNameDialog.stories.tsx :: Rename": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/FolderThumbnail.stories.tsx :: Default": [
+  "src/editor/core/components/filesPage/FolderThumbnail.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/MoveToFolderDialog.stories.tsx :: Default": [
+  "src/editor/core/components/filesPage/MoveToFolderDialog.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/MoveToFolderDialog.stories.tsx :: Empty": [
+  "src/editor/core/components/filesPage/MoveToFolderDialog.stories.tsx :: Empty": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/MoveToFolderDialog.stories.tsx :: With Create Folder": [
+  "src/editor/core/components/filesPage/MoveToFolderDialog.stories.tsx :: With Create Folder": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/MoveToFolderDialog.stories.tsx :: With Disabled Descendant": [
+  "src/editor/core/components/filesPage/MoveToFolderDialog.stories.tsx :: With Disabled Descendant": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/VersionHistoryModal.stories.tsx :: Default": [
+  "src/editor/core/components/filesPage/VersionHistoryModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/VersionHistoryModal.stories.tsx :: No File Selected": [
+  "src/editor/core/components/filesPage/VersionHistoryModal.stories.tsx :: No File Selected": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/VersionTimeline.stories.tsx :: Default": [
+  "src/editor/core/components/filesPage/VersionTimeline.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/VersionTimeline.stories.tsx :: Long Chain Collapsed": [
+  "src/editor/core/components/filesPage/VersionTimeline.stories.tsx :: Long Chain Collapsed": [
     "color-contrast"
   ],
-  "editor/src/core/components/filesPage/VersionTimeline.stories.tsx :: No Header": [
+  "src/editor/core/components/filesPage/VersionTimeline.stories.tsx :: No Header": [
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Admin Overview Login Disabled": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Admin Overview Login Disabled": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Admin Overview Login Enabled": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Admin Overview Login Enabled": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Analytics Choice": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Analytics Choice": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Analytics Choice Error": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Analytics Choice Error": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Desktop Install": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Desktop Install": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: First Login": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: First Login": [
     "aria-dialog-name"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: First Login Default Credentials": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: First Login Default Credentials": [
     "aria-dialog-name"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Mfa Setup": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Mfa Setup": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Security Check": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Security Check": [
     "aria-dialog-name"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Server License": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Server License": [
     "aria-dialog-name"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Server License Over Limit": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Server License Over Limit": [
     "aria-dialog-name"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Stepped Flow Example": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Stepped Flow Example": [
     "aria-dialog-name",
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Tour Overview": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Tour Overview": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Welcome": [
+  "src/editor/core/components/onboarding/OnboardingModalSlide.stories.tsx :: Welcome": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingSlideShell.stories.tsx :: Default": [
+  "src/editor/core/components/onboarding/OnboardingSlideShell.stories.tsx :: Default": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/OnboardingSlideShell.stories.tsx :: Not Dismissible": [
+  "src/editor/core/components/onboarding/OnboardingSlideShell.stories.tsx :: Not Dismissible": [
     "aria-dialog-name",
     "aria-progressbar-name"
   ],
-  "editor/src/core/components/onboarding/OnboardingSlideShell.stories.tsx :: Stepped With Back": [
+  "src/editor/core/components/onboarding/OnboardingSlideShell.stories.tsx :: Stepped With Back": [
     "aria-dialog-name",
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/core/components/onboarding/slides/WelcomeSlide.stories.tsx :: Default": [
+  "src/editor/core/components/onboarding/slides/WelcomeSlide.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/pageEditor/bulkSelectionPanel/SelectedPagesDisplay.stories.tsx :: Default": [
+  "src/editor/core/components/pageEditor/bulkSelectionPanel/SelectedPagesDisplay.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/BulkShareModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/BulkShareModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/BulkShareModal.stories.tsx :: Links Enabled": [
+  "src/editor/core/components/shared/BulkShareModal.stories.tsx :: Links Enabled": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/BulkUploadToServerModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/BulkUploadToServerModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/BulkUploadToServerModal.stories.tsx :: Single File": [
+  "src/editor/core/components/shared/BulkUploadToServerModal.stories.tsx :: Single File": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ButtonToggle.stories.tsx :: Default": [
+  "src/editor/core/components/shared/ButtonToggle.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ButtonToggle.stories.tsx :: Small": [
+  "src/editor/core/components/shared/ButtonToggle.stories.tsx :: Small": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/DropdownListWithFooter.stories.tsx :: Default": [
+  "src/editor/core/components/shared/DropdownListWithFooter.stories.tsx :: Default": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/shared/DropdownListWithFooter.stories.tsx :: Empty": [
+  "src/editor/core/components/shared/DropdownListWithFooter.stories.tsx :: Empty": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/shared/DropdownListWithFooter.stories.tsx :: Multi Select With Footer": [
+  "src/editor/core/components/shared/DropdownListWithFooter.stories.tsx :: Multi Select With Footer": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/shared/EditableSecretField.stories.tsx :: Masked": [
+  "src/editor/core/components/shared/EditableSecretField.stories.tsx :: Masked": [
     "label"
   ],
-  "editor/src/core/components/shared/EditableSecretField.stories.tsx :: Masked Disabled": [
+  "src/editor/core/components/shared/EditableSecretField.stories.tsx :: Masked Disabled": [
     "label"
   ],
-  "editor/src/core/components/shared/EditableSecretField.stories.tsx :: With Error": [
+  "src/editor/core/components/shared/EditableSecretField.stories.tsx :: With Error": [
     "color-contrast",
     "label-title-only"
   ],
-  "editor/src/core/components/shared/EncryptedPdfUnlockModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/EncryptedPdfUnlockModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/EncryptedPdfUnlockModal.stories.tsx :: Incorrect Password": [
+  "src/editor/core/components/shared/EncryptedPdfUnlockModal.stories.tsx :: Incorrect Password": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/EncryptedPdfUnlockModal.stories.tsx :: Multiple Files Remaining": [
+  "src/editor/core/components/shared/EncryptedPdfUnlockModal.stories.tsx :: Multiple Files Remaining": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/EncryptedPdfUnlockModal.stories.tsx :: Processing": [
+  "src/editor/core/components/shared/EncryptedPdfUnlockModal.stories.tsx :: Processing": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ErrorBoundary.stories.tsx :: Caught Error": [
+  "src/editor/core/components/shared/ErrorBoundary.stories.tsx :: Caught Error": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ErrorBoundary.stories.tsx :: Custom Fallback": [
+  "src/editor/core/components/shared/ErrorBoundary.stories.tsx :: Custom Fallback": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileCard.stories.tsx :: Default": [
+  "src/editor/core/components/shared/FileCard.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileCard.stories.tsx :: Selected": [
+  "src/editor/core/components/shared/FileCard.stories.tsx :: Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileCard.stories.tsx :: Unsupported": [
+  "src/editor/core/components/shared/FileCard.stories.tsx :: Unsupported": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileDropdownMenu.stories.tsx :: Default": [
+  "src/editor/core/components/shared/FileDropdownMenu.stories.tsx :: Default": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/shared/FileDropdownMenu.stories.tsx :: No Remove": [
+  "src/editor/core/components/shared/FileDropdownMenu.stories.tsx :: No Remove": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/shared/FileDropdownMenu.stories.tsx :: Switching": [
+  "src/editor/core/components/shared/FileDropdownMenu.stories.tsx :: Switching": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/shared/FileGrid.stories.tsx :: Default": [
+  "src/editor/core/components/shared/FileGrid.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileGrid.stories.tsx :: Empty": [
+  "src/editor/core/components/shared/FileGrid.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileGrid.stories.tsx :: Search And Sort": [
+  "src/editor/core/components/shared/FileGrid.stories.tsx :: Search And Sort": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/shared/FilePickerModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/FilePickerModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/shared/FilePickerModal.stories.tsx :: Empty": [
+  "src/editor/core/components/shared/FilePickerModal.stories.tsx :: Empty": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileSelectorPicker.stories.tsx :: Custom Placeholder": [
+  "src/editor/core/components/shared/FileSelectorPicker.stories.tsx :: Custom Placeholder": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileSelectorPicker.stories.tsx :: Default": [
+  "src/editor/core/components/shared/FileSelectorPicker.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/FileSelectorPicker.stories.tsx :: Disabled": [
+  "src/editor/core/components/shared/FileSelectorPicker.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/Footer.stories.tsx :: All Links And Cookie Banner": [
+  "src/editor/core/components/shared/Footer.stories.tsx :: All Links And Cookie Banner": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/Footer.stories.tsx :: Default": [
+  "src/editor/core/components/shared/Footer.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/InfoBanner.stories.tsx :: Warning": [
+  "src/editor/core/components/shared/InfoBanner.stories.tsx :: Warning": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/MobileUploadModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/MobileUploadModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast",
     "svg-img-alt"
   ],
-  "editor/src/core/components/shared/MultiSelectControls.stories.tsx :: All Actions": [
+  "src/editor/core/components/shared/MultiSelectControls.stories.tsx :: All Actions": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/NavigationWarningModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/NavigationWarningModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/NavigationWarningModal.stories.tsx :: With Apply And Continue": [
+  "src/editor/core/components/shared/NavigationWarningModal.stories.tsx :: With Apply And Continue": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/NavigationWarningModal.stories.tsx :: With Export And Continue": [
+  "src/editor/core/components/shared/NavigationWarningModal.stories.tsx :: With Export And Continue": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ShareFileModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/ShareFileModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ShareFileModal.stories.tsx :: Links Enabled": [
+  "src/editor/core/components/shared/ShareFileModal.stories.tsx :: Links Enabled": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ShareManagementModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/ShareManagementModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ShareManagementModal.stories.tsx :: Links Enabled": [
+  "src/editor/core/components/shared/ShareManagementModal.stories.tsx :: Links Enabled": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/UpdateModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/UpdateModal.stories.tsx :: Default": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/UpdateModal.stories.tsx :: Desktop Install Blocked": [
+  "src/editor/core/components/shared/UpdateModal.stories.tsx :: Desktop Install Blocked": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/UpdateModal.stories.tsx :: Desktop Install Ready To Restart": [
+  "src/editor/core/components/shared/UpdateModal.stories.tsx :: Desktop Install Ready To Restart": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/UploadToServerModal.stories.tsx :: Already Uploaded": [
+  "src/editor/core/components/shared/UploadToServerModal.stories.tsx :: Already Uploaded": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/UploadToServerModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/UploadToServerModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/UserSelector.stories.tsx :: Default": [
+  "src/editor/core/components/shared/UserSelector.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ZipWarningModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/ZipWarningModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/ZipWarningModal.stories.tsx :: Single File": [
+  "src/editor/core/components/shared/ZipWarningModal.stories.tsx :: Single File": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/LoginRequiredBanner.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/LoginRequiredBanner.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/OverviewHeader.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/OverviewHeader.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/PendingBadge.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/PendingBadge.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/PendingBadge.stories.tsx :: Large Size": [
+  "src/editor/core/components/shared/config/PendingBadge.stories.tsx :: Large Size": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/RestartConfirmationModal.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/RestartConfirmationModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/SettingsStickyFooter.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/SettingsStickyFooter.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/SettingsStickyFooter.stories.tsx :: Saving": [
+  "src/editor/core/components/shared/config/SettingsStickyFooter.stories.tsx :: Saving": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/GeneralSection.stories.tsx :: Admin Banner": [
+  "src/editor/core/components/shared/config/configSections/GeneralSection.stories.tsx :: Admin Banner": [
     "label"
   ],
-  "editor/src/core/components/shared/config/configSections/GeneralSection.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/configSections/GeneralSection.stories.tsx :: Default": [
     "label"
   ],
-  "editor/src/core/components/shared/config/configSections/GeneralSection.stories.tsx :: With Backend Version": [
+  "src/editor/core/components/shared/config/configSections/GeneralSection.stories.tsx :: With Backend Version": [
     "label"
   ],
-  "editor/src/core/components/shared/config/configSections/HelpSection.stories.tsx :: Admin": [
+  "src/editor/core/components/shared/config/configSections/HelpSection.stories.tsx :: Admin": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/HelpSection.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/configSections/HelpSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/HotkeysSection.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/configSections/HotkeysSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/LegalSection.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/configSections/LegalSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/LegalSection.stories.tsx :: Minimal Links": [
+  "src/editor/core/components/shared/config/configSections/LegalSection.stories.tsx :: Minimal Links": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/LegalSection.stories.tsx :: With Analytics Enabled": [
+  "src/editor/core/components/shared/config/configSections/LegalSection.stories.tsx :: With Analytics Enabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/Overview.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/configSections/Overview.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/Overview.stories.tsx :: Loaded": [
+  "src/editor/core/components/shared/config/configSections/Overview.stories.tsx :: Loaded": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/Overview.stories.tsx :: With Warning": [
+  "src/editor/core/components/shared/config/configSections/Overview.stories.tsx :: With Warning": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/ProviderCard.stories.tsx :: Configured": [
+  "src/editor/core/components/shared/config/configSections/ProviderCard.stories.tsx :: Configured": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/ProviderCard.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/configSections/ProviderCard.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/ProviderCard.stories.tsx :: Read Only": [
+  "src/editor/core/components/shared/config/configSections/ProviderCard.stories.tsx :: Read Only": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/ThirdPartyLicensesSection.stories.tsx :: Default": [
+  "src/editor/core/components/shared/config/configSections/ThirdPartyLicensesSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/config/configSections/ThirdPartyLicensesSection.stories.tsx :: Frontend": [
+  "src/editor/core/components/shared/config/configSections/ThirdPartyLicensesSection.stories.tsx :: Frontend": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/filePreview/DocumentThumbnail.stories.tsx :: Encrypted": [
+  "src/editor/core/components/shared/filePreview/DocumentThumbnail.stories.tsx :: Encrypted": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/filePreview/DocumentThumbnail.stories.tsx :: Loading": [
+  "src/editor/core/components/shared/filePreview/DocumentThumbnail.stories.tsx :: Loading": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/CreateSessionFlow.stories.tsx :: Creating": [
+  "src/editor/core/components/shared/signing/CreateSessionFlow.stories.tsx :: Creating": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/CreateSessionFlow.stories.tsx :: Default": [
+  "src/editor/core/components/shared/signing/CreateSessionFlow.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/CreateSessionFlow.stories.tsx :: No File Selected": [
+  "src/editor/core/components/shared/signing/CreateSessionFlow.stories.tsx :: No File Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/SharedSigningLauncher.stories.tsx :: Default": [
+  "src/editor/core/components/shared/signing/SharedSigningLauncher.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/SharedSigningLauncher.stories.tsx :: Pending Requests": [
+  "src/editor/core/components/shared/signing/SharedSigningLauncher.stories.tsx :: Pending Requests": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/ConfigureSignatureDefaultsStep.stories.tsx :: Default": [
+  "src/editor/core/components/shared/signing/steps/ConfigureSignatureDefaultsStep.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/ConfigureSignatureDefaultsStep.stories.tsx :: Disabled": [
+  "src/editor/core/components/shared/signing/steps/ConfigureSignatureDefaultsStep.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/ConfigureSignatureDefaultsStep.stories.tsx :: Invisible Signature": [
+  "src/editor/core/components/shared/signing/steps/ConfigureSignatureDefaultsStep.stories.tsx :: Invisible Signature": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/ReviewSessionStep.stories.tsx :: Default": [
+  "src/editor/core/components/shared/signing/steps/ReviewSessionStep.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/ReviewSessionStep.stories.tsx :: Disabled": [
+  "src/editor/core/components/shared/signing/steps/ReviewSessionStep.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/ReviewSessionStep.stories.tsx :: Invisible Signature": [
+  "src/editor/core/components/shared/signing/steps/ReviewSessionStep.stories.tsx :: Invisible Signature": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/SelectDocumentStep.stories.tsx :: Default": [
+  "src/editor/core/components/shared/signing/steps/SelectDocumentStep.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/SelectDocumentStep.stories.tsx :: Multiple Files Selected": [
+  "src/editor/core/components/shared/signing/steps/SelectDocumentStep.stories.tsx :: Multiple Files Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/SelectDocumentStep.stories.tsx :: No File Selected": [
+  "src/editor/core/components/shared/signing/steps/SelectDocumentStep.stories.tsx :: No File Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/SelectParticipantsStep.stories.tsx :: Default": [
+  "src/editor/core/components/shared/signing/steps/SelectParticipantsStep.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/SelectParticipantsStep.stories.tsx :: Disabled": [
+  "src/editor/core/components/shared/signing/steps/SelectParticipantsStep.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/signing/steps/SelectParticipantsStep.stories.tsx :: With Selection": [
+  "src/editor/core/components/shared/signing/steps/SelectParticipantsStep.stories.tsx :: With Selection": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/sliderWithInput/SliderWithInput.stories.tsx :: Default": [
+  "src/editor/core/components/shared/sliderWithInput/SliderWithInput.stories.tsx :: Default": [
     "aria-input-field-name",
     "label"
   ],
-  "editor/src/core/components/shared/sliderWithInput/SliderWithInput.stories.tsx :: Disabled": [
+  "src/editor/core/components/shared/sliderWithInput/SliderWithInput.stories.tsx :: Disabled": [
     "label"
   ],
-  "editor/src/core/components/shared/wetSignature/DrawSignatureCanvas.stories.tsx :: Default": [
+  "src/editor/core/components/shared/wetSignature/DrawSignatureCanvas.stories.tsx :: Default": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/wetSignature/DrawSignatureCanvas.stories.tsx :: Disabled": [
+  "src/editor/core/components/shared/wetSignature/DrawSignatureCanvas.stories.tsx :: Disabled": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/wetSignature/TypeSignatureText.stories.tsx :: Default": [
+  "src/editor/core/components/shared/wetSignature/TypeSignatureText.stories.tsx :: Default": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/wetSignature/TypeSignatureText.stories.tsx :: Disabled": [
+  "src/editor/core/components/shared/wetSignature/TypeSignatureText.stories.tsx :: Disabled": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/wetSignature/TypeSignatureText.stories.tsx :: Empty": [
+  "src/editor/core/components/shared/wetSignature/TypeSignatureText.stories.tsx :: Empty": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/shared/wetSignature/UploadSignatureImage.stories.tsx :: Disabled": [
+  "src/editor/core/components/shared/wetSignature/UploadSignatureImage.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/wetSignature/UploadSignatureImage.stories.tsx :: Empty": [
+  "src/editor/core/components/shared/wetSignature/UploadSignatureImage.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/shared/wetSignature/UploadSignatureImage.stories.tsx :: With Signature": [
+  "src/editor/core/components/shared/wetSignature/UploadSignatureImage.stories.tsx :: With Signature": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/ToolLoadingFallback.stories.tsx :: Default": [
+  "src/editor/core/components/tools/ToolLoadingFallback.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/ToolLoadingFallback.stories.tsx :: With Tool Name": [
+  "src/editor/core/components/tools/ToolLoadingFallback.stories.tsx :: With Tool Name": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/ToolPanelModePrompt.stories.tsx :: Default": [
+  "src/editor/core/components/tools/ToolPanelModePrompt.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/ToolRenderer.stories.tsx :: Default": [
+  "src/editor/core/components/tools/ToolRenderer.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addPageNumbers/PageNumberPreview.stories.tsx :: Default": [
+  "src/editor/core/components/tools/addPageNumbers/PageNumberPreview.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addPageNumbers/PageNumberPreview.stories.tsx :: With Quick Grid": [
+  "src/editor/core/components/tools/addPageNumbers/PageNumberPreview.stories.tsx :: With Quick Grid": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addStamp/StampPreview.stories.tsx :: Default": [
+  "src/editor/core/components/tools/addStamp/StampPreview.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addStamp/StampPreview.stories.tsx :: With Quick Grid": [
+  "src/editor/core/components/tools/addStamp/StampPreview.stories.tsx :: With Quick Grid": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addStamp/StampPreview.stories.tsx :: With Text": [
+  "src/editor/core/components/tools/addStamp/StampPreview.stories.tsx :: With Text": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addStamp/StampSetupSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/addStamp/StampSetupSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addStamp/StampSetupSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/addStamp/StampSetupSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addStamp/StampSetupSettings.stories.tsx :: Image Stamp": [
+  "src/editor/core/components/tools/addStamp/StampSetupSettings.stories.tsx :: Image Stamp": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addStamp/StampSetupSettings.stories.tsx :: Text Stamp With Preview": [
+  "src/editor/core/components/tools/addStamp/StampSetupSettings.stories.tsx :: Text Stamp With Preview": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/addWatermark/AddWatermarkSingleStepSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/addWatermark/AddWatermarkSingleStepSettings.stories.tsx :: Disabled": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/addWatermark/AddWatermarkSingleStepSettings.stories.tsx :: Text Only": [
-    "button-name",
-    "color-contrast",
-    "label"
-  ],
-  "editor/src/core/components/tools/addWatermark/AddWatermarkSingleStepSettings.stories.tsx :: Text Watermark": [
+  "src/editor/core/components/tools/addWatermark/AddWatermarkSingleStepSettings.stories.tsx :: Text Only": [
     "button-name",
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/addWatermark/WatermarkFormatting.stories.tsx :: Default": [
-    "color-contrast",
-    "label"
-  ],
-  "editor/src/core/components/tools/addWatermark/WatermarkFormatting.stories.tsx :: Disabled": [
-    "color-contrast",
-    "label"
-  ],
-  "editor/src/core/components/tools/addWatermark/WatermarkFormatting.stories.tsx :: Without Flatten Option": [
-    "color-contrast",
-    "label"
-  ],
-  "editor/src/core/components/tools/addWatermark/WatermarkStyleSettings.stories.tsx :: Default": [
-    "label"
-  ],
-  "editor/src/core/components/tools/addWatermark/WatermarkStyleSettings.stories.tsx :: Disabled": [
-    "label"
-  ],
-  "editor/src/core/components/tools/addWatermark/WatermarkTextStyle.stories.tsx :: Default": [
-    "button-name",
-    "label"
-  ],
-  "editor/src/core/components/tools/addWatermark/WatermarkTextStyle.stories.tsx :: Disabled": [
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastBasicSettings.stories.tsx :: Adjusted": [
-    "aria-input-field-name",
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastBasicSettings.stories.tsx :: Default": [
-    "aria-input-field-name",
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastBasicSettings.stories.tsx :: Disabled": [
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastColorSettings.stories.tsx :: Adjusted": [
-    "aria-input-field-name",
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastColorSettings.stories.tsx :: Default": [
-    "aria-input-field-name",
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastColorSettings.stories.tsx :: Disabled": [
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastSingleStepSettings.stories.tsx :: Adjusted": [
-    "aria-input-field-name",
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastSingleStepSettings.stories.tsx :: Default": [
-    "aria-input-field-name",
-    "label"
-  ],
-  "editor/src/core/components/tools/adjustContrast/AdjustContrastSingleStepSettings.stories.tsx :: Disabled": [
-    "label"
-  ],
-  "editor/src/core/components/tools/automate/AutomationCreation.stories.tsx :: Edit Existing": [
-    "color-contrast"
-  ],
-  "editor/src/core/components/tools/automate/AutomationImportModal.stories.tsx :: Default": [
+  "src/editor/core/components/tools/addWatermark/AddWatermarkSingleStepSettings.stories.tsx :: Text Watermark": [
     "button-name",
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/automate/ToolConfigurationModal.stories.tsx :: Default": [
+  "src/editor/core/components/tools/addWatermark/WatermarkFormatting.stories.tsx :: Default": [
+    "color-contrast",
+    "label"
+  ],
+  "src/editor/core/components/tools/addWatermark/WatermarkFormatting.stories.tsx :: Disabled": [
+    "color-contrast",
+    "label"
+  ],
+  "src/editor/core/components/tools/addWatermark/WatermarkFormatting.stories.tsx :: Without Flatten Option": [
+    "color-contrast",
+    "label"
+  ],
+  "src/editor/core/components/tools/addWatermark/WatermarkStyleSettings.stories.tsx :: Default": [
+    "label"
+  ],
+  "src/editor/core/components/tools/addWatermark/WatermarkStyleSettings.stories.tsx :: Disabled": [
+    "label"
+  ],
+  "src/editor/core/components/tools/addWatermark/WatermarkTextStyle.stories.tsx :: Default": [
+    "button-name",
+    "label"
+  ],
+  "src/editor/core/components/tools/addWatermark/WatermarkTextStyle.stories.tsx :: Disabled": [
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastBasicSettings.stories.tsx :: Adjusted": [
+    "aria-input-field-name",
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastBasicSettings.stories.tsx :: Default": [
+    "aria-input-field-name",
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastBasicSettings.stories.tsx :: Disabled": [
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastColorSettings.stories.tsx :: Adjusted": [
+    "aria-input-field-name",
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastColorSettings.stories.tsx :: Default": [
+    "aria-input-field-name",
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastColorSettings.stories.tsx :: Disabled": [
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastSingleStepSettings.stories.tsx :: Adjusted": [
+    "aria-input-field-name",
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastSingleStepSettings.stories.tsx :: Default": [
+    "aria-input-field-name",
+    "label"
+  ],
+  "src/editor/core/components/tools/adjustContrast/AdjustContrastSingleStepSettings.stories.tsx :: Disabled": [
+    "label"
+  ],
+  "src/editor/core/components/tools/automate/AutomationCreation.stories.tsx :: Edit Existing": [
+    "color-contrast"
+  ],
+  "src/editor/core/components/tools/automate/AutomationImportModal.stories.tsx :: Default": [
+    "button-name",
+    "color-contrast",
+    "label"
+  ],
+  "src/editor/core/components/tools/automate/ToolConfigurationModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/automate/ToolConfigurationModal.stories.tsx :: With Settings": [
+  "src/editor/core/components/tools/automate/ToolConfigurationModal.stories.tsx :: With Settings": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/bookletImposition/BookletImpositionSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/bookletImposition/BookletImpositionSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/bookletImposition/BookletImpositionSettings.stories.tsx :: Manual Duplex": [
+  "src/editor/core/components/tools/bookletImposition/BookletImpositionSettings.stories.tsx :: Manual Duplex": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/CertSignAutomationSettings.stories.tsx :: Auto Sign Mode": [
+  "src/editor/core/components/tools/certSign/CertSignAutomationSettings.stories.tsx :: Auto Sign Mode": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/CertSignAutomationSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/CertSignAutomationSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/CertificateFilesSettings.stories.tsx :: Auto Sign Mode": [
+  "src/editor/core/components/tools/certSign/CertificateFilesSettings.stories.tsx :: Auto Sign Mode": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/CertificateFormatSettings.stories.tsx :: Selected": [
+  "src/editor/core/components/tools/certSign/CertificateFormatSettings.stories.tsx :: Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/CertificateSelector.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/CertificateSelector.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/CertificateSelector.stories.tsx :: Pem Format": [
+  "src/editor/core/components/tools/certSign/CertificateSelector.stories.tsx :: Pem Format": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/CertificateTypeSettings.stories.tsx :: All Sources Available": [
+  "src/editor/core/components/tools/certSign/CertificateTypeSettings.stories.tsx :: All Sources Available": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/CertificateTypeSettings.stories.tsx :: Server Selected": [
+  "src/editor/core/components/tools/certSign/CertificateTypeSettings.stories.tsx :: Server Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/HardwareCertificateSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/HardwareCertificateSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/SignatureAppearanceSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/SignatureAppearanceSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/SignatureAppearanceSettings.stories.tsx :: Visible Signature": [
+  "src/editor/core/components/tools/certSign/SignatureAppearanceSettings.stories.tsx :: Visible Signature": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/SignatureSettingsDisplay.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/SignatureSettingsDisplay.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/SignatureSettingsDisplay.stories.tsx :: Invisible": [
+  "src/editor/core/components/tools/certSign/SignatureSettingsDisplay.stories.tsx :: Invisible": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/SignatureSettingsDisplay.stories.tsx :: Minimal Details": [
+  "src/editor/core/components/tools/certSign/SignatureSettingsDisplay.stories.tsx :: Minimal Details": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/SignatureSettingsInput.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/SignatureSettingsInput.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/SignatureSettingsInput.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/certSign/SignatureSettingsInput.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/SignatureSettingsInput.stories.tsx :: Visible Signature": [
+  "src/editor/core/components/tools/certSign/SignatureSettingsInput.stories.tsx :: Visible Signature": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/WetSignatureInput.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/WetSignatureInput.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/WetSignatureInput.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/certSign/WetSignatureInput.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/WetSignatureInput.stories.tsx :: Upload Certificate": [
+  "src/editor/core/components/tools/certSign/WetSignatureInput.stories.tsx :: Upload Certificate": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/modals/AddParticipantsFlow.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/modals/AddParticipantsFlow.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/modals/CertificateConfigModal.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/modals/CertificateConfigModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/modals/CertificateConfigModal.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/certSign/modals/CertificateConfigModal.stories.tsx :: Disabled": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/modals/CertificateConfigModal.stories.tsx :: Multiple Signatures": [
+  "src/editor/core/components/tools/certSign/modals/CertificateConfigModal.stories.tsx :: Multiple Signatures": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/modals/SelectSignatureModal.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/modals/SelectSignatureModal.stories.tsx :: Default": [
     "button-name"
   ],
-  "editor/src/core/components/tools/certSign/panels/ParticipantListPanel.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/panels/ParticipantListPanel.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/panels/ParticipantListPanel.stories.tsx :: Finalized": [
+  "src/editor/core/components/tools/certSign/panels/ParticipantListPanel.stories.tsx :: Finalized": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/panels/SessionActionsPanel.stories.tsx :: All Signed": [
+  "src/editor/core/components/tools/certSign/panels/SessionActionsPanel.stories.tsx :: All Signed": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/panels/SessionActionsPanel.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/panels/SessionActionsPanel.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/panels/SessionActionsPanel.stories.tsx :: Finalized": [
+  "src/editor/core/components/tools/certSign/panels/SessionActionsPanel.stories.tsx :: Finalized": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/panels/SessionDetailPanel.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/panels/SessionDetailPanel.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/panels/SessionDetailPanel.stories.tsx :: Finalized": [
+  "src/editor/core/components/tools/certSign/panels/SessionDetailPanel.stories.tsx :: Finalized": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/panels/SignControlsPanel.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/panels/SignControlsPanel.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/panels/SignControlsPanel.stories.tsx :: No Signature Chosen": [
+  "src/editor/core/components/tools/certSign/panels/SignControlsPanel.stories.tsx :: No Signature Chosen": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/AddSignaturesStep.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/steps/AddSignaturesStep.stories.tsx :: Default": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/AddSignaturesStep.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/certSign/steps/AddSignaturesStep.stories.tsx :: Disabled": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/AddSignaturesStep.stories.tsx :: Placement Mode": [
+  "src/editor/core/components/tools/certSign/steps/AddSignaturesStep.stories.tsx :: Placement Mode": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/CertificateSelectionStep.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/steps/CertificateSelectionStep.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/CertificateSelectionStep.stories.tsx :: Upload Ready": [
+  "src/editor/core/components/tools/certSign/steps/CertificateSelectionStep.stories.tsx :: Upload Ready": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/CertificateSelectionStep.stories.tsx :: User Certificate": [
+  "src/editor/core/components/tools/certSign/steps/CertificateSelectionStep.stories.tsx :: User Certificate": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/ReviewSignatureStep.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/steps/ReviewSignatureStep.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/ReviewSignatureStep.stories.tsx :: Multiple Signatures": [
+  "src/editor/core/components/tools/certSign/steps/ReviewSignatureStep.stories.tsx :: Multiple Signatures": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/ReviewSignatureStep.stories.tsx :: Uploaded Certificate Disabled": [
+  "src/editor/core/components/tools/certSign/steps/ReviewSignatureStep.stories.tsx :: Uploaded Certificate Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/SignatureCreationStep.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/steps/SignatureCreationStep.stories.tsx :: Default": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/SignatureCreationStep.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/certSign/steps/SignatureCreationStep.stories.tsx :: Disabled": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/SignatureCreationStep.stories.tsx :: Type Mode": [
+  "src/editor/core/components/tools/certSign/steps/SignatureCreationStep.stories.tsx :: Type Mode": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/SignatureCreationStep.stories.tsx :: With Signature": [
+  "src/editor/core/components/tools/certSign/steps/SignatureCreationStep.stories.tsx :: With Signature": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/SignaturePlacementStep.stories.tsx :: Default": [
+  "src/editor/core/components/tools/certSign/steps/SignaturePlacementStep.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/SignaturePlacementStep.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/certSign/steps/SignaturePlacementStep.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/certSign/steps/SignaturePlacementStep.stories.tsx :: Placed": [
+  "src/editor/core/components/tools/certSign/steps/SignaturePlacementStep.stories.tsx :: Placed": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/changeMetadata/steps/AdvancedOptionsStep.stories.tsx :: With Custom Metadata": [
+  "src/editor/core/components/tools/changeMetadata/steps/AdvancedOptionsStep.stories.tsx :: With Custom Metadata": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/changeMetadata/steps/CustomMetadataStep.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/changeMetadata/steps/CustomMetadataStep.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/changeMetadata/steps/CustomMetadataStep.stories.tsx :: With Entries": [
+  "src/editor/core/components/tools/changeMetadata/steps/CustomMetadataStep.stories.tsx :: With Entries": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/changeMetadata/steps/DocumentDatesStep.stories.tsx :: Default": [
+  "src/editor/core/components/tools/changeMetadata/steps/DocumentDatesStep.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/changeMetadata/steps/DocumentDatesStep.stories.tsx :: Filled": [
+  "src/editor/core/components/tools/changeMetadata/steps/DocumentDatesStep.stories.tsx :: Filled": [
     "button-name"
   ],
-  "editor/src/core/components/tools/compare/CompareDocumentPane.stories.tsx :: Default": [
+  "src/editor/core/components/tools/compare/CompareDocumentPane.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/compare/ComparePixelWorkbenchView.stories.tsx :: Default": [
+  "src/editor/core/components/tools/compare/ComparePixelWorkbenchView.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/compare/ComparePixelWorkbenchView.stories.tsx :: No Differences": [
+  "src/editor/core/components/tools/compare/ComparePixelWorkbenchView.stories.tsx :: No Differences": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/compare/ComparePixelWorkbenchView.stories.tsx :: With Warnings": [
+  "src/editor/core/components/tools/compare/ComparePixelWorkbenchView.stories.tsx :: With Warnings": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/compress/CompressSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/compress/CompressSettings.stories.tsx :: Default": [
     "aria-input-field-name",
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/compress/CompressSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/compress/CompressSettings.stories.tsx :: Disabled": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/compress/CompressSettings.stories.tsx :: File Size Method": [
+  "src/editor/core/components/tools/compress/CompressSettings.stories.tsx :: File Size Method": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/compress/CompressSettings.stories.tsx :: Line Art Enabled": [
+  "src/editor/core/components/tools/compress/CompressSettings.stories.tsx :: Line Art Enabled": [
     "aria-input-field-name",
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromEbookSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/convert/ConvertFromEbookSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromEbookSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/convert/ConvertFromEbookSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromEmailSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/convert/ConvertFromEmailSettings.stories.tsx :: Default": [
     "label"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromEmailSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/convert/ConvertFromEmailSettings.stories.tsx :: Disabled": [
     "label"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromImageSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/convert/ConvertFromImageSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromSvgSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/convert/ConvertFromSvgSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromSvgSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/convert/ConvertFromSvgSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromWebSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/convert/ConvertFromWebSettings.stories.tsx :: Default": [
     "aria-input-field-name",
     "label"
   ],
-  "editor/src/core/components/tools/convert/ConvertFromWebSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/convert/ConvertFromWebSettings.stories.tsx :: Disabled": [
     "label"
   ],
-  "editor/src/core/components/tools/convert/ConvertToEpubSettings.stories.tsx :: Azw 3 Output": [
+  "src/editor/core/components/tools/convert/ConvertToEpubSettings.stories.tsx :: Azw 3 Output": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/convert/ConvertToEpubSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/convert/ConvertToEpubSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/convert/ConvertToEpubSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/convert/ConvertToEpubSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/convert/ConvertToPdfaSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/convert/ConvertToPdfaSettings.stories.tsx :: Default": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/convert/ConvertToPdfaSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/convert/ConvertToPdfaSettings.stories.tsx :: Disabled": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/convert/ConvertToPdfaSettings.stories.tsx :: Strict Mode": [
+  "src/editor/core/components/tools/convert/ConvertToPdfaSettings.stories.tsx :: Strict Mode": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/convert/GroupedFormatDropdown.stories.tsx :: Default": [
+  "src/editor/core/components/tools/convert/GroupedFormatDropdown.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/crop/CropAutomationSettings.stories.tsx :: Custom Area": [
+  "src/editor/core/components/tools/crop/CropAutomationSettings.stories.tsx :: Custom Area": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/crop/CropAutomationSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/crop/CropAutomationSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/crop/CropAutomationSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/crop/CropAutomationSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/crop/CropCoordinateInputs.stories.tsx :: Automation Info": [
+  "src/editor/core/components/tools/crop/CropCoordinateInputs.stories.tsx :: Automation Info": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/BookmarkEditor.stories.tsx :: Default": [
+  "src/editor/core/components/tools/editTableOfContents/BookmarkEditor.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/BookmarkEditor.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/editTableOfContents/BookmarkEditor.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/BookmarkEditor.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/editTableOfContents/BookmarkEditor.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/EditTableOfContentsSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/editTableOfContents/EditTableOfContentsSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/EditTableOfContentsSettings.stories.tsx :: Loading With Error": [
+  "src/editor/core/components/tools/editTableOfContents/EditTableOfContentsSettings.stories.tsx :: Loading With Error": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/EditTableOfContentsSettings.stories.tsx :: No File Selected": [
+  "src/editor/core/components/tools/editTableOfContents/EditTableOfContentsSettings.stories.tsx :: No File Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.stories.tsx :: Default": [
+  "src/editor/core/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.stories.tsx :: With Error": [
+  "src/editor/core/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.stories.tsx :: With Error": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.stories.tsx :: With Results": [
+  "src/editor/core/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.stories.tsx :: With Results": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/flatten/FlattenSettings.stories.tsx :: Custom Render Dpi": [
+  "src/editor/core/components/tools/flatten/FlattenSettings.stories.tsx :: Custom Render Dpi": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/flatten/FlattenSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/flatten/FlattenSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/flatten/FlattenSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/flatten/FlattenSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/flatten/FlattenSettings.stories.tsx :: Flatten Only Forms": [
+  "src/editor/core/components/tools/flatten/FlattenSettings.stories.tsx :: Flatten Only Forms": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/fullscreen/DetailedToolItem.stories.tsx :: Default": [
+  "src/editor/core/components/tools/fullscreen/DetailedToolItem.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/fullscreen/DetailedToolItem.stories.tsx :: Selected": [
+  "src/editor/core/components/tools/fullscreen/DetailedToolItem.stories.tsx :: Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/GetPdfInfoReportView.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/GetPdfInfoReportView.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/GetPdfInfoReportView.stories.tsx :: No Data": [
+  "src/editor/core/components/tools/getPdfInfo/GetPdfInfoReportView.stories.tsx :: No Data": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/GetPdfInfoResults.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/GetPdfInfoResults.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/GetPdfInfoResults.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/GetPdfInfoResults.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/GetPdfInfoResults.stories.tsx :: Partial Error": [
+  "src/editor/core/components/tools/getPdfInfo/GetPdfInfoResults.stories.tsx :: Partial Error": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/ComplianceSection.stories.tsx :: All Passed": [
+  "src/editor/core/components/tools/getPdfInfo/sections/ComplianceSection.stories.tsx :: All Passed": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/ComplianceSection.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/sections/ComplianceSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/ComplianceSection.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/sections/ComplianceSection.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/KeyValueSection.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/sections/KeyValueSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/KeyValueSection.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/sections/KeyValueSection.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/OtherSection.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/sections/OtherSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/OtherSection.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/sections/OtherSection.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/PerPageSection.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/sections/PerPageSection.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/SummarySection.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/sections/SummarySection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/SummarySection.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/sections/SummarySection.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/SummarySection.stories.tsx :: Hidden Title": [
+  "src/editor/core/components/tools/getPdfInfo/sections/SummarySection.stories.tsx :: Hidden Title": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/TableOfContentsSection.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/sections/TableOfContentsSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/sections/TableOfContentsSection.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/sections/TableOfContentsSection.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/shared/KeyValueList.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/shared/KeyValueList.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/shared/KeyValueList.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/shared/KeyValueList.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/shared/ScrollableCodeBlock.stories.tsx :: Custom Empty Message": [
+  "src/editor/core/components/tools/getPdfInfo/shared/ScrollableCodeBlock.stories.tsx :: Custom Empty Message": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/shared/ScrollableCodeBlock.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/getPdfInfo/shared/ScrollableCodeBlock.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/getPdfInfo/shared/SectionBlock.stories.tsx :: Default": [
+  "src/editor/core/components/tools/getPdfInfo/shared/SectionBlock.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/ocr/LanguagePicker.stories.tsx :: Default": [
+  "src/editor/core/components/tools/ocr/LanguagePicker.stories.tsx :: Default": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/tools/ocr/OCRSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/ocr/OCRSettings.stories.tsx :: Default": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/tools/redact/RedactAdvancedSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/redact/RedactAdvancedSettings.stories.tsx :: Default": [
     "button-name"
   ],
-  "editor/src/core/components/tools/redact/RedactSingleStepSettings.stories.tsx :: Automatic With Words": [
+  "src/editor/core/components/tools/redact/RedactSingleStepSettings.stories.tsx :: Automatic With Words": [
     "button-name"
   ],
-  "editor/src/core/components/tools/redact/RedactSingleStepSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/redact/RedactSingleStepSettings.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/redact/WordsToRedactInput.stories.tsx :: Default": [
+  "src/editor/core/components/tools/redact/WordsToRedactInput.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/removeBlanks/RemoveBlanksSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/removeBlanks/RemoveBlanksSettings.stories.tsx :: Default": [
     "aria-input-field-name",
     "label"
   ],
-  "editor/src/core/components/tools/removeBlanks/RemoveBlanksSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/removeBlanks/RemoveBlanksSettings.stories.tsx :: Disabled": [
     "label"
   ],
-  "editor/src/core/components/tools/removeBlanks/RemoveBlanksSettings.stories.tsx :: Include Blank Pages": [
+  "src/editor/core/components/tools/removeBlanks/RemoveBlanksSettings.stories.tsx :: Include Blank Pages": [
     "aria-input-field-name",
     "label"
   ],
-  "editor/src/core/components/tools/removePages/RemovePagesSettings.stories.tsx :: Invalid Input": [
+  "src/editor/core/components/tools/removePages/RemovePagesSettings.stories.tsx :: Invalid Input": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/replaceColor/ReplaceColorSettings.stories.tsx :: Custom Color": [
+  "src/editor/core/components/tools/replaceColor/ReplaceColorSettings.stories.tsx :: Custom Color": [
     "button-name",
     "label"
   ],
-  "editor/src/core/components/tools/replaceColor/ReplaceColorSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/replaceColor/ReplaceColorSettings.stories.tsx :: Default": [
     "label"
   ],
-  "editor/src/core/components/tools/replaceColor/ReplaceColorSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/replaceColor/ReplaceColorSettings.stories.tsx :: Disabled": [
     "label"
   ],
-  "editor/src/core/components/tools/sanitize/SanitizeSettings.stories.tsx :: All Selected": [
+  "src/editor/core/components/tools/sanitize/SanitizeSettings.stories.tsx :: All Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/sanitize/SanitizeSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/sanitize/SanitizeSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/sanitize/SanitizeSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/sanitize/SanitizeSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/scannerImageSplit/ScannerImageSplitSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/scannerImageSplit/ScannerImageSplitSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/scannerImageSplit/ScannerImageSplitSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/scannerImageSplit/ScannerImageSplitSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/ErrorNotification.stories.tsx :: Custom Title": [
+  "src/editor/core/components/tools/shared/ErrorNotification.stories.tsx :: Custom Title": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/ErrorNotification.stories.tsx :: Default": [
+  "src/editor/core/components/tools/shared/ErrorNotification.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/FileMetadata.stories.tsx :: Default": [
+  "src/editor/core/components/tools/shared/FileMetadata.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/FileMetadata.stories.tsx :: Unknown Type": [
+  "src/editor/core/components/tools/shared/FileMetadata.stories.tsx :: Unknown Type": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/NavigationControls.stories.tsx :: Default": [
+  "src/editor/core/components/tools/shared/NavigationControls.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/NavigationControls.stories.tsx :: Last File": [
+  "src/editor/core/components/tools/shared/NavigationControls.stories.tsx :: Last File": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/NoToolsFound.stories.tsx :: Default": [
+  "src/editor/core/components/tools/shared/NoToolsFound.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/NumberInputWithUnit.stories.tsx :: Default": [
+  "src/editor/core/components/tools/shared/NumberInputWithUnit.stories.tsx :: Default": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/shared/NumberInputWithUnit.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/shared/NumberInputWithUnit.stories.tsx :: Disabled": [
     "color-contrast",
     "label"
   ],
-  "editor/src/core/components/tools/shared/NumberInputWithUnit.stories.tsx :: With Min Max": [
+  "src/editor/core/components/tools/shared/NumberInputWithUnit.stories.tsx :: With Min Max": [
     "label"
   ],
-  "editor/src/core/components/tools/shared/ResultsPreview.stories.tsx :: Default": [
+  "src/editor/core/components/tools/shared/ResultsPreview.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/ResultsPreview.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/shared/ResultsPreview.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/ResultsPreview.stories.tsx :: Loading": [
+  "src/editor/core/components/tools/shared/ResultsPreview.stories.tsx :: Loading": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/ResultsPreview.stories.tsx :: Single File": [
+  "src/editor/core/components/tools/shared/ResultsPreview.stories.tsx :: Single File": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/ToolStep.stories.tsx :: Collapsed": [
+  "src/editor/core/components/tools/shared/ToolStep.stories.tsx :: Collapsed": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/shared/ToolStep.stories.tsx :: With Help Text And Number": [
+  "src/editor/core/components/tools/shared/ToolStep.stories.tsx :: With Help Text And Number": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/showJS/ShowJSView.stories.tsx :: Default": [
+  "src/editor/core/components/tools/showJS/ShowJSView.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/showJS/ShowJSView.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/showJS/ShowJSView.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/showJS/ShowJSView.stories.tsx :: With Download": [
+  "src/editor/core/components/tools/showJS/ShowJSView.stories.tsx :: With Download": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/sign/SavedSignaturesSection.stories.tsx :: Admin With Shared Delete": [
+  "src/editor/core/components/tools/sign/SavedSignaturesSection.stories.tsx :: Admin With Shared Delete": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/sign/SavedSignaturesSection.stories.tsx :: At Capacity": [
+  "src/editor/core/components/tools/sign/SavedSignaturesSection.stories.tsx :: At Capacity": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/sign/SavedSignaturesSection.stories.tsx :: Default": [
+  "src/editor/core/components/tools/sign/SavedSignaturesSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/sign/SavedSignaturesSection.stories.tsx :: Empty": [
+  "src/editor/core/components/tools/sign/SavedSignaturesSection.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/split/SplitSettings.stories.tsx :: By Poster": [
+  "src/editor/core/components/tools/split/SplitSettings.stories.tsx :: By Poster": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/split/SplitSettings.stories.tsx :: By Sections": [
+  "src/editor/core/components/tools/split/SplitSettings.stories.tsx :: By Sections": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/split/SplitSettings.stories.tsx :: No Method Selected": [
+  "src/editor/core/components/tools/split/SplitSettings.stories.tsx :: No Method Selected": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/timestampPdf/TimestampPdfSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/timestampPdf/TimestampPdfSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/timestampPdf/TimestampPdfSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/timestampPdf/TimestampPdfSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/toolPicker/FavoriteStar.stories.tsx :: Default": [
+  "src/editor/core/components/tools/toolPicker/FavoriteStar.stories.tsx :: Default": [
     "aria-prohibited-attr"
   ],
-  "editor/src/core/components/tools/toolPicker/FavoriteStar.stories.tsx :: Favorited": [
+  "src/editor/core/components/tools/toolPicker/FavoriteStar.stories.tsx :: Favorited": [
     "aria-prohibited-attr"
   ],
-  "editor/src/core/components/tools/toolPicker/FavoriteStar.stories.tsx :: Sizes": [
+  "src/editor/core/components/tools/toolPicker/FavoriteStar.stories.tsx :: Sizes": [
     "aria-prohibited-attr"
   ],
-  "editor/src/core/components/tools/validateSignature/ValidateSignatureReportView.stories.tsx :: Default": [
+  "src/editor/core/components/tools/validateSignature/ValidateSignatureReportView.stories.tsx :: Default": [
     "aria-allowed-attr",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/ValidateSignatureReportView.stories.tsx :: Error": [
+  "src/editor/core/components/tools/validateSignature/ValidateSignatureReportView.stories.tsx :: Error": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/ValidateSignatureReportView.stories.tsx :: Multiple Signatures": [
+  "src/editor/core/components/tools/validateSignature/ValidateSignatureReportView.stories.tsx :: Multiple Signatures": [
     "aria-allowed-attr",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/ValidateSignatureReportView.stories.tsx :: No Signatures": [
+  "src/editor/core/components/tools/validateSignature/ValidateSignatureReportView.stories.tsx :: No Signatures": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/ValidateSignatureSettings.stories.tsx :: Default": [
+  "src/editor/core/components/tools/validateSignature/ValidateSignatureSettings.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/ValidateSignatureSettings.stories.tsx :: Disabled": [
+  "src/editor/core/components/tools/validateSignature/ValidateSignatureSettings.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/ValidateSignatureSettings.stories.tsx :: With Cert File": [
+  "src/editor/core/components/tools/validateSignature/ValidateSignatureSettings.stories.tsx :: With Cert File": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/FieldBlock.stories.tsx :: Default": [
+  "src/editor/core/components/tools/validateSignature/reportView/FieldBlock.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/FieldBlock.stories.tsx :: Empty Value": [
+  "src/editor/core/components/tools/validateSignature/reportView/FieldBlock.stories.tsx :: Empty Value": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/FileSummaryHeader.stories.tsx :: Default": [
+  "src/editor/core/components/tools/validateSignature/reportView/FileSummaryHeader.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/FileSummaryHeader.stories.tsx :: Missing Metadata": [
+  "src/editor/core/components/tools/validateSignature/reportView/FileSummaryHeader.stories.tsx :: Missing Metadata": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/FileSummaryHeader.stories.tsx :: No Signatures": [
+  "src/editor/core/components/tools/validateSignature/reportView/FileSummaryHeader.stories.tsx :: No Signatures": [
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/SignatureSection.stories.tsx :: Default": [
+  "src/editor/core/components/tools/validateSignature/reportView/SignatureSection.stories.tsx :: Default": [
     "aria-allowed-attr",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/SignatureSection.stories.tsx :: Invalid With Error": [
+  "src/editor/core/components/tools/validateSignature/reportView/SignatureSection.stories.tsx :: Invalid With Error": [
     "aria-allowed-attr",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/SignatureSection.stories.tsx :: Self Signed Minimal Data": [
+  "src/editor/core/components/tools/validateSignature/reportView/SignatureSection.stories.tsx :: Self Signed Minimal Data": [
     "aria-allowed-attr",
     "color-contrast"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/SignatureStatusBadge.stories.tsx :: Default": [
+  "src/editor/core/components/tools/validateSignature/reportView/SignatureStatusBadge.stories.tsx :: Default": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/SignatureStatusBadge.stories.tsx :: Invalid": [
+  "src/editor/core/components/tools/validateSignature/reportView/SignatureStatusBadge.stories.tsx :: Invalid": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/tools/validateSignature/reportView/SignatureStatusBadge.stories.tsx :: Untrusted Signer": [
+  "src/editor/core/components/tools/validateSignature/reportView/SignatureStatusBadge.stories.tsx :: Untrusted Signer": [
     "aria-allowed-attr"
   ],
-  "editor/src/core/components/viewer/DocumentReadyWrapper.stories.tsx :: Default": [
+  "src/editor/core/components/viewer/DocumentReadyWrapper.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/LocalEmbedPDF.stories.tsx :: Empty": [
+  "src/editor/core/components/viewer/LocalEmbedPDF.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/LocalEmbedPDF.stories.tsx :: Unsupported File": [
+  "src/editor/core/components/viewer/LocalEmbedPDF.stories.tsx :: Unsupported File": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/NonPdfViewer.stories.tsx :: Csv": [
+  "src/editor/core/components/viewer/NonPdfViewer.stories.tsx :: Csv": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/NonPdfViewer.stories.tsx :: Unsupported": [
+  "src/editor/core/components/viewer/NonPdfViewer.stories.tsx :: Unsupported": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/SearchInterface.stories.tsx :: Default": [
+  "src/editor/core/components/viewer/SearchInterface.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/SearchInterface.stories.tsx :: Hidden": [
+  "src/editor/core/components/viewer/SearchInterface.stories.tsx :: Hidden": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/nonpdf/CsvViewer.stories.tsx :: Default": [
+  "src/editor/core/components/viewer/nonpdf/CsvViewer.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/nonpdf/CsvViewer.stories.tsx :: Empty": [
+  "src/editor/core/components/viewer/nonpdf/CsvViewer.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/nonpdf/CsvViewer.stories.tsx :: Tsv": [
+  "src/editor/core/components/viewer/nonpdf/CsvViewer.stories.tsx :: Tsv": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/nonpdf/HtmlViewer.stories.tsx :: Default": [
+  "src/editor/core/components/viewer/nonpdf/HtmlViewer.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/nonpdf/JsonViewer.stories.tsx :: Invalid Json": [
+  "src/editor/core/components/viewer/nonpdf/JsonViewer.stories.tsx :: Invalid Json": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/nonpdf/NonPdfBanner.stories.tsx :: Default": [
+  "src/editor/core/components/viewer/nonpdf/NonPdfBanner.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/nonpdf/TextViewer.stories.tsx :: Default": [
+  "src/editor/core/components/viewer/nonpdf/TextViewer.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/core/components/viewer/nonpdf/TextViewer.stories.tsx :: Markdown": [
+  "src/editor/core/components/viewer/nonpdf/TextViewer.stories.tsx :: Markdown": [
     "color-contrast"
   ],
-  "editor/src/core/tokens/Tokens.stories.tsx :: Colours": ["color-contrast"],
-  "editor/src/core/ui/Banner.stories.tsx :: Playground": ["color-contrast"],
-  "editor/src/core/ui/Banner.stories.tsx :: Success": ["color-contrast"],
-  "editor/src/core/ui/Banner.stories.tsx :: Tone Matrix": ["color-contrast"],
-  "editor/src/core/ui/Banner.stories.tsx :: With Action": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Accents": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Disabled Dark": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Loading": ["button-name"],
-  "editor/src/core/ui/Button.stories.tsx :: Padding": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Playground": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Shape": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Sizes": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: Variants": ["color-contrast"],
-  "editor/src/core/ui/Button.stories.tsx :: With Icons": ["color-contrast"],
-  "editor/src/core/ui/ChatFABButton.stories.tsx :: Default": ["button-name"],
-  "editor/src/core/ui/ChatFABButton.stories.tsx :: Loading": ["button-name"],
-  "editor/src/core/ui/ChatFABButton.stories.tsx :: Tick": ["button-name"],
-  "editor/src/core/ui/ChatFABButton.stories.tsx :: Tick While Loading": [
+  "src/editor/core/tokens/Tokens.stories.tsx :: Colours": ["color-contrast"],
+  "src/editor/core/ui/Banner.stories.tsx :: Playground": ["color-contrast"],
+  "src/editor/core/ui/Banner.stories.tsx :: Success": ["color-contrast"],
+  "src/editor/core/ui/Banner.stories.tsx :: Tone Matrix": ["color-contrast"],
+  "src/editor/core/ui/Banner.stories.tsx :: With Action": ["color-contrast"],
+  "src/editor/core/ui/Button.stories.tsx :: Accents": ["color-contrast"],
+  "src/editor/core/ui/Button.stories.tsx :: Disabled Dark": ["color-contrast"],
+  "src/editor/core/ui/Button.stories.tsx :: Loading": ["button-name"],
+  "src/editor/core/ui/Button.stories.tsx :: Padding": ["color-contrast"],
+  "src/editor/core/ui/Button.stories.tsx :: Playground": ["color-contrast"],
+  "src/editor/core/ui/Button.stories.tsx :: Shape": ["color-contrast"],
+  "src/editor/core/ui/Button.stories.tsx :: Sizes": ["color-contrast"],
+  "src/editor/core/ui/Button.stories.tsx :: Variants": ["color-contrast"],
+  "src/editor/core/ui/Button.stories.tsx :: With Icons": ["color-contrast"],
+  "src/editor/core/ui/ChatFABButton.stories.tsx :: Default": ["button-name"],
+  "src/editor/core/ui/ChatFABButton.stories.tsx :: Loading": ["button-name"],
+  "src/editor/core/ui/ChatFABButton.stories.tsx :: Tick": ["button-name"],
+  "src/editor/core/ui/ChatFABButton.stories.tsx :: Tick While Loading": [
     "button-name"
   ],
-  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Open": ["color-contrast"],
-  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Toggle": ["color-contrast"],
-  "editor/src/core/ui/Chip.stories.tsx :: Accents": ["color-contrast"],
-  "editor/src/core/ui/Chip.stories.tsx :: Dashed Add": ["nested-interactive"],
-  "editor/src/core/ui/Chip.stories.tsx :: In Context Op Chain": [
+  "src/editor/core/ui/ChatFABWindow.stories.tsx :: Open": ["color-contrast"],
+  "src/editor/core/ui/ChatFABWindow.stories.tsx :: Toggle": ["color-contrast"],
+  "src/editor/core/ui/Chip.stories.tsx :: Accents": ["color-contrast"],
+  "src/editor/core/ui/Chip.stories.tsx :: Dashed Add": ["nested-interactive"],
+  "src/editor/core/ui/Chip.stories.tsx :: In Context Op Chain": [
     "color-contrast"
   ],
-  "editor/src/core/ui/Chip.stories.tsx :: Playground": [
+  "src/editor/core/ui/Chip.stories.tsx :: Playground": [
     "color-contrast",
     "nested-interactive"
   ],
-  "editor/src/core/ui/CodeBlock.stories.tsx :: In Context Quickstart": [
+  "src/editor/core/ui/CodeBlock.stories.tsx :: In Context Quickstart": [
     "color-contrast"
   ],
-  "editor/src/core/ui/CodeBlock.stories.tsx :: In Context Two Up Comparison": [
+  "src/editor/core/ui/CodeBlock.stories.tsx :: In Context Two Up Comparison": [
     "color-contrast"
   ],
-  "editor/src/core/ui/CodeBlock.stories.tsx :: Long Scrolling": [
+  "src/editor/core/ui/CodeBlock.stories.tsx :: Long Scrolling": [
     "color-contrast",
     "scrollable-region-focusable"
   ],
-  "editor/src/core/ui/CodeBlock.stories.tsx :: Playground": ["color-contrast"],
-  "editor/src/core/ui/Drawer.stories.tsx :: Playground": [
+  "src/editor/core/ui/CodeBlock.stories.tsx :: Playground": ["color-contrast"],
+  "src/editor/core/ui/Drawer.stories.tsx :: Playground": [
     "aria-allowed-role",
     "color-contrast"
   ],
-  "editor/src/core/ui/Drawer.stories.tsx :: With Footer": [
+  "src/editor/core/ui/Drawer.stories.tsx :: With Footer": [
     "aria-allowed-role",
     "color-contrast"
   ],
-  "editor/src/core/ui/EmptyState.stories.tsx :: With CT As": ["color-contrast"],
-  "editor/src/core/ui/FilePicker.stories.tsx :: Accept Pdf": ["color-contrast"],
-  "editor/src/core/ui/FilePicker.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/FilePicker.stories.tsx :: Multiple": ["color-contrast"],
-  "editor/src/core/ui/Forms.stories.tsx :: Checkbox Grid Of Categories": [
+  "src/editor/core/ui/EmptyState.stories.tsx :: With CT As": ["color-contrast"],
+  "src/editor/core/ui/FilePicker.stories.tsx :: Accept Pdf": ["color-contrast"],
+  "src/editor/core/ui/FilePicker.stories.tsx :: Default": ["color-contrast"],
+  "src/editor/core/ui/FilePicker.stories.tsx :: Multiple": ["color-contrast"],
+  "src/editor/core/ui/Forms.stories.tsx :: Checkbox Grid Of Categories": [
     "color-contrast"
   ],
-  "editor/src/core/ui/Forms.stories.tsx :: Full Form": [
+  "src/editor/core/ui/Forms.stories.tsx :: Full Form": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/Forms.stories.tsx :: Input Default": ["color-contrast"],
-  "editor/src/core/ui/Forms.stories.tsx :: Input Error": ["color-contrast"],
-  "editor/src/core/ui/Forms.stories.tsx :: Input With Icon": ["color-contrast"],
-  "editor/src/core/ui/Forms.stories.tsx :: Radio Group": ["color-contrast"],
-  "editor/src/core/ui/Forms.stories.tsx :: Radio Horizontal": [
+  "src/editor/core/ui/Forms.stories.tsx :: Input Default": ["color-contrast"],
+  "src/editor/core/ui/Forms.stories.tsx :: Input Error": ["color-contrast"],
+  "src/editor/core/ui/Forms.stories.tsx :: Input With Icon": ["color-contrast"],
+  "src/editor/core/ui/Forms.stories.tsx :: Radio Group": ["color-contrast"],
+  "src/editor/core/ui/Forms.stories.tsx :: Radio Horizontal": [
     "color-contrast"
   ],
-  "editor/src/core/ui/Forms.stories.tsx :: Slider Confidence": [
+  "src/editor/core/ui/Forms.stories.tsx :: Slider Confidence": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/Forms.stories.tsx :: Slider Retention": [
+  "src/editor/core/ui/Forms.stories.tsx :: Slider Retention": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/Inline.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/Inline.stories.tsx :: Space Between": ["color-contrast"],
-  "editor/src/core/ui/Inline.stories.tsx :: Wrap": ["color-contrast"],
-  "editor/src/core/ui/ListRow.stories.tsx :: In Card": ["color-contrast"],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Color Input Default": [
+  "src/editor/core/ui/Inline.stories.tsx :: Default": ["color-contrast"],
+  "src/editor/core/ui/Inline.stories.tsx :: Space Between": ["color-contrast"],
+  "src/editor/core/ui/Inline.stories.tsx :: Wrap": ["color-contrast"],
+  "src/editor/core/ui/ListRow.stories.tsx :: In Card": ["color-contrast"],
+  "src/editor/core/ui/MantineForms.stories.tsx :: Color Input Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Color Input Error": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Color Input Error": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Color Input Preselected": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Color Input Preselected": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Color Input Sm Size": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Color Input Sm Size": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Multi Select Default": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Multi Select Default": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Multi Select Error": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Multi Select Error": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Multi Select Sm Size": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Multi Select Sm Size": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Multi Select With Values": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Multi Select With Values": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Number Input Decimal": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Number Input Decimal": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Number Input Default": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Number Input Default": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Number Input Error": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Number Input Error": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Number Input Sm Size": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Number Input Sm Size": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Number Input With Unit": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Number Input With Unit": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Select Default": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Select Default": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Select Error": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Select Error": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Select Searchable": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Select Searchable": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Select Sm Size": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Select Sm Size": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Slider Default": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Slider Default": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Slider Disabled": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Slider Disabled": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Slider No Label": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Slider No Label": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Slider With Marks": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Slider With Marks": [
     "aria-input-field-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MantineForms.stories.tsx :: Watermark Form": [
+  "src/editor/core/ui/MantineForms.stories.tsx :: Watermark Form": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/core/ui/MethodBadge.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/MethodBadge.stories.tsx :: In Row": ["color-contrast"],
-  "editor/src/core/ui/MethodBadge.stories.tsx :: Matrix": ["color-contrast"],
-  "editor/src/core/ui/MetricCard.stories.tsx :: Playground": ["color-contrast"],
-  "editor/src/core/ui/MetricCard.stories.tsx :: Pro Tier Strip": [
+  "src/editor/core/ui/MethodBadge.stories.tsx :: Default": ["color-contrast"],
+  "src/editor/core/ui/MethodBadge.stories.tsx :: In Row": ["color-contrast"],
+  "src/editor/core/ui/MethodBadge.stories.tsx :: Matrix": ["color-contrast"],
+  "src/editor/core/ui/MetricCard.stories.tsx :: Playground": ["color-contrast"],
+  "src/editor/core/ui/MetricCard.stories.tsx :: Pro Tier Strip": [
     "color-contrast"
   ],
-  "editor/src/core/ui/MetricStrip.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/NavItem.stories.tsx :: In Context Sidebar Group": [
+  "src/editor/core/ui/MetricStrip.stories.tsx :: Default": ["color-contrast"],
+  "src/editor/core/ui/NavItem.stories.tsx :: In Context Sidebar Group": [
     "color-contrast"
   ],
-  "editor/src/core/ui/PanelHeader.stories.tsx :: With Actions": [
+  "src/editor/core/ui/PanelHeader.stories.tsx :: With Actions": [
     "color-contrast"
   ],
-  "editor/src/core/ui/ProgressBar.stories.tsx :: In Context Usage Meter": [
+  "src/editor/core/ui/ProgressBar.stories.tsx :: In Context Usage Meter": [
     "color-contrast"
   ],
-  "editor/src/core/ui/ProgressBar.stories.tsx :: Playground": [
+  "src/editor/core/ui/ProgressBar.stories.tsx :: Playground": [
     "aria-progressbar-name"
   ],
-  "editor/src/core/ui/ProgressBar.stories.tsx :: Threshold Ladder": [
+  "src/editor/core/ui/ProgressBar.stories.tsx :: Threshold Ladder": [
     "aria-progressbar-name"
   ],
-  "editor/src/core/ui/SegmentedControl.stories.tsx :: Variants": [
+  "src/editor/core/ui/SegmentedControl.stories.tsx :: Variants": [
     "color-contrast"
   ],
-  "editor/src/core/ui/SegmentedControl.stories.tsx :: With Icons": [
+  "src/editor/core/ui/SegmentedControl.stories.tsx :: With Icons": [
     "color-contrast"
   ],
-  "editor/src/core/ui/SettingsRow.stories.tsx :: List": ["label"],
-  "editor/src/core/ui/SettingsRow.stories.tsx :: Select Control": ["label"],
-  "editor/src/core/ui/SettingsRow.stories.tsx :: Toggle": ["label"],
-  "editor/src/core/ui/SettingsRow.stories.tsx :: With Description": ["label"],
-  "editor/src/core/ui/SettingsShell.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/StatTile.stories.tsx :: Tone Row": ["color-contrast"],
-  "editor/src/core/ui/StatusBadge.stories.tsx :: All Tones": ["color-contrast"],
-  "editor/src/core/ui/StatusBadge.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/core/ui/StatusBadge.stories.tsx :: Live": ["color-contrast"],
-  "editor/src/core/ui/StatusBadge.stories.tsx :: Sizes": ["color-contrast"],
-  "editor/src/core/ui/StepIndicator.stories.tsx :: Small": [
+  "src/editor/core/ui/SettingsRow.stories.tsx :: List": ["label"],
+  "src/editor/core/ui/SettingsRow.stories.tsx :: Select Control": ["label"],
+  "src/editor/core/ui/SettingsRow.stories.tsx :: Toggle": ["label"],
+  "src/editor/core/ui/SettingsRow.stories.tsx :: With Description": ["label"],
+  "src/editor/core/ui/SettingsShell.stories.tsx :: Default": ["color-contrast"],
+  "src/editor/core/ui/StatTile.stories.tsx :: Tone Row": ["color-contrast"],
+  "src/editor/core/ui/StatusBadge.stories.tsx :: All Tones": ["color-contrast"],
+  "src/editor/core/ui/StatusBadge.stories.tsx :: Default": ["color-contrast"],
+  "src/editor/core/ui/StatusBadge.stories.tsx :: Live": ["color-contrast"],
+  "src/editor/core/ui/StatusBadge.stories.tsx :: Sizes": ["color-contrast"],
+  "src/editor/core/ui/StepIndicator.stories.tsx :: Small": [
     "aria-progressbar-name"
   ],
-  "editor/src/core/ui/StepIndicator.stories.tsx :: Step 1": [
+  "src/editor/core/ui/StepIndicator.stories.tsx :: Step 1": [
     "aria-progressbar-name"
   ],
-  "editor/src/core/ui/StepIndicator.stories.tsx :: Step 2": [
+  "src/editor/core/ui/StepIndicator.stories.tsx :: Step 2": [
     "aria-progressbar-name"
   ],
-  "editor/src/core/ui/StepIndicator.stories.tsx :: Step 3": [
+  "src/editor/core/ui/StepIndicator.stories.tsx :: Step 3": [
     "aria-progressbar-name"
   ],
-  "editor/src/core/ui/Table.stories.tsx :: Basic": ["color-contrast"],
-  "editor/src/core/ui/Table.stories.tsx :: Interactive": ["color-contrast"],
-  "editor/src/core/ui/Tabs.stories.tsx :: In Context Document Verticals": [
+  "src/editor/core/ui/Table.stories.tsx :: Basic": ["color-contrast"],
+  "src/editor/core/ui/Table.stories.tsx :: Interactive": ["color-contrast"],
+  "src/editor/core/ui/Tabs.stories.tsx :: In Context Document Verticals": [
     "color-contrast"
   ],
-  "editor/src/core/ui/Tabs.stories.tsx :: Playground": ["color-contrast"],
-  "editor/src/core/ui/Tabs.stories.tsx :: With Disabled Tab": [
+  "src/editor/core/ui/Tabs.stories.tsx :: Playground": ["color-contrast"],
+  "src/editor/core/ui/Tabs.stories.tsx :: With Disabled Tab": [
     "color-contrast"
   ],
-  "editor/src/core/ui/Toast.stories.tsx :: Triggers": ["color-contrast"],
-  "editor/src/portal/components/AppShell.stories.tsx :: Mobile": [
+  "src/editor/core/ui/Toast.stories.tsx :: Triggers": ["color-contrast"],
+  "src/processor/proprietary/components/AppShell.stories.tsx :: Mobile": [
     "color-contrast"
   ],
-  "editor/src/portal/components/AppShell.stories.tsx :: With Home View": [
+  "src/processor/proprietary/components/AppShell.stories.tsx :: With Home View": [
     "color-contrast"
   ],
-  "editor/src/portal/components/AssistantPanel.stories.tsx :: Reply Fails": [
+  "src/processor/proprietary/components/AssistantPanel.stories.tsx :: Reply Fails": [
     "aria-allowed-role"
   ],
-  "editor/src/portal/components/AssistantPanel.stories.tsx :: Slow Reply": [
+  "src/processor/proprietary/components/AssistantPanel.stories.tsx :: Slow Reply": [
     "aria-allowed-role"
   ],
-  "editor/src/portal/components/AssistantPanel.stories.tsx :: Suggestions Only": [
+  "src/processor/proprietary/components/AssistantPanel.stories.tsx :: Suggestions Only": [
     "aria-allowed-role",
     "color-contrast"
   ],
-  "editor/src/portal/components/ChatFABWidget.stories.tsx :: Closed": [
+  "src/processor/proprietary/components/ChatFABWidget.stories.tsx :: Closed": [
     "aria-hidden-focus"
   ],
-  "editor/src/portal/components/ChatFABWidget.stories.tsx :: Full Flow": [
+  "src/processor/proprietary/components/ChatFABWidget.stories.tsx :: Full Flow": [
     "aria-hidden-focus",
     "color-contrast"
   ],
-  "editor/src/portal/components/ChatFABWidget.stories.tsx :: Loading While Closed": [
+  "src/processor/proprietary/components/ChatFABWidget.stories.tsx :: Loading While Closed": [
     "aria-hidden-focus"
   ],
-  "editor/src/portal/components/ChatFABWidget.stories.tsx :: Unread Result": [
+  "src/processor/proprietary/components/ChatFABWidget.stories.tsx :: Unread Result": [
     "aria-hidden-focus"
   ],
-  "editor/src/portal/components/EditorStatusCard.stories.tsx :: Deployment Unavailable": [
+  "src/processor/proprietary/components/EditorStatusCard.stories.tsx :: Deployment Unavailable": [
     "color-contrast"
   ],
-  "editor/src/portal/components/EditorStatusCard.stories.tsx :: With Setup Checklist": [
+  "src/processor/proprietary/components/EditorStatusCard.stories.tsx :: With Setup Checklist": [
     "color-contrast"
   ],
-  "editor/src/portal/components/ErrorBoundary.stories.tsx :: Caught Error": [
+  "src/processor/proprietary/components/ErrorBoundary.stories.tsx :: Caught Error": [
     "color-contrast"
   ],
-  "editor/src/portal/components/HomeHero.stories.tsx :: Default": [
+  "src/processor/proprietary/components/HomeHero.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/HomeHero.stories.tsx :: Free Tier": [
+  "src/processor/proprietary/components/HomeHero.stories.tsx :: Free Tier": [
     "color-contrast"
   ],
-  "editor/src/portal/components/PortalChrome.stories.tsx :: Default": [
+  "src/processor/proprietary/components/PortalChrome.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/ProcessorFlow.stories.tsx :: Default": [
+  "src/processor/proprietary/components/ProcessorFlow.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/ProcessorFlow.stories.tsx :: Idle Empty": [
+  "src/processor/proprietary/components/ProcessorFlow.stories.tsx :: Idle Empty": [
     "color-contrast"
   ],
-  "editor/src/portal/components/ProcessorFlow.stories.tsx :: Playground": [
+  "src/processor/proprietary/components/ProcessorFlow.stories.tsx :: Playground": [
     "color-contrast"
   ],
-  "editor/src/portal/components/SearchModal.stories.tsx :: Default": [
+  "src/processor/proprietary/components/SearchModal.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/SearchModal.stories.tsx :: Empty Catalogue": [
+  "src/processor/proprietary/components/SearchModal.stories.tsx :: Empty Catalogue": [
     "color-contrast"
   ],
-  "editor/src/portal/components/SetupChecklist.stories.tsx :: Almost Done": [
+  "src/processor/proprietary/components/SetupChecklist.stories.tsx :: Almost Done": [
     "color-contrast"
   ],
-  "editor/src/portal/components/SetupChecklist.stories.tsx :: In Progress": [
+  "src/processor/proprietary/components/SetupChecklist.stories.tsx :: In Progress": [
     "color-contrast"
   ],
-  "editor/src/portal/components/SetupChecklist.stories.tsx :: Not Started": [
+  "src/processor/proprietary/components/SetupChecklist.stories.tsx :: Not Started": [
     "color-contrast"
   ],
-  "editor/src/portal/components/Sidebar.stories.tsx :: Default": [
+  "src/processor/proprietary/components/Sidebar.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/Sidebar.stories.tsx :: Enterprise Tier": [
+  "src/processor/proprietary/components/Sidebar.stories.tsx :: Enterprise Tier": [
     "color-contrast"
   ],
-  "editor/src/portal/components/Sidebar.stories.tsx :: Free Tier": [
+  "src/processor/proprietary/components/Sidebar.stories.tsx :: Free Tier": [
     "color-contrast"
   ],
-  "editor/src/portal/components/WelcomeBanner.stories.tsx :: With Setup Checklist": [
+  "src/processor/proprietary/components/WelcomeBanner.stories.tsx :: With Setup Checklist": [
     "color-contrast"
   ],
-  "editor/src/portal/components/account-link/AccountLinkPanel.stories.tsx :: Default": [
+  "src/processor/proprietary/components/account-link/AccountLinkPanel.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/components/account-link/AccountLinkPanel.stories.tsx :: Load Forbidden": [
+  "src/processor/proprietary/components/account-link/AccountLinkPanel.stories.tsx :: Load Forbidden": [
     "color-contrast"
   ],
-  "editor/src/portal/components/account-link/AccountLinkPanel.stories.tsx :: Not Linked": [
+  "src/processor/proprietary/components/account-link/AccountLinkPanel.stories.tsx :: Not Linked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/account-link/LinkAccountCard.stories.tsx :: Error": [
+  "src/processor/proprietary/components/account-link/LinkAccountCard.stories.tsx :: Error": [
     "color-contrast"
   ],
-  "editor/src/portal/components/account-link/LinkAccountCard.stories.tsx :: Linked": [
+  "src/processor/proprietary/components/account-link/LinkAccountCard.stories.tsx :: Linked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/account-link/LinkAccountCard.stories.tsx :: Linking": [
+  "src/processor/proprietary/components/account-link/LinkAccountCard.stories.tsx :: Linking": [
     "color-contrast"
   ],
-  "editor/src/portal/components/account-link/LinkAccountCard.stories.tsx :: Not Linked": [
+  "src/processor/proprietary/components/account-link/LinkAccountCard.stories.tsx :: Not Linked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/account-link/LinkAccountCard.stories.tsx :: Unconfigured": [
+  "src/processor/proprietary/components/account-link/LinkAccountCard.stories.tsx :: Unconfigured": [
     "color-contrast"
   ],
-  "editor/src/portal/components/account-link/LinkedInstancesTable.stories.tsx :: Default": [
+  "src/processor/proprietary/components/account-link/LinkedInstancesTable.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/components/billing/ActivationChoiceModal.stories.tsx :: Default": [
+  "src/processor/proprietary/components/billing/ActivationChoiceModal.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/BundleCheckoutModal.stories.tsx :: First Purchase": [
+  "src/processor/proprietary/components/billing/BundleCheckoutModal.stories.tsx :: First Purchase": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/BundleCheckoutModal.stories.tsx :: Top Up": [
+  "src/processor/proprietary/components/billing/BundleCheckoutModal.stories.tsx :: Top Up": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/CardPlaceholder.stories.tsx :: Default": [
+  "src/processor/proprietary/components/billing/CardPlaceholder.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/FreePlanView.stories.tsx :: Leader": [
+  "src/processor/proprietary/components/billing/FreePlanView.stories.tsx :: Leader": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/FreePlanView.stories.tsx :: Member": [
+  "src/processor/proprietary/components/billing/FreePlanView.stories.tsx :: Member": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/InvoicesList.stories.tsx :: Default": [
+  "src/processor/proprietary/components/billing/InvoicesList.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/LinkAccountPrompt.stories.tsx :: Default": [
+  "src/processor/proprietary/components/billing/LinkAccountPrompt.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/PrepaidCapacityCard.stories.tsx :: Bundle Healthy": [
+  "src/processor/proprietary/components/billing/PrepaidCapacityCard.stories.tsx :: Bundle Healthy": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/PrepaidCapacityCard.stories.tsx :: Bundle Low": [
+  "src/processor/proprietary/components/billing/PrepaidCapacityCard.stories.tsx :: Bundle Low": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/SpendLimitCard.stories.tsx :: Approaching Cap": [
+  "src/processor/proprietary/components/billing/SpendLimitCard.stories.tsx :: Approaching Cap": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/SpendLimitCard.stories.tsx :: Editing": [
+  "src/processor/proprietary/components/billing/SpendLimitCard.stories.tsx :: Editing": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/SpendLimitCard.stories.tsx :: Within Cap": [
+  "src/processor/proprietary/components/billing/SpendLimitCard.stories.tsx :: Within Cap": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/SpendThisMonthCard.stories.tsx :: With Free Remaining": [
+  "src/processor/proprietary/components/billing/SpendThisMonthCard.stories.tsx :: With Free Remaining": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/StripeCheckoutModal.stories.tsx :: Set Cap": [
+  "src/processor/proprietary/components/billing/StripeCheckoutModal.stories.tsx :: Set Cap": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/StripeCheckoutModal.stories.tsx :: Uncapped": [
+  "src/processor/proprietary/components/billing/StripeCheckoutModal.stories.tsx :: Uncapped": [
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/SubscribedPlanView.stories.tsx :: Approaching Cap": [
+  "src/processor/proprietary/components/billing/SubscribedPlanView.stories.tsx :: Approaching Cap": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/SubscribedPlanView.stories.tsx :: Leader": [
+  "src/processor/proprietary/components/billing/SubscribedPlanView.stories.tsx :: Leader": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/SubscribedPlanView.stories.tsx :: With Prepaid": [
+  "src/processor/proprietary/components/billing/SubscribedPlanView.stories.tsx :: With Prepaid": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/WalletMeter.stories.tsx :: Free Approaching Limit": [
+  "src/processor/proprietary/components/billing/WalletMeter.stories.tsx :: Free Approaching Limit": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/WalletMeter.stories.tsx :: Free Limit Reached": [
+  "src/processor/proprietary/components/billing/WalletMeter.stories.tsx :: Free Limit Reached": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/billing/WalletMeter.stories.tsx :: Free Plenty Left": [
+  "src/processor/proprietary/components/billing/WalletMeter.stories.tsx :: Free Plenty Left": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/AuthenticationSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/AuthenticationSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/ComponentsSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/ComponentsSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/DocsNav.stories.tsx :: Badged Leaf Active": [
+  "src/processor/proprietary/components/docs/DocsNav.stories.tsx :: Badged Leaf Active": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/DocsNav.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/DocsNav.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/DocsSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/DocsSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/DocsSection.stories.tsx :: Without Lead": [
+  "src/processor/proprietary/components/docs/DocsSection.stories.tsx :: Without Lead": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/EndpointReferenceSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/EndpointReferenceSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/ErrorsSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/ErrorsSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/GettingStartedSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/GettingStartedSection.stories.tsx :: Default": [
     "color-contrast",
     "heading-order"
   ],
-  "editor/src/portal/components/docs/LangSnippet.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/LangSnippet.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/LangSnippet.stories.tsx :: Single Language": [
+  "src/processor/proprietary/components/docs/LangSnippet.stories.tsx :: Single Language": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/PlaybooksSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/PlaybooksSection.stories.tsx :: Default": [
     "color-contrast",
     "heading-order"
   ],
-  "editor/src/portal/components/docs/RateLimitsSection.stories.tsx :: Enterprise": [
+  "src/processor/proprietary/components/docs/RateLimitsSection.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/RateLimitsSection.stories.tsx :: Free": [
+  "src/processor/proprietary/components/docs/RateLimitsSection.stories.tsx :: Free": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/RateLimitsSection.stories.tsx :: Pro": [
+  "src/processor/proprietary/components/docs/RateLimitsSection.stories.tsx :: Pro": [
     "color-contrast"
   ],
-  "editor/src/portal/components/docs/SdksSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/SdksSection.stories.tsx :: Default": [
     "color-contrast",
     "heading-order"
   ],
-  "editor/src/portal/components/docs/SdksSection.stories.tsx :: Ga Only": [
+  "src/processor/proprietary/components/docs/SdksSection.stories.tsx :: Ga Only": [
     "color-contrast",
     "heading-order"
   ],
-  "editor/src/portal/components/docs/SkillsSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/SkillsSection.stories.tsx :: Default": [
     "color-contrast",
     "heading-order"
   ],
-  "editor/src/portal/components/docs/WebhooksSection.stories.tsx :: Default": [
+  "src/processor/proprietary/components/docs/WebhooksSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/DocumentAudit.stories.tsx :: Approved": [
+  "src/processor/proprietary/components/documents/DocumentAudit.stories.tsx :: Approved": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/DocumentAudit.stories.tsx :: Default": [
+  "src/processor/proprietary/components/documents/DocumentAudit.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/DocumentDrawer.stories.tsx :: Default": [
+  "src/processor/proprietary/components/documents/DocumentDrawer.stories.tsx :: Default": [
     "aria-allowed-role",
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/DocumentDrawer.stories.tsx :: Sensitive": [
+  "src/processor/proprietary/components/documents/DocumentDrawer.stories.tsx :: Sensitive": [
     "aria-allowed-role",
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/DocumentExtractions.stories.tsx :: Masked": [
+  "src/processor/proprietary/components/documents/DocumentExtractions.stories.tsx :: Masked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/ElevationBanner.stories.tsx :: Granted": [
+  "src/processor/proprietary/components/documents/ElevationBanner.stories.tsx :: Granted": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/ElevationBanner.stories.tsx :: Granted Four Eyes": [
+  "src/processor/proprietary/components/documents/ElevationBanner.stories.tsx :: Granted Four Eyes": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/ElevationBanner.stories.tsx :: Locked": [
+  "src/processor/proprietary/components/documents/ElevationBanner.stories.tsx :: Locked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/ElevationBanner.stories.tsx :: Locked Four Eyes": [
+  "src/processor/proprietary/components/documents/ElevationBanner.stories.tsx :: Locked Four Eyes": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/ReviewQueue.stories.tsx :: Default": [
+  "src/processor/proprietary/components/documents/ReviewQueue.stories.tsx :: Default": [
     "aria-prohibited-attr",
     "color-contrast",
     "empty-table-header",
     "nested-interactive"
   ],
-  "editor/src/portal/components/documents/ReviewQueue.stories.tsx :: Empty": [
+  "src/processor/proprietary/components/documents/ReviewQueue.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/portal/components/documents/ReviewQueueTable.stories.tsx :: Default": [
+  "src/processor/proprietary/components/documents/ReviewQueueTable.stories.tsx :: Default": [
     "aria-prohibited-attr",
     "color-contrast",
     "empty-table-header",
     "nested-interactive"
   ],
-  "editor/src/portal/components/documents/ReviewQueueTable.stories.tsx :: Empty": [
+  "src/processor/proprietary/components/documents/ReviewQueueTable.stories.tsx :: Empty": [
     "empty-table-header"
   ],
-  "editor/src/portal/components/documents/ReviewQueueTable.stories.tsx :: Needs Review": [
+  "src/processor/proprietary/components/documents/ReviewQueueTable.stories.tsx :: Needs Review": [
     "color-contrast",
     "empty-table-header",
     "nested-interactive"
   ],
-  "editor/src/portal/components/editor-admin/CredentialRotationCard.stories.tsx :: Default": [
+  "src/processor/proprietary/components/editor-admin/CredentialRotationCard.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/CredentialRotationCard.stories.tsx :: Recently Rotated": [
+  "src/processor/proprietary/components/editor-admin/CredentialRotationCard.stories.tsx :: Recently Rotated": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/DeploymentSummaryStrip.stories.tsx :: Enterprise": [
+  "src/processor/proprietary/components/editor-admin/DeploymentSummaryStrip.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/DeploymentSummaryStrip.stories.tsx :: Pro": [
+  "src/processor/proprietary/components/editor-admin/DeploymentSummaryStrip.stories.tsx :: Pro": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/DeploymentTargets.stories.tsx :: Enterprise": [
+  "src/processor/proprietary/components/editor-admin/DeploymentTargets.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/DeploymentTargets.stories.tsx :: Free": [
+  "src/processor/proprietary/components/editor-admin/DeploymentTargets.stories.tsx :: Free": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/DeploymentTargets.stories.tsx :: Pro": [
+  "src/processor/proprietary/components/editor-admin/DeploymentTargets.stories.tsx :: Pro": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/InstanceHealthTable.stories.tsx :: Enterprise": [
+  "src/processor/proprietary/components/editor-admin/InstanceHealthTable.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/InstanceHealthTable.stories.tsx :: Pro": [
+  "src/processor/proprietary/components/editor-admin/InstanceHealthTable.stories.tsx :: Pro": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/OfflineActivationCard.stories.tsx :: Locked": [
+  "src/processor/proprietary/components/editor-admin/OfflineActivationCard.stories.tsx :: Locked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/PairingPanel.stories.tsx :: Enterprise": [
+  "src/processor/proprietary/components/editor-admin/PairingPanel.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
-  "editor/src/portal/components/editor-admin/PairingPanel.stories.tsx :: Pro": [
+  "src/processor/proprietary/components/editor-admin/PairingPanel.stories.tsx :: Pro": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ApiKeyCard.stories.tsx :: Personal": [
+  "src/processor/proprietary/components/infrastructure/ApiKeyCard.stories.tsx :: Personal": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ApiKeyCard.stories.tsx :: Revoked": [
+  "src/processor/proprietary/components/infrastructure/ApiKeyCard.stories.tsx :: Revoked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ApiKeysTab.stories.tsx :: Default": [
+  "src/processor/proprietary/components/infrastructure/ApiKeysTab.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ApiKeysTab.stories.tsx :: Empty": [
+  "src/processor/proprietary/components/infrastructure/ApiKeysTab.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ApiKeysTab.stories.tsx :: Loading": [
+  "src/processor/proprietary/components/infrastructure/ApiKeysTab.stories.tsx :: Loading": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/AuditExportModal.stories.tsx :: Export Fails": [
+  "src/processor/proprietary/components/infrastructure/AuditExportModal.stories.tsx :: Export Fails": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/AuditExportModal.stories.tsx :: Open": [
+  "src/processor/proprietary/components/infrastructure/AuditExportModal.stories.tsx :: Open": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/AuditTab.stories.tsx :: Default": [
+  "src/processor/proprietary/components/infrastructure/AuditTab.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/AuditTab.stories.tsx :: Empty": [
+  "src/processor/proprietary/components/infrastructure/AuditTab.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/AuditTab.stories.tsx :: Loading": [
+  "src/processor/proprietary/components/infrastructure/AuditTab.stories.tsx :: Loading": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/AuditTab.stories.tsx :: Non Lead Forbidden": [
+  "src/processor/proprietary/components/infrastructure/AuditTab.stories.tsx :: Non Lead Forbidden": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/AuditTab.stories.tsx :: Team Lead Scoped": [
+  "src/processor/proprietary/components/infrastructure/AuditTab.stories.tsx :: Team Lead Scoped": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/CreateKeyModal.stories.tsx :: Form": [
+  "src/processor/proprietary/components/infrastructure/CreateKeyModal.stories.tsx :: Form": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/DeploymentsTab.stories.tsx :: Default": [
+  "src/processor/proprietary/components/infrastructure/DeploymentsTab.stories.tsx :: Default": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ModelsTab.stories.tsx :: Enterprise": [
+  "src/processor/proprietary/components/infrastructure/ModelsTab.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ModelsTab.stories.tsx :: Free": [
+  "src/processor/proprietary/components/infrastructure/ModelsTab.stories.tsx :: Free": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ModelsTab.stories.tsx :: Pro": [
+  "src/processor/proprietary/components/infrastructure/ModelsTab.stories.tsx :: Pro": [
     "aria-progressbar-name",
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/SecurityTab.stories.tsx :: Default": [
+  "src/processor/proprietary/components/infrastructure/SecurityTab.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/StorageTab.stories.tsx :: Default": [
+  "src/processor/proprietary/components/infrastructure/StorageTab.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/pipelines/PipelineStepSettings.stories.tsx :: No Settings": [
+  "src/processor/proprietary/components/pipelines/PipelineStepSettings.stories.tsx :: No Settings": [
     "color-contrast"
   ],
-  "editor/src/portal/components/pipelines/PipelineStepSettings.stories.tsx :: Unsupported": [
+  "src/processor/proprietary/components/pipelines/PipelineStepSettings.stories.tsx :: Unsupported": [
     "color-contrast"
   ],
-  "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Default": [
+  "src/processor/proprietary/components/pipelines/PipelinesTable.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Empty": [
+  "src/processor/proprietary/components/pipelines/PipelinesTable.stories.tsx :: Empty": [
     "empty-table-header"
   ],
-  "editor/src/portal/components/policies/PolicyCategoryCard.stories.tsx :: Coming Soon": [
+  "src/processor/proprietary/components/policies/PolicyCategoryCard.stories.tsx :: Coming Soon": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyCategoryCard.stories.tsx :: Configured": [
+  "src/processor/proprietary/components/policies/PolicyCategoryCard.stories.tsx :: Configured": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyCategoryCard.stories.tsx :: Not Set Up": [
+  "src/processor/proprietary/components/policies/PolicyCategoryCard.stories.tsx :: Not Set Up": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Active": [
+  "src/processor/proprietary/components/policies/PolicyDetailPanel.stories.tsx :: Active": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Custom No Activity": [
+  "src/processor/proprietary/components/policies/PolicyDetailPanel.stories.tsx :: Custom No Activity": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Paused": [
+  "src/processor/proprietary/components/policies/PolicyDetailPanel.stories.tsx :: Paused": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: With Flagged Items": [
+  "src/processor/proprietary/components/policies/PolicyDetailPanel.stories.tsx :: With Flagged Items": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyExternalApiConfig.stories.tsx :: Custom Api Escape Hatch": [
+  "src/processor/proprietary/components/policies/PolicyExternalApiConfig.stories.tsx :: Custom Api Escape Hatch": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyExternalApiConfig.stories.tsx :: Notify Configured": [
+  "src/processor/proprietary/components/policies/PolicyExternalApiConfig.stories.tsx :: Notify Configured": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyFieldRow.stories.tsx :: Chips": [
+  "src/processor/proprietary/components/policies/PolicyFieldRow.stories.tsx :: Chips": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyFieldRow.stories.tsx :: Select": [
+  "src/processor/proprietary/components/policies/PolicyFieldRow.stories.tsx :: Select": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyFieldRow.stories.tsx :: Text": [
+  "src/processor/proprietary/components/policies/PolicyFieldRow.stories.tsx :: Text": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyPurviewConfig.stories.tsx :: Configured": [
+  "src/processor/proprietary/components/policies/PolicyPurviewConfig.stories.tsx :: Configured": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyPurviewConfig.stories.tsx :: Empty": [
+  "src/processor/proprietary/components/policies/PolicyPurviewConfig.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyPurviewReadConfig.stories.tsx :: Connection Selected": [
+  "src/processor/proprietary/components/policies/PolicyPurviewReadConfig.stories.tsx :: Connection Selected": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicyPurviewReadConfig.stories.tsx :: Empty": [
+  "src/processor/proprietary/components/policies/PolicyPurviewReadConfig.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Classification": [
+  "src/processor/proprietary/components/policies/PolicySetupWizard.stories.tsx :: Classification": [
     "color-contrast"
   ],
-  "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Create": [
+  "src/processor/proprietary/components/policies/PolicySetupWizard.stories.tsx :: Create": [
     "color-contrast",
     "label"
   ],
-  "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Edit": [
+  "src/processor/proprietary/components/policies/PolicySetupWizard.stories.tsx :: Edit": [
     "color-contrast",
     "label"
   ],
-  "editor/src/portal/components/procurement/DealJourney.stories.tsx :: At Trial": [
+  "src/processor/proprietary/components/procurement/DealJourney.stories.tsx :: At Trial": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DealJourney.stories.tsx :: Default": [
+  "src/processor/proprietary/components/procurement/DealJourney.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DealJourney.stories.tsx :: Live": [
+  "src/processor/proprietary/components/procurement/DealJourney.stories.tsx :: Live": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DealStatusHero.stories.tsx :: Agreement": [
+  "src/processor/proprietary/components/procurement/DealStatusHero.stories.tsx :: Agreement": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DealStatusHero.stories.tsx :: Live": [
+  "src/processor/proprietary/components/procurement/DealStatusHero.stories.tsx :: Live": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DealStatusHero.stories.tsx :: Payment": [
+  "src/processor/proprietary/components/procurement/DealStatusHero.stories.tsx :: Payment": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DealStatusHero.stories.tsx :: Quote": [
+  "src/processor/proprietary/components/procurement/DealStatusHero.stories.tsx :: Quote": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DealStatusHero.stories.tsx :: Trial": [
+  "src/processor/proprietary/components/procurement/DealStatusHero.stories.tsx :: Trial": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DocRow.stories.tsx :: Complete": [
+  "src/processor/proprietary/components/procurement/DocRow.stories.tsx :: Complete": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DocRow.stories.tsx :: Download": [
+  "src/processor/proprietary/components/procurement/DocRow.stories.tsx :: Download": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DocRow.stories.tsx :: Locked": [
+  "src/processor/proprietary/components/procurement/DocRow.stories.tsx :: Locked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DocRow.stories.tsx :: Paid Addon": [
+  "src/processor/proprietary/components/procurement/DocRow.stories.tsx :: Paid Addon": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DocRow.stories.tsx :: Sign Action": [
+  "src/processor/proprietary/components/procurement/DocRow.stories.tsx :: Sign Action": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DocumentLedger.stories.tsx :: At Trial": [
+  "src/processor/proprietary/components/procurement/DocumentLedger.stories.tsx :: At Trial": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/DocumentLedger.stories.tsx :: Default": [
+  "src/processor/proprietary/components/procurement/DocumentLedger.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/LockedState.stories.tsx :: Default": [
+  "src/processor/proprietary/components/procurement/LockedState.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementAgreement.stories.tsx :: Agreeing": [
+  "src/processor/proprietary/components/procurement/ProcurementAgreement.stories.tsx :: Agreeing": [
     "color-contrast",
     "scrollable-region-focusable"
   ],
-  "editor/src/portal/components/procurement/ProcurementAgreement.stories.tsx :: Default": [
+  "src/processor/proprietary/components/procurement/ProcurementAgreement.stories.tsx :: Default": [
     "color-contrast",
     "scrollable-region-focusable"
   ],
-  "editor/src/portal/components/procurement/ProcurementAgreement.stories.tsx :: Downloading": [
+  "src/processor/proprietary/components/procurement/ProcurementAgreement.stories.tsx :: Downloading": [
     "color-contrast",
     "scrollable-region-focusable"
   ],
-  "editor/src/portal/components/procurement/ProcurementBanner.stories.tsx :: Deal Underway": [
+  "src/processor/proprietary/components/procurement/ProcurementBanner.stories.tsx :: Deal Underway": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementBanner.stories.tsx :: Upsell": [
+  "src/processor/proprietary/components/procurement/ProcurementBanner.stories.tsx :: Upsell": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: License": [
+  "src/processor/proprietary/components/procurement/ProcurementExtras.stories.tsx :: License": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: License Trial": [
+  "src/processor/proprietary/components/procurement/ProcurementExtras.stories.tsx :: License Trial": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: Trial Manage": [
+  "src/processor/proprietary/components/procurement/ProcurementExtras.stories.tsx :: Trial Manage": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: Trial Setup": [
+  "src/processor/proprietary/components/procurement/ProcurementExtras.stories.tsx :: Trial Setup": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementFlow.stories.tsx :: Default": [
+  "src/processor/proprietary/components/procurement/ProcurementFlow.stories.tsx :: Default": [
     "color-contrast",
     "scrollable-region-focusable"
   ],
-  "editor/src/portal/components/procurement/ProcurementFlow.stories.tsx :: Unlinked": [
+  "src/processor/proprietary/components/procurement/ProcurementFlow.stories.tsx :: Unlinked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementHome.stories.tsx :: Default": [
+  "src/processor/proprietary/components/procurement/ProcurementHome.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementModal.stories.tsx :: Open": [
+  "src/processor/proprietary/components/procurement/ProcurementModal.stories.tsx :: Open": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementStages.stories.tsx :: License": [
+  "src/processor/proprietary/components/procurement/ProcurementStages.stories.tsx :: License": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementStages.stories.tsx :: License Downloading": [
+  "src/processor/proprietary/components/procurement/ProcurementStages.stories.tsx :: License Downloading": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementStages.stories.tsx :: License Online Only": [
+  "src/processor/proprietary/components/procurement/ProcurementStages.stories.tsx :: License Online Only": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/ProcurementStages.stories.tsx :: Payment": [
+  "src/processor/proprietary/components/procurement/ProcurementStages.stories.tsx :: Payment": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/QuoteBuilder.stories.tsx :: Default": [
+  "src/processor/proprietary/components/procurement/QuoteBuilder.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/procurement/StageStepper.stories.tsx :: Locked": [
+  "src/processor/proprietary/components/procurement/StageStepper.stories.tsx :: Locked": [
     "color-contrast"
   ],
-  "editor/src/portal/components/sources/ConnectionForm.stories.tsx :: Conditional Fields Revealed": [
+  "src/processor/proprietary/components/sources/ConnectionForm.stories.tsx :: Conditional Fields Revealed": [
     "color-contrast"
   ],
-  "editor/src/portal/components/sources/ConnectionForm.stories.tsx :: Default": [
+  "src/processor/proprietary/components/sources/ConnectionForm.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/sources/ConnectionForm.stories.tsx :: Filled": [
+  "src/processor/proprietary/components/sources/ConnectionForm.stories.tsx :: Filled": [
     "color-contrast"
   ],
-  "editor/src/portal/components/sources/ConnectionModal.stories.tsx :: Edit": [
+  "src/processor/proprietary/components/sources/ConnectionModal.stories.tsx :: Edit": [
     "color-contrast"
   ],
-  "editor/src/portal/components/sources/ConnectionModal.stories.tsx :: Fixed Type": [
+  "src/processor/proprietary/components/sources/ConnectionModal.stories.tsx :: Fixed Type": [
     "color-contrast"
   ],
-  "editor/src/portal/components/sources/SourceModal.stories.tsx :: Edit Folder": [
+  "src/processor/proprietary/components/sources/SourceModal.stories.tsx :: Edit Folder": [
     "color-contrast"
   ],
-  "editor/src/portal/components/sources/SourceModal.stories.tsx :: Edit Webhook": [
+  "src/processor/proprietary/components/sources/SourceModal.stories.tsx :: Edit Webhook": [
     "color-contrast"
   ],
-  "editor/src/portal/components/sources/SourcesTable.stories.tsx :: Default": [
+  "src/processor/proprietary/components/sources/SourcesTable.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/components/users/ConfirmModal.stories.tsx :: Danger": [
+  "src/processor/proprietary/components/users/ConfirmModal.stories.tsx :: Danger": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/ConfirmModal.stories.tsx :: Neutral": [
+  "src/processor/proprietary/components/users/ConfirmModal.stories.tsx :: Neutral": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/InviteMemberModal.stories.tsx :: Create Account Form": [
+  "src/processor/proprietary/components/users/InviteMemberModal.stories.tsx :: Create Account Form": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/InviteMemberModal.stories.tsx :: No Admin Role": [
+  "src/processor/proprietary/components/users/InviteMemberModal.stories.tsx :: No Admin Role": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/InviteMemberModal.stories.tsx :: Open": [
+  "src/processor/proprietary/components/users/InviteMemberModal.stories.tsx :: Open": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/InviteMemberModal.stories.tsx :: Scoped To Team": [
+  "src/processor/proprietary/components/users/InviteMemberModal.stories.tsx :: Scoped To Team": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/InviteMemberModal.stories.tsx :: Self Hosted Direct Create": [
+  "src/processor/proprietary/components/users/InviteMemberModal.stories.tsx :: Self Hosted Direct Create": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/InviteMemberModal.stories.tsx :: Self Hosted No Mail": [
+  "src/processor/proprietary/components/users/InviteMemberModal.stories.tsx :: Self Hosted No Mail": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/MoveToTeamModal.stories.tsx :: Default": [
+  "src/processor/proprietary/components/users/MoveToTeamModal.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/NewTeamModal.stories.tsx :: Default": [
+  "src/processor/proprietary/components/users/NewTeamModal.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/PendingInvitations.stories.tsx :: Default": [
+  "src/processor/proprietary/components/users/PendingInvitations.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/PendingInvitations.stories.tsx :: Empty": [
+  "src/processor/proprietary/components/users/PendingInvitations.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/PendingInvitations.stories.tsx :: Expires Today": [
+  "src/processor/proprietary/components/users/PendingInvitations.stories.tsx :: Expires Today": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/RenameTeamModal.stories.tsx :: Default": [
+  "src/processor/proprietary/components/users/RenameTeamModal.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/ResetPasswordModal.stories.tsx :: Default": [
+  "src/processor/proprietary/components/users/ResetPasswordModal.stories.tsx :: Default": [
     "color-contrast",
     "label"
   ],
-  "editor/src/portal/components/users/ResetPasswordModal.stories.tsx :: With Email": [
+  "src/processor/proprietary/components/users/ResetPasswordModal.stories.tsx :: With Email": [
     "color-contrast",
     "label"
   ],
-  "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Default": [
+  "src/processor/proprietary/components/users/UsersDirectory.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Large Team": [
+  "src/processor/proprietary/components/users/UsersDirectory.stories.tsx :: Large Team": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Member States": [
+  "src/processor/proprietary/components/users/UsersDirectory.stories.tsx :: Member States": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Org Only": [
+  "src/processor/proprietary/components/users/UsersDirectory.stories.tsx :: Org Only": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Saas Team Leader": [
+  "src/processor/proprietary/components/users/UsersDirectory.stories.tsx :: Saas Team Leader": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Single Team": [
+  "src/processor/proprietary/components/users/UsersDirectory.stories.tsx :: Single Team": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Team Wide Processor": [
+  "src/processor/proprietary/components/users/UsersDirectory.stories.tsx :: Team Wide Processor": [
     "color-contrast"
   ],
-  "editor/src/portal/components/users/UsersDirectory.stories.tsx :: With Guests": [
+  "src/processor/proprietary/components/users/UsersDirectory.stories.tsx :: With Guests": [
     "color-contrast"
   ],
-  "editor/src/portal/data/Endpoints.stories.tsx :: By Vertical": [
+  "src/processor/proprietary/data/Endpoints.stories.tsx :: By Vertical": [
     "color-contrast"
   ],
-  "editor/src/portal/data/Ops.stories.tsx :: Agents": ["color-contrast"],
-  "editor/src/portal/data/Ops.stories.tsx :: Library By Category": [
+  "src/processor/proprietary/data/Ops.stories.tsx :: Agents": [
     "color-contrast"
   ],
-  "editor/src/portal/data/Ops.stories.tsx :: Pipeline Ops": ["color-contrast"],
-  "editor/src/portal/theme/MantineIntegration.stories.tsx :: Side By Side": [
+  "src/processor/proprietary/data/Ops.stories.tsx :: Library By Category": [
     "color-contrast"
   ],
-  "editor/src/portal/views/DeveloperDocs.stories.tsx :: Default": [
+  "src/processor/proprietary/data/Ops.stories.tsx :: Pipeline Ops": [
+    "color-contrast"
+  ],
+  "src/processor/proprietary/theme/MantineIntegration.stories.tsx :: Side By Side": [
+    "color-contrast"
+  ],
+  "src/processor/proprietary/views/DeveloperDocs.stories.tsx :: Default": [
     "color-contrast",
     "landmark-unique"
   ],
-  "editor/src/portal/views/Documents.stories.tsx :: Default": [
+  "src/processor/proprietary/views/Documents.stories.tsx :: Default": [
     "aria-prohibited-attr",
     "color-contrast",
     "empty-table-header",
     "nested-interactive"
   ],
-  "editor/src/portal/views/Documents.stories.tsx :: Empty": [
+  "src/processor/proprietary/views/Documents.stories.tsx :: Empty": [
     "aria-prohibited-attr",
     "color-contrast",
     "empty-table-header",
     "nested-interactive"
   ],
-  "editor/src/portal/views/Home.stories.tsx :: Enterprise Tier": [
+  "src/processor/proprietary/views/Home.stories.tsx :: Enterprise Tier": [
     "color-contrast",
     "landmark-no-duplicate-banner",
     "landmark-unique"
   ],
-  "editor/src/portal/views/Home.stories.tsx :: Free Tier": ["color-contrast"],
-  "editor/src/portal/views/Home.stories.tsx :: Pro Tier": [
+  "src/processor/proprietary/views/Home.stories.tsx :: Free Tier": [
+    "color-contrast"
+  ],
+  "src/processor/proprietary/views/Home.stories.tsx :: Pro Tier": [
     "color-contrast",
     "landmark-no-duplicate-banner",
     "landmark-unique"
   ],
-  "editor/src/portal/views/Home.stories.tsx :: Subscribed In Procurement": [
+  "src/processor/proprietary/views/Home.stories.tsx :: Subscribed In Procurement": [
     "color-contrast",
     "landmark-no-duplicate-banner",
     "landmark-unique"
   ],
-  "editor/src/portal/views/Integrations.stories.tsx :: Default": [
+  "src/processor/proprietary/views/Integrations.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/views/Integrations.stories.tsx :: No Connections": [
+  "src/processor/proprietary/views/Integrations.stories.tsx :: No Connections": [
     "color-contrast"
   ],
-  "editor/src/portal/views/PipelineBuilder.stories.tsx :: Default": [
+  "src/processor/proprietary/views/PipelineBuilder.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/views/Pipelines.stories.tsx :: Default": [
+  "src/processor/proprietary/views/Pipelines.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/views/Pipelines.stories.tsx :: Empty": [
+  "src/processor/proprietary/views/Pipelines.stories.tsx :: Empty": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/views/Policies.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/portal/views/Policies.stories.tsx :: Empty": ["color-contrast"],
-  "editor/src/portal/views/Sources.stories.tsx :: Default": [
+  "src/processor/proprietary/views/Policies.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "src/processor/proprietary/views/Policies.stories.tsx :: Empty": [
+    "color-contrast"
+  ],
+  "src/processor/proprietary/views/Sources.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/views/Sources.stories.tsx :: Empty": [
+  "src/processor/proprietary/views/Sources.stories.tsx :: Empty": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/proprietary/auth/ui/AuthScreens.stories.tsx :: Signup": [
+  "src/editor/proprietary/auth/ui/AuthScreens.stories.tsx :: Signup": [
     "aria-hidden-focus"
   ],
-  "editor/src/proprietary/auth/ui/EmailPasswordForm.stories.tsx :: With Errors": [
+  "src/editor/proprietary/auth/ui/EmailPasswordForm.stories.tsx :: With Errors": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/policies/PolicyPiiField.stories.tsx :: With Selection": [
+  "src/editor/proprietary/components/policies/PolicyPiiField.stories.tsx :: With Selection": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/policies/PolicyRedactConfig.stories.tsx :: With Selection": [
+  "src/editor/proprietary/components/policies/PolicyRedactConfig.stories.tsx :: With Selection": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/policies/PolicyWatermarkConfig.stories.tsx :: Default": [
+  "src/editor/proprietary/components/policies/PolicyWatermarkConfig.stories.tsx :: Default": [
     "button-name",
     "color-contrast",
     "label"
   ],
-  "editor/src/proprietary/components/policies/PolicyWatermarkConfig.stories.tsx :: Disabled": [
+  "src/editor/proprietary/components/policies/PolicyWatermarkConfig.stories.tsx :: Disabled": [
     "color-contrast",
     "label"
   ],
-  "editor/src/proprietary/components/shared/ChangeUserPasswordModal.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/ChangeUserPasswordModal.stories.tsx :: Default": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/ChangeUserPasswordModal.stories.tsx :: Mail Disabled": [
+  "src/editor/proprietary/components/shared/ChangeUserPasswordModal.stories.tsx :: Mail Disabled": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/ChangeUserPasswordModal.stories.tsx :: Non Email Username": [
+  "src/editor/proprietary/components/shared/ChangeUserPasswordModal.stories.tsx :: Non Email Username": [
     "aria-dialog-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/UpdateSeatsModal.stories.tsx :: At Minimum": [
+  "src/editor/proprietary/components/shared/UpdateSeatsModal.stories.tsx :: At Minimum": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/UpdateSeatsModal.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/UpdateSeatsModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/EnterpriseRequiredBanner.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/EnterpriseRequiredBanner.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/GeneralWithLoginLanding.stories.tsx :: Admin Banner": [
+  "src/editor/proprietary/components/shared/config/GeneralWithLoginLanding.stories.tsx :: Admin Banner": [
     "label"
   ],
-  "editor/src/proprietary/components/shared/config/GeneralWithLoginLanding.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/GeneralWithLoginLanding.stories.tsx :: Default": [
     "label"
   ],
-  "editor/src/proprietary/components/shared/config/GeneralWithLoginLanding.stories.tsx :: With Backend Version": [
+  "src/editor/proprietary/components/shared/config/GeneralWithLoginLanding.stories.tsx :: With Backend Version": [
     "label"
   ],
-  "editor/src/proprietary/components/shared/config/OverviewHeader.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/OverviewHeader.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/OverviewHeader.stories.tsx :: Signed In": [
+  "src/editor/proprietary/components/shared/config/OverviewHeader.stories.tsx :: Signed In": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AccountSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/AccountSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AccountSection.stories.tsx :: Mfa Enabled": [
+  "src/editor/proprietary/components/shared/config/configSections/AccountSection.stories.tsx :: Mfa Enabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AccountSection.stories.tsx :: Sso User": [
+  "src/editor/proprietary/components/shared/config/configSections/AccountSection.stories.tsx :: Sso User": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminAiDocumentsSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminAiDocumentsSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminAiGeneralSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminAiGeneralSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminAiLimitsSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminAiLimitsSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminAiModelsSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminAiModelsSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminAuditSection.stories.tsx :: Audit Logging Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminAuditSection.stories.tsx :: Audit Logging Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminAuditSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminAuditSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminAuditSection.stories.tsx :: Enabled": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminAuditSection.stories.tsx :: Enabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminAuditSection.stories.tsx :: Login Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminAuditSection.stories.tsx :: Login Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminFolderAccessSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminFolderAccessSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/AdminFolderAccessSection.stories.tsx :: Login Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/AdminFolderAccessSection.stories.tsx :: Login Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/ApiKeys.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/ApiKeys.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/ApiKeys.stories.tsx :: Load Error": [
+  "src/editor/proprietary/components/shared/config/configSections/ApiKeys.stories.tsx :: Load Error": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/ApiKeys.stories.tsx :: Loading": [
+  "src/editor/proprietary/components/shared/config/configSections/ApiKeys.stories.tsx :: Loading": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/LoginAgreementEditor.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/LoginAgreementEditor.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/LoginAgreementEditor.stories.tsx :: Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/LoginAgreementEditor.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/TeamDetailsSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/TeamDetailsSection.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/TeamDetailsSection.stories.tsx :: Empty": [
+  "src/editor/proprietary/components/shared/config/configSections/TeamDetailsSection.stories.tsx :: Empty": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/TeamsSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/TeamsSection.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/TeamsSection.stories.tsx :: Empty": [
+  "src/editor/proprietary/components/shared/config/configSections/TeamsSection.stories.tsx :: Empty": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/TeamsSection.stories.tsx :: Login Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/TeamsSection.stories.tsx :: Login Disabled": [
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/apiKeys/RefreshModal.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/apiKeys/RefreshModal.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditClearDataSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditClearDataSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditClearDataSection.stories.tsx :: Login Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditClearDataSection.stories.tsx :: Login Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditEventsTable.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditEventsTable.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditEventsTable.stories.tsx :: With File Metadata Columns": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditEventsTable.stories.tsx :: With File Metadata Columns": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditExportSection.stories.tsx :: All Fields Enabled": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditExportSection.stories.tsx :: All Fields Enabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditExportSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditExportSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditExportSection.stories.tsx :: Login Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditExportSection.stories.tsx :: Login Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditFiltersForm.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditFiltersForm.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditFiltersForm.stories.tsx :: Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditFiltersForm.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditFiltersForm.stories.tsx :: Interactive": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditFiltersForm.stories.tsx :: Interactive": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditFiltersForm.stories.tsx :: With Filters Applied": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditFiltersForm.stories.tsx :: With Filters Applied": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditStatsCards.stories.tsx :: Day": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditStatsCards.stories.tsx :: Day": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditStatsCards.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditStatsCards.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditStatsCards.stories.tsx :: Month": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditStatsCards.stories.tsx :: Month": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditSystemStatus.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditSystemStatus.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/audit/AuditSystemStatus.stories.tsx :: Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/audit/AuditSystemStatus.stories.tsx :: Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/plan/AvailablePlansSection.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/plan/AvailablePlansSection.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/plan/AvailablePlansSection.stories.tsx :: Login Disabled": [
+  "src/editor/proprietary/components/shared/config/configSections/plan/AvailablePlansSection.stories.tsx :: Login Disabled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/plan/AvailablePlansSection.stories.tsx :: With Currency Selector": [
+  "src/editor/proprietary/components/shared/config/configSections/plan/AvailablePlansSection.stories.tsx :: With Currency Selector": [
     "color-contrast",
     "label"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/plan/PlanCard.stories.tsx :: Current Tier": [
+  "src/editor/proprietary/components/shared/config/configSections/plan/PlanCard.stories.tsx :: Current Tier": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/plan/PlanCard.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/plan/PlanCard.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/plan/PlanCard.stories.tsx :: Enterprise Plan": [
+  "src/editor/proprietary/components/shared/config/configSections/plan/PlanCard.stories.tsx :: Enterprise Plan": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/plan/PlanCard.stories.tsx :: Free Plan": [
+  "src/editor/proprietary/components/shared/config/configSections/plan/PlanCard.stories.tsx :: Free Plan": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/usage/UsageAnalyticsChart.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/usage/UsageAnalyticsChart.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/usage/UsageAnalyticsChart.stories.tsx :: Empty": [
+  "src/editor/proprietary/components/shared/config/configSections/usage/UsageAnalyticsChart.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/usage/UsageAnalyticsTable.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/config/configSections/usage/UsageAnalyticsTable.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/config/configSections/usage/UsageAnalyticsTable.stories.tsx :: Empty": [
+  "src/editor/proprietary/components/shared/config/configSections/usage/UsageAnalyticsTable.stories.tsx :: Empty": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/StripeCheckout.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/stripeCheckout/StripeCheckout.stories.tsx :: Default": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/StripeCheckout.stories.tsx :: Hosted Checkout Success": [
+  "src/editor/proprietary/components/shared/stripeCheckout/StripeCheckout.stories.tsx :: Hosted Checkout Success": [
     "button-name",
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/components/PriceDisplay.stories.tsx :: Enterprise": [
+  "src/editor/proprietary/components/shared/stripeCheckout/components/PriceDisplay.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/components/PriceDisplay.stories.tsx :: Enterprise With Total": [
+  "src/editor/proprietary/components/shared/stripeCheckout/components/PriceDisplay.stories.tsx :: Enterprise With Total": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/components/PriceDisplay.stories.tsx :: Simple": [
+  "src/editor/proprietary/components/shared/stripeCheckout/components/PriceDisplay.stories.tsx :: Simple": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/components/PricingBadge.stories.tsx :: Current": [
+  "src/editor/proprietary/components/shared/stripeCheckout/components/PricingBadge.stories.tsx :: Current": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/components/PricingBadge.stories.tsx :: Popular": [
+  "src/editor/proprietary/components/shared/stripeCheckout/components/PricingBadge.stories.tsx :: Popular": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/components/PricingBadge.stories.tsx :: Savings": [
+  "src/editor/proprietary/components/shared/stripeCheckout/components/PricingBadge.stories.tsx :: Savings": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/EmailStage.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/EmailStage.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/EmailStage.stories.tsx :: Filled": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/EmailStage.stories.tsx :: Filled": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/EmailStage.stories.tsx :: With Error": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/EmailStage.stories.tsx :: With Error": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/ErrorStage.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/ErrorStage.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/ErrorStage.stories.tsx :: Network Error": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/ErrorStage.stories.tsx :: Network Error": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/PaymentStage.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/PaymentStage.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/PaymentStage.stories.tsx :: Redirecting": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/PaymentStage.stories.tsx :: Redirecting": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/PlanSelectionStage.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/PlanSelectionStage.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/PlanSelectionStage.stories.tsx :: Enterprise": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/PlanSelectionStage.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/PlanSelectionStage.stories.tsx :: With Savings": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/PlanSelectionStage.stories.tsx :: With Savings": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/SuccessStage.stories.tsx :: Default": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/SuccessStage.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/SuccessStage.stories.tsx :: Polling": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/SuccessStage.stories.tsx :: Polling": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/SuccessStage.stories.tsx :: Timeout": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/SuccessStage.stories.tsx :: Timeout": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/shared/stripeCheckout/stages/SuccessStage.stories.tsx :: Upgrade Complete": [
+  "src/editor/proprietary/components/shared/stripeCheckout/stages/SuccessStage.stories.tsx :: Upgrade Complete": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/workflow/ParticipantView.stories.tsx :: Completed": [
+  "src/editor/proprietary/components/workflow/ParticipantView.stories.tsx :: Completed": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/workflow/ParticipantView.stories.tsx :: Default": [
+  "src/editor/proprietary/components/workflow/ParticipantView.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/proprietary/components/workflow/ParticipantView.stories.tsx :: Expired": [
+  "src/editor/proprietary/components/workflow/ParticipantView.stories.tsx :: Expired": [
     "color-contrast"
   ],
-  "editor/src/proprietary/routes/login/OAuthButtons.stories.tsx :: Vertical": [
+  "src/editor/proprietary/routes/login/OAuthButtons.stories.tsx :: Vertical": [
     "image-redundant-alt"
   ]
 }

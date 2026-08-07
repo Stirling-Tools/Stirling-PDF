@@ -14,9 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
 
 ART_ROOT = Path(sys.argv[1])
-CONF = Path(
-    sys.argv[2] if len(sys.argv) > 2 else "frontend/editor/src-tauri/tauri.conf.json"
-)
+CONF = Path(sys.argv[2] if len(sys.argv) > 2 else "frontend/src-tauri/tauri.conf.json")
 
 
 def load_pubkey():

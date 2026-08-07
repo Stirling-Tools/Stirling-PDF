@@ -6,7 +6,7 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
  * Dedicated Vitest config that turns every story into a browser test: it mounts
  * the story in real Chromium and runs axe against it, so a story fails if it
  * throws on mount or trips an accessibility rule. Kept separate from
- * editor/vitest.config.ts (the jsdom unit tests) so the two suites don't collide.
+ * vitest.config.ts (the jsdom unit tests) so the two suites don't collide.
  *
  * The storybook test must live in a `test.projects[]` entry (not a flat config)
  * so Vitest wires up the browser test runner correctly.
@@ -17,7 +17,7 @@ export default defineConfig({
   optimizeDeps: {
     // Pre-scan every story + the preview so Vite discovers the story set's large
     // dep surface (embedpdf plugins, @mui icons, …) in one pass up front.
-    entries: ["editor/src/**/*.stories.@(ts|tsx)", ".storybook/preview.tsx"],
+    entries: ["src/**/*.stories.@(ts|tsx)", ".storybook/preview.tsx"],
     // `entries` alone does not catch deps reached through a transformed JSX
     // runtime import, nor the preview's own dependency graph (the test plugin
     // injects the preview in a way the entry scanner doesn't crawl). Vite then

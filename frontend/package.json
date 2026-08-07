@@ -83,7 +83,7 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "docs:sync": "tsx editor/scripts/sync-portal-docs.mts",
+    "docs:sync": "tsx scripts/sync-portal-docs.mts",
     "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
@@ -93,7 +93,7 @@
     "tauri:serve-dev-update": "bash scripts/dev-update-test/serve-update.sh",
     "tauri:test-update-e2e": "bash scripts/dev-update-test/test-update-e2e.sh",
     "tauri:test-update-e2e:install": "bash scripts/dev-update-test/test-update-e2e.sh --install",
-    "tauri:dev-with-update": "cd editor && npx tsx scripts/setup-env.mts --desktop && node scripts/generate-icons.js && npx tauri dev --config src-tauri/tauri.conf.dev-update.json"
+    "tauri:dev-with-update": "npx tsx scripts/setup-env.mts --desktop && node scripts/generate-icons.js && npx tauri dev --config src-tauri/tauri.conf.dev-update.json"
   },
   "browserslist": {
     "production": [
@@ -182,7 +182,7 @@
   },
   "msw": {
     "workerDirectory": [
-      "editor/public"
+      "public"
     ]
   }
 }

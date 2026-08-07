@@ -1,0 +1,107 @@
+import React, { useState } from "react";
+import { Container } from "@mantine/core";
+import { Dropzone } from "@mantine/dropzone";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
+import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
+import { Logo } from "@editor/ui/Logo";
+import { LandingActions } from "@editor/components/shared/LandingActions";
+import "@editor/components/shared/LandingPage.css";
+
+const LandingPage = () => {
+  const { addFiles } = useFileHandler();
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const terminology = useFileActionTerminology();
+  const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
+
+  const handleFileDrop = async (files: File[]) => {
+    await addFiles(files);
+  };
+
+  const handleNativeUploadClick = async () => {
+    const files = await openFilesFromDisk({
+      multiple: true,
+      onFallbackOpen: () => fileInputRef.current?.click(),
+    });
+    if (files.length > 0) {
+      await addFiles(files);
+    }
+  };
+
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      await addFiles(files);
+    }
+    event.target.value = "";
+  };
+
+  const handleFilesReceivedFromMobile = async (files: File[]) => {
+    if (files.length > 0) {
+      await addFiles(files);
+    }
+  };
+
+  return (
+    <Container
+      size="70rem"
+      p={0}
+      h="100%"
+      className="flex min-h-0 flex-col"
+      style={{ position: "relative" }}
+    >
+      <Dropzone
+        onDrop={handleFileDrop}
+        multiple
+        activateOnClick={false}
+        enablePointerEvents
+        aria-label={terminology.dropFilesHere}
+        className="landing-dropzone flex min-h-0 flex-1 cursor-default flex-col items-center justify-center border-none bg-transparent px-4 py-8 shadow-none outline-none"
+        styles={{
+          root: {
+            border: "none !important",
+            backgroundColor: "transparent",
+            overflow: "visible",
+          },
+          inner: {
+            overflow: "visible",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
+          },
+        }}
+      >
+        <Logo
+          variant="iconAndText"
+          orientation="vertical"
+          iconHeight="5rem"
+          textHeight="2.5rem"
+          gap="1rem"
+          className="landing-logo-enter"
+          style={{ marginBottom: "2.5rem" }}
+        />
+
+        <div className="landing-actions-enter">
+          <LandingActions
+            fileInputRef={fileInputRef}
+            onUploadClick={() => void handleNativeUploadClick()}
+            onMobileUploadClick={() => setMobileUploadModalOpen(true)}
+            onFileSelect={handleFileSelect}
+          />
+        </div>
+      </Dropzone>
+
+      <MobileUploadModal
+        opened={mobileUploadModalOpen}
+        onClose={() => setMobileUploadModalOpen(false)}
+        onFilesReceived={handleFilesReceivedFromMobile}
+      />
+    </Container>
+  );
+};
+
+export default LandingPage;
