@@ -35,9 +35,11 @@ const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
 
 type SignatureTab = "draw" | "type" | "photo";
 
+// Ink pigments, not UI theme colours: they are baked into the exported PNG
+// and transferred to the desktop, so they must be fixed literals.
 const INK_COLORS = [
-  { value: "#101010", label: "black" },
-  { value: "#1d4ed8", label: "blue" },
+  { value: "#101010", label: "black" }, // theme-allow-color ink pigment, serialized into the signature
+  { value: "#1d4ed8", label: "blue" }, // theme-allow-color ink pigment, serialized into the signature
 ];
 
 const PEN_SIZES = [
