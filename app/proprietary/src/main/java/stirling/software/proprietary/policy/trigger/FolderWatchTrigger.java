@@ -31,7 +31,9 @@ import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -85,10 +87,10 @@ public class FolderWatchTrigger implements PolicyTrigger {
     }
 
     @Override
-    public void validate(Policy policy) {
-        if (watchDirsOf(policy).isEmpty()) {
+    public void validate(Policy policy, PipelineInput input) {
+        if (watchDirsOf(input).isEmpty()) {
             throw new IllegalArgumentException(
-                    "folder-watch trigger requires at least one watchable (folder) input source");
+                    "folder-watch trigger requires a watchable (folder) input source");
         }
     }
 
@@ -185,24 +187,30 @@ public class FolderWatchTrigger implements PolicyTrigger {
         return changed;
     }
 
-    /** Run every folder-watch policy that draws from one of the changed directories. */
+    /** Fire every folder-watch input that draws from one of the changed directories. */
     void runForChangedDirs(Set<Path> changedDirs) {
         if (changedDirs.isEmpty()) {
             return;
         }
-        for (Policy policy : policyStore.findByTriggerType(TYPE)) {
+        for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
             List<Path> dirs;
             try {
-                dirs = watchDirsOf(policy);
+                dirs = watchDirsOf(binding.input());
             } catch (RuntimeException e) {
                 log.warn(
-                        "Folder-watch policy {} is misconfigured: {}", policy.id(), e.getMessage());
+                        "Folder-watch input {}/{} is misconfigured: {}",
+                        binding.policy().id(),
+                        binding.input().sourceId(),
+                        e.getMessage());
                 continue;
             }
             if (dirs.stream().anyMatch(changedDirs::contains)) {
-                log.debug("Folder-watch policy {} ({}) saw activity", policy.id(), policy.name());
+                log.debug(
+                        "Folder-watch input {}/{} saw activity",
+                        binding.policy().id(),
+                        binding.input().sourceId());
                 // Light: the periodic reconcile does the full sweep.
-                policyRunner.run(policy, SweepKind.LIGHT);
+                policyRunner.runInput(binding.policy(), binding.input(), SweepKind.LIGHT);
             }
         }
     }
@@ -216,15 +224,16 @@ public class FolderWatchTrigger implements PolicyTrigger {
         }
     }
 
-    /** Reconcile safety net: run every folder-watch policy regardless of watch events. */
+    /** Reconcile safety net: run every folder-watch input regardless of watch events. */
     void runAll() {
-        for (Policy policy : policyStore.findByTriggerType(TYPE)) {
+        for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
             try {
-                policyRunner.run(policy);
+                policyRunner.runInput(binding.policy(), binding.input(), SweepKind.FULL);
             } catch (RuntimeException e) {
                 log.warn(
-                        "Folder-watch reconcile run failed for policy {}: {}",
-                        policy.id(),
+                        "Folder-watch reconcile run failed for input {}/{}: {}",
+                        binding.policy().id(),
+                        binding.input().sourceId(),
                         e.getMessage());
             }
         }
@@ -269,41 +278,43 @@ public class FolderWatchTrigger implements PolicyTrigger {
         return Set.copyOf(keysByDir.keySet());
     }
 
-    /** Every existing directory any current folder-watch policy wants watched. */
+    /** Every existing directory any current folder-watch input wants watched. */
     private Set<Path> desiredDirs() {
         Set<Path> dirs = new HashSet<>();
-        for (Policy policy : policyStore.findByTriggerType(TYPE)) {
+        for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
             try {
-                for (Path dir : watchDirsOf(policy)) {
+                for (Path dir : watchDirsOf(binding.input())) {
                     if (Files.isDirectory(dir)) {
                         dirs.add(dir);
                     }
                 }
             } catch (RuntimeException e) {
                 log.warn(
-                        "Folder-watch policy {} is misconfigured: {}", policy.id(), e.getMessage());
+                        "Folder-watch input {}/{} is misconfigured: {}",
+                        binding.policy().id(),
+                        binding.input().sourceId(),
+                        e.getMessage());
             }
         }
         return dirs;
     }
 
     // Absolute + normalised so registration keys and event-time matching compare regardless of how
-    // the path was configured.
-    private List<Path> watchDirsOf(Policy policy) {
+    // the path was configured. Empty for a non-folder or missing source (that input is never
+    // watched), so a folder-watch trigger paired with an S3 input is simply inert.
+    private List<Path> watchDirsOf(PipelineInput input) {
         List<Path> dirs = new ArrayList<>();
-        for (String sourceId : policy.sourceIds()) {
-            Source source = sourceStore.get(sourceId).orElse(null);
-            if (source == null) {
-                continue;
-            }
-            InputSpec spec = source.toInputSpec();
-            InputSource inputSource = sourceFor(spec);
-            if (inputSource == null) {
-                continue;
-            }
-            for (Path dir : inputSource.watchTargets(spec)) {
-                dirs.add(dir.toAbsolutePath().normalize());
-            }
+        Source source = sourceStore.get(input.sourceId()).orElse(null);
+        if (source == null) {
+            return dirs;
+        }
+        InputSpec spec = source.toInputSpec();
+        InputSource inputSource = sourceFor(spec);
+        if (inputSource == null) {
+            return dirs;
+        }
+        for (Path dir : inputSource.watchTargets(spec)) {
+            dirs.add(dir.toAbsolutePath().normalize());
         }
         return dirs;
     }

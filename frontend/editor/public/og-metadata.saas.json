@@ -101,6 +101,11 @@
       "title": "Rotate - Stirling PDF",
       "description": "Easily rotate your PDFs."
     },
+    "autoRotate": {
+      "image": "/og_images/home.png",
+      "title": "Auto Rotate - Stirling PDF",
+      "description": "Detect each page's orientation and rotate it upright automatically."
+    },
     "annotate": {
       "image": "/og_images/annotate.png",
       "title": "Annotate - Stirling PDF",
@@ -471,9 +476,34 @@
       "title": "Admin Storage Sharing Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/adminFolderAccess": {
+      "image": "/og_images/home.png",
+      "title": "Admin Folder Access Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/adminMcp": {
       "image": "/og_images/home.png",
       "title": "Admin Mcp Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiGeneral": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai General Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiModels": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Models Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiDocuments": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Documents Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiLimits": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Limits Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "/settings/help": {
@@ -539,6 +569,7 @@
     "/ocr": "ocr",
     "/add-image": "addImage",
     "/rotate": "rotate",
+    "/auto-rotate": "autoRotate",
     "/annotate": "annotate",
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
@@ -666,7 +697,12 @@
     "/settings/adminUsage": "/settings/adminUsage",
     "/settings/adminEndpoints": "/settings/adminEndpoints",
     "/settings/adminStorageSharing": "/settings/adminStorageSharing",
+    "/settings/adminFolderAccess": "/settings/adminFolderAccess",
     "/settings/adminMcp": "/settings/adminMcp",
+    "/settings/adminAiGeneral": "/settings/adminAiGeneral",
+    "/settings/adminAiModels": "/settings/adminAiModels",
+    "/settings/adminAiDocuments": "/settings/adminAiDocuments",
+    "/settings/adminAiLimits": "/settings/adminAiLimits",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",

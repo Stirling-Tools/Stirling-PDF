@@ -100,11 +100,7 @@ export function PolicyCatalogueTable({
           if (entry.policy) {
             const paused = entry.policy.state.status === "paused";
             return (
-              <StatusBadge
-                tone={paused ? "warning" : "success"}
-                size="sm"
-                pulse={!paused}
-              >
+              <StatusBadge tone={paused ? "warning" : "success"} size="sm">
                 {paused
                   ? t("portal.policies.status.paused")
                   : t("portal.policies.status.active")}

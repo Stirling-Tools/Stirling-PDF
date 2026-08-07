@@ -52,6 +52,25 @@ public class IntegrationConfigController {
         return ResponseEntity.ok(service.toResponse(service.create(request, user), user));
     }
 
+    /**
+     * What this caller may set up, so the UI offers the vendor presets and the free-form "custom
+     * API" option only to those who can actually use them. The answer is computed here rather than
+     * inferred client-side: hiding a button is presentation, and the service still refuses the call
+     * regardless of what the client believed.
+     */
+    @GetMapping("/capabilities")
+    public ResponseEntity<IntegrationCapabilitiesResponse> capabilities(
+            @AuthenticationPrincipal User user) {
+        requireUser(user);
+        return ResponseEntity.ok(
+                new IntegrationCapabilitiesResponse(service.canAuthorCustomApi(user)));
+    }
+
+    /**
+     * @param customApi whether the caller may author a free-form API integration
+     */
+    public record IntegrationCapabilitiesResponse(boolean customApi) {}
+
     @GetMapping("/{id}")
     public ResponseEntity<IntegrationConfigResponse> get(
             @PathVariable Long id, @AuthenticationPrincipal User user) {

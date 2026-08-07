@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "@app/ui/Button";
 
 /* tiny inline icons for the demos */
@@ -172,7 +172,7 @@ export const Loading: Story = {
 /** Disabled primary — dark mode keeps a muted accent instead of grey. */
 export const DisabledDark: Story = {
   render: () => (
-    <div style={{ background: "var(--bg-surface)", padding: 24, width: 360 }}>
+    <div style={{ background: "var(--c-surface)", padding: 24, width: 360 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <Button data-d="active" fullWidth text="Merge (8 files)" />
         <Button data-d="disabled" fullWidth disabled text="Merge (8 files)" />
