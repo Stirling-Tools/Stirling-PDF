@@ -294,7 +294,7 @@ tasks:
     desc: "Run oxlint linting"
     deps: [install]
     cmds:
-      - npx oxlint --max-warnings=0
+      - npx oxlint --config oxlint.config.ts --max-warnings=0
 
   lint:dpdm:
     desc: "Run circular import linting"
@@ -308,7 +308,7 @@ tasks:
     desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
-      - npx oxlint --fix
+      - npx oxlint --config oxlint.config.ts --fix
 
   format:
     desc: "Auto-fix code formatting"
