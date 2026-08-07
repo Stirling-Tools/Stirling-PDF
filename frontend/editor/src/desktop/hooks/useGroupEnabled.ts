@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
@@ -14,7 +15,11 @@ const OFFLINE_REASON_FALLBACK =
  */
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { t } = useTranslation();
-  const isOffline = selfHostedServerMonitor.getSnapshot().status === "offline";
+  const serverStatus = useSyncExternalStore(
+    selfHostedServerMonitor.subscribe,
+    selfHostedServerMonitor.getSnapshot,
+  ).status;
+  const isOffline = serverStatus === "offline";
 
   const query = useQuery({
     queryKey: editorQk.groupEnabled(group),

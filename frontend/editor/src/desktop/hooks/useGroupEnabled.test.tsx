@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { useGroupEnabled } from "@app/hooks/useGroupEnabled";
-import { fetchGroupEnabled } from "@app/api/config";
+import { fetchGroupEnabled } from "@app/queries/endpoints";
 
-vi.mock("@app/api/config", () => ({ fetchGroupEnabled: vi.fn() }));
+vi.mock("@app/queries/endpoints", () => ({ fetchGroupEnabled: vi.fn() }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_k: string, fallback: string) => fallback }),

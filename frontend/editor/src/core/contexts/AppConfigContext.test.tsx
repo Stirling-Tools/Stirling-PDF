@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { waitFor, renderHook, act } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   AppConfigProvider,
   useAppConfig,
@@ -9,39 +8,10 @@ import apiClient from "@app/services/apiClient";
 import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
-
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
-  });
-}
-
-function TestProviders({
-  children,
-  appConfigProps,
-}: {
-  children: ReactNode;
-  appConfigProps?: Omit<
-    React.ComponentProps<typeof AppConfigProvider>,
-    "children"
-  >;
-}) {
-  const [client] = useState(createTestQueryClient);
-  return (
-    <QueryClientProvider client={client}>
-      <AppConfigProvider {...appConfigProps}>{children}</AppConfigProvider>
-    </QueryClientProvider>
-  );
-}
 
 describe("AppConfigContext", () => {
   beforeEach(() => {
@@ -58,9 +28,9 @@ describe("AppConfigContext", () => {
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-<TestQueryProvider>
-  <AppConfigProvider>{children}</AppConfigProvider>
-</TestQueryProvider>
+    <TestQueryProvider>
+      <AppConfigProvider>{children}</AppConfigProvider>
+    </TestQueryProvider>
   );
 
   it("should fetch and provide app config on non-auth pages", async () => {
@@ -295,11 +265,11 @@ describe("AppConfigContext", () => {
     };
 
     const customWrapper = ({ children }: { children: ReactNode }) => (
-<TestQueryProvider>
-  <AppConfigProvider initialConfig={initialConfig}>
-    {children}
-  </AppConfigProvider>
-</TestQueryProvider>
+      <TestQueryProvider>
+        <AppConfigProvider initialConfig={initialConfig}>
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
     );
 
     const { result } = renderHook(() => useAppConfig(), {
