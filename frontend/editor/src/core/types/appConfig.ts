@@ -45,6 +45,8 @@ export interface AppConfig {
   error?: string;
   isNewServer?: boolean;
   isNewUser?: boolean;
+  defaultToolPanelMode?: "sidebar" | "fullscreen";
+  defaultStartupView?: "tools" | "read" | "automate";
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
   storageEnabled?: boolean;

@@ -27,6 +27,8 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
+import type { ToolPanelMode } from "@app/constants/toolPanel";
+import type { StartupView } from "@app/services/preferencesService";
 import {
   supportedLanguages,
   toUnderscoreFormat,
@@ -39,6 +41,8 @@ interface GeneralSettingsData {
     appNameNavbar?: string;
     languages?: string[];
     logoStyle?: "modern" | "classic";
+    defaultToolPanelMode?: ToolPanelMode;
+    defaultStartupView?: StartupView;
     hideDisabledTools?: {
       googleDrive?: boolean;
       mobileQRScanner?: boolean;
@@ -201,6 +205,8 @@ export default function AdminGeneralSection() {
         "ui.appNameNavbar": settings.ui?.appNameNavbar,
         "ui.languages": settings.ui?.languages,
         "ui.logoStyle": settings.ui?.logoStyle,
+        "ui.defaultToolPanelMode": settings.ui?.defaultToolPanelMode,
+        "ui.defaultStartupView": settings.ui?.defaultStartupView,
         "ui.hideDisabledTools.googleDrive":
           settings.ui?.hideDisabledTools?.googleDrive,
         "ui.hideDisabledTools.mobileQRScanner":
@@ -372,6 +378,16 @@ export default function AdminGeneralSection() {
   const logoStyleValue = loginEnabled
     ? (settings.ui?.logoStyle ?? preferences.logoVariant ?? "classic")
     : (preferences.logoVariant ?? "classic");
+  const configuredDefaultStartupView = settings.ui?.defaultStartupView;
+  const defaultToolPanelModeValue: ToolPanelMode =
+    settings.ui?.defaultToolPanelMode === "fullscreen"
+      ? "fullscreen"
+      : "sidebar";
+  const defaultStartupViewValue: StartupView =
+    configuredDefaultStartupView === "read" ||
+    configuredDefaultStartupView === "automate"
+      ? configuredDefaultStartupView
+      : "tools";
 
   const handleLogoStyleChange = (value: string) => {
     const nextValue = value === "modern" ? "modern" : "classic";
@@ -557,6 +573,103 @@ export default function AdminGeneralSection() {
                     ),
                   },
                 ]}
+              />
+            </div>
+
+            <div>
+              <Text size="sm" fw={500} mb={4}>
+                <Group gap="xs">
+                  <span>
+                    {t(
+                      "admin.settings.general.defaultToolPickerMode.label",
+                      "Default tool picker mode",
+                    )}
+                  </span>
+                  <PendingBadge
+                    show={isFieldPending("ui.defaultToolPanelMode")}
+                  />
+                </Group>
+              </Text>
+              <Text size="xs" c="dimmed" mb="xs">
+                {t(
+                  "admin.settings.general.defaultToolPickerMode.description",
+                  "Choose whether the tool picker opens in fullscreen or sidebar by default",
+                )}
+              </Text>
+              <SegmentedControl
+                value={defaultToolPanelModeValue}
+                onChange={(value: string) =>
+                  setSettings({
+                    ...settings,
+                    ui: {
+                      ...settings.ui,
+                      defaultToolPanelMode: value as ToolPanelMode,
+                    },
+                  })
+                }
+                data={[
+                  {
+                    label: t("settings.general.mode.sidebar", "Sidebar"),
+                    value: "sidebar",
+                  },
+                  {
+                    label: t("settings.general.mode.fullscreen", "Fullscreen"),
+                    value: "fullscreen",
+                  },
+                ]}
+                disabled={!loginEnabled}
+              />
+            </div>
+
+            <div>
+              <Text size="sm" fw={500} mb={4}>
+                <Group gap="xs">
+                  <span>
+                    {t(
+                      "admin.settings.general.defaultStartupView.label",
+                      "Default view on launch",
+                    )}
+                  </span>
+                  <PendingBadge
+                    show={isFieldPending("ui.defaultStartupView")}
+                  />
+                </Group>
+              </Text>
+              <Text size="xs" c="dimmed" mb="xs">
+                {t(
+                  "admin.settings.general.defaultStartupView.description",
+                  "Choose which view is active when the app starts",
+                )}
+              </Text>
+              <SegmentedControl
+                value={defaultStartupViewValue}
+                onChange={(value: string) =>
+                  setSettings({
+                    ...settings,
+                    ui: {
+                      ...settings.ui,
+                      defaultStartupView: value as StartupView,
+                    },
+                  })
+                }
+                data={[
+                  {
+                    label: t("settings.general.startupView.tools", "Tools"),
+                    value: "tools",
+                  },
+                  {
+                    label: t("settings.general.startupView.read", "Reader"),
+                    value: "read",
+                  },
+                  {
+                    label: t(
+                      "settings.general.startupView.automate",
+                      "Automate",
+                    ),
+                    value: "automate",
+                  },
+                ]}
+                disabled={!loginEnabled}
               />
             </div>
 
