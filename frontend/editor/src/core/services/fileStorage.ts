@@ -66,12 +66,60 @@ export function legacyDerivedFromTool(
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
   private readonly storeName = "files";
+  private blobStorageProbe?: Promise<boolean>;
+
+  constructor() {
+    // Kick the probe off at construction so the first store almost never waits
+    // on it. Errors are swallowed inside the probe itself.
+    if (typeof indexedDB !== "undefined") void this.supportsBlobStorage();
+  }
 
   /**
    * Get database connection using centralized manager
    */
   private async getDatabase(): Promise<IDBDatabase> {
     return indexedDBManager.openDatabase(this.dbConfig);
+  }
+
+  /**
+   * WebKit cannot structured-clone a Blob into IndexedDB: `put` fails with
+   * "Error preparing Blob/File data to be stored in object store", the
+   * transaction aborts and the file is silently never stored. That hits Safari
+   * and, because Tauri uses WKWebView on macOS, the desktop app too.
+   *
+   * Probe once against a throwaway database so the storeStirlingFile path can
+   * keep handing IndexedDB the Blob by reference (no JS-side copy, which is
+   * what keeps multi-GB files off the heap) everywhere that supports it, and
+   * fall back to an ArrayBuffer only where it does not.
+   */
+  private async supportsBlobStorage(): Promise<boolean> {
+    this.blobStorageProbe ??= (async () => {
+      const dbName = `stirling-blob-support-probe-${Date.now()}`;
+      try {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const req = indexedDB.open(dbName, 1);
+          req.onupgradeneeded = () => req.result.createObjectStore("probe");
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const tx = db.transaction("probe", "readwrite");
+            tx.objectStore("probe").put(new Blob([new Uint8Array(1)]), "k");
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(tx.error);
+          });
+          return true;
+        } finally {
+          db.close();
+          indexedDB.deleteDatabase(dbName);
+        }
+      } catch {
+        return false;
+      }
+    })();
+    return this.blobStorageProbe;
   }
 
   /** Returns thumbnail if within TTL, otherwise undefined. */
@@ -132,7 +180,10 @@ class FileStorageService {
       createdAt: stub.createdAt,
       // Store the File (a Blob) itself: IndexedDB persists it by reference and
       // streams to disk, so multi-GB files never materialize in JS memory.
-      data: stirlingFile,
+      // WebKit rejects Blobs here, so fall back to an ArrayBuffer there.
+      data: (await this.supportsBlobStorage())
+        ? stirlingFile
+        : await stirlingFile.arrayBuffer(),
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
       isLeaf: stub.isLeaf ?? true,
