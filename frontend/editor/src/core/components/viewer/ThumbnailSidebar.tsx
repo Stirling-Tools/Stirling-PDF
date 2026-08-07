@@ -326,7 +326,7 @@ export function ThumbnailSidebar({
                           fontWeight: 500,
                           color:
                             scrollState.currentPage === pageIndex + 1
-                              ? "var(--color-primary-500)"
+                              ? "var(--c-accent-text)"
                               : "var(--c-text-subtle)",
                         }}
                       >
