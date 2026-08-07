@@ -174,11 +174,15 @@ html[data-app-theme="custom"] {
   --c-primary-hover: color-mix(in srgb, var(--c-primary) 80%, var(--p-black));
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
   --c-text-on-primary: var(--p-white);
-  --c-accent-fg: var(--c-primary);
   /* Accent used as TEXT: --c-primary and its 80% hover both land under
      4.5:1 on the accent-tinted surfaces they appear on (chips, links,
      outline buttons), so accent copy takes a deeper step of the hue. */
   --c-accent-text: var(--p-blue-700);
+  /* The accent as a foreground. Custom themes overwrite this from
+     --user-accent-fg, which is already forced dark enough on light bases;
+     the default build has to make the same guarantee, so it takes the text
+     step rather than the raw fill. */
+  --c-accent-fg: var(--c-accent-text);
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
   --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-paper));
