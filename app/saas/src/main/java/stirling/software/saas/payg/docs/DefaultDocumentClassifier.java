@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
@@ -169,7 +170,8 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
      * avoid a second copy.
      */
     private int readPageCountFromPath(Path path, String displayName) {
-        try (PdfDocument doc = PdfDocument.open(path)) {
+        try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
+                PdfDocument doc = PdfDocument.open(path)) {
             return doc.pageCount();
         } catch (RuntimeException e) {
             log.debug(

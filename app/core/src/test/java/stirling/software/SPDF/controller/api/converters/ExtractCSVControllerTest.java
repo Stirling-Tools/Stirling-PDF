@@ -10,7 +10,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -20,17 +19,34 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
-import stirling.software.SPDF.pdf.parser.TabulaTableParser;
+import stirling.software.SPDF.pdf.parser.TableExtractionService;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileRegistry;
 
 @ExtendWith(MockitoExtension.class)
 class ExtractCSVControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TabulaTableParser tabulaTableParser;
+    @Mock private TableExtractionService tableExtractionService;
 
-    @InjectMocks private ExtractCSVController controller;
+    @org.junit.jupiter.api.io.TempDir java.nio.file.Path baseTmpDir;
+
+    private ExtractCSVController controller;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getSystem().getTempFileManagement().setBaseTmpDir(baseTmpDir.toString());
+        props.getSystem().getTempFileManagement().setPrefix("csv-test-");
+        controller =
+                new ExtractCSVController(
+                        pdfDocumentFactory,
+                        tableExtractionService,
+                        new TempFileManager(new TempFileRegistry(), props));
+    }
 
     @Test
     void pdfToCsv_noTablesReturnsNoContent() throws Exception {
@@ -45,7 +61,8 @@ class ExtractCSVControllerTest {
         PDDocument emptyDoc = new PDDocument();
         emptyDoc.addPage(new PDPage());
 
-        when(pdfDocumentFactory.load(request)).thenReturn(emptyDoc);
+        when(pdfDocumentFactory.load(org.mockito.ArgumentMatchers.any(java.io.File.class)))
+                .thenReturn(emptyDoc);
 
         try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class)) {
             guMock.when(() -> GeneralUtils.removeExtension("data.pdf")).thenReturn("data");

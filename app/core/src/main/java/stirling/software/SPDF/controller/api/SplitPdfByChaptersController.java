@@ -42,6 +42,7 @@ import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -119,7 +120,8 @@ public class SplitPdfByChaptersController {
 
             List<Bookmark> bookmarks = new ArrayList<>();
             int totalPages;
-            try (PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
+            try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
+                    PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
                 totalPages = sourceDocument.pageCount();
                 List<stirling.software.jpdfium.doc.Bookmark> roots = sourceDocument.bookmarks();
                 if (roots == null || roots.isEmpty()) {
@@ -222,7 +224,8 @@ public class SplitPdfByChaptersController {
                             totalPages);
                 }
             } else {
-                try (PdfDocument sourceDocument = PdfDocument.open(sourceFile.toPath())) {
+                try (JpdfiumGuard.Scope chapterGuard = JpdfiumGuard.acquire();
+                        PdfDocument sourceDocument = PdfDocument.open(sourceFile.toPath())) {
                     for (int i = 0; i < bookmarks.size(); i++) {
                         writeChapterViaJpdfium(
                                 sourceDocument,

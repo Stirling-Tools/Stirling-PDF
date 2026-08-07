@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.jpdfium.exception.JPDFiumException;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -389,6 +390,28 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with appropriate HTTP status
      */
+    /**
+     * Catches jpdfium failures no controller translated; the exceptions are unchecked and carry the
+     * server-side temp path, which would otherwise reach the client in the 500 body.
+     */
+    @ExceptionHandler(JPDFiumException.class)
+    public ResponseEntity<ProblemDetail> handleJpdfium(
+            JPDFiumException ex, HttpServletRequest request) {
+        // Log the throwable so the temp path stays diagnosable server-side.
+        log.warn("Unhandled jpdfium failure on {}", request.getRequestURI(), ex);
+        BaseAppException translated =
+                ExceptionUtils.handleJpdfiumException(ex, "while reading the PDF");
+        if (translated instanceof PdfPasswordException pwd) {
+            return handlePdfPassword(pwd, request);
+        }
+        if (translated instanceof PdfCorruptedException
+                || translated instanceof PdfEncryptionException
+                || translated instanceof OutOfMemoryDpiException) {
+            return handlePdfAndDpiExceptions(translated, request);
+        }
+        return handleBaseApp(translated, request);
+    }
+
     @ExceptionHandler({
         PdfCorruptedException.class,
         PdfEncryptionException.class,
