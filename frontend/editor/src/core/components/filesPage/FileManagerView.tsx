@@ -30,7 +30,7 @@ import { stripBasePath } from "@app/constants/app";
 import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
-import { useFileActions } from "@app/contexts/file/fileHooks";
+import { useFileActions, useFileState } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import {
@@ -92,6 +92,7 @@ export default function FileManagerView() {
     useState<StirlingFileStub | null>(null);
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
+  const { selectors: fileSelectors } = useFileState();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
   const activeWorkspaceFileIdSet = useMemo(
     () => new Set(activeWorkspaceFileIds.map((id) => id as string)),
@@ -571,6 +572,18 @@ export default function FileManagerView() {
         await fileActions.addStirlingFileStubs(materialized, {
           selectFiles: false,
         });
+        // Union the newly opened files into the workspace selection instead of
+        // leaving selection untouched. Tools that gate on a multi-file
+        // selection (e.g. Merge, Compare) would otherwise come back to an
+        // unchanged/empty selection after the user opened files from the Files
+        // tab. Mirrors FilesModalContext's selection-union behaviour.
+        const requestedIds = materialized.map((s) => s.id);
+        const currentSelected = fileSelectors
+          .getSelectedStirlingFileStubs()
+          .map((s) => s.id);
+        fileActions.setSelectedFiles(
+          Array.from(new Set([...currentSelected, ...requestedIds])),
+        );
         // Branch on requested stubs so already-active files still activate.
         if (materialized.length === 1) {
           setActiveFileId(materialized[0]!.id);
@@ -588,6 +601,7 @@ export default function FileManagerView() {
     [
       fileMap,
       fileActions,
+      fileSelectors,
       setActiveFileId,
       navActions,
       navigate,
