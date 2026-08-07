@@ -379,6 +379,23 @@ export default defineConfig({
       },
     },
     {
+      // Desktop test/story files: like every other *.test/*.stories file they
+      // are exempt from the shared-DS Mantine import ban; being desktop they also
+      // keep the Tauri allowance.
+      files: [
+        "editor/src/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "editor/src/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
+      ],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [aliasOverRelative, aliasOverSrc],
+          },
+        ],
+      },
+    },
+    {
       // Stricter no-explicit-any, enabled everywhere in the editor app EXCEPT
       // the folders that are not yet conformant (migrated incrementally).
       files: [APP_SOURCE],
