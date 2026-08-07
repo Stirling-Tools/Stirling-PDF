@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.common.service.PostHogService;
 
 @Service
+@ConditionalOnBooleanProperty(name = "metrics.enabled")
 @RequiredArgsConstructor
 @Slf4j
 public class MetricsAggregatorService {
