@@ -115,6 +115,7 @@ import stirling.software.SPDF.model.json.PdfJsonStream;
 import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.SPDF.service.pdfjson.PdfJsonFontService;
+import stirling.software.SPDF.service.pdfjson.PdfShowTextRewriter;
 import stirling.software.SPDF.service.pdfjson.PdfTextElementCursor;
 import stirling.software.SPDF.service.pdfjson.PdfTextMergeHelper;
 import stirling.software.SPDF.service.pdfjson.encoding.PdfTextEncoder;
@@ -3966,14 +3967,15 @@ public class PdfJsonConversionService {
                                 currentFontName,
                                 i,
                                 cursor.remaining());
-                        if (!rewriteShowText(
+                        if (!PdfShowTextRewriter.rewriteShowText(
                                 tokens,
                                 i - 1,
                                 currentFont,
                                 currentFontModel,
                                 currentFontName,
                                 cursor,
-                                removeOnly)) {
+                                removeOnly,
+                                pdfGlyphCounter)) {
                             log.debug("Failed to rewrite Tj operator; aborting rewrite");
                             return false;
                         }
@@ -4024,64 +4026,6 @@ public class PdfJsonConversionService {
             return true;
         } catch (IOException ex) {
             log.debug("Failed to rewrite content stream: {}", ex.getMessage());
-            return false;
-        }
-    }
-
-    private boolean rewriteShowText(
-            List<Object> tokens,
-            int tokenIndex,
-            PDFont font,
-            PdfJsonFont fontModel,
-            String expectedFontName,
-            PdfTextElementCursor cursor,
-            boolean removeOnly)
-            throws IOException {
-        if (font == null) {
-            log.debug(
-                    "rewriteShowText aborted: no active font for expected resource {}",
-                    expectedFontName);
-            return false;
-        }
-        COSString cosString = (COSString) tokens.get(tokenIndex);
-        int glyphCount = pdfGlyphCounter.countGlyphs(cosString, font);
-        log.trace(
-                "rewriteShowText consuming {} glyphs at cursor index {} for font {}",
-                glyphCount,
-                cursor.getIndex(),
-                expectedFontName);
-        List<PdfJsonTextElement> consumed = cursor.consume(expectedFontName, glyphCount);
-        if (consumed == null) {
-            log.debug(
-                    "Failed to consume {} glyphs for font {} (cursor remaining {})",
-                    glyphCount,
-                    expectedFontName,
-                    cursor.remaining());
-            return false;
-        }
-        if (removeOnly) {
-            tokens.set(tokenIndex, new COSString(new byte[0]));
-            return true;
-        }
-        PdfTextMergeHelper.MergedText replacement = PdfTextMergeHelper.mergeText(consumed);
-        try {
-            byte[] encoded =
-                    PdfTextEncoder.encode(
-                            font, fontModel, replacement.text(), replacement.charCodes());
-            if (encoded == null) {
-                log.debug(
-                        "Failed to map replacement text to glyphs for font {} (text='{}')",
-                        expectedFontName,
-                        replacement.text());
-                return false;
-            }
-            tokens.set(tokenIndex, new COSString(encoded));
-            return true;
-        } catch (IOException | IllegalArgumentException | UnsupportedOperationException ex) {
-            log.debug(
-                    "Failed to encode replacement text with font {}: {}",
-                    expectedFontName,
-                    ex.getMessage());
             return false;
         }
     }
