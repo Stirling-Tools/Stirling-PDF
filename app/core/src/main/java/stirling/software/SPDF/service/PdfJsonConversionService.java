@@ -115,6 +115,7 @@ import stirling.software.SPDF.model.json.PdfJsonStream;
 import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.SPDF.service.pdfjson.PdfJsonFontService;
+import stirling.software.SPDF.service.pdfjson.PdfTextMergeHelper;
 import stirling.software.SPDF.service.pdfjson.encoding.PdfTextEncoder;
 import stirling.software.SPDF.service.pdfjson.font.PdfFontResolver;
 import stirling.software.SPDF.service.pdfjson.parsing.PdfGlyphCounter;
@@ -4061,7 +4062,7 @@ public class PdfJsonConversionService {
             tokens.set(tokenIndex, new COSString(new byte[0]));
             return true;
         }
-        MergedText replacement = mergeText(consumed);
+        PdfTextMergeHelper.MergedText replacement = PdfTextMergeHelper.mergeText(consumed);
         try {
             byte[] encoded =
                     PdfTextEncoder.encode(
@@ -4116,7 +4117,7 @@ public class PdfJsonConversionService {
                     array.set(i, new COSString(new byte[0]));
                     continue;
                 }
-                MergedText replacement = mergeText(consumed);
+                PdfTextMergeHelper.MergedText replacement = PdfTextMergeHelper.mergeText(consumed);
                 try {
                     byte[] encoded =
                             PdfTextEncoder.encode(
@@ -4143,23 +4144,6 @@ public class PdfJsonConversionService {
         }
         return true;
     }
-
-    private MergedText mergeText(List<PdfJsonTextElement> elements) {
-        StringBuilder builder = new StringBuilder();
-        List<Integer> combinedCodes = new ArrayList<>();
-        for (PdfJsonTextElement element : elements) {
-            builder.append(Objects.toString(element.getText(), ""));
-            int[] codes = element.getCharCodes();
-            if (codes != null && codes.length > 0) {
-                for (int code : codes) {
-                    combinedCodes.add(code);
-                }
-            }
-        }
-        return new MergedText(builder.toString(), combinedCodes.isEmpty() ? null : combinedCodes);
-    }
-
-    private record MergedText(String text, List<Integer> charCodes) {}
 
     private static class TextElementCursor {
         private final List<PdfJsonTextElement> elements;
