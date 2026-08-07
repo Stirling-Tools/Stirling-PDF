@@ -1,5 +1,13 @@
 import { useState, memo } from "react";
-import { Group, Text, TextInput, Badge, Tooltip, Stack } from "@mantine/core";
+import {
+  Group,
+  Text,
+  TextInput,
+  Badge,
+  Tooltip,
+  Stack,
+  Box,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -82,6 +90,7 @@ export const AttachmentRow = memo(function AttachmentRow({
             : undefined,
         borderStyle: isStaged ? "dashed" : "solid",
         width: "100%",
+        minWidth: 0,
         boxSizing: "border-box",
         overflow: "hidden",
       }}
@@ -128,23 +137,29 @@ export const AttachmentRow = memo(function AttachmentRow({
           </ActionIcon>
         </Group>
       ) : (
-        <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-          <Group gap={4} wrap="nowrap" style={{ minWidth: 0 }}>
-            <Tooltip label={tooltipLabel} openDelay={400}>
-              <Text
-                size="sm"
-                fw={500}
-                c={isDeleted ? "dimmed" : undefined}
-                truncate="end"
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  textDecoration: isDeleted ? "line-through" : undefined,
-                }}
-              >
-                {filename}
-              </Text>
-            </Tooltip>
+        <Stack gap={2} style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+          <Group
+            gap={4}
+            wrap="nowrap"
+            style={{ minWidth: 0, width: "100%", overflow: "hidden" }}
+          >
+            <Box style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+              <Tooltip label={tooltipLabel} openDelay={400}>
+                <Text
+                  size="sm"
+                  fw={500}
+                  c={isDeleted ? "dimmed" : undefined}
+                  truncate="end"
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textDecoration: isDeleted ? "line-through" : undefined,
+                  }}
+                >
+                  {filename}
+                </Text>
+              </Tooltip>
+            </Box>
 
             {isStaged && (
               <Badge

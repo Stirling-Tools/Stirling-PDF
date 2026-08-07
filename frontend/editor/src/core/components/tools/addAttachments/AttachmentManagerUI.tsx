@@ -66,7 +66,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   );
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" w="100%">
       {/* FILTER SEARCH INPUT (SHOWN WHEN >3 ATTACHMENTS EXIST) */}
       {rows.length > 3 && (
         <TextInput
@@ -97,7 +97,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
 
       {/* ATTACHMENT ROWS LIST */}
       {isLoading ? (
-        <Stack gap={6}>
+        <Stack gap={6} w="100%">
           <Skeleton h={38} radius="sm" />
           <Skeleton h={38} radius="sm" />
         </Stack>
@@ -109,8 +109,23 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           )}
         </Text>
       ) : (
-        <ScrollArea.Autosize mah={280} type="scroll" offsetScrollbars>
-          <Stack gap={6}>
+        <ScrollArea.Autosize
+          mah={280}
+          type="scroll"
+          w="100%"
+          style={{ width: "100%", minWidth: 0 }}
+          styles={{
+            viewport: {
+              overflowX: "hidden",
+            },
+            content: {
+              display: "block",
+              width: "100%",
+              minWidth: 0,
+            },
+          }}
+        >
+          <Stack gap={6} w="100%" style={{ width: "100%", minWidth: 0 }}>
             {filteredRows.map((row) => (
               <AttachmentRow
                 key={row.id}
