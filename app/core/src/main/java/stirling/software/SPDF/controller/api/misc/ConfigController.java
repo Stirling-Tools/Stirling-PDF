@@ -27,6 +27,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.JarPathUtil;
 
 @ConfigApi
 @Hidden
@@ -361,6 +362,11 @@ public class ConfigController {
             configData.put(
                     "serverCertificateEnabled",
                     serverCertificateService != null && serverCertificateService.isEnabled());
+
+            // Whether this deployment can restart itself (packaged JAR + restart helper present).
+            // Hosted/containerised deployments and dev runs can't, so the admin UI uses this to
+            // avoid offering a self-restart that would always fail.
+            configData.put("restartSupported", JarPathUtil.restartSupported());
 
             // Hardware-backed signing (Windows store / USB PKCS#11 tokens) is only viable on the
             // desktop bundle, where the backend runs locally in the user's session. The Tauri
