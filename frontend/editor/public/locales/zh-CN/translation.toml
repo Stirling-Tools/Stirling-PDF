@@ -46,10 +46,8 @@ filesSelected = "选中的文件"
 font = "字体"
 fontSizeTooltip = "页码文本的点数大小。数值越大文字越大。"
 fontTypeTooltip = "页码的字体族。根据文档风格选择。"
-genericSubmit = "提交"
 green = "绿色"
 help = "帮助"
-imgPrompt = "选择图像"
 incorrectPasswordMessage = "当前密码不正确。"
 info = "信息"
 invalidUndoData = "无法撤销：操作数据无效"
@@ -62,7 +60,6 @@ loginAgreementTitle = "登录协议"
 logOut = "退出登录"
 marginTooltip = "页码与页面边缘的距离。"
 moreOptions = "更多选项"
-multiPdfPrompt = "选择多个 PDF（2个或更多）"
 never = "从不"
 no = "否"
 noFileSelected = "未选择文件，请上传一个文件。"
@@ -80,7 +77,6 @@ pageOrderPrompt = "页面顺序（输入逗号分隔的页码列表或函数）�
 pages = "页码"
 pageSelectionPrompt = "自定义页面选择（输入以逗号分隔的页码列表或函数：1,5,6、2n+1）："
 password = "密码"
-pdfPrompt = "选择 PDF"
 pin = "固定文件（在工具运行后保持激活）"
 pro = "专业版"
 processingComplete = "您的文件已就绪。"
@@ -356,6 +352,7 @@ text = "这些权限控制用户对 PDF 的操作。与所有者密码配合时�
 title = "更改权限"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -691,6 +688,165 @@ manualLinks = "手动下载：点击链接并将文件放入 tessdata 文件夹�
 noLanguages = "在配置的目录中未找到 tessdata 语言。"
 permissionNotice = "tessdata 路径不可写。下载将会在浏览器中打开；请手动将 .traineddata 文件保存到 tessdata 文件夹中。"
 
+[admin.settings.ai.documents]
+description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
+title = "Documents & RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments."
+generic = "Embedding API key"
+openai = "OpenAI API key"
+setPlaceholder = "Saved - leave blank to keep the current key"
+voyageai = "VoyageAI API key"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "Base URL of the OpenAI-compatible / Ollama embeddings endpoint, e.g. http://ollama:11434/v1. Must point at a trusted internal endpoint (SSRF-sensitive)."
+label = "Embedding base URL"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Embedding model name. Free text; suggestions are hints only."
+label = "Embedding model"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Provider used to turn document text into vector embeddings."
+label = "Embedding provider"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Maximum number of retrieval searches the agent may run per request."
+label = "Max searches"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Changing the embedding model takes effect immediately, but documents indexed with the previous model must be re-indexed for search to return correct results."
+title = "Re-index required"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "If you changed the embedding model, re-index existing documents so search uses the new model."
+
+[admin.settings.ai.documents.topK]
+description = "Number of most-relevant chunks retrieved per search."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart."
+title = "AI Engine"
+
+[admin.settings.ai.general.capabilities]
+description = "Turn individual AI features on or off. Disabled features are hidden in the app."
+title = "Capabilities"
+
+[admin.settings.ai.general.enabled]
+description = "Master switch. When off, no AI tools, agents, or engine calls are available."
+label = "Enable AI"
+
+[admin.settings.ai.general.features.chat]
+description = "Conversational assistant for working with PDFs."
+label = "Chat assistant"
+
+[admin.settings.ai.general.features.classify]
+description = "Automatically categorise documents by type or content."
+label = "Document classification"
+
+[admin.settings.ai.general.features.createPdf]
+description = "Generate a new PDF (e.g. from HTML) via an AI agent."
+label = "Create PDF from prompt"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Ask questions and get answers grounded in an uploaded document."
+label = "Document questions"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Review documents for mathematical and numerical errors."
+label = "Math auditor"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "Add AI-authored review comments and annotations to a PDF."
+label = "PDF comment agent"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Timeout for heavier agent operations such as document generation."
+label = "Long-running timeout (seconds)"
+
+[admin.settings.ai.general.note]
+body = "The AI engine runs as a separate service. Its shared secret"
+body2 = "is set via a container environment variable. Provider API keys can be entered on these pages or supplied as engine environment variables; keys entered here are pushed to the engine when saved."
+title = "About the AI engine"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Timeout for streamed (token-by-token) chat responses."
+label = "Stream timeout (seconds)"
+
+[admin.settings.ai.general.test]
+button = "Test connection"
+failBody = "The AI engine did not respond. Check the URL, that the engine container is running, and that AI is enabled (a restart is needed after enabling)."
+failTitle = "AI engine unreachable"
+okBody = "The AI engine responded to a health check."
+okTitle = "AI engine reachable"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Timeout for standard AI requests to the engine."
+label = "Request timeout (seconds)"
+
+[admin.settings.ai.general.url]
+description = "Internal URL of the Python AI engine, e.g. http://stirling-pdf-engine:5001."
+label = "AI engine URL"
+
+[admin.settings.ai.limits]
+description = "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved."
+title = "Limits & Performance"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Guardrail: reject AI requests whose extracted text exceeds this length."
+label = "Max characters per request"
+
+[admin.settings.ai.limits.maxPages]
+description = "Guardrail: reject AI requests over this many PDF pages."
+label = "Max pages per request"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Maximum simultaneous in-flight model calls across the whole engine."
+label = "Model max concurrency"
+
+[admin.settings.ai.models]
+description = "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved."
+title = "Models & Providers"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Anthropic API key"
+description = "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments."
+generic = "API key"
+openai = "OpenAI API key"
+setPlaceholder = "Saved - leave blank to keep the current key"
+
+[admin.settings.ai.models.baseUrl]
+description = "Base URL of the OpenAI-compatible / Ollama endpoint, e.g. http://ollama:11434/v1."
+label = "Provider base URL"
+warning = "The base URL must point at a trusted internal endpoint. The engine will make server-side requests to it, so an untrusted value is SSRF-sensitive."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Maximum output tokens for the fast model."
+label = "Fast model max tokens"
+
+[admin.settings.ai.models.fastModel]
+description = "Cheaper, faster model for lightweight tasks. Free text; suggestions are hints only."
+label = "Fast model"
+
+[admin.settings.ai.models.provider]
+description = "Which LLM provider the engine talks to."
+label = "Provider"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Maximum output tokens for the smart model."
+label = "Smart model max tokens"
+
+[admin.settings.ai.models.smartModel]
+description = "High-capability model for complex reasoning. Free text; suggestions are hints only."
+label = "Smart model"
+
+[admin.settings.ai.saved]
+body = "Changes are pushed to the AI engine automatically."
+bodyNoPush = "Settings saved. They will apply the next time the AI engine picks up its configuration."
+title = "AI settings saved"
+
 [admin.settings.badge]
 clickToUpgrade = "点击查看计划详情"
 
@@ -937,6 +1093,25 @@ label = "启动时重新生成"
 [admin.settings.features.serverCertificate.validity]
 description = "证书的有效天数"
 label = "证书有效期（天）"
+
+[admin.settings.folderAccess]
+description = "Directories that folder sources and folder outputs are allowed to read from and write to. This is a security boundary: automations can never be pointed at a server path outside this list."
+securityNote = "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory is always off-limits."
+title = "Folder Access"
+
+[admin.settings.folderAccess.implied]
+description = "These Stirling-managed directories are always permitted and can't be changed here."
+serverStorage = "Server file storage"
+title = "Always allowed"
+watchedFolder = "Pipeline watched folder"
+
+[admin.settings.folderAccess.roots]
+add = "Add"
+empty = "No folders allowed. Folder sources and outputs are currently disabled."
+hint = "Enter absolute paths, for example /data/inbox."
+label = "Allowed folder roots"
+placeholder = "/data/inbox"
+remove = "Remove folder root"
 
 [admin.settings.general]
 description = "配置全局应用设置，包括品牌和默认行为。"
@@ -1842,6 +2017,15 @@ export = "导出"
 accessDenied = "拒绝访问"
 insufficientPermissions = "您没有执行此操作的权限。"
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "访客"
 user = "用户"
@@ -1986,6 +2170,73 @@ secureWorkflowDesc = "通过移除可能的恶意内容（如 JavaScript 和嵌�
 [autoRename]
 description = "此工具将基于内容自动重命名 PDF 文件。它会分析文档以从文本中找到最合适的标题。"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+
+[autoRotate]
+submit = "Auto Rotate"
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Confidence threshold"
+
+[autoRotate.detectionMode]
+auto = "Auto"
+osd = "OCR only"
+text = "Text only"
+title = "Detection method"
+
+[autoRotate.error]
+failed = "An error occurred while auto-rotating the PDF."
+
+[autoRotate.inferUndetected]
+title = "Rotate low confidence pages to match"
+
+[autoRotate.report]
+applied = "{{degrees}}° CW"
+confidenceValue = "Confidence {{value}}"
+noChange = "No change"
+pageLabel = "Page {{number}}"
+summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
+title = "Detection report"
+
+[autoRotate.report.method]
+inferred = "Matched"
+none = "Skipped"
+osd = "OCR"
+text = "Text"
+
+[autoRotate.report.note]
+belowThreshold = "Below threshold"
+blankPage = "Page is blank"
+inferredFromDocument = "Same as the other pages"
+noDominantDirection = "Mixed text directions"
+osdFailed = "No readable text found"
+osdNoVerdict = "Could not tell which way up"
+tesseractUnavailable = "OCR not installed"
+tooFewGlyphs = "Too little text"
+
+[autoRotate.results]
+title = "Auto Rotate Results"
+
+[autoRotate.settings]
+title = "Settings"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "How certain the check has to be before a page is turned. Lower it to rotate more pages, raise it to leave more pages untouched."
+title = "Confidence threshold"
+
+[autoRotate.tooltip.description]
+text = "Works out which way up each page should be and turns it the right way round. Pages that are already upright are left alone."
+
+[autoRotate.tooltip.detectionMode]
+text = "Auto reads the text on the page first, then looks at the page as an image if that is not enough. Text only skips the image check, which is quickest for documents that were never scanned. OCR only treats every page as an image."
+title = "Detection method"
+
+[autoRotate.tooltip.header]
+title = "Auto Rotate"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Blank or nearly blank pages cannot be checked on their own. When every page that could be read needs the same turn, these pages are turned to match them."
+title = "Rotate low confidence pages to match"
 
 [autoSizeSplitPDF]
 tags = "pdf、拆分、文件、组织"
@@ -2188,33 +2439,6 @@ title = "语法基础"
 keywords = "关键字：odd、even"
 numbers = "数字/范围：5，10-20"
 progressions = "等差：3n，4n+1"
-
-[certificateChoice.tooltip]
-header = "证书类型"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "由系统管理员管理"
-bullet2 = "在授权用户间共享"
-bullet3 = "代表公司身份，而非个人"
-bullet4 = "最佳用途：正式文档、团队签署"
-description = "由您的组织提供的共享证书。用于全公司范围的签署授权。"
-title = "组织证书"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "首次使用时自动生成"
-bullet2 = "与您的用户帐户绑定"
-bullet3 = "不可与其他用户共享"
-bullet4 = "最佳用途：个人文档、个人责任"
-description = "为您的用户帐户自动生成的唯一证书。适用于个人签名。"
-title = "个人证书"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "需要 P12/PFX 文件和密码"
-bullet2 = "可由外部证书颁发机构签发"
-bullet3 = "对法律文档具有更高信任级别"
-bullet4 = "最佳用途：具有法律效力的合同、外部验证"
-description = "使用您自己的 PKCS#12 证书文件。可完全控制证书属性。"
-title = "上传自定义 P12"
 
 [certSign]
 awaitingSignatures = "等待签署"
@@ -2542,34 +2766,6 @@ server = "服务器"
 stepTitle = "证书来源"
 upload = "上传"
 
-[certSign.tooltip.header]
-title = "签名管理说明"
-
-[certSign.tooltip.overview]
-bullet1 = "检查现有签名及其有效性"
-bullet2 = "查看签署人和证书的详细信息"
-bullet3 = "添加新的数字签名以保护文档"
-bullet4 = "支持多个文件并便于导航"
-text = "此工具可检查您的 PDF 是否已数字签名，并可添加新的数字签名。数字签名可证明文档的创建者或批准者，并显示签署后是否被更改。"
-title = "该工具能做什么？"
-
-[certSign.tooltip.signing]
-bullet1 = "支持 PEM、PKCS12、JKS 以及服务器证书格式"
-bullet2 = "可选择在 PDF 上显示或隐藏签名"
-bullet3 = "可添加原因、地点和签署人姓名"
-bullet4 = "可选择放置可见签名的页面"
-bullet5 = "可使用服务器证书实现简便的“使用 Stirling-PDF 签名”选项"
-text = "要对 PDF 进行签名，您需要数字证书（如 PEM、PKCS12 或 JKS）。您可以选择让签名在文档上可见，或仅用于安全而不可见。"
-title = "添加签名"
-
-[certSign.tooltip.validation]
-bullet1 = "显示签名是否有效"
-bullet2 = "显示签署人信息与签署日期"
-bullet3 = "检查文档在签署后是否被修改"
-bullet4 = "可使用自定义证书进行验证"
-text = "检查签名时，工具会告诉您签名是否有效、谁签了名、何时签的，以及自签署后文档是否被更改。"
-title = "检查签名"
-
 [changeCreds]
 changeUsername = "更新您的用户名。更新后您将被登出。"
 credsUpdated = "账户已更新"
@@ -2824,6 +3020,7 @@ next = "下一页"
 preview = "预览"
 previous = "上一页"
 refresh = "刷新"
+remaining = "Remaining"
 retry = "重试"
 save = "保存"
 
@@ -3264,24 +3461,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog 分析"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "高级监控"
-allInOneWorkspace = "一体化 PDF 工作空间（查看器、工具与代理）"
-apiSandbox = "API 沙盒"
-dedicatedSupportSlas = "专属支持与 SLA"
-fasterThroughput = "吞吐量提升 10 倍"
-fullyPrivateFiles = "完全私密的文件"
-largeFileProcessing = "大文件处理"
-orgWideAccess = "组织范围的访问控制"
-premiumAiModels = "高级 AI 模型"
-prioritySupport = "优先支持"
-privateDocCloud = "私有文档云"
-ragFineTuning = "RAG + 微调"
-secureApiAccess = "安全 API 访问"
-standardThroughput = "标准吞吐量"
-unlimitedApiAccess = "无限 API 访问"
-unlimitedSeats = "无限席位"
-
 [crop]
 autoCrop = "自动裁剪空白"
 noFileSelected = "选择一个 PDF 文件开始裁剪"
@@ -3346,6 +3525,7 @@ message = "设置默认 PDF 处理程序失败"
 title = "错误"
 
 [defaultApp.prompt]
+dontRemind = "Don't remind me again"
 message = "将 Stirling PDF 设为打开 PDF 文件的默认应用。"
 
 [defaultApp.settingsOpened]
@@ -3697,10 +3877,10 @@ customizeGroups = "自定义分组"
 dropHint = "打开文件以开始"
 dropToAdd = "Drop files to add"
 expand = "展开侧边栏"
-files = "文件"
 googleDrive = "Google Drive"
 googleDriveDisabled = "未配置 Google Drive"
 leaveMyFiles = "离开我的文件"
+library = "PDF Library"
 myFiles = "我的文件"
 noFiles = "暂无文件"
 openFileManager = "打开文件管理器"
@@ -3723,19 +3903,8 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "添加"
-addLabel = "添加标签…"
-categoryIconAria = "为 {{name}} 选择图标"
-createCategory = "创建类别"
-delete = "删除类别"
 done = "完成"
-hide = "隐藏类别"
-newCategory = "新类别名称…"
-removeLabel = "移除 {{name}}"
-rename = "重命名"
 reset = "重置为默认值"
-search = "搜索标签…"
-show = "显示类别"
 subtitle = "将文件分组到父类别中。向类别添加现有或新标签、重命名类别，或创建自己的类别。不属于任何类别的文件会显示在“其他”下。"
 title = "侧边栏类别"
 
@@ -3808,6 +3977,7 @@ refresh = "从服务器刷新"
 remove = "删除"
 removeVersion = "移除此版本"
 rename = "重命名"
+renamed = "Renamed"
 renameFolder = "重命名文件夹"
 resizeFolderTree = "调整文件夹树大小（方向键，按住 Shift 步长更大；双击自动适配）"
 save = "保存"
@@ -3910,9 +4080,7 @@ count = "文件数"
 folder = "文件夹"
 labels = "标签"
 modified = "修改时间"
-name = "名称"
 size = "大小"
-toolHistoryAtVersion = "累计工具链"
 totalSize = "总大小"
 type = "类型"
 versionHistory = "版本历程"
@@ -4072,10 +4240,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "填写后扁平化"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "重新扫描字段"
 rescanFormFields = "重新扫描表单字段"
 save = "保存"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "关闭侧边栏"
@@ -4308,6 +4483,11 @@ title = "自动化"
 desc = "基于检测到的页眉自动重命名 PDF 文件"
 tags = "自动检测,基于标题,组织,重新标记"
 title = "自动重命名 PDF 文件"
+
+[home.autoRotate]
+desc = "Detect each page's orientation and rotate it upright automatically."
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+title = "Auto Rotate"
 
 [home.autoSizeSplitPDF]
 tags = "自动,拆分,大小"
@@ -4608,12 +4788,12 @@ hint = "上传 PNG、JPG、SVG 或其他图像文件以放置到 PDF 上。为�
 label = "上传图片"
 placeholder = "选择图片文件"
 
-[imageToPdf]
-tags = "转换、图像、JPG、图片、照片"
-
 [imageToPDF]
 header = "将图片转换为 PDF"
 title = "图片转 PDF"
+
+[imageToPdf]
+tags = "转换、图像、JPG、图片、照片"
 
 [infoBanner]
 dismiss = "关闭"
@@ -4647,11 +4827,9 @@ welcomeTitle = "您已被邀请！"
 
 [landing]
 addFiles = "添加文件"
-heroSubtitle = "拖放或添加现有 PDF 以开始使用。"
 mobileUpload = "从手机上传"
 openFromComputer = "从电脑打开"
 uploadFromComputer = "从电脑上传"
-workbenchEmptyStateHero = "将 PDF 拖放到任意位置"
 
 [language]
 direction = "ltr"
@@ -4696,6 +4874,7 @@ login = "登录"
 magicLinkSent = "魔法链接已发送至 {{email}}！请检查邮箱并点击链接登录。"
 mfaCode = "认证代码"
 mfaRequired = "需要双重身份验证代码"
+noAccount = "Don't have an account?"
 or = "或"
 password = "密码"
 passwordChangedSuccess = "密码修改成功！请使用新密码登录。"
@@ -4715,25 +4894,9 @@ signInWith = "使用以下方式登录"
 title = "登录"
 unexpectedError = "意外错误：{{message}}"
 updatePassword = "更新密码"
-useEmailInstead = "使用邮箱登录"
 useMagicLink = "改用魔法链接"
 username = "用户名"
 youAreLoggedIn = "您已登录！"
-
-[login.slides.edit]
-alt = "编辑 PDF"
-subtitle = "拥有十余种工具，助您涂黑、签名、阅读并处理 PDF，定能满足您的需求。"
-title = "编辑 PDF，以展示/保护您所需的信息"
-
-[login.slides.overview]
-alt = "Stirling PDF 概览"
-subtitle = "面向隐私优先的 PDF 云套件，支持转换、签名、涂黑与管理文档，并提供 50+ 个其他强大工具。"
-title = "满足您全部 PDF 需求的一站式平台。"
-
-[login.slides.secure]
-alt = "保护 PDF"
-subtitle = "轻松添加密码、涂黑内容并管理证书。"
-title = "保护 PDF 中的敏感信息"
 
 [margin]
 large = "大"
@@ -4976,6 +5139,7 @@ pinButton = "如果您希望在运行工具后文件仍保持为活动状态，�
 results = "工具运行完成后，<strong>审阅</strong> 步骤会在此面板显示结果预览，并允许您撤销操作或下载文件。 "
 runButton = "配置完成后，使用此按钮在所有选中的 PDF 上运行该工具。"
 selectCropTool = "让我们选择 <strong>裁剪</strong> 工具，演示如何使用其中一个工具。"
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "这是 <strong>裁剪</strong> 工具界面。正如您所见，目前内容不多，因为我们还没有添加可处理的 PDF 文件。"
 workbench = "这是 <strong>工作台</strong> - 用于查看和编辑 PDF 的主要区域。"
 wrapUp = "一切就绪！您已了解应用的主要区域及其用法。随时点击 <strong>帮助</strong> 按钮重新查看本导览。"
@@ -4988,6 +5152,26 @@ showMeAround = "带我看看"
 skipForNow = "暂时跳过"
 skipTheTour = "跳过导览"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "Stirling 作为桌面应用效果最佳。可离线使用、更快访问文档，并在电脑本地进行编辑。"
 selectOs = "选择操作系统"
@@ -4996,7 +5180,21 @@ titleWithOs = "为 {{osLabel}} 下载"
 
 [onboarding.mfa]
 authenticationCode = "验证码"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "正在生成您的 QR 码…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "启用登录模式后，您可以管理用户、配置设置并监控服务器健康。服务器上的前 <strong>{{freeTierLimit}}</strong> 位用户可免费使用 Stirling。"
@@ -5004,6 +5202,11 @@ adminBodyLoginEnabled = "作为管理员，您可以管理用户、配置设置�
 adminTitle = "管理员概览"
 userBody = "邀请队友、分配角色，并在一个安全的工作区中整理文档。准备好从单人使用扩展时，可随时启用登录模式。"
 userTitle = "方案概览"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5400,6 +5603,28 @@ askLeader = "Only your team owner can change the cap."
 docs = "PDFs"
 subtitle = "Billable PDFs each teammate has processed this period."
 title = "Team member usage"
+
+[payg.prepaid]
+chip = "Prepaid year"
+
+[payg.prepaid.banner]
+exhausted = "Your prepaid capacity is used up; metered billing has resumed. Top up to keep the discount."
+expiring_one = "Your prepaid year ends in {{count}} day. Unused capacity expires — top up to start a fresh year."
+expiring_other = "Your prepaid year ends in {{count}} days. Unused capacity expires — top up to start a fresh year."
+low = "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted."
+
+[payg.prepaid.card]
+subtitle = "Used before metered billing and outside your spend cap."
+title = "Prepaid capacity"
+
+[payg.prepaid.meter]
+capSuffix = "of {{total}} prepaid credits"
+expires = "Expires {{date}}"
+
+[payg.prepaid.state]
+exhausted = "Used up"
+healthy = "Plenty left"
+low = "Running low"
 
 [payg.role]
 leader = "Team owner"
@@ -5937,48 +6162,11 @@ keyDescription = "粘贴您邮件中的许可证密钥"
 success = "许可证已激活！"
 successMessage = "您的许可证已成功激活。现在可以关闭此窗口。"
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "已强制执行"
-enforcing = "正在强制执行..."
-failed = "强制执行失败"
 outputsUnavailable = "策略输出已无法下载。"
 partialOutputsUnavailable = "部分策略输出已无法下载。"
-retrying = "忙碌中，正在重试..."
 runNotFound = "无法再找到此强制执行运行。"
-step = "步骤 {{current}}/{{total}}"
 timedOut = "在运行完成之前强制执行已超时。"
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "关闭"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "正在应用 {{names}}"
@@ -5989,61 +6177,16 @@ failureBody = "{{total}} 个文件中有 {{failures}} 个无法处理，已按�
 failureTitle = "未完全强制执行的导出"
 printPolicyAppliedBody = "此 PDF 已更新以符合某项策略。请检查更改，然后重新打印。"
 printPolicyAppliedTitle = "打印前已应用策略"
-queued = "+{{count}} 已排队"
 successTitle = "已应用 {{names}}"
 summaryMore = "{{first}}、{{second}} 以及另外 {{more}} 个"
 summaryTwo = "{{first}} 和 {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "在转换前强制执行"
-default = "正在强制执行"
-export = "在导出前强制执行"
-input = "在导入时强制执行"
-print = "在打印前强制执行"
-
-[policies.field]
-accessLog = "访问日志"
-archiveAfter = "归档时间"
-auditTrail = "审计跟踪"
-belowThreshold = "低于阈值"
-destination = "目标位置"
-frameworks = "框架"
-immutableHold = "不可变保留"
-keepFor = "保留时长"
-minConfidence = "最低置信度"
-notify = "路由时通知"
-onViolation = "不合规时"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
-
 [policies.labels]
-add = "添加"
-addPlaceholder = "添加标签…"
-customNote = "已为您的团队自定义。"
-defaultNote = "正在使用内置默认设置，并与您的团队共享。"
-duplicate = "\"{{name}}\" 已存在。"
-edit = "编辑标签"
-empty = "还没有标签。"
-export = "导出 JSON"
-iconAria = "为 {{name}} 选择图标"
-import = "导入 JSON"
-importError = "无法导入该文件。"
-managedNote = "团队标签由您的团队负责人管理。"
-modalSubtitle = "与整个团队共享。分类器会选择适合每个文档的标签。"
-modalTitle = "分类标签"
-pickIcon = "使用 {{label}} 图标"
-removeAria = "移除 {{name}}"
-resetToDefault = "重置为默认值"
-saveForTeam = "为团队保存"
-saving = "正在保存…"
-sectionLabel = "分类标签"
-startFromScratch = "从头开始"
-teamCount = "团队标签"
-tooLong = "标签最多 {{max}} 个字符。"
-ungrouped = "未分组"
-view = "查看标签"
+categoryCount = "categories"
+hideCategory = "Hide category"
+labelCount = "labels"
+sharedNote = "These labels are built in and shared across your whole team."
+showCategory = "Show category"
 
 [policies.pii]
 account = "账户号码（带标签）"
@@ -6056,93 +6199,10 @@ placeholder = "Select PII types"
 routing = "美国银行路由号码（ABA）"
 ssn = "社会安全号码"
 
-[policies.settings]
-noneExport = "当前没有在导出时运行的策略。"
-noneUpload = "当前没有在上传时运行的策略。"
-onExport = "导出时"
-onUpload = "上传时"
-reorderHandle = "拖动以重新排序"
-runOrderDesc = "当多个策略在同一触发器上运行时，它们会按此顺序运行——每个策略都基于前一个策略的输出。拖动以重新排序。"
-title = "策略设置"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "策略选项"
-policySettings = "策略设置"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "重试失败的策略（{{count}}）"
-rowProgress = "已处理 {{completed}} / {{total}} 个文件"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "什么是策略？"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "自动查找并涂黑敏感信息（如社会安全号码和卡号），以防在文档中被读取。"
-sanitize = "从文件中移除隐藏的 JavaScript，这样在有人打开时不会自动运行任何内容。"
-watermark = "在每一页上加盖可见标记（例如 \"Confidential\"）。"
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "关闭"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} 正在强制执行..."
 badgeRan = "{{name}} 策略已在此文件上运行"
+badgeRunning = "{{name}} running..."
 blockingAction = "强制执行策略时已阻止 {{action}}，请稍候..."
 dismiss = "关闭叠加层"
 enforcingTitle = "正在强制执行策略..."
@@ -6151,6 +6211,7 @@ viewAnyway = "查看文件（策略仍在强制执行）"
 [policyOption]
 autoRedactPhi = "自动遮盖 PHI"
 blockExport = "阻止导出"
+ccpa = "CCPA"
 contracts = "合同"
 documents = "文档"
 fedramp = "FedRAMP"
@@ -6269,86 +6330,6 @@ free = "Editor 计划"
 subscribed = "Processor 计划"
 unlinked = "未关联"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "从文档引导创建"
-sectionsAriaLabel = "智能体构建器部分"
-selectorAriaLabel = "智能体"
-subtitle = "设计、测试并发布用于对文档进行分类、提取和路由的 AI 智能体。定义场景、限制工具访问、运行黄金集，并发布版本。"
-title = "智能体构建器"
-
-[portal.agentBuilder.bootstrap]
-cancel = "取消"
-dropzoneText = "选择示例文档（PDF 或图像）"
-lead = "拖放一个示例文档，我们将提出场景和可供您优化的提取架构。在您审核之前，不会发布任何内容。"
-submit = "引导创建智能体"
-subtitle = "从一个代表性文件开始创建新智能体"
-title = "从文档引导创建"
-
-[portal.agentBuilder.empty]
-description = "从示例文档引导创建智能体，以生成其场景和提取架构，然后优化并发布。"
-title = "还没有智能体"
-
-[portal.agentBuilder.evals]
-casesPassing = "通过的用例"
-columnCase = "评估用例"
-columnLatency = "延迟"
-columnResult = "结果"
-fail = "失败"
-goldenSetPassRate = "黄金集通过率"
-latencyMs = "{{ms}} ms"
-notRun = "未运行"
-pass = "通过"
-passRate = "通过率"
-runEvals = "运行评估"
-
-[portal.agentBuilder.evals.empty]
-description = "评估会将您的场景转化为可重复的黄金集。升级后可随时间捕获通过率，并将其作为发布门禁。"
-title = "还没有黄金集"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "跨黄金集"
-activeAgents = "活跃智能体"
-avgPassRate = "平均评估通过率"
-fleetWide = "全局范围"
-latestPublished = "最新发布"
-scenarios = "场景"
-testCases = "测试用例"
-totalDescription_one = "共 {{count}} 个"
-totalDescription_other = "共 {{count}} 个"
-
-[portal.agentBuilder.scenarios]
-add = "添加"
-addScenario = "添加场景"
-enable = "启用"
-expectationLabel = "预期行为"
-expectationPlaceholder = "智能体应执行的操作"
-inEval = "在评估中"
-mute = "静音"
-muted = "已静音"
-nameLabel = "名称"
-namePlaceholder = "例如：合规升级"
-
-[portal.agentBuilder.tabs]
-evals = "评估"
-scenarios = "场景"
-tools = "工具"
-versions = "版本"
-
-[portal.agentBuilder.tools]
-broadAccess = "广泛访问"
-deniedHint = "所选工具已被阻止。其他所有工具仍可调用。"
-deniedTools = "拒绝的工具"
-governanceGate = "工具治理在 Enterprise 计划中可用。"
-restricted = "受限"
-restrictedAccess = "受限工具访问"
-restrictedDescription = "允许除下方拒绝工具之外的所有工具。"
-
-[portal.agentBuilder.versions]
-current = "当前"
-historyGate = "完整版本历史记录和回滚在 Enterprise 计划中可用。"
-publish = "发布"
-rollBack = "回滚"
-
 [portal.assistant]
 close = "关闭助手"
 error = "无法连接助手。"
@@ -6365,15 +6346,43 @@ typing = "正在输入"
 loading = "正在加载"
 redirectingToEditor = "正在重定向到编辑器..."
 
+[portal.billing.activation]
+maybeLater = "Maybe later"
+title = "Switch on the Processor"
+
+[portal.billing.activation.payg]
+sub = "Set a monthly limit. Pay for what you run."
+title = "Pay as you go"
+
+[portal.billing.activation.prepay]
+badge = "2 months free"
+sub = "One invoice, card or bank transfer."
+title = "Prepay a year"
+
 [portal.billing.checkout]
 noClientSecret = "Edge 函数未返回 client_secret。"
-subtitle = "添加银行卡，即可在免费 Editor 计划额度用完后继续使用。其余由 Stripe 处理。"
 title = "启用 Processor 计划"
 
 [portal.billing.checkout.activationSlow]
 body = "您的付款已成功，但激活所需时间比平常稍长。它会自动启用——关闭此窗口，稍后会在这里显示。"
 close = "关闭"
 title = "即将完成"
+
+[portal.billing.checkout.cap]
+amountAria = "Monthly spend limit"
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post monthly. Cancel anytime."
+noLimit = "No limit"
+note = "You're never billed past your limit. Processing just pauses."
+perMonth = "/ mo"
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
 
 [portal.billing.checkout.error]
 title = "无法开始结账"
@@ -6383,10 +6392,9 @@ body = "您的付款已完成。我们正在为您的已关联实例启用按量
 hint = "请保持此窗口打开。"
 title = "正在激活您的 Processor 计划..."
 
-[portal.billing.checkout.notConfigured]
-bodyAfter = "，以启用应用内结账。"
-bodyBefore = "在门户 env 中设置"
-title = "Stripe 未配置"
+[portal.billing.checkout.pay]
+limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
+limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
 [portal.billing.enterpriseUpsell]
 cta = "生成您的 Enterprise 报价"
@@ -6409,10 +6417,12 @@ currentPlan = "当前计划"
 freeForever = "永久免费"
 noTeamResolved = "您的钱包尚未解析到团队——请刷新并重试。"
 ownerOnly = "只有团队所有者可以启用 Processor 计划。"
+payInvoice = "Pay invoice to complete"
 planName = "Editor"
 ssoIncluded = "包含 SSO"
 switchOnProcessor = "启用 Processor →"
 unlimitedUsers = "无限用户"
+viewQuote = "View quote"
 
 [portal.billing.invoices]
 columnAmount = "金额"
@@ -6465,7 +6475,111 @@ segmentApiDesc = "直接 API 请求"
 segmentApiLabel = "API"
 segmentAutomationDesc = "自动化和流水线"
 segmentAutomationLabel = "自动化"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "按量计费 PDFs"
+unitsPending_one = "{{units}} meter unit pending sync from linked instances"
+unitsPending_other = "{{units}} meter units pending sync from linked instances"
+
+[portal.billing.prepaid]
+capSuffix = "of {{total}} prepaid credits"
+expires = "Expires {{date}}"
+eyebrow = "Prepaid capacity"
+note = "Used before metered billing and outside your spend limit."
+topUp = "Top up"
+
+[portal.billing.prepaid.buy]
+back = "Back"
+calcTitle = "Calculate your annual payment"
+cancel = "Cancel"
+cancelPurchase = "Cancel purchase"
+close = "Close"
+continueToPayment = "Continue to payment"
+finalise = "Finalise"
+invoiceErrorTitle = "Couldn't generate the invoice"
+loadingTitle = "Loading your quote"
+payTitle = "Pay for your year"
+step = "Step {{current}} of {{total}}"
+
+[portal.billing.prepaid.calc]
+change = "Change"
+deployRow = "Deployment"
+done = "Done"
+enterpriseHint = "This is enterprise scale. At this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes."
+governanceRow = "Governance"
+governanceValue = "{{label}} · {{count}} policies"
+handlesLabel = "Your Processor"
+handlesValue = "handles {{volume}} credits / mo"
+pipelinesLabel = "Pipelines"
+policiesMeta = "{{count}} policies"
+poolCaption = "One pool of {{credits}} credits for the year. Heavy months borrow from light ones."
+priceLabel = "Your year · 12 months for the price of 10"
+rateUnknown = "We'll show the exact price at checkout."
+savings = "You save {{amount}} · 2 months free."
+sizingRow = "Sizing"
+sizingValue = "{{label}} · {{desc}}"
+usersLabel = "Total users"
+
+[portal.billing.prepaid.consent]
+label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Managed by Stirling. Live in minutes."
+cloudValue = "Stirling Cloud · Managed"
+selfhost = "Self-hosted"
+selfhostDesc = "Runs on private infrastructure. Same rate."
+selfhostValue = "Self-hosted · Private infrastructure"
+
+[portal.billing.prepaid.offer]
+cta = "Review offer"
+subtitle = "Prepay a year of PDF processing and get two months free, used before metered billing, outside your spend limit."
+title = "Get 12 months for the price of 10"
+
+[portal.billing.prepaid.pay]
+accountName = "Account holder name"
+accountNamePlaceholder = "e.g. Jane Smith"
+companyName = "Company name (optional)"
+companyNamePlaceholder = "e.g. Acme Inc."
+downloadInvoice = "Download invoice"
+payOnline = "Pay online"
+poNumber = "PO number (optional)"
+poNumberPlaceholder = "e.g. PO-2026-0142"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Advanced"
+advancedDesc = "Pipelines drive most of your processing."
+none = "None"
+noneDesc = "Not running pipelines yet. Turn them on any time."
+standard = "Standard"
+standardDesc = "A few pipelines re-process arriving PDFs."
+
+[portal.billing.prepaid.posture]
+essentials = "Essentials"
+essentialsDesc = "Classification, the default, plus Sharing"
+governed = "Governed"
+governedDesc = "Adds Security and Routing"
+regulated = "Regulated"
+regulatedDesc = "Every category, incl. Compliance, Retention, Ingestion"
+
+[portal.billing.prepaid.review]
+download = "Download quote (PDF)"
+downloading = "Preparing…"
+share = "share for approval"
+
+[portal.billing.prepaid.size]
+compact = "Compact"
+compactDesc = "Files under 25 MB, no data charges"
+heavy = "Heavy"
+heavyDesc = "Scanned or image-heavy, routinely 50 MB+"
+standard = "Standard"
+standardDesc = "Mostly small, some scans past 25 MB"
+
+[portal.billing.prepaid.state]
+exhausted = "Used up"
+healthy = "Plenty left"
+low = "Running low"
 
 [portal.billing.spendLimit]
 adjustLimit = "调整限额"
@@ -6494,6 +6608,8 @@ label = "预计会超出。"
 
 [portal.billing.spendThisMonth]
 eyebrow = "本月支出"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "已处理 {{formattedCount}} 个 PDF。"
 processed_other = "已处理 {{formattedCount}} 个 PDFs。"
 processedWithRate_one = "已处理 {{formattedCount}} 个 PDF，每个 {{rate}}。"
@@ -6533,6 +6649,350 @@ signature = "签名"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
+
+[portal.connections]
+createTitle = "New connection"
+createTitleFor = "Connect {{name}}"
+delete = "Delete"
+edit = "Edit"
+editTitle = "Edit connection"
+unsupportedType = "This connection type cannot be edited here."
+
+[portal.connections.categories.advanced]
+description = "For a service we do not support yet."
+label = "Advanced"
+
+[portal.connections.categories.audit]
+description = "Record what happened to a document, where your auditors already look."
+label = "Audit & compliance logging"
+
+[portal.connections.categories.notify]
+description = "Tell another system that something happened."
+label = "Notify & workflow"
+
+[portal.connections.categories.security]
+description = "Scan or label a document before it moves on."
+label = "Security & classification"
+
+[portal.connections.categories.signing]
+description = "Send a document out to be signed or notarized."
+label = "E-signature & notarization"
+
+[portal.connections.categories.storage]
+description = "Where processed documents end up - a bucket, a drive, a ticket or a page."
+label = "File & attach"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Stirling stores this encrypted and never shows it again."
+label = "Access token"
+
+[portal.connections.commonFields.apiKey]
+label = "API key"
+
+[portal.connections.commonFields.apiToken]
+label = "API token"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Steps using this connection can only call paths under this URL, never another host."
+label = "Server URL"
+
+[portal.connections.commonFields.email]
+label = "Email"
+
+[portal.connections.commonFields.host]
+label = "Host"
+
+[portal.connections.commonFields.password]
+label = "Password"
+
+[portal.connections.commonFields.port]
+label = "Port"
+
+[portal.connections.commonFields.username]
+label = "Username"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Paste the URL the service gave you. Only paths under it can be called."
+label = "Webhook URL"
+
+[portal.connections.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Production"
+
+[portal.connections.picker]
+cancel = "Cancel"
+createNew = "New connection..."
+placeholder = "Select a connection"
+save = "Save connection"
+
+[portal.connections.picker2]
+back = "Change integration"
+heading = "What do you want to connect?"
+noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
+noResultsTitle = "Nothing matches \"{{query}}\""
+searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
+
+[portal.connections.types.api]
+description = "Call any HTTP API from a policy. You choose the URL, authentication and payload."
+label = "Custom API"
+
+[portal.connections.types.api.fields.authType]
+label = "Authentication"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "Username and password"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Token in a custom header"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Log in for a token"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Steps using this connection can only call paths under this URL, never another host."
+label = "Base URL"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Header name"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Login path"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Password"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "If the API replies with a download link, only these hosts may be fetched. Separate with commas. Leave blank to allow only the base URL's own host."
+label = "Allowed result hosts"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Send the token as this header"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "The response header the login call returns the token in, e.g. X-Auth-Token."
+label = "Token response header"
+
+[portal.connections.types.api.fields.username]
+label = "Username"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "Scan documents for malware on a server you run - nothing leaves your network."
+label = "ClamAV (self-hosted)"
+
+[portal.connections.types.cloudmersive]
+description = "Virus and content scanning for documents in a policy."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Block documents containing macros, executables, scripts or embedded objects - not just known malware."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Attach processed documents to a Confluence page."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Send documents to ConsignO Cloud (Notarius) for electronic signature and notarization."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "Your ConsignO Cloud environment, including /api/v1."
+label = "Server URL"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "API key"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "API secret"
+
+[portal.connections.types.consigno.fields.password]
+label = "Password"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Only needed if your organisation uses tenants."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "Username"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Post a message to Discord when a policy processes a document."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Index an audit event in Elasticsearch each time a policy handles a document."
+label = "Elasticsearch"
+
+[portal.connections.types.ftp]
+description = "Poll an FTP or FTPS server for new documents."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Connection mode"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Active"
+passive = "Passive (recommended)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "Plain FTP sends credentials and files unencrypted; choose FTPS if the server supports it."
+label = "Encryption"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explicit / AUTH TLS)"
+implicit = "FTPS (implicit)"
+none = "None (plain FTP)"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Post a message to a Google Chat space when a policy runs."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Attach processed documents to a Jira issue."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "Email a document or a notification when a policy runs."
+label = "Mailgun"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "File processed documents into Nextcloud."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "App password"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "Detect personal data in document text using a Presidio server you run."
+label = "Presidio (self-hosted)"
+
+[portal.connections.types.purview]
+description = "Read and apply Microsoft Purview sensitivity labels on PDFs."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "Optional. Only needed to pick labels by name; labelling works without it."
+label = "Application (client) ID"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Stamped onto every label as its SiteId, so Purview-aware tools know which organisation applied it."
+label = "Directory (tenant) ID"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "An S3 bucket that sources can read from and pipeline outputs can write to."
+label = "S3 storage"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "Leave blank for AWS. Set this for MinIO or another S3-compatible store."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Region"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
+[portal.connections.types.sendgrid]
+description = "Email a document or a notification when a policy runs."
+label = "SendGrid"
+
+[portal.connections.types.sftp]
+description = "Poll an SFTP (SSH) server for new documents."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Optional. The server's SHA-256 host key fingerprint (from `ssh-keyscan host | ssh-keygen -lf -`). When set, only a server presenting this key is accepted; when blank, the key seen on first connect is pinned and later changes are refused."
+label = "Host key fingerprint"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key passphrase"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Leave blank if you authenticate with a private key instead."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Optional. Paste an OpenSSH private key to authenticate with a key instead of a password."
+label = "Private key"
+
+[portal.connections.types.slack]
+description = "Post a message to Slack when a policy processes a document."
+label = "Slack"
+
+[portal.connections.types.smb]
+description = "Watch an SMB / CIFS network share (Windows or Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Network share"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Optional. The Windows domain or workgroup, if your server uses one."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Send an audit event to Splunk each time a policy handles a document."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Send an audit event to a Sumo Logic HTTP collector."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Post a message to a Teams channel when a policy runs."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Post each document, or just the details, to a URL you choose."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Trigger a Zap or Make scenario from a policy."
+label = "Zapier & Make"
+
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "每个请求"
@@ -6619,10 +7079,18 @@ title = "官方 SDKs"
 beta = "Beta"
 deprecated = "已弃用"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "技能"
 lead = "打包的命名能力，您的智能体可将其作为单个工具调用。每项技能都是附带评估的确定性操作链。"
 title = "智能体技能"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6697,6 +7165,8 @@ type = "类型"
 user = "用户"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "当来源将文档送入您的流水线时，它们会显示在此处以供审核。"
 title = "队列中没有文档"
 
@@ -6806,12 +7276,70 @@ description = "此视图遇到意外错误。请重试，或从侧边栏选择�
 retry = "重试"
 title = "此页面出现问题"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
-activeUsers = "{{n}} 活跃"
-invite = "邀请队友"
+activeOfDeployed = "{{active}} of {{total}} active this month"
 name = "Stirling PDF Editor"
 open = "在浏览器中打开"
 updated = "已更新 {{time}}"
+
+[portal.home.editor.deploy]
+finish = "Finish deployment"
+options = "View deployment options"
+start = "Deploy the Editor"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
@@ -6822,49 +7350,6 @@ kubernetes = "自托管 · Kubernetes"
 afternoon = "下午好"
 evening = "晚上好"
 morning = "早上好"
-
-[portal.home.onboarding]
-dismiss = "关闭设置"
-notStarted = "未开始"
-progress = "已完成 {{done}} / {{total}}"
-title = "完成设置"
-
-[portal.home.onboarding.enterprise]
-body = "组织范围的 SSO + SCIM + RBAC、承诺用量定价，以及隔离网络部署。"
-cta = "开始试用"
-ctaQuote = "获取报价"
-lead = "适用于 250+ 名员工。"
-tag = "企业版"
-
-[portal.home.onboarding.steps.editor]
-blurb = "部署桌面应用，永久免费。"
-title = "下载 PDF Editor"
-
-[portal.home.onboarding.steps.policies]
-blurb = "{{active}} 个活跃 · {{recommended}} 个推荐"
-chip = "{{active}} 个活跃"
-title = "启用策略"
-
-[portal.home.onboarding.steps.sources]
-blurb = "已连接 {{connected}} 个 · 每个 PDF 到达后均受管控"
-chip = "已连接 {{connected}} 个"
-title = "连接您的来源"
-
-[portal.home.quickActions]
-subtitle = "今日热门任务"
-title = "快捷操作"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "基于类型化操作库的 3 步编排器"
-title = "构建流水线"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3、代理、webhook、监视文件夹"
-title = "连接来源"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "带速率限制和 IP allowlist 的作用域密钥"
-title = "签发 API 密钥"
 
 [portal.infrastructure]
 manageEditorDeployment = "管理 Editor 部署"
@@ -6878,19 +7363,29 @@ heading = "API 密钥"
 subheading = "带有单密钥速率限制、权限和 IP allowlist 的作用域凭据。"
 
 [portal.infrastructure.apiKeys.card]
-allowedIps = "允许的 IP"
-anyIp = "任意 IP（无 allowlist）"
 created = "已创建"
 lastUsed = "最后使用"
-permissions = "权限"
-rateLimit = "速率限制"
-rateLimitValue = "{{value}} 次请求/分钟"
+revoke = "Revoke key"
 usageMonth = "本月用量"
 usageToday = "今日用量"
 
 [portal.infrastructure.apiKeys.empty]
 description = "创建作用域密钥以开始调用 Stirling API。"
 title = "还没有 API 密钥"
+
+[portal.infrastructure.apiKeys.error]
+load = "Couldn't load your API keys. Please try again."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Revoke \"{{name}}\"? Any integration still using this key will immediately start receiving 401 errors. This can't be undone."
+cancel = "Cancel"
+confirm = "Revoke key"
+title = "Revoke API key"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "按类别筛选审计事件"
@@ -6935,6 +7430,7 @@ all = "全部"
 auth = "身份验证"
 config = "配置"
 elevation = "权限提升"
+policy = "Policy"
 processing = "处理"
 security = "安全"
 
@@ -6944,25 +7440,47 @@ title = "您没有访问权限"
 
 [portal.infrastructure.audit.metrics]
 config = "配置"
-elevation = "权限提升"
+policy = "Policy"
 processing = "处理"
 totalEvents = "事件总数 · 24h"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "取消"
 createKey = "创建密钥"
 done = "完成"
-ipAllowlistHelper = "逗号分隔的 CIDR 范围。留空则允许任意 IP。"
-ipAllowlistLabel = "IP allowlist"
 keyNameLabel = "密钥名称"
 keyNamePlaceholder = "例如：生产 · 摄取"
-permissionsLabel = "权限"
 secretKeyCaption = "密钥"
 secretWarning = "请将其存储在密钥管理器中。Stirling 只会存储哈希 — 之后无法恢复。"
 subtitle = "将密钥的作用域限定为所需的最小范围。您可以随时轮换或撤销。"
 subtitleCreated = "立即复制此密钥 — 它不会再次显示。"
 title = "创建 API 密钥"
 titleCreated = "密钥已创建"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6999,6 +7517,15 @@ subheading = "每个已部署 Stirling 区域的实时健康状况 — 延迟、
 description = "工作区完成预配后，已部署区域会显示在此处。"
 title = "未部署区域"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "模型"
 msValue = "{{value}} ms"
@@ -7026,6 +7553,10 @@ status = "状态"
 type = "类型"
 version = "版本"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "活跃模型"
 avgLatency = "平均延迟"
@@ -7048,6 +7579,17 @@ docType = "文档类型"
 modelForAria = "{{operation}} 的模型"
 operation = "操作"
 routedTo = "路由到"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "从您自己的 KMS 提供密钥。Stirling 使用它进行加密，但仍可读取。"
@@ -7174,6 +7716,47 @@ models = "模型"
 security = "安全"
 storage = "存储"
 
+[portal.integrations]
+addAnother = "Add another"
+availableHeading = "Available"
+comingSoonHeading = "Coming soon"
+connect = "Connect"
+connectedHeading = "Connected"
+connectionCount_one = "{{count}} connection"
+connectionCount_other = "{{count}} connections"
+customApi = "Custom API"
+searchPlaceholder = "Search integrations"
+subtitle = "Everything Stirling can talk to. Credentials are created once here, then referenced by sources, policies and pipelines."
+title = "Integrations"
+typedName = "{{tool}} name"
+
+[portal.integrations.filters]
+all = "All"
+audit = "Audit"
+connected = "Connected"
+notify = "Notify"
+security = "Security"
+signing = "Signing"
+storage = "Storage"
+
+[portal.integrations.status]
+connected = "Connected"
+
+[portal.integrations.table]
+integration = "Integration"
+worksWith = "Works with"
+
+[portal.integrations.worksWith]
+pipelines = "Pipelines"
+policies = "Policies"
+sources = "Sources"
+
+[portal.legal]
+draft = "{{label}} · draft"
+loadError = "Could not load this document. Please try again."
+loading = "Loading…"
+title = "Legal document"
+
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "组件"
@@ -7182,6 +7765,7 @@ documents = "文档"
 editor = "编辑器"
 home = "主页"
 infrastructure = "基础设施"
+integrations = "Integrations"
 pipelines = "流水线"
 policies = "策略"
 procurement = "采购"
@@ -7190,25 +7774,9 @@ sources = "来源"
 usage = "用量与计费"
 users = "用户"
 
-[portal.notifications]
-markAllRead = "全部标为已读"
-title = "通知"
-viewAll = "查看全部"
-
-[portal.notifications.ariaLabel]
-none = "通知，无未读"
-unread_one = "通知，{{count}} 条未读"
-unread_other = "通知，{{count}} 条未读"
-
-[portal.notifications.count]
-allRead = "全部已读"
-loading = "正在加载"
-new_one = "{{count}} 条新通知"
-new_other = "{{count}} 条新通知"
-
-[portal.notifications.empty]
-description = "没有新通知。"
-title = "您已全部处理完毕"
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "后端上的每个自动化文档流水线：针对一组来源的有序操作链，由触发器运行。单击一行以查看其步骤和来源。"
@@ -7220,15 +7788,28 @@ newPipeline = "新建流水线"
 [portal.pipelines.builder]
 addStep = "添加工具"
 back = "返回流水线"
+cannotFollow = "Can't take {{produced}}"
+chooseAccount = "Choose an account"
+chooseDestination = "Choose a destination"
+chooseOperation = "Choose what this step does"
+chooseSource = "Choose a source"
 discard = "放弃更改"
 enabled = "已启用"
+inputs = "Input"
+inputSource = "Input source"
+inputTrigger = "Trigger"
 keepEditing = "继续编辑"
+needsConfiguring = "Needs setting up"
 needsUpload = "需要上传文件"
+noSources = "No sources connected yet. Create one to use it as an input."
 noToolMatches = "没有工具符合您的搜索。"
 pipelineSettings = "流水线设置"
 searchTools = "搜索工具"
 selectToolBody = "添加工具以构建您的流水线。"
 selectToolTitle = "还没有工具"
+sendToSystem = "Send to another system"
+stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
+stepsNeedSetup = "These steps still need setting up before saving: {{tools}}."
 toolSettings = "工具设置"
 unknownStep = "无法识别的操作，已按原样保留。"
 unsavedBody = "您有未保存的更改。离开前保存，还是放弃更改？"
@@ -7236,19 +7817,24 @@ unsavedTitle = "未保存的更改"
 uploadUnsupported = "流水线尚不支持上传的文件，因此这些步骤无法保存：{{tools}}。"
 usesDefaults = "使用默认设置运行"
 
+[portal.pipelines.builder.diagnostic]
+fan-in = "Combines every file from the previous step"
+fan-out = "Runs once per file from the previous step"
+format-mismatch = "Needs {{accepts}}, but the previous step produces {{produced}}"
+output-uncertain = "May not run: the previous step's output depends on how it's set up"
+source-mismatch = "Needs {{accepts}}, but this pipeline's input is {{produced}}"
+undeclared-operation = "Can't check what this step accepts"
+
 [portal.pipelines.composer]
 addTool = "添加工具"
 cancel = "取消"
 chainEmpty = "添加工具以开始构建您的流水线。"
 create = "创建流水线"
-directory = "输出文件夹"
-directoryHelp = "服务器上的绝对路径。必须位于已配置的允许文件夹内。"
 editingUnsupported = "尚不支持显示这些工具参数以进行编辑。"
 moveDown = "下移"
 moveUp = "上移"
 name = "名称"
 namePlaceholder = "例如：修订扫描"
-noSources = "尚未连接来源。流水线仍可直接对提供给它的文件运行。"
 noToolSettings = "此工具没有可配置的设置。"
 operations_one = "操作 ({{count}})"
 operations_other = "操作 ({{count}})"
@@ -7273,11 +7859,13 @@ confirm = "删除"
 title = "删除流水线？"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "删除流水线"
 run = "立即运行"
 
 [portal.pipelines.empty]
 action = "创建流水线"
+connectSource = "Connect a source"
 description = "创建您的第一个流水线：选择要运行的来源，串联操作，并选择输出位置。"
 title = "还没有流水线"
 
@@ -7286,15 +7874,17 @@ active = "活跃"
 paused = "已暂停"
 total = "流水线"
 
-[portal.pipelines.output]
-folder = "写入文件夹"
-inline = "返回文件"
-
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "运行已完成。"
 completed_other = "所有 {{count}} 次运行均已完成。"
 empty = "没有可运行内容：来源中没有要处理的文档。"
 failed = "运行失败：{{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "运行已开始；仍在进行中。"
 timeout = "运行耗时超过预期；它可能仍会在后台完成。"
 
@@ -7314,12 +7904,18 @@ manual = "手动"
 schedule = "已计划"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "在每个文档上强制执行工具流水线的常驻自动化。每个策略在上传或导出时触发，运行其工具链，并将强制执行后的版本与原始文件一起保存。"
 title = "策略"
 
 [portal.policies.card]
 comingSoon = "升级到企业版"
 notSetUp = "未设置"
+requiresAiEngine = "Requires AI engine"
+
+[portal.policies.categories.classification]
+desc = "Identify each document's type on upload and tag its metadata for filing and search."
+label = "Classification"
 
 [portal.policies.categories.compliance]
 desc = "对每个文档强制执行 HIPAA、GDPR、SOC 2 或 FedRAMP 要求。"
@@ -7343,6 +7939,13 @@ label = "安全"
 
 [portal.policies.config]
 scopeAll = "所有文档"
+
+[portal.policies.config.classification]
+summary = "Classifies every uploaded document against your team's labels and tags its metadata."
+
+[portal.policies.config.classification.rules]
+0 = "Classify"
+1 = "Tag metadata"
 
 [portal.policies.config.compliance]
 summary = "在文档离开系统之前，根据监管框架验证文档。"
@@ -7370,6 +7973,29 @@ minConfidence = "最低置信度"
 1 = "提取"
 2 = "命名"
 3 = "规范化"
+
+[portal.policies.config.purview]
+label = "Apply a Microsoft Purview sensitivity label"
+
+[portal.policies.config.purview.fields]
+connection = "Purview tenant"
+labelId = "Label ID"
+labelIdHelp = "The label's GUID, from the Purview portal. Applying a label writes its metadata onto the PDF; it cannot encrypt, which needs the Microsoft client."
+labelName = "Label name (optional)"
+labelNameHelp = "Recorded alongside the ID so people and tools can recognise the label."
+
+[portal.policies.config.purview.fields.method]
+help = "Purview distinguishes a label a policy applied from one a person chose."
+label = "How the label is recorded"
+privileged = "As chosen by a person"
+standard = "As applied automatically"
+
+[portal.policies.config.purviewRead]
+label = "Read a Microsoft Purview label"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Purview tenant"
+connectionHelp = "Reads the label the document already carries, so later steps can act on it."
 
 [portal.policies.config.retention]
 summary = "强制执行文档保留时长、何时归档以及何时删除。"
@@ -7438,6 +8064,7 @@ title = "暂无活动"
 [portal.policies.endpoints]
 addWatermark = "水印"
 autoRedact = "遮盖 PII"
+classifyAndLabel = "Classify"
 compressPdf = "压缩"
 flatten = "扁平化"
 ocrPdf = "OCR"
@@ -7447,6 +8074,183 @@ sanitizePdf = "移除 JavaScript"
 description = "你的策略已保存，连接恢复后将显示。"
 retry = "重试"
 title = "后端不可用"
+
+[portal.policies.operations]
+change = "Change what this step does"
+noResults = "No step matches that. Try a product name, or \"scan\", \"notify\", \"attach\"."
+searchPlaceholder = "Search steps - try \"scan\", \"attach\" or a product name"
+
+[portal.policies.operations.bodyMode]
+binary = "Raw file bytes"
+json = "Inside a JSON payload"
+multipart = "As a file upload (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "Your own ClamAV server checks the document; nothing leaves your network."
+label = "Scan for viruses (self-hosted)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Rejects documents carrying macros, executables, scripts or embedded objects."
+label = "Block active content"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Cloudmersive checks the document and the run stops if it is not clean."
+label = "Scan for viruses"
+
+[portal.policies.operations.confluenceAttach]
+description = "Files the processed document onto a page."
+label = "Attach to a Confluence page"
+
+[portal.policies.operations.consignoSubmit]
+description = "Submits the document to ConsignO Cloud for signing."
+label = "Send for signature (ConsignO)"
+note = "Submits the document. Retrieving the signed copy is not yet supported, because a step cannot pass a result to a later step."
+
+[portal.policies.operations.customApiCall]
+description = "Author the call yourself: path, method, body and response handling."
+label = "Call a custom API"
+
+[portal.policies.operations.discordNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Discord"
+
+[portal.policies.operations.elasticIndex]
+description = "Records what the policy did as a searchable document."
+label = "Index an audit event in Elasticsearch"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Multipart suits upload APIs; JSON suits APIs that want the file inside a payload; binary sends the raw bytes."
+label = "How to send the document"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "A JSON body sent as-is. {{document.base64}} carries the file; {{document.*}} and {{run.*}} are filled in per document."
+label = "JSON body"
+
+[portal.policies.operations.fields.connection]
+label = "Account"
+
+[portal.policies.operations.fields.domain]
+label = "Mailgun domain"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "The form field the API expects the document under."
+label = "File field name"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "From"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "A JSON object of header name/value pairs. The connection's credential is added for you."
+label = "Headers"
+
+[portal.policies.operations.fields.index]
+label = "Index"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Issue key"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "Sent as the message body. {{document.*}} and {{run.*}} are filled in per document."
+label = "Message"
+
+[portal.policies.operations.fields.method]
+label = "Method"
+
+[portal.policies.operations.fields.pageId]
+label = "Page ID"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "Appended to the connection's base URL. It can never reach another host."
+label = "Path"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "Where in the drive to write it. {{document.filename}} is filled in per document."
+label = "Destination path"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Report leaves the document untouched. Replace swaps it for whatever comes back."
+label = "What to do with the reply"
+
+[portal.policies.operations.fields.signerEmail]
+label = "Signer's email"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Subject"
+placeholder = "Processed: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Presidio analyses this text. Use {{document.title}} or paste the text you want checked."
+label = "Text to check"
+
+[portal.policies.operations.fields.to]
+label = "To"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Nextcloud username"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Tells a space that the policy handled a document."
+label = "Post a message to Google Chat"
+
+[portal.policies.operations.jiraAttach]
+description = "Files the processed document onto an issue."
+label = "Attach to a Jira issue"
+
+[portal.policies.operations.mailgunEmail]
+description = "Sends the processed document as an attachment."
+label = "Email the document (Mailgun)"
+
+[portal.policies.operations.nextcloudUpload]
+description = "Writes the processed document into a folder."
+label = "Upload to Nextcloud"
+
+[portal.policies.operations.presidioAnalyze]
+description = "Your own Presidio server reports the personal data it finds."
+label = "Detect personal data"
+note = "Presidio reads text, not files. Give it the text you want checked — the document itself is not uploaded."
+
+[portal.policies.operations.responseMode]
+replace = "Replace the document with the reply"
+report = "Keep the document, record the reply"
+
+[portal.policies.operations.sendgridEmail]
+description = "Sends the processed document as an attachment."
+label = "Email the document (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Slack"
+
+[portal.policies.operations.splunkEvent]
+description = "Records what the policy did, where your auditors already look."
+label = "Send an audit event to Splunk"
+
+[portal.policies.operations.sumologicEvent]
+description = "Records what the policy did to an HTTP collector."
+label = "Send an audit event to Sumo Logic"
+
+[portal.policies.operations.teamsNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Teams"
+
+[portal.policies.operations.webhookPost]
+description = "Sends the document itself to a URL you choose."
+label = "Post the document to a webhook"
+
+[portal.policies.operations.zapierNotify]
+description = "Hands the run's details to your automation."
+label = "Trigger a Zap or Make scenario"
 
 [portal.policies.stats]
 activeFor = "活跃"
@@ -7473,12 +8277,23 @@ label = "已应用策略的文档"
 description = "已配置但未触发"
 label = "已暂停"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "返回"
 cancel = "取消"
 continue = "继续"
 enablePolicy = "启用策略"
 saveChanges = "保存更改"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
+label = "Classify the document"
 
 [portal.policies.wizard.capability.compress]
 desc = "将文档压缩为更小的文件大小。"
@@ -7500,9 +8315,17 @@ label = "遮盖敏感信息"
 desc = "移除隐藏的 JavaScript，使文档打开时不会自动运行任何内容。"
 label = "移除活动内容"
 
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server."
+label = "Add a trusted timestamp"
+
 [portal.policies.wizard.capability.watermark]
 desc = "在每一页上盖上可见标记（例如“机密”）。"
 label = "应用水印"
+
+[portal.policies.wizard.classification]
+description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
+labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "请先在工作流中启用至少一个工具。"
@@ -7548,73 +8371,118 @@ setUp = "设置 {{category}} 策略"
 [portal.policies.wizard.workflow]
 description = "选择此策略对其处理的每个文档执行的操作。"
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} 个活跃"
-noRule = "尚未执行任何规则"
-subtitle = "每个文档都会经过的常驻自动化流程，无论由哪个流水线处理。"
-title = "你的 PDFs 上运行的内容"
-
 [portal.policySummary.action]
-comingSoon = "升级到 Enterprise"
-configure = "配置"
 setUp = "设置"
 
-[portal.policySummary.column]
-activeRule = "活跃规则"
-policy = "策略"
-status = "状态"
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
 
-[portal.policySummary.empty]
-description = "配置策略后，类别将显示在这里。"
-title = "暂无策略"
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
 
-[portal.policySummary.state]
-active = "活跃"
-off = "关闭"
-soon = "即将推出"
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
 
-[portal.processingStatus]
-managePlan = "管理方案"
-volumeSuffix = "已处理 PDFs · 过去 30 天"
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
+soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
 
 [portal.procurement]
-reset = "重置采购（演示）"
 subtitle = "让你的团队完成评估、签约和上线。所有文档集中在一处。"
 title = "采购"
 
-[portal.procurement.action]
-download = "下载"
-pay = "立即支付"
-request = "请求"
-sign = "审阅并签署"
-upload = "上传"
-
 [portal.procurement.agreement]
 agreeCta = "同意并订阅"
+confidential = "Confidential"
 confirm = "我已阅读并同意 Stirling Enterprise Agreement。"
-eyebrow = "协议"
-intro = "一份合并协议涵盖你的交易：主服务协议、订单表、EULA 和数据处理协议。请审阅后同意，将报价接受为承诺订阅。"
-title = "审阅你的企业协议"
+docName = "Stirling Enterprise Agreement"
+docSub = "MSA, Order Form, EULA and DPA, combined into one signature."
+download = "Download"
+downloadDraftError = "Could not generate the agreement PDF - the document renderer is unavailable. Please try again shortly or contact support."
+downloadError = "Could not download the signed agreement. Please try again."
+legalName = "Legal entity name"
+legalNamePlaceholder = "The legal entity that will sign"
+loadError = "Could not load the agreement. Please try again."
+loading = "Loading the agreement..."
+ref = "Ref {{ref}} · {{version}}"
+requestChanges = "Request changes"
+scrollHint = "Scroll to review"
+signatory = "Signatory name"
+signatoryPlaceholder = "Full name"
+signatoryTitle = "Signatory title"
+signatoryTitlePlaceholder = "e.g. General Counsel"
+signError = "Could not record your signature. Please try again."
 
 [portal.procurement.builder]
 addons = "附加项"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "返回"
 businessName = "企业名称"
 businessNamePlaceholder = "你的公司"
+city = "City"
+cityPlaceholder = "San Francisco"
+completeRequired = "Please complete the required fields (marked *) with a valid email before generating the quote."
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "继续"
-country = "国家/地区"
-countryEuro = "欧元区 (EUR €)"
-countryUK = "英国 (GBP £)"
-countryUS = "美国 (USD $)"
+done = "Done"
 eula = "我已阅读并同意 Stirling Enterprise EULA。它管理由此报价生成的协议。"
 generate = "生成报价"
-included = "已包含"
 indemnification = "IP 赔偿"
 indemnificationSub = "我们会根据 EULA 为符合条件的 IP 索赔提供抗辩"
-offlineLicense = "离线 / 隔离网络许可证"
-offlineLicenseSub = "用于隔离网络自托管实例的可下载许可证文件"
+paperEyebrow = "Enterprise quote"
+paperFor = "Prepared for"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "季度业务回顾"
 qbrSub = "你的 SE 每季度审查使用情况和路线图"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / 年 · {{years}} 年 {{tcv}}"
 s1Sub = "你的团队，以及预计每年处理的 PDFs 数量。"
 s1Title = "你将处理多少？"
@@ -7623,6 +8491,12 @@ s2Title = "承诺和服务"
 s3Sub = "用于报价及其生成的协议。"
 s3Title = "你的详细信息"
 serviceLevel = "服务级别"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "专属"
 slDedicatedSub = "4 个工作小时 · 专属客户经理 · +30%"
 slPriority = "优先"
@@ -7630,6 +8504,8 @@ slPrioritySub = "同一工作日 · 指定 CSM · +15%"
 slStandard = "标准"
 slStandardSub = "下一个工作日 · 共享 CSM · 已包含"
 stepOf = "第 {{n}} 步，共 {{total}} 步"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "期限"
 termDiscount = "已应用 {{pct}}% 多年承诺折扣"
 title = "构建你的报价"
@@ -7637,6 +8513,7 @@ training = "入门与培训"
 trainingSub = "实时课程帮助你的团队开始使用"
 users = "用户总数"
 usersPlaceholder = "例如 250"
+viewEula = "Read it"
 volEstimated = "根据 {{count}} 位用户估算（每人约 2,000 个 PDFs，包括自动化）。如果你更清楚，可自行编辑。"
 volManual = "正在使用你的数值。你可以随时根据团队规模重新估算。"
 volNoUsers = "不确定？输入你的团队规模，我们将为你估算。"
@@ -7645,55 +8522,55 @@ volumePlaceholder = "例如 1,000,000"
 years_one = "{{count}} 年"
 years_other = "{{count}} 年"
 
-[portal.procurement.docs]
-count_one = "{{count}} 个文档"
-count_other = "{{count}} 个文档"
-done = "完成"
-here = "你在这里"
-hide = "隐藏"
-optional = "可选"
-paidAddon = "付费附加项"
-show = "显示"
-subtitle = "在旅程的每一步，你需要的所有内容都会随交易推进而显示。"
-supportingSubtitle = "SOC 2、安全审查、税务表格等，在你的安全或采购团队需要时即可提供。有些需要一次性费用。"
-supportingTitle = "支持你的评估"
-title = "文档"
-upcoming = "即将到来"
+[portal.procurement.documents]
+agreement = "Enterprise Agreement"
+agreementSub = "MSA, Order Form and DPA in one signature."
+download = "Download"
+eula = "EULA & Commercial Terms"
+eulaSub = "The software and self-serve commercial terms."
+invoice = "Invoice"
+invoiceSub = "Your first subscription invoice."
+laterInvoice = "Available after you accept"
+laterQuote = "Available once your quote is issued"
+quote = "Quote"
+quoteSub = "Your itemised enterprise quote."
+sla = "SLA Exhibit"
+slaSub = "Support tiers and response targets."
+subprocessors = "Subprocessors"
+subprocessorsSub = "Third parties that process data on your behalf."
+subtitle = "Your deal paperwork, available any time."
+title = "Documents"
+view = "View"
 
 [portal.procurement.error]
 title = "出现问题"
 
 [portal.procurement.hero]
-company = "你的企业交易"
+barAria = "Stage {{current}} of {{total}}"
 ctaAgreement = "审阅并签署协议"
-ctaLive = "你已上线"
-ctaPayment = "添加付款"
+ctaExploring = "Set up your trial"
 ctaQuote = "审阅你的报价"
+ctaReviewQuote = "Review quote"
 ctaTrial = "构建你的报价"
+documents = "Documents"
 eyebrow = "企业采购"
+eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "邀请队友"
-keyDocs = "关键文档"
-nextStep = "下一步：{{action}}"
-notStarted = "未开始"
+licenseKey = "Licence key"
+liveSub = "Your organization is provisioned and your licence is active."
+liveTitle = "You are live on Stirling Enterprise"
+next = "Next: {{stage}}"
 open = "打开采购"
 scheduleCall = "安排通话"
-setup1Sub = "邀请你的队友"
-setup1Title = "部署 PDF Editor"
-setup2Sub = "在编辑器和其他源中开启处理"
-setup2Title = "连接 PDF Processor"
-setup3Sub = "在需要时开启安全、合规、路由或保留策略"
-setup3Title = "添加推荐策略"
+sentenceAgreement = "review and sign the agreement"
+sentenceLive = "provisioning and rollout"
+sentencePayment = "purchase order and payment"
+sentenceQuote = "review and accept your quote"
+sentenceTrial = "set up your trial workspace"
 
 [portal.procurement.journey]
 daysLeft_one = "剩余 {{count}} 天"
 daysLeft_other = "剩余 {{count}} 天"
-engineerLabel = "你的解决方案工程师"
-eyebrow = "你的推出流程"
-live = "你已在 Stirling Enterprise 上线"
-nextStep = "下一步：{{action}}"
-subtitle = "你的解决方案工程师会参与每一步。一次只处理一个下一步操作；完整清单如下。"
-title = "从试用到上线，一条引导路径"
-trialTitle = "Enterprise 试用"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "一次签名涵盖 MSA、订单表、EULA 和 DPA。"
@@ -7727,6 +8604,9 @@ downloadError = "暂时无法生成离线许可证文件——请稍后重试。
 downloadOffline = "下载离线许可证 (.lic)"
 hint = "将此密钥粘贴到自托管实例中以激活它，或留作记录。请妥善保管。"
 label = "你的许可证密钥"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "关联账户"
@@ -7739,65 +8619,62 @@ description = "你的订阅已激活，许可证已签发。你的团队已配�
 eyebrow = "已上线"
 title = "你已在 Stirling Enterprise 上线"
 
-[portal.procurement.locked]
-description = "开始企业评估后，试用密钥、承诺用量报价、一签式协议、付款和你的文档账本都会在这里。"
-eyebrow = "仅限 Enterprise"
-talkToSales = "联系销售"
-title = "采购流程随 Enterprise 开启"
-
 [portal.procurement.milestone]
-accept = "接受并继续"
-description = "下载 PDF 与你的团队共享，准备好后回来接受，或进行更改。"
-download = "下载 PDF"
 downloadError = "暂时无法下载报价 PDF——请稍后重试。"
-edit = "编辑报价"
-eyebrow = "报价 {{number}}"
-perYear = " / 年"
-preparedFor = "为 {{company}} 准备"
-tcv = "{{value}} 合同总价值"
-title = "你的报价已准备好"
-
-[portal.procurement.modal]
-cancel = "取消"
-chooseFile = "选择文件"
-close = "关闭"
-downloadBody = "你的下载即将开始。"
-downloadCta = "下载"
-downloadTitle = "下载"
-noFile = "未选择文件"
-payBody = "通过 Stripe 使用银行卡或银行转账支付你的承诺合同。付款到账后，你的工作区会立即配置。"
-payCta = "继续到 Stripe"
-payTitle = "确认付款"
-requestBodyFree = "我们会按需生成此文档。确认后，你的解决方案工程师会很快发送给你。"
-requestBodyPaid = "这是付费附加项。确认后，你的解决方案工程师会评估范围并发送文件。"
-requestCta = "请求"
-requestTitle = "请求此文档"
-signBody = "打开 Stirling Enterprise Agreement 进行电子签名：一次签名涵盖 MSA、订单表、EULA 和 DPA。我们会自动会签，然后你将进入付款步骤。"
-signCta = "打开签署"
-signTitle = "审阅并签署你的协议"
-uploadBody = "向我们发送你的 PO，我们将按其条款开具发票。拖入 PDF 或在下方选择文件。"
-uploadCta = "上传采购订单"
-uploadTitle = "上传你的采购订单"
 
 [portal.procurement.payment]
 description = "你的报价已接受，许可证也已激活——你的团队可以立即开始使用。准备好后支付第一张发票；你可以在这里支付或下载，无需 email。"
+downloadAgreement = "Download signed agreement"
 downloadInvoice = "下载发票"
-simulate = "模拟已收到付款（演示）"
+eyebrow = "Payment"
 title = "订阅已创建"
 viewInvoice = "查看并支付发票"
+
+[portal.procurement.review]
+acceptCta = "Accept quote"
+annual = "Annual fee (year 1)"
+downloadCta = "Download quote"
+poNumber = "Purchase order: {{po}}"
+renewal = "Renews at {{amount}}/year after the term (+{{pct}}% CPI)"
+tcv = "{{years}}-year term, paid in full up front: {{tcv}}"
+validUntil = "Valid until {{date}}"
 
 [portal.procurement.schedule]
 fallback = "无法加载调度器。"
 fallbackLink = "在新标签页中打开调度"
+loading = "Loading scheduler..."
 subtitle = "你的解决方案工程师将带领你的团队完成推出流程。选择一个适合你的时间。"
 title = "安排通话"
 
-[portal.procurement.status]
-action = "需要操作"
-available = "可用"
-complete = "完成"
-pending = "待处理"
-request = "按请求提供"
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Sealed, no outbound"
+back = "Back"
+businessName = "Business name"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "Managed, fastest start"
+continue = "Continue"
+deployment = "Where should it deploy?"
+eula = "I agree to the Stirling EULA & Commercial Terms."
+fullName = "Full name"
+fullNamePlaceholder = "Your name"
+invites = "Invite teammates · optional"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Schedule a call"
+seats = "People testing"
+seatsPlaceholder = "e.g. 15"
+selfhost = "Self-hosted"
+selfhostSub = "Docker or Kubernetes"
+start = "Start trial"
+stepOf = "Step {{n}} of {{total}}"
+subtitle = "Free for 14 days, no card required."
+subtitleDetails = "A few details for your quote and agreement."
+talkFirst = "Prefer to talk first?"
+title = "Set up your trial"
+viewEula = "Read it"
+workEmail = "Work email"
+workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "延长会增加 7 天，并通知你的解决方案工程师。"
@@ -7807,20 +8684,6 @@ extend = "延长 7 天"
 maxed = "已达上限"
 subtitle = "你的免费试用持续到 {{date}}。无需银行卡。"
 title = "Enterprise 试用"
-
-[portal.procurement.upsell]
-homeBadge = "Enterprise"
-homeBody = "承诺用量定价、全组织 SSO + SCIM + RBAC、90 天不可变审计，以及专属 SE。"
-homeCta = "开始试用 →"
-homeHeadline = "处理数百万个 PDFs。"
-
-[portal.recentActivity]
-title = "近期活动"
-viewAll = "查看全部"
-
-[portal.recentActivity.empty]
-description = "流水线运行、部署和代理事件将显示在这里。"
-title = "这里还没有内容"
 
 [portal.search]
 ariaLabel = "搜索"
@@ -7838,57 +8701,49 @@ admin = "管理员"
 [portal.settings.sections]
 account-link = "账户关联"
 
-[portal.shell.header]
-accountFallback = "账户"
-accountMenu = "账户菜单"
-darkMode = "深色模式"
-lightMode = "浅色模式"
-search = "搜索"
-searchPlaceholder = "搜索…"
-signOut = "退出登录"
-switchToDark = "切换到深色主题"
-switchToLight = "切换到浅色主题"
-
 [portal.shell.sidebar]
 appEditor = "编辑器"
 appProcessor = "处理器"
-brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} 个文档"
 linkAccount = "关联 Stirling 账户"
-planEditor = "编辑器方案"
-planEnterprise = "Enterprise 方案"
-planProcessor = "处理器方案"
 primaryNav = "主导航"
 switchApp = "切换应用"
+
+[portal.shell.topbar]
+closeNav = "Close navigation"
+openNav = "Open navigation"
+search = "Search"
 
 [portal.sources]
 subtitle = "可复用的输入连接，用于将文档送入 Stirling。配置一次连接，然后可在任意数量的策略中引用它。点击一行查看其配置以及使用它的策略。"
 title = "源"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "连接源"
+
+[portal.sources.builder]
+back = "Back to sources"
+backToTypes = "All source types"
+cancel = "Cancel"
+chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
+comingSoon = "Coming soon"
+comingSoonHeading = "Coming soon"
+create = "Create source"
+createTitle = "Connect a source"
+delete = "Delete"
+editTitle = "Edit source"
+enabled = "Enabled"
+save = "Save changes"
+
+[portal.sources.builder.folderAccess]
+description = "Folder automations can only use folders an administrator has allowed. Add it under Folder Access settings, then try again."
+openSettings = "Folder Access settings"
+title = "This folder isn't allowed"
 
 [portal.sources.delete]
 body = "删除“{{name}}”？此操作无法撤销。引用它的策略需要更新。"
 cancel = "取消"
 confirm = "删除"
 title = "删除源？"
-
-[portal.sources.detail]
-closeAriaLabel = "关闭详情"
-delete = "删除源"
-docs24h = "过去 24 小时"
-docs30d = "过去 30 天"
-docsTotal = "累计发现"
-docsTrend = "过去 30 天的文档"
-documents = "文档"
-edit = "编辑"
-notReferenced = "未被任何策略引用，因此可以安全删除。"
-pause = "暂停"
-resume = "恢复"
-subtitle = "{{type}} · {{status}}"
-usedBy = "使用者"
 
 [portal.sources.empty]
 description = "连接一个文件夹（很快还会支持云存储），让你的策略有地方拉取文档。"
@@ -7899,18 +8754,57 @@ inUse = "使用中"
 total = "连接"
 unused = "未使用"
 
+[portal.sources.networkFields.connection]
+helperText = "The stored connection with the server address and credentials. Reused by every source that references it."
+label = "Connection"
+
+[portal.sources.networkFields.directory]
+helperText = "Folder on the server to poll, relative to the login home or share root. Leave blank for the root."
+label = "Folder"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume removes each file from the server once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: process each file once"
+snapshot = "Snapshot: re-read the folder every run"
+
+[portal.sources.networkFields.recursive]
+label = "Folder depth"
+
+[portal.sources.networkFields.recursive.options]
+all = "Include subfolders"
+top = "Top level only"
+
 [portal.sources.status]
 active = "活跃"
 disabled = "已禁用"
 unused = "未使用"
 
 [portal.sources.table]
+documents = "Documents"
 source = "源"
 status = "状态"
 usedBy = "策略"
 
+[portal.sources.types.box]
+description = "Pull documents from Box folders your team already shares."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Pull documents from a shared Dropbox folder."
+label = "Dropbox"
+
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "编辑器"
+noPolicies = "No policies run from the editor yet."
+
+[portal.sources.types.email]
+description = "Turn attachments sent to a dedicated mailbox into documents."
+label = "Email inbox"
 
 [portal.sources.types.folder]
 description = "监视服务器上的目录以发现新文档。"
@@ -7943,25 +8837,80 @@ label = "文件夹深度"
 all = "包含子文件夹"
 top = "仅顶层"
 
+[portal.sources.types.ftp]
+description = "Poll an FTP or FTPS server folder for new documents."
+label = "FTP"
+
+[portal.sources.types.googledrive]
+description = "Pull documents from shared Google Drive folders."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Watch an SMB network share for new documents."
+label = "Network drive"
+
+[portal.sources.types.onedrive]
+description = "Watch OneDrive folders for new documents."
+label = "OneDrive"
+
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+label = "Connection"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Poll an SFTP drop folder for new documents."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "Pull documents from SharePoint document libraries."
+label = "SharePoint"
+
 [portal.sources.types.unknown]
 label = "源"
 
+[portal.sources.types.webhook]
+createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."
+description = "Receive documents by signed HTTP POST from any external system."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "Delivery URL"
+secretNote = "The signing secret is shown once, when the webhook is created. Recreate the source to roll it."
+
+[portal.sources.types.webhook.reveal]
+copy = "Copy"
+done = "Done"
+secret = "Signing secret"
+secretHelp = "Sign each delivery's raw body with this key (HMAC-SHA256) and send it as the X-Stirling-Signature header."
+secretWarning = "Copy the signing secret now. For your security it is shown only once and cannot be retrieved later."
+title = "Webhook created"
+url = "Delivery URL"
+usage = "POST each document as the raw request body to the delivery URL with a binary content type (application/pdf or application/octet-stream). Referencing policies run automatically on arrival."
+
 [portal.sources.wizard]
-back = "返回"
-cancel = "取消"
-continue = "继续"
-editTitle = "编辑源"
 name = "名称"
 namePlaceholder = "例如 理赔接收"
-save = "保存更改"
-subtitle = "第 {{current}} 步，共 {{total}} 步 · {{label}}"
-title = "连接源"
 type = "类型"
 
-[portal.sources.wizard.steps]
-chooseType = "选择类型"
-configure = "配置"
-review = "审阅并连接"
+[portal.stepModal]
+close = "Close"
 
 [portal.usage]
 managePayment = "管理付款"
@@ -8021,16 +8970,9 @@ summary = "拥有一个团队——管理其成员资源和共享配置。"
 2 = "通过默认策略访问门户"
 3 = "Member 可以做的所有事"
 
-[portal.welcome]
-ariaLabel = "欢迎使用 Stirling PDF"
-badge = "开源"
-installEditor = "安装编辑器"
-inviteTeammates = "邀请队友"
-openInBrowser = "在浏览器中打开"
-perks = "永久免费 · 可自托管"
-subtitle = "全球最安全的 PDF Editor 对各种规模的团队免费。包括 60+ 个 PDF 操作和 SSO。"
-title = "欢迎使用"
-titleAccent = "Stirling PDF"
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
 
 [printFile]
 title = "打印文件"
@@ -8613,6 +9555,14 @@ text = "以 90° 为增量顺时针或逆时针旋转 PDF 页面。PDF 中所有
 [rotate.tooltip.header]
 title = "旋转设置概览"
 
+[ruler]
+clearAll = "Clear all"
+hideAllLabels = "Hide all labels"
+hideSmallLabels = "Hide small labels"
+physicalValues = "Physical"
+scaled = "Scaled"
+showAllLabels = "Show all labels"
+
 [sanitize]
 desc = "移除 PDF 文件中的潜在有害元素。"
 sanitizationResults = "安全清理结果"
@@ -8654,30 +9604,44 @@ label = "删除 XMP 元数据"
 [sanitize.steps]
 settings = "设置"
 
-[sanitizePdf]
-tags = "清理、安全、安全、删除威胁"
-
 [sanitizePDF]
 title = "清理 PDF"
+
+[sanitizePdf]
+tags = "清理、安全、安全、删除威胁"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "调整页面缩放比例"
 
+[scaleSettings]
+activeScale = "Active Scale"
+apply = "Apply Scale"
+applyCalibration = "Apply Calibration"
+calculatedScale = "Calculated scale"
+calibrate = "Calibrate"
+calibrating = "Calibrating"
+calibrationDistanceRequired = "Enter a real-world distance greater than zero"
+calibrationInvalid = "Unable to calculate scale from this measurement"
+calibrationPaperDistance = "Measured page distance: {{distance}}"
+calibrationTitle = "Calibrate Scale"
+calibrationTooltip = "Measure a known distance to calculate the scale automatically"
+customScale = "Custom Scale"
+noneSet = "No custom scale set"
+presets = "Preset Scales"
+ratio = "Scale Ratio"
+ratioHelp = "Ratio: 1 page unit = X real-world units"
+ratioPlaceholder = "e.g., 100"
+ratioPositive = "Ratio must be greater than zero"
+ratioRequired = "Ratio is required"
+realDistance = "Real-world distance"
+realDistancePlaceholder = "e.g., 5"
+reset = "Reset to Defaults"
+unit = "Unit"
+unitInvalid = "Invalid unit: {{scaleUnit}}"
+
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[ScannerImageSplit.selectText]
-1 = "角度阈值："
-10 = "设置添加和删除的边框大小，以防止输出中出现白边（默认值：1）。"
-2 = "设置图像被旋转所需的最小绝对角度（默认：10）。"
-3 = "公差："
-4 = "确定估计背景颜色周围的颜色变化范围（默认值：30）。"
-5 = "最小面积："
-6 = "设置照片的最小面积阈值（默认：10000）。"
-7 = "最小轮廓面积："
-8 = "设置照片的最小轮廓面积阈值。"
-9 = "边框尺寸："
 
 [scannerImageSplit]
 submit = "提取图像扫描"
@@ -8710,6 +9674,18 @@ whatThisDoes = "功能说明"
 whatThisDoesDesc = "自动查找并从扫描页面或合成图像中提取每张照片 - 无需手动裁剪。"
 whenToUse = "何时使用"
 
+[ScannerImageSplit.selectText]
+1 = "角度阈值："
+10 = "设置添加和删除的边框大小，以防止输出中出现白边（默认值：1）。"
+2 = "设置图像被旋转所需的最小绝对角度（默认：10）。"
+3 = "公差："
+4 = "确定估计背景颜色周围的颜色变化范围（默认值：30）。"
+5 = "最小面积："
+6 = "设置照片的最小面积阈值（默认：10000）。"
+7 = "最小轮廓面积："
+8 = "设置照片的最小轮廓面积阈值。"
+9 = "边框尺寸："
+
 [search]
 noResults = "未找到结果"
 placeholder = "输入搜索词…"
@@ -8727,46 +9703,22 @@ toolNotAvailableLocally = "您的 Stirling-PDF 服务器处于离线状态，且
 [session]
 expired = "您的会话已过期。请刷新页面并重试。"
 
-[sessionManagement.tooltip]
-header = "管理签署会话"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "新参与者将添加到签署顺序的末尾"
-bullet2 = "会话最终确定后无法再添加参与者"
-bullet3 = "轮到他们时，每位参与者都会收到通知"
-description = "在最终确定前，您可以随时向活动会话添加更多参与者。"
-title = "添加参与者"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>完全最终确定</b>：所有参与者均已签署"
-bullet2 = "<b>部分最终确定</b>：部分参与者尚未签署"
-bullet3 = "未签署的参与者将被排除在最终文档之外"
-bullet4 = "最终确定后，您可以将已签署的 PDF 加载到活动文件中"
-description = "最终确定会将所有签名合并为一个已签署的 PDF。此操作无法撤销。"
-title = "会话最终确定"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "无法移除已签署的参与者"
-bullet2 = "被移除的参与者将不再收到通知"
-bullet3 = "签署顺序将自动调整"
-description = "参与者可在签署前从会话中移除。"
-title = "移除参与者"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "每个签名都会按顺序应用到 PDF"
-bullet2 = "后续签署者可以看到较早的签名"
-bullet3 = "对审批流程和法律保全至关重要"
-description = "您在创建会话时指定的顺序决定谁先签署。"
-title = "签署顺序"
-
 [settings]
 close = "关闭"
+
+[settings.ai]
+documents = "Documents & RAG"
+general = "General"
+limits = "Limits & Performance"
+models = "Models & Providers"
+title = "AI"
 
 [settings.configuration]
 advanced = "高级"
 database = "数据库"
 endpoints = "端点"
 features = "功能"
+folderAccess = "Folder Access"
 mcp = "MCP Server"
 storageSharing = "文件存储与共享"
 systemSettings = "系统设置"
@@ -8800,6 +9752,8 @@ defaultPdfEditor = "默认 PDF 编辑器"
 defaultPdfEditorActive = "Stirling PDF 是您的默认 PDF 编辑器"
 defaultPdfEditorChecking = "正在检查..."
 defaultPdfEditorInactive = "其他应用被设为默认"
+defaultPdfEditorRemind = "Remind me to set as default"
+defaultPdfEditorRemindDescription = "Show a banner when Stirling PDF is not your default PDF application."
 defaultPdfEditorSet = "已为默认"
 defaultStartupView = "启动时的默认视图"
 defaultStartupViewDescription = "选择应用启动时左侧栏中激活的选项卡"
@@ -8817,9 +9771,18 @@ languageDescription = "选择显示语言"
 logout = "退出登录"
 setAsDefault = "设为默认"
 theme = "主题"
+themeAccent = "Accent colour"
+themeAccentCustom = "Custom colour"
+themeAccentCustomHint = "Custom (defaults recommended)"
+themeAccentDark = "Dark mode accent colour"
+themeAccentDefault = "Default"
+themeAccentDefaultHint = "Default theme (recommended)"
+themeAccentDescription = "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active."
+themeAccentLight = "Light mode accent colour"
 themeDark = "深色"
 themeDescription = "在浅色和深色模式间切换"
 themeLight = "浅色"
+themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "通用"
 user = "用户"
@@ -8832,6 +9795,12 @@ dismiss = "关闭"
 intro = "为您的组织启用用户认证、团队管理和工作区功能。"
 learnMore = "在文档中了解更多"
 title = "面向系统管理员"
+
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
 
 [settings.general.mode]
 fullscreen = "全屏"
@@ -9040,6 +10009,11 @@ connections = "连接"
 security = "安全"
 telegram = "Telegram"
 title = "安全与认证"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "团队"
@@ -9657,6 +10631,9 @@ uploadButton = "上传到服务器"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,文档,swagger,端点,开发"
 title = "API 文档"
 
@@ -9764,14 +10741,42 @@ selectFilesHint = "在“活动文件”中选择文件以运行此工具"
 singleFileScope = "仅应用于：{{fileName}}"
 viewerMode = "切换到文件编辑器以选择多个文件。"
 
+[toolFormat]
+ANY = "any file"
+CBR = "a comic book archive (CBR)"
+CBZ = "a comic book archive (CBZ)"
+CSV = "a CSV file"
+EBOOK = "an ebook"
+EMAIL = "an email"
+EXCEL = "a spreadsheet"
+HTML = "a web page"
+IMAGE = "images"
+JAVASCRIPT = "a JavaScript file"
+JSON = "a JSON file"
+MARKDOWN = "a Markdown file"
+NONE = "no file"
+PCL = "a PCL print file"
+PDF = "a PDF"
+PDF_ENCRYPTED = "a password-protected PDF"
+POSTSCRIPT = "a PostScript file"
+PPT = "a presentation"
+TEXT = "a text file"
+VIDEO = "a video"
+WORD = "a Word document"
+XML = "an XML file"
+XPS = "an XPS document"
+ZIP = "a ZIP archive"
+
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "返回所有工具"
 collapse = "折叠面板"
 expand = "展开面板"
 goBack = "返回"
+pdfTools = "PDF Tools"
 placeholder = "选择一个工具以开始"
 premiumFeature = "高级功能："
+searchTools = "Search tools"
 toolsHeader = "工具"
 viewAllTools = "查看所有工具"
 
@@ -9805,11 +10810,6 @@ allTools = "所有工具"
 noToolsFound = "未找到工具"
 quickAccess = "快速访问"
 searchPlaceholder = "搜索工具…"
-
-[toolPicker.categories]
-advancedTools = "高级工具"
-recommendedTools = "推荐工具"
-standardTools = "标准工具"
 
 [toolPicker.subcategories]
 advancedFormatting = "高级排版"
@@ -9950,15 +10950,30 @@ title = "用户"
 you = "（你）"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "删除团队"
 disableMfa = "重置 MFA"
 move = "移动到团队"
 reinstate = "恢复"
 remove = "从组织中移除"
+removeTeam = "Remove from team"
 rename = "重命名团队"
 resetPw = "重置密码"
 suspend = "暂停"
 unlock = "解锁账户"
+
+[users.activity]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "Just now"
+minutesAgo = "{{count}}m ago"
+monthsAgo_one = "{{count}} month ago"
+monthsAgo_other = "{{count}} months ago"
+never = "Never"
+weeksAgo_one = "{{count}} week ago"
+weeksAgo_other = "{{count}} weeks ago"
+yearsAgo_one = "{{count}} year ago"
+yearsAgo_other = "{{count}} years ago"
 
 [users.cap]
 addProcessor = "+ 处理器"
@@ -9967,11 +10982,14 @@ editor = "编辑器"
 processor = "处理器"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "删除 {{name}} 团队？该团队必须先为空——请将其成员移动到其他团队，并且它不能仍拥有任何集成配置。"
 deleteTeamTitle = "删除团队"
 disableMfaBody = "移除 {{name}} 的 MFA 注册？如果需要，他们将在下次登录时重新设置。"
 disableMfaTitle = "重置 MFA"
 removeBody = "永久从组织中移除 {{name}}？此操作无法撤销。"
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "移除成员"
 
 [users.empty]
@@ -10021,6 +11039,16 @@ title = "邀请成员"
 username = "用户名"
 usernameError = "用户名必须至少包含 3 个字符"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expiresInDays_one = "Expires in {{count}} day"
+expiresInDays_other = "Expires in {{count}} days"
+expiresToday = "Expires today"
+title = "Pending invitations"
 
 [users.loadError]
 description = "连接后端时出现问题，或者你没有访问权限。请重试。"
@@ -10212,9 +11240,11 @@ title = "附件"
 
 [viewer.bookmarks]
 bookmarkTitle = "书签标题"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "关闭书签侧边栏"
 collapseAll = "折叠所有书签"
 expandAll = "展开所有书签"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "添加评论"
@@ -10605,30 +11635,6 @@ title = "水印文本"
 image = "图像"
 text = "文本"
 
-[wetSignature.tooltip]
-header = "签名创建方式"
-
-[wetSignature.tooltip.draw]
-bullet1 = "自定义笔颜色和粗细"
-bullet2 = "清除并重新绘制直至满意"
-bullet3 = "适用于触控设备（平板、手机）"
-description = "使用鼠标或触摸屏创建手写签名。最适合个人、真实的签名。"
-title = "手写签名"
-
-[wetSignature.tooltip.type]
-bullet1 = "从多种字体中选择"
-bullet2 = "自定义文字大小和颜色"
-bullet3 = "适用于标准化签名"
-description = "从输入文本生成签名。快速一致，适用于商务文档。"
-title = "文字签名"
-
-[wetSignature.tooltip.upload]
-bullet1 = "支持 PNG、JPG 等图像格式"
-bullet2 = "建议使用透明背景以获得最佳效果"
-bullet3 = "图像将调整大小以适配签名区域"
-description = "上传预先制作的签名图像。如果您有扫描的签名或公司徽标，理想之选。"
-title = "上传签名图像"
-
 [workbenchBar]
 activeFiles = "活动文件"
 annotations = "注释"
@@ -10652,6 +11658,7 @@ redact = "涂黑"
 rotateLeft = "向左旋转"
 rotateRight = "向右旋转"
 ruler = "标尺/测量"
+rulerSettings = "Scale Settings"
 save = "保存"
 saveAll = "全部保存"
 saveAs = "另存为"
