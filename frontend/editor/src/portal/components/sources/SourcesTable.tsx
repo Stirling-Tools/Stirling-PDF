@@ -94,7 +94,9 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
       },
       {
         key: "open",
-        header: "",
+        header: (
+          <span className="sr-only">{t("portal.sources.table.open")}</span>
+        ),
         align: "right",
         width: "2.5rem",
         // The editor source has no page to open, so it shows no chevron.

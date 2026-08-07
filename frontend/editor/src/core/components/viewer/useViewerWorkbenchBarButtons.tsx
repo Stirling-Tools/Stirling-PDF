@@ -200,18 +200,18 @@ export function useViewerWorkbenchBarButtons(
               opened={isSearchInterfaceVisible}
               onClose={viewer.searchInterfaceActions.close}
             >
+              {/* The button is the target: Popover.Target puts aria-expanded
+                  on whatever it wraps, which a plain div may not carry. */}
               <Popover.Target>
-                <div style={{ display: "inline-flex" }}>
-                  <ActionIcon
-                    variant="tertiary"
-                    className="workbench-bar-action-icon"
-                    disabled={disabled}
-                    aria-label={searchLabel}
-                    onClick={viewer.searchInterfaceActions.toggle}
-                  >
-                    <LocalIcon icon="search" width="1rem" height="1rem" />
-                  </ActionIcon>
-                </div>
+                <ActionIcon
+                  variant="tertiary"
+                  className="workbench-bar-action-icon"
+                  disabled={disabled}
+                  aria-label={searchLabel}
+                  onClick={viewer.searchInterfaceActions.toggle}
+                >
+                  <LocalIcon icon="search" width="1rem" height="1rem" />
+                </ActionIcon>
               </Popover.Target>
               <Popover.Dropdown>
                 <div style={{ minWidth: "20rem" }}>

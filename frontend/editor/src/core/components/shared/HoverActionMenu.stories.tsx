@@ -74,3 +74,32 @@ export const WithDisabledAction: Story = {
     ],
   },
 };
+
+/** Seated outside the card's edge rather than inside it. */
+export const OutsidePosition: Story = {
+  args: { show: true, actions, position: "outside" },
+};
+
+/** An action hidden outright — dropped rather than greyed. */
+export const WithHiddenAction: Story = {
+  args: {
+    show: true,
+    actions: [actions[0], { ...actions[1], hidden: true }, actions[2]],
+  },
+};
+
+/** Every action hidden: the menu renders nothing at all, so a card with no
+ *  available actions gets no empty affordance. */
+export const AllHidden: Story = {
+  args: { show: true, actions: actions.map((a) => ({ ...a, hidden: true })) },
+};
+
+/** A single action. */
+export const SingleAction: Story = {
+  args: { show: true, actions: [actions[2]] },
+};
+
+/** Revealed by CSS hover rather than React state — hover the card. */
+export const CssHoverVisibility: Story = {
+  args: { show: false, actions, visibility: "cssHover" },
+};

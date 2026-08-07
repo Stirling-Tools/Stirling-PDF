@@ -15,7 +15,10 @@ import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { validateEmail } from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
-import { getClickablePaperStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
+import {
+  getClickableCardProps,
+  getClickablePaperStyle,
+} from "@app/components/shared/stripeCheckout/utils/cardStyles";
 import {
   STATIC_STRIPE_LINKS,
   buildStripeUrlWithEmail,
@@ -194,7 +197,9 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
                   p="xl"
                   radius="md"
                   style={getClickablePaperStyle()}
-                  onClick={() => handlePeriodSelect("monthly")}
+                  {...getClickableCardProps(() =>
+                    handlePeriodSelect("monthly"),
+                  )}
                 >
                   <Stack
                     gap="md"
@@ -218,7 +223,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
                   p="xl"
                   radius="md"
                   style={getClickablePaperStyle()}
-                  onClick={() => handlePeriodSelect("yearly")}
+                  {...getClickableCardProps(() => handlePeriodSelect("yearly"))}
                 >
                   <Stack
                     gap="md"

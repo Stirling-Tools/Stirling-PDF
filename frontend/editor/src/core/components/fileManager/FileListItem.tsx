@@ -208,11 +208,13 @@ const FileListItem: React.FC<FileListItemProps> = ({
       >
         <Group gap="sm">
           {!isHistoryFile && (
-            <Box>
-              {/* Checkbox for regular files only */}
+            <Box onClick={(e) => e.stopPropagation()}>
+              {/* The row's own onClick is mouse-only, so the checkbox has to
+                  carry the keyboard path rather than deferring to it. Its
+                  click stops above so a mouse press doesn't toggle twice. */}
               <Checkbox
                 checked={isSelected}
-                onChange={() => {}} // Handled by parent onClick
+                onChange={() => onSelect(false)}
                 size="sm"
                 pl="sm"
                 pr="xs"
