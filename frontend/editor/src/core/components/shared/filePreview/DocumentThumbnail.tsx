@@ -33,6 +33,23 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
 }) => {
   if (!file) return null;
 
+  // A thumbnail that takes a click is a control; without these it is a div, so
+  // the file cannot be opened by keyboard. Only applied when a handler was
+  // given — a decorative thumbnail should not take a tab stop.
+  const interactive = onClick
+    ? {
+        role: "button",
+        tabIndex: 0,
+        onClick,
+        onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick();
+          }
+        },
+      }
+    : {};
+
   const containerStyle: React.CSSProperties = {
     position: "relative",
     cursor: onClick ? "pointer" : "default",
@@ -47,7 +64,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
 
   if (thumbnail && !isEncrypted) {
     return (
-      <Box style={containerStyle} onClick={onClick}>
+      <Box style={containerStyle} {...interactive}>
         <PrivateContent>
           <img
             src={thumbnail}
@@ -77,7 +94,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
 
   if (isEncrypted) {
     return (
-      <Box style={containerStyle} onClick={onClick}>
+      <Box style={containerStyle} {...interactive}>
         <div
           style={{
             display: "flex",
@@ -116,7 +133,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
 
   if (isLoading) {
     return (
-      <Box style={containerStyle} onClick={onClick}>
+      <Box style={containerStyle} {...interactive}>
         <Stack
           align="center"
           justify="center"
@@ -136,7 +153,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
   const ext = detectFileExtension(file.name ?? "").toUpperCase();
 
   return (
-    <Box style={containerStyle} onClick={onClick}>
+    <Box style={containerStyle} {...interactive}>
       <Center
         style={{
           width: "100%",
