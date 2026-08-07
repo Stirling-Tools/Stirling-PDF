@@ -23,6 +23,7 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertToPdfUaSettings from "@app/components/tools/convert/ConvertToPdfUaSettings";
 import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
 import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
@@ -474,6 +475,20 @@ const ConvertSettings = ({
           <>
             <Divider />
             <ConvertToPdfaSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              selectedFiles={selectedFiles}
+              disabled={disabled}
+            />
+          </>
+        )}
+
+      {/* PDF to PDF/UA options */}
+      {parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "pdfua" && (
+          <>
+            <Divider />
+            <ConvertToPdfUaSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
               selectedFiles={selectedFiles}

@@ -182,6 +182,12 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -276,6 +282,12 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -338,6 +350,12 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -407,6 +425,12 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -483,6 +507,12 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -558,6 +588,12 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -630,6 +666,12 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -693,6 +735,12 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -764,6 +812,12 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -827,6 +881,12 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -897,6 +957,12 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -965,6 +1031,12 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          title: "",
+          embedFonts: true,
         },
         cbzOutputOptions: {
           dpi: 150,

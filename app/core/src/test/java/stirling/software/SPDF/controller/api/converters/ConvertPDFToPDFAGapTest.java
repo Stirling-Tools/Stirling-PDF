@@ -65,7 +65,13 @@ class ConvertPDFToPDFAGapTest {
     @Mock private TempFileManager tempFileManager;
 
     private ConvertPDFToPDFA newController() {
-        return new ConvertPDFToPDFA(runtimePathConfig, veraPDFService, tempFileManager);
+        return new ConvertPDFToPDFA(
+                runtimePathConfig,
+                veraPDFService,
+                new stirling.software.SPDF.service.ua.PdfaAccessibilityService(
+                        new stirling.software.SPDF.service.ua.PdfUaValidationService(),
+                        veraPDFService),
+                tempFileManager);
     }
 
     // ---- reflection helpers ----------------------------------------------------------------
