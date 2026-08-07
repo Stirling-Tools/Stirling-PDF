@@ -74,7 +74,7 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   responseHandler?: ResponseHandler;
 
   /** Extract user-friendly error messages from API errors */
-  getErrorMessage?: (error: any) => string;
+  getErrorMessage?: (error: unknown) => string;
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
