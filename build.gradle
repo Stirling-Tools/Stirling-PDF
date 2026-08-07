@@ -38,7 +38,6 @@ ext {
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.4"
-    jackson2Version = "2.22.1"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
@@ -50,6 +49,17 @@ ext {
     smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
+    // Security CVE overrides for Spring Boot 4 BOM-managed transitives
+    nettyVersion = "4.2.16.Final"
+    jackson2Version = "2.22.1"
+    // jackson-annotations ships 2-component versions (2.22, not 2.22.1)
+    jackson2AnnotationsVersion = "2.22"
+    // Jackson 3 (tools.jackson) used by Spring Boot 4; stays on Spring's 3.1.x line
+    jackson3Version = "3.1.5"
+    postgresqlVersion = "42.7.13"
+    // velocity-engine-core 2.3 (via shib-velocity SAML stack) shades a vulnerable
+    // commons-io 2.8.0 (CVE-2024-47554) into its jar; 2.4.1 no longer shades it
+    velocityVersion = "2.4.1"
     // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 25
 }
@@ -234,17 +244,31 @@ subprojects {
         resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
         // CVE-2024-47554: commons-io DoS prevention
         resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
-        // Jackson 2 is transitive-only here (jinjava, opensaml, jjwt request older versions);
-        // pin the family to a current release and keep modules aligned.
-        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jackson2Version}"
+        // CVE-2024-47554: velocity-engine-core 2.3 shades commons-io 2.8.0; 2.4.1 unshades it
+        resolutionStrategy.force "org.apache.velocity:velocity-engine-core:${velocityVersion}"
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
+        resolutionStrategy.eachDependency { details ->
+            // Netty: GHSA-gcjf-9mgh-3p7g/q4f6-jm68-57ww/4mp9-239f-g9hg/6cqp-g7gg-8hr5 need 4.2.16+
+            if (details.requested.group == "io.netty") {
+                details.useVersion nettyVersion
+                details.because "netty CVE fixes (>=4.2.16.Final)"
+            }
+            // Jackson 2.x: GHSA-5gvw-p9qm-jgwh (@JsonView bypass) fixed in 2.22.1.
+            // jackson-annotations uses 2-component versions (2.22), unlike core/databind.
+            if (details.requested.group.startsWith("com.fasterxml.jackson")) {
+                details.useVersion(details.requested.name == "jackson-annotations"
+                    ? jackson2AnnotationsVersion : jackson2Version)
+                details.because "jackson 2.x CVE fixes (>=2.22.1)"
+            }
+            // Jackson 3 (tools.jackson) ships with Spring Boot 4; same advisory fixed in 3.1.5
+            if (details.requested.group.startsWith("tools.jackson")) {
+                details.useVersion jackson3Version
+                details.because "jackson 3.x CVE fixes (>=3.1.5)"
+            }
+        }
     }
 
     dependencyManagement {
@@ -254,6 +278,8 @@ subprojects {
         dependencies {
             // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
             dependency "org.apache.commons:commons-lang3:$commonsLang3"
+            // GHSA-j92g-9f8w-j867 (channel-binding downgrade): BOM pins 42.7.10, needs 42.7.12+
+            dependency "org.postgresql:postgresql:$postgresqlVersion"
         }
     }
 

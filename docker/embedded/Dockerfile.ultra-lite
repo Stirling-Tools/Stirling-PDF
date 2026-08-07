@@ -101,6 +101,7 @@ ENV VERSION_TAG=$VERSION_TAG \
 RUN mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /storage /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
     apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
     tzdata \
