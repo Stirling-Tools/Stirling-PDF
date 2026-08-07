@@ -4,8 +4,9 @@ import logging
 
 from pydantic import ConfigDict, Field
 from pydantic_ai import Agent
+from pydantic_ai.output import NativeOutput
 
-from stirling.agents.output_mode import output_retries, structured_output
+from stirling.agents.output_mode import output_retries
 from stirling.agents.registry import AgentDescriptor, OrchestratorRoute
 from stirling.contracts import (
     ExtractedTextArtifact,
@@ -62,8 +63,8 @@ class OrchestratorAgent:
         }
         self._router = Agent(
             model=runtime.fast_model,
-            output_type=structured_output([_RouteDecision], chat_provider=runtime.settings.chat_provider),
-            # Local models pick a capability less reliably; extra retries. No-op for real providers.
+            output_type=NativeOutput([_RouteDecision]),
+            # Local models can still need extra output-validation retries. No-op for real providers.
             retries=output_retries(runtime.settings.chat_provider),
             system_prompt=_build_router_prompt(routes),
             model_settings=runtime.fast_model_settings,
