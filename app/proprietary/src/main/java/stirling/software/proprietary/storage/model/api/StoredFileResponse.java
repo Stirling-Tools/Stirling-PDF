@@ -17,6 +17,9 @@ public class StoredFileResponse {
     private final String owner;
     private final boolean ownedByCurrentUser;
     private final String accessRole;
+
+    // Content revision for optimistic concurrency; clients echo it back on update.
+    private final long version;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final List<String> sharedWithUsers;

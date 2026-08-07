@@ -574,6 +574,28 @@
   pointer-events: none;
 }
 
+/* Newer shared revision exists on the server; sits under the Open badge slot. */
+.files-page-card-update-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: var(--c-warning);
+  color: var(--c-text-on-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.85),
+    0 2px 6px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
 .files-page-card-open-dot {
   width: 0.45rem;
   height: 0.45rem;

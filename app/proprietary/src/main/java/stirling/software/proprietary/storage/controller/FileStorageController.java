@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -77,9 +78,11 @@ public class FileStorageController {
             @PathVariable Long fileId,
             @RequestPart("file") MultipartFile file,
             @RequestPart(name = "historyBundle", required = false) MultipartFile historyBundle,
-            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog) {
+            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog,
+            @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
         User user = fileStorageService.requireAuthenticatedUser();
-        return fileStorageService.updateFileResponse(user, fileId, file, historyBundle, auditLog);
+        return fileStorageService.updateFileResponse(
+                user, fileId, file, historyBundle, auditLog, parseVersionHeader(ifMatch));
     }
 
     @GetMapping(value = "/files", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -206,6 +209,34 @@ public class FileStorageController {
         return redirect.orElseGet(() -> buildFileResponse(file, inline));
     }
 
+    @PutMapping(
+            value = "/share-links/{token}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ShareLinkMetadataResponse updateShareLink(
+            @PathVariable String token,
+            Authentication authentication,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart(name = "historyBundle", required = false) MultipartFile historyBundle,
+            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog,
+            @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        fileStorageService.ensureShareLinksEnabled();
+        FileShare share = fileStorageService.getShareByToken(token);
+        if (!fileStorageService.canAccessShareLink(share, authentication)) {
+            HttpStatus status =
+                    isAuthenticated(authentication)
+                            ? HttpStatus.FORBIDDEN
+                            : HttpStatus.UNAUTHORIZED;
+            String message =
+                    status == HttpStatus.FORBIDDEN
+                            ? "Access denied for this share link"
+                            : "Authentication required for this share link";
+            throw new ResponseStatusException(status, message);
+        }
+        return fileStorageService.updateShareLinkResponse(
+                share, authentication, file, historyBundle, auditLog, parseVersionHeader(ifMatch));
+    }
+
     @GetMapping("/share-links/{token}/metadata")
     public ShareLinkMetadataResponse getShareLinkMetadata(
             @PathVariable String token, Authentication authentication) {
@@ -238,6 +269,7 @@ public class FileStorageController {
                         share.getAccessRole() != null
                                 ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
                                 : null)
+                .version(file.contentVersionOrZero())
                 .createdAt(share.getCreatedAt())
                 .expiresAt(share.getExpiresAt())
                 .build();
@@ -278,7 +310,26 @@ public class FileStorageController {
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         }
         headers.setContentLength(file.getSizeBytes());
+        // Content revision as ETag so clients can track the version their bytes came from.
+        headers.setETag("\"" + file.contentVersionOrZero() + "\"");
         return ResponseEntity.ok().headers(headers).body(resource);
+    }
+
+    // Accepts a plain number or a (weak) quoted ETag; null/invalid means no conflict check.
+    private Long parseVersionHeader(String ifMatch) {
+        if (ifMatch == null || ifMatch.isBlank()) {
+            return null;
+        }
+        String cleaned = ifMatch.trim();
+        if (cleaned.startsWith("W/")) {
+            cleaned = cleaned.substring(2);
+        }
+        cleaned = cleaned.replace("\"", "").trim();
+        try {
+            return Long.parseLong(cleaned);
+        } catch (NumberFormatException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid If-Match header");
+        }
     }
 
     private boolean isAuthenticated(Authentication authentication) {

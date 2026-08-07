@@ -175,19 +175,93 @@ public class FileStorageService {
     }
 
     public StoredFile replaceFile(
-            User owner,
+            User actor,
             StoredFile existing,
             MultipartFile file,
             MultipartFile historyBundle,
             MultipartFile auditLog) {
+        return replaceFile(actor, existing, file, historyBundle, auditLog, null);
+    }
+
+    public StoredFile replaceFile(
+            User actor,
+            StoredFile existing,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog,
+            Long expectedVersion) {
         ensureStorageEnabled();
-        if (!isOwner(existing, owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can update");
+        if (!isOwner(existing, actor)) {
+            // Collaborative write-back: shared EDITORs may replace content when sharing is on.
+            ensureSharingEnabled();
+            ShareAccessRole role = resolveUserShareRole(existing, actor);
+            if (role != ShareAccessRole.EDITOR) {
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN, "Editor access is required to update this file");
+            }
         }
+        return replaceFileContent(existing, file, historyBundle, auditLog, expectedVersion);
+    }
+
+    /** Content replace via an EDITOR share link; the actor is not the owner. */
+    public StoredFile replaceFileViaShareLink(
+            FileShare share,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog,
+            Long expectedVersion) {
+        ensureStorageEnabled();
+        ensureShareLinksEnabled();
+        requireEditorAccess(share);
+        return replaceFileContent(share.getFile(), file, historyBundle, auditLog, expectedVersion);
+    }
+
+    // Runs inside the transaction so lazy owner/share fields are still attached
+    // when the response is built (OSIV is off - controllers must not touch proxies).
+    public ShareLinkMetadataResponse updateShareLinkResponse(
+            FileShare share,
+            Authentication authentication,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog,
+            Long expectedVersion) {
+        StoredFile updated =
+                replaceFileViaShareLink(share, file, historyBundle, auditLog, expectedVersion);
+        recordShareAccess(share, authentication, FileShareAccessType.EDIT);
+        User currentUser = requireAuthenticatedUser();
+        boolean ownedByCurrentUser =
+                updated.getOwner() != null
+                        && updated.getOwner().getId().equals(currentUser.getId());
+        return ShareLinkMetadataResponse.builder()
+                .shareToken(share.getShareToken())
+                .fileId(updated.getId())
+                .fileName(updated.getOriginalFilename())
+                .owner(updated.getOwner() != null ? updated.getOwner().getUsername() : null)
+                .ownedByCurrentUser(ownedByCurrentUser)
+                .accessRole(
+                        share.getAccessRole() != null
+                                ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
+                                : null)
+                .version(updated.contentVersionOrZero())
+                .createdAt(share.getCreatedAt())
+                .expiresAt(share.getExpiresAt())
+                .build();
+    }
+
+    private StoredFile replaceFileContent(
+            StoredFile existing,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog,
+            Long expectedVersion) {
         validateMainUpload(file);
+        // Quotas and blob attribution always follow the file owner, not the acting editor.
+        User owner = existing.getOwner();
 
         long newTotalBytes = calculateUploadBytes(file, historyBundle, auditLog, existing);
         enforceStorageQuotas(owner, newTotalBytes, totalStoredBytes(existing));
+
+        long newVersion = bumpContentVersion(existing, expectedVersion);
 
         StoredObject mainObject = null;
         StoredObject historyObject = null;
@@ -249,6 +323,28 @@ public class FileStorageService {
         }
     }
 
+    // Serializes concurrent writers via a guarded UPDATE (row lock); loser gets 409.
+    // Syncs the in-memory entity so the later full-column flush doesn't clobber the bump.
+    private long bumpContentVersion(StoredFile existing, Long expectedVersion) {
+        long newVersion;
+        if (expectedVersion != null) {
+            int updated =
+                    storedFileRepository.bumpContentVersionIfMatches(
+                            existing.getId(), expectedVersion);
+            if (updated == 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "File was modified by someone else. Refresh and try again.");
+            }
+            newVersion = expectedVersion + 1;
+        } else {
+            storedFileRepository.bumpContentVersion(existing.getId());
+            newVersion = existing.contentVersionOrZero() + 1;
+        }
+        existing.setContentVersion(newVersion);
+        return newVersion;
+    }
+
     public StoredFile getAccessibleFile(User user, Long fileId) {
         ensureStorageEnabled();
         StoredFile file =
@@ -284,7 +380,7 @@ public class FileStorageService {
         ShareAccessRole role = resolveUserShareRole(file, user);
         if (role != ShareAccessRole.EDITOR) {
             throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Insufficient permissions to download");
+                    HttpStatus.FORBIDDEN, "Editor access is required to update this file");
         }
     }
 
@@ -292,7 +388,7 @@ public class FileStorageService {
         ShareAccessRole role = resolveShareRole(share);
         if (role != ShareAccessRole.EDITOR) {
             throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Insufficient permissions to download");
+                    HttpStatus.FORBIDDEN, "Editor access is required to update this file");
         }
     }
 
@@ -334,18 +430,30 @@ public class FileStorageService {
     }
 
     public StoredFileResponse updateFileResponse(User owner, Long fileId, MultipartFile file) {
-        return updateFileResponse(owner, fileId, file, null, null);
+        return updateFileResponse(owner, fileId, file, null, null, null);
     }
 
     public StoredFileResponse updateFileResponse(
-            User owner,
+            User actor,
             Long fileId,
             MultipartFile file,
             MultipartFile historyBundle,
             MultipartFile auditLog) {
-        StoredFile existing = getOwnedFile(owner, fileId);
-        StoredFile updated = replaceFile(owner, existing, file, historyBundle, auditLog);
-        return buildResponse(updated, owner);
+        return updateFileResponse(actor, fileId, file, historyBundle, auditLog, null);
+    }
+
+    public StoredFileResponse updateFileResponse(
+            User actor,
+            Long fileId,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog,
+            Long expectedVersion) {
+        // Share-aware lookup so EDITOR recipients can write back; replaceFile enforces the role.
+        StoredFile existing = getAccessibleFile(actor, fileId);
+        StoredFile updated =
+                replaceFile(actor, existing, file, historyBundle, auditLog, expectedVersion);
+        return buildResponse(updated, actor);
     }
 
     public List<StoredFileResponse> listAccessibleFileResponses(User user) {
@@ -452,6 +560,7 @@ public class FileStorageService {
                 .owner(file.getOwner() != null ? file.getOwner().getUsername() : null)
                 .ownedByCurrentUser(ownedByCurrentUser)
                 .accessRole(accessRole)
+                .version(file.contentVersionOrZero())
                 .createdAt(file.getCreatedAt())
                 .updatedAt(file.getUpdatedAt())
                 .sharedWithUsers(sharedWithUsers)
@@ -723,6 +832,14 @@ public class FileStorageService {
     }
 
     public void recordShareAccess(FileShare share, Authentication authentication, boolean inline) {
+        recordShareAccess(
+                share,
+                authentication,
+                inline ? FileShareAccessType.VIEW : FileShareAccessType.DOWNLOAD);
+    }
+
+    public void recordShareAccess(
+            FileShare share, Authentication authentication, FileShareAccessType accessType) {
         if (share == null) {
             return;
         }
@@ -739,7 +856,7 @@ public class FileStorageService {
         FileShareAccess access = new FileShareAccess();
         access.setFileShare(share);
         access.setUser(user);
-        access.setAccessType(inline ? FileShareAccessType.VIEW : FileShareAccessType.DOWNLOAD);
+        access.setAccessType(accessType);
         fileShareAccessRepository.save(access);
     }
 
@@ -825,6 +942,7 @@ public class FileStorageService {
                                                             .name()
                                                             .toLowerCase(Locale.ROOT)
                                                     : null)
+                                    .version(file != null ? file.contentVersionOrZero() : null)
                                     .createdAt(share != null ? share.getCreatedAt() : null)
                                     .expiresAt(share != null ? share.getExpiresAt() : null)
                                     .lastAccessedAt(access.getAccessedAt())

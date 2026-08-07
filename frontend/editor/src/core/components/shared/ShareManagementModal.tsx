@@ -991,12 +991,22 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                     )}
                                 </Text>
                               </Stack>
-                              <Badge size="sm" variant="light">
+                              <Badge
+                                size="sm"
+                                variant="light"
+                                color={
+                                  entry.accessType === "EDIT"
+                                    ? "orange"
+                                    : undefined
+                                }
+                              >
                                 {entry.accessType === "VIEW"
                                   ? t("storageShare.viewed", "Viewed")
                                   : entry.accessType === "DOWNLOAD"
                                     ? t("storageShare.downloaded", "Downloaded")
-                                    : t("storageShare.accessed", "Accessed")}
+                                    : entry.accessType === "EDIT"
+                                      ? t("storageShare.edited", "Edited")
+                                      : t("storageShare.accessed", "Accessed")}
                               </Badge>
                             </Group>
                           </Paper>

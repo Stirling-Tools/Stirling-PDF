@@ -75,6 +75,8 @@ export interface BaseFileMetadata {
   // Remote storage tracking
   remoteStorageId?: number; // Server-side storage ID for this file chain
   remoteStorageUpdatedAt?: number; // Timestamp when chain was last uploaded
+  remoteVersionBase?: number; // Server content version our local bytes derive from
+  remoteVersionLatest?: number; // Newest server content version seen during sync
   remoteOwnerUsername?: string; // Server-side owner username (if known)
   remoteOwnedByCurrentUser?: boolean; // Ownership flag for server files
   remoteAccessRole?: string; // Access role for shared server files

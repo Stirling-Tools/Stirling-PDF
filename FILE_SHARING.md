@@ -56,6 +56,32 @@ Default role when none is specified: `EDITOR`.
 
 Owners always have full access regardless of role.
 
+`EDITOR` write access is enforced on the update path: a non-owner with an
+`EDITOR` user-share can `PUT /api/v1/storage/files/{fileId}`, and any
+authenticated holder of an `EDITOR` share link can
+`PUT /api/v1/storage/share-links/{token}`. Non-owner writes require
+`sharing.enabled`. Non-owner updates replace only the main file content -
+history bundle and audit log parts are accepted but only the owner's client
+sends them, so the owner's audit trail is not clobbered by collaborators.
+
+### Optimistic Concurrency (Collaboration)
+
+Every stored file carries a `content_version` counter (`stored_files.content_version`,
+null for pre-upgrade rows, read as 0). Every content replace bumps it atomically
+via a guarded UPDATE, which also serializes concurrent writers at the database row.
+
+- `StoredFileResponse.version` and `ShareLinkMetadataResponse.version` expose the counter
+- Downloads return it as the `ETag` header
+- Clients send `If-Match: "N"` on update; if the server version moved on, the
+  update fails with `409 Conflict` and nothing is written
+- Requests without `If-Match` keep last-write-wins semantics (legacy clients)
+
+The frontend tracks `remoteVersionBase` (what the local bytes derive from) and
+`remoteVersionLatest` (newest seen during sync). When latest > base the UI shows
+an "Update available" badge and offers "Get latest version". On a 409 the save
+dialogs offer "Get latest version" (fetch as a separate copy to merge manually)
+or "Overwrite anyway".
+
 #### Role Semantics: COMMENTER vs VIEWER
 
 In the file storage layer, `COMMENTER` and `VIEWER` are equivalent — both grant read-only access and neither can replace file content. The distinction is meaningful in the **signing workflow** context:
@@ -309,7 +335,7 @@ The `FileShare.workflow_participant_id` column and the `FileShare.isWorkflowShar
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | POST | `/api/v1/storage/files` | Upload file | Required |
-| PUT | `/api/v1/storage/files/{id}` | Update file | Required (owner) |
+| PUT | `/api/v1/storage/files/{id}` | Update file content | Required (owner or EDITOR share) |
 | GET | `/api/v1/storage/files` | List accessible files | Required |
 | GET | `/api/v1/storage/files/{id}` | Get file metadata | Required |
 | GET | `/api/v1/storage/files/{id}/download` | Download file | Required |
@@ -320,6 +346,7 @@ The `FileShare.workflow_participant_id` column and the `FileShare.isWorkflowShar
 | POST | `/api/v1/storage/files/{id}/shares/links` | Create share link | Required (owner) |
 | DELETE | `/api/v1/storage/files/{id}/shares/links/{token}` | Revoke share link | Required (owner) |
 | GET | `/api/v1/storage/share-links/{token}` | Download via share link | Required |
+| PUT | `/api/v1/storage/share-links/{token}` | Update content via EDITOR share link | Required |
 | GET | `/api/v1/storage/share-links/{token}/metadata` | Get share link metadata | Required |
 | GET | `/api/v1/storage/share-links/accessed` | List accessed share links | Required |
 | GET | `/api/v1/storage/files/{id}/shares/links/{token}/accesses` | List share accesses | Required (owner) |
@@ -355,7 +382,7 @@ storage:
 ### Access Control
 - All endpoints require authentication — there is no anonymous access
 - Owner-only operations enforced in service layer (not just controller)
-- `requireReadAccess` / `requireEditorAccess` checked on every download
+- `requireReadAccess` checked on every download; `requireEditorAccess` checked on every non-owner content update
 
 ### Share Link Security
 - Tokens are UUIDs (random, not guessable)

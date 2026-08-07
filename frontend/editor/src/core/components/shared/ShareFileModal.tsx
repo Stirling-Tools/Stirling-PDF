@@ -124,23 +124,22 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
         const {
           remoteId: newStoredId,
           updatedAt,
+          version,
           chain,
         } = await uploadHistoryChain(originalFileId, remoteId);
         storedId = newStoredId;
 
         for (const stub of chain) {
-          actions.updateStirlingFileStub(stub.id, {
+          const updates = {
             remoteStorageId: newStoredId,
             remoteStorageUpdatedAt: updatedAt,
             remoteOwnedByCurrentUser: true,
             remoteHasShareLinks: true,
-          });
-          await fileStorage.updateFileMetadata(stub.id, {
-            remoteStorageId: newStoredId,
-            remoteStorageUpdatedAt: updatedAt,
-            remoteOwnedByCurrentUser: true,
-            remoteHasShareLinks: true,
-          });
+            remoteVersionBase: version,
+            remoteVersionLatest: version,
+          };
+          actions.updateStirlingFileStub(stub.id, updates);
+          await fileStorage.updateFileMetadata(stub.id, updates);
         }
       }
 
