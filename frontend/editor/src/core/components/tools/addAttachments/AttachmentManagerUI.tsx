@@ -6,7 +6,6 @@ import {
   ScrollArea,
   Checkbox,
   Skeleton,
-  Badge,
   TextInput,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -68,15 +67,6 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
 
   return (
     <Stack gap="md">
-      {/* TOOLBAR HEADER: TITLE + COUNT BADGE */}
-      <Group gap="xs" wrap="nowrap">
-        <Text size="sm" fw={600}>
-          {t("attachments.listTitle", "Attachments")}
-        </Text>
-        <Badge size="xs" variant="light" color="blue" style={{ flexShrink: 0 }}>
-          {rows.length}
-        </Badge>
-      </Group>
 
       {/* FILTER SEARCH INPUT (SHOWN WHEN >3 ATTACHMENTS EXIST) */}
       {rows.length > 3 && (
