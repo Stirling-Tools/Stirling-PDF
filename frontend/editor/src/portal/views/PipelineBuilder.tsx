@@ -1,19 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
-import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import {
   ActionIcon,
   Banner,
   Button,
-  Checkbox,
-  EmptyState,
+  FormField,
   Input,
   Modal,
   Select,
@@ -47,11 +43,14 @@ import {
   deletePipeline,
   fetchPipeline,
   fetchRun,
+  fetchRunOutput,
   fetchTriggers,
+  runPipelineTest,
   savePipeline,
   triggerPipeline,
   type Policy,
   type PolicyRunView,
+  type RunOutputFile,
   type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
@@ -61,14 +60,27 @@ import { DestinationPicker } from "@portal/components/pipelines/DestinationPicke
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
+import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
+import { PipelineHeader } from "@portal/components/pipelines/PipelineHeader";
+import { PipelineInspector } from "@portal/components/pipelines/PipelineInspector";
+import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
+import {
+  PipelineGraph,
+  selectedSteps,
+  type ChainEnd,
+  type ChainWarning,
+  type GraphSelection,
+  type GraphStepContent,
+} from "@portal/components/pipelines/graph/PipelineGraph";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import { BrandMark } from "@portal/components/BrandMarks";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import {
   integrationStepConfigured,
@@ -158,6 +170,11 @@ function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
   return { type: input.triggerType, options: {} };
 }
 
+/** Whether a source can be written to, i.e. offered as a pipeline destination. */
+function isWritableSource(source: SourceView): boolean {
+  return (availableOutputModes() as string[]).includes(source.type);
+}
+
 /**
  * Full-page pipeline builder (route: /pipelines/new and /pipelines/:id). Pipeline-level settings
  * (sources, trigger, output) sit above the operation list; the operation list and the selected
@@ -206,10 +223,7 @@ export function PipelineBuilder() {
   // A destination is a source used as a write target: only writable types (folder/S3, filtered per
   // deployment) can be picked, and the virtual editor is already excluded from availableSources.
   const writableSources = useMemo<SourceView[]>(
-    () =>
-      availableSources.filter((source) =>
-        (availableOutputModes() as string[]).includes(source.type),
-      ),
+    () => availableSources.filter(isWritableSource),
     [availableSources],
   );
   const triggers = useMemo(
@@ -223,9 +237,23 @@ export function PipelineBuilder() {
   // wire shape stays a list (see save()).
   const [input, setInput] = useState<WorkingInput>(blankInput);
   const [steps, setSteps] = useState<WorkingToolStep[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  /** Which node the inspector is editing: an end of the chain, a step, or nothing. */
+  const [selected, setSelected] = useState<GraphSelection>(null);
+  /** Slot the tool picker will insert into, or null when it is closed. */
+  const [pickerAt, setPickerAt] = useState<number | null>(null);
+  const [definitionOpen, setDefinitionOpen] = useState(false);
+  /** The last test run in this session: one file through the steps as they stand. */
+  const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
+  const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
+  /**
+   * Whether the user has asked for each end of the chain yet, distinguishing "not offered" from
+   * "offered and still owed a choice" - the two states an empty sourceId cannot tell apart. Only a
+   * brand new pipeline starts with either false; anything loaded arrives with both ends set, and
+   * choosing one places it, so these are just the "clicked add, chosen nothing" window.
+   */
+  const [inputAsked, setInputAsked] = useState(false);
+  const [outputAsked, setOutputAsked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -235,6 +263,39 @@ export function PipelineBuilder() {
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [pendingNav, setPendingNav] = useState<string | null>(null);
+
+  // Create or edit a source in place, instead of leaving the builder (and its
+  // unsaved edits) for the Sources page.
+  const [sourceModal, setSourceModal] = useState<{
+    open: boolean;
+    sourceId: string | null;
+  }>({ open: false, sourceId: null });
+  // A source created from here is the one the pipeline was missing, so select it
+  // on arrival - as the input or the destination, whichever asked for it.
+  const autoSelectRef = useRef<"input" | "output" | null>(null);
+  const knownSourceIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const target = autoSelectRef.current;
+    const known = knownSourceIdsRef.current;
+    knownSourceIdsRef.current = new Set(availableSources.map((s) => s.id));
+    if (!target) return;
+    const fresh = availableSources.find((s) => !known.has(s.id));
+    if (!fresh) return;
+    // One arrival answers the request, whatever type it turned out to be.
+    autoSelectRef.current = null;
+    if (target === "input") {
+      changeInputSource(fresh.id);
+    } else if (isWritableSource(fresh)) {
+      // A source of an unwritable type is left alone rather than becoming a
+      // destination the picker has no option for.
+      setOutputIds([fresh.id]);
+    }
+  }, [availableSources]);
+
+  function createSourceFor(target: "input" | "output") {
+    autoSelectRef.current = target;
+    setSourceModal({ open: true, sourceId: null });
+  }
 
   const mounted = useRef(true);
   useEffect(() => {
@@ -272,14 +333,6 @@ export function PipelineBuilder() {
     setOutputIds(policy?.outputIds ?? []);
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded]);
-
-  // Keep one tool's settings open: auto-select the first step whenever a pipeline has steps but
-  // nothing is selected (initial load, or after the selected step is removed).
-  useEffect(() => {
-    if (seeded && selectedIndex === null && steps.length > 0) {
-      setSelectedIndex(0);
-    }
-  }, [seeded, selectedIndex, steps.length]);
 
   const sourceType = (sourceId: string) =>
     availableSources.find((s) => s.id === sourceId)?.type;
@@ -339,38 +392,65 @@ export function PipelineBuilder() {
     });
   }
 
-  function addOperationStep(op: (typeof STEP_OPERATIONS)[number]) {
+  /** Put an end on the chain and open it, so the click that asks for it also offers the choice. */
+  function addEnd(end: ChainEnd) {
+    if (end === "input") setInputAsked(true);
+    else setOutputAsked(true);
+    setSelected(end);
+  }
+
+  /** Take an end back off, discarding whatever it held so its row reads as unfilled again. */
+  function removeEnd(end: ChainEnd) {
+    if (end === "input") {
+      setInputAsked(false);
+      setInput(blankInput());
+    } else {
+      setOutputAsked(false);
+      setOutputIds([]);
+    }
+    setSelected((current) => (current === end ? null : current));
+  }
+
+  /** Drop a new step into the slot the picker was opened on, and select it to be configured. */
+  function insertStep(step: WorkingToolStep) {
+    const at = pickerAt ?? steps.length;
     setSteps((current) => {
-      const next = [...current, newIntegrationStep(op)];
-      setSelectedIndex(next.length - 1);
+      const next = [...current];
+      next.splice(at, 0, step);
       return next;
     });
-    setPickerOpen(false);
+    setSelected({ steps: [at] });
+    setPickerAt(null);
+  }
+
+  function addOperationStep(op: (typeof STEP_OPERATIONS)[number]) {
+    insertStep(newIntegrationStep(op));
   }
 
   function addStep(tool: ExecutableTool) {
-    setSteps((current) => {
-      const next = [...current, newWorkingToolStep(tool, allTools)];
-      setSelectedIndex(next.length - 1);
-      return next;
-    });
-    setPickerOpen(false);
+    insertStep(newWorkingToolStep(tool, allTools));
   }
 
-  function removeStep(index: number) {
-    setSelectedIndex(null);
-    setSteps((current) => current.filter((_, i) => i !== index));
+  function removeSteps(indices: number[]) {
+    const gone = new Set(indices);
+    setSelected(null);
+    setSteps((current) => current.filter((_, i) => !gone.has(i)));
   }
 
-  function moveStep(index: number, delta: number) {
-    setSteps((current) => {
-      const target = index + delta;
-      if (target < 0 || target >= current.length) return current;
-      const next = [...current];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
-    setSelectedIndex((cur) => (cur === index ? index + delta : cur));
+  /**
+   * Apply a reordered chain, given as the original step indices in their new positions. The steps
+   * the drag carried stay selected where they land, so a set can be dragged again without re-picking
+   * it - and dragging an unselected step selects it, rather than leaving the inspector on whatever
+   * was selected before.
+   */
+  function reorderSteps(order: number[], moved: readonly number[]) {
+    const moving = new Set(moved);
+    setSteps((current) => order.map((i) => current[i]));
+    const landed = order
+      .map((original, position) => ({ original, position }))
+      .filter(({ original }) => moving.has(original))
+      .map(({ position }) => position);
+    setSelected(landed.length > 0 ? { steps: landed } : null);
   }
 
   function updateStepParams(index: number, params: ErasedToolParams) {
@@ -394,6 +474,21 @@ export function PipelineBuilder() {
       return t("portal.pipelines.builder.sendToSystem");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
+  }
+
+  /**
+   * A step's glyph, matching how the tool picker draws it: an integration step carries its vendor's
+   * mark, a tool step its own icon. Without this every node falls back to the generic slider glyph,
+   * so a chain reads as a stack of identical cards.
+   */
+  function stepIcon(step: WorkingToolStep): ReactNode {
+    const op = stepOperation(step);
+    if (op)
+      return (
+        <BrandMark id={op.custom ? "api" : op.connectionTypeId} size={17} />
+      );
+    if (isIntegrationStep(step)) return <BrandMark id="api" size={17} />;
+    return step.toolId ? allTools[step.toolId]?.icon : undefined;
   }
 
   // Steps whose params carry an uploaded file can't be saved: the bytes aren't persisted with the
@@ -431,16 +526,22 @@ export function PipelineBuilder() {
     .map((d) => stepLabel(steps[d.stepIndex]));
   const hasIncompatibleSteps = hasBlockingDiagnostics(chainDiagnostics);
 
-  // What a newly added step would be handed, so the picker can flag tools that cannot take it.
-  const chainOutput = useMemo(
+  /**
+   * What a step added at the open slot would be handed, so the picker can flag tools that cannot
+   * take it. Scoped to the steps *before* that slot rather than the whole chain: the graph inserts
+   * anywhere, so what precedes the new step is not necessarily the chain's final output.
+   */
+  const precedingOutput = useMemo(
     () =>
-      chainOutputFormat(
-        steps.map((step) => ({
-          operation: step.operation,
-          parameters: step.params,
-        })),
-      ),
-    [steps],
+      pickerAt === null
+        ? undefined
+        : chainOutputFormat(
+            steps.slice(0, pickerAt).map((step) => ({
+              operation: step.operation,
+              parameters: step.params,
+            })),
+          ),
+    [steps, pickerAt],
   );
 
   function diagnosticNote(diagnostic: ToolDiagnostic): string {
@@ -451,26 +552,21 @@ export function PipelineBuilder() {
     });
   }
 
-  /** The most severe diagnostic for a step, rendered as its note. */
-  function renderStepDiagnostic(index: number) {
+  /**
+   * The step's most severe diagnostic, for the wire arriving at it - which is where a note about
+   * what the step is being handed belongs, rather than on the step itself.
+   */
+  function stepInputWarning(index: number): ChainWarning | undefined {
     const forStep = diagnosticsForStep(chainDiagnostics, index);
     const diagnostic =
       forStep.find((d) => d.severity === "ERROR") ??
       forStep.find((d) => d.severity === "WARN") ??
       forStep[0];
-    if (!diagnostic) return null;
-    return (
-      <span
-        className={
-          "portal-builder__step-note" +
-          (diagnostic.severity === "ERROR"
-            ? " portal-builder__step-note--danger"
-            : "")
-        }
-      >
-        {diagnosticNote(diagnostic)}
-      </span>
-    );
+    if (!diagnostic) return undefined;
+    return {
+      text: diagnosticNote(diagnostic),
+      blocking: diagnostic.severity === "ERROR",
+    };
   }
 
   // Track unsaved edits: snapshot the form and compare against the state captured just after
@@ -505,7 +601,6 @@ export function PipelineBuilder() {
     !submitting;
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
-  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
 
   function close() {
     navigate(listPath);
@@ -515,12 +610,6 @@ export function PipelineBuilder() {
   function attemptLeave(destination: string) {
     if (dirty) setPendingNav(destination);
     else navigate(destination);
-  }
-
-  // Jump to the source builder, for when the source you want to read from or write to doesn't
-  // exist yet. Inputs and the output destination are both saved sources, so both create one here.
-  function goToSources() {
-    attemptLeave(sourcesPath);
   }
 
   async function save(destination: string) {
@@ -550,14 +639,67 @@ export function PipelineBuilder() {
   }
 
   // Poll a run until it reaches a terminal state (or we give up), so a failure surfaces.
-  async function awaitRun(runId: string): Promise<PolicyRunView | null> {
+  async function awaitRun(
+    runId: string,
+    onProgress?: (view: PolicyRunView) => void,
+  ): Promise<PolicyRunView | null> {
     for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
       if (!mounted.current) return null;
       const view = await fetchRun(runId);
+      onProgress?.(view);
       if (TERMINAL_STATUSES.has(view.status)) return view;
       await sleep(POLL_INTERVAL_MS);
     }
     return null;
+  }
+
+  /**
+   * Run the steps as they stand against one uploaded file. Output is forced inline so nothing
+   * reaches the pipeline's real destination, and the pipeline need not be saved first - this is
+   * how the chain gets checked while it is still being built.
+   */
+  async function handleTest(file: File) {
+    if (testing) return;
+    setTesting(true);
+    setTestRun(null);
+    setRunResult(null);
+    try {
+      const { runId } = await runPipelineTest(
+        {
+          name: name.trim() || t("portal.pipelines.builder.testRun"),
+          steps: steps.map((step) => serializeToolStep(step, allTools)),
+          output: { type: "inline", options: {} },
+        },
+        file,
+      );
+      const final = await awaitRun(runId, (view) => {
+        if (mounted.current) setTestRun(view);
+      });
+      if (mounted.current && final) setTestRun(final);
+    } catch (e) {
+      if (mounted.current)
+        setRunResult({ tone: "danger", text: errorMessage(e) });
+    } finally {
+      if (mounted.current) setTesting(false);
+    }
+  }
+
+  /** Save one of a test run's outputs to disk. */
+  async function downloadOutput(output: RunOutputFile) {
+    try {
+      const blob = await fetchRunOutput(output.fileId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = output.fileName ?? output.fileId;
+      link.click();
+      // Revoke on the next tick: some browsers have not yet begun reading the
+      // blob when click() returns, and revoking now would cancel the download.
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (e) {
+      if (mounted.current)
+        setRunResult({ tone: "danger", text: errorMessage(e) });
+    }
   }
 
   /** Explain an empty trigger: parked files outrank blander reasons. */
@@ -669,95 +811,257 @@ export function PipelineBuilder() {
     );
   }
 
+  const chosenSteps = selectedSteps(selected);
+  // One step selected means its settings; several means there is no single thing to configure.
   const selectedStep =
-    selectedIndex !== null ? (steps[selectedIndex] ?? null) : null;
+    chosenSteps.length === 1 ? (steps[chosenSteps[0]] ?? null) : null;
 
-  return (
-    <div className="portal-builder">
-      <header className="portal-builder__head">
-        <Button
-          variant="quiet"
-          size="sm"
-          className="portal-builder__back"
-          onClick={() => attemptLeave(listPath)}
-          aria-label={t("portal.pipelines.builder.back")}
-          leftSection={
-            <ArrowBackRoundedIcon style={{ fontSize: "1.125rem" }} />
-          }
-        >
-          {t("portal.pipelines.title")}
-        </Button>
-        <div className="portal-builder__head-main">
-          <Input
-            value={name}
-            placeholder={t("portal.pipelines.composer.namePlaceholder")}
-            aria-label={t("portal.pipelines.composer.name")}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div className="portal-builder__head-actions">
-          <Checkbox
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-            label={t("portal.pipelines.builder.enabled")}
-          />
-          {isEdit && (
+  const chosenSource = availableSources.find((s) => s.id === input.sourceId);
+  const chosenDestination = writableSources.find((s) => s.id === outputIds[0]);
+
+  /** How this input fires, in a few words, for the input node's summary line. */
+  function triggerSummary(): string {
+    if (input.triggerType === MANUAL)
+      return t("portal.pipelines.composer.triggerManual");
+    if (input.triggerType === "schedule")
+      // One counted phrase per unit, so it reads "Runs every hour" / "Runs every 3 hours" rather
+      // than the ungrammatical, untranslatable "Run every 1 hours".
+      return t(
+        `portal.pipelines.composer.runsEvery.${input.scheduleUnit.toLowerCase()}`,
+        { count: Number(input.scheduleCount) || 1 },
+      );
+    return t(`portal.pipelines.trigger.${input.triggerType}`, {
+      defaultValue: input.triggerType,
+    });
+  }
+
+  /** Why a step cannot be saved yet, if anything. */
+  function stepWarning(step: WorkingToolStep): string | undefined {
+    if (isIntegrationStep(step)) {
+      if (!stepOperation(step))
+        return t("portal.pipelines.builder.chooseOperation");
+      if (!integrationStepConfigured(step))
+        return t("portal.pipelines.builder.chooseAccount");
+      return undefined;
+    }
+    if (stepRequiresUpload(step))
+      return t("portal.pipelines.builder.needsUpload");
+    if (stepNeedsConfiguring(step, allTools))
+      return t("portal.pipelines.builder.needsConfiguring");
+    return undefined;
+  }
+
+  /** A step's one-line summary: what it will do beyond its name. */
+  function stepDetail(step: WorkingToolStep): string | undefined {
+    if (step.support === "unsupported")
+      return t("portal.pipelines.builder.usesDefaults");
+    if (step.support === "unknown")
+      return t("portal.pipelines.builder.unknownStep");
+    return undefined;
+  }
+
+  // A run reports one step cursor, so progress reads off it: everything before the cursor is done,
+  // the cursor itself is whatever the run currently is.
+  function stepRunState(index: number): GraphStepContent["runState"] {
+    if (!testRun) return undefined;
+    if (index < testRun.currentStep) return "done";
+    if (index > testRun.currentStep) return undefined;
+    if (testRun.status === "FAILED") return "failed";
+    if (testRun.status === "COMPLETED") return "done";
+    return "running";
+  }
+
+  const graphSteps: GraphStepContent[] = steps.map((step, i) => ({
+    label: stepLabel(step),
+    detail: stepDetail(step),
+    icon: stepIcon(step),
+    warning: stepWarning(step),
+    inputWarning: stepInputWarning(i),
+    runState: stepRunState(i),
+  }));
+
+  const definitionJson = JSON.stringify(
+    {
+      name: name.trim(),
+      enabled,
+      inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
+      steps: steps.map((step) => serializeToolStep(step, allTools)),
+      outputIds,
+    },
+    null,
+    2,
+  );
+
+  const testSummary =
+    testRun === null
+      ? null
+      : {
+          status:
+            testRun.status === "FAILED"
+              ? ("failed" as const)
+              : testRun.status === "COMPLETED"
+                ? ("completed" as const)
+                : ("running" as const),
+          completedSteps: testRun.currentStep,
+          stepCount: testRun.stepCount,
+          error: testRun.error,
+          outputs: testRun.outputs ?? [],
+        };
+
+  /** The editor for whatever node is selected. Undefined when nothing is. */
+  function inspectorBody() {
+    if (selected === "input") {
+      // Nothing to pick from yet: a dropdown of nothing helps no one, so offer only the way to make
+      // the first source. The trigger has no meaning without a source either, so it waits too.
+      const hasSources = availableSources.length > 0;
+      return (
+        <>
+          {hasSources && (
             <>
-              <Button
-                variant="secondary"
-                size="sm"
-                loading={running}
-                onClick={handleRun}
-                leftSection={
-                  <PlayArrowRoundedIcon style={{ fontSize: "1.125rem" }} />
-                }
-              >
-                {t("portal.pipelines.detail.run")}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                loading={clearingHistory}
-                onClick={handleClearHistory}
-                leftSection={
-                  <HistoryRoundedIcon style={{ fontSize: "1.125rem" }} />
-                }
-              >
-                {t("portal.pipelines.detail.clearHistory")}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                accent="danger"
-                onClick={() => setPendingDelete(true)}
-                leftSection={
-                  <DeleteOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
-                }
-              >
-                {t("portal.pipelines.detail.delete")}
-              </Button>
+              <FormField label={t("portal.pipelines.builder.inputSource")}>
+                <div className="portal-builder__input-row">
+                  <div className="portal-builder__input-field">
+                    <Select
+                      inputSize="sm"
+                      aria-label={t("portal.pipelines.builder.inputSource")}
+                      placeholder={t("portal.pipelines.builder.chooseSource")}
+                      value={input.sourceId || null}
+                      invalid={input.sourceId === ""}
+                      onChange={(value) => changeInputSource(value ?? "")}
+                      options={sourceOptions}
+                    />
+                  </div>
+                  <ActionIcon
+                    variant="tertiary"
+                    className="portal-builder__source-edit"
+                    aria-label={t("portal.pipelines.composer.editSource")}
+                    disabled={input.sourceId === ""}
+                    onClick={() =>
+                      setSourceModal({ open: true, sourceId: input.sourceId })
+                    }
+                  >
+                    <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+                  </ActionIcon>
+                </div>
+              </FormField>
+
+              <FormField label={t("portal.pipelines.builder.inputTrigger")}>
+                <Select
+                  inputSize="sm"
+                  aria-label={t("portal.pipelines.builder.inputTrigger")}
+                  value={
+                    input.triggerType === MANUAL
+                      ? MANUAL_OPTION
+                      : input.triggerType
+                  }
+                  disabled={input.sourceId === ""}
+                  onChange={(value) =>
+                    updateInput({
+                      triggerType:
+                        value && value !== MANUAL_OPTION ? value : MANUAL,
+                    })
+                  }
+                  options={triggerOptionsFor(input.sourceId)}
+                />
+              </FormField>
+
+              {input.triggerType === "schedule" && (
+                <div className="portal-builder__schedule">
+                  <span className="portal-builder__muted">
+                    {t("portal.pipelines.composer.scheduleEvery")}
+                  </span>
+                  <Input
+                    inputSize="sm"
+                    type="number"
+                    min={1}
+                    value={input.scheduleCount}
+                    invalid={Number(input.scheduleCount) <= 0}
+                    onChange={(e) =>
+                      updateInput({ scheduleCount: e.target.value })
+                    }
+                    className="portal-builder__schedule-count"
+                  />
+                  <Select
+                    inputSize="sm"
+                    value={input.scheduleUnit}
+                    onChange={(value) =>
+                      value &&
+                      updateInput({ scheduleUnit: value as ScheduleUnit })
+                    }
+                    options={SCHEDULE_UNITS.map((unit) => ({
+                      value: unit,
+                      label: t(
+                        `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
+                      ),
+                    }))}
+                  />
+                </div>
+              )}
             </>
           )}
+
           <Button
             variant="tertiary"
             size="sm"
-            onClick={() => attemptLeave(listPath)}
-            disabled={submitting}
+            onClick={() => createSourceFor("input")}
+            leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
           >
-            {t("portal.pipelines.composer.cancel")}
+            {t("portal.sources.actions.connectSource")}
           </Button>
-          <Button
-            size="sm"
-            onClick={() => save(listPath)}
-            loading={submitting}
-            disabled={!canSave}
-          >
-            {isEdit
-              ? t("portal.pipelines.composer.save")
-              : t("portal.pipelines.composer.create")}
-          </Button>
-        </div>
-      </header>
+        </>
+      );
+    }
+
+    if (selected === "output") {
+      return (
+        <DestinationPicker
+          sources={writableSources}
+          value={outputIds}
+          onChange={setOutputIds}
+          onCreateNew={() => createSourceFor("output")}
+          onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
+        />
+      );
+    }
+
+    if (selectedStep) {
+      return (
+        <PipelineStepSettings
+          step={selectedStep}
+          registry={allTools}
+          onChange={(params) => updateStepParams(chosenSteps[0], params)}
+        />
+      );
+    }
+
+    return undefined;
+  }
+
+  return (
+    <div className="portal-builder">
+      <PipelineHeader
+        name={name}
+        onNameChange={setName}
+        enabled={enabled}
+        onEnabledChange={setEnabled}
+        isEdit={isEdit}
+        stepCount={steps.length}
+        canSave={canSave}
+        saving={submitting}
+        onSave={() => save(listPath)}
+        onCancel={() => attemptLeave(listPath)}
+        onBack={() => attemptLeave(listPath)}
+        onTest={handleTest}
+        testing={testing}
+        onRun={handleRun}
+        running={running}
+        onClearHistory={handleClearHistory}
+        clearingHistory={clearingHistory}
+        onDelete={() => setPendingDelete(true)}
+        onViewDefinition={() => setDefinitionOpen(true)}
+        runResult={testSummary}
+        onDownloadOutput={downloadOutput}
+      />
 
       {error && <Banner tone="danger" description={error} />}
       {runResult && (
@@ -788,271 +1092,106 @@ export function PipelineBuilder() {
         />
       )}
 
-      {/* Pipeline-level settings, above the operation list. */}
-      <section className="portal-builder__settings">
-        <div className="portal-builder__section-label">
-          {t("portal.pipelines.builder.pipelineSettings")}
-        </div>
-        <div className="portal-builder__settings-grid">
-          <div className="portal-builder__settings-col portal-builder__inputs-col">
-            <span className="portal-pipelines__detail-heading">
-              {t("portal.pipelines.builder.inputs")}
-            </span>
-            {sourcesState.loading ? (
-              <p className="portal-pipelines__muted">
-                {t("portal.pipelines.composer.sourcesLoading")}
-              </p>
-            ) : (
-              <>
-                <div className="portal-builder__input-row">
-                  <div className="portal-builder__input-field">
-                    <Select
-                      inputSize="sm"
-                      aria-label={t("portal.pipelines.builder.inputSource")}
-                      placeholder={t("portal.pipelines.builder.chooseSource")}
-                      value={input.sourceId || null}
-                      invalid={input.sourceId === ""}
-                      onChange={(value) => changeInputSource(value ?? "")}
-                      options={sourceOptions}
-                    />
-                  </div>
-                  <div className="portal-builder__input-field">
-                    <Select
-                      inputSize="sm"
-                      aria-label={t("portal.pipelines.builder.inputTrigger")}
-                      value={
-                        input.triggerType === MANUAL
-                          ? MANUAL_OPTION
-                          : input.triggerType
-                      }
-                      disabled={input.sourceId === ""}
-                      onChange={(value) =>
-                        updateInput({
-                          triggerType:
-                            value && value !== MANUAL_OPTION ? value : MANUAL,
-                        })
-                      }
-                      options={triggerOptionsFor(input.sourceId)}
-                    />
-                  </div>
-                  {input.triggerType === "schedule" && (
-                    <div className="portal-pipelines__schedule">
-                      <span className="portal-pipelines__muted">
-                        {t("portal.pipelines.composer.scheduleEvery")}
-                      </span>
-                      <Input
-                        inputSize="sm"
-                        type="number"
-                        min={1}
-                        value={input.scheduleCount}
-                        invalid={Number(input.scheduleCount) <= 0}
-                        onChange={(e) =>
-                          updateInput({ scheduleCount: e.target.value })
-                        }
-                        className="portal-pipelines__schedule-count"
-                      />
-                      <Select
-                        inputSize="sm"
-                        value={input.scheduleUnit}
-                        onChange={(value) =>
-                          value &&
-                          updateInput({
-                            scheduleUnit: value as ScheduleUnit,
-                          })
-                        }
-                        options={SCHEDULE_UNITS.map((unit) => ({
-                          value: unit,
-                          label: t(
-                            `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
-                          ),
-                        }))}
-                      />
-                    </div>
-                  )}
-                  <Button
-                    variant="tertiary"
-                    size="sm"
-                    onClick={goToSources}
-                    leftSection={
-                      <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
-                    }
-                  >
-                    {t("portal.sources.actions.connectSource")}
-                  </Button>
-                </div>
-                {availableSources.length === 0 && (
-                  <p className="portal-pipelines__muted">
-                    {t("portal.pipelines.builder.noSources")}
-                  </p>
-                )}
-              </>
-            )}
-          </div>
-
-          <div className="portal-builder__settings-col portal-builder__inputs-col">
-            <span className="portal-pipelines__detail-heading">
-              {t("portal.pipelines.composer.output")}
-            </span>
-            <DestinationPicker
-              sources={writableSources}
-              value={outputIds}
-              onChange={setOutputIds}
-              onCreateNew={goToSources}
-            />
-          </div>
-        </div>
-      </section>
-
       <div className="portal-builder__grid">
-        <section className="portal-builder__flow">
-          <div className="portal-builder__section-label">
-            {t("portal.pipelines.composer.operations", { count: steps.length })}
-          </div>
-
-          {steps.length === 0 && !pickerOpen && (
-            <p className="portal-builder__empty">
-              {t("portal.pipelines.composer.chainEmpty")}
-            </p>
-          )}
-
-          <ol className="portal-builder__steps">
-            {steps.map((step, i) => (
-              <li key={`${step.operation}-${i}`}>
-                <div
-                  className={
-                    "portal-builder__step" +
-                    (selectedIndex === i ? " portal-builder__step--active" : "")
-                  }
-                >
-                  <Button
-                    variant="quiet"
-                    justify="start"
-                    className="portal-builder__step-main"
-                    onClick={() => setSelectedIndex(i)}
-                    leftSection={
-                      <span className="portal-builder__step-index">
-                        {i + 1}
-                      </span>
-                    }
-                  >
-                    <span className="portal-builder__step-text">
-                      <span className="portal-builder__step-name">
-                        {stepLabel(step)}
-                      </span>
-                      {isIntegrationStep(step) ? (
-                        !stepOperation(step) ? (
-                          <span className="portal-builder__step-note">
-                            {t("portal.pipelines.builder.chooseOperation")}
-                          </span>
-                        ) : !integrationStepConfigured(step) ? (
-                          <span className="portal-builder__step-note">
-                            {t("portal.pipelines.builder.chooseAccount")}
-                          </span>
-                        ) : null
-                      ) : stepRequiresUpload(step) ? (
-                        <span className="portal-builder__step-note">
-                          {t("portal.pipelines.builder.needsUpload")}
-                        </span>
-                      ) : stepNeedsConfiguring(step, allTools) ? (
-                        <span className="portal-builder__step-note">
-                          {t("portal.pipelines.builder.needsConfiguring")}
-                        </span>
-                      ) : step.support === "unsupported" ? (
-                        <span className="portal-builder__step-note">
-                          {t("portal.pipelines.builder.usesDefaults")}
-                        </span>
-                      ) : step.support === "unknown" ? (
-                        <span className="portal-builder__step-note">
-                          {t("portal.pipelines.builder.unknownStep")}
-                        </span>
-                      ) : (
-                        renderStepDiagnostic(i)
-                      )}
-                    </span>
-                  </Button>
-                  <div className="portal-builder__step-actions">
-                    <ActionIcon
-                      variant="tertiary"
-                      aria-label={t("portal.pipelines.composer.moveUp")}
-                      disabled={i === 0}
-                      onClick={() => moveStep(i, -1)}
-                    >
-                      <KeyboardArrowUpRoundedIcon
-                        style={{ fontSize: "1.125rem" }}
-                      />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="tertiary"
-                      aria-label={t("portal.pipelines.composer.moveDown")}
-                      disabled={i === steps.length - 1}
-                      onClick={() => moveStep(i, 1)}
-                    >
-                      <KeyboardArrowDownRoundedIcon
-                        style={{ fontSize: "1.125rem" }}
-                      />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="tertiary"
-                      aria-label={t("portal.pipelines.composer.removeStep")}
-                      onClick={() => removeStep(i)}
-                    >
-                      <DeleteOutlineRoundedIcon
-                        style={{ fontSize: "1.125rem" }}
-                      />
-                    </ActionIcon>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ol>
-
-          {pickerOpen ? (
-            <ToolPicker
-              tools={executableTools}
-              onPick={addStep}
-              operations={STEP_OPERATIONS}
-              onPickOperation={addOperationStep}
-              precedingOutput={chainOutput}
-              onClose={() => setPickerOpen(false)}
-            />
-          ) : (
-            <Button
-              variant="quiet"
-              fullWidth
-              className="portal-builder__add-step"
-              onClick={() => setPickerOpen(true)}
-              leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
-            >
-              {t("portal.pipelines.composer.addTool")}
-            </Button>
-          )}
-        </section>
-
-        <aside className="portal-builder__inspector-col">
-          <div className="portal-builder__section-label">
-            {selectedStep
-              ? stepLabel(selectedStep)
-              : t("portal.pipelines.builder.toolSettings")}
-          </div>
-          <div className="portal-builder__inspector">
-            {selectedStep ? (
-              <PipelineStepSettings
-                step={selectedStep}
-                registry={allTools}
-                onChange={(params) =>
-                  selectedIndex !== null &&
-                  updateStepParams(selectedIndex, params)
+        <PipelineGraph
+          // An end is on the chain once it has been asked for or already holds a value, so a
+          // loaded pipeline needs no seeding: its source and destination place themselves.
+          input={
+            inputAsked || inputValid
+              ? {
+                  label:
+                    chosenSource?.name ??
+                    t("portal.pipelines.builder.chooseSource"),
+                  detail: chosenSource ? triggerSummary() : undefined,
+                  warning: inputValid
+                    ? undefined
+                    : t("portal.pipelines.builder.needsSource"),
                 }
-              />
-            ) : (
-              <EmptyState
-                title={t("portal.pipelines.builder.selectToolTitle")}
-                description={t("portal.pipelines.builder.selectToolBody")}
-              />
-            )}
-          </div>
-        </aside>
+              : null
+          }
+          output={
+            outputAsked || outputValid
+              ? {
+                  label:
+                    chosenDestination?.name ??
+                    t("portal.pipelines.builder.chooseDestination"),
+                  warning: outputValid
+                    ? undefined
+                    : t("portal.pipelines.builder.needsDestination"),
+                }
+              : null
+          }
+          steps={graphSteps}
+          selected={selected}
+          onSelect={setSelected}
+          onAddEnd={addEnd}
+          onRemoveEnd={removeEnd}
+          onInsertStep={setPickerAt}
+          onRemoveSteps={removeSteps}
+          onReorderSteps={reorderSteps}
+          onOpenStepError={(index) => setSelected({ steps: [index] })}
+        />
+
+        <PipelineInspector
+          title={
+            selected === "input"
+              ? t("portal.pipelines.builder.inputs")
+              : selected === "output"
+                ? t("portal.pipelines.composer.output")
+                : selectedStep
+                  ? stepLabel(selectedStep)
+                  : undefined
+          }
+          icon={
+            selected === "input" ? (
+              <MoveToInboxRoundedIcon style={{ fontSize: "1.125rem" }} />
+            ) : selected === "output" ? (
+              <SendRoundedIcon style={{ fontSize: "1.125rem" }} />
+            ) : selectedStep ? (
+              stepIcon(selectedStep)
+            ) : undefined
+          }
+          error={
+            chosenSteps.length === 1 &&
+            testRun?.status === "FAILED" &&
+            testRun.currentStep === chosenSteps[0]
+              ? testRun.error
+              : undefined
+          }
+          message={
+            chosenSteps.length > 1
+              ? t("portal.pipelines.inspector.multipleSelected", {
+                  count: chosenSteps.length,
+                })
+              : undefined
+          }
+        >
+          {inspectorBody()}
+        </PipelineInspector>
       </div>
+
+      <Modal
+        open={pickerAt !== null}
+        onClose={() => setPickerAt(null)}
+        width="md"
+        title={t("portal.pipelines.composer.addTool")}
+        className="portal-pipelines__picker-modal"
+      >
+        <ToolPicker
+          tools={executableTools}
+          onPick={addStep}
+          operations={STEP_OPERATIONS}
+          onPickOperation={addOperationStep}
+          precedingOutput={precedingOutput}
+          onClose={() => setPickerAt(null)}
+        />
+      </Modal>
+
+      <PipelineDefinitionModal
+        open={definitionOpen}
+        onClose={() => setDefinitionOpen(false)}
+        json={definitionJson}
+      />
 
       <Modal
         open={pendingDelete}
@@ -1060,7 +1199,7 @@ export function PipelineBuilder() {
         width="sm"
         title={t("portal.pipelines.delete.title")}
         footer={
-          <div className="portal-pipelines__composer-footer">
+          <div className="portal-builder__composer-footer">
             <Button
               variant="tertiary"
               size="sm"
@@ -1089,7 +1228,7 @@ export function PipelineBuilder() {
         width="sm"
         title={t("portal.pipelines.builder.unsavedTitle")}
         footer={
-          <div className="portal-pipelines__composer-footer">
+          <div className="portal-builder__composer-footer">
             <Button
               variant="tertiary"
               size="sm"
@@ -1130,6 +1269,12 @@ export function PipelineBuilder() {
       >
         <p>{t("portal.pipelines.builder.unsavedBody")}</p>
       </Modal>
+
+      <SourceModal
+        open={sourceModal.open}
+        sourceId={sourceModal.sourceId}
+        onClose={() => setSourceModal({ open: false, sourceId: null })}
+      />
     </div>
   );
 }
