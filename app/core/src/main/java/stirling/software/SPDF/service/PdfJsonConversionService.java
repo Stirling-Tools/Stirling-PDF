@@ -3268,7 +3268,7 @@ public class PdfJsonConversionService {
                                 if (run.font() instanceof PDType3Font
                                         && run.charCodes() != null
                                         && !run.charCodes().isEmpty()) {
-                                    encoded = encodeType3CharCodes(run.charCodes());
+                                    encoded = PdfTextEncoder.encodeType3CharCodes(run.charCodes());
                                     if (encoded == null || encoded.length == 0) {
                                         log.warn(
                                                 "[FONT-DEBUG] Failed to emit raw Type3 char codes for font {} on page {}",
@@ -4268,20 +4268,6 @@ public class PdfJsonConversionService {
             }
         }
         return null;
-    }
-
-    private byte[] encodeType3CharCodes(List<Integer> charCodes) {
-        if (charCodes == null || charCodes.isEmpty()) {
-            return null;
-        }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(charCodes.size());
-        for (Integer code : charCodes) {
-            if (code == null || code < 0 || code > 0xFF) {
-                return null;
-            }
-            baos.write(code);
-        }
-        return baos.toByteArray();
     }
 
     private MergedText mergeText(List<PdfJsonTextElement> elements) {

@@ -7,6 +7,7 @@
 package stirling.software.SPDF.service.pdfjson.encoding;
 
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,5 +45,19 @@ public class PdfTextEncoder {
             return !(unsigned == 0x09 || unsigned == 0x0A || unsigned == 0x0D);
         }
         return false;
+    }
+
+    public static byte[] encodeType3CharCodes(List<Integer> charCodes) {
+        if (charCodes == null || charCodes.isEmpty()) {
+            return null;
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(charCodes.size());
+        for (Integer code : charCodes) {
+            if (code == null || code < 0 || code > 0xFF) {
+                return null;
+            }
+            baos.write(code);
+        }
+        return baos.toByteArray();
     }
 }
