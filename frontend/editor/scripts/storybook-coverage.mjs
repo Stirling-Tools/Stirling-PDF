@@ -14,7 +14,11 @@
 //
 // Each uncovered surface is classified by what a story would have to supply:
 //
-//   props      nothing — it renders from its props
+//   props      no context to supply. Note this means "no provider needed", not
+//              "cheap" — a props-only component can still be expensive to
+//              story if its props are heavy (ButtonAppearanceOverlay wants
+//              real PDF bytes; AppConfigModalLazy lazy-loads the whole
+//              settings tree). Read the props before assuming it is quick.
 //   context    it (or something it renders) reads a React context. The cheap
 //              fix is usually to export the context and hand the story the
 //              slice the component actually touches, rather than mounting the
