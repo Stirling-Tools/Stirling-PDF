@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
   Switch,
-  Button,
   Stack,
   Paper,
   Text,
@@ -14,7 +14,6 @@ import {
   Select,
   Badge,
   Table,
-  ActionIcon,
   Tooltip,
   FileInput,
   Alert,
@@ -22,6 +21,8 @@ import {
   Box,
   Modal,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -52,6 +53,7 @@ interface DatabaseSettingsData {
 
 export default function AdminDatabaseSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } =
     useLoginRequired();
   const {
@@ -462,7 +464,16 @@ export default function AdminDatabaseSection() {
                 )}
               </Text>
             </div>
-            <Badge color="grape" size="lg">
+            <Badge
+              color="grape"
+              size="lg"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/settings/adminPlan")}
+              title={t(
+                "admin.settings.badge.clickToUpgrade",
+                "Click to view plan details",
+              )}
+            >
               ENTERPRISE
             </Badge>
           </Group>
@@ -485,7 +496,7 @@ export default function AdminDatabaseSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.database.enableCustom.label",
@@ -576,6 +587,10 @@ export default function AdminDatabaseSection() {
                       { value: "mysql", label: "MySQL" },
                       { value: "mariadb", label: "MariaDB" },
                     ]}
+                    comboboxProps={{
+                      withinPortal: true,
+                      zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                    }}
                     disabled={!loginEnabled}
                   />
                 </div>
@@ -698,7 +713,10 @@ export default function AdminDatabaseSection() {
                     onChange={(value) =>
                       setSettings({ ...settings, password: value })
                     }
-                    placeholder="Enter database password"
+                    placeholder={t(
+                      "admin.settings.database.password.placeholder",
+                      "Enter database password",
+                    )}
                     disabled={!loginEnabled}
                   />
                 </div>
@@ -786,7 +804,7 @@ export default function AdminDatabaseSection() {
                   </Group>
                   <Group gap="xs">
                     <Button
-                      variant="light"
+                      variant="secondary"
                       leftSection={
                         <LocalIcon icon="refresh" width="1rem" height="1rem" />
                       }
@@ -831,7 +849,7 @@ export default function AdminDatabaseSection() {
                       styles={{ input: { minWidth: 280 } }}
                     />
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       onClick={handleUploadImport}
                       loading={importingUpload}
                       disabled={!loginEnabled || !isEmbeddedH2}
@@ -909,11 +927,15 @@ export default function AdminDatabaseSection() {
                                 withArrow
                               >
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   onClick={() =>
                                     handleDownload(backup.fileName)
                                   }
                                   disabled={!loginEnabled || !isEmbeddedH2}
+                                  aria-label={t(
+                                    "admin.settings.database.download",
+                                    "Download",
+                                  )}
                                 >
                                   {downloadingFile === backup.fileName ? (
                                     <Loader size="xs" />
@@ -934,11 +956,15 @@ export default function AdminDatabaseSection() {
                                 withArrow
                               >
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   onClick={() =>
                                     handleImportExisting(backup.fileName)
                                   }
                                   disabled={!loginEnabled || !isEmbeddedH2}
+                                  aria-label={t(
+                                    "admin.settings.database.import",
+                                    "Import",
+                                  )}
                                 >
                                   {importingBackupFile === backup.fileName ? (
                                     <Loader size="xs" />
@@ -959,12 +985,16 @@ export default function AdminDatabaseSection() {
                                 withArrow
                               >
                                 <ActionIcon
-                                  variant="subtle"
-                                  color="red"
+                                  variant="tertiary"
+                                  accent="danger"
                                   onClick={() =>
                                     handleDeleteClick(backup.fileName)
                                   }
                                   disabled={!loginEnabled || !isEmbeddedH2}
+                                  aria-label={t(
+                                    "admin.settings.database.delete",
+                                    "Delete",
+                                  )}
                                 >
                                   {deletingFile === backup.fileName ? (
                                     <Loader size="xs" />
@@ -1050,14 +1080,14 @@ export default function AdminDatabaseSection() {
             </Stack>
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="default"
+                variant="secondary"
                 onClick={closeConfirmImportModal}
                 disabled={importingUpload}
               >
                 {t("cancel", "Cancel")}
               </Button>
               <Button
-                color="red"
+                accent="danger"
                 onClick={handleConfirmImport}
                 loading={importingUpload}
                 disabled={confirmInput.length === 0}
@@ -1094,14 +1124,14 @@ export default function AdminDatabaseSection() {
             </Alert>
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="default"
+                variant="secondary"
                 onClick={() => setDeleteConfirmFile(null)}
                 disabled={deletingFile !== null}
               >
                 {t("cancel", "Cancel")}
               </Button>
               <Button
-                color="red"
+                accent="danger"
                 onClick={() =>
                   deleteConfirmFile && handleDelete(deleteConfirmFile)
                 }

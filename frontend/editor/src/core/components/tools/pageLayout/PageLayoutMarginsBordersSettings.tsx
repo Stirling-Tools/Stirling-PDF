@@ -75,7 +75,7 @@ export default function PageLayoutMarginsBordersSettings({
     <Stack gap="sm">
       <NumberInput
         label={t("pageLayout.top", "Top Margin")}
-        placeholder="Enter top margin"
+        placeholder={t("pageLayout.margins.topPlaceholder", "Enter top margin")}
         value={parameters.topMargin}
         onChange={(v) => onParameterChange("topMargin", Number(v))}
         min={0}
@@ -85,7 +85,10 @@ export default function PageLayoutMarginsBordersSettings({
       />
       <NumberInput
         label={t("pageLayout.bottom", "Bottom Margin")}
-        placeholder="Enter bottom margin"
+        placeholder={t(
+          "pageLayout.margins.bottomPlaceholder",
+          "Enter bottom margin",
+        )}
         value={parameters.bottomMargin}
         onChange={(v) => onParameterChange("bottomMargin", Number(v))}
         min={0}
@@ -95,7 +98,10 @@ export default function PageLayoutMarginsBordersSettings({
       />
       <NumberInput
         label={t("pageLayout.left", "Left Margin")}
-        placeholder="Enter left margin"
+        placeholder={t(
+          "pageLayout.margins.leftPlaceholder",
+          "Enter left margin",
+        )}
         value={parameters.leftMargin}
         onChange={(v) => onParameterChange("leftMargin", Number(v))}
         min={0}
@@ -104,7 +110,10 @@ export default function PageLayoutMarginsBordersSettings({
       />
       <NumberInput
         label={t("pageLayout.right", "Right Margin")}
-        placeholder="Enter right margin"
+        placeholder={t(
+          "pageLayout.margins.rightPlaceholder",
+          "Enter right margin",
+        )}
         value={parameters.rightMargin}
         onChange={(v) => onParameterChange("rightMargin", Number(v))}
         min={0}
@@ -114,7 +123,10 @@ export default function PageLayoutMarginsBordersSettings({
       />
       <NumberInput
         label={t("pageLayout.innerMargin", "Inner Margin")}
-        placeholder="Enter inner margin"
+        placeholder={t(
+          "pageLayout.margins.innerPlaceholder",
+          "Enter inner margin",
+        )}
         value={parameters.innerMargin}
         onChange={(v) => onParameterChange("innerMargin", Number(v))}
         min={0}
@@ -137,7 +149,10 @@ export default function PageLayoutMarginsBordersSettings({
       {parameters.addBorder && (
         <NumberInput
           label={t("pageLayout.borderWidth", "Border Thickness")}
-          placeholder="Enter border thickness"
+          placeholder={t(
+            "pageLayout.margins.borderThicknessPlaceholder",
+            "Enter border thickness",
+          )}
           value={parameters.borderWidth}
           onChange={(v) => onParameterChange("borderWidth", Number(v))}
           min={1}

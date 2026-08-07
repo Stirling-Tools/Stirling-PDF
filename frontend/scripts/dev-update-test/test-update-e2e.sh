@@ -151,6 +151,11 @@ if [ "$SKIP_BUILD" = false ] || [ -z "$BUNDLE_FILE" ]; then
   PRIVATE_KEY="$(cat "$KEYS_DIR/dev-update-key")"
 
   cd "$FRONTEND_DIR/editor"
+  # Mirror tauri:dev-with-update's prebuild: setup-env writes .env.local +
+  # .env.desktop.local, generate-icons emits src/assets/material-symbols-icons.json
+  # which LocalIcon.tsx imports. Without these, vite build fails to resolve the icons file.
+  npx tsx scripts/setup-env.mts --desktop
+  node scripts/generate-icons.js
   # Build the Windows installer provisioner + thumbnail-handler (no-op on macOS/Linux).
   # The WiX fragment references these binaries, so light.exe fails to bind without them.
   node scripts/build-provisioner.mjs

@@ -1,4 +1,7 @@
-import { AnimatedCircleConfig } from "@app/types/types";
+import {
+  AnimatedCircleConfig,
+  AnimatedSlideBackgroundProps,
+} from "@app/types/types";
 
 /**
  * Unified circle background configuration used across all onboarding slides.
@@ -27,3 +30,36 @@ export const UNIFIED_CIRCLE_CONFIG: AnimatedCircleConfig[] = [
     offsetY: 18,
   },
 ];
+
+/**
+ * Build a light slide background in a slide-specific accent colour: a white
+ * hero fading into a pale horizon tint, with the unified sphere geometry
+ * glowing in the accent on each sphere's inner edge.
+ */
+export function createLightSlideBackground(
+  accentRgb: [number, number, number],
+  horizon: string,
+): AnimatedSlideBackgroundProps {
+  const [r, g, b] = accentRgb;
+  const sphereColors = [
+    `linear-gradient(45deg, rgba(${r}, ${g}, ${b}, 0.04), rgba(${r}, ${g}, ${b}, 0.3))`,
+    `linear-gradient(225deg, rgba(${r}, ${g}, ${b}, 0.04), rgba(${r}, ${g}, ${b}, 0.26))`,
+  ];
+  return {
+    gradientStops: ["#FFFFFF", horizon],
+    circles: UNIFIED_CIRCLE_CONFIG.map((circle, index) => ({
+      ...circle,
+      color: sphereColors[index],
+    })),
+    tone: "light",
+  };
+}
+
+/**
+ * Default light slide background: white with a light blue horizon and
+ * blue-glow spheres.
+ */
+export const UNIFIED_LIGHT_BACKGROUND = createLightSlideBackground(
+  [37, 99, 235],
+  "#DBEAFE",
+);

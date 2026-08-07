@@ -22,7 +22,7 @@ import { useAdminSettings } from "@app/hooks/useAdminSettings";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import ProviderCard from "@app/components/shared/config/configSections/ProviderCard";
 import {
   Provider,
@@ -603,7 +603,7 @@ export default function AdminConnectionsSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.connections.ssoAutoLogin.enable",
@@ -674,7 +674,7 @@ export default function AdminConnectionsSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.connections.mobileScanner.enable",
@@ -815,7 +815,10 @@ export default function AdminConnectionsSection() {
                           ]}
                           disabled={!loginEnabled}
                           style={{ width: "250px" }}
-                          comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                          comboboxProps={{
+                            withinPortal: true,
+                            zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                          }}
                         />
                         <PendingBadge
                           show={isFieldPending("mobileScannerImageResolution")}
@@ -872,7 +875,10 @@ export default function AdminConnectionsSection() {
                           ]}
                           disabled={!loginEnabled}
                           style={{ width: "250px" }}
-                          comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                          comboboxProps={{
+                            withinPortal: true,
+                            zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                          }}
                         />
                         <PendingBadge
                           show={isFieldPending("mobileScannerPageFormat")}

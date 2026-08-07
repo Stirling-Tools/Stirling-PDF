@@ -588,7 +588,7 @@ public class PdfJsonConversionService {
                                                             .replaceAll("");
                                             return String.format("%s (%s)", cleanName, subtype);
                                         })
-                                .collect(java.util.stream.Collectors.toList());
+                                .toList();
                 long type3Fonts =
                         responseFonts.stream().filter(f -> "Type3".equals(f.getSubtype())).count();
 
@@ -1554,7 +1554,7 @@ public class PdfJsonConversionService {
                                                                 .glyphName(outline.getGlyphName())
                                                                 .unicode(outline.getUnicode())
                                                                 .build())
-                                        .collect(Collectors.toList());
+                                        .toList();
                     }
                 } catch (Exception ex) {
                     log.debug(

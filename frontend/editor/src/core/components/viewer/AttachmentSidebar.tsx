@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import {
-  Box,
-  ScrollArea,
-  Text,
-  ActionIcon,
-  Loader,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Box, ScrollArea, Text, Loader, Stack, TextInput } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
 import DownloadIcon from "@mui/icons-material/DownloadRounded";
@@ -52,7 +47,9 @@ export const AttachmentSidebar = ({
   preloadCacheKeys = [],
 }: AttachmentSidebarProps) => {
   const { t } = useTranslation();
-  const { attachmentActions, hasAttachmentSupport } = useViewer();
+  const { attachmentActions, hasAttachmentSupport, toggleAttachmentSidebar } =
+    useViewer();
+  const { handleToolSelectForced } = useToolWorkflow();
   const [searchTerm, setSearchTerm] = useState("");
   const [attachmentSupport, setAttachmentSupport] = useState(() =>
     hasAttachmentSupport(),
@@ -139,16 +136,28 @@ export const AttachmentSidebar = ({
 
     const key = documentCacheKey;
     const cached = cacheRef.current.get(key);
-    if (
-      cached &&
-      (cached.status === "loading" || cached.status === "success")
-    ) {
+    // Only short-circuit on a finalised success cache. Skipping when
+    // cached.status === "loading" caused the sidebar to get stuck: if
+    // the previous fetch was cancelled (by a parent re-render that
+    // changed the attachmentActions reference - createViewerActions
+    // builds a new object every viewer render), the cache still says
+    // "loading" but no live fetch is in flight. On the re-run we'd
+    // early-return and never refetch, so the UI would sit on the
+    // "Loading attachments..." state forever. Same change applied in
+    // BookmarkSidebar.
+    if (cached && cached.status === "success") {
       return;
     }
 
     let cancelled = false;
+    // Don't write "loading" into the cache - keep the cache for
+    // terminal states (success/error) only, so a cancelled run can
+    // never leave a stale "loading" entry behind. The visible
+    // sidebar state still goes through setActiveEntry below.
     const updateEntry = (entry: AttachmentCacheEntry) => {
-      cacheRef.current.set(key, entry);
+      if (entry.status === "success" || entry.status === "error") {
+        cacheRef.current.set(key, entry);
+      }
       if (!cancelled && currentKeyRef.current === key) {
         setActiveEntry(entry);
       }
@@ -163,10 +172,20 @@ export const AttachmentSidebar = ({
     );
 
     const fetchWithRetry = async () => {
-      const maxAttempts = 10;
+      // See BookmarkSidebar - matching change. After a file swap the
+      // attachment bridge briefly unregisters and the action returns
+      // null until the new document is loaded; without retrying on
+      // null we'd cache an empty success and miss freshly-added
+      // attachments.
+      const maxAttempts = 30;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
           const result = await attachmentActions.getAttachments();
+          if (result === null) {
+            if (attempt === maxAttempts - 1) return [];
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            continue;
+          }
           return Array.isArray(result) ? result : [];
         } catch (error: any) {
           const message =
@@ -239,6 +258,14 @@ export const AttachmentSidebar = ({
     attachmentActions.downloadAttachment(attachment);
   };
 
+  const handleAddAttachment = useCallback(() => {
+    // Close the attachment sidebar before opening the tool so the user
+    // doesn't end up looking at two stacked side panels (the sidebar on
+    // the right + the tool's settings on the left).
+    toggleAttachmentSidebar();
+    handleToolSelectForced("addAttachments");
+  }, [handleToolSelectForced, toggleAttachmentSidebar]);
+
   const filteredAttachments = useMemo(() => {
     const attachments = Array.isArray(activeEntry.attachments)
       ? activeEntry.attachments
@@ -288,9 +315,10 @@ export const AttachmentSidebar = ({
             )}
           </div>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             className="attachment-item__download-icon"
+            aria-label={t("viewer.attachments.download", "Download attachment")}
             onClick={(event) => handleDownload(attachment, event)}
           >
             <DownloadIcon sx={{ fontSize: "1.2rem" }} />
@@ -352,6 +380,21 @@ export const AttachmentSidebar = ({
             {t("viewer.attachments.title", "Attachments")}
           </Text>
         </div>
+        <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            onClick={toggleAttachmentSidebar}
+            aria-label={t(
+              "viewer.attachments.closeSidebar",
+              "Close attachments sidebar",
+            )}
+            title={t("viewer.attachments.close", "Close attachments")}
+          >
+            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+          </ActionIcon>
+        </Box>
       </div>
 
       <Box
@@ -405,7 +448,11 @@ export const AttachmentSidebar = ({
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
-              <ActionIcon variant="light" onClick={requestReload}>
+              <ActionIcon
+                variant="secondary"
+                aria-label={t("viewer.attachments.retry", "Retry")}
+                onClick={requestReload}
+              >
                 <LocalIcon icon="refresh" />
               </ActionIcon>
             </Stack>
@@ -427,20 +474,51 @@ export const AttachmentSidebar = ({
           )}
 
           {showEmptyState && (
-            <div className="sidebar-base__empty-state">
+            <Stack align="center" gap="sm" py="lg">
+              <LocalIcon
+                icon="attachment-rounded"
+                width="2rem"
+                height="2rem"
+                style={{ color: "var(--mantine-color-dimmed)" }}
+              />
               <Text size="sm" c="dimmed" ta="center">
                 {t(
                   "viewer.attachments.empty",
                   "No attachments in this document",
                 )}
               </Text>
-            </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleAddAttachment}
+                leftSection={
+                  <LocalIcon icon="add" width="1rem" height="1rem" />
+                }
+              >
+                {t("viewer.attachments.addAttachment", "Add attachment")}
+              </Button>
+            </Stack>
           )}
 
           {showAttachmentList && (
-            <div className="attachment-list">
-              {renderAttachments(filteredAttachments)}
-            </div>
+            <>
+              <Button
+                variant="tertiary"
+                size="sm"
+                fullWidth
+                justify="start"
+                onClick={handleAddAttachment}
+                leftSection={
+                  <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+                }
+                style={{ marginBottom: "var(--space-xs)" }}
+              >
+                {t("viewer.attachments.addAttachment", "Add attachment")}
+              </Button>
+              <div className="attachment-list">
+                {renderAttachments(filteredAttachments)}
+              </div>
+            </>
           )}
 
           {showSearchEmpty && (

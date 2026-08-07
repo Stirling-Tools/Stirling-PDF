@@ -23,12 +23,18 @@ import {
 const THUMBNAIL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export interface StoredStirlingFileRecord extends BaseFileMetadata {
-  data: ArrayBuffer;
+  // Blob since the large-file OOM fix (stored by reference, no JS-side copy);
+  // ArrayBuffer records predate it and are still readable.
+  data: ArrayBuffer | Blob;
   fileId: FileId; // Matches runtime StirlingFile.fileId exactly
   quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
+  // Cached classification labels — mirrors the stub field so the sidebar can
+  // group by label without re-reading PDF bytes, and it survives versioning.
+  // See StirlingFileStub.classificationLabels.
+  classificationLabels?: string[];
 }
 
 export interface StorageStats {
@@ -36,6 +42,25 @@ export interface StorageStats {
   available: number;
   fileCount: number;
   quota?: number;
+}
+
+/**
+ * Best-effort provenance for records persisted before `derivedFromTool`
+ * existed. A version chain (a tool history, a version past the first, or a
+ * parent) is unambiguously a tool output, so flag it. Legacy independent
+ * artifacts (convert/split/merge) recorded none of that and are
+ * indistinguishable from uploads in old data — they stay unflagged, which for
+ * an enforcement feature is the safe default (enforce rather than silently
+ * skip). New records always carry an explicit flag, so this only fires for
+ * pre-existing files on first read after upgrade.
+ */
+export function legacyDerivedFromTool(
+  record: StoredStirlingFileRecord,
+): boolean | undefined {
+  if ((record.toolHistory?.length ?? 0) > 0) return true;
+  if ((record.versionNumber ?? 1) > 1) return true;
+  if (record.parentFileId != null) return true;
+  return undefined;
 }
 
 class FileStorageService {
@@ -95,7 +120,6 @@ class FileStorageService {
     stub: StirlingFileStub,
   ): Promise<void> {
     const db = await this.getDatabase();
-    const arrayBuffer = await stirlingFile.arrayBuffer();
 
     const record: StoredStirlingFileRecord = {
       id: stirlingFile.fileId,
@@ -106,7 +130,9 @@ class FileStorageService {
       size: stirlingFile.size,
       lastModified: stirlingFile.lastModified,
       createdAt: stub.createdAt,
-      data: arrayBuffer,
+      // Store the File (a Blob) itself: IndexedDB persists it by reference and
+      // streams to disk, so multi-GB files never materialize in JS memory.
+      data: stirlingFile,
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
       isLeaf: stub.isLeaf ?? true,
@@ -124,9 +150,14 @@ class FileStorageService {
       originalFileId: stub.originalFileId ?? stirlingFile.fileId,
       parentFileId: stub.parentFileId ?? undefined,
       toolHistory: stub.toolHistory ?? [],
+      derivedFromTool: stub.derivedFromTool ?? false,
+      sourceFileIds: stub.sourceFileIds,
 
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
+
+      // Cached classification category, if already known (preserved across re-stores).
+      classificationLabels: stub.classificationLabels,
     };
 
     return new Promise((resolve, reject) => {
@@ -247,8 +278,12 @@ class FileStorageService {
           originalFileId: record.originalFileId,
           parentFileId: record.parentFileId,
           toolHistory: record.toolHistory,
+          derivedFromTool:
+            record.derivedFromTool ?? legacyDerivedFromTool(record),
+          sourceFileIds: record.sourceFileIds,
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
+          classificationLabels: record.classificationLabels,
         };
 
         resolve(stub);
@@ -303,8 +338,12 @@ class FileStorageService {
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
+              derivedFromTool:
+                record.derivedFromTool ?? legacyDerivedFromTool(record),
+              sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
+              classificationLabels: record.classificationLabels,
             });
           }
           cursor.continue();
@@ -391,8 +430,12 @@ class FileStorageService {
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
+              derivedFromTool:
+                record.derivedFromTool ?? legacyDerivedFromTool(record),
+              sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
+              classificationLabels: record.classificationLabels,
             });
           }
           cursor.continue();
@@ -698,6 +741,53 @@ class FileStorageService {
       console.error("Failed to mark file as processed:", error);
       return false;
     }
+  }
+
+  /**
+   * Persist output files as versions of their inputs: mark each input non-leaf (unless the
+   * outputs are v1 originals, i.e. nothing was versioned) and store each output with its stub.
+   * This is the durable half of {@link consumeFiles}, shared so a versioned result can be written
+   * even when the input isn't in the active workspace (e.g. a policy run recovered after a reload).
+   * Storage-only callers must bump the IndexedDB revision afterwards so the file views re-read;
+   * {@link consumeFiles} instead updates workspace state via its dispatch.
+   */
+  async persistVersionedOutputs(
+    inputFileIds: FileId[],
+    outputStirlingFiles: StirlingFile[],
+    outputStirlingFileStubs: StirlingFileStub[],
+  ): Promise<void> {
+    if (outputStirlingFiles.length !== outputStirlingFileStubs.length) {
+      throw new Error(
+        `Mismatch between output files (${outputStirlingFiles.length}) and stubs (${outputStirlingFileStubs.length})`,
+      );
+    }
+
+    const allV1 = outputStirlingFileStubs.every(
+      (stub) => stub.versionNumber === 1,
+    );
+    if (!allV1) {
+      await Promise.all(
+        inputFileIds.map((fileId) =>
+          this.markFileAsProcessed(fileId).catch((error) => {
+            // Best-effort: a missing/locked input shouldn't block storing the outputs.
+            console.warn(`Failed to mark file ${fileId} as processed:`, error);
+          }),
+        ),
+      );
+    }
+
+    await Promise.all(
+      outputStirlingFiles.map((file, i) =>
+        this.storeStirlingFile(file, outputStirlingFileStubs[i]).catch(
+          (error) =>
+            console.error(
+              "Failed to persist output file to storage:",
+              file.name,
+              error,
+            ),
+        ),
+      ),
+    );
   }
 
   /**

@@ -8,14 +8,8 @@
  * - Better visual hierarchy and spacing
  */
 import React, { useCallback, useEffect, useRef } from "react";
-import {
-  Box,
-  Text,
-  ScrollArea,
-  Badge,
-  Tooltip,
-  ActionIcon,
-} from "@mantine/core";
+import { Box, Text, ScrollArea, Badge, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FieldInput } from "@app/tools/formFill/FieldInput";
@@ -34,7 +28,7 @@ interface FormFieldSidebarProps {
 }
 
 export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
-  useTranslation();
+  const { t } = useTranslation();
   const { state, setValue, setActiveField } = useFormFill();
   const { fields, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);
@@ -88,9 +82,9 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         zIndex: 999,
         display: "flex",
         flexDirection: "column",
-        background: "var(--bg-toolbar, var(--mantine-color-body))",
+        background: "var(--c-bg-raised, var(--mantine-color-body))",
         borderLeft:
-          "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+          "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
         boxShadow: "-4px 0 16px rgba(0,0,0,0.08)",
       }}
     >
@@ -102,7 +96,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           justifyContent: "space-between",
           padding: "0.625rem 0.75rem",
           borderBottom:
-            "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+            "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
           flexShrink: 0,
         }}
       >
@@ -116,10 +110,10 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           </Badge>
         </div>
         <ActionIcon
-          variant="subtle"
+          variant="tertiary"
           size="sm"
           onClick={onToggle}
-          aria-label="Close sidebar"
+          aria-label={t("formFill.sidebar.close", "Close sidebar")}
         >
           <CloseIcon sx={{ fontSize: 16 }} />
         </ActionIcon>

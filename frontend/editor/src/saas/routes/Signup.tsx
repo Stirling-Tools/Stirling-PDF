@@ -4,24 +4,23 @@ import { signInAnonymously } from "@app/auth/supabase";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import { getBaseUrl } from "@app/constants/app";
+import { getBaseUrl, withBasePath } from "@app/constants/app";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
-import GuestSignInButton from "@app/routes/authShared/GuestSignInButton";
 import { alert } from "@app/components/toast";
+import { Button } from "@app/ui/Button";
 
 // Import signup components
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
-import DividerWithText from "@app/components/shared/DividerWithText";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
   useSignupFormValidation,
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -30,7 +29,6 @@ export default function Signup() {
   const { t } = useTranslation();
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showEmailForm, setShowEmailForm] = useState(false);
   const [name, setName] = useState(undefined as string | undefined);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -109,7 +107,7 @@ export default function Signup() {
       "app.description",
       "The Free Adobe Acrobat alternative (10M+ Downloads)",
     ),
-    ogImage: `${baseUrl}/og_images/home.png`,
+    ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
@@ -183,42 +181,35 @@ export default function Signup() {
   };
 
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm}>
-      <LoginHeader title={t("signup.title")} subtitle={t("signup.subtitle")} />
+    <AuthLayout>
+      {/* Centered logo */}
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
+      </div>
 
       <ErrorMessage error={error} />
 
-      {/* OAuth first */}
-      <div style={{ marginBottom: "0.5rem" }}>
+      {/* OAuth providers */}
+      <div>
         <OAuthButtons
           onProviderClick={handleProviderSignIn}
           isSubmitting={isSigningUp}
           layout="fullwidth"
+          labelPrefix={`${t("signup.signUpWith", "Sign up with")} `}
         />
       </div>
 
-      {/* Divider between OAuth and Email */}
-      <div style={{ margin: "0.5rem 0" }}>
-        <DividerWithText
-          text={t("signup.or", "or")}
-          respondsToDarkMode={false}
-          opacity={0.4}
-        />
-      </div>
-
-      {/* Use Email Instead button (toggles email form) */}
-      <div className="auth-section">
-        <button
-          type="button"
-          disabled={isSigningUp}
-          onClick={() => setShowEmailForm((v) => !v)}
-          className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
-        >
-          {t("signup.useEmailInstead", "Use Email Instead")}
-        </button>
-      </div>
-
-      {showEmailForm && (
+      {/* Sign-up form — always visible (no expander toggle) */}
+      <div style={{ marginTop: "2.5rem", paddingBottom: "0.5rem" }}>
         <SignupForm
           name={name}
           email={email}
@@ -234,35 +225,50 @@ export default function Signup() {
           isSubmitting={isSigningUp}
           fieldErrors={fieldErrors}
         />
-      )}
-
-      <div className="auth-section-sm">
-        <DividerWithText
-          text={t("signup.or", "or")}
-          respondsToDarkMode={false}
-          opacity={0.4}
-        />
       </div>
 
-      <GuestSignInButton
-        onClick={handleAnonymousSignIn}
-        disabled={isSigningUp}
-        label={
-          isSigningUp
-            ? t("login.signingIn", "Signing in...")
-            : t("login.signInAnonymously", "Sign in as a Guest")
-        }
-      />
-
-      {/* Bottom row */}
-      <div className="auth-bottom-right">
-        <button
-          type="button"
+      {/* Already have an account — pushed to the bottom */}
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: "auto",
+          paddingTop: "1rem",
+        }}
+      >
+        <Button
+          variant="tertiary"
           onClick={() => navigate("/login")}
-          className="auth-link-black"
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.875rem",
+            color: "var(--c-primary)",
+          }}
         >
-          {t("login.logIn", "Log In")}
-        </button>
+          {t("signup.alreadyHaveAccount", "I already have an account")}
+        </Button>
+      </div>
+
+      {/* Skip — small + muted, at the very bottom */}
+      <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
+        <Button
+          variant="tertiary"
+          onClick={handleAnonymousSignIn}
+          disabled={isSigningUp}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.8125rem",
+            fontWeight: 500,
+            color: "var(--c-text-subtle)",
+          }}
+        >
+          {isSigningUp
+            ? t("login.signingIn", "Signing in...")
+            : `${t("signup.skip", "Skip")} →`}
+        </Button>
       </div>
     </AuthLayout>
   );

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +64,21 @@ public class JobExecutorService {
                 "Job executor configured with effective timeout of {} ms", this.effectiveTimeoutMs);
     }
 
+    /** Stop the service-owned executor when the application context is closed or restarted. */
+    @PreDestroy
+    public void shutdown() {
+        log.debug("Shutting down job executor");
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            executor.shutdownNow();
+        }
+    }
+
     public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) {
         return runJobGeneric(async, work, -1);
     }
@@ -88,6 +104,11 @@ public class JobExecutorService {
         }
 
         String jobId = scopedJobKey;
+
+        final String jobOwner =
+                jobOwnershipService != null
+                        ? jobOwnershipService.getCurrentUserId().orElse(null)
+                        : null;
 
         long timeoutToUse = customTimeoutMs > 0 ? customTimeoutMs : effectiveTimeoutMs;
 
@@ -119,6 +140,7 @@ public class JobExecutorService {
                         try {
                             stirling.software.common.util.JobContext.setJobId(
                                     capturedJobIdForQueue);
+                            stirling.software.common.util.JobContext.setOwner(jobOwner);
                             Object result = work.get();
                             processJobResult(capturedJobIdForQueue, result);
                             return result;
@@ -153,6 +175,7 @@ public class JobExecutorService {
                                     timeoutToUse);
 
                             stirling.software.common.util.JobContext.setJobId(capturedJobId);
+                            stirling.software.common.util.JobContext.setOwner(jobOwner);
                             Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
                             processJobResult(capturedJobId, result);
                         } catch (TimeoutException te) {

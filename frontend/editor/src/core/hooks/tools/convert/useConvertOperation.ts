@@ -2,13 +2,14 @@ import { useCallback, useMemo } from "react";
 import apiClient from "@app/services/apiClient";
 import { useTranslation } from "react-i18next";
 import {
+  validateConvertParameters,
   ConvertParameters,
   defaultParameters,
 } from "@app/hooks/tools/convert/useConvertParameters";
 import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
 import {
   useToolOperation,
-  ToolType,
+  defineCustomTool,
   CustomProcessorResult,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -300,8 +301,8 @@ export const convertProcessor = async (
 };
 
 // Static configuration object
-export const convertOperationConfig = {
-  toolType: ToolType.custom,
+export const convertOperationConfig = defineCustomTool({
+  validateParams: validateConvertParameters,
   customProcessor: convertProcessor, // Can't use callback version here
   operationType: "convert",
   defaultParameters,
@@ -311,7 +312,7 @@ export const convertOperationConfig = {
       params.toExtension === "pdfx" ? "pdfa" : params.toExtension;
     return getEndpointUrl(params.fromExtension, actualToExtension) ?? undefined;
   },
-} as const;
+});
 
 export const useConvertOperation = (parameters?: ConvertParameters) => {
   const { t } = useTranslation();

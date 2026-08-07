@@ -1,5 +1,8 @@
 import React, { ReactNode } from "react";
-import { Paper, Group, Text, Button, ActionIcon, Stack } from "@mantine/core";
+import { Paper, Group, Text, Stack } from "@mantine/core";
+import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
 type InfoBannerTone = "info" | "warning";
@@ -30,6 +33,40 @@ const toneStyles: Record<
   },
 };
 
+function toSharedButtonVariant(
+  variant: "light" | "filled" | "white" | "outline" | "subtle",
+): ButtonVariant {
+  switch (variant) {
+    case "filled":
+      return "primary";
+    case "outline":
+      return "secondary";
+    case "subtle":
+      return "tertiary";
+    case "light":
+    case "white":
+    default:
+      return "secondary";
+  }
+}
+
+function toSharedButtonAccent(color: string | undefined): ButtonAccent {
+  // Mantine colours may carry a shade suffix (e.g. "orange.7"); use the hue.
+  const hue = (color ?? "").split(".")[0];
+  switch (hue) {
+    case "red":
+      return "danger";
+    case "green":
+      return "success";
+    case "yellow":
+    case "orange":
+      return "warning";
+    case "blue":
+    default:
+      return "default";
+  }
+}
+
 interface InfoBannerProps {
   /**
    * Either a LocalIcon name (string) for the standard sized icon slot, or a
@@ -41,6 +78,9 @@ interface InfoBannerProps {
   buttonText?: string;
   buttonIcon?: string;
   onButtonClick?: () => void;
+  /** Optional muted secondary action (e.g. "Don't remind me again"). */
+  secondaryButtonText?: string;
+  onSecondaryButtonClick?: () => void;
   onDismiss?: () => void;
   dismissible?: boolean;
   loading?: boolean;
@@ -69,6 +109,8 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   buttonText,
   buttonIcon = "check-circle-rounded",
   onButtonClick,
+  secondaryButtonText,
+  onSecondaryButtonClick,
   onDismiss,
   dismissible = true,
   loading = false,
@@ -85,18 +127,19 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   closeIconColor,
   compact = false,
 }) => {
+  const { t } = useTranslation();
   if (!show) {
     return null;
   }
 
   const toneStyle = toneStyles[tone] ?? toneStyles.info;
+  const resolvedTextColor = textColor ?? toneStyle.text;
   const handleDismiss = () => {
     onDismiss?.();
   };
 
   const iconSize = compact ? "1rem" : "1.2rem";
   const textSize = compact ? "xs" : "sm";
-  const buttonSize = compact ? "xs" : "xs";
 
   return (
     <Paper
@@ -147,7 +190,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               <Text
                 fw={600}
                 size={textSize}
-                style={{ color: textColor ?? toneStyle.text }}
+                style={{ color: resolvedTextColor }}
               >
                 {title}
               </Text>
@@ -155,7 +198,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
             <Text
               fw={title ? 400 : 500}
               size={textSize}
-              style={{ color: textColor ?? toneStyle.text }}
+              style={{ color: resolvedTextColor }}
               lineClamp={compact ? 1 : 2}
             >
               {message}
@@ -165,11 +208,13 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
         <Group gap="xs" align="center" wrap="nowrap">
           {buttonText && onButtonClick && (
             <Button
-              variant={buttonVariant}
-              color={buttonColor ?? toneStyle.buttonColor}
-              size={buttonSize}
-              onClick={onButtonClick}
+              variant={toSharedButtonVariant(buttonVariant)}
+              accent={toSharedButtonAccent(
+                buttonColor ?? toneStyle.buttonColor,
+              )}
+              size="sm"
               loading={loading}
+              onClick={onButtonClick}
               leftSection={
                 <LocalIcon
                   icon={buttonIcon}
@@ -177,23 +222,32 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
                   height={compact ? "0.75rem" : "0.9rem"}
                 />
               }
-              styles={
-                buttonTextColor
-                  ? { label: { color: buttonTextColor } }
-                  : undefined
-              }
+              style={buttonTextColor ? { color: buttonTextColor } : undefined}
             >
               {buttonText}
             </Button>
           )}
+          {secondaryButtonText && onSecondaryButtonClick && (
+            <Button
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
+              onClick={onSecondaryButtonClick}
+              style={{ color: "var(--c-text-muted)" }}
+            >
+              {secondaryButtonText}
+            </Button>
+          )}
           {dismissible && (
             <ActionIcon
-              variant="subtle"
-              color={closeIconColor ? undefined : "gray"}
+              variant="tertiary"
+              accent="neutral"
               size="sm"
               onClick={handleDismiss}
-              aria-label="Dismiss"
-              style={closeIconColor ? { color: closeIconColor } : undefined}
+              aria-label={t("infoBanner.dismiss", "Dismiss")}
+              style={{
+                color: closeIconColor ?? "var(--c-text-muted)",
+              }}
             >
               <LocalIcon
                 icon="close-rounded"

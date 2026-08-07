@@ -15,6 +15,7 @@ const FIRST_LAUNCH_KEY: &str = "setup_completed";
 const CONNECTION_MODE_KEY: &str = "connection_mode";
 const SERVER_CONFIG_KEY: &str = "server_config";
 const LOCK_CONNECTION_KEY: &str = "lock_connection_mode";
+const LOGIN_AGREEMENT_KEY: &str = "login_agreement_enabled";
 pub(crate) const UPDATE_MODE_KEY: &str = "update_mode";
 /// When `true` the update mode was written by a provisioning file and cannot
 /// be changed from the UI. Only another provisioning file (from MDM) can
@@ -182,6 +183,7 @@ pub async fn set_connection_mode(
 struct ProvisioningConfig {
     server_url: Option<String>,
     lock_connection_mode: Option<bool>,
+    login_agreement_enabled: Option<bool>,
     /// Optional headless-install update policy (`"prompt"`, `"auto"`, `"disabled"`).
     /// When omitted the existing stored mode is left unchanged.
     update_mode: Option<UpdateMode>,
@@ -236,14 +238,35 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
     let parsed: ProvisioningConfig = serde_json::from_str(&raw)
         .map_err(|e| format!("Failed to parse provisioning file: {}", e))?;
 
+    // Login agreement can be provisioned independently of a server URL so it also applies to
+    // local, no-login desktop installs. Persist it before the server-URL handling below, which
+    // may early-return when no URL is present.
+    if let Some(login_agreement_enabled) = parsed.login_agreement_enabled {
+        if let Ok(store) = app_handle.store(STORE_FILE) {
+            store.set(LOGIN_AGREEMENT_KEY, serde_json::json!(login_agreement_enabled));
+            let _ = store.save();
+        }
+        add_log(format!(
+            "🧩 Provisioned login agreement enabled = {}",
+            login_agreement_enabled
+        ));
+    }
+
     let server_url = parsed
         .server_url
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty());
 
-    if server_url.is_none() && parsed.update_mode.is_none() {
+    // Only short-circuit when there is nothing left to apply. login_agreement is handled above,
+    // but it must still be in this guard so a login-agreement-only file falls through to the
+    // deletion block at the end (otherwise the per-user file would linger and re-apply forever).
+    if server_url.is_none()
+        && parsed.update_mode.is_none()
+        && parsed.login_agreement_enabled.is_none()
+    {
         add_log(
-            "⚠️ Provisioning file has neither serverUrl nor updateMode; skipping apply".to_string(),
+            "⚠️ Provisioning file has no actionable fields (serverUrl/updateMode/loginAgreement); skipping apply"
+                .to_string(),
         );
         return Ok(());
     }
@@ -333,6 +356,17 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
     }
 
     Ok(())
+}
+
+/// Whether the login agreement was provisioned as enabled. Read by the backend launcher to pass
+/// the `-Dlegal.loginAgreement.enabled` flag to the bundled JVM in local desktop mode.
+pub fn login_agreement_enabled(app_handle: &AppHandle) -> bool {
+    app_handle
+        .store(STORE_FILE)
+        .ok()
+        .and_then(|store| store.get(LOGIN_AGREEMENT_KEY))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
 }
 
 #[tauri::command]
