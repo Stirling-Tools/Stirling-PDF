@@ -285,7 +285,6 @@ export default defineConfig(
       "editor/src/core/components/annotation/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/pageEditor/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/shared/config/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/tools/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
