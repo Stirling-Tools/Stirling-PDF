@@ -25,15 +25,24 @@
 // Not counted as surfaces at all: providers, contexts, gates, routers, test
 // helpers, and modules that return a config object rather than markup.
 //
-// Known blocker: desktop/ cannot be storied as things stand. Storybook resolves
-// @app/* through the proprietary vite tsconfig (proprietary -> core), but the
-// desktop flavour resolves it desktop-first, and 34 desktop files import
-// @app/* assets that only exist under desktop/ — e.g.
-// @app/components/shared/DisabledButtonWithTooltip.css. Those imports fail to
-// resolve in Storybook, so the story file will not load at all. Fixing it means
-// either a desktop-aware alias in .storybook/main.ts or moving the shared
-// assets; until then desktop/ is reported as a gap it is not yet possible to
-// close.
+// Known blocker — four flavours cannot be storied as things stand.
+//
+// Storybook resolves @app/* through editor/tsconfig.proprietary.vite.json,
+// which maps it to src/proprietary/* then src/core/* and excludes src/desktop.
+// A file in another flavour that imports an @app/* asset living only in its own
+// tree therefore fails to resolve, and the story file does not load at all:
+//
+//   desktop      80 of 152 @app/ imports unresolvable
+//   saas         54 of 232
+//   cloud        28 of  77
+//   prototypes    4 of  40
+//   portal-saas   0 of   7   (fine)
+//
+// That accounts for the 0% areas below — it is a build-config gap, not
+// neglect. Closing it means either per-flavour alias projects in
+// .storybook/main.ts or hoisting the shared assets, and it is a decision with
+// blast radius across every existing story, so it is deliberately not made
+// here.
 //
 // Run from frontend/.
 
