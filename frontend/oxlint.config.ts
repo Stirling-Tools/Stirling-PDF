@@ -74,7 +74,6 @@ const modernGlobals: OxlintGlobals = {
 
 // Folders not yet conformant to the stricter no-explicit-any rule
 const noExplicitAnyExcludes = [
-  "editor/src/core/components/pageEditor/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/tools/*.{js,mjs,jsx,ts,tsx}",
