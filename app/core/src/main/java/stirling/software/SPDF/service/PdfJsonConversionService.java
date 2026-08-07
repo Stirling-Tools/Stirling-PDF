@@ -115,6 +115,7 @@ import stirling.software.SPDF.model.json.PdfJsonStream;
 import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.SPDF.service.pdfjson.PdfJsonFontService;
+import stirling.software.SPDF.service.pdfjson.encoding.PdfTextEncoder;
 import stirling.software.SPDF.service.pdfjson.font.PdfFontResolver;
 import stirling.software.SPDF.service.pdfjson.parsing.PdfGlyphCounter;
 import stirling.software.SPDF.service.pdfjson.type3.Type3ConversionRequest;
@@ -4187,7 +4188,7 @@ public class PdfJsonConversionService {
             // For non-Type3 fonts without Type3 metadata, use standard encoding
             try {
                 byte[] encoded = font.encode(text);
-                return sanitizeEncoded(encoded);
+                return PdfTextEncoder.sanitizeEncoded(encoded);
             } catch (IllegalArgumentException ex) {
                 log.debug(
                         "[FONT-DEBUG] Font {} cannot encode text '{}': {}",
@@ -4249,7 +4250,7 @@ public class PdfJsonConversionService {
             baos.write(charCode);
         }
         if (mappedAll) {
-            return sanitizeEncoded(baos.toByteArray());
+            return PdfTextEncoder.sanitizeEncoded(baos.toByteArray());
         }
         // Fallback to rawCharCodes for actual Type3 fonts if mapping failed
         if (rawCharCodes != null && !rawCharCodes.isEmpty()) {
@@ -4281,35 +4282,6 @@ public class PdfJsonConversionService {
             baos.write(code);
         }
         return baos.toByteArray();
-    }
-
-    private byte[] sanitizeEncoded(byte[] encoded) {
-        if (encoded == null || encoded.length == 0) {
-            return new byte[0];
-        }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(encoded.length);
-        for (byte b : encoded) {
-            if (isStrippedControlByte(b)) {
-                continue;
-            }
-            baos.write(b);
-        }
-        byte[] sanitized = baos.toByteArray();
-        if (sanitized.length == 0) {
-            return sanitized;
-        }
-        return sanitized;
-    }
-
-    private boolean isStrippedControlByte(byte value) {
-        if (value == 0) {
-            return true;
-        }
-        int unsigned = Byte.toUnsignedInt(value);
-        if (unsigned <= 0x1F) {
-            return !(unsigned == 0x09 || unsigned == 0x0A || unsigned == 0x0D);
-        }
-        return false;
     }
 
     private MergedText mergeText(List<PdfJsonTextElement> elements) {
