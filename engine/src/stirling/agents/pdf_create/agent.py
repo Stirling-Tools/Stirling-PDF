@@ -338,12 +338,10 @@ class PdfCreateAgent(RegisterableAgent):
         return AgentDescriptor(
             orchestrator=OrchestratorRoute(
                 capability=SupportedCapability.PDF_CREATE,
-                tool_name="delegate_pdf_create",
-                tool_description=(
-                    "Delegate requests to create a new PDF document from scratch based on a"
-                    " description. Use this when the user wants to generate a new document"
-                    " (e.g. 'create an invoice', 'write a report', 'make a contract',"
-                    " 'draft a letter'). No input file is required."
+                description=(
+                    "Generate a new document from scratch based on a description. Use this when the"
+                    " user wants to create a new document (e.g. 'create an invoice', 'write a report',"
+                    " 'make a contract', 'draft a letter'). No input file is required."
                 ),
                 orchestrate=self.orchestrate,
             ),

@@ -51,8 +51,7 @@ class UserSpecAgent(RegisterableAgent):
         return AgentDescriptor(
             orchestrator=OrchestratorRoute(
                 capability=SupportedCapability.AGENT_DRAFT,
-                tool_name="delegate_user_spec",
-                tool_description="Delegate requests to create or define an agent spec; returns the draft result.",
+                description="Create or define an agent spec; returns the draft result.",
                 orchestrate=self.orchestrate,
             ),
             mcp=(

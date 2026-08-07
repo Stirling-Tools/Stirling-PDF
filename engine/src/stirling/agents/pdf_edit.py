@@ -181,8 +181,7 @@ class PdfEditAgent(RegisterableAgent):
         return AgentDescriptor(
             orchestrator=OrchestratorRoute(
                 capability=SupportedCapability.PDF_EDIT,
-                tool_name="delegate_pdf_edit",
-                tool_description="Delegate any requested modification of one or more PDFs; returns the edit result.",
+                description="Modify or convert one or more attached PDFs; returns the edit result.",
                 orchestrate=self.orchestrate,
             ),
             mcp=(

@@ -4,8 +4,8 @@ An agent declares one :class:`AgentDescriptor` via :meth:`RegisterableAgent.desc
 Two projections are derived from the collected descriptors, so neither has to be
 hand-maintained:
 
-* the **orchestrator** builds its delegate ``ToolOutput`` union and ``resume``
-  dispatch from descriptors whose ``orchestrator`` route is set;
+* the **orchestrator** builds its capability classifier and ``resume`` dispatch
+  from descriptors whose ``orchestrator`` route is set;
 * the **MCP capabilities manifest** is built from descriptors' ``mcp`` rows.
 
 Adding an agent therefore means implementing ``describe`` and adding the instance
@@ -24,39 +24,24 @@ from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel
-from pydantic_ai.output import ToolOutput
-from pydantic_ai.tools import RunContext
 
 from stirling.contracts import OrchestratorRequest, OrchestratorResponse, SupportedCapability
-from stirling.services import AppRuntime
 
 OrchestrateFn = Callable[[OrchestratorRequest], Awaitable[OrchestratorResponse]]
 
 
 @dataclass(frozen=True)
-class OrchestratorDeps:
-    runtime: AppRuntime
-    request: OrchestratorRequest
-
-
-@dataclass(frozen=True)
 class OrchestratorRoute:
-    """How an agent is exposed to the top-level orchestrator LLM and resume path.
+    """How an agent is exposed to the top-level orchestrator.
 
-    ``capability`` keys the resume dispatch: the orchestrator re-enters this
-    delegate when a ``resume_with`` of the same value arrives.
+    ``capability`` both identifies the option the router picks and keys the resume
+    dispatch: the orchestrator re-enters this delegate when a ``resume_with`` of the
+    same value arrives. ``description`` is the one-line summary the router sees.
     """
 
     capability: SupportedCapability
-    tool_name: str
-    tool_description: str
+    description: str
     orchestrate: OrchestrateFn
-
-    async def _invoke(self, ctx: RunContext[OrchestratorDeps]) -> OrchestratorResponse:
-        return await self.orchestrate(ctx.deps.request)
-
-    def tool_output(self) -> ToolOutput[OrchestratorResponse]:
-        return ToolOutput(self._invoke, name=self.tool_name, description=self.tool_description)
 
 
 @dataclass(frozen=True)

@@ -133,12 +133,11 @@ class PdfReviewAgent(RegisterableAgent):
         return AgentDescriptor(
             orchestrator=OrchestratorRoute(
                 capability=SupportedCapability.PDF_REVIEW,
-                tool_name="delegate_pdf_review",
-                tool_description=(
-                    "Delegate requests to review a PDF and leave review comments, notes, or"
-                    " sticky-note annotations on the document itself. Use this when the user"
-                    " wants the PDF returned with comments attached (e.g. 'review this',"
-                    " 'add review comments', 'flag unclear sentences', 'annotate with feedback')."
+                description=(
+                    "Review a PDF and leave review comments, notes, or sticky-note annotations on the"
+                    " document itself. Use this when the user wants the PDF returned with comments"
+                    " attached (e.g. 'review this', 'add review comments', 'flag unclear sentences',"
+                    " 'annotate with feedback')."
                 ),
                 orchestrate=self.orchestrate,
             ),

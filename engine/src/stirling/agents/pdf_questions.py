@@ -108,8 +108,7 @@ class PdfQuestionAgent(RegisterableAgent):
         return AgentDescriptor(
             orchestrator=OrchestratorRoute(
                 capability=SupportedCapability.PDF_QUESTION,
-                tool_name="delegate_pdf_question",
-                tool_description="Delegate questions about the contents of the attached PDFs; returns the answer.",
+                description="Answer questions about the contents of the attached PDFs; returns the answer.",
                 orchestrate=self.orchestrate,
             ),
             mcp=(

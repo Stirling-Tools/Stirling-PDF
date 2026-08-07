@@ -1,20 +1,19 @@
-"""Behavioural lock: a scripted top-level tool call reaches the right delegate.
+"""Behavioural lock: the router's capability decision reaches the right delegate.
 
-No real LLM — a :class:`FunctionModel` scripts the exact tool call the orchestrator
-would have received, and we assert which delegate handled it. Built on the real
-descriptor list (via ``build_descriptors``) with each agent's ``orchestrate``
+No real LLM — a :class:`TestModel` feeds the orchestrator's classifier a scripted
+``_RouteDecision`` as JSON, and we assert which delegate handled it. Built on the
+real descriptor list (via ``build_descriptors``) with each agent's ``orchestrate``
 swapped for a recording spy, so the test stays honest to whatever agents are
 actually registered.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import replace
+import json
 
 import pytest
-from pydantic_ai.messages import ModelMessage, ModelResponse, ToolCallPart
-from pydantic_ai.models.function import AgentInfo, FunctionModel
+from pydantic_ai.models.test import TestModel
+from pydantic_ai.profiles import ModelProfile
 
 from stirling.agents import OrchestratorAgent, build_descriptors
 from stirling.agents._registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
@@ -25,32 +24,28 @@ from stirling.contracts import (
     OrchestratorResponse,
     PdfQuestionNotFoundResponse,
     SupportedCapability,
+    UnsupportedCapabilityResponse,
 )
 from stirling.services.runtime import AppRuntime
+
+_NATIVE_PROFILE = ModelProfile(supports_json_schema_output=True)
 
 _REACHED: list[SupportedCapability] = []
 
 
 class _SpyAgent(RegisterableAgent):
-    """Stand-in agent that reproduces a real delegate's tool surface but records
-    the reach and returns a fixed sentinel instead of doing work."""
+    """Registers a real delegate route but records the reach and returns a fixed
+    sentinel instead of doing work."""
 
-    def __init__(
-        self,
-        capability: SupportedCapability,
-        tool_name: str,
-        response: OrchestratorResponse,
-    ) -> None:
+    def __init__(self, capability: SupportedCapability, response: OrchestratorResponse) -> None:
         self._capability = capability
-        self._tool_name = tool_name
         self._response = response
 
     def describe(self) -> AgentDescriptor:
         return AgentDescriptor(
             orchestrator=OrchestratorRoute(
                 capability=self._capability,
-                tool_name=self._tool_name,
-                tool_description=f"spy for {self._tool_name}",
+                description=f"spy for {self._capability.value}",
                 orchestrate=self._orchestrate,
             ),
         )
@@ -62,57 +57,56 @@ class _SpyAgent(RegisterableAgent):
 
 def _spies() -> list[RegisterableAgent]:
     return [
-        _SpyAgent(SupportedCapability.PDF_EDIT, "delegate_pdf_edit", EditCannotDoResponse(reason="spy")),
-        _SpyAgent(
-            SupportedCapability.PDF_QUESTION,
-            "delegate_pdf_question",
-            PdfQuestionNotFoundResponse(reason="spy"),
-        ),
-        _SpyAgent(SupportedCapability.PDF_REVIEW, "delegate_pdf_review", EditPlanResponse(summary="", steps=[])),
-        _SpyAgent(SupportedCapability.PDF_CREATE, "delegate_pdf_create", EditPlanResponse(summary="", steps=[])),
+        _SpyAgent(SupportedCapability.PDF_EDIT, EditCannotDoResponse(reason="spy")),
+        _SpyAgent(SupportedCapability.PDF_QUESTION, PdfQuestionNotFoundResponse(reason="spy")),
+        _SpyAgent(SupportedCapability.PDF_REVIEW, EditPlanResponse(summary="", steps=[])),
+        _SpyAgent(SupportedCapability.PDF_CREATE, EditPlanResponse(summary="", steps=[])),
     ]
 
 
-def _script(tool_name: str) -> Callable[[list[ModelMessage], AgentInfo], ModelResponse]:
-    def call(_messages: list[ModelMessage], _info: AgentInfo) -> ModelResponse:
-        return ModelResponse(parts=[ToolCallPart(tool_name=tool_name, args={})])
-
-    return call
-
-
-async def _route(runtime: AppRuntime, tool_name: str) -> OrchestratorResponse:
+async def _route(runtime: AppRuntime, decision: dict[str, str]) -> OrchestratorResponse:
     _REACHED.clear()
-    scripted = replace(runtime, fast_model=FunctionModel(_script(tool_name)))
-    orchestrator = OrchestratorAgent(scripted, build_descriptors(_spies()))
-    return await orchestrator.handle(OrchestratorRequest(user_message="x"))
+    orchestrator = OrchestratorAgent(runtime, build_descriptors(_spies()))
+    scripted = TestModel(profile=_NATIVE_PROFILE, custom_output_text=json.dumps(decision))
+    with orchestrator._router.override(model=scripted):
+        return await orchestrator.handle(OrchestratorRequest(user_message="x"))
 
 
 @pytest.mark.anyio
-async def test_delegate_pdf_edit_reaches_edit_delegate(runtime: AppRuntime) -> None:
-    response = await _route(runtime, "delegate_pdf_edit")
+async def test_router_reaches_edit_delegate(runtime: AppRuntime) -> None:
+    response = await _route(runtime, {"capability": "pdf_edit"})
     assert _REACHED == [SupportedCapability.PDF_EDIT]
     assert isinstance(response, EditCannotDoResponse)
 
 
 @pytest.mark.anyio
-async def test_delegate_pdf_question_reaches_question_delegate(runtime: AppRuntime) -> None:
-    response = await _route(runtime, "delegate_pdf_question")
+async def test_router_reaches_question_delegate(runtime: AppRuntime) -> None:
+    response = await _route(runtime, {"capability": "pdf_question"})
     assert _REACHED == [SupportedCapability.PDF_QUESTION]
     assert isinstance(response, PdfQuestionNotFoundResponse)
 
 
 @pytest.mark.anyio
-async def test_delegate_pdf_review_reaches_review_delegate(runtime: AppRuntime) -> None:
-    response = await _route(runtime, "delegate_pdf_review")
+async def test_router_reaches_review_delegate(runtime: AppRuntime) -> None:
+    response = await _route(runtime, {"capability": "pdf_review"})
     assert _REACHED == [SupportedCapability.PDF_REVIEW]
     assert isinstance(response, EditPlanResponse)
 
 
 @pytest.mark.anyio
-async def test_delegate_pdf_create_reaches_create_delegate(runtime: AppRuntime) -> None:
-    response = await _route(runtime, "delegate_pdf_create")
+async def test_router_reaches_create_delegate(runtime: AppRuntime) -> None:
+    response = await _route(runtime, {"capability": "pdf_create"})
     assert _REACHED == [SupportedCapability.PDF_CREATE]
     assert isinstance(response, EditPlanResponse)
+
+
+@pytest.mark.anyio
+async def test_router_orchestrate_pick_is_unsupported(runtime: AppRuntime) -> None:
+    # 'orchestrate' is the escape hatch: it has no delegate, so it surfaces as unsupported.
+    response = await _route(runtime, {"capability": "orchestrate", "message": "no fit"})
+    assert _REACHED == []
+    assert isinstance(response, UnsupportedCapabilityResponse)
+    assert response.message == "no fit"
 
 
 @pytest.mark.anyio
@@ -126,7 +120,7 @@ async def test_resume_dispatches_to_matching_delegate(runtime: AppRuntime) -> No
 @pytest.mark.anyio
 async def test_resume_with_unroutable_capability_raises(runtime: AppRuntime) -> None:
     # MATH_AUDITOR_AGENT is MCP-only — not an orchestrator delegate, so it has no
-    # resumable route and resuming into it must raise.
+    # route and resuming into it must raise.
     orchestrator = OrchestratorAgent(runtime, build_descriptors(_spies()))
     with pytest.raises(ValueError, match="Cannot resume"):
         await orchestrator.handle(
