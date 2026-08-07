@@ -38,7 +38,12 @@ interface HotkeyContextValue {
   getDisplayParts: (binding: HotkeyBinding | null | undefined) => string[];
 }
 
-const HotkeyContext = createContext<HotkeyContextValue | undefined>(undefined);
+// Exported so a component that only reads a slice of this (HotkeyDisplay wants
+// getDisplayParts) can be mounted without HotkeyProvider, which pulls in the
+// whole tool-workflow chain behind it.
+export const HotkeyContext = createContext<HotkeyContextValue | undefined>(
+  undefined,
+);
 
 const STORAGE_KEY = "stirlingpdf.hotkeys";
 
