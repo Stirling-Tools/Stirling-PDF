@@ -17,7 +17,6 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.examples.util.DeletingRandomAccessFile;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
@@ -728,5 +727,33 @@ public class CustomPDFDocumentFactory {
         Path p = Files.createTempFile(prefix, ".tmp");
         p.toFile().deleteOnExit();
         return p;
+    }
+
+    /** A custom RandomAccessRead implementation that deletes the file when closed */
+    private static class DeletingRandomAccessFile extends RandomAccessReadBufferedFile {
+        private final Path tempFilePath;
+
+        public DeletingRandomAccessFile(File file) throws IOException {
+            super(file);
+            this.tempFilePath = file.toPath();
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                try {
+                    boolean deleted = Files.deleteIfExists(tempFilePath);
+                    if (deleted) {
+                        log.info("Successfully deleted temp file: {}", tempFilePath);
+                    } else {
+                        log.warn("Failed to delete temp file (may not exist): {}", tempFilePath);
+                    }
+                } catch (IOException e) {
+                    log.error("Error deleting temp file: {}", tempFilePath, e);
+                }
+            }
+        }
     }
 }
