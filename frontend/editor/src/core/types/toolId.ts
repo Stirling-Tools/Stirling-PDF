@@ -58,6 +58,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "changeMetadata",
   "overlayPdfs",
   "getPdfInfo",
+  "wordCount",
   "validateSignature",
   "timestampPdf",
   "replaceColor",
