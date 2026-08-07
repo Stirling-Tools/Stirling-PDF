@@ -20,7 +20,6 @@ import {
   Spinner,
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
 import {
   deserializeToolStep,
   getExecutableTools,
@@ -28,6 +27,7 @@ import {
   serializeToolStep,
   stepNeedsConfiguring,
   stepRequiresUpload,
+  updateWorkingStepParams,
   type ExecutableTool,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
@@ -67,7 +67,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
-import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
+import {
+  PipelineStepSettings,
+  type ParamsUpdate,
+} from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import {
@@ -373,15 +376,22 @@ export function PipelineBuilder() {
     setSelectedIndex((cur) => (cur === index ? index + delta : cur));
   }
 
-  function updateStepParams(index: number, params: ErasedToolParams) {
+  function updateStepParams(index: number, update: ParamsUpdate) {
     setSteps((current) =>
-      current.map((step, i) =>
+      current.map((step, i) => {
         // Integration steps are deliberately toolId-less, so they must be editable too; only a
         // genuinely unrecognised step has no editor to send changes from.
-        i === index && (step.toolId !== null || isIntegrationStep(step))
-          ? { ...step, params }
-          : step,
-      ),
+        if (i !== index || (step.toolId === null && !isIntegrationStep(step)))
+          return step;
+        // Resolve the update against the CURRENT step params, so a settings UI firing several
+        // single-field changes in one tick (convert's source-format change resets target + options)
+        // accumulates instead of each merge clobbering a stale snapshot. updateWorkingStepParams
+        // also re-resolves the endpoint for a format-routed tool so validation reflects the edit;
+        // it's a no-op on the operation for fixed-endpoint steps.
+        const nextParams =
+          typeof update === "function" ? update(step.params) : update;
+        return updateWorkingStepParams(step, nextParams, allTools);
+      }),
     );
   }
 
@@ -413,18 +423,25 @@ export function PipelineBuilder() {
     .map(stepLabel);
   const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
+  // Steps as the I/O checker sees them. A step still needing configuration has no settled endpoint
+  // yet (a format-routed tool like convert doesn't know its from/to), so it is presented as
+  // undeclared: it raises no compatibility error and breaks the carry chain, leaving downstream
+  // steps unjudged until it is filled in. Its own "needs configuring" note already flags it.
+  const validationSteps = useMemo(
+    () =>
+      steps.map((step) => ({
+        operation: stepNeedsConfiguring(step, allTools) ? "" : step.operation,
+        parameters: step.params,
+      })),
+    [steps, allTools],
+  );
+
   // Whether each step can actually accept what the one before it produces. Checked here from the
   // generated tool I/O table rather than by running the pipeline, so an impossible chain (say,
   // Extract Images then Rotate) is caught while it is being built.
   const chainDiagnostics = useMemo(
-    () =>
-      validateToolChain(
-        steps.map((step) => ({
-          operation: step.operation,
-          parameters: step.params,
-        })),
-      ),
-    [steps],
+    () => validateToolChain(validationSteps),
+    [validationSteps],
   );
   const blockingSteps = chainDiagnostics
     .filter((d) => d.severity === "ERROR")
@@ -433,14 +450,8 @@ export function PipelineBuilder() {
 
   // What a newly added step would be handed, so the picker can flag tools that cannot take it.
   const chainOutput = useMemo(
-    () =>
-      chainOutputFormat(
-        steps.map((step) => ({
-          operation: step.operation,
-          parameters: step.params,
-        })),
-      ),
-    [steps],
+    () => chainOutputFormat(validationSteps),
+    [validationSteps],
   );
 
   function diagnosticNote(diagnostic: ToolDiagnostic): string {
@@ -1039,9 +1050,9 @@ export function PipelineBuilder() {
               <PipelineStepSettings
                 step={selectedStep}
                 registry={allTools}
-                onChange={(params) =>
+                onChange={(update) =>
                   selectedIndex !== null &&
-                  updateStepParams(selectedIndex, params)
+                  updateStepParams(selectedIndex, update)
                 }
               />
             ) : (

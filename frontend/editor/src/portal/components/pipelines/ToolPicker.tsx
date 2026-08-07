@@ -50,6 +50,20 @@ export function ToolPicker({
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
 
+  // A format-routed tool (convert) can follow the previous step if ANY endpoint in its routing set
+  // accepts that output; a single-endpoint tool is judged on its one endpoint. Unknown when there
+  // is no preceding output yet.
+  const acceptsPreceding = (tool: ExecutableTool): boolean => {
+    if (!precedingOutput) return true;
+    const endpoints =
+      tool.endpoints && tool.endpoints.length > 0
+        ? tool.endpoints
+        : [tool.endpoint];
+    return endpoints.some((endpoint) =>
+      toolAcceptsFormat(endpoint, precedingOutput),
+    );
+  };
+
   const matchedOperations = useMemo(
     () =>
       onPickOperation
@@ -124,8 +138,7 @@ export function ToolPicker({
                   <span className="portal-pipelines__picker-name">
                     {tool.name}
                   </span>
-                  {precedingOutput &&
-                  !toolAcceptsFormat(tool.endpoint, precedingOutput) ? (
+                  {precedingOutput && !acceptsPreceding(tool) ? (
                     <span className="portal-pipelines__picker-note">
                       {t("portal.pipelines.builder.cannotFollow", {
                         produced: getToolFormatLabel(t, precedingOutput),
