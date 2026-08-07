@@ -15,6 +15,63 @@ if [ -d /scripts ] && [[ ":${PATH}:" != *":/scripts:"* ]]; then
   export PATH="/scripts:${PATH}"
 fi
 
+# === Shared environment setup ===
+# Lives here so images that call init-without-ocr.sh directly (e.g. ultra-lite)
+# get the same environment as images that go through init.sh first.
+
+_append_env_path() {
+  local target="$1" current="$2"
+  if [ -d "$target" ] && [[ ":${current}:" != *":${target}:"* ]]; then
+    [ -n "$current" ] && printf '%s' "${target}:${current}" || printf '%s' "${target}"
+  else
+    printf '%s' "$current"
+  fi
+}
+
+_python_site_dir() {
+  local venv_dir="$1" python_bin="$1/bin/python" py_tag
+  if [ -x "$python_bin" ]; then
+    if py_tag="$("$python_bin" -c 'import sys; print(f"python{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)" \
+       && [ -n "$py_tag" ] && [ -d "$venv_dir/lib/$py_tag/site-packages" ]; then
+      printf '%s' "$venv_dir/lib/$py_tag/site-packages"
+    fi
+  fi
+}
+
+# LD_LIBRARY_PATH: arch-specific system libs + LibreOffice
+case "$(uname -m)" in
+  x86_64)  [ -d /usr/lib/x86_64-linux-gnu ] && export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+  aarch64) [ -d /usr/lib/aarch64-linux-gnu ] && export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+esac
+[ -d /usr/lib/libreoffice/program ] && export LD_LIBRARY_PATH="/usr/lib/libreoffice/program${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# Reduce soffice.bin RSS by avoiding unnecessary subsystems.
+export SAL_USE_VCLPLUGIN=svp           # Null rendering plugin — avoids loading X11 toolkit (~40 MB)
+export SAL_DISABLE_PRINTERLIST=1       # Skip printer enumeration
+export OOO_FORCE_DESKTOP=none          # No desktop frame
+export SAL_LOG="-WARN-INFO"            # Minimal logging
+export MALLOC_ARENA_MAX=2              # Limit glibc arena fragmentation (saves 20-80 MB RSS)
+export DBUS_SESSION_BUS_ADDRESS=/dev/null  # Avoid D-Bus overhead
+
+# Python venv PATH + PYTHONPATH
+for _venv_bin in /opt/venv/bin /opt/unoserver-venv/bin; do
+  PATH="$(_append_env_path "$_venv_bin" "$PATH")"
+done
+export PATH
+unset _venv_bin
+
+_py_entries=()
+for _venv in /opt/venv /opt/unoserver-venv; do
+  [ -d "$_venv" ] || continue
+  _site="$(_python_site_dir "$_venv")"
+  [ -n "${_site:-}" ] && _py_entries+=("$_site")
+done
+if [ ${#_py_entries[@]} -gt 0 ]; then
+  PYTHONPATH="$(IFS=:; printf '%s' "${_py_entries[*]}")${PYTHONPATH:+:$PYTHONPATH}"
+  export PYTHONPATH
+fi
+unset _venv _site _py_entries
+
 if [ -x /scripts/stirling-diagnostics.sh ]; then
   mkdir -p /usr/local/bin
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostics
@@ -63,10 +120,21 @@ cleanup() {
     wait "$AOT_GEN_PID" 2>/dev/null || true
   fi
 
+  # Kill on-demand manager if running
+  if [ -n "${DEMAND_MANAGER_PID:-}" ] && kill -0 "$DEMAND_MANAGER_PID" 2>/dev/null; then
+    kill -TERM "$DEMAND_MANAGER_PID" 2>/dev/null || true
+    wait "$DEMAND_MANAGER_PID" 2>/dev/null || true
+  fi
+
   # Signal unoserver instances to shut down
   for pid in "${UNOSERVER_PIDS[@]:-}"; do
     [ -n "$pid" ] && kill -TERM "$pid" 2>/dev/null || true
   done
+
+  # Stop Xvfb if running (on-demand mode)
+  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
+    kill -TERM "$XVFB_PID" 2>/dev/null || true
+  fi
 
   # Signal Java to shut down gracefully, Spring Boot handles SIGTERM cleanly
   if [ -n "${JAVA_PID:-}" ] && kill -0 "$JAVA_PID" 2>/dev/null; then
@@ -344,7 +412,8 @@ start_unoserver_watchdog() {
   ) &
 }
 
-start_unoserver_pool() {
+# Start the unoserver pool eagerly (legacy always-on mode).
+start_unoserver_pool_eager() {
   local auto
   auto="$(get_unoserver_auto)"
   auto="${auto,,}"
@@ -381,6 +450,181 @@ start_unoserver_pool() {
   sleep 2
 }
 
+# ---------- On-demand unoserver management ----------
+# When UNO_DEMAND_ENABLED=true, unoserver + soffice + Xvfb are only started
+# when a conversion is needed and stopped after an idle timeout.
+# This saves ~200-350 MB idle memory.
+UNO_DEMAND_FILE="/tmp/uno-last-used"
+UNO_POOL_RUNNING=false
+XVFB_PID=""
+
+start_xvfb_if_needed() {
+  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
+    return 0
+  fi
+  if command_exists Xvfb; then
+    Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
+    XVFB_PID=$!
+    export DISPLAY=:99
+    sleep 1
+    log "Xvfb started on-demand (pid $XVFB_PID)"
+  fi
+}
+
+stop_xvfb() {
+  if [ -n "${XVFB_PID:-}" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
+    kill -TERM "$XVFB_PID" 2>/dev/null || true
+    wait "$XVFB_PID" 2>/dev/null || true
+    log "Xvfb stopped"
+  fi
+  XVFB_PID=""
+}
+
+# Start the unoserver pool on-demand (called from the demand manager).
+start_unoserver_pool_now() {
+  if [ "$UNO_POOL_RUNNING" = true ]; then
+    return 0
+  fi
+
+  start_xvfb_if_needed
+
+  local count
+  count="$(get_unoserver_count)"
+  case "$count" in
+    ''|*[!0-9]*) count=1 ;;
+  esac
+  if [ "$count" -le 0 ]; then
+    count=1
+  fi
+
+  UNOSERVER_PIDS=()
+  UNOSERVER_PORTS=()
+  UNOSERVER_UNO_PORTS=()
+
+  local i=0
+  while [ "$i" -lt "$count" ]; do
+    local port=$((2003 + (i * 2)))
+    local uno_port=$((2004 + (i * 2)))
+    log "Starting unoserver on-demand on 127.0.0.1:${port} (uno-port ${uno_port})"
+    UNOSERVER_PORTS+=("$port")
+    UNOSERVER_UNO_PORTS+=("$uno_port")
+    start_unoserver_instance "$port" "$uno_port"
+    UNOSERVER_PIDS+=("$LAST_UNOSERVER_PID")
+    i=$((i + 1))
+  done
+
+  # Wait for readiness
+  local ready=false
+  for _ in {1..30}; do
+    if check_unoserver_ready "silent"; then
+      ready=true
+      break
+    fi
+    sleep 1
+  done
+
+  if [ "$ready" = true ]; then
+    log "unoserver pool started on-demand and ready"
+  else
+    log "WARNING: unoserver started but not ready after 30s"
+  fi
+  UNO_POOL_RUNNING=true
+}
+
+# Stop all unoserver instances and Xvfb to reclaim memory.
+stop_unoserver_pool_now() {
+  if [ "$UNO_POOL_RUNNING" = false ]; then
+    return 0
+  fi
+  log "Stopping unoserver pool (idle timeout)"
+
+  for pid in "${UNOSERVER_PIDS[@]:-}"; do
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+      local child_pids
+      child_pids=$(pgrep -P "$pid" 2>/dev/null || true)
+      pkill -TERM -P "$pid" 2>/dev/null || true
+      kill -TERM "$pid" 2>/dev/null || true
+      sleep 2
+      if [ -n "$child_pids" ]; then
+        kill -KILL $child_pids 2>/dev/null || true
+      fi
+      kill -KILL "$pid" 2>/dev/null || true
+    fi
+  done
+
+  # Also kill any orphaned soffice processes
+  pkill -f 'soffice\.bin' 2>/dev/null || true
+  sleep 1
+  pkill -9 -f 'soffice\.bin' 2>/dev/null || true
+
+  stop_xvfb
+
+  UNOSERVER_PIDS=()
+  UNOSERVER_PORTS=()
+  UNOSERVER_UNO_PORTS=()
+  UNO_POOL_RUNNING=false
+  log "unoserver pool stopped, memory reclaimed"
+}
+
+# Demand manager: background loop that watches for conversion demand and manages idle timeout.
+start_unoserver_demand_manager() {
+  local idle_timeout=${UNO_IDLE_TIMEOUT_SECONDS:-120}
+  case "$idle_timeout" in
+    ''|*[!0-9]*) idle_timeout=120 ;;
+  esac
+  local check_interval=5
+
+  log "unoserver demand manager started (idle_timeout=${idle_timeout}s)"
+
+  # Ensure demand file does not exist at startup
+  rm -f "$UNO_DEMAND_FILE"
+
+  while true; do
+    if [ -f "$UNO_DEMAND_FILE" ]; then
+      # Demand detected — ensure pool is running
+      if [ "$UNO_POOL_RUNNING" = false ]; then
+        log "unoserver demand detected, starting pool"
+        start_unoserver_pool_now
+      fi
+
+      # Check idle time
+      local last_used_epoch
+      last_used_epoch=$(cat "$UNO_DEMAND_FILE" 2>/dev/null || echo "0")
+      local now_epoch
+      now_epoch=$(date +%s)
+      local idle_secs=$(( now_epoch - last_used_epoch ))
+
+      if [ "$idle_secs" -ge "$idle_timeout" ] && [ "$UNO_POOL_RUNNING" = true ]; then
+        log "unoserver idle for ${idle_secs}s (timeout=${idle_timeout}s)"
+        stop_unoserver_pool_now
+        rm -f "$UNO_DEMAND_FILE"
+      fi
+    elif [ "$UNO_POOL_RUNNING" = true ]; then
+      # Demand file removed but pool still running — stop it
+      stop_unoserver_pool_now
+    fi
+
+    # Also health-check running instances
+    if [ "$UNO_POOL_RUNNING" = true ]; then
+      local i=0
+      while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
+        local pid=${UNOSERVER_PIDS[$i]}
+        local port=${UNOSERVER_PORTS[$i]}
+        local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+
+        if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+          log "unoserver PID ${pid} died for port ${port}, restarting"
+          start_unoserver_instance "$port" "$uno_port"
+          UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+        fi
+        i=$((i + 1))
+      done
+    fi
+
+    sleep "$check_interval"
+  done
+}
+
 # ---------- VERSION_TAG ----------
 # Load VERSION_TAG from file if not provided via environment.
 if [ -z "${VERSION_TAG:-}" ] && [ -f /etc/stirling_version ]; then
@@ -396,11 +640,13 @@ AOT_ENABLED="${STIRLING_AOT_ENABLE:-false}"
 # Detects the container memory limit (in MB) from cgroups v2/v1 or /proc/meminfo.
 detect_container_memory_mb() {
   local mem_bytes=""
+  local no_cgroup_limit=false
   # cgroups v2
   if [ -f /sys/fs/cgroup/memory.max ]; then
     mem_bytes=$(cat /sys/fs/cgroup/memory.max 2>/dev/null)
     if [ "$mem_bytes" = "max" ]; then
       mem_bytes=""
+      no_cgroup_limit=true
     fi
   fi
   # cgroups v1 fallback
@@ -410,11 +656,33 @@ detect_container_memory_mb() {
     # Use string-length heuristic (>=19 digits) to avoid shell integer overflow on Alpine/busybox
     if [ "${#mem_bytes}" -ge 19 ]; then
       mem_bytes=""
+      no_cgroup_limit=true
     fi
   fi
-  # Fallback to system total memory
+  # Fallback when no cgroup memory limit is found.
+  # If running inside a container (/.dockerenv or /run/.containerenv present) with no
+  # limit set, the host's /proc/meminfo would return the full host RAM.  Using that
+  # value causes InitialRAMPercentage to pre-commit gigabytes of heap against the host's
+  # RAM, making idle RSS absurdly large.  Cap the effective size at 2 GB so the JVM
+  # stays proportionate.  Users who need more should set -m / mem_limit in their
+  # docker-compose to get accurate sizing.
   if [ -z "$mem_bytes" ]; then
-    mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
+    local host_mem_bytes
+    host_mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
+    if [ "$no_cgroup_limit" = true ] && \
+       { [ -f /.dockerenv ] || [ -f /run/.containerenv ]; }; then
+      local cap_bytes=$(( 2048 * 1048576 ))
+      if [ "${host_mem_bytes:-0}" -gt "$cap_bytes" ] 2>/dev/null; then
+        log "WARNING: No container memory limit set. Host has $(( host_mem_bytes / 1048576 ))MB RAM."
+        log "Capping JVM sizing at 2048MB to avoid over-committing host memory."
+        log "Set mem_limit / -m in docker-compose or docker run to control heap sizing."
+        mem_bytes=$cap_bytes
+      else
+        mem_bytes=$host_mem_bytes
+      fi
+    else
+      mem_bytes=$host_mem_bytes
+    fi
   fi
   if [ -n "$mem_bytes" ] && [ "$mem_bytes" -gt 0 ] 2>/dev/null; then
     echo $(( mem_bytes / 1048576 ))
@@ -423,11 +691,11 @@ detect_container_memory_mb() {
   fi
 }
 
-# Computes dynamic JVM memory flags based on detected container memory and profile.
+# Computes dynamic JVM memory flags based on detected container memory.
+# Uses performance-oriented settings (Shenandoah GC).
 # Sets: DYNAMIC_INITIAL_RAM_PCT, DYNAMIC_MAX_RAM_PCT, DYNAMIC_MAX_METASPACE
 compute_dynamic_memory() {
   local mem_mb=$1
-  local profile=${2:-balanced}
 
   if [ "$mem_mb" -le 0 ] 2>/dev/null; then
     # Cannot detect memory; use safe defaults
@@ -439,39 +707,33 @@ compute_dynamic_memory() {
 
   log "Detected container memory: ${mem_mb}MB"
 
-  # NOTE: MaxRAMPercentage governs HEAP only. Total JVM footprint also includes:
+  # NOTE: MaxRamPercentage governs HEAP only. Total JVM footprint also includes:
   # - Metaspace (MaxMetaspaceSize)
   # - Code cache (~100-200MB)
   # - Thread stacks (~1MB each × virtual threads)
   # - Direct byte buffers, native memory
   # Rule of thumb: heap% + (metaspace + ~200MB overhead) should fit in container.
   if [ "$mem_mb" -le 512 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=30
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=55
     DYNAMIC_MAX_METASPACE=96
   elif [ "$mem_mb" -le 1024 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=25
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=60
     DYNAMIC_MAX_METASPACE=128
   elif [ "$mem_mb" -le 2048 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=20
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=65
     DYNAMIC_MAX_METASPACE=192
   elif [ "$mem_mb" -le 4096 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=15
+    DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=70
     DYNAMIC_MAX_METASPACE=256
   else
-    # Large memory: be conservative to leave room for off-heap (LibreOffice, Calibre, etc.)
-    if [ "$profile" = "performance" ]; then
-      DYNAMIC_INITIAL_RAM_PCT=20
-      DYNAMIC_MAX_RAM_PCT=70
-      DYNAMIC_MAX_METASPACE=512
-    else
-      DYNAMIC_INITIAL_RAM_PCT=10
-      DYNAMIC_MAX_RAM_PCT=50
-      DYNAMIC_MAX_METASPACE=256
-    fi
+    # Large memory (>4GB): cap at 70% to leave room for off-heap (LibreOffice, Calibre, etc.)
+    DYNAMIC_INITIAL_RAM_PCT=2
+    DYNAMIC_MAX_RAM_PCT=70
+    DYNAMIC_MAX_METASPACE=256
   fi
 
   log "Dynamic memory: InitialRAM=${DYNAMIC_INITIAL_RAM_PCT}%, MaxRAM=${DYNAMIC_MAX_RAM_PCT}%, MaxMeta=${DYNAMIC_MAX_METASPACE}m"
@@ -688,8 +950,7 @@ save_aot_fingerprint() {
 
 # ---------- Memory Detection ----------
 CONTAINER_MEM_MB=$(detect_container_memory_mb)
-JVM_PROFILE="${STIRLING_JVM_PROFILE:-balanced}"
-compute_dynamic_memory "$CONTAINER_MEM_MB" "$JVM_PROFILE"
+compute_dynamic_memory "$CONTAINER_MEM_MB"
 MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
 
 # ---------- Compressed Oops Detection ----------
@@ -707,32 +968,34 @@ if [ "$AOT_ENABLED" = "true" ]; then
   fi
 fi
 
-# ---------- JVM Profile Selection ----------
-# Resolve JAVA_BASE_OPTS from profile system or user override.
-# Priority: JAVA_BASE_OPTS (explicit override) > STIRLING_JVM_PROFILE > fallback defaults
-if [ -z "${JAVA_BASE_OPTS:-}" ]; then
-  case "$JVM_PROFILE" in
-    performance)
-      if [ -n "${_JVM_OPTS_PERFORMANCE:-}" ]; then
-        JAVA_BASE_OPTS="${_JVM_OPTS_PERFORMANCE}"
-        log "JVM profile: performance (Shenandoah generational)"
-      else
-        JAVA_BASE_OPTS="${_JVM_OPTS_BALANCED:-}"
-        log "Performance profile not available in this image; falling back to balanced"
-      fi
-      ;;
-    *)
-      if [ -n "${_JVM_OPTS_BALANCED:-}" ]; then
-        JAVA_BASE_OPTS="${_JVM_OPTS_BALANCED}"
-        log "JVM profile: balanced (G1GC)"
-      else
-        log "JAVA_BASE_OPTS and profiles unset; applying fallback defaults."
-        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true"
-      fi
-      ;;
-  esac
+# ---------- JVM Options ----------
+# Resolve JAVA_BASE_OPTS from _JVM_OPTS or user override.
+# Priority: JAVA_BASE_OPTS (explicit override) > _JVM_OPTS > fallback defaults
+# Memory percentages are computed dynamically by compute_dynamic_memory().
 
-  # Strip any hardcoded memory/CDS/AOT flags from the profile (managed dynamically)
+# Calculate ConcGCThreads dynamically based on available CPUs
+# Shenandoah defaults to ParallelGCThreads/4; we cap it for large hosts
+AVAILABLE_CPUS=$(nproc 2>/dev/null || echo "2")
+if [ "$AVAILABLE_CPUS" -ge 16 ]; then
+  CONC_GC_THREADS=4
+elif [ "$AVAILABLE_CPUS" -ge 8 ]; then
+  CONC_GC_THREADS=3
+elif [ "$AVAILABLE_CPUS" -ge 4 ]; then
+  CONC_GC_THREADS=2
+else
+  CONC_GC_THREADS=1
+fi
+
+if [ -z "${JAVA_BASE_OPTS:-}" ]; then
+  if [ -n "${_JVM_OPTS:-}" ]; then
+    JAVA_BASE_OPTS="${_JVM_OPTS} -XX:ConcGCThreads=${CONC_GC_THREADS}"
+    log "Using JVM options: Shenandoah generational GC (ConcGCThreads=${CONC_GC_THREADS})"
+  else
+    log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -Xss256k -XX:CICompilerCount=2 -Djdk.virtualThreadScheduler.maxPoolSize=4 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+  fi
+
+  # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
   JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
     's/-XX:InitialRAMPercentage=[^ ]*//g;
      s/-XX:MinRAMPercentage=[^ ]*//g;
@@ -913,30 +1176,43 @@ for dir in "${CRITICAL_DIRS[@]}"; do
   fi
 done
 
-# ---------- Xvfb ----------
-# Start a virtual framebuffer for GUI-based LibreOffice interactions.
-if command_exists Xvfb; then
-  log "Starting Xvfb on :99"
-  Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
-  export DISPLAY=:99
-  # Brief pause so Xvfb accepts connections before unoserver tries to attach
-  sleep 1
-else
-  log "Xvfb not installed; skipping virtual display setup"
-fi
+# ---------- Xvfb + unoserver ----------
+# Detect whether on-demand mode is enabled.
+UNO_DEMAND_ENABLED="${UNO_DEMAND_ENABLED:-true}"
+UNO_DEMAND_ENABLED="${UNO_DEMAND_ENABLED,,}"
 
-# ---------- unoserver ----------
-# Start LibreOffice UNO server for document conversions.
-# Java and unoserver start in parallel, do NOT block here waiting for readiness.
-# Readiness is verified after Java is launched; the watchdog handles any restarts.
 UNOSERVER_BIN="$(command -v unoserver || true)"
 UNOCONVERT_BIN="$(command -v unoconvert || true)"
 UNOPING_BIN="$(command -v unoping || true)"
+
 if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
   LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
   run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE"
-  start_unoserver_pool
-  log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE), Java starting in parallel"
+
+  if [ "$UNO_DEMAND_ENABLED" = "true" ]; then
+    # ---------- On-demand mode ----------
+    # Do NOT start Xvfb, unoserver, or soffice yet.
+    # The demand manager will start them lazily when a conversion request arrives
+    # and stop them after an idle timeout to reclaim ~200-350 MB RSS.
+    log "unoserver on-demand mode enabled (UNO_IDLE_TIMEOUT_SECONDS=${UNO_IDLE_TIMEOUT_SECONDS:-120}s)"
+    log "unoserver + soffice will start on first conversion request"
+    start_unoserver_demand_manager &
+    DEMAND_MANAGER_PID=$!
+  else
+    # ---------- Legacy always-on mode ----------
+    if command_exists Xvfb; then
+      log "Starting Xvfb on :99"
+      Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
+      XVFB_PID=$!
+      export DISPLAY=:99
+      sleep 1
+    else
+      log "Xvfb not installed; skipping virtual display setup"
+    fi
+
+    start_unoserver_pool_eager
+    log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE), Java starting in parallel"
+  fi
 else
   log "unoserver/unoconvert not installed; skipping UNO setup"
 fi
@@ -977,11 +1253,8 @@ fi
 
 JAVA_PID=$!
 
-# ---------- Unoserver Readiness + Watchdog ----------
-# Now that Java is running, check unoserver readiness and start the watchdog.
-# Runs in the main shell (not a subshell) so UNOSERVER_PIDS/PORTS arrays are accessible.
-# Java handles unoserver being temporarily unavailable, no fatal exit on timeout.
-if [ "${#UNOSERVER_PORTS[@]}" -gt 0 ]; then
+# ---------- Unoserver Readiness + Watchdog (legacy always-on mode only) ----------
+if [ "$UNO_DEMAND_ENABLED" != "true" ] && [ "${#UNOSERVER_PORTS[@]}" -gt 0 ]; then
   log "Waiting for unoserver (Java already starting in parallel)..."
   UNOSERVER_READY=false
   for _ in {1..30}; do
@@ -1063,7 +1336,7 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
         fi
       done
       log "AOT: All attempts failed. App runs normally without cache."
-      log "AOT: To disable, set STIRLING_AOT_ENABLE=false (or omit it, default is off)"
+      log "AOT: To disable, set STIRLING_AOT_ENABLE=false"
     ) &
     AOT_GEN_PID=$!
     log "AOT: Background generation scheduled (PID $AOT_GEN_PID, arch=$(uname -m))"
