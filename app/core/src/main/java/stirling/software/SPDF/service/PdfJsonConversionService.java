@@ -115,6 +115,8 @@ import stirling.software.SPDF.model.json.PdfJsonStream;
 import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.SPDF.service.pdfjson.PdfJsonFontService;
+import stirling.software.SPDF.service.pdfjson.font.PdfFontResolver;
+import stirling.software.SPDF.service.pdfjson.parsing.PdfGlyphCounter;
 import stirling.software.SPDF.service.pdfjson.type3.Type3ConversionRequest;
 import stirling.software.SPDF.service.pdfjson.type3.Type3FontConversionService;
 import stirling.software.SPDF.service.pdfjson.type3.Type3GlyphExtractor;
@@ -147,6 +149,8 @@ public class PdfJsonConversionService {
     private final PdfJsonFontService fontService;
     private final Type3FontConversionService type3FontConversionService;
     private final Type3GlyphExtractor type3GlyphExtractor;
+    private final PdfFontResolver pdfFontResolver;
+    private final PdfGlyphCounter pdfGlyphCounter;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
     private final Map<String, PDFont> type3NormalizedFontCache = new ConcurrentHashMap<>();
     private final Map<String, Set<Integer>> type3GlyphCoverageCache = new ConcurrentHashMap<>();
@@ -938,14 +942,11 @@ public class PdfJsonConversionService {
     }
 
     private String buildFontKey(String jobId, int pageNumber, String fontId) {
-        // Include jobId to ensure font UIDs are globally unique across concurrent jobs
-        String jobPrefix = (jobId != null && !jobId.isEmpty()) ? jobId + ":" : "";
-        return jobPrefix + pageNumber + ":" + fontId;
+        return pdfFontResolver.buildFontKey(jobId, pageNumber, fontId);
     }
 
     private String buildFontKey(String jobId, Integer pageNumber, String fontId) {
-        int page = pageNumber != null ? pageNumber : -1;
-        return buildFontKey(jobId, page, fontId);
+        return pdfFontResolver.buildFontKey(jobId, pageNumber, fontId);
     }
 
     private String resolveFontCacheKey(PdfJsonFont font) {
@@ -975,19 +976,6 @@ public class PdfJsonConversionService {
             lookup.put(buildFontKey(null, font.getPageNumber(), font.getId()), font);
         }
         return lookup;
-    }
-
-    private PdfJsonFont resolveFontModel(
-            Map<String, PdfJsonFont> lookup, int pageNumber, String fontId) {
-        if (lookup == null || fontId == null) {
-            return null;
-        }
-        // JSON->PDF conversion: no jobId context, pass null
-        PdfJsonFont model = lookup.get(buildFontKey(null, pageNumber, fontId));
-        if (model != null) {
-            return model;
-        }
-        return lookup.get(buildFontKey(null, -1, fontId));
     }
 
     private List<PdfJsonFont> cloneFontList(Collection<PdfJsonFont> source) {
@@ -1856,7 +1844,8 @@ public class PdfJsonConversionService {
                 continue;
             }
 
-            PdfJsonFont fontModel = resolveFontModel(fontLookup, pageNumber, element.getFontId());
+            PdfJsonFont fontModel =
+                    pdfFontResolver.resolve(fontLookup, pageNumber, element.getFontId());
             if (font instanceof PDType3Font && fontModel != null) {
                 Set<Integer> supportedGlyphs =
                         type3GlyphCache.computeIfAbsent(
@@ -3245,11 +3234,13 @@ public class PdfJsonConversionService {
                                 activeFont = run.font();
                             }
                             PdfJsonFont runFontModel =
-                                    resolveFontModel(runFontLookup, pageNumber, run.fontId());
+                                    pdfFontResolver.resolve(
+                                            runFontLookup, pageNumber, run.fontId());
                             if (runFontModel == null) {
                                 runFontLookup = buildFontModelLookup(fontModels);
                                 runFontModel =
-                                        resolveFontModel(runFontLookup, pageNumber, run.fontId());
+                                        pdfFontResolver.resolve(
+                                                runFontLookup, pageNumber, run.fontId());
                             }
                             // Check if this is a normalized Type3 font (has Type3 metadata but is
                             // not PDType3Font)
@@ -3386,7 +3377,7 @@ public class PdfJsonConversionService {
         }
 
         Map<String, PdfJsonFont> runFontLookup = buildFontModelLookup(fontModels);
-        PdfJsonFont baseFontModel = resolveFontModel(runFontLookup, pageNumber, baseFontId);
+        PdfJsonFont baseFontModel = pdfFontResolver.resolve(runFontLookup, pageNumber, baseFontId);
         boolean baseIsType3 =
                 baseFontModel != null
                         && baseFontModel.getSubtype() != null
@@ -3945,7 +3936,8 @@ public class PdfJsonConversionService {
                             currentFont = resources.getFont(fontResourceName);
                             currentFontName = fontResourceName.getName();
                             currentFontModel =
-                                    resolveFontModel(fontLookup, pageNumber, currentFontName);
+                                    pdfFontResolver.resolve(
+                                            fontLookup, pageNumber, currentFontName);
                             log.trace(
                                     "Encountered Tf operator; switching to font resource {}",
                                     currentFontName);
@@ -4049,7 +4041,7 @@ public class PdfJsonConversionService {
             return false;
         }
         COSString cosString = (COSString) tokens.get(tokenIndex);
-        int glyphCount = countGlyphs(cosString, font);
+        int glyphCount = pdfGlyphCounter.countGlyphs(cosString, font);
         log.trace(
                 "rewriteShowText consuming {} glyphs at cursor index {} for font {}",
                 glyphCount,
@@ -4108,7 +4100,7 @@ public class PdfJsonConversionService {
         for (int i = 0; i < array.size(); i++) {
             COSBase element = array.get(i);
             if (element instanceof COSString cosString) {
-                int glyphCount = countGlyphs(cosString, font);
+                int glyphCount = pdfGlyphCounter.countGlyphs(cosString, font);
                 List<PdfJsonTextElement> consumed = cursor.consume(expectedFontName, glyphCount);
                 if (consumed == null) {
                     log.debug(
@@ -4318,67 +4310,6 @@ public class PdfJsonConversionService {
             return !(unsigned == 0x09 || unsigned == 0x0A || unsigned == 0x0D);
         }
         return false;
-    }
-
-    private int countGlyphs(COSString value, PDFont font) {
-        if (value == null) {
-            return 0;
-        }
-        if (font != null) {
-            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(value.getBytes())) {
-                int count = countCodesProtected(inputStream, font::readCode);
-                if (count > 0) {
-                    return count;
-                }
-            } catch (IOException ex) {
-                log.debug("Failed to decode glyphs: {}", ex.getMessage());
-            }
-        }
-        byte[] bytes = value.getBytes();
-        return Math.max(1, bytes.length);
-    }
-
-    /**
-     * Functional accessor for {@link PDFont#readCode(InputStream)} so the bounded counting loop can
-     * be exercised in isolation without instantiating a {@link PDFont}.
-     */
-    @FunctionalInterface
-    interface CodeReader {
-        int readCode(InputStream stream) throws IOException;
-    }
-
-    /**
-     * Count how many codes the supplied {@code reader} can extract from {@code inputStream}, with
-     * two safety nets that PDFBox's raw {@link PDFont#readCode(InputStream)} loop lacks:
-     *
-     * <ol>
-     *   <li>Stop when the stream is empty (a corrupt CMap can otherwise loop forever returning
-     *       successfully-matched zero-bytes from an exhausted {@link ByteArrayInputStream}).
-     *   <li>Stop when a {@code readCode} call did not consume any bytes, even if it returned a
-     *       non-{@code -1} value.
-     * </ol>
-     *
-     * <p>Both conditions were observed in the wild on round-tripped fallback fonts where the
-     * embedded ToUnicode CMap matched 0x00 sequences, hanging the JSON&rarr;PDF rebuild.
-     */
-    static int countCodesProtected(ByteArrayInputStream inputStream, CodeReader reader)
-            throws IOException {
-        int count = 0;
-        int previousAvailable = inputStream.available();
-        while (previousAvailable > 0) {
-            int code = reader.readCode(inputStream);
-            if (code == -1) {
-                break;
-            }
-            int currentAvailable = inputStream.available();
-            if (currentAvailable >= previousAvailable) {
-                // No progress made; break to avoid infinite loop on corrupt CMaps.
-                break;
-            }
-            count++;
-            previousAvailable = currentAvailable;
-        }
-        return count;
     }
 
     private MergedText mergeText(List<PdfJsonTextElement> elements) {
