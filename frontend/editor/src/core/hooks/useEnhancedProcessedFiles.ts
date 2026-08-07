@@ -47,6 +47,8 @@ export function useEnhancedProcessedFiles(
   const [processingStates, setProcessingStates] = useState<
     Map<string, ProcessingState>
   >(new Map());
+  const processedFilesRef = useRef(processedFiles);
+  processedFilesRef.current = processedFiles;
 
   // Subscribe to processing state changes once
   useEffect(() => {
@@ -57,6 +59,7 @@ export function useEnhancedProcessedFiles(
 
   // Process files when activeFiles changes
   useEffect(() => {
+    let cancelled = false;
     console.log(
       "useEnhancedProcessedFiles: activeFiles changed",
       activeFiles.length,
@@ -77,6 +80,7 @@ export function useEnhancedProcessedFiles(
       const newProcessedFiles = new Map<File, ProcessedFile>();
 
       for (const file of activeFiles) {
+        if (cancelled) return;
         // Generate hash for this file
         const fileHash = await FileHasher.generateHybridHash(file);
         fileHashMapRef.current.set(file, fileHash);
@@ -120,57 +124,67 @@ export function useEnhancedProcessedFiles(
           (file) => !processedFiles.has(file),
         );
 
-      if (hasChanged) {
+      if (hasChanged && !cancelled) {
+        processedFilesRef.current = newProcessedFiles;
         setProcessedFiles(newProcessedFiles);
       }
     };
 
     processFiles();
+    return () => {
+      cancelled = true;
+    };
   }, [activeFiles]); // Only depend on activeFiles to avoid infinite loops
 
   // Listen for processing completion
   useEffect(() => {
+    const checkInFlightRef = { current: false };
     const checkForCompletedFiles = async () => {
+      if (checkInFlightRef.current) return;
+      checkInFlightRef.current = true;
       let hasNewFiles = false;
-      const updatedFiles = new Map(processedFiles);
+      const updatedFiles = new Map(processedFilesRef.current);
 
-      // Generate file keys for all files first
-      const fileKeyPromises = activeFiles.map(async (file) => ({
-        file,
-        key: await FileHasher.generateHybridHash(file),
-      }));
+      try {
+        // Generate file keys for all files first
+        const fileKeyPromises = activeFiles.map(async (file) => ({
+          file,
+          key: await FileHasher.generateHybridHash(file),
+        }));
 
-      const fileKeyPairs = await Promise.all(fileKeyPromises);
+        const fileKeyPairs = await Promise.all(fileKeyPromises);
 
-      for (const { file, key } of fileKeyPairs) {
-        // Only check files that don't have processed results yet
-        if (!updatedFiles.has(file)) {
-          const processingState = processingStates.get(key);
+        for (const { file, key } of fileKeyPairs) {
+          // Only check files that don't have processed results yet
+          if (!updatedFiles.has(file)) {
+            const processingState = processingStates.get(key);
 
-          // Check for both processing and recently completed files
-          // This ensures we catch completed files before they're cleaned up
-          if (
-            processingState?.status === "processing" ||
-            processingState?.status === "completed"
-          ) {
-            try {
-              const processed = await enhancedPDFProcessingService.processFile(
-                file,
-                config,
-              );
-              if (processed) {
-                updatedFiles.set(file, processed);
-                hasNewFiles = true;
+            // Check for both processing and recently completed files
+            // This ensures we catch completed files before they're cleaned up
+            if (
+              processingState?.status === "processing" ||
+              processingState?.status === "completed"
+            ) {
+              try {
+                const processed =
+                  await enhancedPDFProcessingService.processFile(file, config);
+                if (processed) {
+                  updatedFiles.set(file, processed);
+                  hasNewFiles = true;
+                }
+              } catch {
+                // Ignore errors in completion check
               }
-            } catch {
-              // Ignore errors in completion check
             }
           }
         }
-      }
 
-      if (hasNewFiles) {
-        setProcessedFiles(updatedFiles);
+        if (hasNewFiles) {
+          processedFilesRef.current = updatedFiles;
+          setProcessedFiles(updatedFiles);
+        }
+      } finally {
+        checkInFlightRef.current = false;
       }
     };
 

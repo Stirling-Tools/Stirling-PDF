@@ -34,6 +34,16 @@ export class FileLifecycleManager {
     }
   };
 
+  private revokeBlobUrl = (url: string): void => {
+    if (!url.startsWith("blob:")) return;
+    try {
+      URL.revokeObjectURL(url);
+    } catch {
+      // Ignore revocation errors.
+    }
+    this.blobUrls.delete(url);
+  };
+
   /**
    * Clean up resources for a specific file (with stateRef access for complete cleanup)
    */
@@ -150,32 +160,14 @@ export class FileLifecycleManager {
       const record = stateRef.current.files.byId[fileId];
       if (record) {
         // Clean up thumbnail blob URLs
-        if (record.thumbnailUrl && record.thumbnailUrl.startsWith("blob:")) {
-          try {
-            URL.revokeObjectURL(record.thumbnailUrl);
-          } catch {
-            // Ignore revocation errors
-          }
-        }
+        if (record.thumbnailUrl) this.revokeBlobUrl(record.thumbnailUrl);
 
-        if (record.blobUrl && record.blobUrl.startsWith("blob:")) {
-          try {
-            URL.revokeObjectURL(record.blobUrl);
-          } catch {
-            // Ignore revocation errors
-          }
-        }
+        if (record.blobUrl) this.revokeBlobUrl(record.blobUrl);
 
         // Clean up processed file thumbnails
         if (record.processedFile?.pages) {
           record.processedFile.pages.forEach((page: ProcessedFilePage) => {
-            if (page.thumbnail && page.thumbnail.startsWith("blob:")) {
-              try {
-                URL.revokeObjectURL(page.thumbnail);
-              } catch {
-                // Ignore revocation errors
-              }
-            }
+            if (page.thumbnail) this.revokeBlobUrl(page.thumbnail);
           });
         }
       }
