@@ -46,3 +46,6 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+.coverage
+coverage/

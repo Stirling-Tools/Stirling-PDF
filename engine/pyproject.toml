@@ -5,29 +5,33 @@ description = "AI Document Engine"
 requires-python = ">=3.13"
 dependencies = [
     "cryptography>=50.0.0",
-    "fastapi>=0.116.0",
-    "pgvector>=0.3.6",
-    "psycopg[binary,pool]>=3.2",
-    "pydantic>=2.0.0",
-    # <2 cap: 1.99.0 patches CVE-2026-46678; 2.0 is an untested major migration
-    "pydantic-ai>=1.99.0,<2.0.0",
-    "pydantic-ai-slim[voyageai]>=1.99.0,<2.0.0",
-    "pydantic-settings>=2.0.0",
-    "python-dotenv>=1.2.1",
-    "sqlite-vec>=0.1.6",
-    "uvicorn>=0.35.0",
-    "opentelemetry-sdk>=1.39.0",
-    "posthog>=3.0.0",
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "openai>=2.0.0,<3.0.0",
+    "pgvector>=0.5.0",
+    "psycopg[binary,pool]>=3.3.4",
+    "pydantic>=2.13.4",
+    # Keep the v1 line until the engine is migrated to Pydantic AI v2.
+    "pydantic-ai>=1.107.1,<2.0.0",
+    "pydantic-ai-slim[voyageai]>=1.107.1,<2.0.0",
+    "pydantic-settings>=2.14.2",
+    "python-dotenv>=1.2.2",
+    "starlette>=1.3.1",
+    "sqlite-vec>=0.1.9",
+    "uvicorn>=0.52.1",
+    "opentelemetry-sdk>=1.39.0,<1.44.0",
+    "posthog>=7.37.3",
 ]
 
 [dependency-groups]
 dev = [
-    "anyio>=4.0.0",
-    "datamodel-code-generator[ruff]>=0.26.0",
-    "pytest>=8.0.0",
-    "pyright>=1.1.408",
-    "referencing>=0.35.0",
-    "ruff>=0.14.10",
+    "anyio>=4.14.2",
+    "datamodel-code-generator[ruff]>=0.72.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pyright>=1.1.411",
+    "referencing>=0.37.0",
+    "ruff>=0.16.1",
 ]
 
 [build-system]
