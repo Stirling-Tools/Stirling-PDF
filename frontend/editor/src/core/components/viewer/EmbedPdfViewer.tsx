@@ -370,20 +370,20 @@ const EmbedPdfViewerContent = ({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const mod = event.ctrlKey || event.metaKey;
+      const target = event.target as Element | null;
+      const isInTextInput =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
 
-      // Ctrl+P (print) must be intercepted unconditionally
+      // Ctrl+P (print) must be intercepted 
       // whenever the viewer is mounted, even before the user has hovered over it.
       // Ctrl+R (rotate) is intercepted only on desktop (Tauri), while on web it still falls through to browser refresh.
       // Without this, the browser falls through to its native "print HTML page"
       // or "reload page" behaviour.
 
       if (mod) {
-        const target = event.target as Element;
-        const isInTextInput =
-          target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          (target as HTMLElement).isContentEditable;
-
         if (!isInTextInput) {
           const wasOverridden = viewerKeyCommand(event);
           if (!wasOverridden) {
@@ -476,18 +476,24 @@ const EmbedPdfViewerContent = ({
       // Non-modifier shortcuts
       switch (event.key) {
         case "Home":
+          if (isInTextInput) return;
           event.preventDefault();
           scrollActions.scrollToFirstPage();
           return;
         case "End":
+          if (isInTextInput) return;
           event.preventDefault();
           scrollActions.scrollToLastPage();
           return;
         case "PageUp":
+        case "ArrowLeft":
+          if (isInTextInput || event.altKey) return;
           event.preventDefault();
           scrollActions.scrollToPreviousPage();
           return;
         case "PageDown":
+        case "ArrowRight":
+          if (isInTextInput || event.altKey) return;
           event.preventDefault();
           scrollActions.scrollToNextPage();
           return;
