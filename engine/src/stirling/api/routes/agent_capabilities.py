@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Request
 
-from stirling.api.agent_capabilities import manifest_payload
+from stirling.api.agent_capabilities import CapabilitiesManifest, manifest_payload
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
 
 @router.get("/capabilities")
-def get_capabilities(request: Request) -> dict[str, Any]:
+def get_capabilities(request: Request) -> CapabilitiesManifest:
     """Return the agent capabilities manifest, derived from the startup registry.
 
     Gated by ``EngineSharedSecretMiddleware`` when the ``STIRLING_ENGINE_SHARED_SECRET`` env var

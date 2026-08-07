@@ -16,7 +16,7 @@ from pydantic_ai.models.test import TestModel
 from pydantic_ai.profiles import ModelProfile
 
 from stirling.agents import OrchestratorAgent, build_descriptors
-from stirling.agents._registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
+from stirling.agents.registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
 from stirling.contracts import (
     EditCannotDoResponse,
     EditPlanResponse,

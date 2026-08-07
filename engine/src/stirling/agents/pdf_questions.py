@@ -4,10 +4,10 @@ import logging
 
 from pydantic_ai import Agent
 
-from stirling.agents._registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
 from stirling.agents.contradiction import ContradictionCapability, ContradictionDetector
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
 from stirling.agents.output_mode import output_retries, structured_output
+from stirling.agents.registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
 from stirling.agents.shared import ChunkedReasoner, WholeDocReaderCapability
 from stirling.contracts import (
     AiFile,

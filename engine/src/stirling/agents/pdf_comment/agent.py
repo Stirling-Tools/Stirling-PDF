@@ -20,8 +20,8 @@ import logging
 from pydantic import Field
 from pydantic_ai import Agent
 
-from stirling.agents._registry import AgentDescriptor, McpCapability, RegisterableAgent
 from stirling.agents.pdf_comment.prompts import COMMENT_AGENT_SYSTEM_PROMPT
+from stirling.agents.registry import AgentDescriptor, McpCapability, RegisterableAgent
 from stirling.contracts.pdf_comments import (
     MAX_COMMENT_TEXT_LENGTH,
     PdfCommentInstruction,

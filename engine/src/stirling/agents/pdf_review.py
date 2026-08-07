@@ -31,11 +31,11 @@ from typing import Literal
 from pydantic import Field
 from pydantic_ai import Agent
 
-from stirling.agents._registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
 from stirling.agents.contradiction import ContradictionDetector, ContradictionIntentClassifier
 from stirling.agents.contradiction.detector import _escape_for_tag
 from stirling.agents.contradiction.prompts import REVIEW_LOCALISER_PROMPT
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
+from stirling.agents.registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
 from stirling.contracts import (
     AiFile,
     CommentSpec,

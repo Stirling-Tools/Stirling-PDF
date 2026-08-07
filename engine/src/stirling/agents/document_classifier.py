@@ -6,6 +6,7 @@ from pydantic import Field
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.agents.registry import AgentDescriptor, McpCapability, RegisterableAgent
 from stirling.contracts import (
     ClassifyDocumentRequest,
     ClassifyDocumentResponse,
@@ -98,7 +99,7 @@ def validate_labels(output: _ClassifierOutput, allowed: list[LabelOption]) -> Do
     return DocumentClassificationResponse(labels=kept)
 
 
-class DocumentClassifierAgent:
+class DocumentClassifierAgent(RegisterableAgent):
     """Assigns labels to a document from an allowed vocabulary.
 
     Reads the bounded page window supplied on the request (first/last
@@ -113,6 +114,22 @@ class DocumentClassifierAgent:
             output_type=NativeOutput(_ClassifierOutput),
             system_prompt=_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
+        )
+
+    def describe(self) -> AgentDescriptor:
+        # MCP-only: a standalone classification capability invoked directly via its
+        # route; never a top-level orchestrator delegate.
+        return AgentDescriptor(
+            mcp=(
+                McpCapability(
+                    id="document-classify",
+                    description="Assign document-type labels to a document from a fixed allowed vocabulary.",
+                    input_model=ClassifyDocumentRequest,
+                    mode="sync",
+                    required_scope="mcp.tools.read",
+                    route="/api/v1/documents/classify",
+                ),
+            ),
         )
 
     async def classify(self, request: ClassifyDocumentRequest) -> ClassifyDocumentResponse:

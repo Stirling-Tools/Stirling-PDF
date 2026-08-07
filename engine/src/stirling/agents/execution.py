@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from stirling.agents._registry import AgentDescriptor, McpCapability, RegisterableAgent
+from stirling.agents.registry import AgentDescriptor, McpCapability, RegisterableAgent
 from stirling.contracts import AgentExecutionRequest, CannotContinueExecutionAction, NextExecutionAction
 from stirling.services import AppRuntime
 

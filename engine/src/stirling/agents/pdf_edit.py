@@ -9,7 +9,7 @@ from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
 from stirling.agents._page_text import format_page_text, get_extracted_text_artifact, has_page_text
-from stirling.agents._registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
+from stirling.agents.registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,

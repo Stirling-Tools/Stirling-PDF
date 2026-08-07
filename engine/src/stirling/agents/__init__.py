@@ -2,7 +2,6 @@
 
 from collections.abc import Iterable
 
-from ._registry import AgentDescriptor, RegisterableAgent
 from .document_classifier import DocumentClassifierAgent
 from .execution import ExecutionPlanningAgent
 from .orchestrator import OrchestratorAgent
@@ -10,6 +9,7 @@ from .pdf_create import PdfCreateAgent
 from .pdf_edit import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
 from .pdf_questions import PdfQuestionAgent
 from .pdf_review import PdfReviewAgent
+from .registry import AgentDescriptor, RegisterableAgent
 from .user_spec import UserSpecAgent
 
 

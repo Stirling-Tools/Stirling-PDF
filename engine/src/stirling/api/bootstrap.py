@@ -67,6 +67,7 @@ def build_app_state(
     execution_planning_agent = ExecutionPlanningAgent(runtime)
     math_auditor_agent = MathAuditorAgent(runtime)
     pdf_comment_agent = PdfCommentAgent(runtime)
+    document_classifier_agent = DocumentClassifierAgent(runtime)
     agent_descriptors = build_descriptors(
         [
             pdf_edit_agent,
@@ -77,6 +78,7 @@ def build_app_state(
             pdf_comment_agent,
             math_auditor_agent,
             execution_planning_agent,
+            document_classifier_agent,
         ]
     )
     return AppState(
@@ -88,7 +90,7 @@ def build_app_state(
         execution_planning_agent=execution_planning_agent,
         math_auditor_agent=math_auditor_agent,
         pdf_comment_agent=pdf_comment_agent,
-        document_classifier_agent=DocumentClassifierAgent(runtime),
+        document_classifier_agent=document_classifier_agent,
         agent_descriptors=agent_descriptors,
     )
 

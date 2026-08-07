@@ -24,6 +24,7 @@ from stirling.contracts import (
     AgentDraftRequest,
     AgentExecutionRequest,
     AgentRevisionRequest,
+    ClassifyDocumentRequest,
     Evidence,
     FolioManifest,
     PdfCommentRequest,
@@ -130,6 +131,13 @@ _EXPECTED: dict[str, _Expected] = {
         required_scope="mcp.tools.read",
         route="/api/v1/agents/next-action",
         input_model=AgentExecutionRequest,
+    ),
+    "document-classify": _Expected(
+        description="Assign document-type labels to a document from a fixed allowed vocabulary.",
+        mode="sync",
+        required_scope="mcp.tools.read",
+        route="/api/v1/documents/classify",
+        input_model=ClassifyDocumentRequest,
     ),
 }
 

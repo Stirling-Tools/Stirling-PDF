@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
-from stirling.agents._registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
+from stirling.agents.registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
 from stirling.contracts import (
     EditCannotDoResponse,
     EditPlanResponse,

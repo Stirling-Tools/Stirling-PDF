@@ -3,8 +3,8 @@ from __future__ import annotations
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
-from stirling.agents._registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
 from stirling.agents.pdf_edit import PdfEditAgent
+from stirling.agents.registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
 from stirling.contracts import (
     AgentDraft,
     AgentDraftRequest,

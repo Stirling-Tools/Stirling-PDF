@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import AgentRunError
 
-from stirling.agents._registry import AgentDescriptor, McpCapability, RegisterableAgent
+from stirling.agents.registry import AgentDescriptor, McpCapability, RegisterableAgent
 from stirling.contracts.ledger import (
     Discrepancy,
     DiscrepancyKind,

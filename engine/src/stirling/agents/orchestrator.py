@@ -5,8 +5,8 @@ import logging
 from pydantic import ConfigDict, Field
 from pydantic_ai import Agent
 
-from stirling.agents._registry import AgentDescriptor, OrchestratorRoute
 from stirling.agents.output_mode import output_retries, structured_output
+from stirling.agents.registry import AgentDescriptor, OrchestratorRoute
 from stirling.contracts import (
     ExtractedTextArtifact,
     OrchestratorRequest,
