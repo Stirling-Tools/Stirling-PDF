@@ -22,6 +22,7 @@ import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateRounded";
+import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import {
   MobileDrawCanvas,
@@ -118,6 +119,7 @@ export default function MobileSignPage() {
 
   const canvasHandle = useRef<MobileDrawCanvasHandle>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Validate the session up front, so a stale QR shows one clear error rather
   // than a canvas whose Send fails.
@@ -195,6 +197,7 @@ export default function MobileSignPage() {
       setTypedText("");
       setPhotoDataUrl(null);
       if (photoInputRef.current) photoInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
     } catch (err) {
       console.error("[MobileSignPage] upload failed:", err);
       setSendError(
@@ -461,22 +464,40 @@ export default function MobileSignPage() {
               />
             </Card>
           ) : null}
-          <DSButton
-            variant="secondary"
-            onClick={() => photoInputRef.current?.click()}
-            leftSection={
-              <AddPhotoAlternateRoundedIcon style={{ fontSize: 18 }} />
-            }
-          >
-            {photoDataUrl
-              ? t("mobileSign.photo.replace", "Choose a different photo")
-              : t("mobileSign.photo.choose", "Take or choose a photo")}
-          </DSButton>
+          <Group grow>
+            <DSButton
+              variant="secondary"
+              onClick={() => cameraInputRef.current?.click()}
+              leftSection={<PhotoCameraRoundedIcon style={{ fontSize: 18 }} />}
+            >
+              {t("mobileSign.photo.takePhoto", "Take a photo")}
+            </DSButton>
+            <DSButton
+              variant="secondary"
+              onClick={() => photoInputRef.current?.click()}
+              leftSection={
+                <AddPhotoAlternateRoundedIcon style={{ fontSize: 18 }} />
+              }
+            >
+              {t("mobileSign.photo.fromGallery", "From gallery")}
+            </DSButton>
+          </Group>
           {photoError && (
             <Text size="sm" c="red">
               {photoError}
             </Text>
           )}
+          {/* Two inputs, not one: `capture` makes the OS open the camera
+              directly, but an input carrying it never offers the gallery,
+              so each source needs its own. */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={handlePhotoSelect}
+          />
           <input
             ref={photoInputRef}
             type="file"

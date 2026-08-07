@@ -4995,10 +4995,10 @@ undo = "Undo"
 validating = "Checking session…"
 
 [mobileSign.photo]
-choose = "Take or choose a photo"
+fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
-replace = "Choose a different photo"
+takePhoto = "Take a photo"
 
 [mobileSign.tab]
 draw = "Draw"
