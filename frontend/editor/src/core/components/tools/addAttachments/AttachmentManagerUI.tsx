@@ -68,38 +68,14 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
 
   return (
     <Stack gap="md">
-      {/* TOOLBAR HEADER: TITLE + COUNT BADGE + EXTRACT ALL ACTION */}
-      <Group justify="space-between" wrap="nowrap" align="center">
-        <Group gap="xs" wrap="nowrap" style={{ flexShrink: 1, minWidth: 0 }}>
-          <Text size="sm" fw={600} truncate>
-            {t("attachments.listTitle", "Attachments")}
-          </Text>
-          <Badge
-            size="xs"
-            variant="light"
-            color="blue"
-            style={{ flexShrink: 0 }}
-          >
-            {rows.length}
-          </Badge>
-        </Group>
-
-        {rows.length > 0 && (
-          <DSButton
-            size="sm"
-            px="xs"
-            variant="tertiary"
-            style={{ flexShrink: 0, whiteSpace: "nowrap" }}
-            leftSection={
-              <LocalIcon icon="download-rounded" width={13} height={13} />
-            }
-            onClick={onExtractAllZip}
-            disabled={disabled || isSaving}
-            loading={activeAction === "extractAll"}
-          >
-            {t("attachments.extractAll", "Extract all")}
-          </DSButton>
-        )}
+      {/* TOOLBAR HEADER: TITLE + COUNT BADGE */}
+      <Group gap="xs" wrap="nowrap">
+        <Text size="sm" fw={600}>
+          {t("attachments.listTitle", "Attachments")}
+        </Text>
+        <Badge size="xs" variant="light" color="blue" style={{ flexShrink: 0 }}>
+          {rows.length}
+        </Badge>
       </Group>
 
       {/* FILTER SEARCH INPUT (SHOWN WHEN >3 ATTACHMENTS EXIST) */}
@@ -144,7 +120,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           )}
         </Text>
       ) : (
-        <ScrollArea.Autosize mah={300} type="scroll" offsetScrollbars>
+        <ScrollArea.Autosize mah={280} type="scroll" offsetScrollbars>
           <Stack gap={6}>
             {filteredRows.map((row) => (
               <AttachmentRow
@@ -165,6 +141,23 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
             ))}
           </Stack>
         </ScrollArea.Autosize>
+      )}
+
+      {/* EXTRACT ALL — full width below the list */}
+      {rows.length > 0 && (
+        <DSButton
+          size="sm"
+          variant="tertiary"
+          fullWidth
+          leftSection={
+            <LocalIcon icon="download-rounded" width={13} height={13} />
+          }
+          onClick={onExtractAllZip}
+          disabled={disabled || isSaving}
+          loading={activeAction === "extractAll"}
+        >
+          {t("attachments.extractAll", "Extract all")}
+        </DSButton>
       )}
 
       {/* ADD ATTACHMENTS BUTTON (USING STANDARD SHARED FILEPICKER) */}
