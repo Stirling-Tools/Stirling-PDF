@@ -3,6 +3,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 
 const posthogState = vi.hoisted(() => ({ loaded: false }));
 const posthogMock = vi.hoisted(() => ({
@@ -62,9 +63,19 @@ describe("usePosthogTracking", () => {
   });
 
   it("does not initialize PostHog when analytics is disabled", async () => {
-    renderHook(() => usePosthogTracking(), {
-      wrapper: createWrapper(false),
-    });
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <TestQueryProvider>
+    <AppConfigProvider
+      initialConfig={{ enableAnalytics: false }}
+      bootstrapMode="non-blocking"
+      autoFetch={false}
+    >
+      {children}
+    </AppConfigProvider>
+  </TestQueryProvider>
+);
+
+renderHook(() => usePosthogTracking(), { wrapper });
 
     await waitFor(() => {
       expect(posthogMock.init).not.toHaveBeenCalled();
@@ -72,9 +83,19 @@ describe("usePosthogTracking", () => {
   });
 
   it("initializes PostHog when analytics is enabled", async () => {
-    renderHook(() => usePosthogTracking(), {
-      wrapper: createWrapper(true),
-    });
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <TestQueryProvider>
+    <AppConfigProvider
+      initialConfig={{ enableAnalytics: true }}
+      bootstrapMode="non-blocking"
+      autoFetch={false}
+    >
+      {children}
+    </AppConfigProvider>
+  </TestQueryProvider>
+);
+
+renderHook(() => usePosthogTracking(), { wrapper });
 
     await waitFor(() => {
       expect(posthogMock.init).toHaveBeenCalledTimes(1);

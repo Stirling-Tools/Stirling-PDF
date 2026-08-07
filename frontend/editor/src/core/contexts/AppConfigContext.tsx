@@ -3,17 +3,26 @@ import React, {
   useContext,
   useMemo,
   useEffect,
-  ReactNode,
   useCallback,
+  useState,
+  ReactNode,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import apiClient from "@app/services/apiClient";
-import { getSimulatedAppConfig } from "@app/testing/serverExperienceSimulations";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DEFAULT_APP_CONFIG, fetchAppConfig } from "@app/api/config";
+import { qk } from "@app/query/keys";
+import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import type { AppConfig, AppConfigBootstrapMode } from "@app/types/appConfig";
 import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
 import { editorQk } from "@app/queries/keys";
 
+/**
+ * Sleep utility for delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 export interface AppConfigRetryOptions {
   maxRetries?: number;
   initialDelay?: number;
@@ -73,7 +82,6 @@ function extractErrorMessage(err: unknown): string | null {
   }
   return null;
 }
-
 export interface AppConfigProviderProps {
   children?: ReactNode;
   retryOptions?: AppConfigRetryOptions;
@@ -81,6 +89,22 @@ export interface AppConfigProviderProps {
   bootstrapMode?: AppConfigBootstrapMode;
   autoFetch?: boolean;
   onConfigLoaded?: (config: AppConfig) => void;
+}
+
+function statusOf(error: unknown): number | undefined {
+  return (error as { response?: { status?: number } })?.response?.status;
+}
+
+function errorMessage(error: unknown): string {
+  const axiosLike = error as {
+    response?: { data?: { message?: string } };
+    message?: string;
+  };
+  return (
+    axiosLike?.response?.data?.message ||
+    axiosLike?.message ||
+    "Unknown error occurred"
+  );
 }
 
 export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
@@ -91,68 +115,131 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   autoFetch = true,
   onConfigLoaded,
 }) => {
-  const isBlockingMode = bootstrapMode === "blocking";
-  const queryClient = useQueryClient();
-  const maxRetries = retryOptions?.maxRetries ?? 0;
-  const initialDelay = retryOptions?.initialDelay ?? 1000;
+const maxRetries = retryOptions?.maxRetries ?? 0;
+const initialDelay = retryOptions?.initialDelay ?? 1000;
+// Non-blocking mode treats initialConfig as good enough to render on.
+const seeded = Boolean(initialConfig) && bootstrapMode !== "blocking";
   const onConfigLoadedRef = React.useRef(onConfigLoaded);
   onConfigLoadedRef.current = onConfigLoaded;
 
-  const refetch = useCallback(async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: editorQk.appConfig() }),
-      queryClient.invalidateQueries({
-        queryKey: editorQk.endpointsAvailability(),
-      }),
-    ]);
-  }, [queryClient]);
-
-  const { isAuthPage } = useJwtConfigSync(refetch);
-
-  const query = useQuery({
-    queryKey: editorQk.appConfig(),
+const queryClient = useQueryClient();
+// Auth pages skip the fetch until sign-in asks for one.
+const [signedIn, setSignedIn] = useState(false);
+// fetchQuery, not refetchQueries: the latter skips a disabled query, and
+// enabling one whose cache is still fresh doesn't fetch either. Sign-in has
+// to force the request — a pre-login 401 leaves a cached default behind.
+const refetch = useCallback(async () => {
+  setSignedIn(true);
+  await queryClient.fetchQuery({
+    queryKey: qk.appConfig(),
     queryFn: fetchAppConfig,
-    enabled: autoFetch && !isAuthPage,
-    retry: (failureCount, error) => {
-      const status = responseStatus(error);
-      if (status && status < 500) return false;
-      return failureCount < maxRetries;
-    },
-    retryDelay: (i) => initialDelay * Math.pow(2, Math.max(0, i)),
-    ...(initialConfig
-      ? { initialData: initialConfig, initialDataUpdatedAt: 0 }
-      : {}),
+    staleTime: 0,
   });
+}, [queryClient]);
 
-  useEffect(() => {
-    if (query.data) onConfigLoadedRef.current?.(query.data);
-  }, [query.data]);
+const { isAuthPage } = useJwtConfigSync(refetch);
 
-  useEffect(() => {
-    if (query.isError && query.error) {
-      console.error(
-        "[AppConfig] Failed to fetch app config after retries:",
-        query.error,
-      );
-    }
-  }, [query.isError, query.error]);
+const fetching = autoFetch && (!isAuthPage || signedIn);
 
-  const config: AppConfig | null = isAuthPage
-    ? { enableLogin: true }
-    : (query.data ?? (query.isError ? { enableLogin: true } : null));
+const query = useQuery({
+  queryKey: qk.appConfig(),
+  queryFn: fetchAppConfig,
+  enabled: fetching,
+  staleTime: CONFIG_STALE_TIME,
+  retry: (failureCount, err) => {
+    const status = statusOf(err);
+    return (!status || status >= 500) && failureCount < maxRetries;
+  },
+  retryDelay: (attempt) => initialDelay * 2 ** attempt,
+});
 
-  const loading =
-    !isAuthPage &&
-    autoFetch &&
-    !query.isError &&
-    (query.isLoading ||
-      (isBlockingMode && query.isFetching && !query.isFetchedAfterMount));
+useEffect(() => {
+  if (query.data) onConfigLoadedRef.current?.(query.data);
+}, [query.data]);
 
-  const error = query.isError ? extractErrorMessage(query.error) : null;
+useEffect(() => {
+  if (query.isError && query.error) {
+    console.error(
+      "[AppConfig] Failed to fetch app config after retries:",
+      query.error,
+    );
+  }
+}, [query.isError, query.error]);
+
+useEffect(() => {
+  if (data) onConfigLoadedRef.current?.(data);
+}, [data]);
+
+useEffect(() => {
+  if (query.isError && query.error) {
+    console.error(
+      "[AppConfig] Failed to fetch app config after retries:",
+      query.error,
+    );
+  }
+}, [query.isError, query.error]);
+
+useEffect(() => {
+  if (error) console.error("[AppConfig] Failed to fetch app config:", error);
+}, [error]);
+
+const config: AppConfig | null = isAuthPage
+  ? { enableLogin: true }
+  : (query.data ?? (query.isError ? { enableLogin: true } : null));
+
+const loading =
+  !isAuthPage &&
+  autoFetch &&
+  !query.isError &&
+  (query.isLoading ||
+    (isBlockingMode && query.isFetching && !query.isFetchedAfterMount));
+
+const error = query.isError ? extractErrorMessage(query.error) : null;
+
+useEffect(() => {
+  if (isAuthPage) {
+    console.debug(
+      "[AppConfig] On auth page - using default config, skipping fetch",
+      { path: window.location.pathname },
+    );
+    setConfig({ enableLogin: true });
+    setHasResolvedConfig(true);
+    setLoading(false);
+    return;
+  }
+
+  if (autoFetch) {
+    fetchConfig();
+  }
+}, [autoFetch, fetchConfig, isAuthPage]);
+
+const refetch = useCallback(() => fetchConfig(true), [fetchConfig]);
 
   const value = useMemo<AppConfigContextValue>(
-    () => ({ config, loading, error, refetch }),
-    [config, loading, error, refetch],
+    () => ({ config:
+        data ??
+        initialConfig ??
+        (isAuthPage || error ? DEFAULT_APP_CONFIG : null),
+      // "Config not settled yet": in flight, or never going to be fetched at
+      // all. isFetching rather than isPending because a pre-login 401 resolves
+      // to the default config, so isPending is already false by the time the
+      // post-sign-in fetch runs — and consumers key effects on the flip. loading: seeded
+        ? false
+        : !autoFetch
+          ? true
+          : fetching
+            ? isFetching
+            : false, error: error ? errorMessage(error) : null, refetch }),
+    [data,
+      error,
+      isFetching,
+      initialConfig,
+      isAuthPage,
+      seeded,
+      autoFetch,
+      fetching,
+      refetch,
+    ],
   );
 
   return (
