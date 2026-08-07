@@ -42,12 +42,28 @@ import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWind
 
 export type FilesPageViewMode = "grid" | "list";
 
+/**
+ * A folder mounted from a directory on disk. It is not a {@link FolderRecord}: there is no stored
+ * folder behind it, and its id is a processing-folder id rather than the branded UUID a
+ * FolderRecord carries — so it is kept as its own entry kind instead of being faked into one.
+ */
+export interface MountedFolderEntry {
+  /** The processing folder's id, for reading its contents and acting on it. */
+  id: string;
+  name: string;
+  /** The directory it mirrors, shown as the folder's subtitle. */
+  directory: string;
+  enabled: boolean;
+}
+
 export interface FilesPageEntry {
-  kind: "folder" | "file";
+  kind: "folder" | "file" | "mounted";
   folder?: FolderRecord;
   /** Number of files inside this folder (folder entries only). */
   folderFileCount?: number;
   file?: StirlingFileStub;
+  /** Set for `kind: "mounted"` — a folder backed by a directory on disk. */
+  mounted?: MountedFolderEntry;
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
 }
@@ -62,6 +78,8 @@ interface FileGridProps {
   /** Replace the entire selection set. */
   onSetSelection?: (ids: Set<FileId>) => void;
   onOpenFolder: (id: FolderId) => void;
+  /** Open a folder mounted from disk, by its processing-folder id. */
+  onOpenMountedFolder?: (id: string) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   onMoveFiles: (
@@ -332,6 +350,7 @@ function GridView({
   activeWorkspaceFileIds,
   onSelectFile,
   onOpenFolder,
+  onOpenMountedFolder,
   onOpenFile,
   onMoveFiles,
   onMoveFolder,
@@ -347,6 +366,15 @@ function GridView({
   return (
     <div className="files-page-grid" role="list">
       {entries.map((entry) => {
+        if (entry.kind === "mounted" && entry.mounted) {
+          return (
+            <MountedFolderCard
+              key={`mounted-${entry.mounted.id}`}
+              mounted={entry.mounted}
+              onOpen={() => onOpenMountedFolder?.(entry.mounted!.id)}
+            />
+          );
+        }
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderCard
@@ -641,6 +669,94 @@ function FolderCard({
   );
 }
 
+/**
+ * A folder mirrored from a directory on disk. Read-only here: the directory is the source of
+ * truth, so this shows what is in it rather than offering the storage-folder actions (rename,
+ * appearance, delete) that would have no meaning on someone's own filesystem.
+ */
+function MountedFolderCard({
+  mounted,
+  onOpen,
+}: {
+  mounted: MountedFolderEntry;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      role="listitem"
+      tabIndex={0}
+      className="files-page-card is-folder is-mounted"
+      onDoubleClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+      title={mounted.directory}
+    >
+      <div className="files-page-card-thumb">
+        <FolderThumbnail color={undefined} fileCount={0} />
+      </div>
+      <div className="files-page-card-body">
+        <div className="files-page-card-name" title={mounted.name}>
+          {mounted.name}
+        </div>
+        <div className="files-page-card-path" title={mounted.directory}>
+          {mounted.directory}
+        </div>
+        <div className="files-page-card-meta">
+          <span className="files-page-processing-tag">
+            {mounted.enabled
+              ? t("filesPage.processing.active", "Processing folder")
+              : t("filesPage.processing.paused", "Processing paused")}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** List-view counterpart of {@link MountedFolderCard}. */
+function MountedFolderRow({
+  mounted,
+  onOpen,
+}: {
+  mounted: MountedFolderEntry;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      role="row"
+      tabIndex={0}
+      className="files-page-list-row is-folder is-mounted"
+      onDoubleClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+      title={mounted.directory}
+    >
+      <span aria-hidden="true" />
+      <span className="files-page-list-name">
+        <FolderIcon fontSize="small" />
+        <span>
+          {mounted.name}
+          <span className="files-page-card-path"> {mounted.directory}</span>
+        </span>
+      </span>
+      <span>
+        <span className="files-page-processing-tag">
+          {mounted.enabled
+            ? t("filesPage.processing.active", "Processing folder")
+            : t("filesPage.processing.paused", "Processing paused")}
+        </span>
+      </span>
+      <span>-</span>
+      <span>-</span>
+      <span aria-hidden="true" />
+    </div>
+  );
+}
+
 /** Shield badges for the policies that have run on a file. */
 function PolicyBadges({ fileId }: { fileId: string }) {
   const badges = usePolicyFileBadges().get(fileId) ?? [];
@@ -908,6 +1024,7 @@ function ListView({
   onSelectFile,
   onSetSelection,
   onOpenFolder,
+  onOpenMountedFolder,
   onOpenFile,
   onMoveFiles,
   onMoveFolder,
@@ -1002,6 +1119,15 @@ function ListView({
         <span aria-hidden="true" />
       </div>
       {entries.map((entry) => {
+        if (entry.kind === "mounted" && entry.mounted) {
+          return (
+            <MountedFolderRow
+              key={`mounted-${entry.mounted.id}`}
+              mounted={entry.mounted}
+              onOpen={() => onOpenMountedFolder?.(entry.mounted!.id)}
+            />
+          );
+        }
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderRow
