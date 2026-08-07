@@ -115,9 +115,9 @@ import stirling.software.SPDF.model.json.PdfJsonStream;
 import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.SPDF.service.pdfjson.PdfJsonFontService;
+import stirling.software.SPDF.service.pdfjson.PdfShowTextArrayRewriter;
 import stirling.software.SPDF.service.pdfjson.PdfShowTextRewriter;
 import stirling.software.SPDF.service.pdfjson.PdfTextElementCursor;
-import stirling.software.SPDF.service.pdfjson.PdfTextMergeHelper;
 import stirling.software.SPDF.service.pdfjson.encoding.PdfTextEncoder;
 import stirling.software.SPDF.service.pdfjson.font.PdfFontResolver;
 import stirling.software.SPDF.service.pdfjson.parsing.PdfGlyphCounter;
@@ -3990,13 +3990,14 @@ public class PdfJsonConversionService {
                                 currentFontName,
                                 i,
                                 cursor.remaining());
-                        if (!rewriteShowTextArray(
+                        if (!PdfShowTextArrayRewriter.rewriteShowTextArray(
                                 array,
                                 currentFont,
                                 currentFontModel,
                                 currentFontName,
                                 cursor,
-                                removeOnly)) {
+                                removeOnly,
+                                pdfGlyphCounter)) {
                             log.debug("Failed to rewrite TJ operator; aborting rewrite");
                             return false;
                         }
@@ -4028,66 +4029,6 @@ public class PdfJsonConversionService {
             log.debug("Failed to rewrite content stream: {}", ex.getMessage());
             return false;
         }
-    }
-
-    private boolean rewriteShowTextArray(
-            COSArray array,
-            PDFont font,
-            PdfJsonFont fontModel,
-            String expectedFontName,
-            PdfTextElementCursor cursor,
-            boolean removeOnly)
-            throws IOException {
-        if (font == null) {
-            log.debug(
-                    "rewriteShowTextArray aborted: no active font for expected resource {}",
-                    expectedFontName);
-            return false;
-        }
-        for (int i = 0; i < array.size(); i++) {
-            COSBase element = array.get(i);
-            if (element instanceof COSString cosString) {
-                int glyphCount = pdfGlyphCounter.countGlyphs(cosString, font);
-                List<PdfJsonTextElement> consumed = cursor.consume(expectedFontName, glyphCount);
-                if (consumed == null) {
-                    log.debug(
-                            "Failed to consume {} glyphs for font {} in TJ segment {} (cursor remaining {})",
-                            glyphCount,
-                            expectedFontName,
-                            i,
-                            cursor.remaining());
-                    return false;
-                }
-                if (removeOnly) {
-                    array.set(i, new COSString(new byte[0]));
-                    continue;
-                }
-                PdfTextMergeHelper.MergedText replacement = PdfTextMergeHelper.mergeText(consumed);
-                try {
-                    byte[] encoded =
-                            PdfTextEncoder.encode(
-                                    font, fontModel, replacement.text(), replacement.charCodes());
-                    if (encoded == null) {
-                        log.debug(
-                                "Failed to map replacement text in TJ array for font {} segment {}",
-                                expectedFontName,
-                                i);
-                        return false;
-                    }
-                    array.set(i, new COSString(encoded));
-                } catch (IOException
-                        | IllegalArgumentException
-                        | UnsupportedOperationException ex) {
-                    log.debug(
-                            "Failed to encode replacement text in TJ array for font {} segment {}: {}",
-                            expectedFontName,
-                            i,
-                            ex.getMessage());
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     private Map<String, PDFont> buildFontMap(
