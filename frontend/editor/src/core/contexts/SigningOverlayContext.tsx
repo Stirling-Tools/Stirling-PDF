@@ -12,6 +12,8 @@ export interface SigningOverlay {
   signaturePlacementMode?: boolean;
   signaturePlacementData?: string;
   signaturePlacementType?: "canvas" | "image" | "text";
+  /** CSS-pixel width÷height lock for place/resize (cert-sign uses 2). */
+  signaturePlacementAspectRatio?: number;
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
 }

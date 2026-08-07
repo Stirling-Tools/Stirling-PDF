@@ -21,6 +21,7 @@ type SignatureOverlayPassThrough = Pick<
   | "signaturePlacementMode"
   | "signaturePlacementData"
   | "signaturePlacementType"
+  | "signaturePlacementAspectRatio"
   | "onSignaturePreviewsChange"
   | "signatureOverlayApiRef"
 >;

@@ -5,6 +5,7 @@ import {
   fetchViaLocalProxy,
   markFastTransportUnavailable,
 } from "@app/services/tauriLocalProxy";
+import { materializeFormDataFiles } from "@app/services/materializeFormDataFiles";
 
 /**
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
@@ -216,8 +217,9 @@ class TauriHttpClient {
 
     if (finalConfig.data) {
       if (finalConfig.data instanceof FormData) {
-        // FormData can be passed directly
-        body = finalConfig.data;
+        // Materialise File entries so Tauri/WebKit can serialise multipart
+        // (avoids InvalidStateError: Unable to read form data file).
+        body = await materializeFormDataFiles(finalConfig.data);
         // Drop any caller-supplied Content-Type so the native fetch generates
         // multipart/form-data WITH its boundary (matches axios's FormData
         // handling). A boundary-less "multipart/form-data" header makes the

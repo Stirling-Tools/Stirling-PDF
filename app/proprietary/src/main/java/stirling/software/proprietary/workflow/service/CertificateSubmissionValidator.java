@@ -160,8 +160,22 @@ public class CertificateSubmissionValidator {
     private void testSign(KeyStore keystore, char[] password, String signerName) {
         try {
             byte[] blankPdf = createBlankPdf();
+            // Null rect args keep the legacy default visible widget (unused here:
+            // showSignature=false).
             pdfSigningService.signWithKeystore(
-                    blankPdf, keystore, password, false, null, signerName, null, null, false);
+                    blankPdf,
+                    keystore,
+                    password,
+                    false,
+                    null,
+                    signerName,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {

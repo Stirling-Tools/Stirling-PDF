@@ -129,6 +129,9 @@ export default function Workbench() {
           signaturePlacementMode={signingOverlay.signaturePlacementMode}
           signaturePlacementData={signingOverlay.signaturePlacementData}
           signaturePlacementType={signingOverlay.signaturePlacementType}
+          signaturePlacementAspectRatio={
+            signingOverlay.signaturePlacementAspectRatio
+          }
           onSignaturePreviewsChange={signingOverlay.onSignaturePreviewsChange}
           signatureOverlayApiRef={signingOverlay.signatureOverlayApiRef}
         />
