@@ -80,7 +80,6 @@ const noExplicitAnyExcludes = [
   "editor/src/core/components/tools/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/tools/automate/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/certSign/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/contexts/file/*.{js,mjs,jsx,ts,tsx}",
