@@ -1,105 +1,114 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
+// The shared preview only loads the portal tokens; the shell reads the editor
+// theme tokens (--bg-surface, --onboarding-title, …), so load them here or the
+// card renders transparent over the dark overlay.
+import "@app/styles/theme.css";
 import OnboardingSlideShell, {
   ShellHero,
+  type ShellButton,
 } from "@app/components/onboarding/OnboardingSlideShell";
 
-/**
- * The frame every onboarding slide sits in: hero panel, copy, step position
- * and the action row. `stepIndex` / `stepCount` drive the progress dots, and
- * `allowDismiss` decides whether the tour can be abandoned.
- */
-const meta: Meta<typeof OnboardingSlideShell> = {
-  title: "Onboarding/OnboardingSlideShell",
+const meta = {
+  title: "Onboarding/Slide Shell",
   component: OnboardingSlideShell,
   parameters: { layout: "fullscreen" },
-  args: {
-    opened: true,
-    slideKey: "welcome",
-    onAction: () => {},
-    onClose: () => {},
-    hero: <ShellHero appIcon />,
-    title: "Welcome to Stirling PDF",
-    body: "Everything you need to work with PDFs, in one place. This tour takes about a minute.",
-    stepIndex: 0,
-    stepCount: 4,
-    buttons: [
-      { key: "next", label: "Get started", primary: true, action: "next" },
-    ],
-  },
-};
+} satisfies Meta<typeof OnboardingSlideShell>;
 export default meta;
 
-type Story = StoryObj<typeof OnboardingSlideShell>;
+type Story = StoryObj<typeof meta>;
 
-/** The opening slide: app mark, one primary action. */
-export const FirstSlide: Story = {};
+const BUTTONS: ShellButton[] = [
+  { key: "back", back: true, action: "back" },
+  { key: "skip", label: "Skip", action: "skip" },
+  { key: "next", label: "Next", primary: true, action: "next" },
+];
 
-/** Mid-tour — a back button joins the primary, and the dots advance. */
-export const MidTour: Story = {
+/** A single standalone card — no step count, so no progress bar or pill. */
+export const Default: Story = {
   args: {
-    slideKey: "tools",
-    hero: (
-      <ShellHero>
-        <RocketLaunchRoundedIcon fontSize="large" />
-      </ShellHero>
-    ),
-    title: "Every tool, one click away",
-    body: "Search or browse the tool picker. Your recent tools stay pinned to the top.",
-    stepIndex: 2,
-    stepCount: 4,
-    buttons: [
-      { key: "back", label: "Back", back: true, action: "back" },
-      { key: "next", label: "Next", primary: true, action: "next" },
-    ],
+    hero: <ShellHero appIcon />,
+    slideKey: "default",
+    title: "Welcome to Stirling PDF",
+    body: "Everything you need to view, edit and manage your PDFs in one place.",
+    stepIndex: 0,
+    stepCount: 1,
+    buttons: [{ key: "next", label: "Next", primary: true, action: "next" }],
+    onAction: () => {},
+    onClose: () => {},
   },
 };
 
-/** The final slide — the primary action closes the tour. */
-export const LastSlide: Story = {
+/** Mid-flow step: shows the step pill + progress bar, plus a back control. */
+export const SteppedWithBack: Story = {
   args: {
+    hero: <ShellHero>2</ShellHero>,
+    slideKey: "stepped",
+    title: "Choose your role",
+    body: "This helps us tailor the tools you see first.",
+    stepIndex: 2,
+    stepCount: 5,
+    buttons: BUTTONS,
+    onAction: () => {},
+    onClose: () => {},
+  },
+};
+
+/** Dismiss (close button + escape-to-close) disabled — used for mandatory
+ * steps like a forced first-login password change. */
+export const NotDismissible: Story = {
+  args: {
+    hero: <ShellHero appIcon />,
+    slideKey: "mandatory",
+    title: "Set a new password",
+    body: "You're using the default password — choose a new one to continue.",
+    stepIndex: 0,
+    stepCount: 3,
+    buttons: [
+      {
+        key: "next",
+        label: "Continue",
+        primary: true,
+        action: "next",
+        disabled: true,
+      },
+    ],
+    onAction: () => {},
+    onClose: () => {},
+    allowDismiss: false,
+  },
+};
+
+/** The final step — the bar is fully filled and the primary action closes the
+ *  tour rather than advancing it. */
+export const LastStep: Story = {
+  args: {
+    hero: <ShellHero appIcon />,
     slideKey: "done",
     title: "You're all set",
     body: "You can reopen this tour any time from the help menu.",
-    stepIndex: 3,
-    stepCount: 4,
+    stepIndex: 4,
+    stepCount: 5,
     buttons: [
-      { key: "back", label: "Back", back: true, action: "back" },
+      { key: "back", back: true, action: "back" },
       { key: "finish", label: "Finish", primary: true, action: "finish" },
     ],
+    onAction: () => {},
+    onClose: () => {},
   },
 };
 
-/** A single-step slide: no progress to show. */
-export const SingleStep: Story = {
-  args: {
-    stepIndex: 0,
-    stepCount: 1,
-    title: "One thing before you start",
-    buttons: [{ key: "ok", label: "Got it", primary: true, action: "close" }],
-  },
-};
-
-/** A step that cannot be dismissed — the only way on is the action row. */
-export const NotDismissable: Story = {
-  args: {
-    allowDismiss: false,
-    title: "Set up two-factor authentication",
-    body: "Your administrator requires this before you can continue.",
-    buttons: [
-      { key: "setup", label: "Set up now", primary: true, action: "setup" },
-    ],
-  },
-};
-
-/** An action that is not yet available — shown rather than hidden, so the
- *  path forward stays visible. */
+/** An action that is not yet available — shown rather than hidden, so the path
+ *  forward stays visible. */
 export const DisabledAction: Story = {
   args: {
+    hero: <ShellHero>1</ShellHero>,
+    slideKey: "choose",
     title: "Choose your install",
     body: "Pick a platform to continue.",
+    stepIndex: 1,
+    stepCount: 4,
     buttons: [
-      { key: "back", label: "Back", back: true, action: "back" },
+      { key: "back", back: true, action: "back" },
       {
         key: "next",
         label: "Download",
@@ -108,24 +117,32 @@ export const DisabledAction: Story = {
         disabled: true,
       },
     ],
+    onAction: () => {},
+    onClose: () => {},
   },
 };
 
-/** A long body, to check the panel scrolls rather than pushing the actions
- *  off-screen. */
+/** A body longer than the viewport must scroll inside the card rather than
+ *  pushing the actions off-screen. */
 export const LongBody: Story = {
   args: {
+    hero: <ShellHero appIcon />,
+    slideKey: "release-notes",
     title: "What changed in this release",
     body: (
       <div style={{ display: "grid", gap: "0.75rem", textAlign: "left" }}>
         {Array.from({ length: 12 }, (_, i) => (
           <p key={i} style={{ margin: 0 }}>
             {i + 1}. Batch processing now runs pipelined rather than serialised,
-            so a queue of documents finishes in roughly the time the slowest one
-            takes.
+            so a queue finishes in roughly the time the slowest document takes.
           </p>
         ))}
       </div>
     ),
+    stepIndex: 0,
+    stepCount: 1,
+    buttons: [{ key: "ok", label: "Got it", primary: true, action: "close" }],
+    onAction: () => {},
+    onClose: () => {},
   },
 };
