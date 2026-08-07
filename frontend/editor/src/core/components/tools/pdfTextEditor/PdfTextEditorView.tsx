@@ -1406,6 +1406,17 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     clearSelection();
   };
 
+  // Clicking the page backdrop deselects, but that is mouse-only: without this
+  // a keyboard user has no way out of a selection. The backdrop itself stays a
+  // plain surface — it is a canvas, not a control.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") handleBackgroundClick();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   const handleSelectionInteraction = useCallback(
     (groupId: string, groupIndex: number, event: React.MouseEvent): boolean => {
       const multiSelect = event.metaKey || event.ctrlKey;
