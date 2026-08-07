@@ -313,10 +313,9 @@ export default defineConfig({
       // The cloud/ layer is the SHARED hosted/SaaS experience consumed by BOTH
       // the saas and desktop leaves, so it must stay platform-portable: no
       // Supabase or Tauri directly, and no raw fetch/localStorage/sessionStorage
-      // — those arrive via @app/* seams that each leaf provides for its own
-      // platform. (The window.location and import.meta.env bans from the ESLint
-      // config used no-restricted-syntax, which oxlint does not implement, so
-      // they are dropped.)
+      // - those arrive via @app/* seams that each leaf provides for its own
+      // platform. window.location and import.meta.env are banned below via the
+      // no-restricted-properties.
       files: [CLOUD_SOURCE],
       rules: {
         "no-restricted-imports": [
@@ -347,6 +346,24 @@ export default defineConfig({
             name: "sessionStorage",
             message:
               "cloud/ must not touch sessionStorage — use an @app/* storage seam so desktop/web can differ.",
+          },
+        ],
+        "no-restricted-properties": [
+          "error",
+          {
+            object: "window",
+            property: "location",
+            message:
+              "cloud/ must not touch window.location - use an @app/* seam (e.g. @app/platform/openExternal) so desktop/web can differ.",
+          },
+          {
+            // Property-only: import.meta.env's object is a MetaProperty, which
+            // no-restricted-properties can't target, so this bans every `.env`
+            // read in cloud/ - which matches the intent (config comes via seams,
+            // never env). cloud/ has no other `.env` access today.
+            property: "env",
+            message:
+              "cloud/ must not read import.meta.env - config comes from @app/constants/app / @app/platform seams, not env.",
           },
         ],
       },
