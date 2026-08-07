@@ -1,5 +1,6 @@
 package stirling.software.common.controller;
 
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -7,6 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -134,18 +137,23 @@ public class JobController {
                                     result.getAllResultFiles()));
         }
 
+        // Handle single file (download directly).
+        // Streams the file through InputStreamResource — Spring closes the stream after writing
+        // the body, so we never hold the full file as a byte[] on heap. Critical when results
+        // can be large PDFs from Compress / Convert / OCR jobs (10s of MiB to GiB).
         if (result.hasFiles() && !result.hasMultipleFiles()) {
             try {
                 List<ResultFile> files = result.getAllResultFiles();
                 ResultFile singleFile = files.get(0);
-
-                byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
+                long size = fileStorage.getFileSize(singleFile.getFileId());
+                InputStream in = fileStorage.retrieveInputStream(singleFile.getFileId());
                 return ResponseEntity.ok()
                         .header("Content-Type", singleFile.getContentType())
                         .header(
                                 "Content-Disposition",
                                 createContentDispositionHeader(singleFile.getFileName()))
-                        .body(fileContent);
+                        .contentLength(size)
+                        .body((Resource) new InputStreamResource(in));
             } catch (Exception e) {
                 log.error("Error retrieving file for job {}: {}", jobId, e.getMessage(), e);
                 return ResponseEntity.internalServerError()
@@ -330,6 +338,8 @@ public class JobController {
                         .body(Map.of("message", "You are not authorized to access this file"));
             }
 
+            // Find the file metadata from any job that contains this file
+            // This is for getting the original filename and content type
             ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
 
             String fileName = resultFile != null ? resultFile.getFileName() : "download";
@@ -338,12 +348,15 @@ public class JobController {
                             ? resultFile.getContentType()
                             : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
-            byte[] fileContent = fileStorage.retrieveBytes(fileId);
-
+            // Stream the file rather than buffering it as byte[] — see job download above for
+            // motivation. Spring closes the InputStream after writing the response body.
+            long size = fileStorage.getFileSize(fileId);
+            InputStream in = fileStorage.retrieveInputStream(fileId);
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)
                     .header("Content-Disposition", createContentDispositionHeader(fileName))
-                    .body(fileContent);
+                    .contentLength(size)
+                    .body((Resource) new InputStreamResource(in));
         } catch (Exception e) {
             log.error("Error retrieving file {}: {}", fileId, e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Error retrieving file");
