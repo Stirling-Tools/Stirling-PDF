@@ -17,7 +17,7 @@
 
 .text-divider .text-divider__label {
   color: rgb(
-    var(--text-divider-label-rgb, var(--gray-400)) /
+    var(--text-divider-label-rgb, var(--gray-600)) /
       var(--text-divider-opacity, 1)
   );
   font-size: 0.75rem; /* 12px */

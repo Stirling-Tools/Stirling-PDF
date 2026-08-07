@@ -94,6 +94,7 @@ export default function ViewerShareButton({
           value={enforcingProgress}
           striped
           animated
+          aria-label={t("policy.enforcingTitle", "Enforcing policy…")}
         />
       ) : (
         <Loader size="xs" />

@@ -469,7 +469,7 @@ export default function Login() {
                 border:
                   "1px solid color-mix(in srgb, var(--c-success) 30%, transparent)",
                 borderRadius: "0.5rem",
-                color: "var(--c-success)",
+                color: "var(--color-green-dark)",
               }}
             >
               <p

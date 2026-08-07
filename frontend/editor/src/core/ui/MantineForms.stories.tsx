@@ -444,6 +444,7 @@ export const Slider_Default: Story = {
             max={1}
             step={0.01}
             formatValue={(x) => x.toFixed(2)}
+            aria-label="Confidence threshold"
           />
         </FormField>
       );
@@ -465,6 +466,7 @@ export const Slider_WithMarks: Story = {
             max={365}
             step={1}
             formatValue={(d) => `${d}d`}
+            aria-label="Retain artifacts for"
             marks={[
               { value: 30, label: "30d" },
               { value: 90, label: "90d" },
@@ -492,6 +494,7 @@ export const Slider_NoLabel: Story = {
             max={100}
             step={1}
             showValue={false}
+            aria-label="Opacity"
           />
         </FormField>
       );

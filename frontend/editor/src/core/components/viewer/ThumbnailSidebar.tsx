@@ -216,7 +216,27 @@ export function ThumbnailSidebar({
                   (_, pageIndex) => (
                     <Box
                       key={pageIndex}
+                      // Each thumbnail jumps the viewer to that page, so it is
+                      // a control. aria-current marks the page being viewed,
+                      // which the highlight alone only conveys visually.
+                      role="button"
+                      tabIndex={0}
+                      aria-label={t("viewer.thumbnails.goToPage", {
+                        defaultValue: "Go to page {{page}}",
+                        page: pageIndex + 1,
+                      })}
+                      aria-current={
+                        scrollState.currentPage === pageIndex + 1
+                          ? "true"
+                          : undefined
+                      }
                       onClick={() => handlePageClick(pageIndex)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handlePageClick(pageIndex);
+                        }
+                      }}
                       style={{
                         cursor: "pointer",
                         borderRadius: "8px",
@@ -306,7 +326,7 @@ export function ThumbnailSidebar({
                           fontWeight: 500,
                           color:
                             scrollState.currentPage === pageIndex + 1
-                              ? "var(--color-primary-500)"
+                              ? "var(--c-accent-text)"
                               : "var(--c-text-subtle)",
                         }}
                       >

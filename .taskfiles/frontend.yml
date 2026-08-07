@@ -210,6 +210,16 @@ tasks:
       #   task frontend:storybook:test -- Button
       - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
 
+  storybook:coverage:
+    desc: "Which rendered surfaces have a story, and what each gap would need"
+    summary: |
+      Reports coverage by import rather than by adjacent file, and classifies
+      every gap by the work a story needs — props, a context slice, MSW
+      handlers or router state. Pass --todo to list every gap, or
+      --area <path> to scope it.
+    cmds:
+      - node editor/scripts/storybook-coverage.mjs {{.CLI_ARGS}}
+
   storybook:a11y:
     desc: "a11y regression gate over every story: fail only on NEW axe violations"
     deps: [prepare, storybook:browser]

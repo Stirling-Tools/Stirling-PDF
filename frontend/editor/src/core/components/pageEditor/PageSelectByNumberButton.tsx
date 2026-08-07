@@ -35,16 +35,17 @@ export default function PageSelectByNumberButton({
     >
       <div>
         <Popover position="left" withArrow shadow="md" offset={8}>
+          {/* The button is the target, not a wrapper: Popover.Target puts
+              aria-haspopup and aria-expanded on whatever it wraps, and
+              aria-expanded is not a permitted attribute on a plain div. */}
           <Popover.Target>
-            <div style={{ display: "inline-flex" }}>
-              <ActionIcon
-                variant="tertiary"
-                disabled={disabled || totalPages === 0}
-                aria-label={label}
-              >
-                <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </div>
+            <ActionIcon
+              variant="tertiary"
+              disabled={disabled || totalPages === 0}
+              aria-label={label}
+            >
+              <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
+            </ActionIcon>
           </Popover.Target>
           <Popover.Dropdown>
             <div style={{ minWidth: "24rem", maxWidth: "32rem" }}>

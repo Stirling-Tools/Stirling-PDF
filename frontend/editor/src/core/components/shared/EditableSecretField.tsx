@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useId, useState, useRef, useEffect } from "react";
 import { PasswordInput, Group, Tooltip, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -32,6 +32,7 @@ export default function EditableSecretField({
   error,
 }: EditableSecretFieldProps) {
   const { t } = useTranslation();
+  const fieldId = useId();
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,6 +67,7 @@ export default function EditableSecretField({
     <div>
       {label && (
         <label
+          htmlFor={fieldId}
           style={{
             display: "block",
             marginBottom: 4,
@@ -91,7 +93,13 @@ export default function EditableSecretField({
       {isMasked && !isEditing ? (
         // Masked value from backend: show display + Edit button
         <Group gap="xs" align="flex-end">
-          <TextInput value="••••••••" disabled style={{ flex: 1 }} readOnly />
+          <TextInput
+            id={fieldId}
+            value="••••••••"
+            disabled
+            style={{ flex: 1 }}
+            readOnly
+          />
           <Tooltip label={t("editSecret")} withArrow>
             <ActionIcon
               variant="secondary"
@@ -110,6 +118,7 @@ export default function EditableSecretField({
       ) : isEditing ? (
         // Edit mode: normal password input
         <PasswordInput
+          id={fieldId}
           ref={inputRef}
           value={tempValue}
           onChange={(e) => setTempValue(e.currentTarget.value)}
@@ -125,6 +134,7 @@ export default function EditableSecretField({
       ) : (
         // Normal password input: empty or user typing
         <PasswordInput
+          id={fieldId}
           value={value}
           onChange={(e) => onChange(e.currentTarget.value)}
           placeholder={placeholder}

@@ -118,7 +118,16 @@ const AutoRotateReport = ({ reports }: AutoRotateReportProps) => {
 
           {/* A per-page list rather than a table: the tool panel is too narrow
               for five columns, which truncated the badges and wrapped notes. */}
-          <ScrollArea.Autosize mah={300}>
+          {/* The per-page list scrolls but holds no control of its own, so it
+              needs a tab stop to be reachable without a mouse. */}
+          <ScrollArea.Autosize
+            mah={300}
+            viewportProps={{
+              tabIndex: 0,
+              role: "group",
+              "aria-label": t("autoRotate.report.pages", "Per-page results"),
+            }}
+          >
             <Stack gap={0}>
               {report.pages.map((page, index) => {
                 const confidence = confidenceValue(page);

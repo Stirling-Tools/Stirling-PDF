@@ -18,7 +18,14 @@ import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
+import { PreferencesProvider } from "@core/contexts/PreferencesContext";
+import { SidebarProvider } from "@core/contexts/SidebarContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
+import { MantineProvider } from "@mantine/core";
+import {
+  mantineTheme as editorMantineTheme,
+  editorCssVariablesResolver,
+} from "@core/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
@@ -29,6 +36,11 @@ import { rtlLanguages, supportedLanguages } from "@core/i18n/languages";
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
 import "@core/theme/index.css";
+// The editor's Mantine theme resolves its palette through the --color-* vocab
+// defined here. The app picks this up via styles/tailwind.css; Storybook has no
+// tailwind entry, so without it every var(--color-*) in the theme is undefined
+// and Mantine silently falls back to its stock palette.
+import "@core/styles/theme.css";
 import "@core/tokens/base.css";
 
 // Storybook-only: bundle every shipped locale's TOML at build time via a ?raw
@@ -190,6 +202,37 @@ const withLocale: Decorator = (Story, context) => {
   return <Story />;
 };
 
+/**
+ * Applies the Mantine theme the story's component actually runs under in the
+ * app: PortalApp wraps the Processor in SuiProvider, while the editor wraps
+ * everything else in its own ThemeProvider. Getting this wrong is not just
+ * cosmetic — the two themes carry different neutral ramps, so rendering an
+ * editor component under the Processor's theme drops it onto Mantine's stock
+ * greys and reports contrast failures the app doesn't have.
+ */
+function StoryTheme({
+  isPortalStory,
+  colorScheme,
+  children,
+}: {
+  isPortalStory: boolean;
+  colorScheme: "light" | "dark";
+  children: React.ReactNode;
+}) {
+  if (isPortalStory) {
+    return <SuiProvider colorScheme={colorScheme}>{children}</SuiProvider>;
+  }
+  return (
+    <MantineProvider
+      theme={editorMantineTheme}
+      cssVariablesResolver={editorCssVariablesResolver}
+      forceColorScheme={colorScheme}
+    >
+      {children}
+    </MantineProvider>
+  );
+}
+
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
   const linkState =
@@ -201,25 +244,36 @@ const withProviders: Decorator = (Story, context) => {
   // anything that isn't "dark" as light — matching the addon's own
   // `selected || defaultTheme` fallback where defaultTheme is light.
   const colorScheme = context.globals.theme === "dark" ? "dark" : "light";
+  // Storybook titles are the routing key here: the Processor's stories are all
+  // filed under "Portal/".
+  const isPortalStory = (context.title ?? "").startsWith("Portal/");
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <SchemeSetup scheme={colorScheme} />
           <ThemeBridge theme={colorScheme}>
-            <SuiProvider colorScheme={colorScheme}>
+            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
               {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
               <LinkProvider key={linkState} initialState={linkState}>
                 <TierKey tier={tier}>
-                  <UIProvider>
-                    <Suspense fallback={null}>
-                      <Story />
-                    </Suspense>
-                  </UIProvider>
+                  {/* Tooltip reads the user's logo preference and the sidebar
+                      geometry it positions against. It is used by ~100
+                      components, so without these a story that renders one
+                      throws. The real app always has both mounted. */}
+                  <PreferencesProvider>
+                    <SidebarProvider>
+                      <UIProvider>
+                        <Suspense fallback={null}>
+                          <Story />
+                        </Suspense>
+                      </UIProvider>
+                    </SidebarProvider>
+                  </PreferencesProvider>
                 </TierKey>
               </LinkProvider>
-            </SuiProvider>
+            </StoryTheme>
           </ThemeBridge>
         </ThemeProvider>
       </QueryClientProvider>
@@ -246,6 +300,14 @@ const preview: Preview = {
       // any violation. Context is left at the addon default (the document root)
       // so it resolves under both the Storybook UI and the Vitest browser mount.
       test: "error",
+      context: {
+        // Nodes carrying this attribute render a facsimile of the user's own
+        // document — their stamp text, their watermark, in the colour and
+        // opacity they chose. WCAG contrast governs the interface, not the
+        // content authored through it, and the controls that set those values
+        // are checked normally.
+        exclude: ["[data-user-content-preview]"],
+      },
     },
   },
   globalTypes: {
