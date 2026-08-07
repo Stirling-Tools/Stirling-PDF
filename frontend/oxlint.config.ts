@@ -82,7 +82,6 @@ const noExplicitAnyExcludes = [
   "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/contexts/viewer/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/hooks/tools/shared/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/services/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
   "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
