@@ -7384,19 +7384,6 @@ keepFor = "Čuvaj tokom"
 1 = "Automatsko arhiviranje"
 2 = "Blokada brisanja"
 
-[portal.policies.config.routing]
-summary = "Rutira dokumente ka pravom odredištu na osnovu tipa i klasifikacije."
-
-[portal.policies.config.routing.fields]
-destination = "Odredište"
-notify = "Obavesti pri rutiranju"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Automatski klasifikuj"
-1 = "Rutiraj u folder"
-2 = "Webhook obaveštenje"
-
 [portal.policies.config.security]
 summary = "Detektuje i rediguje PII, uklanja aktivni sadržaj (JavaScript) i dodaje vodene žigove dokumentima."
 

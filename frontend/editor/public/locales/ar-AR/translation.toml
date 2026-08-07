@@ -7384,19 +7384,6 @@ keepFor = "الاحتفاظ لمدة"
 1 = "أرشفة تلقائية"
 2 = "حظر الحذف"
 
-[portal.policies.config.routing]
-summary = "يوجّه المستندات إلى الوجهة المناسبة بناءً على النوع والتصنيف."
-
-[portal.policies.config.routing.fields]
-destination = "الوجهة"
-notify = "الإخطار عند التوجيه"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "تصنيف تلقائي"
-1 = "توجيه إلى مجلد"
-2 = "إشعار webhook"
-
 [portal.policies.config.security]
 summary = "يكتشف وينقح PII، ويزيل المحتوى النشط (JavaScript)، ويضع علامات مائية على المستندات."
 

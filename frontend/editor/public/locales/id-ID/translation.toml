@@ -7384,19 +7384,6 @@ keepFor = "Simpan selama"
 1 = "Arsip otomatis"
 2 = "Blokir penghapusan"
 
-[portal.policies.config.routing]
-summary = "Merutekan dokumen ke tujuan yang tepat berdasarkan jenis dan klasifikasi."
-
-[portal.policies.config.routing.fields]
-destination = "Tujuan"
-notify = "Beri tahu saat dirutekan"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Klasifikasi otomatis"
-1 = "Rutekan ke folder"
-2 = "Notifikasi webhook"
-
 [portal.policies.config.security]
 summary = "Mendeteksi dan meredaksi PII, menghapus konten aktif (JavaScript), dan memberi watermark pada dokumen."
 

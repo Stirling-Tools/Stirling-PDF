@@ -5,6 +5,8 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import type { ReactNode } from "react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import {
@@ -16,8 +18,15 @@ import {
   type PipelineStep,
 } from "@portal/api/policies";
 
+// The wizard navigates to the source builder, so it needs a router like the app's.
+const Providers = ({ children }: { children: ReactNode }) => (
+  <MemoryRouter initialEntries={["/"]}>
+    <PortalTestProviders>{children}</PortalTestProviders>
+  </MemoryRouter>
+);
+
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: PortalTestProviders });
+  baseRender(ui, { wrapper: Providers });
 
 // Deterministic i18n: return the fallback when given, else the key. initReactI18next is stubbed
 // because the import graph pulls core/i18n.ts, which registers it as a plugin.

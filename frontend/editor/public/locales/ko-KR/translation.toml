@@ -7384,19 +7384,6 @@ keepFor = "보관 기간"
 1 = "자동 보관"
 2 = "삭제 차단"
 
-[portal.policies.config.routing]
-summary = "유형과 분류에 따라 문서를 적절한 대상으로 라우팅합니다."
-
-[portal.policies.config.routing.fields]
-destination = "대상"
-notify = "라우팅 시 알림"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "자동 분류"
-1 = "폴더로 라우팅"
-2 = "Webhook 알림"
-
 [portal.policies.config.security]
 summary = "PII를 감지 및 마스킹하고, 활성 콘텐츠(JavaScript)를 제거하며, 문서에 워터마크를 적용합니다."
 

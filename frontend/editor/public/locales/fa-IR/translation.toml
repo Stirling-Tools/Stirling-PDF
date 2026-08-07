@@ -7384,19 +7384,6 @@ keepFor = "نگه‌داری به مدت"
 1 = "آرشیو خودکار"
 2 = "مسدودسازی حذف"
 
-[portal.policies.config.routing]
-summary = "اسناد را بر اساس نوع و طبقه‌بندی به مقصد درست هدایت می‌کند."
-
-[portal.policies.config.routing.fields]
-destination = "مقصد"
-notify = "اطلاع‌رسانی هنگام routing"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "طبقه‌بندی خودکار"
-1 = "هدایت به پوشه"
-2 = "اطلاع‌رسانی webhook"
-
 [portal.policies.config.security]
 summary = "PII را شناسایی و redaction می‌کند، محتوای فعال (JavaScript) را حذف می‌کند و اسناد را watermark می‌کند."
 

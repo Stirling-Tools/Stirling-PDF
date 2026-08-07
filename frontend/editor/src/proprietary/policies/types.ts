@@ -36,14 +36,25 @@ export interface WireOutputSpec {
   options: Partial<WireOutputOptions>;
 }
 
+/** When a policy fires automatically. `type` keys a backend trigger bean. */
+export interface WireTriggerConfig {
+  type: string;
+  options: Record<string, unknown>;
+}
+
 export interface WirePolicy {
   id: string;
   name: string;
   owner?: string;
   enabled: boolean;
-  trigger: null;
+  /** Null means no server-side trigger (editor-only policies fire via /run). */
+  trigger: WireTriggerConfig | null;
+  /** Persisted backend sources the policy pulls from (excludes the virtual editor). */
+  sourceIds?: string[];
   steps: WirePipelineStep[];
   output: WireOutputSpec;
+  /** Saved sources used as write targets; empty means the inline output. */
+  outputIds?: string[];
   teamId?: string;
 }
 
@@ -90,6 +101,10 @@ export interface PolicyDecodedState {
   maxRetries: number;
   retryDelayMinutes: number;
   steps: WirePipelineStep[];
+  /** Server-side trigger, derived from the selected sources; null = editor-only. */
+  trigger: WireTriggerConfig | null;
+  /** Saved sources the output is also delivered to (write targets). */
+  outputIds: string[];
 }
 
 // ── Display types (returned by runs.ts derivations) ───────────────────────────

@@ -7384,19 +7384,6 @@ keepFor = "Megőrzés időtartama"
 1 = "Automatikus archiválás"
 2 = "Törlési blokk"
 
-[portal.policies.config.routing]
-summary = "A dokumentumokat típus és osztályozás alapján a megfelelő célhelyre irányítja."
-
-[portal.policies.config.routing.fields]
-destination = "Célhely"
-notify = "Értesítés útválasztáskor"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Automatikus osztályozás"
-1 = "Irányítás mappába"
-2 = "Webhook értesítés"
-
 [portal.policies.config.security]
 summary = "Észleli és kitakarja a PII-t, eltávolítja az aktív tartalmat (JavaScript), és vízjelet helyez el a dokumentumokon."
 

@@ -7384,19 +7384,6 @@ keepFor = "Keep for"
 1 = "Auto-archive"
 2 = "Deletion block"
 
-[portal.policies.config.routing]
-summary = "Type, classification എന്നിവയുടെ അടിസ്ഥാനത്തിൽ documents ശരിയായ destination-ലേക്ക് route ചെയ്യുന്നു."
-
-[portal.policies.config.routing.fields]
-destination = "Destination"
-notify = "Route ചെയ്യുമ്പോൾ notify ചെയ്യുക"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Auto-classify"
-1 = "Folder-ലേക്ക് route ചെയ്യുക"
-2 = "Webhook notify"
-
 [portal.policies.config.security]
 summary = "PII detect ചെയ്ത് redact ചെയ്യുന്നു, active content (JavaScript) strip ചെയ്യുന്നു, documents watermark ചെയ്യുന്നു."
 

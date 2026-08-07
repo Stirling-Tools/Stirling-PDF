@@ -23,6 +23,8 @@ const FULL_STATE: PolicyDecodedState = {
       parameters: { mode: "automatic" },
     },
   ],
+  trigger: null,
+  outputIds: [],
 };
 
 describe("toWirePolicy", () => {
@@ -47,6 +49,21 @@ describe("toWirePolicy", () => {
   it("preserves steps at the top level", () => {
     const wire = toWirePolicy(FULL_STATE);
     expect(wire.steps).toEqual(FULL_STATE.steps);
+  });
+
+  it("emits real sources as sourceIds, excluding the virtual editor", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    expect(wire.sourceIds).toEqual(["gdrive"]);
+  });
+
+  it("passes trigger and outputIds through", () => {
+    const wire = toWirePolicy({
+      ...FULL_STATE,
+      trigger: { type: "folder-watch", options: {} },
+      outputIds: ["src-out"],
+    });
+    expect(wire.trigger).toEqual({ type: "folder-watch", options: {} });
+    expect(wire.outputIds).toEqual(["src-out"]);
   });
 });
 
@@ -117,5 +134,24 @@ describe("fromWirePolicy → round-trip", () => {
     const wire = toWirePolicy(FULL_STATE);
     delete (wire.output.options as Record<string, unknown>).fieldValues;
     expect(fromWirePolicy(wire).fieldValues).toEqual({});
+  });
+
+  it("merges wire sourceIds into sources for pre-sourceIds policies", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    // Simulate a record whose metadata predates the source: only sourceIds has it.
+    (wire.output.options as Record<string, unknown>).sources = ["editor"];
+    wire.sourceIds = ["gdrive"];
+    expect(fromWirePolicy(wire).sources).toEqual(["editor", "gdrive"]);
+  });
+
+  it("round-trips trigger and outputIds", () => {
+    const wire = toWirePolicy({
+      ...FULL_STATE,
+      trigger: { type: "webhook", options: {} },
+      outputIds: ["dest-1", "dest-2"],
+    });
+    const decoded = fromWirePolicy(wire);
+    expect(decoded.trigger).toEqual({ type: "webhook", options: {} });
+    expect(decoded.outputIds).toEqual(["dest-1", "dest-2"]);
   });
 });
