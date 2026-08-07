@@ -810,6 +810,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                         size="lg"
                         animated
                         radius="xl"
+                        aria-label={t(
+                          "update.downloadProgress",
+                          "Download progress",
+                        )}
                       />
                       {desktopInstall.state === "installing" && (
                         <Alert variant="light" color="blue" radius="sm" py="xs">

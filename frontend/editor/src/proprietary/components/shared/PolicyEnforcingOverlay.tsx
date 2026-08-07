@@ -110,6 +110,10 @@ export function PolicyEnforcingOverlay({
               striped
               animated
               color={accentVar}
+              // Without a name the bar announces a bare percentage; the
+              // heading above it is visual context a screen reader does not
+              // get from the progressbar node.
+              aria-label={t("policy.enforcingTitle", "Enforcing policy…")}
             />
           ) : (
             <Loader size="xs" color={accentVar} />

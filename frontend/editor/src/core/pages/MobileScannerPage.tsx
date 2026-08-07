@@ -1053,7 +1053,11 @@ export default function MobileScannerPage() {
           <Text size="sm" mb="xs">
             {t("mobileScanner.uploading", "Uploading...")}
           </Text>
-          <Progress value={uploadProgress} animated />
+          <Progress
+            value={uploadProgress}
+            animated
+            aria-label={t("mobileScanner.uploading", "Uploading...")}
+          />
         </Box>
       )}
 

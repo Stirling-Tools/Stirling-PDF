@@ -1752,6 +1752,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
               value={conversionProgress?.percent || 0}
               size="lg"
               radius="md"
+              aria-label={t(
+                "pdfTextEditor.converting",
+                "Converting PDF to editable format...",
+              )}
             />
           </Stack>
         </Card>
