@@ -27,6 +27,7 @@ import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepo
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -132,6 +133,51 @@ class WorkflowParticipantValidateCertificateTest {
 
         mockMvc.perform(
                         multipart("/api/v1/workflow/participant/validate-certificate")
+                                .param("participantToken", VALID_TOKEN)
+                                .param("certType", "P12")
+                                .param("password", "pass"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void oversizedCertificate_returns413BeforeValidation() throws Exception {
+        when(participantRepository.findByShareToken(VALID_TOKEN))
+                .thenReturn(Optional.of(activeParticipant()));
+
+        MockMultipartFile certFile =
+                new MockMultipartFile(
+                        "p12File",
+                        "cert.p12",
+                        "application/octet-stream",
+                        new byte[(int) WorkflowUploadUtils.MAX_CREDENTIAL_FILE_SIZE_BYTES + 1]);
+
+        mockMvc.perform(
+                        multipart("/api/v1/workflow/participant/validate-certificate")
+                                .file(certFile)
+                                .param("participantToken", VALID_TOKEN)
+                                .param("certType", "P12")
+                                .param("password", "pass"))
+                .andExpect(status().isPayloadTooLarge());
+
+        org.mockito.Mockito.verifyNoInteractions(certificateSubmissionValidator);
+    }
+
+    @Test
+    void multipleCertificateFiles_returns400() throws Exception {
+        when(participantRepository.findByShareToken(VALID_TOKEN))
+                .thenReturn(Optional.of(activeParticipant()));
+
+        MockMultipartFile p12File =
+                new MockMultipartFile(
+                        "p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
+        MockMultipartFile jksFile =
+                new MockMultipartFile(
+                        "jksFile", "cert.jks", "application/octet-stream", DUMMY_CERT);
+
+        mockMvc.perform(
+                        multipart("/api/v1/workflow/participant/validate-certificate")
+                                .file(p12File)
+                                .file(jksFile)
                                 .param("participantToken", VALID_TOKEN)
                                 .param("certType", "P12")
                                 .param("password", "pass"))

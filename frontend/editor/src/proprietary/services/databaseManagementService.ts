@@ -27,11 +27,11 @@ const databaseManagementService = {
   },
 
   async createBackup(): Promise<void> {
-    await apiClient.get("/api/v1/database/createDatabaseBackup");
+    await apiClient.post("/api/v1/database/createDatabaseBackup");
   },
 
   async importFromFileName(fileName: string): Promise<void> {
-    await apiClient.get(
+    await apiClient.post(
       `/api/v1/database/import-database-file/${encodeURIComponent(fileName)}`,
     );
   },
@@ -44,7 +44,7 @@ const databaseManagementService = {
   },
 
   async deleteBackup(fileName: string): Promise<void> {
-    await apiClient.get(
+    await apiClient.delete(
       `/api/v1/database/delete/${encodeURIComponent(fileName)}`,
     );
   },

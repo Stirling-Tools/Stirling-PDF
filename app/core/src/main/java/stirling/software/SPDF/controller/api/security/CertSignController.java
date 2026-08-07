@@ -83,6 +83,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
+import stirling.software.common.util.CertificateFileUtils;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -204,6 +205,11 @@ public class CertSignController {
                     "certificate type");
         }
 
+        CertificateFileUtils.validateSize(privateKeyFile);
+        CertificateFileUtils.validateSize(certFile);
+        CertificateFileUtils.validateSize(p12File);
+        CertificateFileUtils.validateSize(jksfile);
+
         KeyStore ks = null;
         String keystorePassword = password;
         Provider signingProvider = null;
@@ -219,8 +225,10 @@ public class CertSignController {
                                 certFile, "PEM certificate", "certificate file is required");
                 ks = KeyStore.getInstance("JKS");
                 ks.load(null);
-                PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
-                Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
+                byte[] privateKeyBytes = CertificateFileUtils.read(privateKeyFile);
+                byte[] certificateBytes = CertificateFileUtils.read(certFile);
+                PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyBytes, password);
+                Certificate cert = (Certificate) getCertificateFromPEM(certificateBytes);
                 ks.setKeyEntry(
                         "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
                 break;
@@ -230,14 +238,18 @@ public class CertSignController {
                         validateFilePresent(
                                 p12File, "PKCS12 keystore", "PKCS12/PFX keystore file is required");
                 ks = KeyStore.getInstance("PKCS12");
-                ks.load(p12File.getInputStream(), password.toCharArray());
+                ks.load(
+                        new ByteArrayInputStream(CertificateFileUtils.read(p12File)),
+                        password.toCharArray());
                 break;
             case "JKS":
                 jksfile =
                         validateFilePresent(
                                 jksfile, "JKS keystore", "JKS keystore file is required");
                 ks = KeyStore.getInstance("JKS");
-                ks.load(jksfile.getInputStream(), password.toCharArray());
+                ks.load(
+                        new ByteArrayInputStream(CertificateFileUtils.read(jksfile)),
+                        password.toCharArray());
                 break;
             case "SERVER":
                 if (serverCertificateService == null) {

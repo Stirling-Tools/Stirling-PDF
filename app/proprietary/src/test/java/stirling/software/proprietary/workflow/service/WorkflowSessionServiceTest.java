@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -41,6 +42,7 @@ import stirling.software.proprietary.workflow.model.WorkflowStatus;
 import stirling.software.proprietary.workflow.model.WorkflowType;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -55,6 +57,7 @@ class WorkflowSessionServiceTest {
     @Mock private ObjectMapper objectMapper;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private MetadataEncryptionService metadataEncryptionService;
+    @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
 
     @InjectMocks private WorkflowSessionService service;
 
@@ -108,6 +111,86 @@ class WorkflowSessionServiceTest {
                 ArgumentCaptor.forClass(WorkflowParticipant.class);
         verify(workflowParticipantRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(ParticipantStatus.SIGNED);
+    }
+
+    @Test
+    void signDocument_inactiveSessionDoesNotChangeParticipant() {
+        User user = user("alice");
+        WorkflowParticipant participant = pendingParticipant(user);
+        WorkflowSession session = sessionWithParticipant("inactive", participant);
+        session.setStatus(WorkflowStatus.COMPLETED);
+
+        SignDocumentRequest req = new SignDocumentRequest();
+        req.setCertType("SERVER");
+
+        assertThatThrownBy(() -> service.signDocument("inactive", user, req))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(participant.getStatus()).isEqualTo(ParticipantStatus.PENDING);
+        verify(workflowParticipantRepository, never()).save(any());
+    }
+
+    @Test
+    void signDocument_oversizedCredentialIsRejectedWithoutReadingIt() throws Exception {
+        User user = user("alice");
+        WorkflowParticipant participant = pendingParticipant(user);
+        sessionWithParticipant("oversized", participant);
+        MultipartFile credential = mock(MultipartFile.class);
+        when(credential.getSize())
+                .thenReturn(WorkflowUploadUtils.MAX_CREDENTIAL_FILE_SIZE_BYTES + 1);
+
+        SignDocumentRequest req = new SignDocumentRequest();
+        req.setCertType("PKCS12");
+        req.setP12File(credential);
+
+        assertThatThrownBy(() -> service.signDocument("oversized", user, req))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
+
+        verify(credential, never()).getBytes();
+        verify(workflowParticipantRepository, never()).save(any());
+    }
+
+    @Test
+    void signDocument_readsCredentialOnlyOnceForValidationAndEncryption() throws Exception {
+        User user = user("alice");
+        WorkflowParticipant participant = pendingParticipant(user);
+        sessionWithParticipant("single-read", participant);
+        MultipartFile credential = mock(MultipartFile.class);
+        byte[] bytes = new byte[] {1, 2, 3};
+        when(credential.getSize()).thenReturn((long) bytes.length);
+        when(credential.getBytes()).thenReturn(bytes);
+        when(metadataEncryptionService.encryptBytes(bytes)).thenReturn("encrypted");
+
+        SignDocumentRequest req = new SignDocumentRequest();
+        req.setCertType("PKCS12");
+        req.setP12File(credential);
+
+        service.signDocument("single-read", user, req);
+
+        verify(credential).getBytes();
+        verify(certificateSubmissionValidator).validateAndExtractInfo(bytes, "PKCS12", null);
+        verify(metadataEncryptionService).encryptBytes(bytes);
+    }
+
+    @Test
+    void signDocument_oversizedWetSignatureDataIsRejected() {
+        User user = user("alice");
+        WorkflowParticipant participant = pendingParticipant(user);
+        sessionWithParticipant("wet-signature", participant);
+
+        SignDocumentRequest req = new SignDocumentRequest();
+        req.setCertType("SERVER");
+        req.setWetSignaturesData("x".repeat(WorkflowUploadUtils.MAX_WET_SIGNATURE_DATA_CHARS + 1));
+
+        assertThatThrownBy(() -> service.signDocument("wet-signature", user, req))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
+
+        verify(workflowParticipantRepository, never()).save(any());
     }
 
     // -------------------------------------------------------------------------

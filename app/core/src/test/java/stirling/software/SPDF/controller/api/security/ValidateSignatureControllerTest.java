@@ -2,6 +2,9 @@ package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
@@ -26,11 +29,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CertificateFileUtils;
 
 @DisplayName("ValidateSignatureController Tests")
 @ExtendWith(MockitoExtension.class)
@@ -157,6 +163,26 @@ class ValidateSignatureControllerTest {
             assertThrows(
                     RuntimeException.class,
                     () -> validateSignatureController.validateSignature(request));
+        }
+
+        @Test
+        @DisplayName("Should reject an oversized custom trust certificate before reading it")
+        void testValidateSignature_OversizedCertFile() throws Exception {
+            MultipartFile oversizedCert = mock(MultipartFile.class);
+            when(oversizedCert.isEmpty()).thenReturn(false);
+            when(oversizedCert.getSize())
+                    .thenReturn(CertificateFileUtils.MAX_CERTIFICATE_FILE_SIZE_BYTES + 1);
+
+            SignatureValidationRequest request = new SignatureValidationRequest();
+            request.setCertFile(oversizedCert);
+
+            ResponseStatusException exception =
+                    assertThrows(
+                            ResponseStatusException.class,
+                            () -> validateSignatureController.validateSignature(request));
+
+            assertEquals(413, exception.getStatusCode().value());
+            verify(oversizedCert, never()).getBytes();
         }
 
         @Test

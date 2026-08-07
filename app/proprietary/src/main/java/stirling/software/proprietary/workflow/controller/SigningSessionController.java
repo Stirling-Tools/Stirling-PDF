@@ -41,8 +41,10 @@ import stirling.software.proprietary.workflow.dto.ParticipantRequest;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
-import stirling.software.proprietary.workflow.service.SigningFinalizationService;
+import stirling.software.proprietary.workflow.service.WorkflowFinalizationCoordinator;
+import stirling.software.proprietary.workflow.service.WorkflowFinalizationCoordinator.FinalizedWorkflow;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 @Slf4j
 @RestController
@@ -55,7 +57,7 @@ public class SigningSessionController {
 
     private final WorkflowSessionService workflowSessionService;
     private final UserService userService;
-    private final SigningFinalizationService signingFinalizationService;
+    private final WorkflowFinalizationCoordinator workflowFinalizationCoordinator;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -239,36 +241,9 @@ public class SigningSessionController {
 
         try {
             User owner = getCurrentUser(principal);
-            WorkflowSession session =
-                    workflowSessionService.getSessionWithParticipantsForOwner(sessionId, owner);
-
-            byte[] originalPdf = workflowSessionService.getOriginalFile(sessionId);
-            byte[] pdf = signingFinalizationService.finalizeDocument(session, originalPdf);
-
-            String filename = session.getDocumentName().replace(".pdf", "") + "_shared_signed.pdf";
-            workflowSessionService.storeProcessedFile(session, pdf, filename);
-            workflowSessionService.finalizeSession(sessionId, owner);
-            workflowSessionService.deleteOriginalFile(session);
-
-            try {
-                signingFinalizationService.clearSensitiveMetadata(session);
-            } catch (Exception e) {
-                log.error(
-                        "SECURITY: Failed to clear sensitive metadata for session {} "
-                                + "(participants: {}). Keystore credentials may remain in the "
-                                + "database until manual cleanup.",
-                        sessionId,
-                        session.getParticipants() != null
-                                ? session.getParticipants().stream().map(p -> p.getEmail()).toList()
-                                : "unknown",
-                        e);
-                throw new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Document signed successfully but post-signing cleanup failed. "
-                                + "Contact your administrator to complete the cleanup.");
-            }
-
-            return WebResponseUtils.bytesToWebResponse(pdf, filename);
+            FinalizedWorkflow finalized =
+                    workflowFinalizationCoordinator.finalizeSession(sessionId, owner);
+            return WebResponseUtils.bytesToWebResponse(finalized.pdf(), finalized.filename());
         } catch (Exception e) {
             log.error("Error finalizing session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -436,14 +411,27 @@ public class SigningSessionController {
                     HttpStatus.BAD_REQUEST, "No certificate file provided");
         }
 
-        try {
-            byte[] keystoreBytes = null;
-            if (p12File != null && !p12File.isEmpty()) {
-                keystoreBytes = p12File.getBytes();
-            } else if (jksFile != null && !jksFile.isEmpty()) {
-                keystoreBytes = jksFile.getBytes();
-            }
+        WorkflowUploadUtils.rejectMultipleKeystores(p12File, jksFile);
 
+        byte[] keystoreBytes;
+        try {
+            keystoreBytes =
+                    WorkflowUploadUtils.readCredentialFile(
+                            p12File != null && !p12File.isEmpty() ? p12File : jksFile);
+        } catch (IOException e) {
+            log.error("Error reading certificate file during pre-validation", e);
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            false,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false,
+                            "Failed to read certificate file"));
+        }
+
+        try {
             CertificateInfo info =
                     certificateSubmissionValidator.validateAndExtractInfo(
                             keystoreBytes, certType, password);
@@ -470,17 +458,6 @@ public class SigningSessionController {
             return ResponseEntity.ok(
                     new CertificateValidationResponse(
                             false, null, null, null, null, false, e.getReason()));
-        } catch (IOException e) {
-            log.error("Error reading certificate file during pre-validation", e);
-            return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            false,
-                            null,
-                            null,
-                            null,
-                            null,
-                            false,
-                            "Failed to read certificate file"));
         }
     }
 

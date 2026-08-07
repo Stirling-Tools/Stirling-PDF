@@ -24,6 +24,9 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.MobileScannerService;
 import stirling.software.common.service.MobileScannerService.FileMetadata;
 import stirling.software.common.service.MobileScannerService.SessionInfo;
+import stirling.software.common.service.MobileScannerService.SessionNotFoundException;
+import stirling.software.common.service.MobileScannerService.UploadRateLimitExceededException;
+import stirling.software.common.service.MobileScannerService.UploadSizeLimitExceededException;
 
 @ExtendWith(MockitoExtension.class)
 class MobileScannerControllerTest {
@@ -170,6 +173,50 @@ class MobileScannerControllerTest {
                 controller.uploadFiles("test-session", files);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    void uploadFiles_whenSessionDoesNotExist_returns404() throws Exception {
+        enableMobileScanner();
+        List<MultipartFile> files =
+                List.of(new MockMultipartFile("files", "scan.jpg", "image/jpeg", new byte[] {1}));
+        doThrow(new SessionNotFoundException("Session not found"))
+                .when(mobileScannerService)
+                .uploadFiles(eq("unknown"), any());
+
+        ResponseEntity<Map<String, Object>> response = controller.uploadFiles("unknown", files);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void uploadFiles_whenRateLimited_returns429() throws Exception {
+        enableMobileScanner();
+        List<MultipartFile> files =
+                List.of(new MockMultipartFile("files", "scan.jpg", "image/jpeg", new byte[] {1}));
+        doThrow(new UploadRateLimitExceededException("Rate limit exceeded"))
+                .when(mobileScannerService)
+                .uploadFiles(eq("test-session"), any());
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.uploadFiles("test-session", files);
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+    }
+
+    @Test
+    void uploadFiles_whenQuotaExceeded_returns413() throws Exception {
+        enableMobileScanner();
+        List<MultipartFile> files =
+                List.of(new MockMultipartFile("files", "scan.jpg", "image/jpeg", new byte[] {1}));
+        doThrow(new UploadSizeLimitExceededException("Quota exceeded"))
+                .when(mobileScannerService)
+                .uploadFiles(eq("test-session"), any());
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.uploadFiles("test-session", files);
+
+        assertEquals(HttpStatus.CONTENT_TOO_LARGE, response.getStatusCode());
     }
 
     // --- getSessionFiles tests ---

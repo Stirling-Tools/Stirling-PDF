@@ -19,7 +19,7 @@ public class RequestUriUtils {
 
         // API routes are never static except for the public status endpoint
         if (normalizedUri.startsWith("/api/")) {
-            return normalizedUri.startsWith("/api/v1/info/status");
+            return matchesPathOrChild(normalizedUri, "/api/v1/info/status");
         }
 
         // Well-known static asset directories (backend + React build artifacts)
@@ -67,7 +67,7 @@ public class RequestUriUtils {
         // cookie, so the server can't authenticate the navigation itself). The
         // portal gates access via its own auth gate + RequirePortalAccess, and its
         // data APIs stay protected, so serving the shell pre-auth is safe.
-        if (normalizedUri.equals("/processor") || normalizedUri.startsWith("/processor/")) {
+        if ("/processor".equals(normalizedUri) || normalizedUri.startsWith("/processor/")) {
             return true;
         }
 
@@ -178,32 +178,33 @@ public class RequestUriUtils {
                         : requestURI;
 
         // Public auth endpoints that don't require authentication
-        return trimmedUri.startsWith("/login")
+        return matchesPathOrChild(trimmedUri, "/login")
                 || trimmedUri.startsWith("/auth/")
-                || trimmedUri.startsWith("/oauth2")
-                || trimmedUri.startsWith("/saml2")
+                || matchesPathOrChild(trimmedUri, "/oauth2")
+                || matchesPathOrChild(trimmedUri, "/saml2")
                 || trimmedUri.contains("/login/oauth2/code/") // Spring Security OAuth2 callback
                 || trimmedUri.contains("/oauth2/authorization/") // OAuth2 authorization endpoint
-                || trimmedUri.startsWith("/api/v1/auth/login")
-                || trimmedUri.startsWith("/api/v1/auth/refresh")
-                || trimmedUri.startsWith("/api/v1/auth/logout")
-                || trimmedUri.startsWith(
-                        "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
+                || "/api/v1/auth/login".equals(trimmedUri)
+                || "/api/v1/auth/refresh".equals(trimmedUri)
+                || "/api/v1/auth/logout".equals(trimmedUri)
+                || "/api/v1/proprietary/ui-data/login"
+                        .equals(trimmedUri) // Login page config (SSO providers +
                 // enableLogin)
                 || trimmedUri.startsWith(
                         "/api/v1/ui-data/footer-info") // Public footer configuration
-                || trimmedUri.startsWith("/api/v1/invite/validate")
-                || trimmedUri.startsWith("/api/v1/invite/accept")
+                || matchesPathOrChild(trimmedUri, "/api/v1/invite/validate")
+                || matchesPathOrChild(trimmedUri, "/api/v1/invite/accept")
                 // Health Endpoints
-                || trimmedUri.startsWith("/actuator/health")
-                || trimmedUri.startsWith("/health")
-                || trimmedUri.startsWith("/healthz")
-                || trimmedUri.startsWith("/liveness")
-                || trimmedUri.startsWith("/readiness")
-                || trimmedUri.startsWith(
-                        "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
+                || matchesPathOrChild(trimmedUri, "/actuator/health")
+                || matchesPathOrChild(trimmedUri, "/health")
+                || matchesPathOrChild(trimmedUri, "/healthz")
+                || matchesPathOrChild(trimmedUri, "/liveness")
+                || matchesPathOrChild(trimmedUri, "/readiness")
+                // Mobile scanner sessions are intentionally public so desktop and phone clients
+                // can exchange files without a login round-trip.
+                || trimmedUri.startsWith("/api/v1/mobile-scanner/")
                 || trimmedUri.startsWith("/api/v1/webhooks/")
-                || trimmedUri.startsWith("/v1/api-docs")
+                || matchesPathOrChild(trimmedUri, "/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
                 // Share-link SPA bootstrap; data APIs remain protected
@@ -215,5 +216,10 @@ public class RequestUriUtils {
             return requestURI.substring(contextPath.length());
         }
         return requestURI;
+    }
+
+    /** Matches one endpoint exactly, or a legitimate path-variable/sub-resource below it. */
+    private static boolean matchesPathOrChild(String requestUri, String endpoint) {
+        return requestUri.equals(endpoint) || requestUri.startsWith(endpoint + "/");
     }
 }
