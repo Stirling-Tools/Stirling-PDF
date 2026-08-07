@@ -101,8 +101,10 @@ for (const f of storyFiles) {
 
 /* ── classification ───────────────────────────────────────────────────────── */
 
+// Bridge: the viewer's *APIBridge components register an API into context and
+// render null — wiring, like the rest of these.
 const INFRA_NAME =
-  /(Provider|Providers|Context|Gate|Boundary|Mount|Router|Guard)\.tsx$/;
+  /(Provider|Providers|Context|Gate|Boundary|Mount|Router|Guard|Bridge)\.tsx$/;
 const INFRA_DIR = /\/(contexts|test|tests|mocks|hooks|types|utils|api|data)\//;
 const RENDERS = /return\s*\(?\s*<|=>\s*\(?\s*</;
 // A module whose exported function returns a config object, not markup.
