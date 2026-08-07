@@ -284,7 +284,6 @@ export default defineConfig(
     ignores: [
       "editor/src/core/components/annotation/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/pageEditor/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/pageEditor/commands/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/pageEditor/hooks/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/components/shared/config/*.{js,mjs,jsx,ts,tsx}",
