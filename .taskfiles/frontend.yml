@@ -260,7 +260,7 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - task: lint:eslint
+      - task: lint:oxlint
       - task: lint:dpdm
       - task: lint:colors
       - task: lint:css
@@ -290,11 +290,11 @@ tasks:
     cmds:
       - node editor/scripts/lint/theme-lint.mjs contrast
 
-  lint:eslint:
-    desc: "Run ESLint linting"
+  lint:oxlint:
+    desc: "Run oxlint linting"
     deps: [install]
     cmds:
-      - npx eslint --max-warnings=0
+      - npx oxlint --max-warnings=0
 
   lint:dpdm:
     desc: "Run circular import linting"
@@ -308,7 +308,7 @@ tasks:
     desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
-      - npx eslint --fix
+      - npx oxlint --fix
 
   format:
     desc: "Auto-fix code formatting"

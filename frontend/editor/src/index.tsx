@@ -5,7 +5,7 @@
 import "@app/utils/patchDomForTranslators";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
-import "../vite-env.d.ts"; // eslint-disable-line no-restricted-imports -- Outside app paths
+import "../vite-env.d.ts"; // oxlint-disable-line no-restricted-imports -- Outside app paths
 import "@app/styles/index.css"; // Import global styles
 import React from "react";
 import ReactDOM from "react-dom/client";
