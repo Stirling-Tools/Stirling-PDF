@@ -463,6 +463,10 @@ tasks:
   test:coverage:
     desc: "Run tests with coverage (one-shot; CI-friendly)."
     deps: [prepare]
+    vars:
+      TEST_TIMEOUT: '{{.TEST_TIMEOUT | default "5000"}}'
+    env:
+      TEST_TIMEOUT: '{{.TEST_TIMEOUT}}'
     cmds:
       # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
       # mode). Explicit reporter list because v8 + json-summary is what the
@@ -480,6 +484,8 @@ tasks:
         --coverage.reporter=json-summary
         --coverage.reporter=html
         --coverage.reportsDirectory=./coverage
+        --testTimeout={{.TEST_TIMEOUT}}
+        --hookTimeout={{.TEST_TIMEOUT}}
 
   # ============================================================
   # Code Generation

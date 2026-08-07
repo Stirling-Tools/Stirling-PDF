@@ -6,6 +6,7 @@
 .pnp.js
 
 # testing
+/editor/coverage
 /coverage
 
 # production
@@ -49,3 +50,4 @@ test-results
 /scripts/dev-update-test/screenshots/
 /editor/src-tauri/tauri.conf.dev-update.json
 .a11y-scan/
+/editor/src-tauri/*

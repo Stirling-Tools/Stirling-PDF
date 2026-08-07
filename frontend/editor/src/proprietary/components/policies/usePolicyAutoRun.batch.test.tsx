@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 
 /**
  * Batch integration test (61 files, two chained upload policies) driving the real
@@ -7,7 +7,7 @@ import { renderHook, act } from "@testing-library/react";
  */
 
 const FILE_COUNT = 61;
-
+const TEST_TIMEOUT_MS = Number(process.env.TEST_TIMEOUT ?? 10000);
 // A tiny mutable "workspace" the mocks share: the list of file stubs currently in
 // the workbench, mirrored into useAllFiles. consumeFiles mutates it in place
 // (input id → output id) exactly as the real silent reducer would.
@@ -224,15 +224,13 @@ beforeEach(() => {
 /** Drive the hook until the store shows the expected number of imported runs. */
 async function runUntilSettled(expectedRuns: number) {
   renderHook(() => Harness());
-  await act(async () => {
-    await vi.waitFor(
-      () => {
-        const imported = latestRuns.filter((r) => r.imported).length;
-        expect(imported).toBe(expectedRuns);
-      },
-      { timeout: 8000, interval: 20 },
-    );
-  });
+  await waitFor(
+    () => {
+      const imported = latestRuns.filter((r) => r.imported).length;
+      expect(imported).toBe(expectedRuns);
+    },
+    { timeout: TEST_TIMEOUT_MS, interval: 20 },
+  );
 }
 
 describe("policy auto-run — 61-file batch through a Security → Classification chain", () => {
@@ -280,19 +278,15 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
       id: "storage",
       versionNumber: 1,
     });
-    act(() => {
-      mocks.workspace = [];
-    });
+    mocks.workspace = [];
 
-    await act(async () => {
-      await vi.waitFor(
-        () => {
-          const imported = latestRuns.filter((r) => r.imported).length;
-          expect(imported).toBe(FILE_COUNT * 2);
-        },
-        { timeout: 8000, interval: 20 },
-      );
-    });
+    await waitFor(
+      () => {
+        const imported = latestRuns.filter((r) => r.imported).length;
+        expect(imported).toBe(FILE_COUNT * 2);
+      },
+      { timeout: TEST_TIMEOUT_MS, interval: 20 },
+    );
 
     // Still fully processed (chain intact), but Security's versions went to
     // STORAGE, never re-added to the workbench — the workspace stays empty.
