@@ -15,11 +15,12 @@ vi.mock("react-i18next", () => ({
 }));
 
 let status = "online";
+let cachedSnapshot = { status };
 const listeners = new Set<() => void>();
 
 vi.mock("@app/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: {
-    getSnapshot: () => ({ status }),
+    getSnapshot: () => cachedSnapshot,
     subscribe: (listener: () => void) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -29,6 +30,7 @@ vi.mock("@app/services/selfHostedServerMonitor", () => ({
 
 function setStatus(next: string) {
   status = next;
+  cachedSnapshot = { status };
   act(() => listeners.forEach((l) => l()));
 }
 
@@ -38,10 +40,12 @@ describe("desktop useGroupEnabled", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     status = "online";
+    cachedSnapshot = { status };
   });
 
   it("skips the request entirely when the server is offline", async () => {
     status = "offline";
+    cachedSnapshot = { status };
 
     const { result } = renderHook(() => useGroupEnabled("ImageMagick"), {
       wrapper: TestQueryProvider,
