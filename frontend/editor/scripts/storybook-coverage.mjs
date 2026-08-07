@@ -105,7 +105,11 @@ for (const f of storyFiles) {
 // render null — wiring, like the rest of these.
 const INFRA_NAME =
   /(Provider|Providers|Context|Gate|Boundary|Mount|Router|Guard|Bridge)\.tsx$/;
-const INFRA_DIR = /\/(contexts|test|tests|mocks|hooks|types|utils|api|data)\//;
+const INFRA_DIR =
+  /\/(contexts|guards|test|tests|mocks|hooks|types|utils|api|data)\//;
+// Hidden and obsolete — not coming back, so it is not a gap anyone should be
+// spending stories on.
+const OBSOLETE_DIR = /\/watchedFolders\//;
 const RENDERS = /return\s*\(?\s*<|=>\s*\(?\s*</;
 // A module whose exported function returns a config object, not markup.
 const CONFIG_FACTORY = /:\s*(SlideConfig|ToolFlowConfig|\w+Config)\s*\{/;
@@ -161,6 +165,7 @@ for (const file of sources) {
   const src = readFileSync(file, "utf8");
   if (!RENDERS.test(src)) continue;
   if (INFRA_NAME.test(base) || INFRA_DIR.test("/" + r)) continue;
+  if (OBSOLETE_DIR.test("/" + r)) continue;
   if (CONFIG_FACTORY.test(src)) continue;
 
   const stem = base.replace(".tsx", "");
