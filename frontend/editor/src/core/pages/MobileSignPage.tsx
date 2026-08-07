@@ -311,9 +311,10 @@ export default function MobileSignPage() {
           onChange={setTab}
           ariaLabel={t("mobileSign.tabsLabel", "Signature source")}
           options={[
+            // Same order as the sign tool's sources: canvas, image, text
             { value: "draw", label: t("mobileSign.tab.draw", "Draw") },
-            { value: "type", label: t("mobileSign.tab.type", "Type") },
             { value: "photo", label: t("mobileSign.tab.photo", "Photo") },
+            { value: "type", label: t("mobileSign.tab.type", "Type") },
           ]}
         />
       </Box>
