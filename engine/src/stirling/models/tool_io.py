@@ -207,6 +207,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         ],
     ),
     ToolEndpoint.AUTO_SPLIT_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
+    ToolEndpoint.BATCH_PROCESS_ATTACHMENTS: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
     ToolEndpoint.COMPRESS_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.DELETE_ATTACHMENT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.EXTRACT_ATTACHMENTS: ToolIOSpec(
@@ -216,6 +219,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO
     ),
     ToolEndpoint.EXTRACT_IMAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO),
+    ToolEndpoint.EXTRACT_SINGLE_ATTACHMENT: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.ANY, arity=ToolArity.SISO
+    ),
     ToolEndpoint.FLATTEN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.OCR_PDF: ToolIOSpec(
         accepts=[ToolFormat.PDF],

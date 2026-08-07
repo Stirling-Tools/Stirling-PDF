@@ -810,17 +810,23 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         icon: (
           <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />
         ),
-        name: t("home.addAttachments.title", "Add Attachments"),
+        name: t("home.addAttachments.title", "Manage Attachments"),
         component: lazy(() => import("@app/tools/AddAttachments")),
         description: t(
           "home.addAttachments.desc",
-          "Add or remove embedded files (attachments) to/from a PDF",
+          "View, add, extract, rename, or delete embedded PDF attachments",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         synonyms: getSynonyms(t, "addAttachments"),
         maxFiles: 1,
-        endpoints: ["add-attachments"],
+        endpoints: [
+          "add-attachments",
+          "list-attachments",
+          "extract-attachments",
+          "rename-attachment",
+          "delete-attachment",
+        ],
         operationConfig: asRegistryConfig(addAttachmentsOperationConfig),
         automationSettings: lazySettings(
           () =>

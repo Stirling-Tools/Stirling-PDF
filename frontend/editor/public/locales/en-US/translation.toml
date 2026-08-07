@@ -174,12 +174,8 @@ tags = "embed,attach,include,attachments,attach files,embed files,include files,
 failed = "An error occurred while adding attachments to the PDF."
 
 [AddAttachmentsRequest]
-addMoreFiles = "Add more files..."
 attachments = "Select Attachments"
 info = "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel."
-placeholder = "Choose files..."
-removeFile = "Remove file"
-selectedFiles = "Selected Files"
 submit = "Add Attachments"
 
 [AddAttachmentsRequest.error]
@@ -1880,13 +1876,27 @@ width = "Width"
 description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
 
 [attachments]
+addAttachments = "Add attachments..."
 convertToPdfA3b = "Convert to PDF/A-3b"
-convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
 convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
 convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
 convertToPdfA3bTooltipTitle = "What it does"
-tags = "attachments,add,remove,embed,file"
-title = "Add Attachments"
+discardChanges = "Discard"
+downloadSingle = "Download attachment"
+extractAll = "Extract all"
+filterPlaceholder = "Filter attachments..."
+noAttachments = "No attachments inside this PDF yet. Drop files below or click to browse."
+remove = "Remove attachment"
+rename = "Rename attachment"
+restore = "Undo delete"
+saveChanges = "Save Changes ({{count}})"
+tags = "attachments,add,remove,embed,file,extract,manage"
+title = "Manage Attachments"
+
+[attachments.badges]
+deleted = "DELETED"
+renamed = "RENAMED"
+staged = "STAGED"
 
 [audit]
 configureAudit = "Configure Audit Logging"
@@ -4435,9 +4445,9 @@ signUp = "Sign Up Free"
 title = "You're using Stirling PDF as a guest!"
 
 [home.addAttachments]
-desc = "Add or remove embedded files (attachments) to/from a PDF"
-tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
-title = "Add Attachments"
+desc = "View, add, extract, rename, or delete embedded PDF attachments"
+tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files,extract,manage"
+title = "Manage Attachments"
 
 [home.addImage]
 desc = "Adds a image onto a set location on the PDF"

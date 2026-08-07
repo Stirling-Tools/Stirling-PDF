@@ -21,8 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.controller.api.converters.ConvertPDFToPDFA;
 import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
+import stirling.software.SPDF.model.api.misc.BatchAttachmentRequest;
 import stirling.software.SPDF.model.api.misc.DeleteAttachmentRequest;
 import stirling.software.SPDF.model.api.misc.ExtractAttachmentsRequest;
+import stirling.software.SPDF.model.api.misc.ExtractSingleAttachmentRequest;
 import stirling.software.SPDF.model.api.misc.ListAttachmentsRequest;
 import stirling.software.SPDF.model.api.misc.RenameAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
@@ -262,5 +264,150 @@ public class AttachmentController {
                             "_attachment_deleted.pdf"),
                     tempFileManager);
         }
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/extract-single-attachment",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.ANY)
+    @Operation(
+            summary = "Extract a single attachment from PDF",
+            description = "This endpoint extracts a single embedded attachment from a PDF by name.")
+    public ResponseEntity<Resource> extractSingleAttachment(
+            @ModelAttribute ExtractSingleAttachmentRequest request) throws IOException {
+        String attachmentName = request.getAttachmentName();
+        if (attachmentName == null || attachmentName.isBlank()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.attachmentNameRequired", "Attachment name cannot be null or empty");
+        }
+
+        try (PDDocument document = pdfDocumentFactory.load(request, true)) {
+            Optional<byte[]> extracted =
+                    pdfAttachmentService.extractSingleAttachment(document, attachmentName);
+
+            if (extracted.isEmpty()) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.attachmentNotFound",
+                        "Attachment ''{0}'' not found in the provided PDF",
+                        attachmentName);
+            }
+
+            String simpleName = Filenames.toSimpleFileName(attachmentName);
+            TempFile tempOut = tempFileManager.createManagedTempFile(".bin");
+            try {
+                Files.write(tempOut.getFile().toPath(), extracted.get());
+            } catch (IOException e) {
+                tempOut.close();
+                throw e;
+            }
+
+            return WebResponseUtils.fileToWebResponse(
+                    tempOut, simpleName, MediaType.APPLICATION_OCTET_STREAM);
+        }
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/batch-process-attachments",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(
+            summary = "Batch process attachments in PDF",
+            description =
+                    "This endpoint applies atomic batch renames, deletions, and additions to PDF attachments in a single pass.")
+    public ResponseEntity<Resource> batchProcessAttachments(
+            @ModelAttribute BatchAttachmentRequest request) throws Exception {
+        MultipartFile fileInput = request.getFileInput();
+        String opsJson = request.getOpsJson();
+        List<MultipartFile> additions = request.getAttachments();
+        boolean convertToPdfA3b = request.isConvertToPdfA3b();
+
+        com.fasterxml.jackson.databind.ObjectMapper mapper =
+                new com.fasterxml.jackson.databind.ObjectMapper();
+        BatchOpsData opsData = null;
+        if (opsJson != null && !opsJson.isBlank()) {
+            try {
+                opsData = mapper.readValue(opsJson, BatchOpsData.class);
+            } catch (Exception e) {
+                log.warn(
+                        "Failed to parse opsJson for batch attachment processing: {}",
+                        e.getMessage());
+            }
+        }
+
+        try (PDDocument document = pdfDocumentFactory.load(request, false)) {
+            if (opsData != null) {
+                if (opsData.getDeletions() != null) {
+                    for (String delName : opsData.getDeletions()) {
+                        try {
+                            pdfAttachmentService.deleteAttachment(document, delName);
+                        } catch (Exception e) {
+                            log.warn("Batch deletion of '{}' skipped: {}", delName, e.getMessage());
+                        }
+                    }
+                }
+                if (opsData.getRenames() != null) {
+                    for (RenameOp renameOp : opsData.getRenames()) {
+                        if (renameOp.getOldName() != null && renameOp.getNewName() != null) {
+                            try {
+                                pdfAttachmentService.renameAttachment(
+                                        document, renameOp.getOldName(), renameOp.getNewName());
+                            } catch (Exception e) {
+                                log.warn(
+                                        "Batch rename from '{}' to '{}' skipped: {}",
+                                        renameOp.getOldName(),
+                                        renameOp.getNewName(),
+                                        e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (additions != null && !additions.isEmpty()) {
+                pdfAttachmentService.addAttachment(document, additions);
+            }
+
+            String originalFileName = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
+            if (originalFileName == null || originalFileName.isEmpty()) {
+                originalFileName = "document";
+            }
+            String baseFileName =
+                    originalFileName.contains(".")
+                            ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
+                            : originalFileName;
+
+            if (convertToPdfA3b) {
+                byte[] pdfaBytes = convertPDFToPDFA.convertPDDocumentToPDFA(document, "pdfa-3b");
+                try (PDDocument pdfaDocument = org.apache.pdfbox.Loader.loadPDF(pdfaBytes)) {
+                    convertPDFToPDFA.ensureEmbeddedFileCompliance(pdfaDocument);
+                    ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
+                    String outputFilename = baseFileName + "_attachments_modified_PDFA-3b.pdf";
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            pdfaDocument, outputFilename, tempFileManager);
+                }
+            } else {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document,
+                        GeneralUtils.generateFilename(
+                                Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                                "_attachments_modified.pdf"),
+                        tempFileManager);
+            }
+        }
+    }
+
+    @lombok.Data
+    public static class BatchOpsData {
+        private List<RenameOp> renames;
+        private List<String> deletions;
+    }
+
+    @lombok.Data
+    public static class RenameOp {
+        private String oldName;
+        private String newName;
     }
 }
