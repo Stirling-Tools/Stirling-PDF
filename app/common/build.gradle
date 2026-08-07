@@ -2,39 +2,40 @@
 bootRun {
     enabled = false
 }
+
 dependencies {
-    api "com.google.guava:guava:${guavaVersion}"
+    implementation "com.google.guava:guava:${libs.versions.guava.get()}"
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
-    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
-    api 'com.fathzer:javaluator:3.0.6'
-    api 'com.posthog.java:posthog:1.2.0'
-    api "org.apache.commons:commons-lang3:${commonsLang3}"
-    api 'com.drewnoakes:metadata-extractor:2.20.0' // Image metadata extractor
-    api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
-    api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
-    api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
-    api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
-    api "org.apache.pdfbox:preflight:$pdfboxVersion"
-    api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
-    api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
-    api 'org.snakeyaml:snakeyaml-engine:3.0.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
+    api "com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:${libs.versions.owaspJavaHtmlSanitizer.get()}"
+    api "com.fathzer:javaluator:${libs.versions.javaluator.get()}"
+    api "com.posthog.java:posthog:${libs.versions.posthog.get()}"
+    api "org.apache.commons:commons-lang3:${libs.versions.commonsLang3.get()}"
+    api "com.drewnoakes:metadata-extractor:${libs.versions.metadataExtractor.get()}" // Image metadata extractor
+    api "com.vladsch.flexmark:flexmark-html2md-converter:${libs.versions.flexmark.get()}"
+    api "org.apache.pdfbox:pdfbox:${libs.versions.pdfbox.get()}"
+    api "org.apache.pdfbox:pdfbox-io:${libs.versions.pdfbox.get()}"
+    api "org.apache.pdfbox:xmpbox:${libs.versions.pdfbox.get()}"
+    api "org.apache.pdfbox:preflight:${libs.versions.pdfbox.get()}"
+    api "com.github.junrar:junrar:${libs.versions.junrar.get()}" // RAR archive support for CBR files
+    api "jakarta.servlet:jakarta.servlet-api:${libs.versions.servletApi.get()}"
+    api "org.snakeyaml:snakeyaml-engine:${libs.versions.snakeyamlEngine.get()}"
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:${libs.versions.springdocOpenapi.get()}"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:8.12.6'
-    api 'org.simplejavamail:outlook-module:8.12.6' // MSG file support
-    api 'jakarta.mail:jakarta.mail-api:2.1.5'
-    runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
+    api "org.simplejavamail:simple-java-mail:${libs.versions.simpleJavaMail.get()}"
+    api "org.simplejavamail:outlook-module:${libs.versions.simpleJavaMail.get()}" // MSG file support
+    api "jakarta.mail:jakarta.mail-api:${libs.versions.jakartaMail.get()}"
+    runtimeOnly "org.eclipse.angus:angus-mail:${libs.versions.angusMail.get()}"
 
     // Tabula table extraction — used by the shared PDF parser and directly by downstream modules.
     // api-scoped so downstream modules (core, proprietary) retain it on their compile classpath.
-    api ('technology.tabula:tabula:1.0.5') {
+    api ("technology.tabula:tabula:${libs.versions.tabula.get()}") {
         exclude group: 'org.slf4j', module: 'slf4j-simple'
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    api "com.stirling:jpdfium:${jpdfiumVersion}"
+    api "com.stirling:jpdfium:${libs.versions.jpdfium.get()}"
 
     // -PjpdfiumPlatforms=all|none|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
     // 'none' skips natives entirely (windows-arm64 builds, until JPDFium ships that platform).
@@ -55,12 +56,12 @@ dependencies {
     }
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms ? jpdfiumPlatforms.join(', ') : 'none'}")
     jpdfiumPlatforms.each { platform ->
-        runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
+        runtimeOnly "com.stirling:jpdfium-natives-${platform}:${libs.versions.jpdfium.get()}"
     }
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
-    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
+    implementation "com.bucket4j:bucket4j_jdk17-core:${libs.versions.bucket4j.get()}"
 
     // ArchUnit: enforces module dependency direction (see ArchitectureTest)
-    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    testImplementation "com.tngtech.archunit:archunit-junit5:${libs.versions.archunit.get()}"
 }
