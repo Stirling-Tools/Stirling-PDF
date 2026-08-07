@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { Button as DSButton } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
@@ -95,6 +96,11 @@ export default function MobileSignPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session");
+  // Landscape phones (not tablets — hence the height cap) get a compact
+  // layout: branding hidden, tighter padding, shorter pad, so the canvas and
+  // the Send button fit on screen together.
+  const compactLandscape =
+    useMediaQuery("(orientation: landscape) and (max-height: 32rem)") ?? false;
 
   const [sessionValid, setSessionValid] = useState<boolean | null>(null);
   const [tab, setTab] = useState<SignatureTab>("draw");
@@ -240,12 +246,12 @@ export default function MobileSignPage() {
 
   return (
     <Box
-      p="md"
+      p={compactLandscape ? "xs" : "md"}
       maw={640}
       mx="auto"
       style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}
     >
-      {header}
+      {!compactLandscape && header}
 
       {justSent && (
         <Alert
@@ -292,8 +298,15 @@ export default function MobileSignPage() {
             radius="md"
             p={0}
             style={{
-              flex: 1,
-              minHeight: "45dvh",
+              // A DEFINITE height, not flex/min-height: the canvas inside is
+              // sized `height: 100%`, which resolves to the 150px intrinsic
+              // canvas default when the parent's height is indefinite —
+              // leaving most of the visible pad ignoring input. Landscape
+              // phones get a shorter, wider pad that still fits on screen.
+              height: compactLandscape
+                ? "min(50dvh, 14rem)"
+                : "min(48dvh, 26rem)",
+              flexShrink: 0,
               // Checkerboard-free plain white: signatures are stamped on paper-
               // white pages, so drawing on white shows what you will get.
               background: "white",

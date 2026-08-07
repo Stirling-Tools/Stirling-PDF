@@ -167,6 +167,12 @@
             pointer-events: none;
         }
 
+        /* Landscape phones: shorter chrome, give the pad more of the height. */
+        @media (orientation: landscape) and (max-height: 32rem) {
+            header { padding-top: 0.5rem; }
+            .pad { height: min(58vh, 16rem); }
+        }
+
         .toolbar {
             display: flex;
             align-items: center;
