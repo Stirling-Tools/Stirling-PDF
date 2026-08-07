@@ -3314,7 +3314,6 @@ label = "Y mövqeyi"
 
 [crop.error]
 failed = "PDF-i kəsmək alınmadı"
-invalidArea = "Kəsmə sahəsi PDF sərhədlərini aşır"
 
 [crop.preview]
 title = "Kəsmə sahəsinin seçimi"

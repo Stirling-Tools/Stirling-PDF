@@ -3314,7 +3314,6 @@ label = "Position Y"
 
 [crop.error]
 failed = "Échec du recadrage du PDF"
-invalidArea = "La zone de recadrage dépasse les limites du PDF"
 
 [crop.preview]
 title = "Sélection de la zone de recadrage"

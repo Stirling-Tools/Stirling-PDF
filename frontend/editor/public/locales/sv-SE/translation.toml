@@ -3314,7 +3314,6 @@ label = "Y-position"
 
 [crop.error]
 failed = "Det gick inte att beskära PDF"
-invalidArea = "Beskärningsområdet sträcker sig utanför PDF:ens gränser"
 
 [crop.preview]
 title = "Val av beskärningsområde"

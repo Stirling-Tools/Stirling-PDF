@@ -3314,7 +3314,6 @@ label = "Y स्थान"
 
 [crop.error]
 failed = "PDF क्रॉप करने में विफल"
-invalidArea = "क्रॉप क्षेत्र PDF सीमाओं से बाहर जा रहा है"
 
 [crop.preview]
 title = "क्रॉप क्षेत्र चयन"

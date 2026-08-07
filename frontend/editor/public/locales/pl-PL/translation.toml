@@ -3314,7 +3314,6 @@ label = "Pozycja Y"
 
 [crop.error]
 failed = "Nie udało się przyciąć PDF"
-invalidArea = "Obszar przycięcia wykracza poza granice PDF"
 
 [crop.preview]
 title = "Wybór obszaru przycięcia"

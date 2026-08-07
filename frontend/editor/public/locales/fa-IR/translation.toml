@@ -3314,7 +3314,6 @@ label = "موقعیت Y"
 
 [crop.error]
 failed = "برش PDF ناموفق بود"
-invalidArea = "ناحیه برش از مرزهای PDF فراتر رفته است"
 
 [crop.preview]
 title = "انتخاب ناحیه برش"
