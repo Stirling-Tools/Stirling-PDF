@@ -399,7 +399,8 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/account")
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize(
+            "!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @Operation(summary = "Get account page data")
     public ResponseEntity<AccountData> getAccountData(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

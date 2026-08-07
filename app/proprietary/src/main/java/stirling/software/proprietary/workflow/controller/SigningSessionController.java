@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,6 +48,7 @@ import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/security")
+@PreAuthorize("@principalPolicy.isHumanUser(authentication)")
 @Tag(
         name = "Signing Sessions",
         description = "Signing session lifecycle and participant management")
