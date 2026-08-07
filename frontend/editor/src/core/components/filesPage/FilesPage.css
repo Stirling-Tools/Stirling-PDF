@@ -470,6 +470,32 @@
   gap: 0.4rem;
 }
 
+/* Marks a folder that runs a pipeline over anything added to it. Replaces the
+   item count so a processing folder reads as a different kind of thing. */
+.files-page-processing-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--c-success-text, var(--c-primary));
+  background: color-mix(
+    in srgb,
+    var(--c-success, var(--c-primary)) 14%,
+    transparent
+  );
+}
+
+.files-page-processing-tag::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
 /* Parent-folder breadcrumb shown on cards/rows during recursive search so
    the user can tell which folder each hit lives in without navigating. */
 .files-page-card-path {

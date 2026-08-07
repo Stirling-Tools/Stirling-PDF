@@ -16,11 +16,13 @@ import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutli
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+import AutoModeIcon from "@mui/icons-material/AutoMode";
 
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 import { useFolders } from "@app/contexts/FolderContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import {
@@ -449,6 +451,27 @@ function FolderCard({
         : `Could not ${label}.`,
     );
   };
+  const {
+    byFolderId: processingFolders,
+    enable: enableProcessing,
+    disable: disableProcessing,
+    sweep: sweepProcessing,
+  } = useProcessingFolders();
+  const processing = processingFolders.get(folder.id as string);
+  // Each action surfaces its own failure the way a failed drop does; the
+  // backend's reason (invalid pipeline, storage disabled) is the useful part.
+  const startProcessing = (label: string) =>
+    Promise.resolve(enableProcessing(folder.id as string)).catch((err) =>
+      surfaceDrop(err, label),
+    );
+  const stopProcessing = (label: string) =>
+    Promise.resolve(disableProcessing(folder.id as string)).catch((err) =>
+      surfaceDrop(err, label),
+    );
+  const runProcessing = (label: string) =>
+    Promise.resolve(sweepProcessing(folder.id as string)).catch((err) =>
+      surfaceDrop(err, label),
+    );
   const kebabRef = useRef<HTMLButtonElement>(null);
   const { handlers: dropHandlers, isOver: isDropTarget } = useDropTarget({
     dragType: FILES_PAGE_DRAG_TYPE,
@@ -518,11 +541,19 @@ function FolderCard({
           </div>
         )}
         <div className="files-page-card-meta">
-          {fileCount === 0
-            ? t("filesPage.folder", "Folder")
-            : t("filesPage.folderItems", "{{count}} items", {
-                count: fileCount,
-              })}
+          {processing ? (
+            <span className="files-page-processing-tag">
+              {processing.enabled
+                ? t("filesPage.processing.active", "Processing folder")
+                : t("filesPage.processing.paused", "Processing paused")}
+            </span>
+          ) : fileCount === 0 ? (
+            t("filesPage.folder", "Folder")
+          ) : (
+            t("filesPage.folderItems", "{{count}} items", {
+              count: fileCount,
+            })
+          )}
         </div>
       </div>
       <div className="files-page-card-actions">
@@ -561,6 +592,38 @@ function FolderCard({
               onChange={onChangeAppearance}
               disabled={!serverReachable}
             />
+            <Menu.Divider />
+            {processing ? (
+              <>
+                <Menu.Item
+                  leftSection={<AutoModeIcon fontSize="small" />}
+                  onClick={() => void runProcessing("process folder now")}
+                >
+                  {t("filesPage.processing.sweep", "Process files now")}
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<AutoModeIcon fontSize="small" />}
+                  onClick={() => void stopProcessing("stop processing folder")}
+                >
+                  {t(
+                    "filesPage.processing.stop",
+                    "Stop processing this folder",
+                  )}
+                </Menu.Item>
+              </>
+            ) : (
+              <Menu.Item
+                leftSection={<AutoModeIcon fontSize="small" />}
+                onClick={() => void startProcessing("process folder")}
+                disabled={!serverReachable}
+                title={!serverReachable ? offlineHint : undefined}
+              >
+                {t(
+                  "filesPage.processing.start",
+                  "Process files in this folder…",
+                )}
+              </Menu.Item>
+            )}
             <Menu.Divider />
             <Menu.Item
               color="red"
@@ -1047,6 +1110,25 @@ function FolderRow({
           }),
     );
   };
+  const {
+    byFolderId: processingFolders,
+    enable: enableProcessing,
+    disable: disableProcessing,
+    sweep: sweepProcessing,
+  } = useProcessingFolders();
+  const processing = processingFolders.get(folder.id as string);
+  const startProcessing = (label: string) =>
+    Promise.resolve(enableProcessing(folder.id as string)).catch((err) =>
+      surfaceDrop(err, label),
+    );
+  const stopProcessing = (label: string) =>
+    Promise.resolve(disableProcessing(folder.id as string)).catch((err) =>
+      surfaceDrop(err, label),
+    );
+  const runProcessing = (label: string) =>
+    Promise.resolve(sweepProcessing(folder.id as string)).catch((err) =>
+      surfaceDrop(err, label),
+    );
   const kebabRef = useRef<HTMLButtonElement>(null);
   const { handlers: dropHandlers, isOver: isDropTarget } = useDropTarget({
     dragType: FILES_PAGE_DRAG_TYPE,
@@ -1119,7 +1201,17 @@ function FolderRow({
           )}
         </span>
       </span>
-      <span>{t("filesPage.folder", "Folder")}</span>
+      <span>
+        {processing ? (
+          <span className="files-page-processing-tag">
+            {processing.enabled
+              ? t("filesPage.processing.active", "Processing folder")
+              : t("filesPage.processing.paused", "Processing paused")}
+          </span>
+        ) : (
+          t("filesPage.folder", "Folder")
+        )}
+      </span>
       <span>
         {fileCount === 0
           ? "-"
@@ -1162,6 +1254,32 @@ function FolderRow({
             onChange={onChangeAppearance}
             disabled={!serverReachable}
           />
+          <Menu.Divider />
+          {processing ? (
+            <>
+              <Menu.Item
+                leftSection={<AutoModeIcon fontSize="small" />}
+                onClick={() => void runProcessing("process folder now")}
+              >
+                {t("filesPage.processing.sweep", "Process files now")}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<AutoModeIcon fontSize="small" />}
+                onClick={() => void stopProcessing("stop processing folder")}
+              >
+                {t("filesPage.processing.stop", "Stop processing this folder")}
+              </Menu.Item>
+            </>
+          ) : (
+            <Menu.Item
+              leftSection={<AutoModeIcon fontSize="small" />}
+              onClick={() => void startProcessing("process folder")}
+              disabled={!serverReachable}
+              title={!serverReachable ? offlineHint : undefined}
+            >
+              {t("filesPage.processing.start", "Process files in this folder…")}
+            </Menu.Item>
+          )}
           <Menu.Divider />
           <Menu.Item
             color="red"

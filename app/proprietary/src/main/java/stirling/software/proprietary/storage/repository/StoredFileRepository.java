@@ -64,6 +64,25 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     List<StoredFile> findAllByFolderId(UUID folderId);
 
     /**
+     * A file's folder placement as a plain id. Reads the FK directly so callers outside a
+     * transaction never touch the lazy {@code folder} association.
+     */
+    @Query("SELECT sf.folder.id FROM StoredFile sf WHERE sf.id = :fileId")
+    Optional<UUID> findFolderIdByFileId(@Param("fileId") Long fileId);
+
+    /**
+     * Set a file's folder placement by id, without loading the entity. Writes the FK directly so a
+     * caller with no persistence context (a policy run's worker thread) can restore placement
+     * without going through a merge of a detached entity.
+     */
+    @Modifying
+    @Transactional
+    @Query(
+            value = "UPDATE stored_files SET folder_id = :folderId WHERE stored_file_id = :fileId",
+            nativeQuery = true)
+    void updateFolderId(@Param("fileId") Long fileId, @Param("folderId") UUID folderId);
+
+    /**
      * Bulk lookup used by the folder-placement controller. Returns only files owned by {@code
      * owner}; ids that don't exist or that belong to another user are silently dropped so the
      * caller can compute the "skipped" set by subtraction.

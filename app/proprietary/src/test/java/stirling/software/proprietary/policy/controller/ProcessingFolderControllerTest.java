@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
@@ -59,6 +60,7 @@ class ProcessingFolderControllerTest {
     @Mock private StorageProvider storageProvider;
     @Mock private UserServiceInterface userService;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
+    @Mock private FolderAccessGuard folderAccessGuard;
 
     private final InProcessPolicyStore policyStore = new InProcessPolicyStore();
     private final InProcessSourceStore sourceStore = new InProcessSourceStore();
@@ -121,7 +123,8 @@ class ProcessingFolderControllerTest {
                         processedLedger,
                         folderRepository,
                         fileStorageService,
-                        accessGuard);
+                        accessGuard,
+                        folderAccessGuard);
     }
 
     @Test
@@ -198,6 +201,7 @@ class ProcessingFolderControllerTest {
         return new ProcessingFolderController.SaveProcessingFolderRequest(
                 id,
                 FOLDER_ID.toString(),
+                null,
                 true,
                 List.of(
                         new PipelineStep(

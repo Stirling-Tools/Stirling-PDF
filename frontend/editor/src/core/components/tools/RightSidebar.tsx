@@ -7,6 +7,7 @@ import ToolPanel from "@app/components/tools/ToolPanel";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
+import { DownloadsProcessingWizard } from "@app/components/policies/DownloadsProcessingWizard";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
@@ -176,6 +177,8 @@ export default function RightSidebar() {
     >
       {/* Headless: enforces enabled policies on every uploaded file. */}
       {policiesEnabled && <PolicyAutoRunController />}
+      {/* Offers to process the PDFs already in the user's Downloads folder, once. */}
+      {policiesEnabled && <DownloadsProcessingWizard />}
       {!fullscreenExpanded && !isPanelVisible && !isMobile && (
         <div className="tool-panel__collapsed-strip">
           <div className="tool-panel__collapsed-top">

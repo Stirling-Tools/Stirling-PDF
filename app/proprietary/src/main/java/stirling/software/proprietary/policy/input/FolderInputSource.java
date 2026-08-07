@@ -32,11 +32,13 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
  * {@link ResolveContext} ledger rather than moved aside, so nothing accumulates in a work
  * directory. Options: "mode" is "consume" (default: a processed file is removed once every policy
  * that claimed it has settled successfully and it is still the version that ran; failures stay in
- * place and are not retried until they change) or "snapshot" (stateless, every run sees the full
- * set); "recursive" descends into subdirectories; "identity" is "stat" (default, any size/mtime
- * change is a new version) or "hash" (content-verified, so a touch does not reprocess). Hidden
- * files and directories, including the legacy {@code .stirling} work dir, are never picked up, and
- * files mid-write are skipped by the readiness check.
+ * place and are not retried until they change), "track" (the same claim-once-per-version tracking
+ * with no removal, for a directory the user owns and expects to stay intact - their Downloads, a
+ * scanner drop), or "snapshot" (stateless, every run sees the full set); "recursive" descends into
+ * subdirectories; "identity" is "stat" (default, any size/mtime change is a new version) or "hash"
+ * (content-verified, so a touch does not reprocess). Hidden files and directories, including the
+ * legacy {@code .stirling} work dir, are never picked up, and files mid-write are skipped by the
+ * readiness check.
  */
 @Slf4j
 @Service
@@ -99,6 +101,17 @@ public class FolderInputSource implements InputSource {
 
         List<ResolvedInput> work = new ArrayList<>();
         for (Path file : present) {
+            // "limit" caps how much one sweep takes on, not what it observes: the full listing is
+            // still reported above so presence cleanup stays honest, and the files beyond the cap
+            // keep their ledger rows and are picked up by later sweeps.
+            if (config.limit() > 0 && work.size() >= config.limit()) {
+                log.debug(
+                        "Folder {} has more ready files than this sweep's limit of {}; the rest"
+                                + " follow on later sweeps",
+                        inputDir,
+                        config.limit());
+                break;
+            }
             if (!readinessChecker.isReady(file)) {
                 continue;
             }
@@ -117,12 +130,25 @@ public class FolderInputSource implements InputSource {
             if (!claimed) {
                 continue;
             }
+            String claimedGate = gate;
             work.add(
                     new ResolvedInput(
                             PolicyInputs.of(List.of(fileResource(file))),
-                            success ->
-                                    completeConsumed(
-                                            ctx, identity, file, gate, contentHash, success)));
+                            success -> {
+                                if (config.track()) {
+                                    // Track mode never removes the input: the directory belongs to
+                                    // the user (their Downloads, a scan drop), so a processed file
+                                    // is recorded and left exactly where they put it.
+                                    ctx.settle(
+                                            identity,
+                                            claimedGate,
+                                            contentHash == null ? null : contentHash.get(),
+                                            success);
+                                    return;
+                                }
+                                completeConsumed(
+                                        ctx, identity, file, claimedGate, contentHash, success);
+                            }));
         }
         return work;
     }
@@ -270,15 +296,23 @@ public class FolderInputSource implements InputSource {
         };
     }
 
-    record FolderConfig(Path directory, boolean snapshot, boolean recursive, boolean hashIdentity) {
+    record FolderConfig(
+            Path directory,
+            boolean snapshot,
+            boolean track,
+            boolean recursive,
+            boolean hashIdentity,
+            int limit) {
 
         private static final String DIRECTORY_OPTION = "directory";
         private static final String MODE_OPTION = "mode";
         private static final String MODE_SNAPSHOT = "snapshot";
+        private static final String MODE_TRACK = "track";
         private static final String RECURSIVE_OPTION = "recursive";
         private static final String IDENTITY_OPTION = "identity";
         private static final String IDENTITY_STAT = "stat";
         private static final String IDENTITY_HASH = "hash";
+        private static final String LIMIT_OPTION = "limit";
 
         static FolderConfig from(Map<String, Object> options) {
             Object directory = options.get(DIRECTORY_OPTION);
@@ -287,6 +321,7 @@ public class FolderInputSource implements InputSource {
             }
             Object mode = options.get(MODE_OPTION);
             boolean snapshot = mode != null && MODE_SNAPSHOT.equals(mode.toString());
+            boolean track = mode != null && MODE_TRACK.equals(mode.toString());
             Object recursive = options.get(RECURSIVE_OPTION);
             boolean recurse = recursive != null && Boolean.parseBoolean(recursive.toString());
             Object identity = options.get(IDENTITY_OPTION);
@@ -297,7 +332,17 @@ public class FolderInputSource implements InputSource {
                 throw new IllegalArgumentException(
                         "folder input 'identity' must be 'stat' or 'hash'");
             }
-            return new FolderConfig(Path.of(directory.toString()), snapshot, recurse, hash);
+            Object limit = options.get(LIMIT_OPTION);
+            int max = 0;
+            if (limit != null && !limit.toString().isBlank()) {
+                try {
+                    max = Math.max(0, Integer.parseInt(limit.toString().trim()));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("folder input 'limit' must be a number", e);
+                }
+            }
+            return new FolderConfig(
+                    Path.of(directory.toString()), snapshot, track, recurse, hash, max);
         }
     }
 }

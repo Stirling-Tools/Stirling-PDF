@@ -54,6 +54,16 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
+// No processing folders in these cases: the org-wide Classification policy above is what
+// activates the loop. Stubbed out so the hook's fetch never lands mid-assertion.
+vi.mock("@app/hooks/useProcessingFolders", () => ({
+  useProcessingFolders: () => ({
+    byFolderId: new Map(),
+    enable: async () => {},
+    disable: async () => {},
+    sweep: async () => {},
+  }),
+}));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({

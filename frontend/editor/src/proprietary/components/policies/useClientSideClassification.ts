@@ -10,6 +10,7 @@ import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
 import { meterClassificationRun } from "@app/services/classificationMeter";
 import {
@@ -67,9 +68,28 @@ export function useClientSideClassification(): void {
       policy.sources.length === 0 ||
       policy.sources.includes("editor")),
   );
+  // Pausing Classification stops it everywhere: a processing folder may activate this loop where
+  // no org-wide policy exists, but it must never resurrect a capability an admin has paused.
+  const classificationPaused = policy?.status === "paused";
+  // A processing folder classifies whatever lands in it, on exactly the same terms: the server
+  // does it when AI is on, and this loop does it when AI is off. So a file sitting in an enabled
+  // processing folder is in scope even with no org-wide Classification policy.
+  const { byFolderId: processingFolders } = useProcessingFolders();
+  const inEnabledProcessingFolder = (stub: StirlingFileStub) => {
+    const folderId = stub.folderId as string | null | undefined;
+    return Boolean(folderId && processingFolders.get(folderId)?.enabled);
+  };
+  const anyProcessingFolder =
+    !classificationPaused &&
+    Array.from(processingFolders.values()).some((f) => f.enabled);
 
   useEffect(() => {
-    if (configLoading || !classificationEnabled || aiEnabled || !active) {
+    if (
+      configLoading ||
+      !classificationEnabled ||
+      aiEnabled ||
+      (!active && !anyProcessingFolder)
+    ) {
       return;
     }
     const claimKey = (s: StirlingFileStub) =>
@@ -80,7 +100,8 @@ export function useClientSideClassification(): void {
         (s) =>
           !s.derivedFromTool &&
           s.classificationLabels == null &&
-          !claimed.current.has(claimKey(s)),
+          !claimed.current.has(claimKey(s)) &&
+          (active || (!classificationPaused && inEnabledProcessingFolder(s))),
       )
       .slice(0, CLASSIFY_BATCH);
     if (pending.length === 0) return;
@@ -121,6 +142,9 @@ export function useClientSideClassification(): void {
   }, [
     fileStubs,
     active,
+    classificationPaused,
+    anyProcessingFolder,
+    processingFolders,
     classificationEnabled,
     aiEnabled,
     configLoading,

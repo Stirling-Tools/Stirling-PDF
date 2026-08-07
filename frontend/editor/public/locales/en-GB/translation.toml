@@ -3848,7 +3848,6 @@ useColour = "Use colour {{c}}"
 modified = "Modified"
 name = "Name"
 size = "Size"
-type = "Type"
 
 [filesPage.deleteScope]
 cloud = "Cloud only"
@@ -3944,6 +3943,14 @@ local = "Local"
 localHint = "Only stored in this browser"
 shared = "Shared"
 sharedHint = "Shared with you via link"
+
+[filesPage.processing]
+active = "Processing folder"
+paused = "Processing paused"
+start = "Process files in this folder…"
+stop = "Stop processing this folder"
+sweep = "Process files now"
+type = "Type"
 
 [filesPage.sort]
 modifiedAsc = "Oldest first"
@@ -8052,6 +8059,24 @@ titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Print File"
+
+[processingFolders.downloads]
+approve = "Process my Downloads"
+capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
+close = "Done"
+explain = "Stirling can classify the {{count}} PDFs already in your Downloads folder, and anything new that lands there."
+failed = "Could not set that up. Your files have not been changed."
+finished = "Classified {{count}} files. New PDFs landing in Downloads are processed automatically from now on."
+keepsOriginals = "Your files stay where they are — originals are never moved or deleted."
+nothingNew = "Nothing new to process — these {{count}} files have already been through. New PDFs landing in Downloads are processed automatically from now on."
+notNow = "Not now"
+outputs = 'Results are saved into a "{{subdir}}" folder alongside them.'
+progress = "Processing {{done}} of {{total}} files…"
+someFailed = "{{count}} could not be processed and were left untouched."
+stillRunning = "Some files are still being processed in the background."
+title = "Organise your Downloads?"
+trigger = "Process {{count}} PDFs in Downloads"
+working = "Processing…"
 
 [provider.googledrive]
 name = "Google Drive"
