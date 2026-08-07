@@ -73,6 +73,8 @@ export const createStampTool = (config: StampToolConfig) => {
       signatureApiRef,
       getImageData,
       setSignaturesApplied,
+      setPlacementMode,
+      setPlaceMultiple,
     } = useSignature();
     const { consumeFiles, selectors } = useFileContext();
     const {
@@ -142,6 +144,18 @@ export const createStampTool = (config: StampToolConfig) => {
     useEffect(() => {
       setSignatureConfig(base.params.parameters);
     }, [base.params.parameters, setSignatureConfig]);
+
+    // When the tool unmounts (user navigates to a different tool), leave
+    // placement mode and clear any active stamp/ink tool. Otherwise the
+    // placement state and the "place signature" cursor leak into whatever the
+    // user opens next.
+    useEffect(() => {
+      return () => {
+        handleDeactivateSignature();
+        setPlacementMode(false);
+        setPlaceMultiple(false);
+      };
+    }, [handleDeactivateSignature, setPlacementMode, setPlaceMultiple]);
 
     const handleSaveToSystem = useCallback(async () => {
       try {

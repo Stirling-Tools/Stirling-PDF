@@ -16,6 +16,7 @@ import type {
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { shouldAutoExitPlacement } from "@app/components/viewer/signaturePlacement";
 
 /**
  * Connects the PDF signature (stamp/ink) tools to the shared ViewerContext and SignatureContext.
@@ -185,7 +186,16 @@ export const SignatureAPIBridge = forwardRef<
     isPlacementMode,
     placementPreviewSize,
     setSignaturesApplied,
+    placeMultiple,
+    setPlacementMode,
   } = useSignature();
+  // Track latest placeMultiple in a ref so the long-lived onAnnotationEvent
+  // subscription always reads the current value without re-subscribing on every
+  // toggle change (which would race with mid-flight create events).
+  const placeMultipleRef = useRef(placeMultiple);
+  useEffect(() => {
+    placeMultipleRef.current = placeMultiple;
+  }, [placeMultiple]);
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
   const [currentZoom, setCurrentZoom] = useState(
@@ -555,6 +565,11 @@ export const SignatureAPIBridge = forwardRef<
       // Mark signatures as not applied when a new signature is placed
       if (event.type === "create") {
         setSignaturesApplied(false);
+
+        if (shouldAutoExitPlacement(annotation, placeMultipleRef.current)) {
+          annotationApi.setActiveTool(null);
+          setPlacementMode(false);
+        }
       }
 
       const directData =
@@ -576,7 +591,13 @@ export const SignatureAPIBridge = forwardRef<
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
+  }, [
+    annotationApi,
+    storeImageData,
+    setSignaturesApplied,
+    setPlacementMode,
+    documentReady,
+  ]);
 
   useEffect(() => {
     if (!isPlacementMode || !documentReady) {
