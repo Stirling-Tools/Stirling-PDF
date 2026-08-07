@@ -7,9 +7,8 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies.windows]
-version = "0.58"
+version = "0.62"
 features = [
-    "implement",
     "Win32_Foundation",
     "Win32_System_Com",
     "Win32_System_Com_StructuredStorage",
@@ -23,4 +22,4 @@ features = [
 ]
 
 [dependencies]
-windows-core = "0.58"
+windows-core = "0.62"

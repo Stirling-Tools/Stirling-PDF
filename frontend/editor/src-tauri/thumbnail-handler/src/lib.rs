@@ -8,9 +8,9 @@ use std::ffi::c_void;
 use std::panic::catch_unwind;
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use windows::core::{implement, IUnknown, Interface, GUID, HRESULT};
+use windows::core::{implement, IUnknown, Interface, Ref, BOOL, GUID, HRESULT};
 use windows::Win32::Foundation::{
-    BOOL, CLASS_E_CLASSNOTAVAILABLE, CLASS_E_NOAGGREGATION, E_FAIL, E_UNEXPECTED, S_FALSE, S_OK,
+    CLASS_E_CLASSNOTAVAILABLE, CLASS_E_NOAGGREGATION, E_FAIL, E_UNEXPECTED, S_FALSE, S_OK,
 };
 use windows::Win32::Graphics::Gdi::{
     CreateDIBSection, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HBITMAP,
@@ -67,11 +67,7 @@ impl Drop for ThumbnailProvider {
 }
 
 impl IInitializeWithStream_Impl for ThumbnailProvider_Impl {
-    fn Initialize(
-        &self,
-        pstream: Option<&IStream>,
-        _grfmode: u32,
-    ) -> windows::core::Result<()> {
+    fn Initialize(&self, pstream: Ref<'_, IStream>, _grfmode: u32) -> windows::core::Result<()> {
         let result = catch_unwind(std::panic::AssertUnwindSafe(|| {
             *self.stream.borrow_mut() = pstream.cloned();
         }));
@@ -118,7 +114,7 @@ impl ThumbnailProvider_Impl {
 
         // Step 2: Load the PDF via WinRT
         let winrt_stream = bytes_to_random_access_stream(&bytes)?;
-        let pdf_doc = PdfDocument::LoadFromStreamAsync(&winrt_stream)?.get()?;
+        let pdf_doc = PdfDocument::LoadFromStreamAsync(&winrt_stream)?.join()?;
 
         if pdf_doc.PageCount()? == 0 {
             return Err(E_FAIL.into());
@@ -140,7 +136,7 @@ impl ThumbnailProvider_Impl {
         render_options.SetDestinationHeight(render_h)?;
 
         page.RenderWithOptionsToStreamAsync(&output_stream, &render_options)?
-            .get()?;
+            .join()?;
 
         // Step 4: Decode the PNG using WIC -> raw BGRA pixels -> HBITMAP
         let hbitmap = png_stream_to_hbitmap(&output_stream, render_w, render_h)?;
@@ -208,7 +204,7 @@ fn bytes_to_random_access_stream(bytes: &[u8]) -> windows::core::Result<IRandomA
     let mem_stream = InMemoryRandomAccessStream::new()?;
     let writer = DataWriter::CreateDataWriter(&mem_stream)?;
     writer.WriteBytes(bytes)?;
-    writer.StoreAsync()?.get()?;
+    writer.StoreAsync()?.join()?;
     // Detach the writer so it doesn't close the stream
     writer.DetachStream()?;
 
@@ -239,7 +235,7 @@ fn png_stream_to_hbitmap(
         let reader = windows::Storage::Streams::DataReader::CreateDataReader(
             &winrt_stream.GetInputStreamAt(0)?,
         )?;
-        reader.LoadAsync(size as u32)?.get()?;
+        reader.LoadAsync(size as u32)?.join()?;
         let mut png_bytes = vec![0u8; size];
         reader.ReadBytes(&mut png_bytes)?;
 
@@ -317,7 +313,7 @@ struct ThumbnailProviderFactory;
 impl IClassFactory_Impl for ThumbnailProviderFactory_Impl {
     fn CreateInstance(
         &self,
-        punkouter: Option<&IUnknown>,
+        punkouter: Ref<'_, IUnknown>,
         riid: *const GUID,
         ppvobject: *mut *mut c_void,
     ) -> windows::core::Result<()> {
@@ -325,7 +321,7 @@ impl IClassFactory_Impl for ThumbnailProviderFactory_Impl {
             *ppvobject = std::ptr::null_mut();
         }
 
-        if punkouter.is_some() {
+        if !punkouter.is_null() {
             return Err(CLASS_E_NOAGGREGATION.into());
         }
 
