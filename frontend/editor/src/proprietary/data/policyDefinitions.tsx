@@ -48,8 +48,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     id: "compliance",
     label: "Compliance",
     icon: policyCategoryIcon("compliance", ICON_SX),
-    desc: "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document.",
-    comingSoon: true,
+    desc: "Strip hidden data, convert to PDF/A for archiving, and validate every document against the standard before it is delivered.",
   },
   {
     id: "routing",
@@ -218,44 +217,26 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   },
   compliance: {
     summary:
-      "Validates documents against regulatory frameworks before they leave the system.",
-    rules: ["Framework scan", "Enforce action", "Audit trail"],
+      "Strips hidden data, converts to the PDF/A archival format, and validates the result against the standard.",
+    rules: ["Strip hidden data", "Convert to PDF/A", "Validate compliance"],
+    // Ordered so the gate judges the document that actually ships. Fonts are left alone: PDF/A
+    // requires them embedded.
     defaultOperations: [
-      { operation: "sanitize", parameters: {} },
+      {
+        operation: "sanitize",
+        parameters: { removeMetadata: true, removeXMPMetadata: true },
+      },
       { operation: "flatten", parameters: {} },
+      { operation: "pdfa", parameters: { outputFormat: "pdfa-2b" } },
+      {
+        operation: "complianceCheck",
+        parameters: { standard: "pdfa", onViolation: "fail" },
+      },
     ],
     scopeLabel: "All PDFs on this device",
-    fields: [
-      {
-        label: "Frameworks",
-        key: "frameworks",
-        type: "chips",
-        value: ["hipaa"],
-        options: [
-          "hipaa",
-          "gdpr",
-          "soc2",
-          "fedramp",
-          "pciDss",
-          "ccpa",
-          "iso27001",
-        ],
-      },
-      {
-        label: "When non-compliant",
-        key: "onViolation",
-        type: "select",
-        value: "flagForReview",
-        options: [
-          "flagForReview",
-          "blockExport",
-          "autoRedactPhi",
-          "quarantineDocument",
-        ],
-      },
-      { label: "Audit trail", key: "auditTrail", type: "toggle", value: true },
-      { label: "Access log", key: "accessLog", type: "toggle", value: true },
-    ],
+    // No policy-level settings: what this policy does is the step chain, and nothing on the
+    // backend reads fieldValues, so a framework picker here could only ever be decoration.
+    fields: [],
   },
   routing: {
     summary:
