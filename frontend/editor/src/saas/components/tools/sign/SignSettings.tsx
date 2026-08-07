@@ -34,6 +34,9 @@ import {
   AddSignatureResult,
 } from "@app/hooks/tools/sign/useSavedSignatures";
 import { SavedSignaturesSection } from "@app/components/tools/sign/SavedSignaturesSection";
+import MobileSignatureModal from "@app/components/tools/sign/MobileSignatureModal";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
 
 type SignatureDrafts = {
@@ -116,6 +119,12 @@ const SignSettings = ({
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isPlacementManuallyPaused, setPlacementManuallyPaused] =
     useState(false);
+  const [isMobileSignModalOpen, setIsMobileSignModalOpen] = useState(false);
+  const { config } = useAppConfig();
+  const isMobileViewport = useIsMobile();
+  // Drawing on a phone needs a second device, so the QR entry is desktop-only.
+  const canDrawOnPhone =
+    Boolean(config?.enableMobileSignature) && !isMobileViewport;
 
   // State for different signature types
   const [canvasSignatureData, setCanvasSignatureData] = useState<
@@ -1011,6 +1020,24 @@ const SignSettings = ({
             "canvas",
             hasCanvasSignature,
             handleSaveCanvasSignature,
+          )}
+          {canDrawOnPhone && (
+            <>
+              <Button
+                variant="secondary"
+                fullWidth
+                disabled={disabled}
+                leftSection={<LocalIcon icon="qr-code-rounded" width="1rem" />}
+                onClick={() => setIsMobileSignModalOpen(true)}
+              >
+                {t("sign.mobile.drawOnPhone", "Draw on your phone")}
+              </Button>
+              <MobileSignatureModal
+                opened={isMobileSignModalOpen}
+                onClose={() => setIsMobileSignModalOpen(false)}
+                onSignatureReceived={handleCanvasSignatureChange}
+              />
+            </>
           )}
         </Stack>
       );
