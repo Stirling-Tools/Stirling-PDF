@@ -330,8 +330,24 @@ tasks.register('copyApiLandingPage', Copy) {
     }
 }
 
+tasks.register('copyBackendOnlySamples', Copy) {
+    group = 'frontend'
+    description = 'Copy frontend sample files for backend-only mode'
+    from(new File(frontendEditorDir, 'public/samples'))
+    into(new File(resourcesStaticDir, 'samples'))
+    dependsOn cleanFrontendAssets
+    onlyIf { !buildWithFrontend }
+}
+
 // Ensure copyFrontendAssets runs after spotless tasks
 tasks.named('copyFrontendAssets').configure {
+    mustRunAfter tasks.matching { it.name.startsWith('spotless') }
+}
+
+// Cleanup removes frontend-generated resources that are also visible to the resource/formatting
+// task graph. Keep all Spotless tasks ahead of cleanup so they never snapshot a path that has
+// just been removed.
+tasks.named('cleanFrontendAssets').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
 }
 
@@ -342,6 +358,7 @@ if (buildWithFrontend) {
     println "Frontend build disabled - JAR will be backend-only with API landing page"
     // When not building the UI, ensure any stale frontend assets are removed and use API landing page
     processResources.dependsOn copyApiLandingPage
+    processResources.dependsOn copyBackendOnlySamples
 }
 
 bootJar.dependsOn ':common:jar'
