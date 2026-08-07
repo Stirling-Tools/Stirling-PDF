@@ -298,38 +298,44 @@ class LiveValkeyIntegrationTest {
         ValkeyRateLimitStore store = newRateLimitStore(factoryA);
         String key = "boundary-" + java.util.UUID.randomUUID();
         long capacity = 5;
-        Duration window = Duration.ofMillis(500);
+        // refillGreedy tops the bucket up continuously, one token every window/capacity. A 500ms
+        // window left the drain loop only 100ms before a 6th token appeared, so a slow Valkey
+        // round-trip broke the count; 4s spaces refills 800ms apart, clear of any burst.
+        Duration window = Duration.ofSeconds(4);
+        long refillIntervalMs = window.toMillis() / capacity;
 
-        long startInit = System.currentTimeMillis();
+        long drainStart = System.nanoTime();
         int firstAllowed = 0;
         for (int i = 0; i < 10; i++) {
             if (store.tryConsume(key, capacity, window).allowed()) firstAllowed++;
         }
-        long elapsedInit = System.currentTimeMillis() - startInit;
-        long refillIntervalMs = window.toMillis() / capacity;
-        long maxExpected = capacity + (elapsedInit / refillIntervalMs);
+        long drainMs = (System.nanoTime() - drainStart) / 1_000_000;
+        // Refill never pauses, so a slow drain earns extra tokens honestly - allow exactly the
+        // number the elapsed time can have produced and no more.
+        long earned = drainMs / refillIntervalMs;
         assertTrue(
-                firstAllowed >= capacity && firstAllowed <= maxExpected,
-                "must allow between "
+                firstAllowed >= capacity && firstAllowed <= capacity + earned,
+                "initial burst must be capacity ("
                         + capacity
-                        + " and "
-                        + maxExpected
-                        + " tokens initially (elapsed "
-                        + elapsedInit
-                        + "ms, got "
-                        + firstAllowed
-                        + ")");
+                        + ") plus at most the "
+                        + earned
+                        + " token(s) refilled during a "
+                        + drainMs
+                        + "ms drain, got "
+                        + firstAllowed);
 
-        Thread.sleep(window.toMillis() + 50);
+        // A fixed-window limiter would hand back a whole fresh capacity at the boundary; a token
+        // bucket hands back one token per refill interval.
+        Thread.sleep(refillIntervalMs + 200);
         int secondAllowed = 0;
-        long start = System.nanoTime();
-        for (int i = 0; i < 20 && (System.nanoTime() - start) < 20_000_000L; i++) {
+        for (int i = 0; i < 10; i++) {
             if (store.tryConsume(key, capacity, window).allowed()) secondAllowed++;
         }
         assertTrue(
-                secondAllowed <= capacity,
-                "token-bucket must not let a fresh full capacity be consumed instantly across"
-                        + " the boundary; got "
+                secondAllowed >= 1 && secondAllowed < capacity,
+                "one refill interval must yield about one token, not a fresh full window of "
+                        + capacity
+                        + "; got "
                         + secondAllowed);
     }
 

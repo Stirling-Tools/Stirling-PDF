@@ -179,10 +179,16 @@ jobs:
           java-version: "25"
           distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - name: Cache Gradle User Home
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          gradle-version: 9.6.1
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Setup Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -380,7 +386,7 @@ jobs:
 
       - name: Build Tauri app (signed)
         if: env.SIGN_BUNDLE == 'true'
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -415,7 +421,7 @@ jobs:
 
       - name: Build Tauri app (unsigned)
         if: env.SIGN_BUNDLE != 'true'
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGN: "0"
@@ -441,7 +447,7 @@ jobs:
       - name: Build Tauri app (Linux AppImage)
         if: matrix.platform == 'ubuntu-22.04' && !inputs.minimal
         continue-on-error: true
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGN: ${{ (inputs.sign && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
