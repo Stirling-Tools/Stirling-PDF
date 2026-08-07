@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import path from "node:path";
+import { createRequire } from "node:module";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import {
   PDFArray,
@@ -16,9 +16,12 @@ const ONE_PIXEL_PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 
 beforeAll(async () => {
-  const wasmPath = path.resolve(
-    process.cwd(),
-    "node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
+  // Resolve through the module system, not process.cwd(): the package is
+  // hoisted to frontend/node_modules while vitest workers may run with cwd
+  // at editor/ (whose node_modules is empty), which 404'd the cwd-relative
+  // path on any --root editor invocation.
+  const wasmPath = createRequire(import.meta.url).resolve(
+    "@embedpdf/pdfium/pdfium.wasm",
   );
   const wasmBytes = await readFile(wasmPath);
   vi.stubGlobal(

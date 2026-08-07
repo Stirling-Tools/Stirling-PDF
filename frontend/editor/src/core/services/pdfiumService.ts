@@ -289,6 +289,43 @@ function copyToWasmHeap(
   (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(bytes, ptr);
 }
 
+/** Human-readable message for an FPDF_GetLastError() code. */
+function pdfiumOpenErrorMessage(err: number): string {
+  switch (err) {
+    case 1:
+      return "Could not open the PDF (unknown error).";
+    case 2:
+      return "This file is not a valid PDF or is corrupted.";
+    case 3:
+      return "The PDF file is corrupted and could not be read.";
+    case 4:
+      return "This PDF is password-protected.";
+    case 5:
+      return "This PDF uses an unsupported security scheme.";
+    case 6:
+      return "A page in this PDF could not be loaded.";
+    default:
+      return `Could not open the PDF (error ${err}).`;
+  }
+}
+
+/** FPDF_GetLastError() code for a missing/incorrect document password. */
+export const FPDF_ERR_PASSWORD = 4;
+
+/**
+ * Open failure carrying the raw FPDF_GetLastError() code so callers can tell a
+ * password prompt (code 4) apart from a corrupt file. Still an `Error`, so
+ * existing `instanceof Error` handlers keep working.
+ */
+export class PdfiumOpenError extends Error {
+  readonly code: number;
+  constructor(code: number) {
+    super(pdfiumOpenErrorMessage(code));
+    this.name = "PdfiumOpenError";
+    this.code = code;
+  }
+}
+
 /**
  * Load a PDF into PDFium memory and return the document pointer.
  * Caller MUST call `closeRawDocument(docPtr)` when finished.
@@ -306,8 +343,7 @@ export async function openRawDocument(
   const docPtr = m.FPDF_LoadMemDocument(ptr, len, password ?? "");
   if (!docPtr) {
     m.pdfium.wasmExports.free(ptr);
-    const err = m.FPDF_GetLastError();
-    throw new Error(`PDFium: failed to open document (error ${err})`);
+    throw new PdfiumOpenError(m.FPDF_GetLastError());
   }
   // Keep the buffer alive — freed in closeRawDocument()
   _docDataPtrs.set(docPtr, ptr);
