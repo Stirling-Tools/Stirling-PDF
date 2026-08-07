@@ -97,7 +97,7 @@ function toFormField(
   // Derive value string
   let value = f.value;
   if (type === "checkbox") {
-    value = f.isChecked ? "Yes" : "Off";
+    value = f.isChecked ? f.widgets[0]?.exportValue || "Yes" : "Off";
   } else if (type === "radio") {
     // Use widget index as the canonical radio value.
     // This avoids issues with duplicate exportValues across widgets
