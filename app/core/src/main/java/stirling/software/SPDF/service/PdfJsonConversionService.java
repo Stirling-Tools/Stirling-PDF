@@ -3784,17 +3784,6 @@ public class PdfJsonConversionService {
         }
     }
 
-    private String abbreviate(String value) {
-        if (value == null) {
-            return "";
-        }
-        String trimmed = WHITESPACE_PATTERN.matcher(value).replaceAll(" ").trim();
-        if (trimmed.length() <= 32) {
-            return trimmed;
-        }
-        return trimmed.substring(0, 29) + "...";
-    }
-
     private static class FontProgramData {
         private final String base64;
         private final String format;
@@ -5390,20 +5379,6 @@ public class PdfJsonConversionService {
                     .colorSpace(colorSpaceName)
                     .components(effective)
                     .build();
-        }
-
-        private String sanitizeForLog(String value) {
-            if (value == null) {
-                return "null";
-            }
-            return value.replace("\n", "\\n").replace("\r", "\\r");
-        }
-
-        private String describeColor(PdfJsonTextColor color) {
-            if (color == null || color.getComponents() == null) {
-                return "null";
-            }
-            return color.getColorSpace() + "=" + color.getComponents();
         }
     }
 
