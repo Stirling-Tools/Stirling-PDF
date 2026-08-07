@@ -380,28 +380,8 @@ export default function Onboarding() {
   }
 
   // Interrupt slides shown outside the normal step flow. Precedence is
-  // preserved by evaluation order: analytics consent → first login → MFA →
+  // preserved by evaluation order: first login → MFA → analytics consent →
   // external license notice.
-  if (showAnalyticsModal) {
-    return (
-      <StaticOnboardingSlide
-        key="analytics-choice"
-        slideId="analytics-choice"
-        runtimeState={runtimeState}
-        params={{ analyticsError, analyticsLoading }}
-        onSkip={() => {}} // No skip allowed
-        allowDismiss={false}
-        onAction={async (action) => {
-          if (action === "enable-analytics") {
-            await handleAnalyticsChoice(true);
-          } else if (action === "disable-analytics") {
-            await handleAnalyticsChoice(false);
-          }
-        }}
-      />
-    );
-  }
-
   if (firstLoginModalOpen) {
     return (
       <StaticOnboardingSlide
@@ -437,6 +417,26 @@ export default function Onboarding() {
         onAction={(action) => {
           if (action === "complete-close") {
             handleMfaSetupComplete();
+          }
+        }}
+      />
+    );
+  }
+
+  if (showAnalyticsModal) {
+    return (
+      <StaticOnboardingSlide
+        key="analytics-choice"
+        slideId="analytics-choice"
+        runtimeState={runtimeState}
+        params={{ analyticsError, analyticsLoading }}
+        onSkip={() => {}} // No skip allowed
+        allowDismiss={false}
+        onAction={async (action) => {
+          if (action === "enable-analytics") {
+            await handleAnalyticsChoice(true);
+          } else if (action === "disable-analytics") {
+            await handleAnalyticsChoice(false);
           }
         }}
       />

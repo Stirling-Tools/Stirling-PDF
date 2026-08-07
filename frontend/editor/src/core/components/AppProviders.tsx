@@ -39,6 +39,7 @@ import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
+import { createEditorQueryClient } from "@app/queryClient";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -116,7 +117,16 @@ function ServerDefaultsSync() {
  * Core application providers
  * Contains all providers needed for the core
  */
-export function AppProviders({
+export function AppProviders(props: AppProvidersProps) {
+  const [queryClient] = useState(createEditorQueryClient);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppProvidersTree {...props} />
+    </QueryClientProvider>
+  );
+}
+
+function AppProvidersTree({
   children,
   appConfigRetryOptions,
   appConfigProviderProps,
@@ -137,7 +147,7 @@ export function AppProviders({
                 <AppConfigLoader />
                 <ServerDefaultsSync />
                 {/* Auto-popup on startup when a newer Stirling-PDF release is available.
-                  No-ops inside Tauri — the desktop popup handles that flow. */}
+                  No-ops inside Tauri; the desktop popup handles that flow. */}
                 <UpdateStartupPopup />
                 <FileContextProvider
                   enableUrlSync={true}
