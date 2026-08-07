@@ -175,6 +175,7 @@ export default function WorkbenchBar({
           value={enforcingProgress}
           striped
           animated
+          aria-label={t("policy.enforcingTitle", "Enforcing policy…")}
         />
       ) : (
         <Loader size="xs" />

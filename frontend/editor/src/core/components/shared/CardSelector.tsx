@@ -57,6 +57,20 @@ const CardSelector = <T, K extends CardOption<T>>({
               radius="md"
               w="100%"
               h={"2.8rem"}
+              // A choice card is a control: without these it is a div with an
+              // onClick, so the option cannot be reached or chosen by keyboard.
+              // aria-disabled rather than removal keeps the option visible and
+              // explains why it is inert.
+              role="button"
+              tabIndex={disabled ? -1 : 0}
+              aria-disabled={disabled || undefined}
+              onKeyDown={(e) => {
+                if (disabled) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleOptionClick(option.value);
+                }
+              }}
               style={{
                 cursor: disabled ? "default" : "pointer",
                 backgroundColor: "var(--mantine-color-gray-2)",

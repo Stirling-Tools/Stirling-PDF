@@ -1406,6 +1406,17 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     clearSelection();
   };
 
+  // Clicking the page backdrop deselects, but that is mouse-only: without this
+  // a keyboard user has no way out of a selection. The backdrop itself stays a
+  // plain surface — it is a canvas, not a control.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") handleBackgroundClick();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   const handleSelectionInteraction = useCallback(
     (groupId: string, groupIndex: number, event: React.MouseEvent): boolean => {
       const multiSelect = event.metaKey || event.ctrlKey;
@@ -1683,7 +1694,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
           >
             <Stack align="center" gap="md" style={{ pointerEvents: "none" }}>
               <UploadFileIcon
-                sx={{ fontSize: 48, color: "var(--mantine-color-blue-5)" }}
+                sx={{ fontSize: 48, color: "var(--c-accent-text)" }}
               />
               <Text size="lg" fw={600}>
                 {t("pdfTextEditor.empty.title", "No document loaded")}
@@ -1741,6 +1752,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
               value={conversionProgress?.percent || 0}
               size="lg"
               radius="md"
+              aria-label={t(
+                "pdfTextEditor.converting",
+                "Converting PDF to editable format...",
+              )}
             />
           </Stack>
         </Card>
