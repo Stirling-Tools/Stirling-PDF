@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable
-from typing import Literal, overload
+from typing import Literal, Protocol, overload
 
 from pydantic import Field
 from pydantic_ai import Agent
@@ -101,6 +101,16 @@ class PdfEditSelectionAgent:
         return result.output
 
 
+class ParameterSelector(Protocol):
+    async def select(
+        self,
+        request: PdfEditRequest,
+        operation_plan: list[ToolEndpoint],
+        operation_index: int,
+        generated_steps: list[ToolOperationStep],
+    ) -> ParamToolModel: ...
+
+
 class PdfEditParameterSelector:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
@@ -174,7 +184,7 @@ class PdfEditParameterSelector:
 class PdfEditAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
-        self.parameter_selector = PdfEditParameterSelector(runtime)
+        self.parameter_selector: ParameterSelector = PdfEditParameterSelector(runtime)
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfEditResponse:
         """Entry point for the orchestrator delegate — adapts the orchestrator's
