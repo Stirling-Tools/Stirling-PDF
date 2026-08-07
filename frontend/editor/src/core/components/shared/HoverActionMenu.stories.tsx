@@ -1,93 +1,105 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import HoverActionMenu from "@app/components/shared/HoverActionMenu";
+import HoverActionMenu, {
+  type HoverAction,
+} from "@app/components/shared/HoverActionMenu";
+import { iconMap } from "@app/components/tools/automate/iconMap";
 
-const action = (
-  id: string,
-  label: string,
-  icon: React.ReactNode,
-  over: Record<string, unknown> = {},
-) => ({ id, label, icon, onClick: () => {}, ...over });
+const { EditIcon, DeleteIcon, DownloadIcon } = iconMap;
 
-const ACTIONS = [
-  action("edit", "Rename", <EditRoundedIcon fontSize="small" />),
-  action("download", "Download", <DownloadRoundedIcon fontSize="small" />),
-  action("share", "Share", <ShareRoundedIcon fontSize="small" />),
-  action("delete", "Delete", <DeleteRoundedIcon fontSize="small" />),
+const actions: HoverAction[] = [
+  {
+    id: "edit",
+    icon: <EditIcon style={{ fontSize: 16 }} />,
+    label: "Edit",
+    onClick: () => {},
+  },
+  {
+    id: "download",
+    icon: <DownloadIcon style={{ fontSize: 16 }} />,
+    label: "Download",
+    onClick: () => {},
+  },
+  {
+    id: "delete",
+    icon: <DeleteIcon style={{ fontSize: 16 }} />,
+    label: "Delete",
+    onClick: () => {},
+    color: "var(--text-error)",
+  },
 ];
 
-/** The row of actions that appears over a card on hover. Hidden actions are
- *  dropped entirely, and the menu renders nothing when none remain — so a card
- *  with no available actions gets no empty affordance. */
 const meta: Meta<typeof HoverActionMenu> = {
   title: "Shared/HoverActionMenu",
   component: HoverActionMenu,
-  parameters: { layout: "centered" },
-  args: { show: true, actions: ACTIONS },
+  parameters: { layout: "padded" },
   decorators: [
-    (Story) => (
-      <div
-        style={{
-          position: "relative",
-          width: 260,
-          height: 150,
-          border: "1px solid var(--c-border)",
-          borderRadius: 8,
-          background: "var(--c-surface)",
-        }}
-      >
-        <Story />
+    (S) => (
+      <div style={{ position: "relative", width: "16rem", height: "4rem" }}>
+        <S />
       </div>
     ),
   ],
 };
 export default meta;
-
 type Story = StoryObj<typeof HoverActionMenu>;
 
-/** All four actions, seated inside the card. */
-export const Default: Story = {};
+/** Visible menu with the standard edit/download/delete action set. */
+export const Default: Story = {
+  args: {
+    show: true,
+    actions,
+  },
+};
 
-/** Seated outside the card's edge. */
-export const OutsidePosition: Story = { args: { position: "outside" } };
+/** Hidden state (`show: false`) — menu stays mounted but faded/non-interactive. */
+export const Hidden: Story = {
+  args: {
+    show: false,
+    actions,
+  },
+};
 
-/** Not shown — the card is not hovered. */
-export const Hidden: Story = { args: { show: false } };
-
-/** One action disabled: still listed, so its absence isn't mistaken for a
- *  missing feature. */
+/** One action disabled with a custom tooltip explaining why. */
 export const WithDisabledAction: Story = {
   args: {
+    show: true,
     actions: [
-      ACTIONS[0],
-      action("download", "Download", <DownloadRoundedIcon fontSize="small" />, {
+      actions[0],
+      actions[1],
+      {
+        ...actions[2],
         disabled: true,
-        tooltip: "Still processing",
-      }),
-      ACTIONS[3],
+        tooltip: "Deletion is restricted by policy",
+      },
     ],
   },
+};
+
+/** Seated outside the card's edge rather than inside it. */
+export const OutsidePosition: Story = {
+  args: { show: true, actions, position: "outside" },
 };
 
 /** An action hidden outright — dropped rather than greyed. */
 export const WithHiddenAction: Story = {
   args: {
-    actions: [ACTIONS[0], { ...ACTIONS[2], hidden: true }, ACTIONS[3]],
+    show: true,
+    actions: [actions[0], { ...actions[1], hidden: true }, actions[2]],
   },
 };
 
-/** Every action hidden: the menu renders nothing at all. */
+/** Every action hidden: the menu renders nothing at all, so a card with no
+ *  available actions gets no empty affordance. */
 export const AllHidden: Story = {
-  args: { actions: ACTIONS.map((a) => ({ ...a, hidden: true })) },
+  args: { show: true, actions: actions.map((a) => ({ ...a, hidden: true })) },
 };
 
 /** A single action. */
-export const SingleAction: Story = { args: { actions: [ACTIONS[3]] } };
+export const SingleAction: Story = {
+  args: { show: true, actions: [actions[2]] },
+};
 
-/** Driven by CSS hover rather than React state — hover the card to reveal. */
+/** Revealed by CSS hover rather than React state — hover the card. */
 export const CssHoverVisibility: Story = {
-  args: { visibility: "cssHover", show: false },
+  args: { show: false, actions, visibility: "cssHover" },
 };

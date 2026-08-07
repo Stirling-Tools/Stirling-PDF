@@ -1,63 +1,68 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
+import ResultsPreview, {
+  ReviewFile,
+} from "@app/components/tools/shared/ResultsPreview";
 
-/** A 1×1 transparent PNG — enough for the thumbnail slot without shipping a
- *  fixture image into the repo. */
-const PIXEL =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+function makeFile(name: string, type: string, size: number): File {
+  return new File([new Uint8Array(size)], name, { type });
+}
 
-const file = (name: string, bytes = 24_000) =>
-  new File([new Uint8Array(bytes)], name, { type: "application/pdf" });
+const files: ReviewFile[] = [
+  { file: makeFile("contract-final.pdf", "application/pdf", 245_760) },
+  { file: makeFile("scan-001.pdf", "application/pdf", 1_048_576) },
+  { file: makeFile("invoice-march.pdf", "application/pdf", 51_200) },
+];
 
-/** What a tool produced, once it has run: a paged preview with metadata and
- *  navigation between the output files. */
-const meta: Meta<typeof ResultsPreview> = {
+const meta = {
   title: "Tools/Shared/ResultsPreview",
   component: ResultsPreview,
-  parameters: { layout: "padded" },
-};
+} satisfies Meta<typeof ResultsPreview>;
 export default meta;
+type Story = StoryObj<typeof meta>;
 
-type Story = StoryObj<typeof ResultsPreview>;
+export const Default: Story = {
+  args: {
+    files,
+  },
+};
 
-/** A single result. */
 export const SingleFile: Story = {
   args: {
-    files: [{ file: file("contract-2026-rotated.pdf"), thumbnail: PIXEL }],
+    files: [files[0]],
   },
 };
 
-/** Several results — the navigation controls appear and wrap around. */
-export const MultipleFiles: Story = {
+export const Loading: Story = {
   args: {
-    files: [
-      { file: file("invoice-001.pdf"), thumbnail: PIXEL },
-      { file: file("invoice-002.pdf", 48_000), thumbnail: PIXEL },
-      { file: file("invoice-003.pdf", 96_000), thumbnail: PIXEL },
-    ],
-  },
-};
-
-/** Results are through, but their thumbnails are still rendering. */
-export const GeneratingThumbnails: Story = {
-  args: {
-    files: [{ file: file("scan-batch.pdf") }],
+    files: [],
     isGeneratingThumbnails: true,
   },
 };
 
-/** Files without thumbnails — the metadata still has to carry the preview. */
-export const NoThumbnails: Story = {
+export const Empty: Story = {
   args: {
-    files: [
-      { file: file("report-q3.pdf") },
-      { file: file("report-q4.pdf", 120_000) },
-    ],
+    files: [],
   },
 };
 
-/** Nothing produced. */
-export const Empty: Story = { args: { files: [] } };
+/** A 1x1 transparent PNG — enough to fill the thumbnail slot without shipping
+ *  a fixture image into the repo. */
+const PIXEL =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+/** Several results with thumbnails — the navigation controls appear and wrap. */
+export const MultipleFiles: Story = {
+  args: {
+    files: files.map((f) => ({ ...f, thumbnail: PIXEL })),
+  },
+};
+
+/** Files present but no thumbnails, so the metadata carries the preview. */
+export const NoThumbnails: Story = {
+  args: {
+    files: files.slice(0, 2),
+  },
+};
 
 /** A custom empty message, for tools whose "no results" means something
  *  specific. */
@@ -73,8 +78,10 @@ export const LongFilename: Story = {
   args: {
     files: [
       {
-        file: file(
+        file: makeFile(
           "2026-08-quarterly-consolidated-financial-statements-final-signed.pdf",
+          "application/pdf",
+          245_760,
         ),
         thumbnail: PIXEL,
       },
