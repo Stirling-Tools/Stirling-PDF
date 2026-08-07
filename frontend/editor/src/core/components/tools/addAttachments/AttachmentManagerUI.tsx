@@ -67,7 +67,6 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
 
   return (
     <Stack gap="md">
-
       {/* FILTER SEARCH INPUT (SHOWN WHEN >3 ATTACHMENTS EXIST) */}
       {rows.length > 3 && (
         <TextInput
