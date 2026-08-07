@@ -2,15 +2,17 @@
  * Receive-flow contract for the phone-signature QR modal.
  *
  * The transfer session's upload endpoint accepts any file from anyone holding
- * the QR URL, so the modal must treat arrivals as untrusted: only images become
- * the signature; anything else is ignored. On a valid image it hands the data
- * URL to the caller and closes.
+ * the QR URL, so the modal must treat arrivals as untrusted. Images become
+ * draw/photo payloads by filename prefix, a signature-text JSON payload is
+ * parsed and clamped field by field, and anything else is ignored.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import MobileSignatureModal from "@app/components/tools/sign/MobileSignatureModal";
+import MobileSignatureModal, {
+  type MobileSignaturePayload,
+} from "@app/components/tools/sign/MobileSignatureModal";
 import apiClient from "@app/services/apiClient";
 import { expectConsole } from "@app/tests/failOnConsole";
 
@@ -44,7 +46,9 @@ const SESSION_INFO = {
   timeoutMs: 600_000,
 };
 
-function primeSession(files: Array<{ filename: string; contentType: string }>) {
+function primeSession(
+  files: Array<{ filename: string; contentType: string; body?: string }>,
+) {
   mockedApi.post.mockResolvedValue({
     status: 200,
     data: SESSION_INFO,
@@ -59,7 +63,9 @@ function primeSession(files: Array<{ filename: string; contentType: string }>) {
       const meta = files.find((f) => f.filename === filename);
       return Promise.resolve({
         status: 200,
-        data: new Blob(["fake-bytes"], { type: meta?.contentType }),
+        data: new Blob([meta?.body ?? "fake-bytes"], {
+          type: meta?.contentType,
+        }),
         config,
       } as never);
     }
@@ -68,7 +74,7 @@ function primeSession(files: Array<{ filename: string; contentType: string }>) {
 }
 
 function renderModal(
-  onSignatureReceived: (d: string) => void,
+  onSignatureReceived: (payload: MobileSignaturePayload) => void,
   onClose: () => void,
 ) {
   return render(
@@ -90,15 +96,58 @@ describe("MobileSignatureModal", () => {
     vi.clearAllMocks();
   });
 
-  it("hands a received image to the caller as a data URL and closes", async () => {
-    primeSession([{ filename: "signature-1.png", contentType: "image/png" }]);
+  it("hands a drawn signature to the caller as a draw payload and closes", async () => {
+    primeSession([
+      { filename: "signature-draw-1.png", contentType: "image/png" },
+    ]);
     const onSignatureReceived = vi.fn();
     const onClose = vi.fn();
 
     renderModal(onSignatureReceived, onClose);
 
     await waitFor(() => expect(onSignatureReceived).toHaveBeenCalledTimes(1));
-    expect(onSignatureReceived.mock.calls[0][0]).toMatch(/^data:image\/png/);
+    const payload = onSignatureReceived.mock.calls[0][0];
+    expect(payload.kind).toBe("draw");
+    expect(payload.dataUrl).toMatch(/^data:image\/png/);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("routes a photographed signature as a photo payload", async () => {
+    primeSession([
+      { filename: "signature-photo-1.jpg", contentType: "image/jpeg" },
+    ]);
+    const onSignatureReceived = vi.fn();
+
+    renderModal(onSignatureReceived, vi.fn());
+
+    await waitFor(() => expect(onSignatureReceived).toHaveBeenCalledTimes(1));
+    expect(onSignatureReceived.mock.calls[0][0].kind).toBe("photo");
+  });
+
+  it("parses a typed signature as text, clamping unknown font and colour", async () => {
+    primeSession([
+      {
+        filename: "signature-text-1.json",
+        contentType: "application/json",
+        body: JSON.stringify({
+          text: "  Reece  ",
+          fontFamily: "Wingdings",
+          color: "javascript:alert(1)",
+        }),
+      },
+    ]);
+    const onSignatureReceived = vi.fn();
+    const onClose = vi.fn();
+
+    renderModal(onSignatureReceived, onClose);
+
+    await waitFor(() => expect(onSignatureReceived).toHaveBeenCalledTimes(1));
+    expect(onSignatureReceived.mock.calls[0][0]).toEqual({
+      kind: "text",
+      text: "Reece",
+      fontFamily: "Helvetica",
+      color: "#000000",
+    });
     expect(onClose).toHaveBeenCalled();
   });
 

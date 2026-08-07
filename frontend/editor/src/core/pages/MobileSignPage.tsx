@@ -46,39 +46,30 @@ const PEN_SIZES = [
   { value: 6, label: "L" },
 ];
 
+/**
+ * The sign tool's own text-mode fonts, so a typed signature transfers as
+ * data and stays editable there. `css` approximates each for the on-phone
+ * preview; `value` is what the desktop's font parameter understands.
+ */
 const TYPE_FONTS = [
-  { value: "Brush Script MT, cursive", label: "Brush Script" },
-  { value: "Georgia, serif", label: "Georgia" },
-  { value: "Times New Roman, serif", label: "Times New Roman" },
-  { value: "Arial, sans-serif", label: "Arial" },
-  { value: "Courier New, monospace", label: "Courier New" },
+  {
+    value: "Helvetica",
+    css: "Helvetica, Arial, sans-serif",
+    label: "Helvetica",
+  },
+  {
+    value: "Times-Roman",
+    css: "'Times New Roman', Times, serif",
+    label: "Times",
+  },
+  {
+    value: "Courier",
+    css: "'Courier New', Courier, monospace",
+    label: "Courier",
+  },
+  { value: "Arial", css: "Arial, sans-serif", label: "Arial" },
+  { value: "Georgia", css: "Georgia, serif", label: "Georgia" },
 ];
-
-/** Render typed text to a trimmed transparent PNG, sized for stamping. */
-function renderTypedSignature(
-  text: string,
-  fontFamily: string,
-  color: string,
-): string | null {
-  const fontSize = 96; // rendered large so the stamped image stays crisp
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-
-  ctx.font = `${fontSize}px ${fontFamily}`;
-  const metrics = ctx.measureText(text);
-  const paddingX = Math.round(fontSize * 0.25);
-  const paddingY = Math.round(fontSize * 0.35);
-  canvas.width = Math.max(1, Math.ceil(metrics.width) + paddingX * 2);
-  canvas.height = Math.max(1, fontSize + paddingY * 2);
-
-  // Canvas state resets when its size changes, so set the font again.
-  ctx.font = `${fontSize}px ${fontFamily}`;
-  ctx.fillStyle = color;
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, paddingX, canvas.height / 2);
-  return canvas.toDataURL("image/png");
-}
 
 async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
   const response = await fetch(dataUrl);
@@ -157,13 +148,44 @@ export default function MobileSignPage() {
     reader.readAsDataURL(file);
   };
 
-  const currentSignature = useCallback((): string | null => {
-    if (tab === "draw") return canvasHandle.current?.exportPng() ?? null;
+  /**
+   * What this tab sends: ink and photos as image files, typed signatures as a
+   * JSON payload (text + font + colour) so the desktop keeps them editable in
+   * the sign tool's text mode. The filename prefix tells the desktop which
+   * source the signature belongs to.
+   */
+  const buildUpload = useCallback(async (): Promise<{
+    blob: Blob;
+    filename: string;
+  } | null> => {
+    if (tab === "draw") {
+      const dataUrl = canvasHandle.current?.exportPng();
+      if (!dataUrl) return null;
+      return {
+        blob: await dataUrlToBlob(dataUrl),
+        filename: `signature-draw-${Date.now()}.png`,
+      };
+    }
     if (tab === "type") {
       const text = typedText.trim();
-      return text ? renderTypedSignature(text, typeFont, inkColor) : null;
+      if (!text) return null;
+      const payload = JSON.stringify({
+        text,
+        fontFamily: typeFont,
+        color: inkColor,
+      });
+      return {
+        blob: new Blob([payload], { type: "application/json" }),
+        filename: `signature-text-${Date.now()}.json`,
+      };
     }
-    return photoDataUrl;
+    if (!photoDataUrl) return null;
+    const blob = await dataUrlToBlob(photoDataUrl);
+    const extension = blob.type === "image/jpeg" ? "jpg" : "png";
+    return {
+      blob,
+      filename: `signature-photo-${Date.now()}.${extension}`,
+    };
   }, [tab, typedText, typeFont, inkColor, photoDataUrl]);
 
   const canSend =
@@ -172,15 +194,15 @@ export default function MobileSignPage() {
     (tab === "photo" && photoDataUrl !== null);
 
   const handleSend = async () => {
-    const dataUrl = currentSignature();
-    if (!dataUrl || !sessionId) return;
+    if (!sessionId) return;
 
     setIsSending(true);
     setSendError(null);
     try {
-      const blob = await dataUrlToBlob(dataUrl);
+      const upload = await buildUpload();
+      if (!upload) return;
       const formData = new FormData();
-      formData.append("files", blob, `signature-${Date.now()}.png`);
+      formData.append("files", upload.blob, upload.filename);
 
       const response = await fetch(
         `${API_BASE}/api/v1/mobile-scanner/upload/${sessionId}`,
@@ -395,7 +417,7 @@ export default function MobileSignPage() {
           <Select
             value={typeFont}
             onChange={(value) => value && setTypeFont(value)}
-            data={TYPE_FONTS}
+            data={TYPE_FONTS.map(({ value, label }) => ({ value, label }))}
             allowDeselect={false}
           />
           <Group gap="xs">
@@ -432,7 +454,9 @@ export default function MobileSignPage() {
           >
             <Text
               style={{
-                fontFamily: typeFont,
+                fontFamily:
+                  TYPE_FONTS.find((font) => font.value === typeFont)?.css ??
+                  "sans-serif",
                 fontSize: "2.5rem",
                 color: inkColor,
                 lineHeight: 1.2,

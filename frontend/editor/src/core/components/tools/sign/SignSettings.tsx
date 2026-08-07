@@ -34,7 +34,9 @@ import {
   AddSignatureResult,
 } from "@app/hooks/tools/sign/useSavedSignatures";
 import { SavedSignaturesSection } from "@app/components/tools/sign/SavedSignaturesSection";
-import MobileSignatureModal from "@app/components/tools/sign/MobileSignatureModal";
+import MobileSignatureModal, {
+  type MobileSignaturePayload,
+} from "@app/components/tools/sign/MobileSignatureModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
@@ -634,6 +636,62 @@ const SignSettings = ({
     [onActivateSignaturePlacement],
   );
 
+  // Route a signature made on a phone to the matching source, mirroring
+  // handleUseSavedSignature: ink is a canvas signature, a photo is an image
+  // signature, and typed text stays editable text rather than baked pixels.
+  const handleMobileSignatureReceived = useCallback(
+    (payload: MobileSignaturePayload) => {
+      if (payload.kind === "draw") {
+        if (parameters.signatureType !== "canvas") {
+          onParameterChange("signatureType", "canvas");
+        }
+        // Placement activation rides the canvas-change handler.
+        handleCanvasSignatureChange(payload.dataUrl);
+        return;
+      }
+      if (payload.kind === "photo") {
+        if (parameters.signatureType !== "image") {
+          onParameterChange("signatureType", "image");
+        }
+        setImageSignatureData(payload.dataUrl);
+      } else {
+        if (parameters.signatureType !== "text") {
+          onParameterChange("signatureType", "text");
+        }
+        onParameterChange("signerName", payload.text);
+        onParameterChange("fontFamily", payload.fontFamily);
+        onParameterChange("textColor", payload.color);
+        // Move the draft mirror in the same commit as the parameters. The
+        // record/restore effect pair otherwise sees them one commit apart and
+        // ping-pongs old draft against new params, wiping the received text
+        // and looping until React aborts the update depth.
+        const nextDraft = {
+          signerName: payload.text,
+          fontSize: parameters.fontSize ?? 16,
+          fontFamily: payload.fontFamily,
+          textColor: payload.color,
+        };
+        lastSyncedTextDraft.current = nextDraft;
+        setSignatureDrafts((prev) => ({ ...prev, text: nextDraft }));
+      }
+      if (typeof window !== "undefined") {
+        window.setTimeout(
+          () => onActivateSignaturePlacement?.(),
+          PLACEMENT_ACTIVATION_DELAY,
+        );
+      } else {
+        onActivateSignaturePlacement?.();
+      }
+    },
+    [
+      parameters.signatureType,
+      parameters.fontSize,
+      onParameterChange,
+      handleCanvasSignatureChange,
+      onActivateSignaturePlacement,
+    ],
+  );
+
   const hasCanvasSignature = useMemo(
     () => Boolean(canvasSignatureData),
     [canvasSignatureData],
@@ -996,7 +1054,7 @@ const SignSettings = ({
               <MobileSignatureModal
                 opened={isMobileSignModalOpen}
                 onClose={() => setIsMobileSignModalOpen(false)}
-                onSignatureReceived={handleCanvasSignatureChange}
+                onSignatureReceived={handleMobileSignatureReceived}
               />
             </>
           )}

@@ -555,7 +555,7 @@
                     if (!blob) return;
 
                     var form = new FormData();
-                    form.append("files", blob, "signature-" + Date.now() + ".png");
+                    form.append("files", blob, "signature-draw-" + Date.now() + ".png");
 
                     var xhr = new XMLHttpRequest();
                     xhr.open("POST", API_BASE + "api/v1/mobile-scanner/upload/" + encodeURIComponent(sessionId));

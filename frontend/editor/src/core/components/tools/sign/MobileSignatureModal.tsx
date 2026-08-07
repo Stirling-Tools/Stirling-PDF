@@ -9,11 +9,40 @@ import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
 
+/**
+ * What the phone sent, routed to the matching signature source: ink and
+ * photos as pixels, typed signatures as data so they stay editable text.
+ */
+export type MobileSignaturePayload =
+  | { kind: "draw"; dataUrl: string }
+  | { kind: "photo"; dataUrl: string }
+  | { kind: "text"; text: string; fontFamily: string; color: string };
+
+/** Fonts the sign tool's text mode offers; anything else falls back. */
+const TEXT_FONTS = new Set([
+  "Helvetica",
+  "Times-Roman",
+  "Courier",
+  "Arial",
+  "Georgia",
+]);
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+const MAX_TEXT_LENGTH = 200;
+
 interface MobileSignatureModalProps {
   opened: boolean;
   onClose: () => void;
-  /** Receives the signature as a PNG/image data URL. */
-  onSignatureReceived: (dataUrl: string) => void;
+  onSignatureReceived: (payload: MobileSignaturePayload) => void;
+}
+
+/** FileReader-based (rather than File.text/arrayBuffer, absent in jsdom). */
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
 }
 
 /**
@@ -30,31 +59,67 @@ export default function MobileSignatureModal({
   const { t } = useTranslation();
   const { config } = useAppConfig();
 
+  // The session endpoints accept any upload from anyone holding the QR URL,
+  // so nothing here is trusted: images pass as pixels, a typed signature is
+  // parsed and clamped field by field, everything else is ignored.
   const handleFileReceived = useCallback(
-    (file: File) =>
-      new Promise<void>((resolve) => {
-        // The session endpoints accept any upload from anyone holding the QR
-        // URL, so never assume the bytes are a signature: only images pass.
-        if (!file.type.startsWith("image/")) {
+    async (file: File) => {
+      if (
+        file.type === "application/json" &&
+        file.name.startsWith("signature-text")
+      ) {
+        try {
+          const parsed: unknown = JSON.parse(await readFileAsText(file));
+          const record = parsed as Record<string, unknown>;
+          const text =
+            typeof record?.text === "string"
+              ? record.text.trim().slice(0, MAX_TEXT_LENGTH)
+              : "";
+          if (!text) return;
+          onSignatureReceived({
+            kind: "text",
+            text,
+            fontFamily: TEXT_FONTS.has(record.fontFamily as string)
+              ? (record.fontFamily as string)
+              : "Helvetica",
+            color: HEX_COLOR.test(record.color as string)
+              ? (record.color as string)
+              : "#000000",
+          });
+          onClose();
+        } catch {
           console.warn(
-            "[MobileSignatureModal] Ignoring non-image upload:",
-            file.type,
+            "[MobileSignatureModal] Ignoring malformed text payload",
           );
-          resolve();
-          return;
         }
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        console.warn(
+          "[MobileSignatureModal] Ignoring non-image upload:",
+          file.type,
+        );
+        return;
+      }
+
+      await new Promise<void>((resolve) => {
         const reader = new FileReader();
         reader.onload = (event) => {
           const dataUrl = event.target?.result;
           if (typeof dataUrl === "string") {
-            onSignatureReceived(dataUrl);
+            onSignatureReceived({
+              kind: file.name.startsWith("signature-photo") ? "photo" : "draw",
+              dataUrl,
+            });
             onClose();
           }
           resolve();
         };
         reader.onerror = () => resolve();
         reader.readAsDataURL(file);
-      }),
+      });
+    },
     [onSignatureReceived, onClose],
   );
 
