@@ -80,7 +80,11 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 )}
 
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button variant="secondary" fullWidth>
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    onClick={() => onSelectPlan("monthly")}
+                  >
                     {t("payment.planStage.selectMonthly", "Select Monthly")}
                   </Button>
                 </div>
@@ -193,7 +197,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 )}
 
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button fullWidth>
+                  <Button fullWidth onClick={() => onSelectPlan("yearly")}>
                     {t("payment.planStage.selectYearly", "Select Yearly")}
                   </Button>
                 </div>

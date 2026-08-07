@@ -25,6 +25,14 @@ export interface TableProps<T> {
    * all rows interactive.
    */
   isRowInteractive?: (row: T) => boolean;
+  /**
+   * Set when every row already carries a control that performs {@link onRowClick}.
+   * Rows keep their pointer target but drop the button role and tab stop, so the
+   * in-row control is not nested inside another widget and the table keeps its
+   * row semantics. Keyboard and assistive-tech users reach the action through
+   * that control instead.
+   */
+  rowActionInCell?: boolean;
   /** Rendered in place of the body when there are no rows. */
   empty?: ReactNode;
   className?: string;
@@ -34,7 +42,7 @@ export interface TableProps<T> {
  * Minimal data table primitive. Columns own their own cell renderers, so the
  * table stays presentational — callers pre-sort/filter and pass the rows they
  * want shown. Rows become focusable buttons-in-disguise when `onRowClick` is
- * set.
+ * set, unless `rowActionInCell` says a control in the row already offers it.
  */
 export function Table<T>({
   columns,
@@ -42,6 +50,7 @@ export function Table<T>({
   rowKey,
   onRowClick,
   isRowInteractive,
+  rowActionInCell = false,
   empty,
   className,
 }: TableProps<T>) {
@@ -85,10 +94,12 @@ export function Table<T>({
                       : "sui-table__row"
                   }
                   onClick={rowInteractive ? () => onRowClick?.(row) : undefined}
-                  tabIndex={rowInteractive ? 0 : undefined}
-                  role={rowInteractive ? "button" : undefined}
+                  tabIndex={rowInteractive && !rowActionInCell ? 0 : undefined}
+                  role={
+                    rowInteractive && !rowActionInCell ? "button" : undefined
+                  }
                   onKeyDown={
-                    rowInteractive
+                    rowInteractive && !rowActionInCell
                       ? (e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();

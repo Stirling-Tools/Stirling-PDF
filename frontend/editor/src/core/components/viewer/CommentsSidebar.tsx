@@ -289,7 +289,7 @@ function AnnotationTypeIcon({ ann }: { ann: PdfAnnotationObject }) {
       icon={iconName}
       width="1.25rem"
       height="1.25rem"
-      style={{ flexShrink: 0, color: "var(--mantine-color-blue-5)" }}
+      style={{ flexShrink: 0, color: "var(--c-accent-text)" }}
     />
   );
 }
@@ -1139,7 +1139,10 @@ export function CommentsSidebar({
                                                       );
                                                     }}
                                                   >
-                                                    <Text size="xs" c="blue">
+                                                    <Text
+                                                      size="xs"
+                                                      c="var(--c-accent-text)"
+                                                    >
                                                       {t(
                                                         "annotation.editText",
                                                         "Edit",

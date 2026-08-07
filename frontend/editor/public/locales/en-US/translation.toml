@@ -2195,6 +2195,7 @@ applied = "{{degrees}}° CW"
 confidenceValue = "Confidence {{value}}"
 noChange = "No change"
 pageLabel = "Page {{number}}"
+pages = "Per-page results"
 summary = "{{rotated}} of {{total}} pages rotated, {{unchanged}} left as they are"
 title = "Detection report"
 
@@ -3001,12 +3002,15 @@ tooltip = "This operation will use your cloud credits"
 tooltip = "Pick color from screen"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Choose color"
 
 [common]
 back = "Back"
 cancel = "Cancel"
 close = "Close"
+codeSample = "Code sample"
 collapse = "Collapse"
 confirm = "Confirm"
 continue = "Continue"
@@ -3023,6 +3027,7 @@ refresh = "Refresh"
 remaining = "Remaining"
 retry = "Retry"
 save = "Save"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Clear selected"
@@ -3185,6 +3190,7 @@ title = "Compression Method"
 [compress.settings]
 desiredSize = "Desired File Size"
 desiredSizePlaceholder = "Enter size"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
@@ -3824,11 +3830,13 @@ shareSelected = "Share Files"
 sharing = "Sharing"
 showAll = "Show All"
 showHistory = "Show History"
+sortBy = "Sort files"
 sortByDate = "Sort by Date"
 sortByName = "Sort by Name"
 sortBySize = "Sort by Size"
 storage = "Storage"
 storageState = "Storage"
+storageUsed = "Storage used"
 synced = "Synced"
 title = "Upload PDF Files"
 toolChain = "Tools Applied"
@@ -4168,6 +4176,7 @@ noFilesInStorageOpen = "No files available in storage. Open some files first."
 open = "Open"
 openFile = "Open File"
 openFiles = "Open Files"
+selectFile = "Select {{name}}"
 selectFromStorage = "Select from Storage"
 upload = "Upload"
 uploadFile = "Upload File"
@@ -4992,6 +5001,7 @@ filesReceived_other = "{{count}} files received"
 instructions = "Scan with your phone camera. Images convert to PDF automatically."
 instructionsNoConvert = "Scan with your phone camera to upload files."
 pollingError = "Error checking for files"
+qrCodeTitle = "QR code linking to the mobile upload page"
 sessionCreateError = "Failed to create session"
 title = "Upload from Mobile"
 
@@ -5129,6 +5139,7 @@ activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you 
 allTools = "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Close"
 cropSettings = "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."
+dialogLabel = "Onboarding"
 fileCheckbox = "Files on the workbench are selected for processing. You can select multiple files for batch operations using the left files sidebar."
 fileReplacement = "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."
 filesButton = "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on."
@@ -5565,6 +5576,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs used"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5644,6 +5656,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6047,6 +6060,7 @@ small = "500 Credits"
 xsmall = "100 Credits"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Choose the plan that fits your needs"
 title = "Available Plans"
 
@@ -6282,6 +6296,7 @@ revoked = "Revoked"
 unnamed = "Unnamed instance"
 
 [portal.accountLink.instances.columns]
+actions = "Actions"
 instance = "Instance"
 lastSeen = "Last seen"
 linked = "Linked"
@@ -6626,6 +6641,7 @@ reachedTitle = "Monthly spend limit reached"
 title = "Couldn't open Stripe portal"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs used"
 capSuffix_one = "of {{allowance}} free PDFs used"
 capSuffix_other = "of {{allowance}} free PDFs used"
 eyebrow = "Processor trial"
@@ -7186,6 +7202,7 @@ sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
+actions = "Actions"
 document = "Document"
 product = "Product"
 status = "Status"
@@ -7483,6 +7500,7 @@ rolledBack = "Rolled back"
 rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
+loadAria = "Load for {{name}}"
 msValue = "{{value}} ms"
 throughputValue = "{{value}}/min"
 
@@ -7528,6 +7546,7 @@ disabled = "Disabled"
 
 [portal.infrastructure.models]
 heading = "Models"
+loadAria = "Load for {{name}}"
 msValue = "{{value}} ms"
 subheading = "The model catalogue and routing that powers document processing across your workspace."
 
@@ -7894,6 +7913,7 @@ paused = "Paused"
 
 [portal.pipelines.table]
 name = "Pipeline"
+open = "Open"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
@@ -8785,6 +8805,7 @@ unused = "Unused"
 
 [portal.sources.table]
 documents = "Documents"
+open = "Open"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
@@ -11325,6 +11346,7 @@ delete = "Delete signature"
 
 [viewer.thumbnails]
 closeSidebar = "Close thumbnails sidebar"
+goToPage = "Go to page {{page}}"
 
 [viewPdf]
 tags = "view,read,annotate,text,image,highlight,edit"
