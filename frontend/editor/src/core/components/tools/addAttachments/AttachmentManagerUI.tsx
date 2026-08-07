@@ -171,6 +171,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
             onStageFiles(files);
           }
         }}
+        inputProps={{ id: "attachments-input" }}
         fullWidth
       >
         {t("attachments.addAttachments", "Add attachments...")}
