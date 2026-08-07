@@ -30,6 +30,7 @@ import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -51,6 +52,7 @@ public class AttachmentService implements AttachmentServiceInterface {
     private final long maxAttachmentSizeBytes;
     private final long maxTotalAttachmentSizeBytes;
 
+    @Autowired
     public AttachmentService() {
         this(DEFAULT_MAX_ATTACHMENT_SIZE_BYTES, DEFAULT_MAX_TOTAL_ATTACHMENT_SIZE_BYTES);
     }
