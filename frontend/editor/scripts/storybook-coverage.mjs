@@ -25,6 +25,16 @@
 // Not counted as surfaces at all: providers, contexts, gates, routers, test
 // helpers, and modules that return a config object rather than markup.
 //
+// Known blocker: desktop/ cannot be storied as things stand. Storybook resolves
+// @app/* through the proprietary vite tsconfig (proprietary -> core), but the
+// desktop flavour resolves it desktop-first, and 34 desktop files import
+// @app/* assets that only exist under desktop/ — e.g.
+// @app/components/shared/DisabledButtonWithTooltip.css. Those imports fail to
+// resolve in Storybook, so the story file will not load at all. Fixing it means
+// either a desktop-aware alias in .storybook/main.ts or moving the shared
+// assets; until then desktop/ is reported as a gap it is not yet possible to
+// close.
+//
 // Run from frontend/.
 
 import { readFileSync, readdirSync } from "node:fs";
