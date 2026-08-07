@@ -109,7 +109,10 @@ const INFRA_DIR =
   /\/(contexts|guards|test|tests|mocks|hooks|types|utils|api|data)\//;
 // Hidden and obsolete — not coming back, so it is not a gap anyone should be
 // spending stories on.
-const OBSOLETE_DIR = /\/watchedFolders\//;
+// Listed by name so the next one is a line rather than a regex edit, and so
+// the reason a directory is absent from the report is visible here.
+const OBSOLETE_DIRS = ["watchedFolders"];
+const OBSOLETE_DIR = new RegExp(`/(${OBSOLETE_DIRS.join("|")})/`);
 const RENDERS = /return\s*\(?\s*<|=>\s*\(?\s*</;
 // A module whose exported function returns a config object, not markup.
 const CONFIG_FACTORY = /:\s*(SlideConfig|ToolFlowConfig|\w+Config)\s*\{/;
