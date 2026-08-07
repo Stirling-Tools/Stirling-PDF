@@ -305,7 +305,6 @@ export default defineConfig(
       "editor/src/core/hooks/signing/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/hooks/tools/adjustContrast/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/hooks/tools/convert/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/hooks/tools/removePassword/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/hooks/tools/shared/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/services/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/tools/annotate/useAnnotationSelection.ts",
