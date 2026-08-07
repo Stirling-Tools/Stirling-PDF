@@ -15,11 +15,22 @@ import {
   buildStepParameters,
   emptyOperationValues,
   operationById,
+  operationFieldIssue,
   operationsByCategory,
   searchOperations,
   type ExternalApiStepParams,
+  type OperationFieldIssue,
   type StepOperation,
 } from "@portal/components/policies/stepOperations";
+import {
+  VariableField,
+  VariablesReference,
+} from "@portal/components/policies/VariableField";
+import { useVariableGroups } from "@portal/components/policies/useVariableGroups";
+import {
+  unknownReferences,
+  type VariableGroup,
+} from "@portal/components/policies/variables";
 
 /**
  * Configures a "send the document to another system" step.
@@ -54,15 +65,20 @@ function decodeValues(raw: string | undefined): Record<string, string> {
 
 interface PolicyExternalApiConfigProps {
   parameters: ExternalApiParams;
+  /** The step's 1-based place in the chain, so cross-step variables offer only earlier steps. */
+  stepPosition?: number;
   onChange: (parameters: ExternalApiParams) => void;
 }
 
 export function PolicyExternalApiConfig({
   parameters,
+  stepPosition,
   onChange,
 }: PolicyExternalApiConfigProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
+  // Which variable scopes this team can use, offered to every field and the reference panel.
+  const variableGroups = useVariableGroups(stepPosition);
   // Whether to OFFER the escape hatch. The server refuses it regardless of what the client
   // believes, so this is presentation only - the same contract the connections tab uses.
   const [allowCustom, setAllowCustom] = useState(true);
@@ -199,46 +215,89 @@ export function PolicyExternalApiConfig({
         />
       </FormField>
 
-      {(selected.fields ?? []).map((field) => (
-        <FormField
-          key={field.key}
-          label={t(field.labelKey)}
-          required={field.required}
-          helperText={field.helperTextKey ? t(field.helperTextKey) : undefined}
-        >
-          {field.control === "textarea" ? (
-            <textarea
-              className="portal-sources__connection-textarea"
-              rows={3}
-              value={values[field.key] ?? ""}
-              onChange={(e) => setValue(field.key, e.target.value)}
-            />
-          ) : field.control === "select" ? (
-            <Select
-              value={values[field.key] ?? ""}
-              options={(field.options ?? []).map((o) => ({
-                value: o.value,
-                label: t(o.labelKey),
-              }))}
-              onChange={(v) => v && setValue(field.key, v)}
-            />
-          ) : (
-            <Input
-              value={values[field.key] ?? ""}
-              placeholder={
-                field.placeholderKey ? t(field.placeholderKey) : undefined
-              }
-              onChange={(e) => setValue(field.key, e.target.value)}
-            />
-          )}
-        </FormField>
-      ))}
+      {(selected.fields ?? []).map((field) => {
+        // Surfaced at the field, and the same check gates saving the pipeline: a bad number or
+        // an unknown reference would otherwise save cleanly and fail every run.
+        const issue = operationFieldIssue(
+          field,
+          values[field.key] ?? "",
+          variableGroups,
+          stepPosition,
+        );
+        return (
+          <FormField
+            key={field.key}
+            label={t(field.labelKey)}
+            required={field.required}
+            error={issueText(t, issue)}
+            helperText={
+              field.helperTextKey ? t(field.helperTextKey) : undefined
+            }
+          >
+            {field.control === "select" ? (
+              <Select
+                value={values[field.key] ?? ""}
+                options={(field.options ?? []).map((o) => ({
+                  value: o.value,
+                  label: t(o.labelKey),
+                }))}
+                onChange={(v) => v && setValue(field.key, v)}
+              />
+            ) : field.control === "number" ? (
+              // A plain numeric input: variables can never resolve to a size cap.
+              <Input
+                type="number"
+                inputMode="decimal"
+                min={1}
+                step="any"
+                invalid={issue !== null}
+                value={values[field.key] ?? ""}
+                placeholder={
+                  field.placeholderKey ? t(field.placeholderKey) : undefined
+                }
+                onChange={(e) => setValue(field.key, e.target.value)}
+              />
+            ) : (
+              // Text answers flow into the call, so every one may reference {{variables}}.
+              <VariableField
+                multiline={field.control === "textarea"}
+                value={values[field.key] ?? ""}
+                placeholder={
+                  field.placeholderKey ? t(field.placeholderKey) : undefined
+                }
+                onChange={(v) => setValue(field.key, v)}
+                groups={variableGroups}
+              />
+            )}
+          </FormField>
+        );
+      })}
 
       {selected.custom && (
-        <CustomCallFields parameters={parameters} onChange={onChange} />
+        <CustomCallFields
+          parameters={parameters}
+          onChange={onChange}
+          groups={variableGroups}
+          stepPosition={stepPosition}
+        />
       )}
+
+      <VariablesReference groups={variableGroups} />
     </div>
   );
+}
+
+/** An issue rendered as the field's error copy. */
+function issueText(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  issue: OperationFieldIssue | null,
+): string | undefined {
+  if (!issue) return undefined;
+  return issue.kind === "number"
+    ? t("portal.policies.operations.errors.invalidNumber")
+    : t("portal.policies.operations.errors.unknownVariable", {
+        path: issue.path,
+      });
 }
 
 function OperationGrid({
@@ -289,26 +348,39 @@ function OperationGrid({
 function CustomCallFields({
   parameters,
   onChange,
+  groups,
+  stepPosition,
 }: {
   parameters: ExternalApiParams;
   onChange: (p: ExternalApiParams) => void;
+  groups: VariableGroup[];
+  stepPosition?: number;
 }) {
   const { t } = useTranslation();
   const set = (key: keyof ExternalApiParams, value: string) =>
     onChange({ ...parameters, [key]: value });
   const str = (key: keyof ExternalApiParams) => parameters[key] ?? "";
+  // Same save-time reference check the preset fields get; these are typed directly.
+  const refError = (key: keyof ExternalApiParams): string | undefined => {
+    const unknown = unknownReferences(str(key), groups, stepPosition);
+    return unknown.length > 0
+      ? issueText(t, { kind: "reference", path: unknown[0] })
+      : undefined;
+  };
 
   return (
     <>
       <FormField
         label={t("portal.policies.operations.fields.path.label")}
         helperText={t("portal.policies.operations.fields.path.helperText")}
+        error={refError("path")}
         required
       >
-        <Input
+        <VariableField
           value={str("path")}
           placeholder="/v1/scan"
-          onChange={(e) => set("path", e.target.value)}
+          onChange={(v) => set("path", v)}
+          groups={groups}
         />
       </FormField>
 
@@ -386,13 +458,15 @@ function CustomCallFields({
       <FormField
         label={t("portal.policies.operations.fields.headers.label")}
         helperText={t("portal.policies.operations.fields.headers.helperText")}
+        error={refError("headers")}
       >
-        <textarea
-          className="portal-sources__connection-textarea"
+        <VariableField
+          multiline
           rows={2}
           value={str("headers")}
           placeholder='{"X-Api-Version": "2"}'
-          onChange={(e) => set("headers", e.target.value)}
+          onChange={(v) => set("headers", v)}
+          groups={groups}
         />
       </FormField>
 
@@ -402,13 +476,15 @@ function CustomCallFields({
           helperText={t(
             "portal.policies.operations.fields.bodyTemplate.helperText",
           )}
+          error={refError("bodyTemplate")}
         >
-          <textarea
-            className="portal-sources__connection-textarea"
+          <VariableField
+            multiline
             rows={4}
             value={str("bodyTemplate")}
             placeholder='{"file": "{{document.base64}}"}'
-            onChange={(e) => set("bodyTemplate", e.target.value)}
+            onChange={(v) => set("bodyTemplate", v)}
+            groups={groups}
           />
         </FormField>
       )}

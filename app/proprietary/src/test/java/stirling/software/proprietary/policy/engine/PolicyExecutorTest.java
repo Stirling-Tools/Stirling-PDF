@@ -34,6 +34,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 
@@ -48,6 +50,7 @@ import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.service.AiToolResponseHeaders;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -73,6 +76,7 @@ class PolicyExecutorTest {
 
     private TempFileManager tempFileManager;
     private PolicyExecutor executor;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -80,7 +84,7 @@ class PolicyExecutorTest {
         props.getSystem().getTempFileManagement().setBaseTmpDir(tempDir.toString());
         props.getSystem().getTempFileManagement().setPrefix("policy-test-");
         tempFileManager = new TempFileManager(new TempFileRegistry(), props);
-        ObjectMapper objectMapper = JsonMapper.builder().build();
+        objectMapper = JsonMapper.builder().build();
         executor =
                 new PolicyExecutor(
                         internalApiClient, toolMetadataService, tempFileManager, objectMapper);
@@ -357,6 +361,83 @@ class PolicyExecutorTest {
     }
 
     @Test
+    void crossStepPlaceholderIsResolvedFromAnEarlierStepReport() throws IOException {
+        String share = "/api/v1/integration/share";
+        String notify = "/api/v1/integration/notify";
+        // Step 1 returns the document plus a report carrying a share url, as report-mode does.
+        stubEndpointWithReport(
+                share, pdf("doc", "doc.pdf"), "{\"body\":{\"url\":\"https://share/abc\"}}");
+        stubEndpoint(notify, pdf("doc", "doc.pdf"));
+
+        Map<String, Object> notifyParams = new LinkedHashMap<>();
+        notifyParams.put("message", "see {{steps.1.body.url}}");
+        // A document-scope placeholder must be left verbatim for the tool to resolve per document.
+        notifyParams.put("keep", "{{document.filename}}");
+
+        executor.execute(
+                definition(
+                        new PipelineStep(share, Map.of()), new PipelineStep(notify, notifyParams)),
+                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
+                PolicyProgressListener.NOOP);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(notify), bodyCaptor.capture());
+        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+        assertEquals("see https://share/abc", body.getFirst("message"));
+        assertEquals("{{document.filename}}", body.getFirst("keep"));
+    }
+
+    @Test
+    void hostileStepOutputCannotInjectFieldsIntoAJsonParameter() throws IOException {
+        String share = "/api/v1/integration/share";
+        String notify = "/api/v1/integration/notify";
+        // Step 1's report carries a value crafted to break out of a JSON string.
+        stubEndpointWithReport(
+                share,
+                pdf("doc", "doc.pdf"),
+                "{\"body\":{\"url\":\"x\\\", \\\"admin\\\": true, \\\"y\\\": \\\"\"}}");
+        stubEndpoint(notify, pdf("doc", "doc.pdf"));
+
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("bodyTemplate", "{\"msg\": \"{{steps.1.body.url}}\"}");
+
+        executor.execute(
+                definition(new PipelineStep(share, Map.of()), new PipelineStep(notify, params)),
+                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
+                PolicyProgressListener.NOOP);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(notify), bodyCaptor.capture());
+        // The sent template is still one field; the hostile value stayed a value.
+        var sent = objectMapper.readTree((String) bodyCaptor.getValue().getFirst("bodyTemplate"));
+        assertEquals(1, sent.size());
+        assertEquals("x\", \"admin\": true, \"y\": \"", sent.get("msg").asString());
+        assertNull(sent.get("admin"));
+    }
+
+    @Test
+    void referencingAStepThatProducedNothingFailsTheRun() {
+        String notify = "/api/v1/integration/notify";
+
+        // The first step references an output no earlier step produced, so the run stops.
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        executor.execute(
+                                definition(
+                                        new PipelineStep(
+                                                notify, Map.of("message", "{{steps.1.body.url}}"))),
+                                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
+                                PolicyProgressListener.NOOP));
+        // It fails before any dispatch, since the reference cannot be filled in.
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
     void emptyPipelineIsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
@@ -375,6 +456,16 @@ class PolicyExecutorTest {
 
     private void stubEndpoint(String endpoint, Resource body) {
         when(internalApiClient.post(eq(endpoint), any())).thenReturn(ResponseEntity.ok(body));
+    }
+
+    /**
+     * A file response carrying a {@link AiToolResponseHeaders#TOOL_REPORT} report, as report-mode.
+     */
+    private void stubEndpointWithReport(String endpoint, Resource body, String reportJson) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(AiToolResponseHeaders.TOOL_REPORT, reportJson);
+        when(internalApiClient.post(eq(endpoint), any()))
+                .thenReturn(new ResponseEntity<>(body, headers, HttpStatus.OK));
     }
 
     private static ByteArrayResource pdf(String content, String filename) {

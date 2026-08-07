@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  act,
   fireEvent,
   render as baseRender,
   screen,
@@ -284,6 +285,116 @@ describe("SourceModal", () => {
         options: expect.objectContaining({ directory: "/new" }),
       }),
     );
+  });
+
+  it("ignores a stale source fetch after the modal switches to another source", async () => {
+    // Two edits in flight: A resolves last (stale). Without the guard its late resolution would
+    // clobber B's fields, and a save would then write A's config onto source B.
+    const makeDeferred = () => {
+      let resolve!: (value: unknown) => void;
+      const promise = new Promise<unknown>((r) => (resolve = r));
+      return { promise, resolve };
+    };
+    const aDef = makeDeferred();
+    const bDef = makeDeferred();
+    fetchSource.mockImplementation((id: string) =>
+      id === "src-A" ? aDef.promise : bDef.promise,
+    );
+
+    const view = render(
+      <SourceModal open sourceId="src-A" onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+    // Switch to B while A is still pending; the effect cleanup marks A's fetch stale.
+    view.rerender(
+      <SourceModal open sourceId="src-B" onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+    bDef.resolve({
+      id: "src-B",
+      name: "Bravo",
+      type: "folder",
+      options: { directory: "/bravo", mode: "consume" },
+      enabled: true,
+    });
+
+    const directory = (await screen.findByLabelText(
+      /portal\.sources\.types\.folder\.fields\.directory\.label/,
+    )) as HTMLInputElement;
+    await waitFor(() => expect(directory.value).toBe("/bravo"));
+
+    // The stale fetch resolves last; the guard must stop it overwriting B. act() flushes the
+    // React update the resolution schedules - a bare microtask hop would pass even unguarded.
+    await act(async () => {
+      aDef.resolve({
+        id: "src-A",
+        name: "Alpha",
+        type: "folder",
+        options: { directory: "/alpha", mode: "consume" },
+        enabled: true,
+      });
+    });
+    expect(directory.value).toBe("/bravo");
+  });
+
+  it("does not leave the previous source's values saveable when the edit fetch fails", async () => {
+    // Edit A loads fine; switching to B fails its fetch. B's form must not sit on A's values -
+    // saving there would write A's config onto B.
+    fetchSource.mockImplementation((id: string) =>
+      id === "src-A"
+        ? Promise.resolve({
+            id: "src-A",
+            name: "Alpha",
+            type: "folder",
+            options: { directory: "/alpha", mode: "consume" },
+            enabled: true,
+          })
+        : Promise.reject(new Error("boom")),
+    );
+
+    const view = render(
+      <SourceModal open sourceId="src-A" onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+    const directory = (await screen.findByLabelText(
+      /portal\.sources\.types\.folder\.fields\.directory\.label/,
+    )) as HTMLInputElement;
+    await waitFor(() => expect(directory.value).toBe("/alpha"));
+
+    view.rerender(
+      <SourceModal open sourceId="src-B" onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+    expect(await screen.findByText("boom")).toBeInTheDocument();
+    const after = screen.getByLabelText(
+      /portal\.sources\.types\.folder\.fields\.directory\.label/,
+    ) as HTMLInputElement;
+    expect(after.value).toBe("");
+    expect(
+      screen.getByText("portal.sources.builder.save").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("does not stick a spinner on create after an edit was closed mid-fetch", async () => {
+    // The modal stays mounted; only `open` toggles. Closing an edit before its fetch resolves
+    // used to leave loading=true forever, so the next create showed a spinner and no form.
+    fetchSource.mockImplementation(() => new Promise(() => {}));
+
+    const view = render(
+      <SourceModal open sourceId="src-A" onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+    view.rerender(
+      <SourceModal
+        open={false}
+        sourceId="src-A"
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+    );
+    view.rerender(
+      <SourceModal open sourceId={null} onClose={vi.fn()} onSaved={vi.fn()} />,
+    );
+
+    fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
+    expect(
+      screen.getByLabelText(/portal\.integrations\.typedName/),
+    ).toBeInTheDocument();
   });
 
   it("deletes an existing source after the inline confirm", async () => {

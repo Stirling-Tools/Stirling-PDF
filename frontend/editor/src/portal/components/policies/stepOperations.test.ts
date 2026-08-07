@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   STEP_OPERATIONS,
   buildStepParameters,
+  customCallUnknownReference,
   emptyOperationValues,
   operationById,
+  operationFieldIssue,
   operationFormValid,
+  operationsForConnectionType,
   searchOperations,
 } from "@portal/components/policies/stepOperations";
 import { CREATABLE_CONNECTION_TYPES } from "@portal/components/sources/connectionTypes";
@@ -94,6 +97,7 @@ describe("buildStepParameters", () => {
       "bodyTemplate",
       "includeContext",
       "includeFile",
+      "maxRequestBytes",
       "operationId",
       "operationValues",
     ]) {
@@ -127,6 +131,42 @@ describe("operation form", () => {
   it("an operation with no fields is immediately valid", () => {
     const cloudmersive = operationById("cloudmersiveScan")!;
     expect(operationFormValid(cloudmersive, {})).toBe(true);
+  });
+
+  it("refuses a reference the run cannot fill in", () => {
+    // {{document.flename}} saves cleanly without this check and then fails every run.
+    const discord = operationById("discordNotify")!;
+    expect(
+      operationFormValid(discord, { message: "{{document.flename}}" }),
+    ).toBe(false);
+    expect(
+      operationFormValid(discord, { message: "{{document.filename}}" }),
+    ).toBe(true);
+  });
+
+  it("refuses a forward or self step reference when the position is known", () => {
+    const discord = operationById("discordNotify")!;
+    const values = { message: "see {{steps.2.body.url}}" };
+    expect(operationFormValid(discord, values, undefined, 3)).toBe(true);
+    expect(operationFormValid(discord, values, undefined, 2)).toBe(false);
+    expect(operationFormValid(discord, values, undefined, 1)).toBe(false);
+  });
+
+  it("checks the custom call's own path, headers and body template", () => {
+    expect(
+      customCallUnknownReference({
+        path: "/v1/{{document.filename}}",
+        headers: '{"X-Doc": "{{document.sha256}}"}',
+        bodyTemplate: "",
+      }),
+    ).toBeNull();
+    expect(
+      customCallUnknownReference({
+        path: "",
+        headers: "",
+        bodyTemplate: '{"file": "{{document.base46}}"}',
+      }),
+    ).toBe("document.base46");
   });
 });
 
@@ -247,5 +287,143 @@ describe("substituting an answer into the URL path", () => {
       domain: "mg.acme.com",
     });
     expect(params.path).toBe("/v3/mg.acme.com/messages");
+  });
+
+  it("keeps a {{document.*}} reference inside an answer for the backend pass", () => {
+    // Encoding the braces would send the reference literally, never resolved - the backend's
+    // URL_PATH pass resolves it per document and percent-encodes the value itself.
+    const op = operationById("nextcloudUpload")!;
+    const params = buildStepParameters(op, "9", {
+      username: "svc",
+      remotePath: "Processed/{{document.filename}}",
+    });
+    expect(params.path).toBe(
+      "/remote.php/dav/files/svc/Processed/{{document.filename}}",
+    );
+  });
+
+  it("keeps a path-valued answer's slashes as separators, encoding each segment", () => {
+    const op = operationById("nextcloudUpload")!;
+    const params = buildStepParameters(op, "9", {
+      username: "svc",
+      remotePath: "My Reports/2026/x.pdf",
+    });
+    expect(params.path).toBe(
+      "/remote.php/dav/files/svc/My%20Reports/2026/x.pdf",
+    );
+  });
+});
+
+describe("operationsForConnectionType", () => {
+  it("lists every task a connection type unlocks, so the (i) can show them", () => {
+    const jira = operationsForConnectionType("jira").map((o) => o.id);
+    expect(jira).toEqual(
+      expect.arrayContaining(["jiraAttach", "jiraComment", "jiraTransition"]),
+    );
+
+    const discord = operationsForConnectionType("discord").map((o) => o.id);
+    expect(discord).toEqual(
+      expect.arrayContaining(["discordNotify", "discordAttach"]),
+    );
+
+    const nextcloud = operationsForConnectionType("nextcloud").map((o) => o.id);
+    expect(nextcloud).toEqual(
+      expect.arrayContaining(["nextcloudUpload", "nextcloudShareLink"]),
+    );
+  });
+
+  it("returns nothing for a connection type with no policy steps", () => {
+    // S3 is a source/destination, not a step operation - so it gets no (i) list.
+    expect(operationsForConnectionType("s3")).toEqual([]);
+    expect(operationsForConnectionType("does-not-exist")).toEqual([]);
+  });
+});
+
+describe("per-step size limit", () => {
+  it("turns the operator's MB limit into a byte cap for Discord attach", () => {
+    const op = operationById("discordAttach")!;
+    const params = buildStepParameters(op, "5", {
+      ...emptyOperationValues(op),
+      maxFileMb: "25",
+    });
+    expect(params.maxRequestBytes).toBe(String(25 * 1024 * 1024));
+  });
+
+  it("caps nothing when the operation declares no size field", () => {
+    const params = buildStepParameters(operationById("slackNotify")!, "5", {
+      message: "hi",
+    });
+    expect(params.maxRequestBytes).toBe("0");
+  });
+
+  it("treats a blank limit as no cap - the helper text promises exactly that", () => {
+    const op = operationById("discordAttach")!;
+    const values = { ...emptyOperationValues(op), maxFileMb: "" };
+    expect(buildStepParameters(op, "5", values).maxRequestBytes).toBe("0");
+    expect(operationFormValid(op, values)).toBe(true);
+  });
+
+  it("refuses to save a limit it would otherwise silently drop", () => {
+    // "abc" or "-5" coerced to "no cap" is the unsafe direction: the operator set a safeguard
+    // and it silently stopped existing. The form must block the save instead.
+    const op = operationById("discordAttach")!;
+    const field = op.fields!.find((f) => f.key === "maxFileMb")!;
+    expect(field.control).toBe("number");
+    for (const bad of ["abc", "-5", "0", "25 MB"]) {
+      expect(
+        operationFormValid(op, { ...emptyOperationValues(op), maxFileMb: bad }),
+        bad,
+      ).toBe(false);
+      expect(operationFieldIssue(field, bad)).toEqual({ kind: "number" });
+    }
+    expect(
+      operationFormValid(op, { ...emptyOperationValues(op), maxFileMb: "25" }),
+    ).toBe(true);
+  });
+});
+
+describe("newly added tasks build the right call", () => {
+  it("nextcloudShareLink asks for JSON, sends no file, uses the OCS header", () => {
+    const op = operationById("nextcloudShareLink")!;
+    const params = buildStepParameters(op, "9", {
+      ...emptyOperationValues(op),
+      remotePath: "Processed/x.pdf",
+    });
+    expect(params.includeFile).toBe("false");
+    expect(params.path).toContain("format=json");
+    expect(params.headers).toContain("OCS-APIRequest");
+    // The operator's path lands in the OCS 'path' field alongside the public shareType.
+    expect(JSON.parse(params.fields)).toMatchObject({
+      path: "Processed/x.pdf",
+      shareType: "3",
+    });
+  });
+
+  it("discordAttach uploads the file under files[0] with a caption", () => {
+    const op = operationById("discordAttach")!;
+    const params = buildStepParameters(op, "3", {
+      ...emptyOperationValues(op),
+      message: "done",
+    });
+    expect(params.bodyMode).toBe("multipart");
+    expect(params.fileFieldName).toBe("files[0]");
+    expect(params.includeFile).toBe("true");
+    // The caption rides in payload_json, Discord's multipart companion field.
+    const fields: Record<string, string> = JSON.parse(params.fields);
+    expect(JSON.parse(fields.payload_json)).toEqual({ content: "done" });
+  });
+
+  it("jiraComment posts an ADF body to the issue's comment endpoint", () => {
+    const op = operationById("jiraComment")!;
+    const params = buildStepParameters(op, "2", {
+      ...emptyOperationValues(op),
+      issueKey: "OPS-9",
+      message: "processed",
+    });
+    expect(params.path).toBe("/rest/api/3/issue/OPS-9/comment");
+    expect(params.includeFile).toBe("false");
+    expect(params.bodyTemplate).toContain("processed");
+    // The Atlassian Document Format wrapper survives to the wire.
+    expect(params.bodyTemplate).toContain("paragraph");
   });
 });

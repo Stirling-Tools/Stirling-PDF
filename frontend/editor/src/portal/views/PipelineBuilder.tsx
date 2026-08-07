@@ -406,8 +406,8 @@ export function PipelineBuilder() {
   // saving on it here where the fix is one click away.
   const unconfiguredStepLabels = steps
     .filter(
-      (step) =>
-        !integrationStepConfigured(step) ||
+      (step, i) =>
+        !integrationStepConfigured(step, i + 1) ||
         stepNeedsConfiguring(step, allTools),
     )
     .map(stepLabel);
@@ -944,9 +944,14 @@ export function PipelineBuilder() {
                           <span className="portal-builder__step-note">
                             {t("portal.pipelines.builder.chooseOperation")}
                           </span>
-                        ) : !integrationStepConfigured(step) ? (
+                        ) : !(step.params as Record<string, unknown>)
+                            .connectionId ? (
                           <span className="portal-builder__step-note">
                             {t("portal.pipelines.builder.chooseAccount")}
+                          </span>
+                        ) : !integrationStepConfigured(step, i + 1) ? (
+                          <span className="portal-builder__step-note">
+                            {t("portal.pipelines.builder.fixStepFields")}
                           </span>
                         ) : null
                       ) : stepRequiresUpload(step) ? (
@@ -1038,6 +1043,9 @@ export function PipelineBuilder() {
             {selectedStep ? (
               <PipelineStepSettings
                 step={selectedStep}
+                stepPosition={
+                  selectedIndex !== null ? selectedIndex + 1 : undefined
+                }
                 registry={allTools}
                 onChange={(params) =>
                   selectedIndex !== null &&

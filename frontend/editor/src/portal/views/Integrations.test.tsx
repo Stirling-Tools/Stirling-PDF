@@ -4,6 +4,7 @@ import {
   render as baseRender,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { HttpError } from "@portal/api/http";
@@ -146,5 +147,87 @@ describe("Integrations view", () => {
     expect(
       screen.queryByText("portal.connections.types.api.label"),
     ).not.toBeInTheDocument();
+  });
+
+  it("expands an available row's (i) into the tasks that integration adds", async () => {
+    fetchIntegrations.mockResolvedValue([]);
+    render(<Integrations />);
+    await screen.findByText("portal.connections.types.jira.label");
+
+    expect(
+      screen.queryByText("portal.policies.operations.jiraComment.label"),
+    ).not.toBeInTheDocument();
+
+    // Every step-backed vendor gets an (i); S3 (a bucket, no steps) gets none, so
+    // there are fewer (i)s than Connect buttons.
+    const infos = screen.getAllByRole("button", {
+      name: "portal.connections.picker2.tasksInfo",
+    });
+    expect(infos.length).toBeGreaterThan(0);
+    expect(infos.length).toBeLessThan(
+      screen.getAllByText("portal.integrations.connect").length,
+    );
+
+    // The Jira row's (i) reveals all three of its tasks inline.
+    const jiraRow = screen
+      .getByText("portal.connections.types.jira.label")
+      .closest(".portal-integrations__group") as HTMLElement;
+    fireEvent.click(
+      within(jiraRow).getByRole("button", {
+        name: "portal.connections.picker2.tasksInfo",
+      }),
+    );
+    expect(
+      await screen.findByText("portal.policies.operations.jiraAttach.label"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.policies.operations.jiraComment.label"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.policies.operations.jiraTransition.label"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the custom-call task out of a connected group when the server withholds it", async () => {
+    // A stored custom-API connection still lists; the task the server would refuse must not
+    // be advertised in its panel (same gate the catalogue honours).
+    const custom = {
+      id: 3,
+      integrationType: "API",
+      name: "In-house API",
+      config: { baseUrl: "https://api.internal" },
+      canManage: true,
+    } as unknown as IntegrationConfig;
+    fetchIntegrations.mockResolvedValue([custom]);
+    render(<Integrations />);
+
+    fireEvent.click(
+      await screen.findByText("portal.connections.types.api.label"),
+    );
+    expect(
+      await screen.findByText("portal.integrations.addAnother"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.policies.operations.customApiCall.label"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a connected group's tasks in its expanded panel", async () => {
+    const slack = {
+      id: 9,
+      integrationType: "API",
+      name: "Ops alerts",
+      config: { presetId: "slack", baseUrl: "https://hooks.slack.com/x" },
+      canManage: true,
+    } as unknown as IntegrationConfig;
+    fetchIntegrations.mockResolvedValue([slack]);
+    render(<Integrations />);
+
+    fireEvent.click(
+      await screen.findByText("portal.connections.types.slack.label"),
+    );
+    expect(
+      await screen.findByText("portal.policies.operations.slackNotify.label"),
+    ).toBeInTheDocument();
   });
 });

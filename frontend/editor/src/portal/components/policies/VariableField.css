@@ -1,0 +1,491 @@
+/* VariableField: a contenteditable whose {{references}} are drawn as labelled boxes. The braces
+   only ever appear in the stored value, or in the "Edit as text" textarea. */
+
+.portal-varfield {
+  position: relative;
+}
+
+/* ── the editor ───────────────────────────────────────────────────────────── */
+
+.portal-varfield__editor {
+  font-size: 0.8125rem;
+  line-height: 2.1;
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--c-input-bg, var(--c-surface));
+  color: var(--c-text);
+  outline: none;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.portal-varfield__editor:focus {
+  outline: 2px solid var(--c-conn-accent);
+  outline-offset: -1px;
+}
+
+.portal-varfield__editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--c-text-subtle);
+}
+
+/* Single line: the field keeps one row and the add button rides inside it. */
+.portal-varfield--single .portal-varfield__editor {
+  line-height: 1.7;
+  padding-right: 2.125rem;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Multiline: the toolbar is welded to the bottom of the field. */
+.portal-varfield:not(.portal-varfield--single) .portal-varfield__editor {
+  border-radius: var(--radius-sm, 0.375rem) var(--radius-sm, 0.375rem) 0 0;
+}
+
+.portal-varfield__raw {
+  display: block;
+  width: 100%;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm, 0.375rem) var(--radius-sm, 0.375rem) 0 0;
+  background: var(--c-input-bg, var(--c-surface));
+  color: var(--c-text);
+  resize: vertical;
+}
+
+.portal-varfield__raw:focus {
+  outline: 2px solid var(--c-conn-accent);
+  outline-offset: -1px;
+}
+
+/* ── a variable, as a box ─────────────────────────────────────────────────── */
+
+.portal-varfield__token {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  vertical-align: baseline;
+  margin: 0 0.0625rem;
+  padding: 0.0625rem 0.3125rem;
+  border: 1px solid color-mix(in srgb, var(--c-conn-accent) 40%, transparent);
+  border-radius: 0.3125rem;
+  background: color-mix(in srgb, var(--c-conn-accent) 14%, transparent);
+  color: var(--c-text);
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.5;
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.portal-varfield__token:hover {
+  background: color-mix(in srgb, var(--c-conn-accent) 22%, transparent);
+  border-color: var(--c-conn-accent);
+}
+
+.portal-varfield__token:focus {
+  outline: none;
+}
+
+/* Selected and keyboard-focused read the same, because they mean the same thing. */
+.portal-varfield__token.is-selected,
+.portal-varfield__token:focus-visible {
+  border-color: var(--c-conn-accent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--c-conn-accent) 32%, transparent);
+}
+
+/* The step this variable came from. That dependency is the one part of the path worth showing. */
+.portal-varfield__token-source {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: var(--c-conn-accent);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 1;
+  color: transparent;
+}
+
+/* With a number in it, the dot grows into a badge. */
+.portal-varfield__token-source:not(:empty) {
+  min-width: 0.875rem;
+  height: 0.875rem;
+  padding: 0 0.1875rem;
+  border-radius: 0.1875rem;
+  color: var(--c-text-on-primary, #fff);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+/* The x floats over the box's top-right corner rather than sitting in the row: reserving a slot
+   for it padded every box with a gap that read as a gap. Out of flow it costs nothing, and
+   nothing reflows when it appears. */
+.portal-varfield__token-remove {
+  position: absolute;
+  top: -0.3125rem;
+  right: -0.3125rem;
+  width: 0.9375rem;
+  height: 0.9375rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: var(--c-text-muted);
+  opacity: 0;
+  /* invisible must also mean unclickable: it overlaps whatever sits beside the box */
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.portal-varfield__token:hover .portal-varfield__token-remove,
+.portal-varfield__token.is-selected .portal-varfield__token-remove,
+.portal-varfield__token:focus-visible .portal-varfield__token-remove {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.portal-varfield__token-remove:hover {
+  color: var(--c-danger);
+  border-color: var(--c-danger);
+}
+
+/* A path we ship no name for: still valid and still editable, visibly a raw path. */
+.portal-varfield__token--unnamed {
+  border-color: color-mix(in srgb, var(--c-warning) 45%, transparent);
+  background: color-mix(in srgb, var(--c-warning) 12%, transparent);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+}
+
+.portal-varfield__token--unnamed .portal-varfield__token-source {
+  background: var(--c-warning);
+}
+
+.portal-varfield__token--unnamed:hover {
+  background: color-mix(in srgb, var(--c-warning) 20%, transparent);
+  border-color: var(--c-warning);
+}
+
+/* ── the toolbar ──────────────────────────────────────────────────────────── */
+
+.portal-varfield__tools {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  padding: 0.25rem 0.3125rem;
+  border: 1px solid var(--c-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-sm, 0.375rem) var(--radius-sm, 0.375rem);
+  background: var(--c-surface-sunken);
+}
+
+.portal-varfield__tools-spacer {
+  flex: 1 1 auto;
+}
+
+.portal-varfield__hint {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  padding-right: 0.1875rem;
+}
+
+/* One line has no room for a toolbar, so the button sits in the field's trailing gutter. */
+.portal-varfield__inline-add {
+  position: absolute;
+  top: 0.3125rem;
+  right: 0.3125rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 0.3125rem;
+  background: var(--c-surface);
+  color: var(--c-conn-accent);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.portal-varfield__inline-add:hover {
+  background: color-mix(in srgb, var(--c-conn-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--c-conn-accent) 40%, transparent);
+}
+
+/* ── the list ─────────────────────────────────────────────────────────────── */
+
+.portal-varfield__picker {
+  position: absolute;
+  z-index: 20;
+  width: 21rem;
+  max-width: calc(100% - 0.5rem);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--c-bg-raised);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.portal-varfield__picker-head {
+  padding: 0.375rem 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-surface-sunken);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.portal-varfield__picker-search {
+  width: 100%;
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.375rem 0.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-input-bg, var(--c-surface));
+  color: var(--c-text);
+  outline: none;
+}
+
+.portal-varfield__picker-list {
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  max-height: 13rem;
+  overflow-y: auto;
+}
+
+.portal-varfield__picker-section + .portal-varfield__picker-section {
+  margin-top: 0.1875rem;
+  padding-top: 0.1875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-varfield__picker-group {
+  display: block;
+  padding: 0.375rem 0.4375rem 0.125rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+
+.portal-varfield__picker-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portal-varfield__picker-option {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4375rem;
+  padding: 0.3125rem 0.4375rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.portal-varfield__picker-option.is-active {
+  background: var(--c-hover);
+}
+
+.portal-varfield__picker-tick {
+  flex: none;
+  width: 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--c-conn-accent);
+}
+
+.portal-varfield__picker-name {
+  font-size: 0.8125rem;
+  color: var(--c-text);
+}
+
+/* The path is kept but demoted: it answers "which one is that really?" without leading. */
+.portal-varfield__picker-path {
+  margin-left: auto;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-varfield__picker-empty {
+  padding: 0.625rem 0.4375rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-varfield__picker-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.3125rem 0.5rem;
+  border-top: 1px solid var(--c-border-subtle);
+  background: var(--c-surface-sunken);
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-varfield__picker-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  margin-left: auto;
+  padding: 0.125rem 0.25rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--c-danger);
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.portal-varfield__picker-remove:hover {
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
+}
+
+/* ── VariablesReference: the quiet collapsible explainer under the fields ──── */
+
+.portal-varref {
+  margin-top: 0.25rem;
+}
+
+/* Rides the shared quiet Button; only the tone is adjusted so it reads as a footnote. */
+.portal-varref__toggle {
+  color: var(--c-text-muted);
+}
+
+.portal-varref__chevron {
+  transition: transform 120ms ease;
+}
+
+.portal-varref__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.portal-varref__body {
+  margin-top: 0.375rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--c-surface-sunken);
+}
+
+.portal-varref__intro {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text);
+}
+
+.portal-varref__group {
+  margin-top: 0.75rem;
+}
+
+.portal-varref__group-title {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--c-text-muted);
+}
+
+.portal-varref__group-desc {
+  margin: 0.125rem 0 0.375rem;
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+
+.portal-varref__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portal-varref__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.625rem;
+  row-gap: 0.0625rem;
+}
+
+/* The name leads here too, matching the boxes and the list. */
+.portal-varref__name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-varref__code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.71875rem;
+  padding: 0.0625rem 0.3125rem;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--c-conn-accent) 12%, transparent);
+  color: var(--c-text);
+}
+
+.portal-varref__row-desc {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+
+/* A worked example, visibly not a variable row: tagged and set off by a rail. */
+.portal-varref__example {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.625rem;
+  row-gap: 0.125rem;
+  margin-top: 0.4375rem;
+  padding: 0.375rem 0.625rem;
+  border-left: 2px solid var(--c-conn-accent);
+  border-radius: 0 var(--radius-sm, 0.375rem) var(--radius-sm, 0.375rem) 0;
+  background: color-mix(in srgb, var(--c-conn-accent) 6%, transparent);
+}
+
+.portal-varref__example-tag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-conn-accent);
+}
