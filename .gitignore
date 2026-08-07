@@ -176,6 +176,9 @@ proprietary/build
 stirling-pdf/build
 frontend/editor/src-tauri/provisioner/target
 
+# Tesseract runtime fetched by scripts/prepare-tesseract-bundle.ps1 (~130 MB)
+frontend/editor/src-tauri/tesseract/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

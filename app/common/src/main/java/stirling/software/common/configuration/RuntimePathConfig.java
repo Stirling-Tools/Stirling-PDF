@@ -1,5 +1,6 @@
 package stirling.software.common.configuration;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -7,9 +8,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.context.annotation.Configuration;
 
 import lombok.Getter;
@@ -27,6 +31,14 @@ import stirling.software.common.util.UnoServerPool;
 @Configuration
 @Getter
 public class RuntimePathConfig {
+
+    /** Directory holding the Tesseract binary bundled by the desktop installers. */
+    private static final String TESSERACT_BUNDLE_DIR = "tesseract";
+
+    private static final String TESSDATA_DIR_NAME = TESSERACT_BUNDLE_DIR + "/tessdata";
+    private static final String TESSERACT_COMMAND = "tesseract";
+    private static final String DEFAULT_LINUX_TESSDATA_PATH = "/usr/share/tesseract-ocr/5/tessdata";
+
     private final ApplicationProperties properties;
     private final String basePath;
 
@@ -37,7 +49,8 @@ public class RuntimePathConfig {
     private final String ocrMyPdfPath;
     private final String sOfficePath;
 
-    // Tesseract data path
+    // Tesseract binary and data paths
+    private final String tesseractPath;
     private final String tessDataPath;
 
     private final List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> unoServerEndpoints;
@@ -114,20 +127,28 @@ public class RuntimePathConfig {
                 resolvePath(
                         defaultSOfficePath, operations != null ? operations.getSoffice() : null);
 
+        // Initialize Tesseract binary path
+        // Priority: config setting > bundled binary shipped with the app > PATH lookup
+        this.tesseractPath =
+                resolveTesseractPath(operations != null ? operations.getTesseract() : null);
+
         // Initialize Tesseract data path
-        // Priority: config setting > TESSDATA_PREFIX env var > default path
+        // Priority: config setting > TESSDATA_PREFIX env var > bundled tessdata > default path
         String tessPath = system.getTessdataDir();
         String tessdataPrefix = java.lang.System.getenv("TESSDATA_PREFIX");
-        String defaultPath = "/usr/share/tesseract-ocr/5/tessdata";
 
         if (tessPath != null && !tessPath.isEmpty()) {
             this.tessDataPath = tessPath;
         } else if (tessdataPrefix != null && !tessdataPrefix.isEmpty()) {
             this.tessDataPath = tessdataPrefix;
         } else {
-            this.tessDataPath = defaultPath;
+            this.tessDataPath =
+                    findBundledPath(TESSDATA_DIR_NAME)
+                            .map(Path::toString)
+                            .orElse(DEFAULT_LINUX_TESSDATA_PATH);
         }
 
+        log.info("Using Tesseract binary: {}", this.tesseractPath);
         log.info("Using Tesseract data path: {}", this.tessDataPath);
 
         ApplicationProperties.ProcessExecutor processExecutor = properties.getProcessExecutor();
@@ -141,6 +162,90 @@ public class RuntimePathConfig {
 
     private String resolvePath(String defaultPath, String customPath) {
         return StringUtils.isNotBlank(customPath) ? customPath : defaultPath;
+    }
+
+    /**
+     * Resolves the Tesseract executable. Desktop installers ship their own copy so the user does
+     * not have to install Tesseract separately; everything else (Docker images, distro packages,
+     * developer machines) keeps relying on a PATH lookup.
+     */
+    private String resolveTesseractPath(String customPath) {
+        if (StringUtils.isNotBlank(customPath)) {
+            return customPath;
+        }
+        String executable = isWindows() ? "tesseract.exe" : "tesseract";
+        return findBundledPath(TESSERACT_BUNDLE_DIR + "/" + executable)
+                .map(Path::toString)
+                .orElse(TESSERACT_COMMAND);
+    }
+
+    /**
+     * Locates a file or directory bundled alongside the application.
+     *
+     * @return the first candidate that exists on disk, or empty when nothing is bundled
+     */
+    private static Optional<Path> findBundledPath(String relativePath) {
+        return findBundledPath(bundleRoots(), relativePath);
+    }
+
+    /**
+     * The search itself, kept separate from {@link #bundleRoots()} so it can be exercised against a
+     * simulated install layout rather than whatever directory the tests happen to run from.
+     */
+    static Optional<Path> findBundledPath(List<Path> roots, String relativePath) {
+        for (Path root : roots) {
+            try {
+                Path candidate = root.resolve(relativePath);
+                if (Files.exists(candidate)) {
+                    return Optional.of(candidate.toAbsolutePath().normalize());
+                }
+            } catch (InvalidPathException | SecurityException e) {
+                log.debug("Skipping bundle root {} while looking for {}", root, relativePath, e);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Candidate directories a bundled resource may sit in.
+     *
+     * <p>Spring Boot's {@link ApplicationHome} does the hard part: for an executable JAR it reports
+     * the directory holding that JAR, handling the nested class loader that makes {@code
+     * getCodeSource()} unusable here. The desktop bundler puts the JAR in {@code <root>/libs} and
+     * the bundled tools in {@code <root>}, so the home directory's parent is probed as well.
+     */
+    private static List<Path> bundleRoots() {
+        List<Path> roots = new ArrayList<>();
+        // Explicit configuration first: an operator who set a base path meant it.
+        roots.add(Path.of(InstallationPathConfig.getPath()));
+        applicationHome()
+                .ifPresent(
+                        dir -> {
+                            roots.add(dir);
+                            Path parent = dir.getParent();
+                            if (parent != null) {
+                                roots.add(parent);
+                            }
+                        });
+        return roots;
+    }
+
+    private static Optional<Path> applicationHome() {
+        try {
+            File dir = new ApplicationHome(RuntimePathConfig.class).getDir();
+            return Optional.ofNullable(dir).map(File::toPath);
+        } catch (RuntimeException e) {
+            // Never worth failing startup over: without a home directory the lookup simply falls
+            // through to the configured base path and then to a PATH lookup.
+            log.debug("Could not determine the application home directory", e);
+            return Optional.empty();
+        }
+    }
+
+    private static boolean isWindows() {
+        return java.lang.System.getProperty("os.name", "")
+                .toLowerCase(Locale.ROOT)
+                .contains("windows");
     }
 
     private List<String> resolveWatchedFolderPaths(

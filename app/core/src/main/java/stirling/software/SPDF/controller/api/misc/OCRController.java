@@ -407,7 +407,7 @@ public class OCRController {
 
                         // Build OCR command
                         List<String> command = new ArrayList<>();
-                        command.add("tesseract");
+                        command.add(runtimePathConfig.getTesseractPath());
                         command.add(imagePath.toString());
                         String outputBase =
                                 new File(

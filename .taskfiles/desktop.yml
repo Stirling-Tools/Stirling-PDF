@@ -35,6 +35,7 @@ tasks:
       - task: ":frontend:prepare"
         vars: { MODE: desktop }
       - provisioner
+      - tesseract
 
   provisioner:
     desc: "Build installer provisioner"
@@ -42,6 +43,17 @@ tasks:
     dir: editor
     cmds:
       - node scripts/build-provisioner.mjs
+
+  tesseract:
+    desc: "Fetch the Tesseract runtime bundled into the Windows installer"
+    # Windows-only: it is the one platform with no packaged Tesseract for users
+    # to install, so the installer has to carry its own.
+    platforms: [windows]
+    dir: ..
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-tesseract-bundle.ps1
+    status:
+      - test -f frontend/editor/src-tauri/tesseract/tesseract.exe
 
   dev:
     desc: "Start Tauri desktop dev mode"
@@ -98,6 +110,7 @@ tasks:
     dir: editor
     cmds:
       - task: jlink:clean
+      - task: tesseract:clean
       - cd src-tauri && cargo clean
       - rm -rf dist build
 
@@ -205,6 +218,12 @@ tasks:
     dir: editor/src-tauri
     cmds:
       - rm -rf libs runtime
+
+  tesseract:clean:
+    desc: "Remove the bundled Tesseract runtime"
+    dir: editor/src-tauri
+    cmds:
+      - rm -rf tesseract
 
   # macOS-only. Replaces jlink:runtime's single-arch JRE with a universal
   # (arm64 + x86_64) one for the universal Tauri shell. Runs the x86_64
