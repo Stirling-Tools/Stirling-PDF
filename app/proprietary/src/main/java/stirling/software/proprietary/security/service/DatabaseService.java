@@ -28,7 +28,6 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
-import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -233,14 +232,17 @@ public class DatabaseService implements DatabaseServiceInterface {
         backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
 
         Path latestExport = Path.of(backupList.get(0).getFilePath());
-
-        executeDatabaseScript(latestExport);
+        try {
+            executeDatabaseScript(latestExport);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not import database backup", e);
+        }
     }
 
     /** Imports a database backup from the specified file. */
     public boolean importDatabaseFromUI(String fileName) {
         try {
-            importDatabaseFromUI(getBackupFilePath(fileName));
+            executeDatabaseScript(getBackupFilePath(fileName));
             backupNotificationService.notifyImportsSuccess(
                     "Database import completed", "Import file: " + fileName);
             return true;
@@ -486,31 +488,68 @@ public class DatabaseService implements DatabaseServiceInterface {
      *
      * @param scriptPath the path to the script file
      */
-    private void executeDatabaseScript(Path scriptPath) {
-        if (isH2Database()) {
-
-            // Validate SQL content BEFORE execution to prevent injection attacks
-            validateSqlContent(scriptPath);
-
-            if (!verifyBackup(scriptPath)) {
-                log.error("Backup verification failed for: {}", scriptPath);
-                throw new IllegalArgumentException("Backup verification failed for: " + scriptPath);
-            }
-
-            String query = "RUNSCRIPT from ?;";
-
-            try (Connection conn = dataSource.getConnection();
-                    PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, scriptPath.toString());
-                stmt.execute();
-            } catch (SQLException e) {
-                log.error("Error during database import: {}", e.getMessage(), e);
-            } catch (ScriptException e) {
-                log.error("Error: File {} not found", scriptPath.toString(), e);
-            }
+    private void executeDatabaseScript(Path scriptPath) throws IOException {
+        if (!isH2Database()) {
+            throw new IllegalStateException("Database backup import is only supported for H2");
         }
 
-        log.info("Database import completed: {}", scriptPath);
+        validateSqlContent(scriptPath);
+        if (!verifyBackup(scriptPath)) {
+            throw new IllegalArgumentException("Backup verification failed for: " + scriptPath);
+        }
+
+        Path safetyBackup = createRestoreSafetyBackup();
+        try {
+            runDatabaseScript(scriptPath);
+            log.info("Database import completed: {}", scriptPath);
+        } catch (SQLException importFailure) {
+            log.error(
+                    "Database import failed; restoring safety backup {}",
+                    safetyBackup,
+                    importFailure);
+            try {
+                runDatabaseScript(safetyBackup);
+            } catch (SQLException rollbackFailure) {
+                importFailure.addSuppressed(rollbackFailure);
+                throw new IOException(
+                        "Database import and automatic rollback both failed. Safety backup: "
+                                + safetyBackup,
+                        importFailure);
+            }
+            throw new IOException(
+                    "Database import failed and the active database was restored from "
+                            + safetyBackup.getFileName(),
+                    importFailure);
+        }
+    }
+
+    private Path createRestoreSafetyBackup() throws IOException {
+        LocalDateTime now = LocalDateTime.now();
+        String timestamp = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+        Path safetyBackup = getBackupFilePath("backup_before_restore_" + timestamp + SQL_SUFFIX);
+        String query = "SCRIPT SIMPLE COLUMNS DROP to ?;";
+
+        try (Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, safetyBackup.toString());
+            statement.execute();
+        } catch (SQLException e) {
+            throw new IOException("Could not create the pre-restore safety backup", e);
+        }
+
+        if (!verifyBackup(safetyBackup)) {
+            throw new IOException("Pre-restore safety backup verification failed: " + safetyBackup);
+        }
+        log.info("Created pre-restore safety backup: {}", safetyBackup);
+        return safetyBackup;
+    }
+
+    private void runDatabaseScript(Path scriptPath) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement("RUNSCRIPT from ?;")) {
+            statement.setString(1, scriptPath.toString());
+            statement.execute();
+        }
     }
 
     /**

@@ -140,7 +140,7 @@ test_fixture() {
     pushd "$workdir" >/dev/null
     "$java_bin" -Xmx1g -jar "$jar" \
         "--server.port=$port" \
-        "--spring.datasource.url=jdbc:h2:file:./configs/stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;MODE=PostgreSQL" \
+        "--spring.datasource.url=jdbc:h2:file:./configs/stirling-pdf-DB-2.4.240;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;MODE=PostgreSQL" \
         "--spring.jpa.show-sql=false" \
         "--logging.level.root=WARN" \
         "--logging.level.stirling=INFO" \
