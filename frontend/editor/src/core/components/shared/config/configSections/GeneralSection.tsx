@@ -11,6 +11,7 @@ import {
   Group,
   Anchor,
   Badge,
+  Alert,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -304,14 +305,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                       {frontendVersionLabel}
                     </Text>
                   </Text>
-                  {mismatchVersion && (
-                    <Text size="sm" c="red" mt={4}>
-                      {t(
-                        "settings.general.updates.versionMismatch",
-                        "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version.",
-                      )}
-                    </Text>
-                  )}
                 </div>
               </Group>
             )}
@@ -460,6 +453,48 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   }}
                 />
               </Stack>
+            )}
+
+            {/* Frontend/backend version mismatch notice. Informational, not an
+                error, and deliberately separated from "Check for Updates" — the
+                update check only looks for a newer *release* and cannot
+                reconcile a mismatch between the app's bundled components. The
+                mismatch is normally transient while an update is being applied,
+                so the resolution is to restart (or reinstall) the app rather
+                than to check for updates. */}
+            {mismatchVersion && (
+              <Alert
+                variant="light"
+                color="yellow"
+                icon={
+                  <LocalIcon
+                    icon="info-outline-rounded"
+                    width="1.2rem"
+                    height="1.2rem"
+                  />
+                }
+                title={t(
+                  "settings.general.updates.versionMismatchTitle",
+                  "Version mismatch",
+                )}
+              >
+                <Text size="sm">
+                  {t(
+                    "settings.general.updates.versionMismatch",
+                    "The app frontend ({{frontendVersion}}) and backend ({{backendVersion}}) are running different versions. This usually happens briefly while an update is being applied.",
+                    {
+                      frontendVersion: frontendVersionLabel,
+                      backendVersion: config?.appVersion ?? "",
+                    },
+                  )}
+                </Text>
+                <Text size="sm" mt={4}>
+                  {t(
+                    "settings.general.updates.versionMismatchResolution",
+                    "Restart Stirling-PDF to finish applying the update. If the warning persists after restarting, reinstall the latest version to bring both components back in sync.",
+                  )}
+                </Text>
+              </Alert>
             )}
           </Stack>
         </Paper>
