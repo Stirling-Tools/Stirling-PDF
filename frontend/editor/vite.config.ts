@@ -98,6 +98,7 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
     name: "prerender-og",
     apply: "build" as const,
     async closeBundle() {
+      // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
       const { prerenderOg } = await import("./scripts/og-prerender.mjs");
       const ogBase = (
         process.env.VITE_OG_BASE_URL ||
