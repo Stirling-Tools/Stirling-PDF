@@ -2255,6 +2255,42 @@ visible = "Visible"
 [certSign.appearance.options]
 title = "Detalles de la firma"
 
+[certSign.attributes]
+issuerCommonName = "Emitido por"
+issuerOrganisation = "Organización emisora"
+hint = "Los campos que no contenga tu certificado se omiten automáticamente."
+location = "Lugar"
+reason = "Motivo"
+reset = "Restablecer"
+serialNumber = "Número de serie"
+signatureAlgorithm = "Algoritmo de firma"
+signingTime = "Fecha de firma"
+subjectCommonName = "Nombre del firmante"
+subjectCountry = "País"
+subjectEmail = "Correo electrónico"
+subjectOrganisation = "Organización"
+subjectOrganisationalUnit = "Unidad organizativa"
+title = "Campos que aparecerán en la firma"
+validFrom = "Válido desde"
+validUntil = "Válido hasta"
+
+[certSign.markAllPages]
+label = "Repetirla en todas las páginas"
+needsBox = "Dibuja primero el recuadro, para que haya una forma que repetir."
+warning = "Un PDF solo se puede firmar en un sitio. Las demás páginas llevan una marca con el mismo aspecto que no es una firma."
+
+[certSign.placement]
+cancel = "Cancelar — pulsa Esc"
+coordinates = "x {{x}}, y {{y}} · {{width}} × {{height}} pt"
+default = "Sin colocar: la firma irá donde siempre, en la página indicada arriba."
+draw = "Dibujar el recuadro sobre el documento"
+dragging = "Arrastra un recuadro sobre la página donde deba ir la firma."
+hint = "Arrastra sobre la página para colocar la firma. El texto se ajusta al recuadro que dibujes."
+noFile = "Selecciona un PDF para elegir dónde va la firma."
+placed = "Colocada en la página {{page}} · {{width}} × {{height}} pt"
+reset = "Usar la posición predeterminada"
+title = "Posición de la firma"
+
 [certSign.appearance.tooltip.header]
 title = "Acerca de la apariencia de firma"
 
@@ -2268,10 +2304,32 @@ title = "Firmas invisibles"
 [certSign.appearance.tooltip.visible]
 bullet1 = "Muestra nombre del firmante y fecha en el documento"
 bullet2 = "Puede incluir motivo y ubicación de la firma"
-bullet3 = "Elija en qué página colocar la firma"
+bullet3 = "Elija el lugar exacto de la página donde va la firma"
 bullet4 = "Se puede incluir un logotipo opcional"
 text = "Muestra un bloque de firma en el PDF con su nombre, fecha y detalles opcionales. Útil cuando desea que los lectores vean claramente que el documento está firmado."
 title = "Firmas visibles"
+
+[certSign.appearance.tooltip.markAllPages]
+bullet1 = "Solo la página donde dibujaste lleva la firma real"
+bullet2 = "Al pulsar una marca saltas a esa página, donde puedes comprobar la firma"
+bullet3 = "Dibuja primero el recuadro: tiene que haber una forma que repetir"
+text = "Los documentos largos suelen rubricarse en todas las páginas para que se vea que el conjunto está firmado. Un PDF solo se puede firmar en un sitio, así que las demás páginas llevan una marca igual."
+title = "Mostrarla en todas las páginas"
+
+[certSign.appearance.tooltip.placement]
+bullet1 = "Arrastra sobre la página, o haz clic en una esquina y luego en la opuesta"
+bullet2 = "La página sobre la que dibujes será la que se firme"
+bullet3 = "El texto se reduce para caber, así que nunca se sale del recuadro"
+bullet4 = "Si no dibujas nada, la firma irá a su sitio de siempre"
+text = "Dibuja un recuadro directamente sobre el documento para indicar dónde debe aparecer la firma. Útil cuando el formulario ya trae una línea o un cuadro impreso para firmar."
+title = "Dónde colocar la firma"
+
+[certSign.appearance.tooltip.attributes]
+bullet1 = "Muestre solo lo importante, como su nombre y la fecha"
+bullet2 = "Añada la autoridad emisora cuando el lector necesite confiar en el origen"
+bullet3 = "Los datos que no contenga su certificado simplemente no aparecen"
+text = "Su certificado contiene datos como su nombre, quién lo emitió y hasta cuándo es válido. Marque los que quiera que aparezcan dentro del recuadro de firma."
+title = "Qué datos muestra la firma"
 
 [certSign.certFiles]
 stepTitle = "Archivos de certificado"

@@ -3,6 +3,8 @@ import {
   useBaseParameters,
   BaseParametersHook,
 } from "@app/hooks/tools/shared/useBaseParameters";
+import { Rectangle } from "@app/utils/cropCoordinates";
+import { CertificateAttribute } from "@app/constants/certSignConstants";
 
 export interface CertSignParameters extends BaseParameters {
   // Where the signing certificate comes from:
@@ -30,6 +32,26 @@ export interface CertSignParameters extends BaseParameters {
   name: string;
   pageNumber: number;
   showLogo: boolean;
+
+  /**
+   * Where the signature box sits on the page, in PDF points with the origin at the
+   * bottom-left corner - the same convention the crop tool uses, so the shared
+   * cropCoordinates helpers can feed it directly. Undefined means "wherever the
+   * backend puts it by default", which keeps the tool usable without drawing a box.
+   */
+  signatureArea?: Rectangle;
+
+  /**
+   * Certificate fields to draw inside the box, in the order shown. Empty means the
+   * backend picks its defaults (signer, date and reason).
+   */
+  visibleAttributes: CertificateAttribute[];
+
+  /**
+   * Repeat the signature's look on every page. Only the signed page carries a real
+   * signature; the rest get a visual mark, which the UI has to say out loud.
+   */
+  markAllPages: boolean;
 }
 
 export const defaultParameters: CertSignParameters = {
@@ -42,6 +64,8 @@ export const defaultParameters: CertSignParameters = {
   name: "",
   pageNumber: 1,
   showLogo: true,
+  visibleAttributes: [],
+  markAllPages: false,
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;

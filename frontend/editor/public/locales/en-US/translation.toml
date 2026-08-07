@@ -2479,6 +2479,42 @@ visible = "Visible"
 [certSign.appearance.options]
 title = "Signature Details"
 
+[certSign.attributes]
+issuerCommonName = "Issued by"
+issuerOrganisation = "Issuer organization"
+hint = "Fields your certificate does not contain are skipped automatically."
+location = "Location"
+reason = "Reason"
+reset = "Reset"
+serialNumber = "Serial number"
+signatureAlgorithm = "Signature algorithm"
+signingTime = "Signing date"
+subjectCommonName = "Signer name"
+subjectCountry = "Country"
+subjectEmail = "Email"
+subjectOrganisation = "Organization"
+subjectOrganisationalUnit = "Organizational unit"
+title = "Fields to show in the signature"
+validFrom = "Valid from"
+validUntil = "Valid until"
+
+[certSign.markAllPages]
+label = "Repeat it on every page"
+needsBox = "Draw the box first, so there is a shape to repeat."
+warning = "A PDF can only be signed in one place. The other pages get a matching mark that looks the same but is not a signature."
+
+[certSign.placement]
+cancel = "Cancel — press Esc"
+coordinates = "x {{x}}, y {{y}} · {{width}} × {{height}} pt"
+default = "Not placed — the signature goes where it always has, on the page above."
+draw = "Draw the box on the document"
+dragging = "Drag a box on the page where the signature should go."
+hint = "Drag on the page to place the signature. The text scales to fit the box you draw."
+noFile = "Select a PDF to choose where the signature goes."
+placed = "Placed on page {{page}} · {{width}} × {{height}} pt"
+reset = "Use the default position"
+title = "Signature position"
+
 [certSign.appearance.tooltip.header]
 title = "About Signature Appearance"
 
@@ -2492,10 +2528,32 @@ title = "Invisible Signatures"
 [certSign.appearance.tooltip.visible]
 bullet1 = "Shows signer name and date on the document"
 bullet2 = "Can include reason and location for signing"
-bullet3 = "Choose which page to place the signature"
+bullet3 = "Choose exactly where on the page it goes"
 bullet4 = "Optional logo can be included"
 text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
 title = "Visible Signatures"
+
+[certSign.appearance.tooltip.markAllPages]
+bullet1 = "Only the page you drew on carries the real signature"
+bullet2 = "Clicking a mark jumps to that page, where you can check the signature"
+bullet3 = "Draw the box first - there has to be a shape to repeat"
+text = "Long documents are often initialled on every page so a reader can see the whole thing was signed. A PDF can only be signed in one place, so the other pages get a matching mark instead."
+title = "Showing It on Every Page"
+
+[certSign.appearance.tooltip.placement]
+bullet1 = "Drag across the page, or click one corner and then the opposite one"
+bullet2 = "The page you draw on becomes the page that gets signed"
+bullet3 = "The text shrinks to fit, so it never spills out of the box"
+bullet4 = "Draw nothing and the signature goes in its usual place"
+text = "Draw a box straight onto the document to say where the signature should appear. Useful when a form has a printed line or box meant for the signature."
+title = "Choosing Where the Signature Goes"
+
+[certSign.appearance.tooltip.attributes]
+bullet1 = "Show only what matters, such as your name and the date"
+bullet2 = "Add the issuing authority when the reader needs to trust the source"
+bullet3 = "Details your certificate does not contain are simply left out"
+text = "Your certificate holds details such as your name, who issued it and how long it is valid. Tick the ones you want printed inside the signature box."
+title = "Choosing What the Signature Shows"
 
 [certSign.certFiles]
 stepTitle = "Certificate Files"
