@@ -192,7 +192,7 @@ What goes where:
 - **saas** — web-only: Supabase web auth, AuthCallback, avatar canvas, `window.location`.
 - **desktop** — Tauri-only: keyring authService, tauriHttpClient, native files/windows, backend routing.
 
-`cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (the import and `fetch`/`localStorage`/`sessionStorage` bans are enforced by oxlint; the `window.location` and `import.meta.env` bans are conventions the linter no longer checks). It reaches platform-specific things only via `@app/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `desktop/`.
+`cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (all enforced by the linter). It reaches platform-specific things only via `@app/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `desktop/`.
 
 Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@app/*` path in a leaf (`saas/` or `desktop/`).
 
