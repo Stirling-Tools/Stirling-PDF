@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Registers the {@code :saas} module's entities and repositories with Spring Data JPA. Any new
- * package holding {@code @Repository} or {@code @Entity} classes must be added here, or the beans
+ * package holding repository interfaces or {@code @Entity} classes must be added here, or the beans
  * won't wire at startup.
  */
 @Configuration
