@@ -4084,10 +4084,15 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Alles gespeichert"
+analyzingFields = "Analysiere Formularfelder..."
 extractCsvError = "CSV konnte nicht extrahiert werden"
 extractXlsxError = "XLSX konnte nicht extrahiert werden"
+filled = "ausgefüllt"
 flattenAfterFilling = "Nach dem Ausfüllen ebnen"
-requiredAbbreviation = "erf."
+noFields = "Keine ausfüllbaren Formularfelder gefunden."
+placeholderEnter = "Eingabe:"
+placeholderSelect = "Auswahl:"
+requiredAbbreviation = "erf"
 requiredFieldsError = "Bitte füllen Sie alle Pflichtfelder aus"
 rescanFields = "Felder erneut scannen"
 rescanFormFields = "Formularfelder erneut scannen"
@@ -4416,8 +4421,8 @@ tags = "vereinfachen,entfernen,interaktiv"
 title = "Abflachen"
 
 [home.formFill]
-desc = "Fill PDF form fields interactively with a visual editor"
-title = "Fill Form"
+desc = "PDF-Formularfelder interaktiv mit visuellem Editor ausfüllen"
+title = "Formular ausfüllen"
 
 [home.getPdfInfo]
 desc = "Erfasst alle möglichen Informationen in einer PDF"
@@ -10292,13 +10297,13 @@ viewComment = "Kommentar anzeigen"
 noFileProvided = "Fehler: Dem Viewer wurde keine Datei übergeben"
 
 [viewer.formBar]
-apply = "Apply Changes"
-dismiss = "Dismiss"
-download = "Download PDF"
-hasFieldsDesc = "This PDF contains fillable fields"
-title = "Form Fields"
-unsavedBadge = "Unsaved"
-unsavedDesc = "You have unsaved changes"
+apply = "Änderungen anwenden"
+dismiss = "Verwerfen"
+download = "PDF herunterladen"
+hasFieldsDesc = "Dieses PDF enthält ausfüllbare Felder"
+title = "Formularfelder"
+unsavedBadge = "Ungespeichert"
+unsavedDesc = "Sie haben ungespeicherte Änderungen"
 
 [viewer.layers]
 closeSidebar = "Seitenleiste für Ebenen schließen"
