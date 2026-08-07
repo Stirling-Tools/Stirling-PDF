@@ -221,6 +221,41 @@ public class AttachmentService implements AttachmentServiceInterface {
     }
 
     @Override
+    public Optional<byte[]> extractSingleAttachment(PDDocument document, String attachmentName)
+            throws IOException {
+        PDDocumentCatalog catalog = document.getDocumentCatalog();
+        if (catalog == null) {
+            return Optional.empty();
+        }
+
+        PDDocumentNameDictionary documentNames = catalog.getNames();
+        if (documentNames == null) {
+            return Optional.empty();
+        }
+
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = documentNames.getEmbeddedFiles();
+        if (embeddedFilesTree == null) {
+            return Optional.empty();
+        }
+
+        Map<String, PDComplexFileSpecification> embeddedFiles = new LinkedHashMap<>();
+        collectEmbeddedFiles(embeddedFilesTree, embeddedFiles);
+
+        for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
+            PDComplexFileSpecification fileSpecification = entry.getValue();
+            String currentName = determineFilename(entry.getKey(), fileSpecification);
+            if (currentName.equalsIgnoreCase(attachmentName)
+                    || entry.getKey().equalsIgnoreCase(attachmentName)) {
+                PDEmbeddedFile embeddedFile = getEmbeddedFile(fileSpecification);
+                if (embeddedFile != null) {
+                    return readAttachmentData(embeddedFile);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public List<AttachmentInfo> listAttachments(PDDocument document) throws IOException {
         List<AttachmentInfo> attachments = new ArrayList<>();
 
@@ -291,7 +326,7 @@ public class AttachmentService implements AttachmentServiceInterface {
 
         for (Map.Entry<String, PDComplexFileSpecification> entry : allEmbeddedFiles.entrySet()) {
             String currentName = determineFilename(entry.getKey(), entry.getValue());
-            if (currentName.equals(attachmentName)) {
+            if (matchesAttachmentName(currentName, entry.getKey(), attachmentName)) {
                 fileToRename = entry.getValue();
                 keyToRename = entry.getKey();
                 break;
@@ -332,7 +367,7 @@ public class AttachmentService implements AttachmentServiceInterface {
 
         for (Map.Entry<String, PDComplexFileSpecification> entry : allEmbeddedFiles.entrySet()) {
             String currentName = determineFilename(entry.getKey(), entry.getValue());
-            if (currentName.equals(attachmentName)) {
+            if (matchesAttachmentName(currentName, entry.getKey(), attachmentName)) {
                 keyToRemove = entry.getKey();
                 break;
             }
@@ -354,6 +389,39 @@ public class AttachmentService implements AttachmentServiceInterface {
         log.info("Deleted attachment: '{}'", attachmentName);
 
         return document;
+    }
+
+    private boolean matchesAttachmentName(
+            String candidateName, String entryKey, String targetName) {
+        if (StringUtils.isBlank(targetName)) {
+            return false;
+        }
+        String normTarget = targetName.trim();
+        if (normTarget.equalsIgnoreCase(candidateName) || normTarget.equalsIgnoreCase(entryKey)) {
+            return true;
+        }
+        String simpleCandidate = Filenames.toSimpleFileName(candidateName);
+        String simpleKey = Filenames.toSimpleFileName(entryKey);
+        String simpleTarget = Filenames.toSimpleFileName(normTarget);
+        if (simpleTarget.equalsIgnoreCase(simpleCandidate)
+                || simpleTarget.equalsIgnoreCase(simpleKey)) {
+            return true;
+        }
+        try {
+            String decodedTarget =
+                    java.net.URLDecoder.decode(normTarget, java.nio.charset.StandardCharsets.UTF_8);
+            String decodedCandidate =
+                    java.net.URLDecoder.decode(
+                            candidateName, java.nio.charset.StandardCharsets.UTF_8);
+            String decodedKey =
+                    java.net.URLDecoder.decode(entryKey, java.nio.charset.StandardCharsets.UTF_8);
+            if (decodedTarget.equalsIgnoreCase(decodedCandidate)
+                    || decodedTarget.equalsIgnoreCase(decodedKey)) {
+                return true;
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
     }
 
     private String sanitizeFilename(String candidate) {
