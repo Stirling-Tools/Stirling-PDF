@@ -44,6 +44,14 @@ Then open: http://localhost:8080
 
 For full installation options (including desktop and Kubernetes), see our [Documentation Guide](https://docs.stirlingpdf.com/#documentation-guide).
 
+## Managed Hosting
+
+Prefer not to self-host? Deploy a managed instance in one click:
+
+[![Deploy with Zenith](https://cdn.zenith.hosting/buttons/deploy-with-zenith.svg)](https://zenith.hosting/host/stirling-pdf)
+
+> One-click managed Stirling-PDF: storage, backups, email and a free subdomain included. A share of every subscription goes back to Stirling-PDF.
+
 ## Resources
 
 - [**Documentation**](https://docs.stirlingpdf.com)
