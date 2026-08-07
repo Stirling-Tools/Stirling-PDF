@@ -158,7 +158,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
         <Text
           size="xs"
           style={{
-            color: "var(--c-primary)",
+            color: "var(--c-accent-text)",
             cursor: "pointer",
             textDecoration: "underline",
             textAlign: "center",

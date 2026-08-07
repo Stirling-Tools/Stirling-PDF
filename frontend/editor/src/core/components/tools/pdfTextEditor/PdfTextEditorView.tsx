@@ -1683,7 +1683,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
           >
             <Stack align="center" gap="md" style={{ pointerEvents: "none" }}>
               <UploadFileIcon
-                sx={{ fontSize: 48, color: "var(--mantine-color-blue-5)" }}
+                sx={{ fontSize: 48, color: "var(--c-accent-text)" }}
               />
               <Text size="lg" fw={600}>
                 {t("pdfTextEditor.empty.title", "No document loaded")}
