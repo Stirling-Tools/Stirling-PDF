@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -568,7 +569,15 @@ class ManualRedactionServiceTest {
                 byPage.put(0, new ArrayList<>(Arrays.asList(text(0, 72, 690, 300, 710))));
 
                 TempFile result =
-                        service.finalizeRedaction(doc, byPage, "#000000", 1.0f, false, false);
+                        service.finalizeRedaction(
+                                doc,
+                                byPage,
+                                "#000000",
+                                1.0f,
+                                false,
+                                false,
+                                Collections.emptySet(),
+                                Collections.emptyList());
 
                 assertNotNull(result);
                 assertNotNull(result.getFile());
@@ -590,7 +599,15 @@ class ManualRedactionServiceTest {
                 Map<Integer, List<PDFText>> byPage = new HashMap<>();
 
                 TempFile result =
-                        service.finalizeRedaction(doc, byPage, "#000000", 0.0f, false, false);
+                        service.finalizeRedaction(
+                                doc,
+                                byPage,
+                                "#000000",
+                                0.0f,
+                                false,
+                                false,
+                                Collections.emptySet(),
+                                Collections.emptyList());
 
                 assertNotNull(result);
                 assertTrue(result.getFile().exists());
@@ -610,7 +627,15 @@ class ManualRedactionServiceTest {
                 Map<Integer, List<PDFText>> byPage = new HashMap<>();
 
                 TempFile result =
-                        service.finalizeRedaction(doc, byPage, "#000000", 0.0f, null, false);
+                        service.finalizeRedaction(
+                                doc,
+                                byPage,
+                                "#000000",
+                                0.0f,
+                                null,
+                                false,
+                                Collections.emptySet(),
+                                Collections.emptyList());
 
                 assertNotNull(result);
                 assertTrue(result.getFile().exists());
@@ -630,7 +655,15 @@ class ManualRedactionServiceTest {
                 byPage.put(0, new ArrayList<>(Arrays.asList(text(0, 72, 690, 300, 710))));
 
                 TempFile result =
-                        service.finalizeRedaction(doc, byPage, "#FF0000", 2.0f, false, true);
+                        service.finalizeRedaction(
+                                doc,
+                                byPage,
+                                "#FF0000",
+                                2.0f,
+                                false,
+                                true,
+                                Collections.emptySet(),
+                                Collections.emptyList());
 
                 assertNotNull(result);
                 try (PDDocument reloaded = Loader.loadPDF(result.getFile())) {
@@ -658,7 +691,14 @@ class ManualRedactionServiceTest {
                         IOException.class,
                         () ->
                                 service.finalizeRedaction(
-                                        doc, byPage, "#000000", 0.0f, false, false));
+                                        doc,
+                                        byPage,
+                                        "#000000",
+                                        0.0f,
+                                        false,
+                                        false,
+                                        Collections.emptySet(),
+                                        Collections.emptyList()));
                 // The failing temp file is closed on the error path.
                 verify(failing).close();
             } finally {

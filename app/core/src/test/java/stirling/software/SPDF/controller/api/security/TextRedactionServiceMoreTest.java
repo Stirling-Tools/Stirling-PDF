@@ -226,19 +226,23 @@ class TextRedactionServiceMoreTest {
                 }
                 page.setContents(pageStream);
 
-                // Processing the page walks into the XObject graph; when a match is found inside
-                // the
-                // form, writeRedactedContentToXObject runs and sets a /Contents item on the form's
-                // COS dictionary. Asserting that item appears proves the XObject redaction path
-                // executed end-to-end without throwing.
+                // Processing the page walks into the XObject graph and rewrites the form's own
+                // stream body in place (F3), so the target is physically gone from the form.
                 List<Object> tokens =
                         service.createTokensWithoutTargetText(
                                 doc, page, Set.of("SECRET"), false, false);
 
                 assertThat(tokens).isNotNull();
-                assertThat(form.getCOSObject().containsKey(COSName.CONTENTS))
-                        .as("form XObject redaction path should have written a new content item")
-                        .isTrue();
+                String rewrittenForm;
+                try (var in = form.getContents()) {
+                    rewrittenForm =
+                            new String(
+                                    in.readAllBytes(),
+                                    java.nio.charset.StandardCharsets.ISO_8859_1);
+                }
+                assertThat(rewrittenForm)
+                        .as("form XObject content should have the target removed in place")
+                        .doesNotContain("SECRET");
             }
         }
     }
