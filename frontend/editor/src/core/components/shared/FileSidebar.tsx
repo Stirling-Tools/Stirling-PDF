@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useRef,
   useEffect,
+  useLayoutEffect,
   forwardRef,
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
@@ -21,6 +22,7 @@ import {
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAuth } from "@app/auth/UseSession";
 import { useProfilePictureUrl } from "@app/hooks/useProfilePictureUrl";
@@ -172,6 +174,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [searchQuery, setSearchQuery] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
     const nativeFileInputRef = useRef<HTMLInputElement>(null);
+    const initialSidebarPreferenceAppliedRef = useRef(false);
     // State (not ref) so setting it triggers a re-render - avoids racing addFiles state updates.
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
       null,
@@ -179,6 +182,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const navigate = useNavigate();
     const { config } = useAppConfig();
+    const { preferences } = usePreferences();
     const {
       isEnabled: isGoogleDriveEnabled,
       openPicker: openGoogleDrivePicker,
@@ -260,6 +264,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [pictureFailed, setPictureFailed] = useState(false);
     useEffect(() => setPictureFailed(false), [profilePictureUrl]);
     const showProfilePicture = !!profilePictureUrl && !pictureFailed;
+
+    useLayoutEffect(() => {
+      if (initialSidebarPreferenceAppliedRef.current) return;
+
+      initialSidebarPreferenceAppliedRef.current = true;
+      if (preferences.hideFilesSidebarByDefault && !collapsed) {
+        onToggleCollapse?.();
+      }
+    }, [collapsed, onToggleCollapse, preferences.hideFilesSidebarByDefault]);
 
     useEffect(() => {
       if (!config?.enableLogin) {
