@@ -269,6 +269,16 @@ tasks:
       - task: lint:eslint
       - task: lint:dpdm
       - task: lint:colors
+      - task: lint:css
+
+  lint:css:
+    desc: "Lint stylesheets for duplicate selectors"
+    deps: [install]
+    cmds:
+      # Covers the whole editor tree, including the portal/processor layer and
+      # public/css. Vendored CSS and build output are excluded via ignoreFiles
+      # in stylelint.config.mjs.
+      - npx stylelint "editor/**/*.css"
 
   lint:colors:
     desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
@@ -394,6 +404,13 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/src/portal/tsconfig.json }
 
+  typecheck:storybook:
+    desc: "Typecheck Storybook config and stories"
+    deps: [prepare]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: .storybook/tsconfig.json }
+
   typecheck:all:
     desc: "Typecheck all build variants"
     cmds:
@@ -405,6 +422,7 @@ tasks:
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal
+      - task: typecheck:storybook
 
   # ============================================================
   # Quality Gate
@@ -486,18 +504,19 @@ tasks:
     desc: "Generate tool API types from the Java OpenAPI spec"
     deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts
     sources:
       - editor/scripts/generate-tool-api-types.mts
       - ../SwaggerDoc.json
     generates:
       - editor/src/core/types/toolApiTypes.ts
+      - editor/src/core/types/toolIO.ts
 
   tool-models:check:
     desc: "Fail if committed tool API types are out of date"
     deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --check
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts --check
 
   licenses:generate:
     desc: "Generate frontend license report"

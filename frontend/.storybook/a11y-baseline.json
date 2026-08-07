@@ -1727,6 +1727,9 @@
   "editor/src/portal/components/billing/InvoicesList.stories.tsx :: Default": [
     "color-contrast"
   ],
+  "editor/src/portal/components/billing/LinkAccountPrompt.stories.tsx :: Default": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/billing/PrepaidCapacityCard.stories.tsx :: Bundle Healthy": [
     "aria-progressbar-name",
     "color-contrast"
@@ -2113,22 +2116,15 @@
     "color-contrast"
   ],
   "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: License": [
-    "aria-dialog-name"
+    "color-contrast"
   ],
   "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: License Trial": [
-    "aria-dialog-name"
-  ],
-  "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: Schedule Call": [
-    "aria-dialog-name"
+    "color-contrast"
   ],
   "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: Trial Manage": [
-    "aria-dialog-name"
-  ],
-  "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: Trial Manage Maxed": [
-    "aria-dialog-name"
+    "color-contrast"
   ],
   "editor/src/portal/components/procurement/ProcurementExtras.stories.tsx :: Trial Setup": [
-    "aria-dialog-name",
     "color-contrast"
   ],
   "editor/src/portal/components/procurement/ProcurementFlow.stories.tsx :: Default": [
@@ -2141,6 +2137,9 @@
   "editor/src/portal/components/procurement/ProcurementHome.stories.tsx :: Default": [
     "color-contrast"
   ],
+  "editor/src/portal/components/procurement/ProcurementModal.stories.tsx :: Open": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/procurement/ProcurementStages.stories.tsx :: License": [
     "color-contrast"
   ],
@@ -2148,6 +2147,9 @@
     "color-contrast"
   ],
   "editor/src/portal/components/procurement/ProcurementStages.stories.tsx :: License Online Only": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/procurement/ProcurementStages.stories.tsx :: Payment": [
     "color-contrast"
   ],
   "editor/src/portal/components/procurement/QuoteBuilder.stories.tsx :: Default": [

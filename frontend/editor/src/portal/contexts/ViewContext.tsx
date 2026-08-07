@@ -14,24 +14,7 @@ export type ViewId =
   | "infrastructure"
   | "usage"
   | "docs"
-  | "procurement"
   | "settings";
-
-export const VIEW_LABELS: Record<ViewId, string> = {
-  home: "Home",
-  editor: "Editor",
-  users: "Users",
-  sources: "Sources",
-  integrations: "Integrations",
-  policies: "Policies",
-  pipelines: "Pipelines",
-  documents: "Documents",
-  infrastructure: "Infrastructure",
-  usage: "Usage & Billing",
-  docs: "Documentation",
-  procurement: "Procurement",
-  settings: "Settings",
-};
 
 export const VIEW_PATHS: Record<ViewId, string> = {
   home: "/",
@@ -45,7 +28,6 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
-  procurement: "/procurement",
   settings: "/settings",
 };
 

@@ -87,7 +87,6 @@ public class DefaultClassificationPolicySeeder {
                 POLICY_NAME,
                 "system",
                 true,
-                null,
                 List.of(),
                 List.of(new PipelineStep(CLASSIFY_ENDPOINT, Map.of())),
                 new OutputSpec("inline", options),

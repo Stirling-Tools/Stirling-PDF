@@ -5,6 +5,7 @@ import {
   Chip,
   EmptyState,
   MetricCard,
+  MetricStrip,
   ProgressBar,
   Select,
   StatusBadge,
@@ -65,11 +66,7 @@ export function ModelsTab() {
       key: "status",
       header: t("portal.infrastructure.models.columns.status"),
       render: (m) => (
-        <StatusBadge
-          tone={MODEL_TONE[m.status]}
-          size="sm"
-          pulse={m.status === "active"}
-        >
+        <StatusBadge tone={MODEL_TONE[m.status]} size="sm">
           {t(MODEL_LABEL[m.status])}
         </StatusBadge>
       ),
@@ -174,7 +171,7 @@ export function ModelsTab() {
       />
 
       {data && (
-        <section className="portal-infra__metrics">
+        <MetricStrip layout="row">
           <MetricCard
             label={t("portal.infrastructure.models.metrics.activeModels")}
             value={data.summary.activeModels}
@@ -193,7 +190,7 @@ export function ModelsTab() {
                 : t("portal.infrastructure.models.metrics.included")
             }
           />
-        </section>
+        </MetricStrip>
       )}
 
       <section>

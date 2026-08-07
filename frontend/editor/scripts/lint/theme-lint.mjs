@@ -314,6 +314,10 @@ function check() {
   const violations = [];
   const primitiveValues = new Map();
   const lineOf = (text, index) => text.slice(0, index).split("\n").length;
+  // path.relative emits backslashes on Windows; normalize so the PRIMITIVES
+  // comparison below matches and printed paths stay POSIX-style.
+  const posixRel = (name) =>
+    relative(process.cwd(), join(THEME, name)).replaceAll("\\", "/");
 
   // Fail if a theme .css exists that isn't registered above (readdir is only
   // compared here — never used to build a path passed to readFileSync).
@@ -321,7 +325,7 @@ function check() {
   for (const name of readdirSync(THEME)) {
     if (name.endsWith(".css") && !known.has(name)) {
       violations.push({
-        file: relative(process.cwd(), join(THEME, name)),
+        file: posixRel(name),
         line: 1,
         msg: `unregistered theme CSS — add "${name}" to THEME_FILES in theme-lint.mjs`,
       });
@@ -742,7 +746,6 @@ const PRIMITIVE_LAYER = [
   /^editor\/src\/core\/theme\//,
   /^editor\/src\/core\/styles\/theme\.css$/,
   /^editor\/src\/core\/tokens\/tokens\.css$/,
-  /^editor\/src\/saas\/styles\/saas-theme\.css$/,
   /^editor\/src\/proprietary\/auth\/ui\/auth-theme\.css$/,
   /^editor\/src\/core\/ui\/accents\.css$/,
 ];

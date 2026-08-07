@@ -504,7 +504,8 @@ For Stirling 2.0, new features are built as React components:
 1. **Create a New Controller:**
    - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/api` directory.
    - Annotate the class with `@RestController` and `@RequestMapping` to define the API endpoint.
-   - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")`.
+   - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates.")`.
+   - If the endpoint transforms a document, declare what it accepts and produces with `@ToolIO`, for example `@ToolIO(produces = ToolFormat.PDF)`. This is what lets a pipeline containing the step be checked before it runs, so a chain that cannot work is caught in the builder rather than part-way through a job. Endpoints under the tool namespaces are required to carry it - `ToolIODeclarationCoverageTest` fails the build otherwise. See [Declaring tool inputs and outputs](#declaring-tool-inputs-and-outputs).
 
    ```java
    package stirling.software.SPDF.controller.api;
@@ -577,6 +578,38 @@ For Stirling 2.0, new features are built as React components:
       }
   }
   ```
+
+### Declaring tool inputs and outputs
+
+An endpoint that transforms a document declares what it accepts and produces with `@ToolIO`. This is the single source of truth: it is published into the OpenAPI spec as an `x-stirling-io` extension, and generated from there into the frontend (`toolIO.ts`) and the AI engine (`tool_io.py`). A pipeline can therefore be checked while it is being edited, instead of failing part-way through a job.
+
+```java
+@ToolIO(produces = ToolFormat.PDF)
+```
+
+`accepts` defaults to `{ ToolFormat.PDF }` and `arity` to `ToolArity.SISO`, so most tools only declare what they produce.
+
+- **`ToolFormat`** is the kind of file: `PDF`, `PDF_ENCRYPTED`, `IMAGE`, `ZIP`, `WORD`, `PPT`, `EXCEL`, `CSV`, `HTML`, `XML`, `JSON`, `TEXT`, `MARKDOWN`, `JAVASCRIPT`, `EBOOK`, `EMAIL`, `POSTSCRIPT`, `VIDEO`, `CBZ`, `CBR`, plus `ANY` (accepts or produces anything) and `NONE` (returns a report, not a file). Encryption is a format rather than a flag, so the default `accepts = PDF` means an endpoint rejects an encrypted PDF unless it opts in.
+- **`ToolArity`** is how many files go in and out: `SISO`, `SIMO`, `MISO`, `MIMO`. This axis carries ZIP-as-transport. A splitter is `produces = PDF, arity = SIMO`, and the caller unpacks the archive; an endpoint whose deliverable really is an archive declares `produces = ZIP` with a single-output arity and stays packed.
+
+When the output depends on a parameter, declare the exception as a case rather than picking one answer. Add Password produces an encrypted PDF unless both passwords are blank, in which case it has only set permissions:
+
+```java
+@ToolIO(
+        produces = ToolFormat.PDF_ENCRYPTED,
+        cases =
+                @ToolIOCase(
+                        when = {
+                            @ToolIOWhen(param = "password", matches = ""),
+                            @ToolIOWhen(param = "ownerPassword", matches = "")
+                        },
+                        produces = ToolFormat.PDF,
+                        arity = ToolArity.SISO))
+```
+
+Every condition in a `when` must hold for the case to apply, and `matches` is compared as a string, case-insensitively, with an empty string matching an absent or blank value. If a case reads a parameter that is not set yet, the output is reported as uncertain and the chain warns rather than erroring.
+
+Endpoints under the tool namespaces must carry a declaration; `ToolIODeclarationCoverageTest` fails the build for any that does not, with a short allowlist for endpoints that manage a session, a device or a stored resource rather than transforming a document. The matching rules are implemented three times (Java `ToolChainValidator`, `toolIOCompat.ts`, `tool_io_compat.py`) and pinned to the same answers by the shared fixtures in `testing/tool-io-cases.json`, so a behaviour change belongs in that file first.
 
 ## Adding New Translations to Existing Language Files in Stirling-PDF
 
