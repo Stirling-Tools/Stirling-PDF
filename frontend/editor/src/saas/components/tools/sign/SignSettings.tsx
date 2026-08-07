@@ -1292,10 +1292,7 @@ const SignSettings = ({
               leftSection={<LocalIcon icon="qr-code-rounded" width="1rem" />}
               onClick={() => setIsMobileSignModalOpen(true)}
             >
-              {t(
-                "sign.mobile.createFromPhone",
-                "Create and upload from phone or tablet",
-              )}
+              {t("sign.mobile.createFromPhone", "Mobile upload")}
             </Button>
             <MobileSignatureModal
               opened={isMobileSignModalOpen}

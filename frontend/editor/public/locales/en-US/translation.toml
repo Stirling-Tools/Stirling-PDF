@@ -10211,7 +10211,7 @@ text = "After entering your name above, click anywhere on the PDF to place your 
 title = "How to add signature"
 
 [sign.mobile]
-createFromPhone = "Create and upload from phone or tablet"
+createFromPhone = "Mobile upload"
 description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
 error = "Connection Error"
 expiryWarning = "QR Code Expiring Soon"
