@@ -1,17 +1,13 @@
 import { useTranslation } from "react-i18next";
 import {
   Banner,
-  Card,
-  Chip,
+  column,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
   MetricCard,
   MetricStrip,
-  ProgressBar,
-  Select,
-  StatusBadge,
-  Table,
   type SelectOption,
-  type TableColumn,
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -22,7 +18,6 @@ import {
   type RoutingRule,
 } from "@portal/api/infrastructure";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
-import { TableSkeleton } from "@portal/components/infrastructure/TableSkeleton";
 import {
   MODEL_LABEL,
   MODEL_PROVIDER_LABEL,
@@ -38,84 +33,53 @@ export function ModelsTab() {
   const { tier } = useTier();
   const state = useAsync<ModelsResponse>(() => fetchModels(tier), [tier]);
   const { data } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
+  const { isLoading } = useSectionFlags(state);
 
-  const modelCols: TableColumn<ModelEntry>[] = [
-    {
+  const modelCols: DataTableColumn<ModelEntry>[] = [
+    column.entity({
       key: "name",
       header: t("portal.infrastructure.models.columns.model"),
-      render: (m) => (
-        <div className="portal-infra__cell-stack">
-          <span className="portal-infra__cell-strong">{m.name}</span>
-          <Chip accent="neutral" size="sm">
-            {MODEL_PROVIDER_LABEL[m.provider]}
-          </Chip>
-        </div>
-      ),
-    },
-    {
+      primary: (m) => m.name,
+      tags: (m) => [{ label: MODEL_PROVIDER_LABEL[m.provider] }],
+    }),
+    column.chips({
       key: "type",
       header: t("portal.infrastructure.models.columns.type"),
-      render: (m) => (
-        <Chip accent={MODEL_TYPE_TONE[m.type]} size="sm">
-          {t(MODEL_TYPE_LABEL[m.type])}
-        </Chip>
-      ),
-    },
-    {
+      get: (m) => [{ label: t(MODEL_TYPE_LABEL[m.type]), accent: MODEL_TYPE_TONE[m.type] }],
+    }),
+    column.badge({
       key: "status",
       header: t("portal.infrastructure.models.columns.status"),
-      render: (m) => (
-        <StatusBadge tone={MODEL_TONE[m.status]} size="sm">
-          {t(MODEL_LABEL[m.status])}
-        </StatusBadge>
-      ),
-    },
-    {
+      get: (m) => ({ tone: MODEL_TONE[m.status], label: t(MODEL_LABEL[m.status]) }),
+    }),
+    column.progress({
       key: "load",
       header: t("portal.infrastructure.models.columns.load"),
-      width: "9rem",
-      render: (m) => (
-        <div className="portal-infra__load">
-          <ProgressBar value={m.load} thresholded height={6} />
-          <span className="portal-infra__load-pct">{pct(m.load)}</span>
-        </div>
-      ),
-    },
-    {
+      get: (m) => ({ value: m.load, label: pct(m.load) }),
+    }),
+    column.number({
       key: "latency",
       header: t("portal.infrastructure.models.columns.latency"),
-      align: "right",
-      render: (m) => (
-        <span className="portal-infra__mono">
-          {t("portal.infrastructure.models.msValue", { value: m.latencyMs })}
-        </span>
-      ),
-    },
-    {
+      get: (m) => m.latencyMs,
+      format: (n) => t("portal.infrastructure.models.msValue", { value: n }),
+    }),
+    column.mono({
       key: "cost",
       header: t("portal.infrastructure.models.columns.cost"),
-      align: "right",
-      render: (m) => (
-        <span className="portal-infra__mono">
-          {modelCost(t, m.cost, m.costUnit)}
-        </span>
-      ),
-    },
-    {
+      get: (m) => modelCost(t, m.cost, m.costUnit),
+    }),
+    column.mono({
       key: "version",
       header: t("portal.infrastructure.models.columns.version"),
-      render: (m) => (
-        <code className="portal-infra__cell-code">{m.version}</code>
-      ),
-    },
+      get: (m) => m.version,
+    }),
   ];
 
   // Free has no routing control: the catalogue is read-only and the routing
   // table is replaced by an upgrade nudge.
   const canRoute = tier !== "free";
 
-  // Routing overrides are interactive but unbacked — assigning a model just
+  // Routing overrides are interactive but unbacked - assigning a model just
   // moves local UI state until the routing endpoint exists.
   // TODO(backend): PUT /v1/infrastructure/models/routing { rules }
   const modelOptions: SelectOption[] =
@@ -123,44 +87,37 @@ export function ModelsTab() {
       .filter((m) => m.status !== "disabled")
       .map((m) => ({ value: m.id, label: m.name })) ?? [];
 
-  const routingCols: TableColumn<RoutingRule>[] = [
-    {
+  const routingCols: DataTableColumn<RoutingRule>[] = [
+    column.entity({
       key: "operation",
       header: t("portal.infrastructure.models.routingColumns.operation"),
-      render: (r) => (
-        <div className="portal-infra__cell-stack">
-          <span className="portal-infra__cell-strong">{r.operation}</span>
-          {r.isDefault && (
-            <Chip accent="default" size="sm">
-              {t("portal.infrastructure.models.routingColumns.default")}
-            </Chip>
-          )}
-        </div>
-      ),
-    },
-    {
+      primary: (r) => r.operation,
+      tags: (r) =>
+        r.isDefault
+          ? [
+              {
+                label: t("portal.infrastructure.models.routingColumns.default"),
+                accent: "default",
+              },
+            ]
+          : [],
+    }),
+    column.text({
       key: "docType",
       header: t("portal.infrastructure.models.routingColumns.docType"),
-      render: (r) => r.docType,
-    },
-    {
+      get: (r) => r.docType,
+    }),
+    column.select({
       key: "modelId",
       header: t("portal.infrastructure.models.routingColumns.routedTo"),
-      width: "16rem",
-      render: (r) => (
-        <Select
-          inputSize="sm"
-          options={modelOptions}
-          defaultValue={r.modelId}
-          aria-label={t(
-            "portal.infrastructure.models.routingColumns.modelForAria",
-            {
-              operation: r.operation,
-            },
-          )}
-        />
-      ),
-    },
+      get: (r) => ({
+        defaultValue: r.modelId,
+        options: modelOptions,
+        ariaLabel: t("portal.infrastructure.models.routingColumns.modelForAria", {
+          operation: r.operation,
+        }),
+      }),
+    }),
   ];
 
   return (
@@ -202,9 +159,12 @@ export function ModelsTab() {
               : t("portal.infrastructure.models.catalogue.sub")
           }
         />
-        <Card padding="none">
-          {isLoading && <TableSkeleton rows={4} cols={7} />}
-          {isEmpty && (
+        <DataTable
+          columns={modelCols}
+          rows={data?.models ?? []}
+          rowKey={(m) => m.id}
+          loading={isLoading}
+          empty={
             <EmptyState
               size="compact"
               title={t("portal.infrastructure.models.catalogue.empty.title")}
@@ -212,15 +172,8 @@ export function ModelsTab() {
                 "portal.infrastructure.models.catalogue.empty.description",
               )}
             />
-          )}
-          {!isEmpty && data && data.models.length > 0 && (
-            <Table
-              columns={modelCols}
-              rows={data.models}
-              rowKey={(m) => m.id}
-            />
-          )}
-        </Card>
+          }
+        />
       </section>
 
       {tier === "enterprise" && (
@@ -241,17 +194,13 @@ export function ModelsTab() {
           }
         />
         {canRoute ? (
-          <Card padding="none">
-            {isLoading && <TableSkeleton rows={4} cols={3} />}
-            {!isEmpty && data && (
-              <Table
-                columns={routingCols}
-                rows={data.routing}
-                rowKey={(r) => r.id}
-                empty={t("portal.infrastructure.models.routing.empty")}
-              />
-            )}
-          </Card>
+          <DataTable
+            columns={routingCols}
+            rows={data?.routing ?? []}
+            rowKey={(r) => r.id}
+            loading={isLoading}
+            empty={t("portal.infrastructure.models.routing.empty")}
+          />
         ) : (
           <Banner
             tone="info"

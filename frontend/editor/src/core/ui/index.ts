@@ -38,7 +38,7 @@ export * from "@app/ui/Collapsible";
 export * from "@app/ui/Tabs";
 export * from "@app/ui/Dropdown";
 export * from "@app/ui/Drawer";
-export * from "@app/ui/Table";
+export * from "@app/ui/DataTable";
 
 // Forms
 export * from "@app/ui/FormField";

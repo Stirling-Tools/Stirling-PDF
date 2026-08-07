@@ -2,15 +2,14 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
-  Card,
+  column,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
   MetricCard,
   MetricStrip,
-  StatusBadge,
-  Table,
   Tabs,
   type TabItem,
-  type TableColumn,
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useSectionFlags } from "@portal/hooks/useAsync";
@@ -22,7 +21,6 @@ import {
 } from "@portal/api/infrastructure";
 import { AuditExportModal } from "@portal/components/infrastructure/AuditExportModal";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
-import { TableSkeleton } from "@portal/components/infrastructure/TableSkeleton";
 import {
   AUDIT_CAT_LABEL,
   AUDIT_CAT_TONE,
@@ -57,55 +55,46 @@ export function AuditTab() {
     },
   ];
 
-  const cols: TableColumn<AuditEvent>[] = [
-    {
+  const cols: DataTableColumn<AuditEvent>[] = [
+    column.mono({
       key: "timestamp",
       header: t("portal.infrastructure.audit.columns.timestamp"),
-      render: (e) => <span className="portal-infra__mono">{e.timestamp}</span>,
-    },
-    {
+      get: (e) => e.timestamp,
+    }),
+    column.badgeText({
       key: "event",
       header: t("portal.infrastructure.audit.columns.event"),
-      render: (e) => (
-        <div className="portal-infra__event">
-          <StatusBadge tone={AUDIT_CAT_TONE[e.category]} size="sm">
-            {t(AUDIT_CAT_LABEL[e.category])}
-          </StatusBadge>
-          <span>{e.action}</span>
-        </div>
-      ),
-    },
-    {
+      get: (e) => ({
+        tone: AUDIT_CAT_TONE[e.category],
+        label: t(AUDIT_CAT_LABEL[e.category]),
+        text: e.action,
+      }),
+    }),
+    column.mono({
       key: "actor",
       header: t("portal.infrastructure.audit.columns.actor"),
-      render: (e) => <span className="portal-infra__mono">{e.actor}</span>,
-    },
-    {
+      get: (e) => e.actor,
+    }),
+    column.text({
       key: "target",
       header: t("portal.infrastructure.audit.columns.target"),
-      render: (e) => e.target,
-    },
-    {
+      get: (e) => e.target,
+    }),
+    column.badge({
       key: "status",
       header: t("portal.infrastructure.audit.columns.status"),
-      render: (e) => (
-        <StatusBadge tone={AUDIT_TONE[e.status]} size="sm">
-          {t(AUDIT_STATUS_LABEL[e.status])}
-        </StatusBadge>
-      ),
-    },
-    {
+      get: (e) => ({
+        tone: AUDIT_TONE[e.status],
+        label: t(AUDIT_STATUS_LABEL[e.status]),
+      }),
+    }),
+    column.number({
       key: "latency",
       header: t("portal.infrastructure.audit.columns.latency"),
-      align: "right",
-      render: (e) => (
-        <span className="portal-infra__mono">
-          {t("portal.infrastructure.audit.latencyValue", {
-            value: e.latencyMs,
-          })}
-        </span>
-      ),
-    },
+      get: (e) => e.latencyMs,
+      format: (n) =>
+        t("portal.infrastructure.audit.latencyValue", { value: n }),
+    }),
   ];
 
   const state = useAuditLog(tier);
@@ -171,31 +160,31 @@ export function AuditTab() {
         />
       )}
 
-      <Card padding="none">
-        {isLoading && <TableSkeleton rows={6} cols={6} />}
-        {!isLoading && forbidden && (
-          <EmptyState
-            size="compact"
-            title={t("portal.infrastructure.audit.forbidden.title")}
-            description={t("portal.infrastructure.audit.forbidden.description")}
-          />
-        )}
-        {!isLoading && !forbidden && isEmpty && (
-          <EmptyState
-            size="compact"
-            title={t("portal.infrastructure.audit.empty.title")}
-            description={t("portal.infrastructure.audit.empty.description")}
-          />
-        )}
-        {!isEmpty && data && (
-          <Table
-            columns={cols}
-            rows={rows}
-            rowKey={(e) => e.id}
-            empty={t("portal.infrastructure.audit.noEventsInCategory")}
-          />
-        )}
-      </Card>
+      <DataTable
+        columns={cols}
+        rows={rows}
+        rowKey={(e) => e.id}
+        loading={isLoading}
+        empty={
+          forbidden ? (
+            <EmptyState
+              size="compact"
+              title={t("portal.infrastructure.audit.forbidden.title")}
+              description={t(
+                "portal.infrastructure.audit.forbidden.description",
+              )}
+            />
+          ) : isEmpty ? (
+            <EmptyState
+              size="compact"
+              title={t("portal.infrastructure.audit.empty.title")}
+              description={t("portal.infrastructure.audit.empty.description")}
+            />
+          ) : (
+            t("portal.infrastructure.audit.noEventsInCategory")
+          )
+        }
+      />
     </div>
   );
 }

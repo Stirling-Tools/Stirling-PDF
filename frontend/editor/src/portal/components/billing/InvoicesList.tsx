@@ -3,11 +3,12 @@ import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
+  type CellLink,
+  column,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
   Skeleton,
-  StatusBadge,
-  Table,
-  type TableColumn,
 } from "@app/ui";
 import { formatMinor, formatPeriodDate } from "@app/billing";
 import { fetchInvoices, type Invoice } from "@portal/api/billing";
@@ -80,96 +81,68 @@ export function InvoicesList() {
   //   Date · Amount · Status · Description (product name) · Actions
   // The monospace invoice id is dropped — users care about "what was it for",
   // not the internal id.
-  const columns: TableColumn<Invoice>[] = [
-    {
+  const columns: DataTableColumn<Invoice>[] = [
+    column.text({
       key: "date",
       header: t("portal.billing.invoices.columnDate", "Date"),
-      render: (inv) =>
-        inv.createdAt ? formatPeriodDate(inv.createdAt, { year: true }) : "—",
-    },
-    {
+      get: (inv) =>
+        inv.createdAt ? formatPeriodDate(inv.createdAt, { year: true }) : "-",
+    }),
+    column.number({
       key: "pdfs",
-      header: t(
-        "portal.billing.invoices.columnPdfsProcessed",
-        "PDFs processed",
-      ),
-      align: "right",
-      // Billed units on the invoice's metered line item; "—" when the
+      header: t("portal.billing.invoices.columnPdfsProcessed", "PDFs processed"),
+      // Billed units on the invoice's metered line item; blank when the
       // line-item table isn't synced into the Stripe mirror.
-      render: (inv) =>
-        inv.pdfsProcessed == null ? "—" : inv.pdfsProcessed.toLocaleString(),
-    },
-    {
+      get: (inv) => inv.pdfsProcessed,
+      format: (n) => n.toLocaleString(),
+    }),
+    column.number({
       key: "amount",
       header: t("portal.billing.invoices.columnAmount", "Amount"),
-      align: "right",
-      render: (inv) =>
-        inv.totalMinor == null
-          ? "—"
-          : formatMinor(inv.totalMinor, inv.currency),
-    },
-    {
+      get: (inv) => inv.totalMinor,
+      format: (n, inv) => formatMinor(n, inv.currency),
+    }),
+    column.badge({
       key: "status",
       header: t("portal.billing.invoices.columnStatus", "Status"),
-      render: (inv) => (
-        <StatusBadge tone={statusTone(inv.status)} size="sm">
-          {inv.status}
-        </StatusBadge>
-      ),
-    },
-    {
+      get: (inv) => ({ tone: statusTone(inv.status), label: inv.status }),
+    }),
+    column.text({
       key: "description",
       header: t("portal.billing.invoices.columnDescription", "Description"),
-      render: (inv) => (
-        <span className="portal-billing__invoice-desc">
-          {inv.description ??
-            t("portal.billing.invoices.descriptionFallback", "Invoice")}
-        </span>
-      ),
-    },
-    {
+      get: (inv) =>
+        inv.description ??
+        t("portal.billing.invoices.descriptionFallback", "Invoice"),
+    }),
+    column.links({
       key: "actions",
-      header: "",
-      align: "right",
-      render: (inv) => (
-        <div className="portal-billing__invoice-actions">
-          {inv.hostedInvoiceUrl && (
-            <a
-              className="portal-billing__invoice-link"
-              href={inv.hostedInvoiceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={t(
-                "portal.billing.invoices.viewAriaLabel",
-                "View invoice {{number}} in Stripe",
-                {
-                  number: inv.number ?? inv.id,
-                },
-              )}
-            >
-              {t("portal.billing.invoices.viewLink", "View ↗")}
-            </a>
-          )}
-          {inv.invoicePdf && (
-            <a
-              className="portal-billing__invoice-link"
-              href={inv.invoicePdf}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={t(
-                "portal.billing.invoices.downloadAriaLabel",
-                "Download invoice {{number}} as PDF",
-                {
-                  number: inv.number ?? inv.id,
-                },
-              )}
-            >
-              {t("portal.billing.invoices.pdfLink", "PDF ↓")}
-            </a>
-          )}
-        </div>
-      ),
-    },
+      get: (inv) => {
+        const out: CellLink[] = [];
+        if (inv.hostedInvoiceUrl) {
+          out.push({
+            label: t("portal.billing.invoices.viewLink", "View ↗"),
+            href: inv.hostedInvoiceUrl,
+            ariaLabel: t(
+              "portal.billing.invoices.viewAriaLabel",
+              "View invoice {{number}} in Stripe",
+              { number: inv.number ?? inv.id },
+            ),
+          });
+        }
+        if (inv.invoicePdf) {
+          out.push({
+            label: t("portal.billing.invoices.pdfLink", "PDF ↓"),
+            href: inv.invoicePdf,
+            ariaLabel: t(
+              "portal.billing.invoices.downloadAriaLabel",
+              "Download invoice {{number}} as PDF",
+              { number: inv.number ?? inv.id },
+            ),
+          });
+        }
+        return out;
+      },
+    }),
   ];
 
   return (
@@ -209,12 +182,7 @@ export function InvoicesList() {
 
       {invoices !== null && invoices.length > 0 && (
         <>
-          <Table
-            className="portal-billing__flush-table"
-            columns={columns}
-            rows={visibleRows}
-            rowKey={(inv) => inv.id}
-          />
+          <DataTable columns={columns} rows={visibleRows} rowKey={(inv) => inv.id} />
           {hasMore && (
             <div className="portal-billing__invoice-footer">
               <Button
