@@ -535,4 +535,3 @@ tasks:
         platforms: [windows]
       - cmd: rm -rf node_modules/.vite editor/dist dist
         platforms: [linux, darwin]
-
