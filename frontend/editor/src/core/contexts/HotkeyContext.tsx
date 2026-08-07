@@ -22,7 +22,7 @@ import { ToolCategoryId, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 
 type Bindings = Partial<Record<ToolId, HotkeyBinding>>;
 
-interface HotkeyContextValue {
+export interface HotkeyContextValue {
   hotkeys: Bindings;
   defaults: Bindings;
   isMac: boolean;

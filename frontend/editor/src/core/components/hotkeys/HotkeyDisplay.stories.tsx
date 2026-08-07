@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HotkeyContext } from "@app/contexts/HotkeyContext";
+import {
+  HotkeyContext,
+  type HotkeyContextValue,
+} from "@app/contexts/HotkeyContext";
 import { HotkeyDisplay } from "@app/components/hotkeys/HotkeyDisplay";
-import { getDisplayParts, type HotkeyBinding } from "@app/utils/hotkeys";
+import { getDisplayParts } from "@app/utils/hotkeys";
 
 /** A keyboard shortcut rendered as key caps.
  *
@@ -13,9 +16,8 @@ const withHotkeys = (Story: React.ComponentType) => (
   <HotkeyContext.Provider
     value={
       {
-        getDisplayParts: (binding: HotkeyBinding | null | undefined) =>
-          getDisplayParts(binding, false),
-      } as never
+        getDisplayParts: (binding) => getDisplayParts(binding, false),
+      } as HotkeyContextValue
     }
   >
     <Story />
