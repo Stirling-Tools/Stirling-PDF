@@ -10196,6 +10196,7 @@ backgroundRemovalFailedTitle = "Background removal failed"
 hint = "Upload a PNG or JPG image of your signature"
 label = "Upload signature image"
 placeholder = "Select image file"
+previewAlt = "Current image signature"
 processing = "Processing image..."
 removeBackground = "Remove white background (make transparent)"
 
@@ -10210,8 +10211,8 @@ text = "After entering your name above, click anywhere on the PDF to place your 
 title = "How to add signature"
 
 [sign.mobile]
+createFromPhone = "Create and upload from phone or tablet"
 description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
-drawOnPhone = "Draw on your phone"
 error = "Connection Error"
 expiryWarning = "QR Code Expiring Soon"
 expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."

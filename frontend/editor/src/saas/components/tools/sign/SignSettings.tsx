@@ -1079,24 +1079,6 @@ const SignSettings = ({
             hasCanvasSignature,
             handleSaveCanvasSignature,
           )}
-          {canDrawOnPhone && (
-            <>
-              <Button
-                variant="secondary"
-                fullWidth
-                disabled={disabled}
-                leftSection={<LocalIcon icon="qr-code-rounded" width="1rem" />}
-                onClick={() => setIsMobileSignModalOpen(true)}
-              >
-                {t("sign.mobile.drawOnPhone", "Draw on your phone")}
-              </Button>
-              <MobileSignatureModal
-                opened={isMobileSignModalOpen}
-                onClose={() => setIsMobileSignModalOpen(false)}
-                onSignatureReceived={handleMobileSignatureReceived}
-              />
-            </>
-          )}
         </Stack>
       );
     }
@@ -1104,6 +1086,29 @@ const SignSettings = ({
     if (signatureSource === "image") {
       return (
         <Stack gap="xs">
+          {imageSignatureData && (
+            <Box
+              style={{
+                border: "1px solid var(--mantine-color-default-border)",
+                borderRadius: "var(--mantine-radius-default)",
+                // Signatures are stamped on paper-white pages, so preview on white.
+                background: "white",
+                padding: "0.5rem",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <img
+                src={imageSignatureData}
+                alt={translate("image.previewAlt", "Current image signature")}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 120,
+                  objectFit: "contain",
+                }}
+              />
+            </Box>
+          )}
           <ImageUploader
             onImageChange={handleImageChange}
             disabled={disabled}
@@ -1278,6 +1283,27 @@ const SignSettings = ({
             "Choose how you want to create the signature",
           )}
         </Text>
+        {canDrawOnPhone && (
+          <>
+            <Button
+              variant="secondary"
+              fullWidth
+              disabled={disabled}
+              leftSection={<LocalIcon icon="qr-code-rounded" width="1rem" />}
+              onClick={() => setIsMobileSignModalOpen(true)}
+            >
+              {t(
+                "sign.mobile.createFromPhone",
+                "Create and upload from phone or tablet",
+              )}
+            </Button>
+            <MobileSignatureModal
+              opened={isMobileSignModalOpen}
+              onClose={() => setIsMobileSignModalOpen(false)}
+              onSignatureReceived={handleMobileSignatureReceived}
+            />
+          </>
+        )}
         {sourceOptions.length > 1 && (
           <SegmentedControl
             value={signatureSource}
