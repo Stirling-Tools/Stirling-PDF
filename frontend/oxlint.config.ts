@@ -107,7 +107,7 @@ const noExplicitAnyExcludes = [
 ];
 
 export default defineConfig({
-  plugins: ["typescript"],
+  plugins: ["typescript", "import"],
   categories: {
     correctness: "off",
   },
@@ -385,6 +385,15 @@ export default defineConfig({
       excludeFiles: noExplicitAnyExcludes,
       rules: {
         "typescript/no-explicit-any": "error",
+      },
+    },
+    {
+      // Circular-import detection across the editor app source (the import
+      // plugin resolves @app/* and the other tsconfig path aliases). Replaces
+      // the previous dpdm pass.
+      files: ["editor/src/**/*.{ts,tsx}"],
+      rules: {
+        "import/no-cycle": "error",
       },
     },
   ],

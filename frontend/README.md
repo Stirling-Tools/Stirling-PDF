@@ -6,7 +6,7 @@ All frontend commands are run from the repository root using [Task](https://task
 - `task frontend:build` — production build
 - `task frontend:test` — run tests
 - `task frontend:test:watch` — run tests in watch mode
-- `task frontend:lint` — run oxlint + cycle detection
+- `task frontend:lint` — run linting
 - `task frontend:typecheck` — run TypeScript type checking
 - `task frontend:check` — run typecheck + lint + test
 - `task frontend:install` — install npm dependencies
