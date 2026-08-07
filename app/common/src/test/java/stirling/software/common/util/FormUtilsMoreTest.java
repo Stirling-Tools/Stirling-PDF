@@ -476,8 +476,17 @@ class FormUtilsMoreTest {
                                 "combobox",
                                 null,
                                 null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
                                 List.of("One", "Two"),
                                 "One",
+                                null,
+                                null,
+                                null,
+                                null,
                                 null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
@@ -505,10 +514,19 @@ class FormUtilsMoreTest {
                                 null,
                                 "listbox", // same type -> in-place path
                                 null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
                                 Boolean.TRUE,
                                 List.of("X", "Y", "Z"),
                                 null,
-                                "Choose items");
+                                "Choose items",
+                                null,
+                                null,
+                                null,
+                                null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -529,7 +547,24 @@ class FormUtilsMoreTest {
 
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
-                                "keep", null, null, "bogusType", null, null, null, null, null);
+                                "keep",
+                                null,
+                                null,
+                                "bogusType",
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
                 // The field is preserved unchanged because the target type is unsupported.
@@ -554,7 +589,8 @@ class FormUtilsMoreTest {
                 // Rename beta -> alpha; should be uniquified to avoid the collision.
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
-                                "beta", "alpha", null, null, null, null, null, null, null);
+                                "beta", "alpha", null, null, null, null, null, null, null, null,
+                                null, null, null, null, null, null, null, null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -575,7 +611,8 @@ class FormUtilsMoreTest {
                 doc.addPage(new PDPage());
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
-                                "x", null, null, null, null, null, null, null, null);
+                                "x", null, null, null, null, null, null, null, null, null, null,
+                                null, null, null, null, null, null, null);
                 FormUtils.modifyFormFields(doc, List.of(mod));
             }
         }

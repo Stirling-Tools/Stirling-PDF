@@ -705,7 +705,16 @@ class FormUtilsGapTest {
                                 "newName",
                                 "New Label",
                                 null, // keep type (text) -> in-place path
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
                                 Boolean.TRUE,
+                                null,
+                                null,
+                                null,
+                                null,
                                 null,
                                 null,
                                 null,
@@ -731,7 +740,8 @@ class FormUtilsGapTest {
 
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
-                                "missing", null, null, null, null, null, null, null, null);
+                                "missing", null, null, null, null, null, null, null, null, null,
+                                null, null, null, null, null, null, null, null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -754,7 +764,8 @@ class FormUtilsGapTest {
                 mods.add(null);
                 mods.add(
                         new FormUtils.ModifyFormFieldDefinition(
-                                "  ", null, null, null, null, null, null, null, null));
+                                "  ", null, null, null, null, null, null, null, null, null, null,
+                                null, null, null, null, null, null, null));
 
                 FormUtils.modifyFormFields(doc, mods);
                 assertEquals(1, FormUtils.extractFormFields(doc).size());

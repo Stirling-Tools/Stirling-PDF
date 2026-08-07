@@ -13,21 +13,6 @@
   padding: 0.25rem;
 }
 
-.segmentedRoot {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-radius: var(--radius-sm) !important;
-}
-
-:global([data-mantine-color-scheme="dark"]) .segmentedRoot {
-  background: rgba(255, 255, 255, 0.05) !important;
-}
-
-.segmentedIndicator {
-  background-color: var(--mantine-color-blue-filled) !important;
-  box-shadow: var(--shadow-sm) !important;
-  border-radius: var(--radius-sm) !important;
-}
-
 .segmentedLabel {
   display: flex;
   flex-direction: column;
@@ -38,20 +23,21 @@
   min-height: 2.25rem;
 }
 
+/* Colour is inherited: the shared SegmentedControl already flips the active
+   segment's text, so setting it here would override that and leave the label
+   unreadable on the accent fill. */
 .segmentedInnerLabel {
   font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: var(--c-text-subtle);
-  transition: color 0.15s ease;
+  color: inherit;
   line-height: 1;
 }
 
 .modeTabIcon {
   font-size: 1rem !important;
   margin-bottom: 0.125rem;
-  opacity: 0.8;
 }
 
 .header {
