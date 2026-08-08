@@ -94,11 +94,14 @@ tauri: &tauri
   - *ci
   - frontend/editor/src-tauri/**
   - frontend/editor/src/desktop/**
+  - frontend/desktop-e2e/**
   - frontend/editor/tsconfig.desktop.vite.json
   - frontend/package.json
   - frontend/package-lock.json
   - frontend/editor/vite.config.ts
   - .github/workflows/tauri-build.yml
+  - .github/workflows/desktop-rust.yml
+  - .github/workflows/desktop-e2e.yml
   - Taskfile.yml
   - .taskfiles/desktop.yml
 

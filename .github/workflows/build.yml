@@ -201,6 +201,30 @@ jobs:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
       dockerfiles-changed: ${{ needs.files-changed.outputs.dockerfiles }}
 
+  # Fast Rust gate: clippy + cargo test on all three desktop OSes in a couple
+  # of minutes, because it skips the jlink/bootJar prep that tauri-build needs.
+  desktop-rust:
+    if: needs.files-changed.outputs.tauri == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/desktop-rust.yml
+    secrets: inherit
+
+  # Runs the real app: window opens, frontend mounts, bundled JRE boots the
+  # bundled JAR. Linux only on PRs (cheapest runner, and the platform where the
+  # webview and jlink regressions have actually bitten); nightly covers Windows
+  # too via its own dispatch.
+  desktop-e2e:
+    if: needs.files-changed.outputs.tauri == 'true'
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/desktop-e2e.yml
+    secrets: inherit
+    with:
+      platform: linux
+
   tauri-build:
     if: needs.files-changed.outputs.tauri == 'true'
     needs: [files-changed]
@@ -296,6 +320,8 @@ jobs:
       - check-licence
       - docker-compose-tests
       - test-build-docker-images
+      - desktop-rust
+      - desktop-e2e
       - tauri-build
       - ai-engine
       - generated-models
@@ -322,6 +348,8 @@ jobs:
             check-licence=${{ needs.check-licence.result }}
             docker-compose-tests=${{ needs.docker-compose-tests.result }}
             test-build-docker-images=${{ needs.test-build-docker-images.result }}
+            desktop-rust=${{ needs.desktop-rust.result }}
+            desktop-e2e=${{ needs.desktop-e2e.result }}
             tauri-build=${{ needs.tauri-build.result }}
             ai-engine=${{ needs.ai-engine.result }}
             generated-models=${{ needs.generated-models.result }}
