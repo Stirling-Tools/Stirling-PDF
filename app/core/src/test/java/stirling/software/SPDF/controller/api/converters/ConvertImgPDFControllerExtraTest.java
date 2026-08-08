@@ -1,11 +1,9 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 
 import java.io.ByteArrayOutputStream;
@@ -34,11 +32,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CheckProgramInstall;
-import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -118,8 +112,7 @@ class ConvertImgPDFControllerExtraTest {
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
+                                                any(Path.class),
                                                 eq("PNG"),
                                                 eq(ImageType.RGB),
                                                 eq(true),
@@ -145,61 +138,44 @@ class ConvertImgPDFControllerExtraTest {
     class WebpWithPython {
 
         @Test
-        @DisplayName("throws when the Python conversion yields no webp files")
-        void noWebpFilesProducedThrows() throws Exception {
+        @DisplayName("webp format converts via PdfUtils without python dependency")
+        void webpConvertsViaPdfUtils() throws Exception {
             byte[] pdfBytes = tinyPdfBytes(1);
             ConvertToImageRequest request = baseRequest(pdfBytes, "webp");
 
             Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
                     .thenReturn(tinyDocument(1));
 
-            // ProcessExecutor instance + result are mocked; the empty output dir drives the
-            // "No WebP files were created" IOException without invoking Python.
-            ProcessExecutorResult procResult = Mockito.mock(ProcessExecutorResult.class);
-            Mockito.when(procResult.getMessages()).thenReturn("no output");
-            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
-            Mockito.when(executor.runCommandWithOutputHandling(anyList())).thenReturn(procResult);
-
-            // parsePageList/generateFilename are stubbed so rearrangePdfPages runs without
-            // touching the real installation path for script extraction.
-            java.util.List<Integer> pageOrder = java.util.List.of(0);
-            Path scriptPath = Path.of("png_to_webp.py");
+            byte[] webpBytes = "webp-image".getBytes();
+            @SuppressWarnings("unchecked")
+            ResponseEntity<byte[]> expected = Mockito.mock(ResponseEntity.class);
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<CheckProgramInstall> cpi =
-                            Mockito.mockStatic(CheckProgramInstall.class);
-                    MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                    MockedStatic<WebResponseUtils> wr =
+                            Mockito.mockStatic(WebResponseUtils.class)) {
 
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("png"),
+                                                any(Path.class),
+                                                eq("WEBP"),
                                                 any(ImageType.class),
                                                 anyBoolean(),
                                                 anyInt(),
                                                 any(String.class),
                                                 anyBoolean()))
-                        .thenReturn("png-image".getBytes());
-                gu.when(
+                        .thenReturn(webpBytes);
+                wr.when(
                                 () ->
-                                        GeneralUtils.parsePageList(
-                                                any(String[].class), anyInt(), anyBoolean()))
-                        .thenReturn(pageOrder);
-                gu.when(() -> GeneralUtils.generateFilename(any(), any(String.class)))
-                        .thenReturn("out");
-                gu.when(() -> GeneralUtils.extractScript("png_to_webp.py")).thenReturn(scriptPath);
-                cpi.when(CheckProgramInstall::isPythonAvailable).thenReturn(true);
-                cpi.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn("python3");
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV))
-                        .thenReturn(executor);
+                                        WebResponseUtils.bytesToWebResponse(
+                                                eq(webpBytes),
+                                                any(String.class),
+                                                any(MediaType.class)))
+                        .thenReturn(expected);
 
-                // Output directory is empty after the (mocked) run, so the controller throws.
-                assertThatThrownBy(() -> controller.convertToImage(request))
-                        .isInstanceOf(IOException.class)
-                        .hasMessageContaining("No WebP files were created");
+                ResponseEntity<?> response = controller.convertToImage(request);
+
+                assertThat(response).isSameAs(expected);
             }
         }
     }

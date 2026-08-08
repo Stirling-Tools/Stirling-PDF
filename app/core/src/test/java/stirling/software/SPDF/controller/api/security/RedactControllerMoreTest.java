@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static stirling.software.common.util.RenderingUtils.isLibVipsAvailable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -244,8 +246,9 @@ class RedactControllerMoreTest {
 
         @Test
         @DisplayName("convert-to-image still returns a valid 200 PDF response")
-        void convertToImage() throws IOException {
-            byte[] bytes = singlePageTextPdf("redact SECRET please");
+        void convertToImageResponse() throws IOException {
+            assumeTrue(isLibVipsAvailable(), "libvips not available");
+            byte[] bytes = singlePageTextPdf("some text SECRET here");
             factoryReturns(bytes);
 
             RedactPdfRequest request = new RedactPdfRequest();
@@ -438,6 +441,7 @@ class RedactControllerMoreTest {
         @Test
         @DisplayName("manual redaction with convert-to-image returns a valid PDF")
         void manualConvertToImage() throws IOException {
+            assumeTrue(isLibVipsAvailable(), "libvips not available");
             byte[] bytes = singlePageTextPdf("image mode area");
             factoryReturns(bytes);
 

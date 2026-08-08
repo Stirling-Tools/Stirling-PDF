@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -162,9 +163,7 @@ class FileEncryptionKeyServiceTest {
                                         winnerKek,
                                         winner.getKeyId()
                                                 .toString()
-                                                .getBytes(
-                                                        java.nio.charset.StandardCharsets
-                                                                .US_ASCII))));
+                                                .getBytes(StandardCharsets.US_ASCII))));
 
         doAnswer(
                         inv -> {

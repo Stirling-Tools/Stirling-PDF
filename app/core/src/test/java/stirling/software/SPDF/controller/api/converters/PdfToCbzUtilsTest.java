@@ -1,13 +1,9 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.IOException;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -79,24 +75,16 @@ public class PdfToCbzUtilsTest {
     }
 
     @Test
-    public void testConvertPdfToCbz_ValidPdf() throws IOException {
-        // Create a simple mock PDF
+    public void testConvertPdfToCbz_InvalidPdfBytes() {
+        // Create a simple mock file with invalid PDF bytes
         MockMultipartFile pdfFile =
                 new MockMultipartFile("test", "test.pdf", "application/pdf", new byte[100]);
 
-        // Mock the PDF document
-        PDDocument mockDocument = Mockito.mock(PDDocument.class);
-        Mockito.when(mockDocument.getNumberOfPages()).thenReturn(1);
-        Mockito.when(pdfDocumentFactory.load(pdfFile)).thenReturn(mockDocument);
-
-        // structure
+        // Expect exception when attempting to process invalid bytes with JPDFium
         Assertions.assertThrows(
                 Exception.class,
                 () ->
                         PdfToCbzUtils.convertPdfToCbz(
                                 pdfFile, 300, pdfDocumentFactory, tempFileManager));
-
-        // Verify that load was called
-        Mockito.verify(pdfDocumentFactory).load(pdfFile);
     }
 }

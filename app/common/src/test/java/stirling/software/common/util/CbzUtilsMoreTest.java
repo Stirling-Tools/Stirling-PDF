@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 
 import java.awt.Color;
@@ -90,6 +91,7 @@ class CbzUtilsMoreTest {
         @Test
         @DisplayName("a CBZ with two images converts to a two-page PDF, sorted by natural order")
         void twoImagesToPdf() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             byte[] archive =
                     buildCbz(
                             new String[] {"page2.png", "page10.png", "page1.png"},
@@ -109,6 +111,7 @@ class CbzUtilsMoreTest {
         @Test
         @DisplayName("non-image entries are ignored, only images become pages")
         void mixedEntries() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             byte[] archive =
                     buildCbz(
                             new String[] {"readme.txt", "cover.png"},
@@ -171,6 +174,7 @@ class CbzUtilsMoreTest {
         @Test
         @DisplayName("a CBZ whose only image is corrupt produces no pages and is rejected")
         void corruptImageProducesNoPages() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             byte[] archive =
                     buildCbz(
                             new String[] {"broken.png"},
@@ -190,6 +194,7 @@ class CbzUtilsMoreTest {
         @Test
         @DisplayName("the returned TempFile lives under the configured temp dir and closes cleanly")
         void tempFileCleanup() throws Exception {
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
             byte[] archive =
                     buildCbz(new String[] {"p.png"}, new byte[][] {pngBytes(Color.MAGENTA)});
 

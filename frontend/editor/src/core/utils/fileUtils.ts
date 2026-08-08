@@ -117,6 +117,11 @@ export const IMAGE_EXTENSIONS = new Set([
   "tiff",
   "tif",
   "webp",
+  "heic",
+  "heif",
+  "avif",
+  "jxl",
+  "jp2",
 ]);
 const CSV_EXTENSIONS = new Set(["csv", "tsv"]);
 const JSON_EXTENSIONS = new Set(["json"]);

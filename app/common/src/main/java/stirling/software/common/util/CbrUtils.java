@@ -3,6 +3,7 @@ package stirling.software.common.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.foreign.Arena;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,6 +26,8 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+
+import app.photofox.vipsffm.VImage;
 
 @Slf4j
 @UtilityClass
@@ -120,10 +123,12 @@ public class CbrUtils {
                 }
 
                 for (ImageEntryData imageEntry : imageEntries) {
-                    try {
+                    try (Arena arena = Arena.ofConfined()) {
+                        VImage vimg = RenderingUtils.loadAnyImage(arena, imageEntry.data());
+                        byte[] pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
                         PDImageXObject pdImage =
                                 PDImageXObject.createFromByteArray(
-                                        document, imageEntry.data(), imageEntry.name());
+                                        document, pngBytes, imageEntry.name());
                         PDPage page =
                                 new PDPage(
                                         new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
@@ -137,7 +142,7 @@ public class CbrUtils {
                                         true)) {
                             contentStream.drawImage(pdImage, 0, 0);
                         }
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         log.warn(
                                 "Error processing image {}: {}", imageEntry.name(), e.getMessage());
                     }
