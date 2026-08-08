@@ -164,7 +164,9 @@ export interface ToolWorkflowDataValue {
 export const ToolWorkflowActionsContext = createContext<
   ToolWorkflowActionsValue | undefined
 >(undefined);
-const ToolWorkflowDataContext = createContext<
+// Exported alongside the other two so a story can supply the registry and
+// favourites a component reads without standing up the provider.
+export const ToolWorkflowDataContext = createContext<
   ToolWorkflowDataValue | undefined
 >(undefined);
 
