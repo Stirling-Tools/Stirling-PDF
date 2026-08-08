@@ -176,6 +176,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
             step={0.1}
             onChange={setZoom}
             disabled={processing}
+            thumbLabel={t("config.account.profilePicture.cropper.zoom", "Zoom")}
           />
         </Stack>
 

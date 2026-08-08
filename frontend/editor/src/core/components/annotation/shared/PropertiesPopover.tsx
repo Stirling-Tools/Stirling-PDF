@@ -75,6 +75,7 @@ export function PropertiesPopover({
           min={8}
           max={32}
           label={(val) => `${val}pt`}
+          thumbLabel={t("annotation.fontSize", "Font size")}
         />
       </div>
 
@@ -86,6 +87,7 @@ export function PropertiesPopover({
         <Slider
           value={Math.round((obj?.opacity ?? 1) * 100)}
           onChange={(val) => onUpdate({ opacity: val / 100 })}
+          thumbLabel={t("annotation.opacity", "Opacity")}
           min={10}
           max={100}
           label={(val) => `${val}%`}
@@ -144,6 +146,7 @@ export function PropertiesPopover({
               fillOpacity: newOpacity,
             });
           }}
+          thumbLabel={t("annotation.opacity", "Opacity")}
           min={10}
           max={100}
           label={(val) => `${val}%`}
@@ -169,6 +172,7 @@ export function PropertiesPopover({
               min={0}
               max={12}
               label={(val) => `${val}pt`}
+              thumbLabel={t("annotation.strokeWidth", "Stroke")}
             />
           </div>
           <Button

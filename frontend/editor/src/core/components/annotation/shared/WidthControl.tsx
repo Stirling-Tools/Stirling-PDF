@@ -49,6 +49,7 @@ export function WidthControl({
             min={min}
             max={max}
             label={(val) => `${val}pt`}
+            thumbLabel={t("annotation.width", "Width")}
           />
         </Stack>
       </Popover.Dropdown>
