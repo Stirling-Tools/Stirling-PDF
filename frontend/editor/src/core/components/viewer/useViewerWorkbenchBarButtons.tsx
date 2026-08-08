@@ -451,6 +451,7 @@ export function useViewerWorkbenchBarButtons(
                 <Slider
                   value={speechRate}
                   onChange={handleSpeechRateChange}
+                  thumbLabel={readAloudSpeedLabel}
                   min={0.5}
                   max={2}
                   step={0.1}
