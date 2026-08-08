@@ -10,7 +10,9 @@
 
 .scc {
   --scc-accent: var(--c-primary);
-  --scc-accent-text: var(--c-primary);
+  /* The tint and border carry the selection; restating the accent as text
+     puts it at 2.93:1 on its own 12% wash. */
+  --scc-accent-text: var(--c-text);
   --scc-accent-soft: color-mix(in srgb, var(--c-primary) 12%, transparent);
   --scc-accent-border: color-mix(in srgb, var(--c-primary) 25%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
@@ -24,7 +26,9 @@
 [data-mantine-color-scheme="dark"] .scc {
   /* Chip surface/border track the neutral --c-* tokens (base rule); only the
      brand-azure accent is tuned brighter for dark. */
-  --scc-accent-text: var(--c-primary);
+  /* The tint and border carry the selection; restating the accent as text
+     puts it at 2.93:1 on its own 12% wash. */
+  --scc-accent-text: var(--c-text);
   --scc-accent-soft: color-mix(in srgb, var(--c-primary) 16%, transparent);
 }
 
@@ -152,7 +156,8 @@
 }
 .scc-estimate__sub {
   font-size: 0.75rem;
-  color: var(--c-text-subtle);
+  /* Sits on the accent tint, where --c-text-subtle lands at 4.28:1. */
+  color: var(--c-text-muted);
   margin-top: 1px;
 }
 
