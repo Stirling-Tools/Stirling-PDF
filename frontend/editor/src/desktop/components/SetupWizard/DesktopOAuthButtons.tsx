@@ -164,7 +164,9 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
                     src={oauthIconUrl(
                       iconConfig?.file || GENERIC_PROVIDER_ICON,
                     )}
-                    alt={label}
+                    /* The button's own text names the provider; repeating it
+                       here makes a screen reader say it twice. */
+                    alt=""
                     className="oauth-icon-tiny-desktop"
                   />
                 </span>
