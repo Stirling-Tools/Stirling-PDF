@@ -296,8 +296,17 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        jvmArgs '--enable-native-access=ALL-UNNAMED'
         systemProperty 'java.awt.headless', 'true'
         systemProperty 'apple.awt.UIElement', 'true'
+
+        testLogging {
+            events "started", "failed"
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+            exceptionFormat "full"
+        }
         finalizedBy(jacocoReport)
     }
 
