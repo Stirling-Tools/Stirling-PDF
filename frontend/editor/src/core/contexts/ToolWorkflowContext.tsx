@@ -58,7 +58,7 @@ export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistra
   data: any;
 }
 
-interface ToolWorkflowContextValue extends ToolWorkflowState {
+export interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: ToolId | null;
   selectedTool: ToolRegistryEntry | null;
@@ -116,7 +116,10 @@ const __GLOBAL_CONTEXT_KEY__ = "__ToolWorkflowContext__";
 const existingContext = (globalThis as any)[__GLOBAL_CONTEXT_KEY__] as
   | React.Context<ToolWorkflowContextValue | undefined>
   | undefined;
-const ToolWorkflowContext =
+// Exported so a test or story can mount a component against a slice of the
+// value. The provider itself stands up the whole tool registry and navigation
+// chain, which is far more than a component reading a few fields needs.
+export const ToolWorkflowContext =
   existingContext ??
   createContext<ToolWorkflowContextValue | undefined>(undefined);
 if (!existingContext) {
