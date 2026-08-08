@@ -518,10 +518,25 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       /usr/lib/python3/dist-packages/_cffi_backend*.cpython*.so \
       2>/dev/null || true; \
     \
-    # Strip debug symbols from ALL shared libraries
+    # Strip debug symbols from shared libraries (excluding glibc system runtime, JVM, LibreOffice)
     find /usr/lib -name '*.so*' -type f \
         -not -path '*/jvm/*' \
         -not -path '*/libreoffice/*' \
+        -not -name 'libc.so*' \
+        -not -name 'libc-*.so' \
+        -not -name 'libpthread*' \
+        -not -name 'ld-*.so*' \
+        -not -name 'ld-linux*' \
+        -not -name 'libdl*' \
+        -not -name 'libm.so*' \
+        -not -name 'libm-*.so' \
+        -not -name 'librt*' \
+        -not -name 'libgcc_s*' \
+        -not -name 'libstdc++*' \
+        -not -name 'libnss*' \
+        -not -name 'libpam*' \
+        -not -name 'libutil*' \
+        -not -name 'libresolv*' \
         -exec strip --strip-unneeded {} + 2>/dev/null || true; \
     \
     # Remove GPU backends not needed for headless operation.
