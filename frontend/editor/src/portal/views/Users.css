@@ -53,9 +53,9 @@
   color: var(--c-text-subtle);
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Members table                                                            */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Members table
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-users__member-cell {
   display: flex;
@@ -108,9 +108,9 @@
   gap: 0.5rem;
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Roles grid                                                               */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Roles grid
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-users__roles-grid {
   display: grid;
@@ -175,9 +175,9 @@
   background: var(--c-text-subtle);
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Access & security                                                        */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Access & security
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-users__access {
   display: flex;
@@ -243,9 +243,9 @@
   display: flex;
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Invite modal                                                             */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Invite modal
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-users__invite-body {
   display: flex;
@@ -269,9 +269,9 @@
   font-size: 0.85rem;
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Directory (grouped roster) — Organization / teams / guests               */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Directory (grouped roster) — Organization / teams / guests
+──────────────────────────────────────────────────────────────────────── */
 .portal-users__head-actions {
   display: flex;
   gap: 0.5rem;
@@ -282,6 +282,7 @@
   color: var(--c-primary);
   text-decoration: none;
 }
+
 .portal-users__link:hover {
   text-decoration: underline;
 }
@@ -316,20 +317,24 @@
   min-width: 0;
   flex-wrap: wrap;
 }
+
 .portal-users__group-title > strong {
   font-size: 0.9rem;
   font-weight: 650;
   color: var(--c-text);
 }
+
 .portal-users__group-desc {
   font-size: 0.8rem;
   color: var(--c-text-subtle);
 }
+
 .portal-users__group-count {
   font-size: 0.78rem;
   color: var(--c-text-subtle);
   white-space: nowrap;
 }
+
 .portal-users__group-action {
   display: inline-flex;
   align-items: center;
@@ -342,6 +347,7 @@
   font-weight: 500;
   white-space: nowrap;
 }
+
 .portal-users__group-action:hover {
   text-decoration: underline;
 }
@@ -352,9 +358,11 @@
   gap: 1rem;
   padding: 0.7rem 1.25rem;
 }
+
 .portal-users__row + .portal-users__row {
   border-top: 1px solid var(--c-border-subtle);
 }
+
 .portal-users__row-main {
   display: flex;
   align-items: center;
@@ -363,26 +371,31 @@
   flex-shrink: 0;
   min-width: 0;
 }
+
 .portal-users__row-id {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
+
 .portal-users__row-name {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--c-text);
 }
+
 .portal-users__row-you {
   font-weight: 400;
   color: var(--c-text-subtle);
 }
+
 .portal-users__row-email {
   font-size: 0.78rem;
   color: var(--c-text-subtle);
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .portal-users__caps {
   display: flex;
   align-items: center;
@@ -390,17 +403,20 @@
   flex: 1;
   flex-wrap: wrap;
 }
+
 /* Solid capability/status tags read cleaner without an outline; the dashed
    "+ Processor" add-chip keeps its box-cut border. */
 .portal-users__caps .sui-chip:not(.sui-chip--dashed),
 .portal-users__row-tag {
   border-color: transparent;
 }
+
 .portal-users__row-active {
   font-size: 0.78rem;
   color: var(--c-text-subtle);
   white-space: nowrap;
 }
+
 .portal-users__row-role {
   width: 12.5rem;
   flex-shrink: 0;
@@ -417,11 +433,13 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
+
 .portal-users__invite-hint {
   margin: 0;
   font-size: 0.78rem;
   color: var(--c-text-subtle);
 }
+
 .portal-users__invite-access {
   display: flex;
   flex-direction: column;
@@ -429,11 +447,13 @@
   padding-top: 0.75rem;
   border-top: 1px solid var(--c-border-subtle);
 }
+
 .portal-users__invite-access-label {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--c-text-muted);
 }
+
 .portal-users__form-note {
   margin: 0;
   font-size: 0.8rem;
@@ -444,9 +464,11 @@
   .portal-users__row {
     flex-wrap: wrap;
   }
+
   .portal-users__row-main {
     width: 100%;
   }
+
   .portal-users__invite-grid {
     grid-template-columns: 1fr;
   }
@@ -478,6 +500,7 @@
     color var(--motion-fast),
     border-color var(--motion-fast);
 }
+
 .portal-users__row-kebab:hover {
   background: var(--c-hover);
   border-color: var(--c-border);
@@ -497,6 +520,7 @@
   font-weight: 500;
   cursor: pointer;
 }
+
 .portal-users__show-more:hover {
   background: var(--c-hover);
 }
@@ -511,12 +535,14 @@
   align-items: center;
   gap: 0.5rem;
 }
+
 /* The password field flexes; the Regenerate/Copy buttons keep their full label
    (flex-shrink:0) so they don't truncate in the narrow modal. */
 .portal-users__pw-row > *:first-child {
   flex: 1;
   min-width: 0;
 }
+
 .portal-users__pw-row > *:not(:first-child) {
   flex-shrink: 0;
 }

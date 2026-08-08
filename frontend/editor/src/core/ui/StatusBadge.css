@@ -12,9 +12,11 @@
 .sui-status--sm {
   font-size: 0.6875rem;
 }
+
 .sui-status--md {
   font-size: 0.75rem;
 }
+
 .sui-status--lg {
   font-size: 0.8125rem;
 }
@@ -40,12 +42,15 @@
     transparent
   );
 }
+
 .sui-status--pill.sui-status--sm {
   padding: 0.125rem 0.5rem;
 }
+
 .sui-status--pill.sui-status--md {
   padding: 0.1875rem 0.625rem;
 }
+
 .sui-status--pill.sui-status--lg {
   padding: 0.3125rem 0.75rem;
 }
@@ -53,6 +58,7 @@
 .sui-status--neutral {
   color: var(--c-text-subtle);
 }
+
 .sui-status--pill.sui-status--neutral {
   background: var(--c-surface-sunken);
   border-color: var(--c-border-subtle);
@@ -61,15 +67,19 @@
 .sui-status--success {
   --sui-status-c: var(--color-green-dark);
 }
+
 .sui-status--warning {
   --sui-status-c: var(--color-amber-dark);
 }
+
 .sui-status--danger {
   --sui-status-c: var(--color-red-dark);
 }
+
 .sui-status--info {
   --sui-status-c: var(--c-primary-hover);
 }
+
 .sui-status--purple {
   --sui-status-c: var(--color-purple-dark);
 }

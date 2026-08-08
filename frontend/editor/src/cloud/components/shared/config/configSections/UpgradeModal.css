@@ -16,7 +16,9 @@
   --upm-text: var(--c-text);
   --upm-muted: var(--c-text-subtle);
 }
+
 [data-mantine-color-scheme="dark"] .upm {
+
   /* Card/border/divider track the neutral --c-* tokens (base rule); only the
      brand-azure accent tint is tuned for dark. */
   --upm-accent-soft: color-mix(in srgb, var(--c-primary) 14%, transparent);
@@ -44,6 +46,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -54,6 +57,7 @@
   border: 1px solid var(--upm-border);
   border-radius: var(--upm-radius);
   width: 100%;
+
   /* Stripe Embedded Checkout flips from its single-column layout to the two-column
      "horizontal" one (order summary beside the payment form) once the iframe is
      ~1000px wide — measured empirically against a live test session; Stripe doesn't
@@ -79,6 +83,7 @@
     opacity: 0;
     transform: translateY(12px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -93,6 +98,7 @@
   padding: 18px 22px 14px;
   border-bottom: 1px solid var(--upm-divider);
 }
+
 .upm-header__title {
   font-size: 1.05rem;
   font-weight: 700;
@@ -100,6 +106,7 @@
   color: var(--upm-text);
   margin: 0;
 }
+
 /* Left cluster: optional back arrow + title. The back arrow only renders on the
    checkout step (cap/confirm have no parent step to return to) — it replaces the
    old footer "← Back" button. */
@@ -109,6 +116,7 @@
   gap: 6px;
   min-width: 0;
 }
+
 .upm-steps {
   display: flex;
   align-items: center;
@@ -117,6 +125,7 @@
   background: var(--upm-accent-soft);
   border-bottom: 1px solid var(--upm-divider);
 }
+
 .upm-step {
   display: inline-flex;
   align-items: center;
@@ -127,6 +136,7 @@
   color: var(--upm-muted);
   transition: color 200ms ease;
 }
+
 .upm-step__dot {
   width: 22px;
   height: 22px;
@@ -143,22 +153,27 @@
     border-color 200ms ease,
     color 200ms ease;
 }
+
 .upm-step[data-state="active"] {
   color: var(--upm-text);
 }
+
 .upm-step[data-state="active"] .upm-step__dot {
   background: linear-gradient(135deg, var(--upm-accent), var(--upm-accent-2));
   border-color: transparent;
   color: var(--c-text-on-primary);
 }
+
 .upm-step[data-state="done"] {
   color: var(--upm-success);
 }
+
 .upm-step[data-state="done"] .upm-step__dot {
   background: var(--upm-success);
   border-color: transparent;
   color: var(--c-text-on-primary);
 }
+
 .upm-step__connector {
   flex: 1 1 auto;
   height: 1.5px;
@@ -186,11 +201,13 @@
   line-height: 1.45;
   color: var(--upm-text);
 }
+
 .upm-promise__icon {
   flex-shrink: 0;
   color: var(--upm-accent);
   margin-top: 1px;
 }
+
 .upm-promise__highlight {
   font-weight: 700;
 }
@@ -202,12 +219,14 @@
   margin: 0 0 4px;
   letter-spacing: -0.005em;
 }
+
 .upm-section-help {
   font-size: 0.825rem;
   color: var(--upm-muted);
   margin: 0 0 14px;
   line-height: 1.45;
 }
+
 /* Field caption above a segmented control in the bundle calculator. */
 .upm-field-label {
   font-size: 0.8rem;
@@ -230,6 +249,7 @@
   line-height: 1.5;
   color: var(--upm-muted);
 }
+
 .upm-help-card__title {
   display: block;
   font-weight: 700;
@@ -248,6 +268,7 @@
   color: var(--upm-text);
   font-weight: 700;
 }
+
 .upm-step__edit {
   background: transparent;
   border: none;
@@ -259,6 +280,7 @@
   padding: 2px 8px;
   border-radius: 6px;
 }
+
 .upm-step__edit:hover {
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
@@ -292,11 +314,13 @@
   min-height: 0;
   text-align: left;
 }
+
 .upm-stripe-mount__title {
   font-weight: 700;
   color: var(--upm-text);
   font-size: 0.95rem;
 }
+
 .upm-stripe-mount__code {
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 0.75rem;
@@ -317,10 +341,12 @@
   border-top: 1px solid var(--upm-divider);
   background: var(--upm-card-bg);
 }
+
 .upm-footer__actions {
   display: flex;
   gap: 8px;
 }
+
 /* ── Step 3: confirmation ─────────────────────────────────────────────── */
 
 .upm-confirm {
@@ -331,6 +357,7 @@
   padding: 12px 8px 4px;
   gap: 12px;
 }
+
 .upm-confirm__icon {
   font-size: 64px !important;
   color: var(--upm-success);
@@ -338,6 +365,7 @@
     0 6px 18px color-mix(in srgb, var(--c-success) 35%, transparent)
   );
 }
+
 .upm-confirm__title {
   margin: 6px 0 0;
   font-size: 1.5rem;
@@ -345,6 +373,7 @@
   letter-spacing: -0.015em;
   color: var(--upm-text);
 }
+
 .upm-confirm__body {
   margin: 0;
   font-size: 0.95rem;
@@ -352,6 +381,7 @@
   max-width: 380px;
   line-height: 1.55;
 }
+
 .upm-confirm__summary {
   display: flex;
   justify-content: space-between;
@@ -365,10 +395,12 @@
   margin-top: 6px;
   font-size: 0.92rem;
 }
+
 .upm-confirm__summary > strong {
   color: var(--upm-text);
   font-size: 1.05rem;
 }
+
 .upm-confirm__note {
   margin: 4px 0 0;
   font-size: 0.78rem;

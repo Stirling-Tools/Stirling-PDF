@@ -18,7 +18,7 @@
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background: #ffffff;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,7 +92,7 @@
 
 .mfaQrCard {
   padding: 12px;
-  background: #ffffff;
+  background: #fff;
   border-radius: 12px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
   display: flex;
@@ -136,7 +136,6 @@
 .iconButton {
   background: none;
   border: none;
-  padding: 0;
   cursor: pointer;
   transition:
     transform 0.2s ease,
@@ -149,6 +148,7 @@
   padding: 4px;
   outline: none;
 }
+
 .iconButton:focus,
 .iconButton:focus-visible {
   outline: none;
@@ -177,7 +177,7 @@
 
 .iconLabel {
   font-family:
-    "Inter",
+    Inter,
     system-ui,
     -apple-system,
     "Segoe UI",
@@ -190,6 +190,7 @@
   text-align: center;
   animation: heroLogoEnter 0.25s ease forwards;
 }
+
 .title,
 .bodyCopy {
   text-align: center;
@@ -202,6 +203,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -211,6 +213,7 @@
   from {
     transform: scale(0.6);
   }
+
   to {
     transform: scale(1);
   }
@@ -220,6 +223,7 @@
   from {
     transform: rotate(-90deg) scale(0.9);
   }
+
   to {
     transform: rotate(0deg) scale(1);
   }
@@ -230,6 +234,7 @@
     opacity: 0;
     transform: translateX(24px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -279,7 +284,7 @@
 /* Title styles */
 .titleText {
   font-family:
-    "Inter",
+    Inter,
     system-ui,
     -apple-system,
     "Segoe UI",
@@ -294,7 +299,7 @@
 /* Body text styles */
 .bodyText {
   font-family:
-    "Inter",
+    Inter,
     system-ui,
     -apple-system,
     "Segoe UI",
@@ -338,7 +343,9 @@
 }
 
 /* ===================================================================== */
+
 /* Redesigned modal card — branded header, progress, hero panel, footer. */
+
 /* ===================================================================== */
 
 .card {

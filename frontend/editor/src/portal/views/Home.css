@@ -11,6 +11,7 @@
 .portal-home__greeting {
   margin-bottom: -0.25rem;
 }
+
 .portal-home__greeting-title {
   margin: 0 0 0.25rem;
   font-size: 1.5rem;
@@ -18,6 +19,7 @@
   letter-spacing: -0.02em;
   color: var(--c-text-muted);
 }
+
 .portal-home__greeting-date {
   margin: 0;
   font-size: 0.8125rem;
@@ -95,6 +97,7 @@
   border-radius: var(--radius-md);
   flex-shrink: 0;
 }
+
 .portal-home__quick-icon svg {
   width: 1.05rem;
   height: 1.05rem;
@@ -123,6 +126,7 @@
   font-size: 0.875rem;
   color: var(--c-text-subtle);
 }
+
 .portal-home__quick-arrow svg {
   width: 1rem;
   height: 1rem;

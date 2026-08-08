@@ -272,6 +272,7 @@
 }
 
 /* Sources picker */
+
 /* Selectable source tiles: a vertical stack of full-width shared Buttons
    (icon · name · check). Layout is the Button's own leftSection/label/
    rightSection — only the selected border/tint is added here. */
@@ -380,9 +381,11 @@
 .portal-policies__activity-icon--success {
   color: var(--color-green);
 }
+
 .portal-policies__activity-icon--warning {
   color: var(--color-amber);
 }
+
 .portal-policies__activity-icon--info {
   color: var(--c-primary);
 }
@@ -492,5 +495,6 @@
   color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
+
 /* The .pcat-badge icon styles live with the PolicyCategoryIcon component
    (PolicyCategoryIcon.css) so the Home policy summary picks them up too. */

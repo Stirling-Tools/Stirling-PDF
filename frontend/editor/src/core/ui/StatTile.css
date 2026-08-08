@@ -23,9 +23,11 @@
 .sui-stat__value--success {
   color: var(--color-green-dark);
 }
+
 .sui-stat__value--warning {
   color: var(--color-amber-dark);
 }
+
 .sui-stat__value--danger {
   color: var(--color-red);
 }

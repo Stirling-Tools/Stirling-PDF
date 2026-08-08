@@ -25,18 +25,22 @@
   font-weight: 700 !important;
   letter-spacing: 0.02em !important;
 }
+
 .status-badge--valid {
   background-color: rgb(var(--pdf-light-status-valid-bg)) !important;
   color: rgb(var(--pdf-light-status-valid-text)) !important;
 }
+
 .status-badge--warning {
   background-color: rgb(var(--pdf-light-status-warning-bg)) !important;
   color: rgb(var(--pdf-light-status-warning-text)) !important;
 }
+
 .status-badge--invalid {
   background-color: rgb(var(--pdf-light-status-invalid-bg)) !important;
   color: rgb(var(--pdf-light-status-invalid-text)) !important;
 }
+
 .status-badge--neutral {
   background-color: rgb(var(--pdf-light-status-neutral-bg)) !important;
   color: rgb(var(--pdf-light-status-neutral-text)) !important;
@@ -60,6 +64,7 @@
 .report-container {
   width: 100%;
   height: 100%;
+
   /* Match Active Files/Page Editor background */
   background: var(--c-bg) !important;
   padding: 32px 24px 48px;
@@ -105,14 +110,17 @@
     background-color: color-mix(in srgb, var(--c-highlight) 0%, transparent);
     box-shadow: none;
   }
+
   20% {
     background-color: color-mix(in srgb, var(--c-highlight) 35%, transparent);
     box-shadow: 0 0 20px color-mix(in srgb, var(--c-highlight) 50%, transparent);
   }
+
   50% {
     background-color: color-mix(in srgb, var(--c-highlight) 25%, transparent);
     box-shadow: 0 0 15px color-mix(in srgb, var(--c-highlight) 40%, transparent);
   }
+
   100% {
     background-color: color-mix(in srgb, var(--c-highlight) 0%, transparent);
     box-shadow: none;

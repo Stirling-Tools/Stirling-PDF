@@ -9,15 +9,16 @@
 }
 
 .files-page-header {
+
   /* 3-column grid keeps the search bar position-stable regardless of
    * breadcrumb length. Left column flexes for the breadcrumb (truncating
    * via overflow:hidden), middle column holds the search, right column
    * holds the action buttons right-aligned. */
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(min(14rem, 100%), 40rem) minmax(
-      0,
-      1fr
-    );
+    0,
+    1fr
+  );
   align-items: center;
   gap: 1rem;
   min-height: 48px;
@@ -43,6 +44,7 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
+
 .files-page-breadcrumbs::-webkit-scrollbar {
   display: none;
 }
@@ -64,6 +66,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .files-page-breadcrumb:hover,
 .files-page-breadcrumb.is-current {
   background: var(--c-hover);
@@ -87,6 +90,7 @@
   border: 1px solid var(--c-border-subtle);
   border-radius: 999px;
   padding: 0.2rem 0.75rem;
+
   /* Fills its grid cell; the cell's minmax(...) clamps to a sensible range. */
   width: 100%;
   min-width: 0;
@@ -156,6 +160,7 @@
   flex-shrink: 0;
   flex-wrap: wrap;
   min-height: 3rem;
+
   /* Safety net - the content should always fit thanks to the shrink rules on
      `.files-page-toolbar-actions` below, but if a future addition ever breaks
      that, this stops the action group bleeding into sibling areas (notably the
@@ -186,6 +191,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
   /* Allow this container to shrink below its intrinsic content width so
      the bulk-action group + filter selects + view toggle can compete for
      space without bursting out of the toolbar (which previously bled
@@ -204,12 +210,15 @@
   padding-right: 0.55rem;
   flex-shrink: 0;
 }
+
 .files-page-toolbar-actions .mantine-Button-section[data-position="left"] {
   margin-right: 0;
 }
+
 .files-page-toolbar-actions .mantine-Button-label {
   display: none;
 }
+
 /* Pin the view toggle: never let it clip off the right. flex-shrink:0
    keeps its width fixed; the rest of the row shrinks around it. */
 .files-page-toolbar-actions .mantine-SegmentedControl-root {
@@ -352,6 +361,7 @@
   background: var(--c-hover);
   color: var(--c-text);
 }
+
 .files-page-list-row:not(.is-header):hover,
 .files-page-list-row.is-selected {
   background: var(--c-hover);
@@ -589,6 +599,7 @@
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.6;
     transform: scale(0.85);
@@ -612,11 +623,11 @@
   background: linear-gradient(
     180deg,
     color-mix(
-        in srgb,
-        var(--mantine-color-teal-6, var(--c-success)) 6%,
-        transparent
-      )
-      0%,
+      in srgb,
+      var(--mantine-color-teal-6, var(--c-success)) 6%,
+      transparent
+    )
+    0%,
     transparent 40%
   );
   z-index: 0;
@@ -683,6 +694,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -786,6 +798,7 @@
 }
 
 .files-page-details-header {
+
   /* Tight vertical padding so the "DETAILS" label hugs the body content
      below it - it's a quiet section header, not a banner, and the old
      ~16px top + 18px body padding wasted nearly two character heights
@@ -806,10 +819,12 @@
 }
 
 .files-page-details-body {
+
   /* Smaller top padding to pair with the tightened header above. Side
      and bottom padding stays at 1.1rem so the content still breathes
      against the panel edges. */
   padding: 0.3rem 1.1rem 1.1rem;
+
   /* Grow to fill the panel and scroll internally so the action footer below
      stays pinned and visible regardless of how tall the content gets. */
   flex: 1;
@@ -851,11 +866,13 @@
 .files-page-details-collapse-chevron {
   transition: transform 0.15s ease;
 }
+
 .files-page-details-collapse-chevron.is-open {
   transform: rotate(180deg);
 }
 
 .files-page-details-thumb {
+
   /* Compact fixed height (was a tall 4:3 box that dominated the panel and
      pushed the action buttons off the bottom). */
   height: 6.5rem;
@@ -867,6 +884,7 @@
   justify-content: center;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
   /* Inside an overflow-y:auto flex column, `aspect-ratio` alone doesn't
      guarantee intrinsic height - flex-shrink:1 (default) can squash the
      thumb to a 2px sliver when the column gets cramped (notably after
@@ -956,6 +974,7 @@
    like a commit graph; clicking a row's summary toggles its expanded
    detail (cumulative tool chain, full meta). Long chains (> 6) collapse
    the middle behind a "Show N earlier versions" button. */
+
 /* Version Timeline styling */
 .files-page-details-version-timeline {
   display: flex;
@@ -988,7 +1007,7 @@
 .files-page-details-version-timeline-list {
   list-style: none !important;
   margin: 0 !important;
-  padding: 1.1rem 0 0 0 !important;
+  padding: 1.1rem 0 0 !important;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -1071,7 +1090,7 @@
 }
 
 .files-page-details-version-timeline-row.is-active
-  .files-page-details-version-timeline-body {
+.files-page-details-version-timeline-body {
   border-color: color-mix(in srgb, var(--c-primary) 40%, transparent);
   background: color-mix(in srgb, var(--c-primary) 5%, var(--c-surface));
   box-shadow: 0 2px 6px color-mix(in srgb, var(--c-primary) 12%, transparent);
@@ -1220,6 +1239,7 @@
     border-color: var(--c-primary);
     transform: scale(1);
   }
+
   50% {
     border-color: color-mix(in srgb, var(--c-primary) 60%, transparent);
     transform: scale(1.005);
@@ -1230,12 +1250,14 @@
   .files-page-tree {
     width: 14rem;
   }
+
   .files-page-details {
     width: 18rem;
   }
 }
 
 @media (max-width: 800px) {
+
   /* Tree slot inside the inline layout can't fit at this width - the
      tree itself is still reachable via the FolderTreePanel slide-out.
      Details panel visibility is controlled by JSX (conditional Drawer)
@@ -1245,6 +1267,7 @@
   .files-page-tree {
     display: none;
   }
+
   .files-page-content {
     padding: 0.75rem;
   }
@@ -1260,13 +1283,16 @@
    right edge. The header stays in desktop layout here (it has fewer
    items and the side panels disappearing actually GIVES it room). */
 .files-page-header [data-desktop-hide="true"] {
+
   /* The mobile-only overflow menu trigger. Hidden by default; shown
      inside the mobile breakpoint below. Live as inline-flex so it
      sits next to the Upload button without breaking the action row. */
   display: none;
 }
+
 @media (max-width: 900px) {
   .files-page-toolbar {
+
     /* nowrap so "7 items" + "Select all" sit on the same row as the
        filter dropdowns and view-toggle instead of stacking on three
        separate lines. Per-child min-width:0 lets them shrink as needed.
@@ -1279,7 +1305,9 @@
     min-height: auto;
     overflow-x: hidden;
   }
+
   .files-page-toolbar-info {
+
     /* Was `flex-basis: 100%` which forced a row break. Let it share
        the row, shrink hard if needed, and ellipsize so the count line
        collapses gracefully (was overlapping the bulk-action buttons
@@ -1290,12 +1318,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   .files-page-toolbar-actions {
     flex-wrap: nowrap;
     gap: 0.3rem;
   }
+
   .files-page-toolbar-actions .mantine-Select-root,
   .files-page-toolbar-actions .mantine-Select-input {
+
     /* Mantine Select defaults to ~12rem which is huge for narrow widths.
        The inline `style={{ width: 140|160 }}` on the Selects gets
        overridden here so they actually shrink. */
@@ -1303,6 +1334,7 @@
     max-width: 7.5rem;
     width: auto !important;
   }
+
   /* The "Select all" / "Clear selection" toggle is a Mantine Button
      directly inside .files-page-toolbar (NOT inside the actions group),
      so the icon-only collapse from base styles doesn't apply to it.
@@ -1321,6 +1353,7 @@
    and the first to go. Same for "Upload" - the user can use the
    centre drop overlay. */
 @media (max-width: 640px) {
+
   /* Drop the 3-column grid on phones; flex-wrap lets the search slip onto
    * its own row when chrome is too cramped to share. */
   .files-page-header {
@@ -1330,28 +1363,35 @@
     padding: 0 0.4rem;
     overflow-x: hidden;
   }
+
   .files-page-header [data-mobile-hide="true"] {
     display: none !important;
   }
+
   .files-page-header [data-desktop-hide="true"] {
     display: inline-flex !important;
   }
+
   /* Mobile-hide for sub-toolbar create buttons. */
   .files-page-toolbar [data-mobile-hide="true"] {
     display: none !important;
   }
+
   .files-page-header-actions {
     margin-left: auto;
     gap: 0.3rem;
     flex-wrap: nowrap;
   }
+
   .files-page-breadcrumbs {
     font-size: 0.85rem;
     flex-wrap: nowrap;
     overflow-x: auto;
     min-width: 0;
   }
+
   .files-page-search {
+
     /* Shrink hard so the search bar doesn't eat the whole action row.
        Users still see the icon + a few chars of the placeholder.
        `overflow: hidden` clips the input's natural intrinsic width so
@@ -1361,13 +1401,16 @@
     max-width: 6.5rem;
     overflow: hidden;
   }
+
   .files-page-search input {
+
     /* `min-width: 0` lets flex actually shrink the input below its
        default ~20-char intrinsic size - without this, the placeholder
        extends beyond the parent's clip box and bleeds onto neighbours. */
     min-width: 0;
     text-overflow: ellipsis;
   }
+
   /* Upload becomes an icon-only square button on mobile so the action
      row stops getting clipped. Scoped to `.files-page-header-actions`
      so the Back button at the header level keeps its visible "Back"
@@ -1376,23 +1419,28 @@
     padding-left: 0.55rem;
     padding-right: 0.55rem;
   }
+
   .files-page-header-actions .mantine-Button-section[data-position="left"] {
     margin-right: 0;
   }
+
   .files-page-header-actions .mantine-Button-label {
     display: none;
   }
+
   /* Grid: single column on very narrow phones; two columns from ~440px */
   .files-page-grid {
     grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
     gap: 0.75rem;
   }
+
   .files-page-content {
     padding: 0.5rem;
   }
 }
 
 @media (max-width: 420px) {
+
   /* Don't force 1fr - auto-fill with the 9rem floor already keeps two cards
      per row on a 360px phone, which feels right for one-handed taps. The
      real fix at this width is the list view, which had 6 columns that wouldn't
@@ -1401,11 +1449,13 @@
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
   }
+
   /* List view at tiny widths becomes cramped - drop the size + type + modified
      columns and let name + actions take the room. */
   .files-page-list-row {
     grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
   }
+
   .files-page-list-row > :nth-child(3),
   .files-page-list-row > :nth-child(4),
   .files-page-list-row > :nth-child(5) {
@@ -1421,16 +1471,20 @@
   .files-page-drop-overlay {
     animation: none;
   }
+
   .files-page-card,
   .files-page-card-thumb img {
     transition: none;
   }
+
   .files-page-card:hover {
     transform: none;
   }
+
   .files-page-card.is-folder.is-drop-target {
     transform: none;
   }
+
   .files-page-card.is-folder.is-drop-target .files-page-card-thumb {
     transform: none;
   }

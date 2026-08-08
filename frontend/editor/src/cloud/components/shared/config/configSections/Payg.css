@@ -6,6 +6,7 @@
   --payg-accent-soft: color-mix(in srgb, var(--c-primary) 10%, transparent);
   --payg-radius: 14px;
   --payg-gap: 20px;
+
   /* Cards sit ON the modal content bg; in light that's white-on-white so we
      lean on border + shadow. Tokens are overridden per scheme below. */
   --payg-card-bg: var(--c-surface);
@@ -28,11 +29,13 @@
   letter-spacing: -0.01em;
   color: var(--c-text);
 }
+
 .payg-header__subtitle {
   margin-top: 4px;
   font-size: 0.875rem;
   color: var(--c-text-subtle);
 }
+
 .payg-role-pill {
   display: inline-flex;
   align-items: center;
@@ -43,11 +46,13 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
 .payg-role-pill[data-leader="true"] {
   background: var(--payg-accent-soft);
   color: var(--payg-accent);
   border: 1px solid color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
+
 .payg-role-pill[data-leader="false"] {
   background: var(--c-surface-sunken);
   color: var(--c-text-subtle);
@@ -61,6 +66,7 @@
   background: var(--payg-card-bg);
   border: 1px solid var(--payg-card-border);
 }
+
 .payg-planhead__top {
   display: flex;
   align-items: center;
@@ -68,22 +74,27 @@
   gap: 12px;
   margin-bottom: 12px;
 }
+
 .payg-planhead__eyebrow {
   font-size: 0.78rem;
   color: var(--c-text-subtle);
 }
+
 .payg-planhead__split {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
 }
+
 .payg-planhead__col {
   padding-right: 22px;
 }
+
 .payg-planhead__col--meter {
   padding-right: 0;
   padding-left: 22px;
   border-left: 1px solid var(--payg-divider);
 }
+
 .payg-planhead__lbl {
   display: inline-flex;
   align-items: center;
@@ -94,15 +105,19 @@
   text-transform: uppercase;
   margin-bottom: 8px;
 }
+
 .payg-planhead__lbl--free {
   color: var(--c-success);
 }
+
 .payg-planhead__lbl--meter {
   color: var(--payg-accent);
 }
+
 .payg-planhead__lbl-icon {
   font-size: 1rem !important;
 }
+
 .payg-planhead__title {
   margin: 0;
   font-size: 1.05rem;
@@ -111,20 +126,24 @@
   letter-spacing: -0.01em;
   line-height: 1.25;
 }
+
 .payg-planhead__body {
   margin: 5px 0 0;
   font-size: 0.85rem;
   color: var(--c-text-subtle);
   line-height: 1.5;
 }
+
 @media (max-width: 640px) {
   .payg-planhead__split {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+
   .payg-planhead__col {
     padding-right: 0;
   }
+
   .payg-planhead__col--meter {
     padding-left: 0;
     padding-top: 16px;
@@ -141,11 +160,13 @@
   padding: 16px 20px;
   box-shadow: var(--shadow-xs);
 }
+
 .payg-card__title {
   font-size: 0.95rem;
   font-weight: 650;
   color: var(--c-text);
 }
+
 .payg-card__subtitle {
   font-size: 0.8125rem;
   color: var(--c-text-subtle);
@@ -162,6 +183,7 @@
   background: var(--payg-card-bg);
   box-shadow: var(--shadow-xs);
 }
+
 .payg-hero::before {
   content: "";
   position: absolute;
@@ -169,6 +191,7 @@
   pointer-events: none;
   opacity: 0.9;
 }
+
 .payg-hero[data-state="FULL"]::before {
   background: linear-gradient(
     135deg,
@@ -176,6 +199,7 @@
     color-mix(in srgb, var(--c-primary) 0%, transparent) 55%
   );
 }
+
 .payg-hero[data-state="WARNED"]::before {
   background: linear-gradient(
     135deg,
@@ -183,6 +207,7 @@
     color-mix(in srgb, var(--c-warning) 0%, transparent) 55%
   );
 }
+
 .payg-hero[data-state="DEGRADED"]::before {
   background: linear-gradient(
     135deg,
@@ -190,10 +215,12 @@
     color-mix(in srgb, var(--c-danger) 0%, transparent) 55%
   );
 }
+
 .payg-hero__inner {
   position: relative;
   z-index: 1;
 }
+
 .payg-hero__eyebrow {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -201,12 +228,14 @@
   text-transform: uppercase;
   color: var(--c-text-subtle);
 }
+
 .payg-hero__figure {
   display: flex;
   align-items: baseline;
   gap: 10px;
   margin-top: 6px;
 }
+
 .payg-hero__spend {
   font-size: 2.35rem;
   font-weight: 750;
@@ -215,11 +244,13 @@
   color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
+
 .payg-hero__cap {
   font-size: 1rem;
   color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
 }
+
 .payg-hero__meta {
   margin-top: 14px;
   display: flex;
@@ -228,9 +259,11 @@
   font-size: 0.8125rem;
   color: var(--c-text-muted);
 }
+
 .payg-hero__meta-dot {
   color: var(--c-border-strong);
 }
+
 .payg-hero__credit {
   display: inline-flex;
   align-items: center;
@@ -241,6 +274,7 @@
   color: var(--color-green-700);
   background: color-mix(in srgb, var(--c-success) 14%, transparent);
 }
+
 [data-mantine-color-scheme="dark"] .payg-hero__credit {
   color: var(--c-success);
   background: color-mix(in srgb, var(--c-success) 18%, transparent);
@@ -259,8 +293,8 @@
    (Cancel/Update cap before the form is dirty) so they read identically to the
    always-enabled ones — Mantine only fades them via opacity. */
 [data-mantine-color-scheme="dark"]
-  .payg
-  .mantine-Button-root[data-variant="default"] {
+.payg
+.mantine-Button-root[data-variant="default"] {
   --button-bg: linear-gradient(
     180deg,
     var(--c-surface-raised) 0%,
@@ -273,19 +307,21 @@
   );
   --button-bd: 1px solid var(--c-border);
   --button-color: var(--mantine-color-white);
+
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 1px 2px rgba(0, 0, 0, 0.25);
 }
+
 /* Mantine recolours disabled buttons to a dim grey via a hard-coded color/bg
    on the disabled selector, overriding --button-color. Re-assert white + the
    gradient so disabled buttons match the rest. */
 [data-mantine-color-scheme="dark"]
-  .payg
-  .mantine-Button-root[data-variant="default"]:disabled,
+.payg
+.mantine-Button-root[data-variant="default"]:disabled,
 [data-mantine-color-scheme="dark"]
-  .payg
-  .mantine-Button-root[data-variant="default"][data-disabled] {
+.payg
+.mantine-Button-root[data-variant="default"][data-disabled] {
   background: var(--button-bg);
   color: var(--mantine-color-white);
 }
@@ -301,31 +337,38 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
 .payg-status__dot {
   width: 8px;
   height: 8px;
   border-radius: 999px;
 }
+
 .payg-status[data-state="FULL"] {
   background: var(--color-green-100);
   color: var(--color-green-700);
 }
+
 .payg-status[data-state="FULL"] .payg-status__dot {
   background: var(--color-green-500);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-success) 18%, transparent);
 }
+
 .payg-status[data-state="WARNED"] {
   background: var(--color-yellow-100);
   color: var(--color-yellow-700);
 }
+
 .payg-status[data-state="WARNED"] .payg-status__dot {
   background: var(--color-yellow-500);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-warning) 20%, transparent);
 }
+
 .payg-status[data-state="DEGRADED"] {
   background: var(--color-red-100);
   color: var(--color-red-700);
 }
+
 .payg-status[data-state="DEGRADED"] .payg-status__dot {
   background: var(--color-red-500);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-danger) 20%, transparent);
@@ -340,17 +383,21 @@
   overflow: hidden;
   position: relative;
 }
+
 .payg-bar__fill {
   height: 100%;
   border-radius: 999px;
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .payg-bar__fill[data-state="FULL"] {
   background: var(--c-primary);
 }
+
 .payg-bar__fill[data-state="WARNED"] {
   background: var(--c-warning);
 }
+
 .payg-bar__fill[data-state="DEGRADED"] {
   background: var(--c-danger);
 }
@@ -359,6 +406,7 @@
 .payg-help {
   margin-top: 12px;
 }
+
 .payg-help__toggle {
   display: inline-flex;
   align-items: center;
@@ -372,15 +420,19 @@
   font-weight: 600;
   color: var(--c-text-muted);
 }
+
 .payg-help__toggle:hover {
   color: var(--c-text);
 }
+
 .payg-help__chevron {
   transition: transform 0.15s ease;
 }
+
 .payg-help__toggle[aria-expanded="true"] .payg-help__chevron {
   transform: rotate(180deg);
 }
+
 .payg-help__panel {
   margin-top: 10px;
   padding: 12px 14px;
@@ -391,6 +443,7 @@
   line-height: 1.45;
   color: var(--c-text-muted);
 }
+
 .payg-help__panel ul {
   margin: 0;
   padding-left: 18px;
@@ -408,15 +461,18 @@
   background: var(--payg-accent-soft);
   border: 1px solid color-mix(in srgb, var(--c-primary) 20%, transparent);
 }
+
 .payg-preview__icon {
   color: var(--payg-accent);
   display: flex;
 }
+
 .payg-preview__main {
   font-size: 0.875rem;
   color: var(--c-text);
   font-weight: 550;
 }
+
 .payg-preview__note {
   font-size: 0.75rem;
   color: var(--c-text-subtle);
@@ -430,11 +486,13 @@
   gap: 10px;
   margin-top: 4px;
 }
+
 @media (max-width: 720px) {
   .payg-gates {
     grid-template-columns: 1fr;
   }
 }
+
 .payg-gate {
   display: flex;
   align-items: center;
@@ -444,10 +502,12 @@
   border: 1px solid var(--payg-card-border);
   background: var(--payg-inset-bg);
 }
+
 .payg-gate[data-enabled="false"] {
   border-style: dashed;
   opacity: 0.85;
 }
+
 .payg-gate__chip {
   display: flex;
   align-items: center;
@@ -457,20 +517,24 @@
   border-radius: 9px;
   flex-shrink: 0;
 }
+
 .payg-gate[data-enabled="true"] .payg-gate__chip {
   background: color-mix(in srgb, var(--c-success) 16%, transparent);
   color: var(--c-success);
 }
+
 .payg-gate[data-enabled="false"] .payg-gate__chip {
   background: color-mix(in srgb, var(--c-danger) 16%, transparent);
   color: var(--c-danger);
 }
+
 .payg-gate__label {
   font-size: 0.8125rem;
   line-height: 1.35;
   color: var(--c-text);
   flex: 1;
 }
+
 .payg-gate__tag {
   font-size: 0.625rem;
   font-weight: 700;
@@ -481,14 +545,17 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
+
 .payg-gate__tag[data-variant="on"] {
   color: var(--c-text-subtle);
   background: var(--c-surface-sunken);
 }
+
 .payg-gate__tag[data-variant="pause"] {
   color: var(--c-danger);
   background: color-mix(in srgb, var(--c-danger) 12%, transparent);
 }
+
 [data-mantine-color-scheme="dark"] .payg-gate__tag[data-variant="pause"] {
   color: var(--c-danger);
   background: color-mix(in srgb, var(--c-danger) 18%, transparent);
@@ -502,9 +569,11 @@
   padding: 12px 4px;
   border-bottom: 1px solid var(--payg-divider);
 }
+
 .payg-member:last-child {
   border-bottom: none;
 }
+
 .payg-member__avatar {
   width: 34px;
   height: 34px;
@@ -517,24 +586,29 @@
   color: var(--c-text-on-primary);
   flex-shrink: 0;
 }
+
 .payg-member__name {
   font-size: 0.875rem;
   font-weight: 550;
   color: var(--c-text);
 }
+
 .payg-member__email {
   font-size: 0.75rem;
   color: var(--c-text-subtle);
 }
+
 .payg-member__usage {
   text-align: right;
   min-width: 120px;
 }
+
 .payg-member__usage-num {
   font-size: 0.8125rem;
   color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
+
 .payg-member__minibar {
   height: 5px;
   width: 90px;
@@ -544,6 +618,7 @@
   margin-top: 5px;
   margin-left: auto;
 }
+
 .payg-member__minibar-fill {
   height: 100%;
   border-radius: 999px;
@@ -558,30 +633,37 @@
   padding: 11px 4px;
   border-bottom: 1px solid var(--payg-divider);
 }
+
 .payg-activity-row:last-child {
   border-bottom: none;
 }
+
 .payg-activity__dot {
   width: 9px;
   height: 9px;
   border-radius: 999px;
   flex-shrink: 0;
 }
+
 .payg-activity__dot[data-kind="ai"] {
   background: var(--category-color-formatting); /* purple */
 }
+
 .payg-activity__dot[data-kind="automation"] {
   background: var(--category-color-automation); /* pink */
 }
+
 .payg-activity__label {
   font-size: 0.8438rem;
   color: var(--c-text);
   flex: 1;
 }
+
 .payg-activity__ts {
   font-size: 0.75rem;
   color: var(--c-text-subtle);
 }
+
 .payg-activity__kind {
   font-size: 0.625rem;
   font-weight: 700;
@@ -592,6 +674,7 @@
   padding: 2px 8px;
   border-radius: 999px;
 }
+
 .payg-activity__units {
   font-size: 0.8125rem;
   font-weight: 650;
@@ -616,11 +699,13 @@
     color-mix(in srgb, var(--c-accent-stripe) 2%, transparent) 100%
   );
 }
+
 .payg-stripe__title {
   font-size: 0.9375rem;
   font-weight: 650;
   color: var(--c-text);
 }
+
 .payg-stripe__subtitle {
   font-size: 0.8125rem;
   color: var(--c-text-subtle);

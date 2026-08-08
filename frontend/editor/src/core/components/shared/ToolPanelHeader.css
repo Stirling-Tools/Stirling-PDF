@@ -1,6 +1,9 @@
 /* ===================== PanelHeader (core) ===================== */
+
 /* Header for the active-tool rail. Core-owned so the OSS build has no          */
+
 /* design-system dependency; mirrors the shared rail header treatment so it     */
+
 /* reads well in both light and dark mode (thin border, no heavy fill).         */
 
 .sui-panelhdr {

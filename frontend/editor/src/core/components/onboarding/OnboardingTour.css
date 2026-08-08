@@ -25,6 +25,7 @@
       0 0 20px var(--mantine-primary-color-filled),
       inset 0 0 20px color-mix(in srgb, var(--c-primary) 10%, transparent);
   }
+
   50% {
     box-shadow:
       0 0 0 3px var(--mantine-primary-color-filled),

@@ -51,6 +51,7 @@
   background: var(
     --c-file-header-resting
   ); /* branded navy for unselected files */
+
   color: var(--c-text-on-primary);
   border-bottom: 1px solid var(--c-border);
 }
@@ -188,6 +189,7 @@
     transform: translateY(-8px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -272,6 +274,7 @@
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -301,6 +304,7 @@
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
+
   /* Background flips via the themed --c-file-header-resting token. */
   color: var(--c-accent-fg, var(--c-primary));
   border-bottom-color: var(--c-border);
@@ -325,6 +329,7 @@
    ========================= */
 
 .addFileCard {
+
   /* Fill the same slot a portrait page thumbnail does. Height: the 310px
      .thumbWrap minus the always-reserved 26px toolchain bar (22px + 4px) that
      sits above the page. Width: the file card's 260px minus its 10px side

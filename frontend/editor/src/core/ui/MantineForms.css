@@ -21,6 +21,7 @@
   --input-placeholder-color: var(--color-text-placeholder);
   --input-height-sm: 1.75rem;
   --input-height-md: 2.25rem;
+
   font-size: 0.875rem;
 }
 
@@ -52,6 +53,7 @@
 }
 
 /* ---- MultiSelect pills ---- */
+
 /* Pills match SUI's Chip component: small rounded tags. */
 .sui-mantine-pill {
   background: var(--c-primary-tint) !important;

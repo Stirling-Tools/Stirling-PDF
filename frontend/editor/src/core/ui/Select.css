@@ -19,6 +19,7 @@
 .sui-select--sm {
   min-height: 1.75rem;
 }
+
 .sui-select--md {
   min-height: 2.25rem;
 }
@@ -26,6 +27,7 @@
 .sui-select--invalid {
   border-color: var(--color-red);
 }
+
 .sui-select--disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -56,9 +58,11 @@
   background-color: var(--c-surface);
   color: var(--c-text);
 }
+
 [data-theme="dark"] .sui-select__el {
   color-scheme: dark;
 }
+
 [data-theme="light"] .sui-select__el {
   color-scheme: light;
 }

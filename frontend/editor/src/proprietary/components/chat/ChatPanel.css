@@ -1,10 +1,12 @@
 .chat-panel {
   display: flex;
   flex-direction: column;
+
   /* Clip + allow shrink so tall welcome content squeezes the scrollable
      quick-actions block instead of pushing the composer off-screen. */
   overflow: hidden;
   min-height: 0;
+
   /* Match the right-rail toolbar background so dark-mode doesn't show a
      lighter card behind the chat, and so the agent-card → pill morph
      doesn't flash a different colour mid-transition. */
@@ -88,6 +90,7 @@
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.45;
   }
@@ -174,6 +177,7 @@
 .chat-panel-messages {
   flex: 1;
   min-height: 0;
+
   /* Establish a size container so the message list's bottom padding can be
      expressed relative to the scroll viewport height (cqh) below. */
   container-type: size;
@@ -192,6 +196,7 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.75rem 0.75rem 0.25rem;
+
   /* When the panel is short, this block (file pills + actions) shrinks and
      scrolls internally instead of pushing the composer off-screen — the input
      must always stay pinned and visible at the bottom. */
@@ -567,6 +572,7 @@
   from {
     background-position: 200% 0;
   }
+
   to {
     background-position: -200% 0;
   }
@@ -577,6 +583,7 @@
   100% {
     opacity: 0.5;
   }
+
   50% {
     opacity: 1;
   }
@@ -690,6 +697,7 @@
     -webkit-text-fill-color: var(--c-text-subtle);
     color: var(--c-text-subtle);
   }
+
   .chat-progress-live__phase-icon {
     animation: none;
     opacity: 0.85;
@@ -712,14 +720,17 @@
     transform: translate(0, 0);
     opacity: 0.5;
   }
+
   25% {
     transform: translate(-1px, -5px);
     opacity: 0.45;
   }
+
   50% {
     transform: translate(-6px, 0);
     opacity: 0.9;
   }
+
   75% {
     transform: translate(-1px, 5px);
     opacity: 0.55;
@@ -732,14 +743,17 @@
     transform: translate(0, 0);
     opacity: 1;
   }
+
   25% {
     transform: translate(1px, 5px);
     opacity: 0.85;
   }
+
   50% {
     transform: translate(6px, 0);
     opacity: 0.5;
   }
+
   75% {
     transform: translate(1px, -5px);
     opacity: 0.85;
@@ -751,6 +765,7 @@
     animation: none;
     opacity: 0.5;
   }
+
   .stirling-thinking__path-left {
     animation: none;
     opacity: 1;

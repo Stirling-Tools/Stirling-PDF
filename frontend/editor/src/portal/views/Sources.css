@@ -104,6 +104,7 @@
     opacity: 0;
     transform: translateY(-0.25rem);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -286,9 +287,9 @@
   gap: 0.5rem;
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Connect wizard                                                           */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Connect wizard
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-sources__steps {
   list-style: none;
@@ -567,6 +568,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+
   /* Bounded rather than free-growing: the modal should not become the page. */
   max-height: min(60vh, 32rem);
   overflow-y: auto;
@@ -582,6 +584,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-sm, 0.375rem);
+
   /* Real theme token with a transparent fallback so it never falls back to opaque white in dark;
      the border alone is enough to read as an input. */
   background: var(--color-bg-subtle, transparent);
@@ -626,6 +629,7 @@
 
 .portal-conn-picker__grid {
   display: grid;
+
   /* auto-fill so the grid reflows to the modal rather than to a fixed column count. */
   grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
   gap: 0.5rem;
@@ -686,6 +690,7 @@
   font-size: 0.75rem;
   line-height: 1.35;
   color: var(--c-text-muted);
+
   /* Two lines keeps every card the same height without truncating most descriptions. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
