@@ -1,7 +1,11 @@
 import os
 import subprocess
+import sys
 
 import requests
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "steps"))
+import parallel_support  # noqa: E402
 
 _BASE_URL = "http://localhost:8080"
 _CONTAINER_NAME = os.environ.get("TEST_CONTAINER_NAME", "")
@@ -139,11 +143,28 @@ def before_all(context):
             "(e.g. a core-only build). Scenarios tagged @policies/@webhook will be skipped."
         )
 
+    context.parallel_config = parallel_support.ParallelConfig()
+    if context.parallel_config.enabled:
+        print(
+            f"\n[PARALLEL] Concurrency validation enabled ({context.parallel_config.describe()}). "
+            f"Every operation also runs concurrently and all responses must match the "
+            f"uncontended baseline. Tag a scenario @noparallel to opt out, "
+            f"@parallel:N to override the count."
+        )
+
 
 def before_scenario(context, scenario):
     """Reset all per-scenario state before each scenario runs."""
-    # Skip scenarios that require JWT Bearer auth when it is not functional.
     scenario_tags = set(scenario.effective_tags)
+
+    # Concurrency validation: resolved per scenario so tags can opt out or override.
+    context.parallel_repeat = context.parallel_config.repeat_for_tags(scenario_tags)
+    context.parallel_validated = False
+    context.parallel_ran_at = 0
+    context.parallel_request = None
+    context.parallel_get = None
+
+    # Skip scenarios that require JWT Bearer auth when it is not functional.
     if _JWT_DEPENDENT_TAGS & scenario_tags and not context.jwt_available:
         scenario.skip(
             "JWT Bearer authentication not available in this environment (V2 disabled). "
@@ -217,3 +238,9 @@ def after_scenario(context, scenario):
     context.jwt_token = None
     context.original_jwt_token = None
     context._status_ok = False
+    context.parallel_request = None
+    context.parallel_get = None
+
+
+def after_all(context):
+    parallel_support.print_summary()

@@ -4,6 +4,21 @@ on:
   schedule:
     - cron: "0 2 * * *" # 2 AM UTC every night
   workflow_dispatch:
+  # nightly.yml is otherwise only reachable on its 2am cron, so a change to it
+  # would first run the night after merge. The router in build.yml cannot own
+  # this one: calling it via workflow_call would make the concurrency block
+  # below resolve to the caller's group and self-cancel, the trap documented in
+  # build-enterprise.yml. Listing this file makes the change self-testing.
+  # Any cucumber change can break something only nightly exercises: an @nightly
+  # scenario, a heavy endpoint at high concurrency, or the shard runner. The pull
+  # request suite runs none of those, so run them here instead of finding out at
+  # 2am. For a pull request that touches nothing listed here, the same job can be
+  # run on demand with `gh workflow run nightly.yml --ref <branch>`.
+  pull_request:
+    paths:
+      - .github/workflows/nightly.yml
+      - testing/cucumber/**
+      - docker/embedded/compose/test_cicd.yml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,6 +31,9 @@ jobs:
   playwright-all-browsers:
     name: Playwright (chromium + firefox + webkit)
     runs-on: ubuntu-latest
+    # Full sweeps only on the cron or a dispatch against main. Pull requests and
+    # branch dispatches reach this workflow to exercise cucumber-nightly alone.
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -61,6 +79,9 @@ jobs:
   a11y-all-stories:
     name: a11y (every story)
     runs-on: ubuntu-latest
+    # Full sweeps only on the cron or a dispatch against main. Pull requests and
+    # branch dispatches reach this workflow to exercise cucumber-nightly alone.
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     timeout-minutes: 60
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -100,6 +121,9 @@ jobs:
   # written on main, where PR and merge-queue tauri builds can restore it.
   warm-tauri-cache:
     name: Warm Tauri Rust cache
+    # Full sweeps only on the cron or a dispatch against main. Pull requests and
+    # branch dispatches reach this workflow to exercise cucumber-nightly alone.
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     permissions:
       contents: read
       pull-requests: write
@@ -108,3 +132,84 @@ jobs:
       platform: all
       sign: false
     secrets: inherit
+
+  # The PR cucumber run keeps each operation at 5 concurrent copies and skips the
+  # endpoints backed by heavy external binaries. Nightly has the time budget to
+  # run @nightly scenarios and to crank concurrency up across every endpoint.
+  cucumber-nightly:
+    name: Cucumber (nightly scenarios + full concurrency)
+    runs-on: ubuntu-latest
+    # Fork pull requests get no MAVEN_* secrets, so the image build cannot work.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: ./testing/cucumber/requirements.txt
+
+      - name: Pip requirements
+        run: |
+          pip install --require-hashes --only-binary=:all: -r ./testing/cucumber/requirements.txt
+
+      - name: Start the fat image with login and storage enabled
+        run: docker compose -f docker/embedded/compose/test_cicd.yml up -d --build
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Wait for the server
+        # The key is the throwaway one test_cicd.yml sets; kept out of the curl
+        # header literal so secret scanners do not flag it as a credential.
+        env:
+          TEST_API_KEY: "123456789"
+        run: |
+          curl --retry 90 --retry-delay 3 --retry-connrefused --retry-all-errors \
+            -sf -H "X-API-KEY: $TEST_API_KEY" http://localhost:8080/api/v1/info/status
+
+      # Heavy LibreOffice/Calibre/Ghostscript conversions, excluded from the PR run.
+      - name: Run @nightly scenarios
+        working-directory: testing/cucumber
+        run: python -m behave --tags=@nightly --no-capture -f plain
+
+      # CUCUMBER_PARALLEL applies to every scenario, including the endpoints the
+      # PR run leaves out, and lifts concurrency well past the in-file value.
+      - name: Full-suite concurrency validation
+        working-directory: testing/cucumber
+        run: python -m behave --no-capture -f plain
+        env:
+          CUCUMBER_PARALLEL: "10"
+          CUCUMBER_PARALLEL_DECOY: "1"
+
+      # Genuinely different payloads contending on one backend.
+      - name: Sharded concurrency validation
+        working-directory: testing/cucumber
+        run: bash run-parallel.sh 10
+
+      - name: Container logs on failure
+        if: failure()
+        run: docker compose -f docker/embedded/compose/test_cicd.yml logs --tail 400
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker/embedded/compose/test_cicd.yml down -v
