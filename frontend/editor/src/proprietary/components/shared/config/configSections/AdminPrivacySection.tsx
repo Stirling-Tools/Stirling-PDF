@@ -181,6 +181,10 @@ export default function AdminPrivacySection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.privacy.enableAnalytics.label",
+                    "Enable Analytics",
+                  )}
                   checked={settings?.enableAnalytics || false}
                   onChange={(e) => {
                     if (!loginEnabled) return;
@@ -219,6 +223,10 @@ export default function AdminPrivacySection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.privacy.metricsEnabled.label",
+                    "Enable Metrics",
+                  )}
                   checked={settings?.metricsEnabled || false}
                   onChange={(e) => {
                     if (!loginEnabled) return;
@@ -269,6 +277,10 @@ export default function AdminPrivacySection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.privacy.googleVisibility.label",
+                    "Google Visibility",
+                  )}
                   checked={settings?.googleVisibility || false}
                   onChange={(e) => {
                     if (!loginEnabled) return;

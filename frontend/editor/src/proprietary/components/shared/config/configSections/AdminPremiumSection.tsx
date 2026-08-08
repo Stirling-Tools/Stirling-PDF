@@ -213,6 +213,10 @@ export default function AdminPremiumSection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.premium.enabled.label",
+                    "Enable Premium Features",
+                  )}
                   checked={settings.enabled || false}
                   onChange={(e) => {
                     if (!loginEnabled) return;

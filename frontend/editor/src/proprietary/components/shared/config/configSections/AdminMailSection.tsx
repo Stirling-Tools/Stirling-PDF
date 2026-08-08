@@ -145,6 +145,10 @@ export default function AdminMailSection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.mail.enabled.label",
+                    "Enable Mail",
+                  )}
                   checked={settings.enabled || false}
                   onChange={(e) =>
                     setSettings({ ...settings, enabled: e.target.checked })
@@ -191,6 +195,10 @@ export default function AdminMailSection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.mail.invites.label",
+                    "Team invitation emails",
+                  )}
                   checked={settings.enableInvites || false}
                   onChange={(e) =>
                     setSettings({
