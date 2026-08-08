@@ -44,6 +44,8 @@ export interface ToolContextOptions {
   activeFileIndex?: number;
   /** Extra viewer fields for components that reach further into it. */
   viewer?: Partial<Record<string, unknown>>;
+  /** Extra workflow fields — search state, panel view, the open tool. */
+  workflow?: Partial<Record<string, unknown>>;
 }
 
 export function withToolContexts({
@@ -51,6 +53,7 @@ export function withToolContexts({
   favourites = [],
   activeFileIndex = 0,
   viewer = {},
+  workflow = {},
 }: ToolContextOptions = {}) {
   return (Story: () => ReactElement): ReactElement => (
     <AppConfigProvider
@@ -69,6 +72,7 @@ export function withToolContexts({
                 toolPanelMode: "normal",
                 leftPanelView: "tools",
                 readerMode: false,
+                ...workflow,
               } as unknown as ToolWorkflowContextValue
             }
           >

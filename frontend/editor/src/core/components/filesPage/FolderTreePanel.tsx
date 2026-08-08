@@ -109,7 +109,11 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
     <div
       className="folder-tree-panel"
       data-active={String(active)}
+      /* Collapsed, the panel keeps its DOM but must not be reachable: hiding it
+         from assistive tech alone would leave its controls in the tab order,
+         focusable but invisible. inert removes both. */
       aria-hidden={!active}
+      inert={!active}
       style={
         active
           ? ({

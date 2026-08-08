@@ -11,12 +11,27 @@ import { ToolPanelViewerBar } from "@app/components/tools/ToolPanelViewerBar";
 import { withToolContexts } from "@app/components/tools/storyFixtures";
 import { WorkbenchBarContext } from "@app/contexts/WorkbenchBarContext";
 
+/** The bar renders only the "tool-panel" section, and names each control from
+ *  ariaLabel (falling back to a string tooltip) — not from `label`. */
 const BUTTONS = [
-  { id: "zoom", label: "Zoom in", icon: <ZoomInIcon />, onClick: () => {} },
-  { id: "print", label: "Print", icon: <PrintIcon />, onClick: () => {} },
+  {
+    id: "zoom",
+    section: "tool-panel",
+    ariaLabel: "Zoom in",
+    icon: <ZoomInIcon />,
+    onClick: () => {},
+  },
+  {
+    id: "print",
+    section: "tool-panel",
+    ariaLabel: "Print",
+    icon: <PrintIcon />,
+    onClick: () => {},
+  },
   {
     id: "download",
-    label: "Download",
+    section: "tool-panel",
+    ariaLabel: "Download",
     icon: <DownloadIcon />,
     onClick: () => {},
   },

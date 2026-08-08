@@ -70,16 +70,10 @@ const AddFileCard = ({
 
       <div
         className={`${styles.addFileCard} select-none flex flex-col transition-all relative cursor-pointer`}
-        tabIndex={0}
-        role="button"
-        aria-label={t("fileEditor.addFiles", "Add files")}
+        /* The card holds its own Add-files and upload buttons, so making the
+           card a button as well nests one control inside another. The click is
+           a mouse convenience; the buttons carry the keyboard path. */
         onClick={handleCardClick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleCardClick();
-          }
-        }}
       >
         {/* Main content area */}
         <div className={styles.addFileContent}>
