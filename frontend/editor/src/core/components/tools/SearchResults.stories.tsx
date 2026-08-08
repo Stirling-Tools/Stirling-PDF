@@ -56,7 +56,7 @@ const MATCHES = [
     ],
   },
   {
-    item: ["extract", tool("Extract pages", SubcategoryId.EXTRACTION)] as [
+    item: ["watermark", tool("Watermark", SubcategoryId.EXTRACTION)] as [
       ToolId,
       ToolRegistryEntry,
     ],
