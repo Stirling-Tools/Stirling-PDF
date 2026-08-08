@@ -8631,6 +8631,14 @@ text = "Rotate your PDF pages clockwise or anticlockwise in 90-degree increments
 [rotate.tooltip.header]
 title = "Rotate Settings Overview"
 
+[ruler]
+clearAll = "Clear all"
+hideAllLabels = "Hide all labels"
+hideSmallLabels = "Hide small labels"
+physicalValues = "Physical"
+scaled = "Scaled"
+showAllLabels = "Show all labels"
+
 [sanitize]
 desc = "Remove potentially harmful elements from PDF files."
 sanitizationResults = "Sanitisation Results"
@@ -8681,6 +8689,32 @@ title = "Sanitise PDF"
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page-scale"
+
+[scaleSettings]
+activeScale = "Active Scale"
+apply = "Apply Scale"
+applyCalibration = "Apply Calibration"
+calculatedScale = "Calculated scale"
+calibrate = "Calibrate"
+calibrating = "Calibrating"
+calibrationDistanceRequired = "Enter a real-world distance greater than zero"
+calibrationInvalid = "Unable to calculate scale from this measurement"
+calibrationPaperDistance = "Measured page distance: {{distance}}"
+calibrationTitle = "Calibrate Scale"
+calibrationTooltip = "Measure a known distance to calculate the scale automatically"
+customScale = "Custom Scale"
+noneSet = "No custom scale set"
+presets = "Preset Scales"
+ratio = "Scale Ratio"
+ratioHelp = "Ratio: 1 page unit = X real-world units"
+ratioPlaceholder = "e.g., 100"
+ratioPositive = "Ratio must be greater than zero"
+ratioRequired = "Ratio is required"
+realDistance = "Real-world distance"
+realDistancePlaceholder = "e.g., 5"
+reset = "Reset to Defaults"
+unit = "Unit"
+unitInvalid = "Invalid unit: {{scaleUnit}}"
 
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
@@ -10670,6 +10704,7 @@ redact = "Redact"
 rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 ruler = "Ruler / Measure"
+rulerSettings = "Scale Settings"
 save = "Save"
 saveAll = "Save All"
 saveAs = "Save As"
