@@ -1,3 +1,4 @@
+import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -10,6 +11,45 @@ import tsconfigPaths from "vite-tsconfig-paths";
  * the portal layer at editor/src/portal/). MDX docs pages live in
  * editor/src/portal/docs/.
  */
+
+/** Layer search order for @app/*, mirroring each flavour's vite tsconfig. */
+const FLAVOUR_LAYERS: Record<string, string[]> = {
+  desktop: ["desktop", "cloud", "proprietary", "core"],
+  saas: ["saas", "cloud", "proprietary", "core"],
+  cloud: ["cloud", "proprietary", "core"],
+  prototypes: ["prototypes", "proprietary", "core"],
+};
+
+const SUFFIXES = ["", ".tsx", ".ts", "/index.tsx", "/index.ts"];
+
+function flavourAppAlias() {
+  return {
+    name: "storybook-app-alias-by-flavour",
+    // Ahead of vite-tsconfig-paths, which would otherwise answer first with the
+    // proprietary order.
+    enforce: "pre" as const,
+    resolveId(source: string, importer: string | undefined) {
+      if (!importer || !source.startsWith("@app/")) return null;
+      const layer = importer
+        .split("\\")
+        .join("/")
+        .match(/\/editor\/src\/(desktop|saas|cloud|prototypes)\//)?.[1];
+      if (!layer) return null;
+      const rest = source.slice("@app/".length);
+      for (const candidate of FLAVOUR_LAYERS[layer]) {
+        for (const suffix of SUFFIXES) {
+          const full = resolve(
+            __dirname,
+            `../editor/src/${candidate}/${rest}${suffix}`,
+          );
+          if (existsSync(full) && statSync(full).isFile()) return full;
+        }
+      }
+      return null;
+    },
+  };
+}
+
 const config: StorybookConfig = {
   stories: [
     "../editor/src/portal/**/*.mdx",
@@ -53,6 +93,12 @@ const config: StorybookConfig = {
     // shared Storybook can host editor components without duplicating the alias
     // map here.
     config.plugins = config.plugins ?? [];
+    // Stories under desktop/, saas/, cloud/ and prototypes/ import @app/* too,
+    // but each of those builds resolves it against its own layer first — an
+    // order the single tsconfig below cannot express. Resolving by the
+    // importer's layer lets those stories load without changing what @app/*
+    // means for core, proprietary or portal stories, which never match here.
+    config.plugins.push(flavourAppAlias());
     config.plugins.push(
       tsconfigPaths({
         projects: [

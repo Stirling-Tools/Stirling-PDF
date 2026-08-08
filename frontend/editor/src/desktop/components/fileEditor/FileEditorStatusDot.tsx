@@ -25,9 +25,12 @@ export function FileEditorStatusDot({ file }: FileEditorStatusDotProps) {
   return (
     <div className={styles.thumbBadgesRight}>
       <Tooltip label={label}>
+        {/* A bare span cannot carry aria-label; without a role the save state
+            is conveyed by colour alone and announced as nothing at all. */}
         <span
           className={styles.statusDot}
           style={{ backgroundColor: color }}
+          role="img"
           aria-label={label}
         />
       </Tooltip>
