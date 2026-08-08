@@ -24,10 +24,14 @@
   --_tert-tint: var(--c-hover);
 }
 /* Danger is pinned to a fixed deep red (not the theme-lightened coral), so the
-   fill and the outline/text are the SAME red in both light and dark. */
+   fill and the outline/text are the SAME red in both light and dark.
+
+   The fill is red-600 rather than red-500 because white sits on it: red-500
+   gives 3.76:1, short of the 4.5:1 body text needs, while red-600 gives 4.85:1
+   and holds in either theme. */
 .sui-acc-danger {
-  --_solid: var(--p-red-500);
-  --_solid-hover: var(--p-red-600);
+  --_solid: var(--p-red-600);
+  --_solid-hover: color-mix(in srgb, var(--p-red-600) 85%, var(--p-black));
   --_on: #ffffff;
   --_text: var(--p-red-500);
   --_bd: color-mix(in srgb, var(--p-red-500) 45%, transparent);
