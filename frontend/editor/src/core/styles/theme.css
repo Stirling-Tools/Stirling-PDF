@@ -43,7 +43,9 @@
     var(--p-green-500) 15%,
     transparent
   ); /* Transparent green for active badge */
-  --file-active-badge-fg: var(--p-green-700); /* Green text for active badge */
+  /* green-700 on the 15% tint measures 4.05:1, under the 4.5:1 this badge's
+     size needs; green-800 clears it. */
+  --file-active-badge-fg: var(--p-green-800);
   --file-active-badge-border: color-mix(
     in srgb,
     var(--p-green-500) 30%,
