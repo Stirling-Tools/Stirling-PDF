@@ -159,7 +159,9 @@ export interface ToolWorkflowDataValue {
   isFavorite: (toolId: ToolId) => boolean;
 }
 
-const ToolWorkflowActionsContext = createContext<
+// Exported alongside ToolWorkflowContext so a story can supply the callbacks a
+// component reaches for without standing up the provider.
+export const ToolWorkflowActionsContext = createContext<
   ToolWorkflowActionsValue | undefined
 >(undefined);
 const ToolWorkflowDataContext = createContext<
