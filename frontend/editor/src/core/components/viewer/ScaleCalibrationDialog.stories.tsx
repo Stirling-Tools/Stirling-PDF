@@ -1,16 +1,10 @@
 /**
- * The calibration modal: the user drags a line over a known distance on the
- * page, then tells the viewer how long that line really is.
+ * Second half of calibration: the user has drawn a line over something of known
+ * size, and this dialog turns that into a scale. The measured page distance is
+ * given; the real-world distance is what it asks for.
  *
- * The only thing the dialog knows on open is the measurement it was handed.
- * That measurement decides whether the "measured page distance" line appears at
- * all, and `formatPaperDistance` switches its unit by magnitude (mm below
- * 100 mm, then cm, then m), so the same component reads quite differently for a
- * short line and a long one. The calculated-scale preview only appears once a
- * real-world distance has been typed, so it is not a static state.
- *
- * The unit selector prefers the last unit the user calibrated in, which is read
- * from local storage — `defaultUnit` only applies on a fresh browser profile.
+ * The chosen unit is remembered between calibrations, so `defaultUnit` only
+ * applies the first time — stories that care about the unit set it explicitly.
  */
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
@@ -18,42 +12,50 @@ import {
   type ScaleCalibrationMeasurement,
 } from "@app/components/viewer/ScaleCalibrationDialog";
 
-function measurement(pdfDistancePts: number): ScaleCalibrationMeasurement {
-  return {
-    start: { pageIndex: 0, x: 100, y: 240 },
-    end: { pageIndex: 0, x: 100 + pdfDistancePts, y: 240 },
-    pdfDistancePts,
-  };
-}
+const MEASUREMENT: ScaleCalibrationMeasurement = {
+  start: { x: 100, y: 220, pageIndex: 0 },
+  end: { x: 388, y: 220, pageIndex: 0 },
+  pdfDistancePts: 288,
+};
+
+/** Short enough that the derived ratio lands in a different order of magnitude. */
+const SHORT_MEASUREMENT: ScaleCalibrationMeasurement = {
+  start: { x: 100, y: 220, pageIndex: 0 },
+  end: { x: 118, y: 220, pageIndex: 0 },
+  pdfDistancePts: 18,
+};
+
+const noop = () => {};
 
 const meta: Meta<typeof ScaleCalibrationDialog> = {
   title: "Viewer/ScaleCalibrationDialog",
   component: ScaleCalibrationDialog,
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "centered" },
   args: {
     opened: true,
+    measurement: MEASUREMENT,
     defaultUnit: "m",
-    measurement: measurement(200),
-    onApplyScale: () => {},
-    onClose: () => {},
+    onApplyScale: noop,
+    onClose: noop,
   },
 };
 export default meta;
 
 type Story = StoryObj<typeof ScaleCalibrationDialog>;
 
-/** A line a few centimetres long on the page. */
+/** Waiting for input: the page distance is shown, the preview is not. */
 export const Default: Story = {};
 
-/** A short line, reported in millimetres. */
+export const ImperialDefault: Story = { args: { defaultUnit: "ft" } };
+
 export const ShortMeasurement: Story = {
-  args: { measurement: measurement(36) },
+  args: { measurement: SHORT_MEASUREMENT },
 };
 
-/** A line over a metre long, reported in metres. */
-export const LongMeasurement: Story = {
-  args: { measurement: measurement(3600) },
-};
-
-/** Opened without a measurement: the page-distance line has nothing to report. */
+/**
+ * Applying with no distance entered is the error path — the dialog can also be
+ * opened before a measurement exists, which leaves the page distance blank.
+ */
 export const NoMeasurement: Story = { args: { measurement: null } };
+
+export const Closed: Story = { args: { opened: false } };

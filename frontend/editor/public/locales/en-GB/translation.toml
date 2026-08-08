@@ -8653,6 +8653,7 @@ title = "Rotate Settings Overview"
 
 [ruler]
 clearAll = "Clear all"
+deleteMeasurement = "Delete measurement"
 hideAllLabels = "Hide all labels"
 hideSmallLabels = "Hide small labels"
 physicalValues = "Physical"
