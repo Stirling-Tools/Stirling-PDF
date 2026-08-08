@@ -45,6 +45,7 @@ export function OpacityControl({
             min={10}
             max={100}
             label={(val) => `${val}%`}
+            thumbLabel={t("annotation.opacity", "Opacity")}
           />
         </Stack>
       </Popover.Dropdown>
