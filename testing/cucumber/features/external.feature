@@ -181,27 +181,11 @@ Feature: API Validation
 
         Examples:
             | format |
+            | webp   |
             | png    |
             | jpeg   |
             | jpg    |
             | gif    |
-
-
-    # No concurrency step: webp is the one format that shells out to python, and
-    # GeneralUtils.extractScript re-materialises the script per request, which 500s under load.
-    @pdf-to-img @positive
-    Scenario: Convert PDF to webp images
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 pages with random text
-        And the pdf contains 3 images of size 300x300 on 3 pages
-        And the request data includes
-            | parameter   | value |
-            | dpi         | 300   |
-            | imageFormat | webp  |
-        When I send the API request to the endpoint "/api/v1/convert/pdf/img"
-        Then the response status code should be 200
-        And the response file should have size greater than 100
-        And the response file should have extension ".zip"
 
     @libre @positive @topdf
     Scenario Outline: Convert PDF to various types
