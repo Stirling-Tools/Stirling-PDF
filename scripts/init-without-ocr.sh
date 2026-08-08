@@ -950,10 +950,13 @@ JAVA_CMD=(
   -Djava.io.tmpdir=/tmp/stirling-pdf
 )
 
-# Required by libvips at link time; LD_PRELOAD extends it to Java
+# jemalloc — required by libvips at link time; LD_PRELOAD extends it to Java
 JEMALLOC_PATH=""
-for p in /usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || echo "unknown")/libjemalloc.so.2 \
-         /usr/lib/libjemalloc.so.2 /usr/lib/libjemalloc.so; do
+for p in /usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || echo "")/libjemalloc.so.2 \
+         /usr/lib/x86_64-linux-gnu/libjemalloc.so.2 \
+         /usr/lib/aarch64-linux-gnu/libjemalloc.so.2 \
+         /usr/lib/libjemalloc.so.2 \
+         /usr/lib/libjemalloc.so; do
   if [ -f "$p" ]; then JEMALLOC_PATH="$p"; break; fi
 done
 

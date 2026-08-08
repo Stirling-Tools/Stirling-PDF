@@ -23,6 +23,8 @@ openapi: &openapi
 
 docker-base: &docker-base
   - docker/base/Dockerfile
+  - scripts/init.sh
+  - scripts/init-without-ocr.sh
 
 # Dockerfiles only (base + embedded + unoserver). Gates the slow multi-arch
 # (arm64) leg of the PR docker test build: arm64 is only rebuilt when a
