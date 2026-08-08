@@ -950,27 +950,19 @@ JAVA_CMD=(
   -Djava.io.tmpdir=/tmp/stirling-pdf
 )
 
-# Setup mimalloc for Java only to avoid issues with other native tools
-MIMALLOC_PATH=""
-case "$(uname -m)" in
-  x86_64)
-    for p in /usr/lib/x86_64-linux-gnu/libmimalloc.so.2 /usr/lib/x86_64-linux-gnu/libmimalloc.so /usr/lib/libmimalloc.so.2 /usr/lib/libmimalloc.so; do
-      if [ -f "$p" ]; then MIMALLOC_PATH="$p"; break; fi
-    done
-    ;;
-  aarch64)
-    for p in /usr/lib/aarch64-linux-gnu/libmimalloc.so.2 /usr/lib/aarch64-linux-gnu/libmimalloc.so /usr/lib/libmimalloc.so.2 /usr/lib/libmimalloc.so; do
-      if [ -f "$p" ]; then MIMALLOC_PATH="$p"; break; fi
-    done
-    ;;
-esac
+# jemalloc — required by libvips at link time; LD_PRELOAD extends it to Java
+JEMALLOC_PATH=""
+for p in /usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || echo "unknown")/libjemalloc.so.2 \
+         /usr/lib/libjemalloc.so.2 /usr/lib/libjemalloc.so; do
+  if [ -f "$p" ]; then JEMALLOC_PATH="$p"; break; fi
+done
 
 TARGET_LD_PRELOAD="${LD_PRELOAD:-}"
-if [ -n "$MIMALLOC_PATH" ]; then
+if [ -n "$JEMALLOC_PATH" ]; then
   if [ -n "$TARGET_LD_PRELOAD" ]; then
-    TARGET_LD_PRELOAD="${MIMALLOC_PATH}:${TARGET_LD_PRELOAD}"
+    TARGET_LD_PRELOAD="${JEMALLOC_PATH}:${TARGET_LD_PRELOAD}"
   else
-    TARGET_LD_PRELOAD="${MIMALLOC_PATH}"
+    TARGET_LD_PRELOAD="${JEMALLOC_PATH}"
   fi
 fi
 
@@ -1038,8 +1030,8 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
 
   if [ "$CONTAINER_MEM_MB" -gt "$_aot_min_mem" ] || [ "$CONTAINER_MEM_MB" -eq 0 ]; then
     (
-      # Setup mimalloc for AOT generation too
-      [ -n "$MIMALLOC_PATH" ] && export LD_PRELOAD="${MIMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}"
+      # jemalloc LD_PRELOAD for AOT generation too
+      [ -n "$JEMALLOC_PATH" ] && export LD_PRELOAD="${JEMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}"
 
       # Wait for Spring Boot to finish initializing before competing for CPU/memory.
       # ARM devices (Raspberry Pi 4, Ampere) need extra time, 90s vs 45s on x86_64.
