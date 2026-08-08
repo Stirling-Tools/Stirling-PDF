@@ -56,6 +56,27 @@ interface LabelBox {
 interface MeasurementLineLabels {
   scaled: string;
   physical: string;
+  delete: string;
+}
+
+/**
+ * The overlay's controls live inside the SVG, where there is no <button> to
+ * inherit from: a bare <g onClick> is invisible to assistive technology and
+ * unreachable by keyboard. These props supply what the element would otherwise
+ * get for free — a role, a name, focusability, and Enter/Space activation.
+ */
+function svgButtonProps(label: string, activate: () => void) {
+  return {
+    role: "button",
+    tabIndex: 0,
+    "aria-label": label,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      e.stopPropagation();
+      activate();
+    },
+  };
 }
 
 export const RULER_DOT_RADIUS = 5;
@@ -623,6 +644,7 @@ function MeasurementLine({
           />
           <g
             style={{ cursor: "pointer" }}
+            {...svgButtonProps(labels.delete, () => onDelete(id))}
             onClick={(e) => {
               e.stopPropagation();
               onDelete(id);
@@ -761,6 +783,7 @@ export function RulerMeasurementLayer({
     () => ({
       scaled: t("ruler.scaled", "Scaled"),
       physical: t("ruler.physicalValues", "Physical"),
+      delete: t("ruler.deleteMeasurement", "Delete measurement"),
     }),
     [t],
   );
@@ -883,6 +906,7 @@ export function RulerMeasurementLayer({
             data-ruler-interactive="true"
             data-ruler-control="true"
             style={{ pointerEvents: "all", cursor: "pointer" }}
+            {...svgButtonProps(t("ruler.clearAll", "Clear all"), onClearAll)}
             onClick={(e) => {
               e.stopPropagation();
               onClearAll();
@@ -915,6 +939,7 @@ export function RulerMeasurementLayer({
             data-ruler-interactive="true"
             data-ruler-control="true"
             style={{ pointerEvents: "all", cursor: "pointer" }}
+            {...svgButtonProps(labelModeButtonLabel, onCycleLabelVisibilityMode)}
             onClick={(e) => {
               e.stopPropagation();
               onCycleLabelVisibilityMode();
