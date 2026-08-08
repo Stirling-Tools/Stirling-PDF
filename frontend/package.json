@@ -172,7 +172,8 @@
     "devalue": "^5.8.1",
     "tsconfck": {
       "typescript": "$typescript"
-    }
+    },
+    "nanoid": "3.3.17"
   },
   "msw": {
     "workerDirectory": [
