@@ -254,7 +254,9 @@ export function ScaleSettingsPanel({
             />
           </div>
         </Group>
-        <Text size="xs" c="dimmed" mt="xs">
+        {/* Mantine's own "dimmed" is too light to clear 4.5:1 at this size, so
+            muted text comes from the design system's token instead. */}
+        <Text size="xs" c="var(--c-text-muted)" mt="xs">
           {t(
             "scaleSettings.ratioHelp",
             "Ratio: 1 page unit = X real-world units",
@@ -271,12 +273,14 @@ export function ScaleSettingsPanel({
         style={{
           padding: "0.5rem",
           backgroundColor: currentScale
-            ? "rgba(30, 136, 229, 0.1)"
-            : "rgba(158, 158, 158, 0.1)",
+            ? "var(--c-primary-tint)"
+            : "var(--c-surface-sunken)",
           borderRadius: "4px",
         }}
       >
-        <Text size="xs" c={currentScale ? "blue" : "dimmed"}>
+        {/* The tint carries the "a scale is active" signal; the text stays at
+            full contrast rather than restating it in the accent hue. */}
+        <Text size="xs" c={currentScale ? undefined : "var(--c-text-muted)"}>
           <strong>{t("scaleSettings.activeScale", "Active Scale")}:</strong>{" "}
           {currentScale && currentScale.ratio
             ? generateScaleLabel(currentScale.ratio, currentScale.unit)

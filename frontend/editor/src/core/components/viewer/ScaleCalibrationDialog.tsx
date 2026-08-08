@@ -124,11 +124,14 @@ export function ScaleCalibrationDialog({
       title={t("scaleSettings.calibrationTitle", "Calibrate Scale")}
       centered
       size="sm"
+      closeButtonProps={{ "aria-label": t("common.close", "Close") }}
     >
       <Stack gap="md">
         {/* Show paper distance automatically */}
+        {/* Mantine's own "dimmed" is too light to clear 4.5:1, so muted text
+            comes from the design system's token instead. */}
         {measurement && (
-          <Text size="sm" c="dimmed">
+          <Text size="sm" c="var(--c-text-muted)">
             {t(
               "scaleSettings.calibrationPaperDistance",
               "Measured page distance: {{distance}}",
@@ -166,7 +169,7 @@ export function ScaleCalibrationDialog({
 
         {/* Preview: show calculated scale */}
         {previewScale && (
-          <Text size="sm" c="blue">
+          <Text size="sm" fw={600}>
             {t(
               "scaleSettings.calculatedScale",
               "Calculated scale (1 page unit = X real units)",
