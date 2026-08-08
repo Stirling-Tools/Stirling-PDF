@@ -90,7 +90,7 @@ COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 # Permissions and configuration
 RUN set -eux; \
     apt-get update; \
-    apt-get install -y --no-install-recommends libvips42 libheif-plugin-x265 libheif-plugin-aomdec libheif-plugin-aomenc; \
+    apt-get install -y --no-install-recommends libvips42 libheif-plugin-libde265 libheif-plugin-x265 libheif-plugin-ffmpegdec libheif-plugin-aomdec libheif-plugin-aomenc; \
     rm -rf /var/lib/apt/lists/*; \
     chmod +x /scripts/*; \
     ln -s /logs /app/logs; \
