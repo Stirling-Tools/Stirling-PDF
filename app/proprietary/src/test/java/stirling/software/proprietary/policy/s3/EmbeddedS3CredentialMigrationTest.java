@@ -23,7 +23,9 @@ import stirling.software.proprietary.access.model.OwnerScope;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.policy.migration.InProcessCompletedMigrations;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
@@ -49,7 +51,11 @@ class EmbeddedS3CredentialMigrationTest {
     void setUp() {
         migration =
                 new EmbeddedS3CredentialMigration(
-                        sourceStore, policyStore, connections, teamRepository);
+                        sourceStore,
+                        policyStore,
+                        connections,
+                        teamRepository,
+                        new InProcessCompletedMigrations());
         AtomicLong ids = new AtomicLong(100);
         // Lenient: the nothing-to-migrate cases never create a connection.
         lenient().when(connections.findAll()).thenReturn(List.of());
@@ -92,8 +98,7 @@ class EmbeddedS3CredentialMigrationTest {
                                 "Rotate",
                                 "alice",
                                 true,
-                                null,
-                                List.of(source.id()),
+                                List.of(PipelineInput.manual(source.id())),
                                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                                 new OutputSpec(
                                         "s3",

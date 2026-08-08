@@ -70,7 +70,7 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
               disabled={action.disabled}
               onClick={action.onClick}
               aria-label={action.label}
-              style={{ color: action.color || "var(--text-secondary)" }}
+              style={{ color: action.color || "var(--c-text-muted)" }}
               data-tour={action.dataTour}
             >
               {action.icon}

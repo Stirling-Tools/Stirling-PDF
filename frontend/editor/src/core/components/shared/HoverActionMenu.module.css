@@ -6,8 +6,8 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  background: var(--bg-toolbar);
-  border: 1px solid var(--border-default);
+  background: var(--c-bg-raised);
+  border: 1px solid var(--c-border);
   padding: 6px 12px;
   border-radius: 20px;
   box-shadow: var(--shadow-md);
