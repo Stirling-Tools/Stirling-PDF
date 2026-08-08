@@ -1,8 +1,4 @@
-"""Concurrency validation for the behave API suite.
-
-Re-issues a scenario's request N times concurrently and asserts every response is
-structurally identical to the uncontended baseline.
-"""
+"""Re-issues a request concurrently and asserts every response matches the baseline."""
 
 import io
 import json as json_module
@@ -19,8 +15,7 @@ from pypdf import PdfReader
 DEFAULT_REPEAT = 10
 DEFAULT_HEAVY_REPEAT = 3
 
-# Tools backed by heavy external binaries; run at a lower concurrency so CI
-# containers are not starved of CPU/memory by the repeat factor alone.
+# Heavy external binaries; lower concurrency so CI containers are not starved.
 HEAVY_TAGS = frozenset(
     {
         "calibre", "compress", "convert", "ghostscript", "libre", "ocr",
@@ -29,7 +24,6 @@ HEAVY_TAGS = frozenset(
     }
 )
 
-# Scenarios carrying this tag never repeat, for genuinely stateful operations.
 OPT_OUT_TAG = "noparallel"
 
 _PARALLEL_TAG_RE = re.compile(r"^parallel[:=](\d+)$")
@@ -110,12 +104,7 @@ class ParallelConfig:
         return ", ".join(bits)
 
 
-###############
-# REQUEST SPEC #
-###############
-
-# A spec is a list of (key, filename_or_None, payload_bytes_or_str, mime_or_None)
-# tuples. Unlike open file handles it can be replayed from many threads at once.
+# A spec replaces open file handles with bytes so it can be replayed from many threads.
 
 
 def materialize(spec):
@@ -131,11 +120,6 @@ def materialize(spec):
 
 def send(url, spec, headers, timeout=300):
     return requests.post(url, files=materialize(spec), headers=headers, timeout=timeout)
-
-
-###############
-# FINGERPRINT #
-###############
 
 
 def _normalize_name(name):
@@ -184,11 +168,7 @@ def _pdf_fingerprint(body, prefix=""):
 
 
 def _entry_sha(entry):
-    """Hash an archive entry, normalizing ids and timestamps inside text formats.
-
-    Container formats such as EPUB and ODF stamp a fresh UUID and timestamp into
-    their XML on every run, which is noise rather than a concurrency signal.
-    """
+    """Hash an archive entry, normalizing the ids and timestamps EPUB/ODF restamp each run."""
     try:
         text = entry.decode("utf-8")
         if "\x00" not in text:
@@ -278,16 +258,11 @@ def _short(value):
     return text if len(text) <= 160 else text[:157] + "..."
 
 
-#########
-# DECOY #
-#########
-
-
 def build_decoy_spec(spec):
-    """Clone a spec with every PDF stamped with unique text, or None if not possible.
+    """Clone a spec with each PDF stamped with unique text, or None if not possible.
 
-    Page count and structure are preserved so endpoint parameters stay valid; only
-    the text content differs, which is what makes bleed between requests visible.
+    Structure is preserved so parameters stay valid; only the text differs, which
+    is what makes bleed visible.
     """
     try:
         from pypdf import PdfWriter
@@ -328,11 +303,6 @@ def build_decoy_spec(spec):
     return decoy if stamped_any else None
 
 
-##############
-# VALIDATION #
-##############
-
-
 def _run_concurrently(url, specs, headers, timeout):
     """Fire every spec at once and return (response, error) in submission order."""
     results = [None] * len(specs)
@@ -349,10 +319,7 @@ def _run_concurrently(url, specs, headers, timeout):
 
 
 def validate(context, url, spec, headers, baseline, label, timeout=300):
-    """Re-issue the captured request concurrently and assert consistent responses.
-
-    No-op unless the scenario resolved to a repeat count above 1.
-    """
+    """Re-issue the request concurrently; no-op unless the repeat count is above 1."""
     repeat = getattr(context, "parallel_repeat", 1)
     config = getattr(context, "parallel_config", None)
     if config is None or repeat < 2 or getattr(context, "parallel_validated", False):
@@ -428,8 +395,7 @@ def _collect_failures(main_results, decoy_results, baseline_fp, repeat, config, 
 def _probe_noise(url, spec, headers, baseline_fp, config, timeout, samples=NOISE_PROBE_SAMPLES):
     """Fields that already vary between uncontended runs, so they prove nothing.
 
-    Several samples are taken because high-variance output (deliberate randomness)
-    can look stable across any single pair.
+    Several samples: high-variance output can look stable across any single pair.
     """
     probes = []
     for _ in range(samples):

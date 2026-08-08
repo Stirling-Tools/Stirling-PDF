@@ -1,12 +1,8 @@
 @jobs @noparallel
 Feature: Asynchronous job API
 
-    # Any tool endpoint accepts ?async=true and returns a jobId instead of the
-    # file. These scenarios cover the whole lifecycle: submit, poll, fetch the
-    # result, list and download the produced files, then delete the job.
-    #
-    # @noparallel because every step after the submit depends on one specific
-    # jobId, so repeating the submit concurrently would leave orphan jobs.
+    # Any tool endpoint accepts ?async=true and returns a jobId instead of the file.
+    # @noparallel: every step after the submit depends on that one jobId.
 
     @positive
     Scenario: An async job runs to completion and returns its result

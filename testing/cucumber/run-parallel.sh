@@ -1,16 +1,6 @@
 #!/bin/bash
-# Run the behave suite as N concurrent shards against one server, so scenarios
-# with genuinely different payloads contend with each other on the same backend.
-#
-# Each shard gets its own working directory because the step definitions write
-# generated input files into the CWD under fixed names, which would collide.
-#
-# Usage:
-#   ./run-parallel.sh [SHARDS] [-- extra behave args]
-#
-# Environment:
-#   CUCUMBER_PARALLEL   also repeat each individual operation N times concurrently
-#   BASE_URL            server to probe for readiness (default http://localhost:8080)
+# Run the behave suite as N concurrent shards against one server.
+# Usage: ./run-parallel.sh [SHARDS] [-- behave args]   Env: CUCUMBER_PARALLEL, BASE_URL
 
 set -uo pipefail
 
@@ -46,10 +36,8 @@ if [ "${#ALL_FEATURES[@]}" -eq 0 ]; then
     exit 1
 fi
 
-# Features that log in as the shared admin account cannot be spread across
-# shards: user_management.feature changes the admin password mid-scenario, so a
-# concurrent shard logging in during that window gets a 401. Keep them together
-# in one shard, where they run sequentially as they always have.
+# user_management.feature changes the admin password mid-scenario, so a concurrent
+# shard logging in then gets a 401. Keep all admin-auth features in one shard.
 AUTH_RE='logged in as admin|I login with username|JWT authentication|stored JWT token'
 declare -a AUTH_FEATURES=() FEATURES=()
 for feature in "${ALL_FEATURES[@]}"; do
@@ -88,8 +76,7 @@ start_shard() {
     shift
     local SHARD_DIR="$WORK_ROOT/shard-$shard"
     mkdir -p "$SHARD_DIR"
-    # Feature files reference exampleFiles/ relative to the CWD, and behave reads
-    # behave.ini from the CWD. Everything else resolves from the feature path.
+    # Feature files reference exampleFiles/ and behave.ini relative to the CWD.
     cp -r "$CUCUMBER_DIR/exampleFiles" "$SHARD_DIR/exampleFiles"
     cp "$CUCUMBER_DIR/behave.ini" "$SHARD_DIR/behave.ini"
 

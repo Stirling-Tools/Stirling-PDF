@@ -1,9 +1,7 @@
 @info @config
 Feature: Config, info and UI-data read APIs
 
-    # Read-only JSON endpoints that back the frontend and the admin surfaces.
-    # They are cheap, so they run on every PR and each is also checked for
-    # consistency under concurrent load.
+    # Cheap read-only JSON endpoints behind the frontend and admin surfaces.
 
     @app-config @positive
     Scenario: app-config returns the frontend configuration

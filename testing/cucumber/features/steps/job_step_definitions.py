@@ -1,7 +1,4 @@
-"""Steps for the asynchronous job API (submit with ?async=true, then poll).
-
-DELETE on a job is a cancel, so it only succeeds while the job is still running.
-"""
+"""Steps for the async job API. DELETE is a cancel, so it 400s once the job finishes."""
 import time
 
 import requests

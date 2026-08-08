@@ -4,16 +4,8 @@ on:
   schedule:
     - cron: "0 2 * * *" # 2 AM UTC every night
   workflow_dispatch:
-  # nightly.yml is otherwise only reachable on its 2am cron, so a change to it
-  # would first run the night after merge. The router in build.yml cannot own
-  # this one: calling it via workflow_call would make the concurrency block
-  # below resolve to the caller's group and self-cancel, the trap documented in
-  # build-enterprise.yml. Listing this file makes the change self-testing.
-  # Any cucumber change can break something only nightly exercises: an @nightly
-  # scenario, a heavy endpoint at high concurrency, or the shard runner. The pull
-  # request suite runs none of those, so run them here instead of finding out at
-  # 2am. For a pull request that touches nothing listed here, the same job can be
-  # run on demand with `gh workflow run nightly.yml --ref <branch>`.
+  # PRs run no @nightly scenario, no high concurrency and no shard run. build.yml
+  # can't own this: via workflow_call the concurrency group below self-cancels.
   pull_request:
     paths:
       - .github/workflows/nightly.yml
@@ -31,8 +23,7 @@ jobs:
   playwright-all-browsers:
     name: Playwright (chromium + firefox + webkit)
     runs-on: ubuntu-latest
-    # Full sweeps only on the cron or a dispatch against main. Pull requests and
-    # branch dispatches reach this workflow to exercise cucumber-nightly alone.
+    # PRs and branch dispatches reach this workflow for cucumber-nightly alone.
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -79,8 +70,6 @@ jobs:
   a11y-all-stories:
     name: a11y (every story)
     runs-on: ubuntu-latest
-    # Full sweeps only on the cron or a dispatch against main. Pull requests and
-    # branch dispatches reach this workflow to exercise cucumber-nightly alone.
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     timeout-minutes: 60
     steps:
@@ -121,8 +110,6 @@ jobs:
   # written on main, where PR and merge-queue tauri builds can restore it.
   warm-tauri-cache:
     name: Warm Tauri Rust cache
-    # Full sweeps only on the cron or a dispatch against main. Pull requests and
-    # branch dispatches reach this workflow to exercise cucumber-nightly alone.
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -133,9 +120,7 @@ jobs:
       sign: false
     secrets: inherit
 
-  # The PR cucumber run keeps each operation at 5 concurrent copies and skips the
-  # endpoints backed by heavy external binaries. Nightly has the time budget to
-  # run @nightly scenarios and to crank concurrency up across every endpoint.
+  # The PR run caps concurrency at 5 and skips the heavy-binary endpoints.
   cucumber-nightly:
     name: Cucumber (nightly scenarios + full concurrency)
     runs-on: ubuntu-latest
@@ -179,8 +164,7 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: Wait for the server
-        # The key is the throwaway one test_cicd.yml sets; kept out of the curl
-        # header literal so secret scanners do not flag it as a credential.
+        # Throwaway key from test_cicd.yml; out of the header literal for gitleaks.
         env:
           TEST_API_KEY: "123456789"
         run: |
@@ -192,8 +176,7 @@ jobs:
         working-directory: testing/cucumber
         run: python -m behave --tags=@nightly --no-capture -f plain
 
-      # CUCUMBER_PARALLEL applies to every scenario, including the endpoints the
-      # PR run leaves out, and lifts concurrency well past the in-file value.
+      # Applies to every scenario, including the endpoints the PR run leaves out.
       - name: Full-suite concurrency validation
         working-directory: testing/cucumber
         run: python -m behave --no-capture -f plain

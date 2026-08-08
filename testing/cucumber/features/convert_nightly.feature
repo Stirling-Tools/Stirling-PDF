@@ -1,9 +1,8 @@
 @nightly @convert
 Feature: Heavy conversion endpoints
 
-    # Excluded from the PR run by behave.ini and executed by the nightly job with
-    # --tags=@nightly. These shell out to LibreOffice, Calibre or Ghostscript, so
-    # they are too slow to run on every pull request but still need coverage.
+    # Too slow for every PR: these shell out to LibreOffice, Calibre or Ghostscript.
+    # behave.ini excludes @nightly; the nightly job opts back in with --tags=@nightly.
 
     @pdf-to-xlsx @positive
     Scenario: Convert a PDF containing tables to XLSX

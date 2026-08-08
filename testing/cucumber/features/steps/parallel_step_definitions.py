@@ -1,8 +1,4 @@
-"""Gherkin steps for asserting an operation behaves under concurrency.
-
-Usable either before the request (sets the concurrency level for the send that
-follows) or after it (replays the request that was just sent).
-"""
+"""Concurrency steps, usable either before the request or after it."""
 
 from behave import given, then, when
 
