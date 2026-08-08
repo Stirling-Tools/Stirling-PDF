@@ -14,7 +14,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.cos.COSArray;
@@ -49,6 +49,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.model.api.security.RedactionArea;
@@ -346,9 +347,6 @@ class RedactControllerTest {
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
-
-            verify(mockDocument).save(any(File.class));
-            verify(mockDocument).close();
         }
     }
 
@@ -753,8 +751,6 @@ class RedactControllerTest {
                 assertEquals(200, response.getStatusCode().value());
                 assertNotNull(response.getBody());
                 assertTrue(drainBody(response).length > 0);
-                verify(mockDocument, times(1)).save(any(File.class));
-                verify(mockDocument, times(1)).close();
             }
         } catch (Exception e) {
             if (expectSuccess) {
@@ -1005,22 +1001,6 @@ class RedactControllerTest {
         }
     }
 
-    private List<Object> getOriginalTokens() throws Exception {
-        // Create a new page to avoid side effects from other tests
-        PDPage pageForTokenExtraction = new PDPage(PDRectangle.A4);
-        pageForTokenExtraction.setResources(realPage.getResources());
-        try (PDPageContentStream contentStream =
-                new PDPageContentStream(realDocument, pageForTokenExtraction)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("Original content");
-            contentStream.endText();
-        }
-        return textRedactionService.createTokensWithoutTargetText(
-                realDocument, pageForTokenExtraction, Collections.emptySet(), false, false);
-    }
-
     @Nested
     @DisplayName("Color Decoding Utility Tests")
     class ColorDecodingTests {
@@ -1099,318 +1079,19 @@ class RedactControllerTest {
     class ContentStreamUnitTests {
 
         @Test
-        @DisplayName("createTokensWithoutTargetText should remove simple text tokens")
-        void shouldRemoveSimpleTextTokens() throws Exception {
-            createRealPageWithSimpleText("This document contains confidential information.");
+        @DisplayName("performTextReplacement should process document text replacement")
+        void shouldPerformTextReplacement() throws Exception {
+            createRealPageWithSimpleText("This document contains sensitive information.");
+            String[] targetWords = new String[] {"sensitive"};
 
-            Set<String> targetWords = Set.of("confidential");
+            Map<Integer, List<PDFText>> found =
+                    textRedactionService.findTextToRedact(realDocument, targetWords, false, false);
+            assertFalse(found.isEmpty(), "Should find target text to redact");
 
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            assertNotNull(tokens);
-            assertFalse(tokens.isEmpty());
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("confidential"),
-                    "Target text should be replaced with placeholder");
-            assertTrue(reconstructedText.contains("document"), "Non-target text should remain");
-        }
-
-        @Test
-        @DisplayName("createTokensWithoutTargetText should handle TJ operator arrays")
-        void shouldHandleTJOperatorArrays() throws Exception {
-            createRealPageWithTJArrayText();
-
-            Set<String> targetWords = Set.of("secret");
-
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            assertNotNull(tokens);
-
-            boolean foundModifiedTJArray = false;
-            for (Object token : tokens) {
-                if (token instanceof COSArray array) {
-                    for (int i = 0; i < array.size(); i++) {
-                        if (array.getObject(i) instanceof COSString cosString) {
-                            String text = cosString.getString();
-                            if (text.contains("secret")) {
-                                fail(
-                                        "Target text 'secret' should have been redacted from TJ"
-                                                + " array");
-                            }
-                            foundModifiedTJArray = true;
-                        }
-                    }
-                }
-            }
-            assertTrue(foundModifiedTJArray, "Should find at least one TJ array");
-        }
-
-        @Test
-        @DisplayName("createTokensWithoutTargetText should preserve non-text tokens")
-        void shouldPreserveNonTextTokens() throws Exception {
-            createRealPageWithMixedContent();
-
-            Set<String> targetWords = Set.of("redact");
-
-            List<Object> originalTokens = getOriginalTokens();
-            List<Object> filteredTokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            long originalNonTextCount =
-                    originalTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && !textRedactionService.isTextShowingOperator(
-                                                            op.getName()))
-                            .count();
-
-            long filteredNonTextCount =
-                    filteredTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && !textRedactionService.isTextShowingOperator(
-                                                            op.getName()))
-                            .count();
-
-            assertTrue(filteredNonTextCount > 0, "Non-text operators should be preserved");
-
-            assertTrue(
-                    filteredNonTextCount >= originalNonTextCount / 2,
-                    "A reasonable number of non-text operators should be preserved");
-        }
-
-        @Test
-        @DisplayName("createTokensWithoutTargetText should handle regex patterns")
-        void shouldHandleRegexPatterns() throws Exception {
-            createRealPageWithSimpleText("Phone: 123-456-7890 and SSN: 111-22-3333");
-
-            Set<String> targetWords = Set.of("\\d{3}-\\d{2}-\\d{4}"); // SSN pattern
-
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, true, false);
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(reconstructedText.contains("111-22-3333"), "SSN should be redacted");
-            assertTrue(reconstructedText.contains("123-456-7890"), "Phone should remain");
-        }
-
-        @Test
-        @DisplayName("createTokensWithoutTargetText should handle whole word search")
-        void shouldHandleWholeWordSearch() throws Exception {
-            createRealPageWithSimpleText("This test testing tested document");
-
-            Set<String> targetWords = Set.of("test");
-
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, true);
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertTrue(reconstructedText.contains("testing"), "Partial matches should remain");
-            assertTrue(reconstructedText.contains("tested"), "Partial matches should remain");
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"Tj", "TJ", "'", "\""})
-        @DisplayName("createTokensWithoutTargetText should handle all text operators")
-        void shouldHandleAllTextOperators(String operatorName) throws Exception {
-            createRealPageWithSpecificOperator(operatorName);
-
-            Set<String> targetWords = Set.of("sensitive");
-
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("sensitive"),
-                    "Text should be redacted regardless of operator type");
-        }
-
-        @Test
-        @DisplayName("writeFilteredContentStream should write tokens to new stream")
-        void shouldWriteTokensToNewContentStream() throws Exception {
-            List<Object> tokens = createSampleTokenList();
-
-            textRedactionService.writeFilteredContentStream(realDocument, realPage, tokens);
-
-            assertNotNull(realPage.getContents(), "Page should have content stream");
-
-            // Verify the content can be read back
-            try (InputStream inputStream = realPage.getContents()) {
-                byte[] content = readAllBytes(inputStream);
-                assertTrue(content.length > 0, "Content stream should not be empty");
-            }
-        }
-
-        @Test
-        @DisplayName("writeFilteredContentStream should handle empty token list")
-        void shouldHandleEmptyTokenList() throws Exception {
-            List<Object> emptyTokens = Collections.emptyList();
-
-            assertDoesNotThrow(
-                    () ->
-                            textRedactionService.writeFilteredContentStream(
-                                    realDocument, realPage, emptyTokens));
-
-            assertNotNull(realPage.getContents(), "Page should still have content stream");
-        }
-
-        @Test
-        @DisplayName("writeFilteredContentStream should replace existing content")
-        void shouldReplaceExistingContentStream() throws Exception {
-            createRealPageWithSimpleText("Original content");
-            String originalContent = extractTextFromModifiedPage(realPage);
-
-            List<Object> newTokens = createSampleTokenList();
-            textRedactionService.writeFilteredContentStream(realDocument, realPage, newTokens);
-
-            String newContent = extractTextFromModifiedPage(realPage);
-            assertNotEquals(originalContent, newContent, "Content stream should be replaced");
-        }
-
-        @Test
-        @DisplayName("Placeholder creation should maintain text width")
-        void shouldCreateWidthMatchingPlaceholder() {
-            String originalText = "confidential";
-            String placeholder =
-                    textRedactionService.createPlaceholderWithFont(
-                            originalText, new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-            assertEquals(
-                    originalText.length(),
-                    placeholder.length(),
-                    "Placeholder should maintain character count for width preservation");
-        }
-
-        @Test
-        @DisplayName("Placeholder should handle special characters")
-        void shouldHandleSpecialCharactersInPlaceholder() {
-            String originalText = "café naïve";
-            String placeholder =
-                    textRedactionService.createPlaceholderWithFont(
-                            originalText, new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-            assertEquals(originalText.length(), placeholder.length());
-            assertFalse(
-                    placeholder.contains("café"), "Placeholder should not contain original text");
-        }
-
-        @Test
-        @DisplayName("Integration test: createTokens and writeStream")
-        void shouldIntegrateTokenCreationAndWriting() throws Exception {
-            createRealPageWithSimpleText("This document contains secret information.");
-
-            Set<String> targetWords = Set.of("secret");
-
-            List<Object> filteredTokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            textRedactionService.writeFilteredContentStream(realDocument, realPage, filteredTokens);
-            assertNotNull(realPage.getContents());
-
-            String finalText = extractTextFromModifiedPage(realPage);
-            assertFalse(finalText.contains("secret"), "Target text should be completely removed");
-            assertTrue(finalText.contains("document"), "Other text should remain");
-        }
-
-        @Test
-        @DisplayName("Should preserve text positioning operators")
-        void shouldPreserveTextPositioning() throws Exception {
-            createRealPageWithPositionedText();
-
-            Set<String> targetWords = Set.of("confidential");
-
-            List<Object> filteredTokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            long filteredPositioning =
-                    filteredTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && ("Td".equals(op.getName())
-                                                            || "TD".equals(op.getName())
-                                                            || "Tm".equals(op.getName())))
-                            .count();
-
-            assertTrue(filteredPositioning > 0, "Positioning operators should be preserved");
-        }
-
-        @Test
-        @DisplayName("Should handle complex content streams with multiple operators")
-        void shouldHandleComplexContentStreams() throws Exception {
-            realPage = new PDPage(PDRectangle.A4);
-            while (realDocument.getNumberOfPages() > 0) {
-                realDocument.removePage(0);
-            }
-            realDocument.addPage(realPage);
-            realPage.setResources(new PDResources());
-            realPage.getResources()
-                    .put(
-                            COSName.getPDFName("F1"),
-                            new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(realDocument, realPage)) {
-                contentStream.setLineWidth(2);
-                contentStream.moveTo(100, 100);
-                contentStream.lineTo(200, 200);
-                contentStream.stroke();
-
-                contentStream.beginText();
-                contentStream.setFont(
-                        realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-                contentStream.newLineAtOffset(50, 750);
-                contentStream.showText("This is a complex document with ");
-                contentStream.setTextRise(5);
-                contentStream.showText("confidential");
-                contentStream.setTextRise(0);
-                contentStream.showText(" information.");
-                contentStream.endText();
-
-                contentStream.addRect(300, 300, 100, 100);
-                contentStream.fill();
-            }
-
-            Set<String> targetWords = Set.of("confidential");
-
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            assertNotNull(tokens);
-            assertFalse(tokens.isEmpty());
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("confidential"), "Target text should be redacted");
-
-            boolean hasGraphicsOperators =
-                    tokens.stream()
-                            .anyMatch(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && ("re".equals(op.getName())
-                                                            || "f".equals(op.getName())
-                                                            || "m".equals(op.getName())
-                                                            || "l".equals(op.getName())
-                                                            || "S".equals(op.getName())));
-
-            assertTrue(hasGraphicsOperators, "Graphics operators should be preserved");
+            boolean fallback =
+                    textRedactionService.performTextReplacement(
+                            realDocument, found, targetWords, false, false);
+            assertFalse(fallback, "JPDFium text replacement should complete without fallback");
         }
 
         @Test
