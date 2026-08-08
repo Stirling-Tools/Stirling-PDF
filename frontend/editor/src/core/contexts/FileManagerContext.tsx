@@ -29,7 +29,7 @@ import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 export { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 
 // Type for the context value - now contains everything directly
-interface FileManagerContextValue {
+export interface FileManagerContextValue {
   // State
   activeSource: "recent" | "local" | "drive";
   storageFilter: "all" | "local" | "sharedWithMe" | "sharedByMe";
@@ -80,8 +80,11 @@ interface FileManagerContextValue {
   modalHeight: string;
 }
 
-// Create the context
-const FileManagerContext = createContext<FileManagerContextValue | null>(null);
+// Create the context. Exported so a test or story can mount a component
+// against a slice of the value instead of the whole provider chain.
+export const FileManagerContext = createContext<FileManagerContextValue | null>(
+  null,
+);
 
 // Provider component props
 interface FileManagerProviderProps {
