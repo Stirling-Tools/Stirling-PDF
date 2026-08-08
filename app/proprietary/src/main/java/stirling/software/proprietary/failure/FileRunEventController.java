@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,6 +92,36 @@ public class FileRunEventController {
         }
     }
 
+    @PostMapping("/reports")
+    @Operation(
+            summary = "Report a failure hit in the editor",
+            description =
+                    "For failures the server never sees, because the editor calls tools directly."
+                            + " Open to any authenticated user, unlike the read and triage endpoints:"
+                            + " whoever's work failed can say so, and a leader reviews it.")
+    public ResponseEntity<Void> report(@RequestBody EditorFailureReport report) {
+        if (report == null || !report.hasOperation()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "operation is required to report a failure");
+        }
+        service.report(report);
+        // No body: the editor reports and moves on, and has nothing to do with the row.
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/removed-files")
+    @Operation(
+            summary = "Close the incidents about files deleted from the editor",
+            description =
+                    "Deleting the document leaves nothing to act on, so its incidents drop out of"
+                            + " the queue while the rows stay for audit. Open to any authenticated"
+                            + " user, and applies only to their own editor rows.")
+    public ResponseEntity<Void> filesRemoved(@RequestBody(required = false) RemovedFiles request) {
+        service.forgetFiles(request == null ? List.of() : request.safeFileIds());
+        // No body: the editor is telling the server, not asking it anything.
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/kinds")
     @Operation(
             summary = "List known failure kinds",
@@ -135,6 +166,14 @@ public class FileRunEventController {
 
     /** Wrapped rather than a bare array so pagination can be added without breaking clients. */
     public record FileRunEventsResponse(List<FileRunEventView> events) {}
+
+    /** Files gone from the caller's editor. Opaque ids only, as everywhere else on this API. */
+    public record RemovedFiles(List<String> fileIds) {
+
+        List<String> safeFileIds() {
+            return fileIds == null ? List.of() : fileIds;
+        }
+    }
 
     /** Inputs an action declared it needs. Empty for both actions that exist today. */
     public record ActionRequest(Map<String, String> inputs) {
