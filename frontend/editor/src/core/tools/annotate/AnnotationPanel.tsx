@@ -572,6 +572,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   min={1}
                   max={12}
                   value={inkWidth}
+                  thumbLabel={t("annotation.strokeWidth", "Width")}
                   onChange={setInkWidth}
                 />
               </Box>
@@ -587,6 +588,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   min={10}
                   max={100}
                   value={highlightOpacity}
+                  thumbLabel={t("annotation.opacity", "Opacity")}
                   onChange={setHighlightOpacity}
                 />
               </Box>
@@ -601,6 +603,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   min={10}
                   max={100}
                   value={underlineOpacity}
+                  thumbLabel={t("annotation.opacity", "Opacity")}
                   onChange={setUnderlineOpacity}
                 />
               </Box>
@@ -615,6 +618,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   min={1}
                   max={20}
                   value={freehandHighlighterWidth}
+                  thumbLabel={t("annotation.strokeWidth", "Width")}
                   onChange={setFreehandHighlighterWidth}
                 />
               </Box>
@@ -630,6 +634,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     min={8}
                     max={32}
                     value={textSize}
+                    thumbLabel={t("annotation.fontSize", "Font size")}
                     onChange={setTextSize}
                   />
                 </Box>
@@ -785,6 +790,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     min={10}
                     max={100}
                     value={shapeOpacity}
+                    thumbLabel={t("annotation.opacity", "Opacity")}
                     onChange={(value) => {
                       setShapeOpacity(value);
                       setShapeStrokeOpacity(value);
@@ -802,6 +808,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                         min={1}
                         max={12}
                         value={shapeThickness}
+                        thumbLabel={t("annotation.strokeWidth", "Width")}
                         onChange={setShapeThickness}
                       />
                     </>
@@ -815,6 +822,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                           min={0}
                           max={12}
                           value={shapeThickness}
+                          thumbLabel={t("annotation.strokeWidth", "Stroke")}
                           onChange={setShapeThickness}
                         />
                       </Box>
