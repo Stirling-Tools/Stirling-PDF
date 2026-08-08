@@ -1,28 +1,28 @@
 /**
- * Shared Storybook scaffolding for the file manager.
+ * Shared fixtures for the file manager stories.
  *
- * Every component under this directory reads FileManagerContext, whose context
- * object is private — only the provider and its hook are exported — so stories
- * cannot hand it a slice and must mount the real provider. That provider in
- * turn calls into FileContext (file actions, file management), which itself
- * needs IndexedDBContext, and several of the components branch on the app
- * config. None of those are part of the shared preview decorators, so the whole
- * stack is stood up here once rather than repeated in each story file.
- *
- * The data is static: no bytes are written to IndexedDB, so anything that would
- * read file contents (thumbnail generation, downloads) simply does nothing.
+ * These components sit deep in a provider chain — FileManagerContext needs
+ * FileContext for useFileActions/useFileManagement, list rows additionally read
+ * AppConfig — and none of it is part of the shared preview decorators. Rather
+ * than each story rebuilding that tree, they mount the real providers here over
+ * static data, so what a story exercises is the component and not a stub.
  */
 import type { ReactElement } from "react";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { FileManagerProvider } from "@app/contexts/FileManagerContext";
+import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 
-/**
- * A minimally complete file stub. `thumbnailUrl` is always set so the thumbnail
- * hooks short-circuit on it instead of trying to read bytes out of IndexedDB.
- */
+/** A grey rectangle, so thumbnail lookups short-circuit instead of reading
+ *  file bytes out of IndexedDB. */
+const THUMBNAIL =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Crect width='120' height='160' fill='%23e9ecef'/%3E%3C/svg%3E";
+
+/** Fixed so stories render identically on every run. */
+const LAST_MODIFIED = Date.parse("2026-03-14T09:30:00Z");
+
 export function makeStub(
   id: string,
   name: string,
@@ -33,64 +33,66 @@ export function makeStub(
     name,
     type: "application/pdf",
     size: 2_400_000,
-    lastModified: Date.UTC(2026, 0, 14),
-    createdAt: Date.UTC(2026, 0, 14),
+    lastModified: LAST_MODIFIED,
     isLeaf: true,
     originalFileId: id,
     versionNumber: 1,
-    thumbnailUrl:
-      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Crect width='120' height='160' fill='%23e9ecef'/%3E%3C/svg%3E",
+    thumbnailUrl: THUMBNAIL,
     ...overrides,
   };
 }
 
-interface FileManagerHarnessOptions {
-  /** Files offered in the "recent" source. Empty renders the empty states. */
-  recentFiles?: StirlingFileStub[];
-  /** Seeds the provider's initial selection, which drives the bulk actions. */
-  activeFileIds?: FileId[];
-  isLoading?: boolean;
-  /** Merged over the defaults; the storage flags gate whole controls. */
-  config?: Record<string, unknown>;
-}
+export const mockFile = makeStub("story-file-1", "quarterly-report.pdf");
 
-/** Everything off — the plain local-only build most stories want. */
+/** Storage off keeps the row's upload and share affordances out of the way;
+ *  stories that want them pass their own config. */
 const BASE_CONFIG = {
   storageEnabled: false,
   storageSharingEnabled: false,
   storageShareLinksEnabled: false,
-  enableMobileScanner: false,
+  frontendUrl: "https://stirling.example",
 };
 
+interface FixtureOptions {
+  recentFiles?: StirlingFileStub[];
+  activeFileIds?: FileId[];
+  isLoading?: boolean;
+  config?: Partial<typeof BASE_CONFIG>;
+}
+
 export function withFileManager({
-  recentFiles = [],
+  recentFiles = [mockFile],
   activeFileIds = [],
   isLoading = false,
-  config = {},
-}: FileManagerHarnessOptions = {}) {
+  config,
+}: FixtureOptions = {}) {
   return (Story: () => ReactElement) => (
     <AppConfigProvider
       initialConfig={{ ...BASE_CONFIG, ...config } as never}
       bootstrapMode="non-blocking"
       autoFetch={false}
     >
-      <FileContextProvider>
-        <FileManagerProvider
-          recentFiles={recentFiles}
-          onRecentFilesSelected={() => {}}
-          onNewFilesSelect={() => {}}
-          onClose={() => {}}
-          isFileSupported={() => true}
-          isOpen
-          onFileRemove={() => {}}
-          modalHeight="600px"
-          refreshRecentFiles={async () => {}}
-          isLoading={isLoading}
-          activeFileIds={activeFileIds}
-        >
-          <Story />
-        </FileManagerProvider>
-      </FileContextProvider>
+      {/* The empty state's wordmark resolves a logo variant through
+          PreferencesContext, which the preview does not mount. */}
+      <PreferencesProvider>
+        <FileContextProvider>
+          <FileManagerProvider
+            recentFiles={recentFiles}
+            onRecentFilesSelected={() => {}}
+            onNewFilesSelect={() => {}}
+            onClose={() => {}}
+            isFileSupported={() => true}
+            isOpen
+            onFileRemove={() => {}}
+            modalHeight="600px"
+            refreshRecentFiles={async () => {}}
+            isLoading={isLoading}
+            activeFileIds={activeFileIds}
+          >
+            <Story />
+          </FileManagerProvider>
+        </FileContextProvider>
+      </PreferencesProvider>
     </AppConfigProvider>
   );
 }

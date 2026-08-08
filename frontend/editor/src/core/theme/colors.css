@@ -398,3 +398,14 @@ html[data-app-theme="custom"][data-accent="default"][data-mantine-color-scheme="
   --c-border: var(--p-c-28282d);
   --c-border-subtle: var(--p-zinc-700);
 }
+
+/* ── MANTINE MUTED TEXT ───────────────────────────────────────────────────── */
+/* Mantine's stock "dimmed" is #868e96, which measures ~3:1 against the app's
+   surfaces — short of the 4.5:1 that body-size text needs. Pointing it at the
+   semantic muted token fixes every `c="dimmed"` at once, and follows the theme
+   rather than staying a fixed grey that only ever suited light mode. */
+/* Doubled selector: Mantine declares this on :root too, and its stylesheet
+   loads later, so a single :root here would lose on source order. */
+:root:root {
+  --mantine-color-dimmed: var(--c-text-muted);
+}

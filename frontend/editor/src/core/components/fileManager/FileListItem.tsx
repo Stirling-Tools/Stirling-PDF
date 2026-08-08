@@ -208,13 +208,14 @@ const FileListItem: React.FC<FileListItemProps> = ({
       >
         <Group gap="sm">
           {!isHistoryFile && (
-            <Box onClick={(e) => e.stopPropagation()}>
-              {/* The row's own onClick is mouse-only, so the checkbox has to
-                  carry the keyboard path rather than deferring to it. Its
-                  click stops above so a mouse press doesn't toggle twice. */}
+            <Box>
+              {/* Checkbox for regular files only */}
               <Checkbox
                 checked={isSelected}
-                onChange={() => onSelect(false)}
+                onChange={() => {}} // Handled by parent onClick
+                aria-label={t("fileManager.selectFile", "Select {{name}}", {
+                  name: file.name,
+                })}
                 size="sm"
                 pl="sm"
                 pr="xs"
@@ -263,12 +264,9 @@ const FileListItem: React.FC<FileListItemProps> = ({
                     : t("storageShare.roleViewer", "Viewer")}
                 </Badge>
               ) : isLocalOnly ? (
-                <Badge
-                  size="xs"
-                  variant="default"
-                  c="dimmed"
-                  style={{ opacity: 0.75 }}
-                >
+                // No extra opacity: at this size the muted colour is already at
+                // the edge of 4.5:1, and fading it drops below.
+                <Badge size="xs" variant="default" c="dimmed">
                   {t("fileManager.localOnly", "Local only")}
                 </Badge>
               ) : uploadEnabled && isOutOfSync ? (
