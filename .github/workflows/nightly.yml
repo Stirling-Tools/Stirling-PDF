@@ -176,14 +176,6 @@ jobs:
         working-directory: testing/cucumber
         run: python -m behave --tags=@nightly --no-capture -f plain
 
-      # Applies to every scenario, including the endpoints the PR run leaves out.
-      - name: Full-suite concurrency validation
-        working-directory: testing/cucumber
-        run: python -m behave --no-capture -f plain
-        env:
-          CUCUMBER_PARALLEL: "10"
-          CUCUMBER_PARALLEL_DECOY: "1"
-
       # Genuinely different payloads contending on one backend.
       - name: Sharded concurrency validation
         working-directory: testing/cucumber

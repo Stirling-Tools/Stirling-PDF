@@ -1,8 +1,8 @@
-@jobs @noparallel
+@jobs
 Feature: Asynchronous job API
 
     # Any tool endpoint accepts ?async=true and returns a jobId instead of the file.
-    # @noparallel: every step after the submit depends on that one jobId.
+    # No parallel step here: every step after the submit depends on that one jobId.
 
     @positive
     Scenario: An async job runs to completion and returns its result

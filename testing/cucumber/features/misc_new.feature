@@ -93,7 +93,7 @@ Feature: Miscellaneous PDF Operations API Validation
             | position       | 2     |
             | fontSize       | 14    |
         When I send the API request to the endpoint "/api/v1/misc/add-page-numbers"
-        And this operation is run 5 times in parallel
+        And this operation is run 5 times in parallel against decoy traffic
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200

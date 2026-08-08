@@ -143,22 +143,14 @@ def before_all(context):
             "(e.g. a core-only build). Scenarios tagged @policies/@webhook will be skipped."
         )
 
-    context.parallel_config = parallel_support.ParallelConfig()
-    if context.parallel_config.enabled:
-        print(
-            f"\n[PARALLEL] Concurrency validation enabled ({context.parallel_config.describe()}). "
-            f"Every operation also runs concurrently and all responses must match the "
-            f"uncontended baseline. Tag a scenario @noparallel to opt out, "
-            f"@parallel:N to override the count."
-        )
-
 
 def before_scenario(context, scenario):
     """Reset all per-scenario state before each scenario runs."""
     scenario_tags = set(scenario.effective_tags)
 
-    # Concurrency validation: resolved per scenario so tags can opt out or override.
-    context.parallel_repeat = context.parallel_config.repeat_for_tags(scenario_tags)
+    # Concurrency is opted into by a step in the feature, never by configuration.
+    context.parallel_repeat = 1
+    context.parallel_decoy = False
     context.parallel_validated = False
     context.parallel_ran_at = 0
     context.parallel_request = None

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run the behave suite as N concurrent shards against one server.
-# Usage: ./run-parallel.sh [SHARDS] [-- behave args]   Env: CUCUMBER_PARALLEL, BASE_URL
+# Usage: ./run-parallel.sh [SHARDS] [-- behave args]   Env: BASE_URL
 
 set -uo pipefail
 
@@ -65,9 +65,6 @@ mkdir -p "$WORK_ROOT" "$REPORT_DIR"
 TOTAL_SHARDS=$SHARDS
 [ "${#AUTH_FEATURES[@]}" -gt 0 ] && TOTAL_SHARDS=$((SHARDS + 1))
 echo "Running ${#ALL_FEATURES[@]} feature files across $TOTAL_SHARDS concurrent shards against $BASE_URL"
-if [ "${CUCUMBER_PARALLEL:-1}" -gt 1 ] 2>/dev/null; then
-    echo "Per-operation concurrency also enabled (CUCUMBER_PARALLEL=$CUCUMBER_PARALLEL)"
-fi
 
 declare -a PIDS=()
 

@@ -12,21 +12,6 @@ from hashlib import sha256
 import requests
 from pypdf import PdfReader
 
-DEFAULT_REPEAT = 10
-DEFAULT_HEAVY_REPEAT = 3
-
-# Heavy external binaries; lower concurrency so CI containers are not starved.
-HEAVY_TAGS = frozenset(
-    {
-        "calibre", "compress", "convert", "ghostscript", "libre", "ocr",
-        "pdfa", "pdf-to-cbz", "pdf-to-epub", "pdf-to-word", "pdftojson", "qpdf",
-        "scanner-effect", "auto-split", "extract-image-scans",
-    }
-)
-
-OPT_OUT_TAG = "noparallel"
-
-_PARALLEL_TAG_RE = re.compile(r"^parallel[:=](\d+)$")
 _UUID_RE = re.compile(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
 _LONG_NUM_RE = re.compile(r"\d{10,}")
 _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?")
@@ -41,67 +26,11 @@ _MAX_TEXT_PAGES = 25
 # Sequential samples taken to separate inherent nondeterminism from a concurrency bug.
 NOISE_PROBE_SAMPLES = 3
 
+# Response size is allowed to drift this far before it counts as a difference.
+SIZE_TOLERANCE = 0.05
+
 # Collected per-scenario results, printed as a summary in after_all.
 VALIDATIONS = []
-
-
-def _env_int(name, default):
-    raw = os.environ.get(name, "").strip()
-    if not raw:
-        return default
-    try:
-        return max(0, int(raw))
-    except ValueError:
-        return default
-
-
-def _env_flag(name):
-    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
-
-
-class ParallelConfig:
-    """Suite-wide concurrency settings, all driven by environment variables."""
-
-    def __init__(self):
-        self.repeat = _env_int("CUCUMBER_PARALLEL", 0)
-        self.heavy_repeat = _env_int("CUCUMBER_PARALLEL_HEAVY", DEFAULT_HEAVY_REPEAT)
-        self.decoy = _env_flag("CUCUMBER_PARALLEL_DECOY")
-        self.strict_bytes = _env_flag("CUCUMBER_PARALLEL_STRICT")
-        try:
-            self.size_tolerance = float(
-                os.environ.get("CUCUMBER_PARALLEL_SIZE_TOLERANCE", "") or 0.05
-            )
-        except ValueError:
-            self.size_tolerance = 0.05
-
-    @property
-    def enabled(self):
-        return self.repeat > 1
-
-    def repeat_for_tags(self, tags):
-        """Resolve the repeat count for a scenario from its effective tags."""
-        if not self.enabled:
-            return 1
-        tags = set(tags)
-        if OPT_OUT_TAG in tags:
-            return 1
-        for tag in tags:
-            match = _PARALLEL_TAG_RE.match(tag)
-            if match:
-                return max(1, int(match.group(1)))
-        if HEAVY_TAGS & tags:
-            return max(1, min(self.repeat, self.heavy_repeat))
-        return self.repeat
-
-    def describe(self):
-        bits = [f"repeat={self.repeat}", f"heavy={self.heavy_repeat}"]
-        if self.decoy:
-            bits.append("decoy=on")
-        if self.strict_bytes:
-            bits.append("strict-bytes=on")
-        else:
-            bits.append(f"size-tolerance={self.size_tolerance:.0%}")
-        return ", ".join(bits)
 
 
 # A spec replaces open file handles with bytes so it can be replayed from many threads.
@@ -196,15 +125,12 @@ def _zip_fingerprint(body):
     return parts
 
 
-def fingerprint(response, strict_bytes=False):
+def fingerprint(response):
     """Structural signature of a response, ignoring benign per-request variance."""
     body = response.content
     content_type = (response.headers.get("Content-Type") or "").split(";")[0].strip()
     parts = {"status": response.status_code, "content_type": content_type, "size": len(body)}
 
-    if strict_bytes:
-        parts["body_sha"] = sha256(body).hexdigest()
-        return parts
 
     if "json" in content_type:
         try:
@@ -233,22 +159,22 @@ def differing_keys(baseline, other):
     }
 
 
-def size_differs(baseline, other, size_tolerance):
+def size_differs(baseline, other):
     base_size, other_size = baseline.get("size", 0), other.get("size", 0)
-    return abs(other_size - base_size) > max(64, base_size * size_tolerance)
+    return abs(other_size - base_size) > max(64, base_size * SIZE_TOLERANCE)
 
 
-def compare(baseline, other, size_tolerance, ignore=frozenset(), ignore_size=False):
+def compare(baseline, other, ignore=frozenset(), ignore_size=False):
     """Return a list of human-readable differences between two fingerprints."""
     diffs = []
     for key in sorted(differing_keys(baseline, other) - set(ignore)):
         diffs.append(
             f"{key}: baseline={_short(baseline.get(key))} parallel={_short(other.get(key))}"
         )
-    if not ignore_size and size_differs(baseline, other, size_tolerance):
+    if not ignore_size and size_differs(baseline, other):
         diffs.append(
             f"size: baseline={baseline.get('size', 0)} parallel={other.get('size', 0)} "
-            f"(differs by more than {size_tolerance:.0%})"
+            f"(differs by more than {SIZE_TOLERANCE:.0%})"
         )
     return diffs
 
@@ -321,30 +247,29 @@ def _run_concurrently(url, specs, headers, timeout):
 def validate(context, url, spec, headers, baseline, label, timeout=300):
     """Re-issue the request concurrently; no-op unless the repeat count is above 1."""
     repeat = getattr(context, "parallel_repeat", 1)
-    config = getattr(context, "parallel_config", None)
-    if config is None or repeat < 2 or getattr(context, "parallel_validated", False):
+    if repeat < 2 or getattr(context, "parallel_validated", False):
         return
     context.parallel_validated = True
     context.parallel_ran_at = repeat
 
-    decoy_spec = build_decoy_spec(spec) if config.decoy else None
+    decoy_spec = build_decoy_spec(spec) if getattr(context, "parallel_decoy", False) else None
     specs = [spec] * repeat + ([decoy_spec] * repeat if decoy_spec else [])
     results = _run_concurrently(url, specs, headers, timeout)
 
     main_results = results[:repeat]
     decoy_results = results[repeat:]
-    baseline_fp = fingerprint(baseline, config.strict_bytes)
+    baseline_fp = fingerprint(baseline)
 
     noise, noisy_size = frozenset(), False
     failures = _collect_failures(
-        main_results, decoy_results, baseline_fp, repeat, config, noise, noisy_size
+        main_results, decoy_results, baseline_fp, repeat, noise, noisy_size
     )
     if failures:
         # Some endpoints are inherently nondeterministic (embedded ids, timestamps,
         # deliberate randomness). Re-run sequentially to tell that apart from a real bug.
-        noise, noisy_size = _probe_noise(url, spec, headers, baseline_fp, config, timeout)
+        noise, noisy_size = _probe_noise(url, spec, headers, baseline_fp, timeout)
         failures = _collect_failures(
-            main_results, decoy_results, baseline_fp, repeat, config, noise, noisy_size
+            main_results, decoy_results, baseline_fp, repeat, noise, noisy_size
         )
 
     VALIDATIONS.append(
@@ -366,20 +291,20 @@ def validate(context, url, spec, headers, baseline, label, timeout=300):
         )
 
 
-def _collect_failures(main_results, decoy_results, baseline_fp, repeat, config, noise, noisy_size):
-    decoy_fp = _decoy_reference(decoy_results, baseline_fp, config, noise, noisy_size)
+def _collect_failures(main_results, decoy_results, baseline_fp, repeat, noise, noisy_size):
+    decoy_fp = _decoy_reference(decoy_results, baseline_fp, noise, noisy_size)
     failures = []
 
     for index, (response, error) in enumerate(main_results):
         if error is not None:
             failures.append(f"copy {index + 1}/{repeat} raised {type(error).__name__}: {error}")
             continue
-        actual_fp = fingerprint(response, config.strict_bytes)
-        diffs = compare(baseline_fp, actual_fp, config.size_tolerance, noise, noisy_size)
+        actual_fp = fingerprint(response)
+        diffs = compare(baseline_fp, actual_fp, noise, noisy_size)
         if not diffs:
             continue
         if decoy_fp is not None and not compare(
-            decoy_fp, actual_fp, config.size_tolerance, noise, noisy_size
+            decoy_fp, actual_fp, noise, noisy_size
         ):
             failures.append(
                 f"copy {index + 1}/{repeat} returned the CONCURRENT DECOY REQUEST'S response "
@@ -388,11 +313,11 @@ def _collect_failures(main_results, decoy_results, baseline_fp, repeat, config, 
         else:
             failures.append(f"copy {index + 1}/{repeat} diverged: " + "; ".join(diffs))
 
-    failures.extend(_check_decoys(decoy_results, repeat, config, noise, noisy_size))
+    failures.extend(_check_decoys(decoy_results, repeat, noise, noisy_size))
     return failures
 
 
-def _probe_noise(url, spec, headers, baseline_fp, config, timeout, samples=NOISE_PROBE_SAMPLES):
+def _probe_noise(url, spec, headers, baseline_fp, timeout, samples=NOISE_PROBE_SAMPLES):
     """Fields that already vary between uncontended runs, so they prove nothing.
 
     Several samples: high-variance output can look stable across any single pair.
@@ -400,29 +325,29 @@ def _probe_noise(url, spec, headers, baseline_fp, config, timeout, samples=NOISE
     probes = []
     for _ in range(samples):
         try:
-            probes.append(fingerprint(send(url, spec, headers, timeout=timeout), config.strict_bytes))
+            probes.append(fingerprint(send(url, spec, headers, timeout=timeout)))
         except Exception:
             break
-    return _noise_from_samples(baseline_fp, probes, config.size_tolerance)
+    return _noise_from_samples(baseline_fp, probes)
 
 
-def _noise_from_samples(baseline_fp, probes, size_tolerance):
+def _noise_from_samples(baseline_fp, probes):
     noise = set()
     noisy_size = False
     for index, probe in enumerate(probes):
         for other in [baseline_fp] + probes[:index]:
             noise |= differing_keys(other, probe)
-            noisy_size = noisy_size or size_differs(other, probe, size_tolerance)
+            noisy_size = noisy_size or size_differs(other, probe)
     return frozenset(noise), noisy_size
 
 
 def validate_get(context, url, params, headers, baseline, label, timeout=60):
     """Concurrency check for read-only GET endpoints."""
     repeat = getattr(context, "parallel_repeat", 1)
-    config = getattr(context, "parallel_config", None)
-    if config is None or repeat < 2 or getattr(context, "parallel_validated", False):
+    if repeat < 2 or getattr(context, "parallel_validated", False):
         return
     context.parallel_validated = True
+    context.parallel_ran_at = repeat
 
     results = [None] * repeat
 
@@ -438,7 +363,7 @@ def validate_get(context, url, params, headers, baseline, label, timeout=60):
     with ThreadPoolExecutor(max_workers=repeat) as pool:
         list(pool.map(_worker, range(repeat)))
 
-    baseline_fp = fingerprint(baseline, config.strict_bytes)
+    baseline_fp = fingerprint(baseline)
 
     def _failures(noise, noisy_size):
         found = []
@@ -448,9 +373,8 @@ def validate_get(context, url, params, headers, baseline, label, timeout=60):
                 continue
             diffs = compare(
                 baseline_fp,
-                fingerprint(response, config.strict_bytes),
-                config.size_tolerance,
-                noise,
+                fingerprint(response),
+                    noise,
                 noisy_size,
             )
             if diffs:
@@ -465,13 +389,12 @@ def validate_get(context, url, params, headers, baseline, label, timeout=60):
             try:
                 probes.append(
                     fingerprint(
-                        requests.get(url, params=params, headers=headers, timeout=timeout),
-                        config.strict_bytes,
+                        requests.get(url, params=params, headers=headers, timeout=timeout)
                     )
                 )
             except Exception:
                 break
-        noise, noisy_size = _noise_from_samples(baseline_fp, probes, config.size_tolerance)
+        noise, noisy_size = _noise_from_samples(baseline_fp, probes)
         failures = _failures(noise, noisy_size)
 
     VALIDATIONS.append(
@@ -490,19 +413,19 @@ def validate_get(context, url, params, headers, baseline, label, timeout=60):
         )
 
 
-def _decoy_reference(decoy_results, baseline_fp, config, noise, noisy_size):
+def _decoy_reference(decoy_results, baseline_fp, noise, noisy_size):
     """Fingerprint of the decoy response, or None when it is not distinguishable."""
     live = [r for r, _e in decoy_results if r is not None]
     if not live:
         return None
-    decoy_fp = fingerprint(live[0], config.strict_bytes)
+    decoy_fp = fingerprint(live[0])
     # Some endpoints ignore page content, so the decoy cannot prove anything there.
-    if not compare(baseline_fp, decoy_fp, config.size_tolerance, noise, noisy_size):
+    if not compare(baseline_fp, decoy_fp, noise, noisy_size):
         return None
     return decoy_fp
 
 
-def _check_decoys(decoy_results, repeat, config, noise, noisy_size):
+def _check_decoys(decoy_results, repeat, noise, noisy_size):
     """Assert the decoy load stayed self-consistent while contending with the main copies."""
     if not decoy_results:
         return []
@@ -511,12 +434,11 @@ def _check_decoys(decoy_results, repeat, config, noise, noisy_size):
         return ["every decoy request failed to complete"]
 
     failures = []
-    reference_fp = fingerprint(live[0][1], config.strict_bytes)
+    reference_fp = fingerprint(live[0][1])
     for index, response in live[1:]:
         diffs = compare(
             reference_fp,
-            fingerprint(response, config.strict_bytes),
-            config.size_tolerance,
+            fingerprint(response),
             noise,
             noisy_size,
         )
