@@ -21,6 +21,8 @@ import {
  * Contains all data needed for both StirlingFile and StirlingFileStub
  */
 const THUMBNAIL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+/** Don't rewrite a record to slide its TTL more often than this. */
+const THUMBNAIL_TTL_REFRESH_MS = 24 * 60 * 60 * 1000; // 1 day
 
 export interface StoredStirlingFileRecord extends BaseFileMetadata {
   // Blob since the large-file OOM fix (stored by reference, no JS-side copy);
@@ -75,6 +77,41 @@ function isBlobValueRejection(error: unknown): boolean {
   return name === "UnknownError" || name === "DataCloneError";
 }
 
+/**
+ * The File for a stored record. Re-wrapping a stored blob can cost WebKit the
+ * backing handle, so hand it back untouched when its identity fields match.
+ */
+function fileFromRecord(record: StoredStirlingFileRecord): File {
+  const { data } = record;
+  if (
+    data instanceof File &&
+    data.name === record.name &&
+    data.type === record.type &&
+    data.lastModified === record.lastModified
+  ) {
+    return data;
+  }
+  return new File([data], record.name, {
+    type: record.type,
+    lastModified: record.lastModified,
+  });
+}
+
+/**
+ * Settle on abort, for promises whose settle paths (a cursor tick, a request not
+ * yet issued) never arrive. Call ONCE per transaction - there is one slot.
+ */
+function settleOnAbort(
+  transaction: IDBTransaction,
+  settle: (reason: Error) => void,
+): void {
+  transaction.onabort = () =>
+    settle(
+      transaction.error ??
+        new Error("IndexedDB transaction aborted before it completed"),
+    );
+}
+
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
   private readonly storeName = "files";
@@ -84,6 +121,9 @@ class FileStorageService {
    * remember the answer, rather than pre-emptively degrading everywhere.
    */
   private blobValuesSupported = true;
+  /** Ids whose TTL write failed. Without this the swallowed failure repeats a
+   *  whole-file rewrite on every listing. Session-scoped on purpose. */
+  private readonly unwritableRecords = new Set<FileId>();
 
   /**
    * Get database connection using centralized manager
@@ -99,9 +139,17 @@ class FileStorageService {
     return Date.now() - record.thumbnailStoredAt < THUMBNAIL_TTL_MS;
   }
 
+  /** Worth rewriting? A bump rewrites the whole record, bytes included, so on a
+   *  30-day TTL once a day is indistinguishable from every read. */
+  private thumbnailTTLIsStale(record: StoredStirlingFileRecord): boolean {
+    if (!record.thumbnailStoredAt) return true;
+    return Date.now() - record.thumbnailStoredAt > THUMBNAIL_TTL_REFRESH_MS;
+  }
+
   /** Fire-and-forget: bump thumbnailStoredAt (or clear expired thumbnail) for a set of ids. */
   private async bumpThumbnailTTL(ids: FileId[], clear = false): Promise<void> {
-    if (ids.length === 0) return;
+    const targets = ids.filter((id) => !this.unwritableRecords.has(id));
+    if (targets.length === 0) return;
     const db = await this.getDatabase();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
@@ -112,7 +160,7 @@ class FileStorageService {
 
       // Issue all gets up front - each onsuccess creates a put before the
       // transaction can auto-commit, keeping it alive until all puts settle.
-      ids.forEach((id) => {
+      targets.forEach((id) => {
         const req = store.get(id);
         req.onsuccess = () => {
           const record = req.result as StoredStirlingFileRecord | undefined;
@@ -123,7 +171,30 @@ class FileStorageService {
           } else {
             record.thumbnailStoredAt = Date.now();
           }
-          store.put(record);
+          // One unwritable record must not take the batch with it: a rejected
+          // put aborts the transaction the other queued gets are still using.
+          try {
+            const put = store.put(record);
+            put.onerror = (event) => {
+              // The write we just swallowed is the one that would have taken
+              // this record out of the expiring set, so stop retrying it.
+              this.unwritableRecords.add(id);
+              this.noteBlobRefusal(put.error);
+              console.warn(
+                `[fileStorage] thumbnail TTL bump skipped for ${id}:`,
+                put.error,
+              );
+              // Swallow it here so the failure doesn't abort the transaction.
+              event.preventDefault();
+              event.stopPropagation();
+            };
+          } catch (error) {
+            this.unwritableRecords.add(id);
+            console.warn(
+              `[fileStorage] thumbnail TTL bump could not be issued for ${id}:`,
+              error,
+            );
+          }
         };
         req.onerror = () => reject(req.error);
       });
@@ -186,18 +257,115 @@ class FileStorageService {
     } catch (error) {
       // Recoverable: re-add as a copy, and stop offering blobs this session.
       // Anything else is the caller's to report.
-      if (!(record.data instanceof Blob) || !isBlobValueRejection(error)) {
+      if (!(record.data instanceof Blob) || !this.noteBlobRefusal(error)) {
         throw error;
       }
+      record.data = await record.data.arrayBuffer();
+      await this.addFileRecord(db, record);
+    }
+  }
+
+  /** Refused a Blob value? Stop offering blobs this session. Any write can flip
+   *  this: WebKit refuses per-operation, not per-engine. */
+  private noteBlobRefusal(error: unknown): boolean {
+    if (!isBlobValueRejection(error)) return false;
+    if (this.blobValuesSupported) {
       this.blobValuesSupported = false;
       console.warn(
         "IndexedDB rejected a Blob value; falling back to in-memory copies for this session. " +
           "Very large files may now exhaust renderer memory.",
         error,
       );
-      record.data = await record.data.arrayBuffer();
-      await this.addFileRecord(db, record);
     }
+    return true;
+  }
+
+  /** Read-modify-write one record in one transaction, resolving on COMMIT. Split
+   *  across two promises, the abort guard covers one and the other hangs. */
+  private async updateRecord(
+    fileId: FileId,
+    mutate: (record: StoredStirlingFileRecord) => boolean | void,
+  ): Promise<boolean> {
+    const db = await this.getDatabase();
+    try {
+      return await this.readModifyWrite(db, fileId, mutate);
+    } catch (error) {
+      // The record we read back still carries its Blob body; retry as a copy.
+      if (!this.noteBlobRefusal(error)) throw error;
+      return await this.rewriteRecordAsCopy(db, fileId, mutate);
+    }
+  }
+
+  /** {@link updateRecord}'s happy path: one transaction, resolve on commit. */
+  private readModifyWrite(
+    db: IDBDatabase,
+    fileId: FileId,
+    mutate: (record: StoredStirlingFileRecord) => boolean | void,
+  ): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      let written = false;
+      settleOnAbort(transaction, reject);
+      transaction.onerror = () => reject(transaction.error);
+      transaction.oncomplete = () => resolve(written);
+
+      const store = transaction.objectStore(this.storeName);
+      const getRequest = store.get(fileId);
+      getRequest.onerror = () => reject(getRequest.error);
+      getRequest.onsuccess = () => {
+        const record = getRequest.result as
+          | StoredStirlingFileRecord
+          | undefined;
+        // Nothing to write: let the empty transaction commit and report false.
+        if (!record || mutate(record) === false) return;
+        written = true;
+        store.put(record);
+      };
+    });
+  }
+
+  /** Recovery path: two transactions, because materializing the copy is async
+   *  and a transaction cannot survive an await. Last-write-wins either way. */
+  private async rewriteRecordAsCopy(
+    db: IDBDatabase,
+    fileId: FileId,
+    mutate: (record: StoredStirlingFileRecord) => boolean | void,
+  ): Promise<boolean> {
+    const record = await this.readRecord(db, fileId);
+    if (!record || mutate(record) === false) return false;
+    if (record.data instanceof Blob) {
+      record.data = await record.data.arrayBuffer();
+    }
+    await this.putRecord(db, record);
+    return true;
+  }
+
+  /** One record by id, in its own transaction. */
+  private readRecord(
+    db: IDBDatabase,
+    fileId: FileId,
+  ): Promise<StoredStirlingFileRecord | undefined> {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readonly");
+      settleOnAbort(transaction, reject);
+      const request = transaction.objectStore(this.storeName).get(fileId);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  }
+
+  /** One `put`, resolving on commit. */
+  private putRecord(
+    db: IDBDatabase,
+    record: StoredStirlingFileRecord,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      settleOnAbort(transaction, reject);
+      transaction.onerror = () => reject(transaction.error);
+      transaction.oncomplete = () => resolve();
+      transaction.objectStore(this.storeName).put(record);
+    });
   }
 
   /** Single `add` of a file record. Rejects with the underlying IDB error. */
@@ -215,6 +383,7 @@ class FileStorageService {
         }
 
         const transaction = db.transaction([this.storeName], "readwrite");
+        settleOnAbort(transaction, reject);
         const store = transaction.objectStore(this.storeName);
 
         const request = store.add(record);
@@ -235,6 +404,7 @@ class FileStorageService {
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
+      settleOnAbort(transaction, reject);
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
@@ -246,15 +416,11 @@ class FileStorageService {
           return;
         }
 
-        // Create File from stored data
-        const blob = new Blob([record.data], { type: record.type });
-        const file = new File([blob], record.name, {
-          type: record.type,
-          lastModified: record.lastModified,
-        });
-
         // Convert to StirlingFile with preserved IDs
-        const stirlingFile = createStirlingFile(file, record.fileId);
+        const stirlingFile = createStirlingFile(
+          fileFromRecord(record),
+          record.fileId,
+        );
         resolve(stirlingFile);
       };
     });
@@ -278,6 +444,7 @@ class FileStorageService {
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
+      settleOnAbort(transaction, reject);
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
@@ -338,6 +505,7 @@ class FileStorageService {
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
+      settleOnAbort(transaction, reject);
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
       const stubs: StirlingFileStub[] = [];
@@ -353,8 +521,8 @@ class FileStorageService {
           if (record && record.name && typeof record.size === "number") {
             const fresh = this.isThumbnailFresh(record);
             if (record.thumbnail) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              if (!fresh) toexpire.push(record.id);
+              else if (this.thumbnailTTLIsStale(record)) tobump.push(record.id);
             }
             stubs.push({
               id: record.id,
@@ -425,6 +593,7 @@ class FileStorageService {
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
+      settleOnAbort(transaction, reject);
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
       const leafStubs: StirlingFileStub[] = [];
@@ -445,8 +614,8 @@ class FileStorageService {
           ) {
             const fresh = this.isThumbnailFresh(record);
             if (record.thumbnail) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              if (!fresh) toexpire.push(record.id);
+              else if (this.thumbnailTTLIsStale(record)) tobump.push(record.id);
             }
             leafStubs.push({
               id: record.id,
@@ -617,45 +786,16 @@ class FileStorageService {
    * Update thumbnail for existing file
    */
   async updateThumbnail(id: FileId, thumbnail: string): Promise<boolean> {
-    const db = await this.getDatabase();
-
-    return new Promise((resolve, _reject) => {
-      try {
-        const transaction = db.transaction([this.storeName], "readwrite");
-        const store = transaction.objectStore(this.storeName);
-        const getRequest = store.get(id);
-
-        getRequest.onsuccess = () => {
-          const record = getRequest.result as StoredStirlingFileRecord;
-          if (record) {
-            record.thumbnail = thumbnail;
-            record.thumbnailStoredAt = Date.now();
-            const updateRequest = store.put(record);
-
-            updateRequest.onsuccess = () => {
-              resolve(true);
-            };
-            updateRequest.onerror = () => {
-              console.error("Failed to update thumbnail:", updateRequest.error);
-              resolve(false);
-            };
-          } else {
-            resolve(false);
-          }
-        };
-
-        getRequest.onerror = () => {
-          console.error(
-            "Failed to get file for thumbnail update:",
-            getRequest.error,
-          );
-          resolve(false);
-        };
-      } catch (error) {
-        console.error("Transaction error during thumbnail update:", error);
-        resolve(false);
-      }
-    });
+    // Reports failure as `false` rather than rejecting; callers just need an answer.
+    try {
+      return await this.updateRecord(id, (record) => {
+        record.thumbnail = thumbnail;
+        record.thumbnailStoredAt = Date.now();
+      });
+    } catch (error) {
+      console.error("Failed to update thumbnail:", error);
+      return false;
+    }
   }
 
   /**
@@ -666,6 +806,7 @@ class FileStorageService {
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
+      settleOnAbort(transaction, reject);
       const store = transaction.objectStore(this.storeName);
       const request = store.clear();
 
@@ -723,6 +864,7 @@ class FileStorageService {
 
       return new Promise((resolve, reject) => {
         const transaction = db.transaction([this.storeName], "readonly");
+        settleOnAbort(transaction, reject);
         const store = transaction.objectStore(this.storeName);
         const request = store.get(id);
 
@@ -730,7 +872,12 @@ class FileStorageService {
         request.onsuccess = () => {
           const record = request.result as StoredStirlingFileRecord | undefined;
           if (record) {
-            const blob = new Blob([record.data], { type: record.type });
+            // Stored blobs are handed straight to createObjectURL — re-wrapping
+            // one can cost WebKit the backing handle. See fileFromRecord.
+            const blob =
+              record.data instanceof Blob
+                ? record.data
+                : new Blob([record.data], { type: record.type });
             const url = URL.createObjectURL(blob);
             resolve(url);
           } else {
@@ -750,32 +897,9 @@ class FileStorageService {
    */
   async markFileAsProcessed(fileId: FileId): Promise<boolean> {
     try {
-      const db = await this.getDatabase();
-      const transaction = db.transaction([this.storeName], "readwrite");
-      const store = transaction.objectStore(this.storeName);
-
-      const record = await new Promise<StoredStirlingFileRecord | undefined>(
-        (resolve, reject) => {
-          const request = store.get(fileId);
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        },
-      );
-
-      if (!record) {
-        return false; // File not found
-      }
-
-      // Update the isLeaf flag to false
-      record.isLeaf = false;
-
-      await new Promise<void>((resolve, reject) => {
-        const request = store.put(record);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+      return await this.updateRecord(fileId, (record) => {
+        record.isLeaf = false;
       });
-
-      return true;
     } catch (error) {
       console.error("Failed to mark file as processed:", error);
       return false;
@@ -835,32 +959,9 @@ class FileStorageService {
    */
   async markFileAsLeaf(fileId: FileId): Promise<boolean> {
     try {
-      const db = await this.getDatabase();
-      const transaction = db.transaction([this.storeName], "readwrite");
-      const store = transaction.objectStore(this.storeName);
-
-      const record = await new Promise<StoredStirlingFileRecord | undefined>(
-        (resolve, reject) => {
-          const request = store.get(fileId);
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        },
-      );
-
-      if (!record) {
-        return false; // File not found
-      }
-
-      // Update the isLeaf flag to true
-      record.isLeaf = true;
-
-      await new Promise<void>((resolve, reject) => {
-        const request = store.put(record);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+      return await this.updateRecord(fileId, (record) => {
+        record.isLeaf = true;
       });
-
-      return true;
     } catch (error) {
       console.error("Failed to mark file as leaf:", error);
       return false;
@@ -870,41 +971,16 @@ class FileStorageService {
   /**
    * Update metadata fields for a stored file record.
    *
-   * Resolves on transaction.oncomplete, NOT on the individual put's onsuccess,
-   * so callers only receive `true` once the write actually commits. If the
-   * transaction aborts after put() succeeded but before commit, we return false
-   * - the previous behavior incorrectly claimed success in that window.
+   * Returns `true` only once the write commits, never on the put's `onsuccess`.
+   * {@link updateRecord} owns that guarantee for every write in this class.
    */
   async updateFileMetadata(
     fileId: FileId,
     updates: Partial<StoredStirlingFileRecord>,
   ): Promise<boolean> {
     try {
-      const db = await this.getDatabase();
-      return await new Promise<boolean>((resolve, reject) => {
-        const transaction = db.transaction([this.storeName], "readwrite");
-        const store = transaction.objectStore(this.storeName);
-        let recordFound = false;
-
-        const getRequest = store.get(fileId);
-        getRequest.onsuccess = () => {
-          const record = getRequest.result as
-            | StoredStirlingFileRecord
-            | undefined;
-          if (!record) {
-            // Don't commit anything; caller wants false.
-            return;
-          }
-          recordFound = true;
-          const updatedRecord = { ...record, ...updates };
-          store.put(updatedRecord);
-        };
-        getRequest.onerror = () => reject(getRequest.error);
-
-        transaction.oncomplete = () => resolve(recordFound);
-        transaction.onerror = () => reject(transaction.error);
-        transaction.onabort = () =>
-          reject(transaction.error ?? new Error("updateFileMetadata aborted"));
+      return await this.updateRecord(fileId, (record) => {
+        Object.assign(record, updates);
       });
     } catch (error) {
       console.error("Failed to update file metadata:", error);

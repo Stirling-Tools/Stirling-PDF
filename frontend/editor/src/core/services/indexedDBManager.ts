@@ -21,6 +21,9 @@ export interface DatabaseConfig {
 
 class IndexedDBManager {
   private static instance: IndexedDBManager;
+  /** Grace period after `blocked`: long enough for a well-behaved tab to close
+   *  its connection, short enough to answer someone watching a spinner. */
+  private static readonly BLOCKED_GRACE_MS = 10_000;
   private databases = new Map<string, IDBDatabase>();
   private initPromises = new Map<string, Promise<IDBDatabase>>();
 
@@ -47,6 +50,24 @@ class IndexedDBManager {
       return existingPromise;
     }
 
+    // Register BEFORE the first await or the check above is dead: boot-time
+    // callers all open their own, and only the first ever receives `blocked`.
+    const initPromise = this.initialiseDatabase(config);
+    this.initPromises.set(config.name, initPromise);
+
+    try {
+      const db = await initPromise;
+      this.databases.set(config.name, db);
+      return db;
+    } catch (error) {
+      this.initPromises.delete(config.name);
+      throw error;
+    }
+  }
+
+  private async initialiseDatabase(
+    config: DatabaseConfig,
+  ): Promise<IDBDatabase> {
     // SaaS lineage shipped a v6 and a v7 of stirling-pdf-files whose
     // upgrade paths corrupted records (separate cursor walks racing in
     // one versionchange transaction). The SaaS build wipes those
@@ -65,17 +86,46 @@ class IndexedDBManager {
       }
     }
 
-    const initPromise = this.performDatabaseInit(config);
-    this.initPromises.set(config.name, initPromise);
+    return this.performDatabaseInit(config);
+  }
 
-    try {
-      const db = await initPromise;
-      this.databases.set(config.name, db);
-      return db;
-    } catch (error) {
-      this.initPromises.delete(config.name);
-      throw error;
-    }
+  /** Drop our cached handle + in-flight promise so the next open starts clean. */
+  private forgetDatabase(name: string): void {
+    this.databases.delete(name);
+    this.initPromises.delete(name);
+  }
+
+  /** Make a blocked open/delete fail loudly instead of hanging. Rejecting does
+   *  not cancel the request, so check `gaveUp()` and close what still arrives. */
+  private blockedGuard(
+    // `deleteDatabase` returns an IDBOpenDBRequest too, so both call sites fit.
+    request: IDBOpenDBRequest,
+    config: Pick<DatabaseConfig, "name">,
+    reject: (reason: Error) => void,
+  ): { settle: () => void; gaveUp: () => boolean } {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let gaveUp = false;
+    request.onblocked = () => {
+      console.warn(
+        `${config.name} is blocked by another open connection (another tab?). ` +
+          `Waiting ${IndexedDBManager.BLOCKED_GRACE_MS}ms for it to close.`,
+      );
+      timer = setTimeout(() => {
+        gaveUp = true;
+        reject(
+          new Error(
+            `Timed out opening ${config.name}: another tab is holding it at an ` +
+              `older version. Close Stirling PDF's other tabs and reload.`,
+          ),
+        );
+      }, IndexedDBManager.BLOCKED_GRACE_MS);
+    };
+    return {
+      settle: () => {
+        if (timer !== undefined) clearTimeout(timer);
+      },
+      gaveUp: () => gaveUp,
+    };
   }
 
   private performDatabaseInit(config: DatabaseConfig): Promise<IDBDatabase> {
@@ -83,20 +133,46 @@ class IndexedDBManager {
       console.log(`Opening IndexedDB: ${config.name} v${config.version}`);
       const request = indexedDB.open(config.name, config.version);
 
+      // A blocked upgrade fires `blocked` and then nothing at all - no success,
+      // no error - so without this the promise never settles.
+      const { settle, gaveUp } = this.blockedGuard(request, config, reject);
+
       request.onerror = () => {
+        settle();
         console.error(`Failed to open ${config.name}:`, request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
+        settle();
         const db = request.result;
+
+        // Blocker gone, but we already rejected: holding this would block the
+        // next upgrade in turn.
+        if (gaveUp()) {
+          console.warn(
+            `${config.name} opened after we gave up waiting; closing the orphaned connection.`,
+          );
+          db.close();
+          return;
+        }
+
         console.log(`Successfully opened ${config.name}`);
+
+        // Yield to another tab's upgrade, or a release that bumps the version
+        // bricks every open tab until the user closes them.
+        db.onversionchange = () => {
+          console.warn(
+            `Another tab is upgrading ${config.name}; closing this connection so it can proceed.`,
+          );
+          this.forgetDatabase(config.name);
+          db.close();
+        };
 
         // Set up close handler to clean up our references
         db.onclose = () => {
           console.log(`Database ${config.name} closed`);
-          this.databases.delete(config.name);
-          this.initPromises.delete(config.name);
+          this.forgetDatabase(config.name);
         };
 
         resolve(db);
@@ -303,8 +379,7 @@ class IndexedDBManager {
     const db = this.databases.get(name);
     if (db) {
       db.close();
-      this.databases.delete(name);
-      this.initPromises.delete(name);
+      this.forgetDatabase(name);
     }
   }
 
@@ -330,8 +405,22 @@ class IndexedDBManager {
     return new Promise((resolve, reject) => {
       const deleteRequest = indexedDB.deleteDatabase(name);
 
-      deleteRequest.onerror = () => reject(deleteRequest.error);
+      // Deletes block like upgrades do, and this one is awaited on the files
+      // open path, so a blocked delete would hang the whole storage layer.
+      const { settle, gaveUp } = this.blockedGuard(
+        deleteRequest,
+        { name },
+        reject,
+      );
+
+      deleteRequest.onerror = () => {
+        settle();
+        reject(deleteRequest.error);
+      };
       deleteRequest.onsuccess = () => {
+        settle();
+        // Caller has moved on; don't resolve an already-rejected promise.
+        if (gaveUp()) return;
         console.log(`Deleted database: ${name}`);
         resolve();
       };

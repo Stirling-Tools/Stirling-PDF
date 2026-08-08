@@ -3,22 +3,17 @@ import "fake-indexeddb/auto";
 import { expectConsole } from "@app/tests/failOnConsole";
 
 /**
- * Regression test for the WebKit nightly breakage introduced with the
- * large-file OOM fix (#7175): `storeStirlingFile` began putting the `File`
- * itself into IndexedDB (persisted by reference, so multi-GB uploads never
- * materialize in JS memory). WebKit refuses blob values whenever it can't write
- * the blob's backing file and rejects the request with `UnknownError: Error
- * preparing Blob/File data to be stored in object store`, so on WebKit every
- * upload silently failed to persist: files vanished on navigation, Compare
- * slots never filled, and the classification backfill had no bytes to read.
+ * WebKit refuses blob values when it can't write the blob's backing file, so
+ * every upload silently failed to persist after #7175. Retried as a copy now.
  *
- * The service now retries such a rejection with an ArrayBuffer copy and stops
- * offering blobs for the rest of the session.
+ * fake-indexeddb never returns a Blob from a read, so round-trips can't be
+ * modelled here - `engine-capabilities.spec.ts` covers those on a real engine.
  */
 
 const nativeAdd = IDBObjectStore.prototype.add;
+const nativePut = IDBObjectStore.prototype.put;
 
-/** What each `add` attempt carried in `data` — the blob path or the copy path. */
+/** What each `add` attempt carried in `data`: blob path or copy path. */
 let attempts: Array<"blob" | "copy"> = [];
 
 /** An IDBRequest that fails asynchronously, the way WebKit rejects blob puts. */
@@ -32,10 +27,7 @@ class FailingRequest extends EventTarget {
   }
 }
 
-/**
- * Record every add attempt, optionally failing the blob-valued ones the way an
- * engine without blob storage does.
- */
+/** Record every add, optionally failing the blob-valued ones. */
 function instrumentAdd(options: { rejectBlobs: boolean }) {
   IDBObjectStore.prototype.add = function (
     this: IDBObjectStore,
@@ -58,11 +50,8 @@ function instrumentAdd(options: { rejectBlobs: boolean }) {
   } as typeof IDBObjectStore.prototype.add;
 }
 
-/**
- * A fresh service per test: whether the engine accepts blobs is remembered for
- * the process lifetime by design, so tests must not inherit that decision from
- * each other.
- */
+/** A fresh service per test: the blob decision is remembered by design, so
+ *  tests must not inherit it from each other. */
 async function freshFileStorage() {
   vi.resetModules();
   const [{ fileStorage }, { createStirlingFile, createNewStirlingFileStub }] =
@@ -90,6 +79,49 @@ beforeEach(() => {
 
 afterEach(() => {
   IDBObjectStore.prototype.add = nativeAdd;
+  IDBObjectStore.prototype.put = nativePut;
+});
+
+/** Abort the transaction the moment a write is issued over it. */
+function abortOnPut() {
+  IDBObjectStore.prototype.put = function (this: IDBObjectStore) {
+    const request = new FailingRequest(
+      new DOMException("transaction aborted", "AbortError"),
+    ) as unknown as IDBRequest<IDBValidKey>;
+    this.transaction.abort();
+    return request;
+  } as typeof IDBObjectStore.prototype.put;
+}
+
+describe("read-modify-write — a refused rewrite must not hang or vanish", () => {
+  /** The abort guard used to sit on the read promise, leaving the write with a
+   *  dead reject - and `.catch` can't rescue a promise that never settles. */
+  test("settles instead of hanging when the write transaction aborts", async () => {
+    expectConsole.error(/Failed to mark file as processed/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    const id = await store("aborts.pdf");
+
+    abortOnPut();
+
+    // Before the fix this never settled and the test timed out.
+    await expect(fileStorage.markFileAsProcessed(id)).resolves.toBe(false);
+  });
+
+  /** The copy-and-retry recovery can't be exercised here: it needs a record that
+   *  reads back as a Blob, which fake-indexeddb never returns. */
+  test("a metadata rewrite still commits, and reports commit not put", async () => {
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    const id = await store("rewrite.pdf");
+
+    await expect(fileStorage.markFileAsProcessed(id)).resolves.toBe(true);
+    // Missing record: `false`, not a throw and not a claim of success.
+    await expect(
+      fileStorage.markFileAsProcessed("nope" as never),
+    ).resolves.toBe(false);
+    expect((await fileStorage.getStirlingFile(id))?.name).toBe("rewrite.pdf");
+  });
 });
 
 describe("storeStirlingFile — blob-value fallback", () => {
@@ -113,8 +145,7 @@ describe("storeStirlingFile — blob-value fallback", () => {
     const id = await store("webkit.pdf");
 
     expect(attempts).toEqual(["blob", "copy"]);
-    // Readable back is what every downstream consumer depends on: rehydration
-    // after navigation, thumbnails, the classification backfill.
+    // Readable back is what rehydration, thumbnails and backfill depend on.
     expect((await fileStorage.getStirlingFile(id))?.name).toBe("webkit.pdf");
   });
 
@@ -127,8 +158,7 @@ describe("storeStirlingFile — blob-value fallback", () => {
     attempts = [];
     const id = await store("second.pdf");
 
-    // Straight to the copy path — no repeated blob probe, and only the single
-    // warning expected above.
+    // Straight to the copy path, and only the one warning expected above.
     expect(attempts).toEqual(["copy"]);
     expect((await fileStorage.getStirlingFile(id))?.name).toBe("second.pdf");
   });

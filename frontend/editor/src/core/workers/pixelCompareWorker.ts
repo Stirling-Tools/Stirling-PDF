@@ -14,6 +14,8 @@ import type {
   PixelCompareWorkerResponse,
   PixelCompareWorkerWarnings,
 } from "@app/types/compare";
+// oxlint-disable-next-line no-restricted-imports -- workers are bundled in their own Rollup pass, which resolves no path aliases, so a relative import is required here
+import { lossyEncodeOptions } from "../utils/canvasImageEncoding";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -155,7 +157,7 @@ const renderPageToBitmap = async (
   return { imageData, bitmap };
 };
 
-const ENCODE_OPTS: ImageEncodeOptions = { type: "image/webp", quality: 0.85 };
+const ENCODE_QUALITY = 0.85;
 
 const bitmapToBlob = async (
   bitmap: ImageBitmap,
@@ -168,7 +170,7 @@ const bitmapToBlob = async (
   if (!ctx) throw new Error(errorStrings.canvasContextUnavailable);
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
-  return await canvas.convertToBlob(ENCODE_OPTS);
+  return await canvas.convertToBlob(await lossyEncodeOptions(ENCODE_QUALITY));
 };
 
 const diffDataToBlob = async (
@@ -183,7 +185,7 @@ const diffDataToBlob = async (
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, width, height);
   ctx.putImageData(diff, 0, 0);
-  return await canvas.convertToBlob(ENCODE_OPTS);
+  return await canvas.convertToBlob(await lossyEncodeOptions(ENCODE_QUALITY));
 };
 
 interface PageTotals {
