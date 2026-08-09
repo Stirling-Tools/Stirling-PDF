@@ -55,9 +55,7 @@ class TranslationAnalyzer:
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
 
-    def _flatten_dict(
-        self, d: dict, parent_key: str = "", separator: str = "."
-    ) -> dict[str, str]:
+    def _flatten_dict(self, d: dict, parent_key: str = "", separator: str = ".") -> dict[str, str]:
         """Flatten nested dictionary into dot-notation keys."""
         items = []
         for k, v in d.items():
@@ -109,10 +107,7 @@ class TranslationAnalyzer:
                 golden_value = golden_flat[key]
 
                 # Check if marked as [UNTRANSLATED] or identical to en-US
-                if (
-                    isinstance(target_value, str)
-                    and target_value.startswith("[UNTRANSLATED]")
-                ) or (
+                if (isinstance(target_value, str) and target_value.startswith("[UNTRANSLATED]")) or (
                     golden_value == target_value
                     and key not in ignore_set
                     and not self._is_expected_identical(key, golden_value)
@@ -171,14 +166,10 @@ class TranslationAnalyzer:
             if key in target_flat:
                 value = target_flat[key]
                 if not (isinstance(value, str) and value.startswith("[UNTRANSLATED]")):
-                    if (
-                        key not in untranslated
-                    ):  # Not identical to en-US (unless expected)
+                    if key not in untranslated:  # Not identical to en-US (unless expected)
                         properly_translated += 1
 
-        completion_rate = (
-            (properly_translated / total_keys) * 100 if total_keys > 0 else 0
-        )
+        completion_rate = (properly_translated / total_keys) * 100 if total_keys > 0 else 0
 
         return {
             "language": lang_code,
@@ -202,9 +193,7 @@ class TranslationAnalyzer:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Analyze translation files against en-US golden truth"
-    )
+    parser = argparse.ArgumentParser(description="Analyze translation files against en-US golden truth")
     parser.add_argument(
         "--locales-dir",
         default="frontend/editor/public/locales",
@@ -216,20 +205,14 @@ def main():
         help="Path to ignore patterns TOML file",
     )
     parser.add_argument("--language", help="Analyze specific language only")
-    parser.add_argument(
-        "--missing-only", action="store_true", help="Show only missing translations"
-    )
+    parser.add_argument("--missing-only", action="store_true", help="Show only missing translations")
     parser.add_argument(
         "--untranslated-only",
         action="store_true",
         help="Show only untranslated entries",
     )
-    parser.add_argument(
-        "--summary", action="store_true", help="Show summary statistics only"
-    )
-    parser.add_argument(
-        "--format", choices=["text", "json"], default="text", help="Output format"
-    )
+    parser.add_argument("--summary", action="store_true", help="Show summary statistics only")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
 
     args = parser.parse_args()
 
@@ -286,16 +269,12 @@ def main():
     print(f"\n{'=' * 60}")
     print("SUMMARY")
     print(f"{'=' * 60}")
-    avg_completion = (
-        sum(r["completion_rate"] for r in results) / len(results) if results else 0
-    )
+    avg_completion = sum(r["completion_rate"] for r in results) / len(results) if results else 0
     print(f"Average Completion Rate: {avg_completion:.1f}%")
     print(f"Languages Analyzed: {len(results)}")
 
     # Top languages by completion
-    sorted_by_completion = sorted(
-        results, key=lambda x: x["completion_rate"], reverse=True
-    )
+    sorted_by_completion = sorted(results, key=lambda x: x["completion_rate"], reverse=True)
     print("\nTop 5 Most Complete Languages:")
     for result in sorted_by_completion[:5]:
         print(f"  {result['language']}: {result['completion_rate']:.1f}%")

@@ -40,9 +40,7 @@ BIN = REPO_ROOT / ".task" / "bin" / ("gitleaks.exe" if IS_WINDOWS else "gitleaks
 
 
 def platform_key() -> str:
-    os_name = {"Linux": "linux", "Darwin": "darwin", "Windows": "windows"}.get(
-        platform.system()
-    )
+    os_name = {"Linux": "linux", "Darwin": "darwin", "Windows": "windows"}.get(platform.system())
     arch = {
         "x86_64": "x64",
         "amd64": "x64",
@@ -55,9 +53,7 @@ def platform_key() -> str:
         "armv6l": "armv6",
     }.get(platform.machine().lower())
     if not os_name or not arch:
-        raise SystemExit(
-            f"Unsupported platform for gitleaks: {platform.system()}/{platform.machine()}"
-        )
+        raise SystemExit(f"Unsupported platform for gitleaks: {platform.system()}/{platform.machine()}")
     return f"{os_name}_{arch}"
 
 
@@ -65,9 +61,7 @@ def cached_version() -> str | None:
     if not BIN.exists():
         return None
     try:
-        return subprocess.run(
-            [str(BIN), "version"], capture_output=True, text=True
-        ).stdout.strip()
+        return subprocess.run([str(BIN), "version"], capture_output=True, text=True).stdout.strip()
     except OSError:
         return None
 
@@ -90,9 +84,7 @@ def main() -> int:
     archive, _ = urllib.request.urlretrieve(url)
     digest = hashlib.sha256(Path(archive).read_bytes()).hexdigest()
     if digest != expected:
-        raise SystemExit(
-            f"gitleaks checksum mismatch: expected {expected}, got {digest}"
-        )
+        raise SystemExit(f"gitleaks checksum mismatch: expected {expected}, got {digest}")
 
     member = "gitleaks.exe" if IS_WINDOWS else "gitleaks"
     if suffix == "zip":

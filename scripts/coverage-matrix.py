@@ -78,9 +78,7 @@ class Bucket:
 class RowBuckets:
     """Per-area buckets for one row of the matrix."""
 
-    by_area: dict[str, Bucket] = field(
-        default_factory=lambda: {a: Bucket() for a in AREAS}
-    )
+    by_area: dict[str, Bucket] = field(default_factory=lambda: {a: Bucket() for a in AREAS})
     # Some inputs (Playwright V8) don't have source-path info, so they
     # only contribute to ALL without an area attribution. Track those
     # separately so per-area cells stay honest.
@@ -170,9 +168,7 @@ def parse_vitest_per_file(path: Path) -> RowBuckets:
     try:
         data = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as exc:
-        print(
-            f"::warning::Failed to parse vitest summary {path}: {exc}", file=sys.stderr
-        )
+        print(f"::warning::Failed to parse vitest summary {path}: {exc}", file=sys.stderr)
         return row
     for file_path, metrics in data.items():
         if file_path == "total":
@@ -267,11 +263,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     # Build each row from its source(s).
-    fe_e2e = (
-        parse_playwright_frontend_total(args.playwright_frontend)
-        if args.playwright_frontend
-        else RowBuckets()
-    )
+    fe_e2e = parse_playwright_frontend_total(args.playwright_frontend) if args.playwright_frontend else RowBuckets()
     fe_unit = parse_vitest_per_file(args.vitest) if args.vitest else RowBuckets()
     fe_all = RowBuckets()
     fe_all.merge(fe_unit)

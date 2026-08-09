@@ -22,17 +22,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SIGNATURES = REPO_ROOT / "docs" / "type3" / "signatures"
-DEFAULT_INDEX = (
-    REPO_ROOT
-    / "app"
-    / "core"
-    / "src"
-    / "main"
-    / "resources"
-    / "type3"
-    / "library"
-    / "index.json"
-)
+DEFAULT_INDEX = REPO_ROOT / "app" / "core" / "src" / "main" / "resources" / "type3" / "library" / "index.json"
 
 
 def normalize_alias(value: str | None) -> str | None:
@@ -198,9 +188,7 @@ def update_library(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Update Type3 library index using signature dumps."
-    )
+    parser = argparse.ArgumentParser(description="Update Type3 library index using signature dumps.")
     parser.add_argument(
         "--signatures-dir",
         type=Path,
@@ -223,11 +211,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    signatures_dir = (
-        args.signatures_dir
-        if args.signatures_dir.is_absolute()
-        else (REPO_ROOT / args.signatures_dir)
-    )
+    signatures_dir = args.signatures_dir if args.signatures_dir.is_absolute() else (REPO_ROOT / args.signatures_dir)
     index_path = args.index if args.index.is_absolute() else (REPO_ROOT / args.index)
 
     if not signatures_dir.exists():
@@ -237,9 +221,7 @@ def main() -> None:
         print(f"Index file not found: {index_path}", file=sys.stderr)
         sys.exit(2)
 
-    modifications, updated_entries, unmatched = update_library(
-        signatures_dir, index_path, apply_changes=args.apply
-    )
+    modifications, updated_entries, unmatched = update_library(signatures_dir, index_path, apply_changes=args.apply)
 
     mode = "APPLIED" if args.apply else "DRY-RUN"
     print(

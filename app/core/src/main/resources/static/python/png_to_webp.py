@@ -150,9 +150,7 @@ def main(pdf_image_path, output_dir, dpi=300, single_images_flag=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert a PDF file to WebP images.")
     parser.add_argument("pdf_path", help="The path to the input PDF file.")
-    parser.add_argument(
-        "output_dir", help="The directory where the WebP images should be saved."
-    )
+    parser.add_argument("output_dir", help="The directory where the WebP images should be saved.")
     parser.add_argument(
         "--dpi",
         type=int,

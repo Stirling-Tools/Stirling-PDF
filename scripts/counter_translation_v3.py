@@ -56,9 +56,7 @@ from collections.abc import Iterable, Mapping
 try:
     import tomlkit
 except ImportError:
-    raise ImportError(
-        "The 'tomlkit' library is not installed. Please install it using 'pip install tomlkit'."
-    )
+    raise ImportError("The 'tomlkit' library is not installed. Please install it using 'pip install tomlkit'.")
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -241,15 +239,11 @@ def compare_files(
             "ignore" not in sort_ignore_translation[language]
             or len(sort_ignore_translation[language].get("ignore", [])) < 1
         ):
-            sort_ignore_translation[language]["ignore"] = tomlkit.array(
-                ["language.direction"]
-            )
+            sort_ignore_translation[language]["ignore"] = tomlkit.array(["language.direction"])
 
         # Clean up ignore list to only include keys present in reference
         sort_ignore_translation[language]["ignore"] = [
-            key
-            for key in sort_ignore_translation[language]["ignore"]
-            if key in ref_keys or key == "language.direction"
+            key for key in sort_ignore_translation[language]["ignore"] if key in ref_keys or key == "language.direction"
         ]
 
         translation_entries = load_translation_entries(file_path)
@@ -263,10 +257,7 @@ def compare_files(
                 continue
 
             file_value = translation_entries[default_key]
-            if (
-                default_value == file_value
-                and default_key not in sort_ignore_translation[language]["ignore"]
-            ):
+            if default_value == file_value and default_key not in sort_ignore_translation[language]["ignore"]:
                 # Missing translation (same as default and not ignored)
                 fails += 1
                 missing_str_keys.append(default_key)
@@ -356,9 +347,7 @@ def main() -> None:
             lang_file = lang_input
         else:
             candidate = os.path.join(locales_dir, lang_input)
-            candidate_with_file = os.path.join(
-                locales_dir, lang_input, "translation.toml"
-            )
+            candidate_with_file = os.path.join(locales_dir, lang_input, "translation.toml")
             if os.path.exists(candidate):
                 if os.path.isdir(candidate):
                     lang_file = candidate_with_file

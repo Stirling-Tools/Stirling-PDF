@@ -74,11 +74,7 @@ def get_language_completion(locales_dir: Path, language: str) -> float | None:
         target_flat = flatten(target_data)
 
         # Count translated (not equal to en-US)
-        translated = sum(
-            1
-            for k in en_us_flat
-            if k in target_flat and target_flat[k] != en_us_flat[k]
-        )
+        translated = sum(1 for k in en_us_flat if k in target_flat and target_flat[k] != en_us_flat[k])
         total = len(en_us_flat)
 
         return (translated / total * 100) if total > 0 else 0.0
@@ -175,9 +171,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
 """,
     )
 
-    parser.add_argument(
-        "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
-    )
+    parser.add_argument("--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)")
     parser.add_argument(
         "--model",
         default="gpt-5.5",
@@ -238,9 +232,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     # Verify API key (unless dry run)
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not args.dry_run and not api_key:
-        print(
-            "Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable"
-        )
+        print("Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable")
         sys.exit(1)
 
     locales_dir = Path(args.locales_dir)

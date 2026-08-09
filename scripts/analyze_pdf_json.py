@@ -106,11 +106,7 @@ def analyze_fonts(fonts: Iterable[dict[str, Any]]) -> FontBreakdown:
                 sample_cos_ids.append((font_id, uid))
 
         metadata_bytes += approx_struct_size(
-            {
-                k: v
-                for k, v in font.items()
-                if k not in {"program", "webProgram", "pdfProgram"}
-            }
+            {k: v for k, v in font.items() if k not in {"program", "webProgram", "pdfProgram"}}
         )
 
         program = font.get("program")
@@ -260,17 +256,10 @@ def main() -> None:
     print(f"  XMP metadata bytes: {human_bytes(summary.xmp_bytes)}")
     print(f"  Form fields bytes: {human_bytes(summary.form_fields_bytes)}")
     print(f"  Lazy flag bytes: {summary.lazy_flag_bytes}")
-    print(
-        f"  Text payload characters (not counting JSON overhead): "
-        f"{page_stats.text_payload_chars:,}"
-    )
+    print(f"  Text payload characters (not counting JSON overhead): {page_stats.text_payload_chars:,}")
     print(f"  Approx text structure bytes: {human_bytes(page_stats.text_struct_bytes)}")
-    print(
-        f"  Approx image structure bytes: {human_bytes(page_stats.image_struct_bytes)}"
-    )
-    print(
-        f"  Approx content stream bytes: {human_bytes(page_stats.content_stream_bytes)}"
-    )
+    print(f"  Approx image structure bytes: {human_bytes(page_stats.image_struct_bytes)}")
+    print(f"  Approx content stream bytes: {human_bytes(page_stats.content_stream_bytes)}")
     print(f"  Approx annotations bytes: {human_bytes(page_stats.annotations_bytes)}")
 
 

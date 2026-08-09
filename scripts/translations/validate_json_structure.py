@@ -41,9 +41,7 @@ def validate_translation_file(file_path: Path) -> tuple[bool, str]:
         return False, f"Error reading file: {str(e)}"
 
 
-def validate_structure(
-    en_us_keys: set[str], lang_keys: set[str], lang_code: str
-) -> dict:
+def validate_structure(en_us_keys: set[str], lang_keys: set[str], lang_code: str) -> dict:
     """Compare structure between en-US and target language."""
     missing_keys = en_us_keys - lang_keys
     extra_keys = lang_keys - en_us_keys
@@ -110,9 +108,7 @@ def main():
         help="Specific language code to validate (e.g., es-ES)",
         default=None,
     )
-    parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Show all missing/extra keys"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show all missing/extra keys")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
 
     args = parser.parse_args()
@@ -161,9 +157,7 @@ def main():
         # First check if file is valid
         is_valid, message = validate_translation_file(lang_path)
         if not is_valid:
-            json_errors.append(
-                {"language": lang_code, "file": str(lang_path), "error": message}
-            )
+            json_errors.append({"language": lang_code, "file": str(lang_path), "error": message})
             continue
 
         # Load and compare structure
@@ -193,9 +187,7 @@ def main():
             print("\n📊 Structure Validation Summary:")
             print(f"   Languages validated: {len(results)}")
 
-            perfect = sum(
-                1 for r in results if r["missing_count"] == 0 and r["extra_count"] == 0
-            )
+            perfect = sum(1 for r in results if r["missing_count"] == 0 and r["extra_count"] == 0)
             print(f"   Perfect matches: {perfect}/{len(results)}")
 
             total_missing = sum(r["missing_count"] for r in results)
@@ -210,9 +202,7 @@ def main():
             print("\n✅ All translations have perfect structure!")
 
     # Exit with error code if issues found
-    has_issues = len(json_errors) > 0 or any(
-        r["missing_count"] > 0 or r["extra_count"] > 0 for r in results
-    )
+    has_issues = len(json_errors) > 0 or any(r["missing_count"] > 0 or r["extra_count"] > 0 for r in results)
     sys.exit(1 if has_issues else 0)
 
 

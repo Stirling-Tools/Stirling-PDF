@@ -34,9 +34,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Bulk collect Type3 font signatures from PDFs."
-    )
+    parser = argparse.ArgumentParser(description="Bulk collect Type3 font signatures from PDFs.")
     parser.add_argument(
         "--input",
         nargs="+",
@@ -139,9 +137,7 @@ def collect_known_signatures(signatures_dir: Path) -> dict[str, dict]:
     return known
 
 
-def run_signature_tool(
-    gradle_cmd: str, pdf: Path, output_path: Path, pretty: bool, cwd: Path
-) -> None:
+def run_signature_tool(gradle_cmd: str, pdf: Path, output_path: Path, pretty: bool, cwd: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     args = f"--pdf {shlex.quote(str(pdf))} --output {shlex.quote(str(output_path))}"
     if pretty:
@@ -157,9 +153,7 @@ def run_signature_tool(
         text=True,
     )
     if completed.returncode != 0:
-        raise RuntimeError(
-            f"Gradle Type3SignatureTool failed for {pdf}:\n{completed.stderr.strip()}"
-        )
+        raise RuntimeError(f"Gradle Type3SignatureTool failed for {pdf}:\n{completed.stderr.strip()}")
 
 
 def extract_fonts_from_payload(payload: dict) -> list[dict]:
@@ -209,15 +203,11 @@ def main() -> None:
             try:
                 payload = load_signature_file(signature_path)
             except Exception as exc:
-                print(
-                    f"[WARN] Failed to parse cached signature {signature_path}: {exc}"
-                )
+                print(f"[WARN] Failed to parse cached signature {signature_path}: {exc}")
                 payload = None
         else:
             try:
-                run_signature_tool(
-                    args.gradle_cmd, pdf, signature_path, args.pretty, REPO_ROOT
-                )
+                run_signature_tool(args.gradle_cmd, pdf, signature_path, args.pretty, REPO_ROOT)
             except Exception as exc:
                 print(f"[ERROR] Harvest failed for {pdf}: {exc}", file=sys.stderr)
                 continue

@@ -143,12 +143,8 @@ def main():
         metavar="LANG",
         help="Validate all batch files for a language (e.g., ar_AR)",
     )
-    parser.add_argument(
-        "--brief", action="store_true", help="Show brief output without context"
-    )
-    parser.add_argument(
-        "--quiet", action="store_true", help="Only show files with errors"
-    )
+    parser.add_argument("--brief", action="store_true", help="Show brief output without context")
+    parser.add_argument("--quiet", action="store_true", help="Only show files with errors")
 
     args = parser.parse_args()
 

@@ -160,9 +160,7 @@ def main() -> None:
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(
-        f"Downloading {len(urls)} PDFs to {output_dir} using {args.workers} workers..."
-    )
+    print(f"Downloading {len(urls)} PDFs to {output_dir} using {args.workers} workers...")
 
     successes = 0
     skipped = 0
@@ -170,10 +168,7 @@ def main() -> None:
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
         future_to_url = {
-            executor.submit(
-                download_pdf, url, output_dir, args.timeout, args.overwrite
-            ): url
-            for url in urls
+            executor.submit(download_pdf, url, output_dir, args.timeout, args.overwrite): url for url in urls
         }
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
@@ -189,9 +184,7 @@ def main() -> None:
                 print(f"[OK] {url} -> {path}")
 
     print()
-    print(
-        f"Completed. Success: {successes}, Skipped: {skipped}, Failures: {len(failures)}"
-    )
+    print(f"Completed. Success: {successes}, Skipped: {skipped}, Failures: {len(failures)}")
     if failures:
         print("Failures:")
         for url, error in failures:

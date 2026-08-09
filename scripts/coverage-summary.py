@@ -109,9 +109,7 @@ def render_jacoco(reports: Iterable[tuple[str, Path]]) -> str:
         return body
 
     lines: list[str] = []
-    lines.append(
-        "| Metric | " + " | ".join(label for label, _ in rows) + " | **Aggregate** |"
-    )
+    lines.append("| Metric | " + " | ".join(label for label, _ in rows) + " | **Aggregate** |")
     lines.append("|---" * (len(rows) + 2) + "|")
 
     for t in ("LINE", "BRANCH", "METHOD", "CLASS"):

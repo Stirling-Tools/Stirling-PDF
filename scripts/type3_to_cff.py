@@ -54,27 +54,13 @@ class GlyphBuildResult:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Synthesize fonts from Type3 glyph JSON."
-    )
-    parser.add_argument(
-        "--input", required=True, help="Path to glyph JSON emitted by the backend"
-    )
-    parser.add_argument(
-        "--otf-output", required=True, help="Destination path for the CFF/OTF font"
-    )
-    parser.add_argument(
-        "--ttf-output", help="Optional destination path for a TrueType font"
-    )
-    parser.add_argument(
-        "--family-name", default="Type3 Synth", help="Family name for the output"
-    )
-    parser.add_argument(
-        "--style-name", default="Regular", help="Style name for the output"
-    )
-    parser.add_argument(
-        "--units-per-em", type=int, default=1000, help="Units per EM value"
-    )
+    parser = argparse.ArgumentParser(description="Synthesize fonts from Type3 glyph JSON.")
+    parser.add_argument("--input", required=True, help="Path to glyph JSON emitted by the backend")
+    parser.add_argument("--otf-output", required=True, help="Destination path for the CFF/OTF font")
+    parser.add_argument("--ttf-output", help="Optional destination path for a TrueType font")
+    parser.add_argument("--family-name", default="Type3 Synth", help="Family name for the output")
+    parser.add_argument("--style-name", default="Regular", help="Style name for the output")
+    parser.add_argument("--units-per-em", type=int, default=1000, help="Units per EM value")
     parser.add_argument(
         "--cu2qu-error",
         type=float,
@@ -169,9 +155,7 @@ def iterate_glyphs(data: dict[str, object]) -> list[GlyphSource]:
             char_code_value = record.get("code")
         if not isinstance(char_code_value, int):
             char_code_value = record.get("charCodeRaw")
-        if not isinstance(char_code_value, int) or not (
-            0 <= char_code_value <= 0x10FFFF
-        ):
+        if not isinstance(char_code_value, int) or not (0 <= char_code_value <= 0x10FFFF):
             char_code_value = None
         outline = record.get("outline")
         if not isinstance(outline, list):

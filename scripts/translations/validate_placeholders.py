@@ -36,9 +36,7 @@ def flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> dict[str, str
     return dict(items)
 
 
-def validate_language(
-    en_us_flat: dict[str, str], lang_flat: dict[str, str], lang_code: str
-) -> list[dict]:
+def validate_language(en_us_flat: dict[str, str], lang_flat: dict[str, str], lang_code: str) -> list[dict]:
     """Validate placeholders for a language against en-US."""
     issues = []
 
@@ -92,9 +90,7 @@ def print_issues(issues: list[dict], verbose: bool = False):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Validate translation placeholder consistency"
-    )
+    parser = argparse.ArgumentParser(description="Validate translation placeholder consistency")
     parser.add_argument(
         "--language",
         help="Specific language code to validate (e.g., es-ES)",
