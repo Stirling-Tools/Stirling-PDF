@@ -29,8 +29,8 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: |
-            scripts/pre-commit/pyproject.toml
-            scripts/pre-commit/uv.lock
+            pyproject.toml
+            uv.lock
           cache-suffix: pre-commit
           working-directory: scripts/pre-commit
 

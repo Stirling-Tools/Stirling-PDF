@@ -32,8 +32,8 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: |
-            engine/pyproject.toml
-            engine/uv.lock
+            pyproject.toml
+            uv.lock
           cache-suffix: ai-engine
           working-directory: engine
 
