@@ -239,6 +239,9 @@ public class RedactController {
                     log.debug(
                             "JPDFium auto-redact complete (matches={})",
                             result != null ? result.totalMatches() : -1);
+                    if (result == null) {
+                        throw new IOException("JPDFium auto-redact returned null result");
+                    }
                     try {
                         result.save(tempOutput.getFile().toPath());
                         log.info(
@@ -247,7 +250,7 @@ public class RedactController {
                                 filename);
                         return WebResponseUtils.pdfFileToWebResponse(tempOutput, filename);
                     } finally {
-                        if (result != null && result.document() != null) {
+                        if (result.document() != null) {
                             result.document().close();
                         }
                     }

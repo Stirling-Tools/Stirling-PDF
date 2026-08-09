@@ -123,11 +123,16 @@ class TextRedactionService {
             log.debug(
                     "JPDFium PdfRedactor.redact complete (matches={})",
                     result != null ? result.totalMatches() : -1);
+            if (result == null) {
+                log.warn(
+                        "JPDFium PdfRedactor.redact returned null result, falling back to box-only redaction mode");
+                return true;
+            }
 
             try {
                 result.save(tempOut.toPath());
             } finally {
-                if (result != null && result.document() != null) {
+                if (result.document() != null) {
                     result.document().close();
                 }
             }
@@ -159,6 +164,7 @@ class TextRedactionService {
                 try {
                     Files.delete(tempOut.toPath());
                 } catch (IOException _) {
+                    log.warn("Failed to delete temporary file: {}", tempOut.getAbsolutePath());
                 }
             }
         }
