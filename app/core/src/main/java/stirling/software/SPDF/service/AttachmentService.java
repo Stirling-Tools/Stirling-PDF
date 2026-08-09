@@ -246,8 +246,7 @@ public class AttachmentService implements AttachmentServiceInterface {
         for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
             PDComplexFileSpecification fileSpecification = entry.getValue();
             String currentName = determineFilename(entry.getKey(), fileSpecification);
-            if (currentName.equalsIgnoreCase(attachmentName)
-                    || entry.getKey().equalsIgnoreCase(attachmentName)) {
+            if (matchesAttachmentName(currentName, entry.getKey(), attachmentName)) {
                 PDEmbeddedFile embeddedFile = getEmbeddedFile(fileSpecification);
                 if (embeddedFile != null) {
                     return readAttachmentData(embeddedFile);

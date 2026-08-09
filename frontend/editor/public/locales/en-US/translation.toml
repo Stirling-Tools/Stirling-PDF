@@ -175,7 +175,7 @@ failed = "An error occurred while adding attachments to the PDF."
 
 [AddAttachmentsRequest]
 attachments = "Select Attachments"
-info = "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel."
+info = "View, add, extract, rename, or delete embedded PDF attachments. Changes are staged cleanly and saved to your document in one pass."
 submit = "Add Attachments"
 
 [AddAttachmentsRequest.error]
@@ -188,7 +188,7 @@ title = "Attachment Results"
 title = "What it does"
 
 [AddAttachmentsRequest.tooltip.header]
-title = "About Add Attachments"
+title = "About Manage Attachments"
 
 [addFileCard]
 upload = "Upload"

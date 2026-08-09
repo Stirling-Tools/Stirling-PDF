@@ -40,6 +40,8 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
+import tools.jackson.databind.ObjectMapper;
+
 @MiscApi
 @Slf4j
 @RequiredArgsConstructor
@@ -52,6 +54,8 @@ public class AttachmentController {
     private final ConvertPDFToPDFA convertPDFToPDFA;
 
     private final TempFileManager tempFileManager;
+
+    private final ObjectMapper objectMapper;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -324,17 +328,9 @@ public class AttachmentController {
         List<MultipartFile> additions = request.getAttachments();
         boolean convertToPdfA3b = request.isConvertToPdfA3b();
 
-        com.fasterxml.jackson.databind.ObjectMapper mapper =
-                new com.fasterxml.jackson.databind.ObjectMapper();
         BatchOpsData opsData = null;
         if (opsJson != null && !opsJson.isBlank()) {
-            try {
-                opsData = mapper.readValue(opsJson, BatchOpsData.class);
-            } catch (Exception e) {
-                log.warn(
-                        "Failed to parse opsJson for batch attachment processing: {}",
-                        e.getMessage());
-            }
+            opsData = objectMapper.readValue(opsJson, BatchOpsData.class);
         }
 
         try (PDDocument document = pdfDocumentFactory.load(request, false)) {

@@ -186,7 +186,11 @@ export async function extractSingleAttachment(
       { responseType: "blob" },
     );
     return response.data as Blob;
-  } catch {
+  } catch (err) {
+    const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+    if (status !== 404 && status !== 501) {
+      throw err;
+    }
     // Client-side JSZip fallback if running against legacy backend
     const zipBlob = await extractAttachments(fileInput);
     const zip = await JSZip.loadAsync(zipBlob);
@@ -210,7 +214,9 @@ export async function extractSingleAttachment(
     }
     const zipEntry = matchedKey ? zip.file(matchedKey) : null;
     if (!zipEntry) {
-      throw new Error(`Attachment file '${filename}' not found in archive.`);
+      throw new Error(`Attachment file '${filename}' not found in archive.`, {
+        cause: err,
+      });
     }
     return await zipEntry.async("blob");
   }
@@ -277,7 +283,11 @@ export async function applyBatchAttachmentOps(
       { responseType: "blob" },
     );
     return response.data as Blob;
-  } catch {
+  } catch (err) {
+    const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+    if (status !== 404 && status !== 501) {
+      throw err;
+    }
     // Client-side sequential fallback if running against legacy server
     let currentFile: File = fileInput;
     for (const { oldName, newName } of ops.renames) {
@@ -294,7 +304,7 @@ export async function applyBatchAttachmentOps(
         lastModified: Date.now(),
       });
     }
-    if (ops.additions.length > 0 || ops.convertToPdfA3b) {
+    if (ops.additions.length > 0) {
       return await addAttachments(
         currentFile,
         ops.additions,

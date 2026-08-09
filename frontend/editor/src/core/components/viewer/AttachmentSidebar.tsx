@@ -303,7 +303,12 @@ export const AttachmentSidebar = ({
           }}
         >
           <div className="attachment-item__content">
-            <Text size="sm" fw={500} className="attachment-item__title">
+            <Text
+              size="sm"
+              fw={500}
+              className="attachment-item__title"
+              title={attachment.name || "Untitled"}
+            >
               {attachment.name || "Untitled"}
             </Text>
             {(attachment.size !== undefined || attachment.description) && (

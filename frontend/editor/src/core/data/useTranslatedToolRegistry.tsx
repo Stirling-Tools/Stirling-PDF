@@ -822,8 +822,10 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         maxFiles: 1,
         endpoints: [
           "add-attachments",
+          "batch-process-attachments",
           "list-attachments",
           "extract-attachments",
+          "extract-single-attachment",
           "rename-attachment",
           "delete-attachment",
         ],
