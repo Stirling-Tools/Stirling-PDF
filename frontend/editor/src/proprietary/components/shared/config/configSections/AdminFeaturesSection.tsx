@@ -173,9 +173,18 @@ export default function AdminFeaturesSection() {
                 )}
               </Text>
               <Badge
-                color="grape"
+                /* grape-6 puts white text at 4.02:1; the darker shade clears
+                   4.5:1 at this size. */
+                color="grape.8"
                 size="sm"
                 style={{ cursor: "pointer" }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" && e.key !== " ") return;
+                  e.preventDefault();
+                  navigate("/settings/adminPlan");
+                }}
                 onClick={() => navigate("/settings/adminPlan")}
                 title={t(
                   "admin.settings.badge.clickToUpgrade",
@@ -216,6 +225,10 @@ export default function AdminFeaturesSection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.features.serverCertificate.enabled.label",
+                    "Enable Server Certificate",
+                  )}
                   checked={settings.serverCertificate?.enabled ?? true}
                   onChange={(e) => {
                     if (!loginEnabled) return;
@@ -333,6 +346,10 @@ export default function AdminFeaturesSection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.features.serverCertificate.regenerateOnStartup.label",
+                    "Regenerate on Startup",
+                  )}
                   checked={
                     settings.serverCertificate?.regenerateOnStartup ?? false
                   }

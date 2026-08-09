@@ -145,6 +145,10 @@ export default function AdminMailSection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.mail.enabled.label",
+                    "Enable Mail",
+                  )}
                   checked={settings.enabled || false}
                   onChange={(e) =>
                     setSettings({ ...settings, enabled: e.target.checked })
@@ -168,7 +172,7 @@ export default function AdminMailSection() {
                     "Allow admins to invite users via email with auto-generated passwords",
                   )}
                 </Text>
-                <Text size="xs" c="orange" mt={8} fw={500}>
+                <Text size="xs" c="var(--color-amber-dark)" mt={8} fw={500}>
                   {t(
                     "admin.settings.mail.frontendUrlNote.note",
                     "Note: Requires Frontend URL to be configured. ",
@@ -179,7 +183,7 @@ export default function AdminMailSection() {
                       e.preventDefault();
                       navigate("/settings/adminGeneral#frontendUrl");
                     }}
-                    c="orange"
+                    c="var(--color-amber-dark)"
                     td="underline"
                   >
                     {t(
@@ -191,6 +195,10 @@ export default function AdminMailSection() {
               </div>
               <Group gap="xs">
                 <Switch
+                  aria-label={t(
+                    "admin.settings.mail.invites.label",
+                    "Team invitation emails",
+                  )}
                   checked={settings.enableInvites || false}
                   onChange={(e) =>
                     setSettings({
