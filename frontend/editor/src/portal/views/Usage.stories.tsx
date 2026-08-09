@@ -1,116 +1,108 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse, delay } from "msw";
-import { Usage } from "@portal/views/Usage";
-import type { Wallet } from "@portal/api/billing";
+import { delay, http, HttpResponse } from "msw";
+import type { LocalUsage } from "@portal/api/link";
 import {
   freeWallet,
+  prepaidWallet,
   subscribedWallet,
 } from "@portal/components/billing/walletFixtures";
+import { Usage } from "@portal/views/Usage";
+
+const WALLET = "/api/v1/payg/wallet";
+
+/** Unsynced work accrued locally since the last daily sync. */
+const localUsage: LocalUsage = {
+  periodStart: "2026-08-01T00:00:00.000Z",
+  apiUnsyncedUnits: 120,
+  aiUnsyncedUnits: 34,
+  automationUnsyncedUnits: 8,
+  totalUnsyncedUnits: 162,
+};
+
+/** Handlers for the two calls the view makes: the billed wallet and the
+ *  locally-accrued usage that is added on top of it. */
+const handlers = (
+  wallet: Parameters<typeof HttpResponse.json>[0],
+  opts: { walletStatus?: number; local?: LocalUsage | null } = {},
+) => [
+  http.get(WALLET, () =>
+    opts.walletStatus
+      ? new HttpResponse(null, { status: opts.walletStatus })
+      : HttpResponse.json(wallet),
+  ),
+  http.get(/\/usage$/, () =>
+    HttpResponse.json(opts.local === undefined ? localUsage : opts.local),
+  ),
+];
 
 /**
- * Usage & billing. The page is a thin shell — header, notices, and one of two
- * plan views — that dispatches entirely on the wallet it loads:
- *
- *   free       → the free-grant meter plus the pay-as-you-go explainer
- *   subscribed → the period meter, spend cap, members and invoices, and the
- *                "Manage Payment" action in the header
- *
- * So the wallet response is what these stories vary. A failed read replaces the
- * plan view with a banner; while the read is in flight the body is skeletons.
- *
- * One state is not reachable here: the "session expired" notice is raised when
- * there is no SaaS token at all, which the Storybook preview always supplies.
+ * Usage and billing for the current period. The figure shown is the synced
+ * wallet plus locally-accrued units, so it reflects work done since the last
+ * daily sync rather than lagging a day behind.
  */
-const wallet = (body: Wallet) =>
-  http.get("*/api/v1/payg/wallet", () => HttpResponse.json(body));
-
-/** The subscribed view also reads the card on file and the invoice history. */
-const paymentMethod = http.get("*/api/v1/payg/payment-method", () =>
-  HttpResponse.json({
-    present: true,
-    brand: "visa",
-    last4: "4242",
-    expMonth: 8,
-    expYear: 2027,
-  }),
-);
-
-const invoices = http.get("*/api/v1/payg/invoices", () =>
-  HttpResponse.json([
-    {
-      id: "in_6",
-      number: "INV-2026-006",
-      status: "open",
-      totalMinor: 714235,
-      currency: "usd",
-      createdAt: "2026-06-01T00:00:00Z",
-      periodStart: "2026-06-01T00:00:00Z",
-      periodEnd: "2026-06-30T00:00:00Z",
-      hostedInvoiceUrl: "https://invoice.stripe.com/i/test_6",
-      invoicePdf: "https://invoice.stripe.com/i/test_6/pdf",
-      description: "Stirling Processor Plan",
-      pdfsProcessed: 142847,
-    },
-  ]),
-);
-
 const meta: Meta<typeof Usage> = {
-  // AppShell renders every view inside <main>; standalone, this view's
-  // own <header> would be promoted to a second banner landmark.
-  decorators: [
-    (Story: () => React.ReactElement) => (
-      <main>
-        <Story />
-      </main>
-    ),
-  ],
   title: "Portal/Views/Usage",
   component: Usage,
   parameters: { layout: "padded" },
 };
 export default meta;
+
 type Story = StoryObj<typeof Usage>;
 
-/** On the one-time free grant: free meter and the "turn on Processor" pitch. */
+/** Free team, part-way through its one-time grant. */
 export const FreePlan: Story = {
-  parameters: { msw: { handlers: [wallet(freeWallet)] } },
+  parameters: { msw: { handlers: handlers(freeWallet) } },
 };
 
-/** Subscribed: period meter, cap, members and invoices, plus the header action. */
+/** Subscribed and metered per document. */
 export const Subscribed: Story = {
-  parameters: {
-    msw: { handlers: [wallet(subscribedWallet), paymentMethod, invoices] },
-  },
+  parameters: { msw: { handlers: handlers(subscribedWallet) } },
 };
 
-/** While the wallet is in flight the body is two skeleton blocks. */
+/** Drawing down a prepaid bundle. */
+export const Prepaid: Story = {
+  parameters: { msw: { handlers: handlers(prepaidWallet) } },
+};
+
+/** Never synced, so there is no local figure to add. */
+export const NoLocalUsage: Story = {
+  parameters: { msw: { handlers: handlers(freeWallet, { local: null }) } },
+};
+
+/** The wallet call is still in flight — skeletons stand in. */
 export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("*/api/v1/payg/wallet", async () => {
+        http.get(WALLET, async () => {
           await delay("infinite");
           return HttpResponse.json(freeWallet);
         }),
+        http.get(/\/usage$/, () => HttpResponse.json(localUsage)),
       ],
     },
   },
 };
 
-/** A failed read: the plan view never mounts and the error banner states why. */
-export const WalletUnavailable: Story = {
+/** The wallet could not be loaded. */
+export const Error: Story = {
   parameters: {
-    msw: {
-      handlers: [
-        http.get("*/api/v1/payg/wallet", () =>
-          HttpResponse.json(
-            { detail: "Billing service unavailable" },
-            {
-              status: 503,
-            },
-          ),
-        ),
-      ],
-    },
+    msw: { handlers: handlers(freeWallet, { walletStatus: 500 }) },
+  },
+};
+
+/** An attended SaaS session has lapsed. Self-hosted passes `onReauth` and gets
+ *  a sign-in action; SaaS leaves it unset, so the notice shows on its own. */
+export const SessionExpired: Story = {
+  args: { onReauth: () => {} },
+  parameters: {
+    msw: { handlers: handlers(freeWallet, { walletStatus: 401 }) },
+  },
+};
+
+/** The same lapsed session without a re-auth path — notice, no action. */
+export const SessionExpiredNoReauth: Story = {
+  parameters: {
+    msw: { handlers: handlers(freeWallet, { walletStatus: 401 }) },
   },
 };

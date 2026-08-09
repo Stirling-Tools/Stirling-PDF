@@ -280,12 +280,10 @@
 
 .portal-users__link {
   color: var(--c-accent-text);
-  /* Sits inside a sentence, so colour alone cannot be what marks it as a
-     link — it stays underlined and thickens on hover instead. */
-  text-decoration: underline;
+  text-decoration: none;
 }
 .portal-users__link:hover {
-  text-decoration-thickness: 2px;
+  text-decoration: underline;
 }
 
 .portal-users__directory {
