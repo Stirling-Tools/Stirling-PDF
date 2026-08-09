@@ -56,7 +56,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   value,
   onChange,
   items,
-  placeholder = "Select option",
+  placeholder,
   disabled = false,
   label,
   header,
@@ -73,6 +73,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   zIndex = Z_INDEX_AUTOMATE_DROPDOWN,
 }) => {
   const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("dropdownList.selectOption");
   const [searchTerm, setSearchTerm] = useState("");
 
   const isMultiValue = Array.isArray(value);
@@ -101,7 +102,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
 
   const getDisplayText = () => {
     if (selectedValues.length === 0) {
-      return placeholder;
+      return resolvedPlaceholder;
     } else if (selectedValues.length === 1) {
       const selectedItem = items.find(
         (item) => item.value === selectedValues[0],
@@ -201,8 +202,8 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                 <Box style={{ padding: "12px", textAlign: "center" }}>
                   <Text size="sm" c="dimmed">
                     {searchable && searchTerm
-                      ? "No results found"
-                      : "No items available"}
+                      ? t("dropdownList.noResults")
+                      : t("dropdownList.noItems")}
                   </Text>
                 </Box>
               ) : (
