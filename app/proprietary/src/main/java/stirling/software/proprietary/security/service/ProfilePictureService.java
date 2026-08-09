@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -56,7 +57,7 @@ public class ProfilePictureService {
     /** Largest upload accepted before decoding. */
     public static final long MAX_UPLOAD_BYTES = 5L * 1024 * 1024;
 
-    /** Backstop for absurd headers; subsampling in decode() is what bounds the allocation. */
+    /** Sanity bound on the header; the region+subsampling read in decode() bounds the memory. */
     private static final long MAX_SOURCE_PIXELS = 50_000_000L;
 
     private static final String PNG = "image/png";
@@ -251,10 +252,10 @@ public class ProfilePictureService {
             if (width <= 0 || height <= 0 || (long) width * height > MAX_SOURCE_PIXELS) {
                 throw new InvalidProfilePictureException("Image dimensions are too large");
             }
-            // Decode at the smallest step that still leaves 2x the target edge, so a 140KB
-            // 7000x7000 PNG costs ~1MB of heap instead of ~140MB. Short edge: we crop to it.
-            int step = Math.max(1, Math.min(width, height) / (2 * AVATAR_SIZE));
+            Rectangle region = centreSquare(width, height);
+            int step = subsamplingStep(region.width);
             ImageReadParam params = reader.getDefaultReadParam();
+            params.setSourceRegion(region);
             params.setSourceSubsampling(step, step, 0, 0);
             return reader.read(0, params);
         } catch (IOException | RuntimeException e) {
@@ -266,6 +267,21 @@ public class ProfilePictureService {
         } finally {
             reader.dispose();
         }
+    }
+
+    /**
+     * The centre square we are going to keep anyway. Read as a region, not just subsampled, because
+     * the step below is bounded by the SHORT edge: a 50000x1000 PNG is a few KB on the wire, clears
+     * the pixel cap, and would still decode to ~200MB if we read the whole frame.
+     */
+    static Rectangle centreSquare(int width, int height) {
+        int edge = Math.min(width, height);
+        return new Rectangle((width - edge) / 2, (height - edge) / 2, edge, edge);
+    }
+
+    /** Largest decode step that still leaves ~2x the target edge to scale down from. */
+    static int subsamplingStep(int edge) {
+        return Math.max(1, edge / (2 * AVATAR_SIZE));
     }
 
     /**

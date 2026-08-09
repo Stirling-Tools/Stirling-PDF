@@ -37,7 +37,6 @@ function load(): Promise<void> {
   if (!loadPromise) {
     const token = generation;
     loadPromise = fetchOwnProfilePicture()
-      .catch(() => null)
       .then((url) => {
         if (token !== generation) {
           // A refresh superseded us; drop the stale blob rather than showing it.
@@ -46,6 +45,12 @@ function load(): Promise<void> {
         }
         setUrl(url);
         loaded = true;
+      })
+      .catch(() => {
+        // Transient: leave `loaded` false so the next mount tries again rather than showing
+        // initials for the rest of the session.
+      })
+      .finally(() => {
         loadPromise = null;
       });
   }

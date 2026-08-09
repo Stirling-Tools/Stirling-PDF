@@ -279,6 +279,9 @@ function normalizeSeatLimit(max: number | undefined): number | null {
   return max;
 }
 
+/** Ids per avatar batch request; see fetchAvatarThumbnails. */
+const AVATAR_BATCH_SIZE = 200;
+
 /**
  * Roster avatars as data URLs, keyed by user id. Data URLs because the portal authenticates with a
  * bearer token, which an `<img src>` request would not carry. Avatars are decoration, so a failure
@@ -289,15 +292,26 @@ export async function fetchAvatarThumbnails(
 ): Promise<Record<string, string>> {
   const ids = Array.from(new Set(userIds)).filter(Boolean);
   if (ids.length === 0) return {};
-  try {
-    return (
-      (await apiClient.local.json<Record<string, string>>(
-        `/api/v1/user/profile-pictures?userIds=${encodeURIComponent(ids.join(","))}`,
-      )) ?? {}
-    );
-  } catch {
-    return {};
+  // Chunked: the ids ride in the query string, and a few thousand overflow nginx's default 8KB
+  // request line, which 414s and wipes every avatar. Also stays under the server's 500-id cap.
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += AVATAR_BATCH_SIZE) {
+    chunks.push(ids.slice(i, i + AVATAR_BATCH_SIZE));
   }
+  const results = await Promise.all(
+    chunks.map(async (chunk) => {
+      try {
+        return (
+          (await apiClient.local.json<Record<string, string>>(
+            `/api/v1/user/profile-pictures?userIds=${encodeURIComponent(chunk.join(","))}`,
+          )) ?? {}
+        );
+      } catch {
+        return {};
+      }
+    }),
+  );
+  return Object.assign({}, ...results);
 }
 
 /**

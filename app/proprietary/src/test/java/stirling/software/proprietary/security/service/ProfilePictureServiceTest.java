@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -134,6 +135,38 @@ class ProfilePictureServiceTest {
         assertThatThrownBy(() -> service.store(user(1L), file))
                 .isInstanceOf(InvalidProfilePictureException.class)
                 .hasMessageContaining("Unsupported image format");
+    }
+
+    @Test
+    void anExtremeAspectRatioStillDecodesOnlyTheCentreSquare() {
+        // Subsampling alone is bounded by the SHORT edge, so on a 50000x1000 frame the step is 1
+        // and the whole ~200MB raster would be decoded. The region is what keeps it bounded.
+        Rectangle region = ProfilePictureService.centreSquare(50000, 1000);
+        assertThat(region.width).isEqualTo(1000);
+        assertThat(region.height).isEqualTo(1000);
+        assertThat(region.x).isEqualTo(24500);
+        assertThat(region.y).isZero();
+
+        long decodedPixels =
+                (long) region.width
+                        * region.height
+                        / (long) Math.pow(ProfilePictureService.subsamplingStep(region.width), 2);
+        assertThat(decodedPixels).isLessThan(2_000_000L);
+    }
+
+    @Test
+    void aSquareBombIsSubsampledDownToRoughlyTwiceTheTargetEdge() {
+        Rectangle region = ProfilePictureService.centreSquare(7000, 7000);
+        int step = ProfilePictureService.subsamplingStep(region.width);
+
+        assertThat(region.width / step)
+                .isBetween(
+                        ProfilePictureService.AVATAR_SIZE, 3 * ProfilePictureService.AVATAR_SIZE);
+    }
+
+    @Test
+    void anImageAlreadySmallerThanTheTargetIsNotSubsampled() {
+        assertThat(ProfilePictureService.subsamplingStep(200)).isEqualTo(1);
     }
 
     @Test
