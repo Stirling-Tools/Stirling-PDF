@@ -19,6 +19,7 @@
     "yzhang.markdown-all-in-one", // Markdown All-in-One extension for enhanced Markdown editing
     "stylelint.vscode-stylelint", // Stylelint extension for CSS and SCSS linting
     "redhat.vscode-yaml", // YAML extension for Visual Studio Code
+    "tamasfe.even-better-toml", // TOML language support and formatting
     "oxc.oxc-vscode", // Oxc (oxlint) extension for JavaScript/TypeScript linting
   ]
 }
