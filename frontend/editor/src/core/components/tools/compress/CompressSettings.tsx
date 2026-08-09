@@ -116,6 +116,7 @@ const CompressSettings = ({
               style={{ flex: 1 }}
             />
             <Select
+              aria-label={t("compress.settings.desiredSizeUnit", "Size unit")}
               value={parameters.fileSizeUnit}
               onChange={(value) => {
                 // Prevent deselection - if value is null/undefined, keep the current value
@@ -244,6 +245,8 @@ const CompressSettings = ({
               }}
               disabled={disabled || imageMagickAvailable === false}
               label={null}
+              // The thumb is a div, so the heading above cannot name it.
+              thumbLabel={t("compress.lineArt.detailLevel", "Detail level")}
               marks={[
                 { value: 1 },
                 { value: 2 },

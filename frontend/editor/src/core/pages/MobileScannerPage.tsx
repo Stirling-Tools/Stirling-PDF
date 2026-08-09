@@ -1053,7 +1053,11 @@ export default function MobileScannerPage() {
           <Text size="sm" mb="xs">
             {t("mobileScanner.uploading", "Uploading...")}
           </Text>
-          <Progress value={uploadProgress} animated />
+          <Progress
+            value={uploadProgress}
+            animated
+            aria-label={t("mobileScanner.uploading", "Uploading...")}
+          />
         </Box>
       )}
 
@@ -1107,7 +1111,7 @@ export default function MobileScannerPage() {
                 <PhotoCameraRoundedIcon
                   style={{
                     fontSize: "3rem",
-                    color: "var(--mantine-color-blue-6)",
+                    color: "var(--c-accent-text)",
                   }}
                 />
                 <Text size="lg" fw={600}>

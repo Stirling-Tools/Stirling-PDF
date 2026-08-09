@@ -1,4 +1,4 @@
-import { CSSProperties } from "react";
+import { CSSProperties, KeyboardEvent } from "react";
 
 /**
  * Shared styling utilities for plan cards
@@ -44,5 +44,24 @@ export function getClickablePaperStyle(
     height: "100%",
     position: "relative",
     ...getCardBorderStyle(isHighlighted),
+  };
+}
+
+/**
+ * Semantics for a card that is itself the control. `getClickablePaperStyle`
+ * only makes a card *look* clickable; without these a Paper with an onClick is
+ * a div, so the choice cannot be reached or made by keyboard.
+ */
+export function getClickableCardProps(onActivate: () => void) {
+  return {
+    role: "button",
+    tabIndex: 0,
+    onClick: onActivate,
+    onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onActivate();
+      }
+    },
   };
 }

@@ -93,7 +93,11 @@ export function LinkedInstancesTable({
     },
     {
       key: "actions",
-      header: "",
+      header: (
+        <span className="sr-only">
+          {t("portal.accountLink.instances.columns.actions", "Actions")}
+        </span>
+      ),
       align: "right",
       render: (i) =>
         i.revoked ? null : (

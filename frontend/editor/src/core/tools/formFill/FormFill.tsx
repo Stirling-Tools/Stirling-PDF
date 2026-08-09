@@ -486,6 +486,10 @@ const FormFill = (_props: BaseToolProps) => {
                     }
                     size={6}
                     radius="xl"
+                    aria-label={t(
+                      "formFill.completionProgress",
+                      "Form completion",
+                    )}
                     color={
                       filledRequiredCount === requiredCount ? "teal" : "blue"
                     }
