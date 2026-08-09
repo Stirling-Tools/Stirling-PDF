@@ -7,16 +7,13 @@ Supports concurrent translation with configurable thread pool.
 
 import argparse
 import os
-import sys
-import time
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import subprocess
-from typing import List, Tuple, Optional
+import sys
 import threading
-
+import time
 import tomllib
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 # Thread-safe print lock
 print_lock = threading.Lock()
@@ -28,7 +25,7 @@ def safe_print(*args, **kwargs):
         print(*args, **kwargs)
 
 
-def get_all_languages(locales_dir: Path) -> List[str]:
+def get_all_languages(locales_dir: Path) -> list[str]:
     """Get all language codes from locales directory."""
     languages = []
 
@@ -45,7 +42,7 @@ def get_all_languages(locales_dir: Path) -> List[str]:
     return languages
 
 
-def get_language_completion(locales_dir: Path, language: str) -> Optional[float]:
+def get_language_completion(locales_dir: Path, language: str) -> float | None:
     """Get completion percentage for a language."""
     lang_dir = locales_dir / language
     toml_file = lang_dir / "translation.toml"
@@ -99,7 +96,7 @@ def translate_language(
     skip_verification: bool,
     include_existing: bool,
     model: str,
-) -> Tuple[str, bool, str]:
+) -> tuple[str, bool, str]:
     """
     Translate a single language.
     Returns: (language_code, success, message)

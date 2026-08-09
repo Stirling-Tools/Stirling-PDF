@@ -4,12 +4,13 @@ Wrap raw CFF/Type1C data (extracted from PDFs) as OpenType-CFF for web compatibi
 Builds proper Unicode cmap from PDF ToUnicode data.
 """
 
-import sys
 import re
-from pathlib import Path
+import sys
 from io import BytesIO
-from fontTools.ttLib import TTFont, newTable
+from pathlib import Path
+
 from fontTools.cffLib import CFFFontSet
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._c_m_a_p import cmap_format_4, cmap_format_12
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables.O_S_2f_2 import Panose

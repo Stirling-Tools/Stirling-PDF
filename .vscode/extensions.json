@@ -2,8 +2,6 @@
   "recommendations": [
     "elagil.pre-commit-helper", // Support for pre-commit hooks to enforce code quality
     "josevseb.google-java-format-for-vs-code", // Google Java code formatter to follow the Google Java Style Guide
-    "ms-python.black-formatter", // Python code formatter using Black
-    "ms-python.flake8", // Flake8 linter for Python to enforce code quality
     "ms-python.python", // Official Microsoft Python extension with IntelliSense, debugging, and Jupyter support
     "ms-vscode-remote.vscode-remote-extensionpack", // Remote Development Pack for SSH, WSL, and Containers
     // "Oracle.oracle-java", // Oracle Java extension with additional features for Java development

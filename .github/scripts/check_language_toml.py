@@ -19,9 +19,9 @@ import argparse
 import glob
 import os
 import re
+import tomllib  # Python 3.11+ (stdlib)
 from pathlib import Path
 
-import tomllib  # Python 3.11+ (stdlib)
 import tomli_w  # For writing TOML files
 
 

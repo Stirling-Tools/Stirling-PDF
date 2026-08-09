@@ -2,7 +2,7 @@
 """Download the pinned gitleaks binary into .task/bin, verifying its checksum.
 
 gitleaks is a Go binary with no PyPI package, so it can't be locked like the
-other tools (ruff/codespell/toml-sort live in scripts/pre-commit/pyproject.toml).
+other tools (ruff/codespell/toml-sort live in the root pyproject.toml).
 This script is the single source of truth for the gitleaks version and the
 SHA-256 of each release asset. It is cross-platform (stdlib only) and idempotent:
 if the cached binary already reports the pinned version it does nothing, so

@@ -4,12 +4,11 @@ Translation Analyzer for Stirling PDF Frontend
 Compares language files against en-US golden truth file.
 """
 
+import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Dict, List, Set
-import argparse
 import tomllib
+from pathlib import Path
 
 
 class TranslationAnalyzer:
@@ -24,7 +23,7 @@ class TranslationAnalyzer:
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
 
-    def _load_translation_file(self, file_path: Path) -> Dict:
+    def _load_translation_file(self, file_path: Path) -> dict:
         """Load TOML translation file with error handling."""
         try:
             with open(file_path, "rb") as f:
@@ -36,7 +35,7 @@ class TranslationAnalyzer:
             print(f"Error: Invalid file {file_path}: {e}")
             sys.exit(1)
 
-    def _load_ignore_patterns(self) -> Dict[str, Set[str]]:
+    def _load_ignore_patterns(self) -> dict[str, set[str]]:
         """Load ignore patterns from TOML file."""
         if not self.ignore_file.exists():
             return {}
@@ -57,8 +56,8 @@ class TranslationAnalyzer:
             return {}
 
     def _flatten_dict(
-        self, d: Dict, parent_key: str = "", separator: str = "."
-    ) -> Dict[str, str]:
+        self, d: dict, parent_key: str = "", separator: str = "."
+    ) -> dict[str, str]:
         """Flatten nested dictionary into dot-notation keys."""
         items = []
         for k, v in d.items():
@@ -69,7 +68,7 @@ class TranslationAnalyzer:
                 items.append((new_key, str(v)))
         return dict(items)
 
-    def get_all_language_files(self) -> List[Path]:
+    def get_all_language_files(self) -> list[Path]:
         """Get all translation files except en-US."""
         files = []
         for lang_dir in self.locales_dir.iterdir():
@@ -79,7 +78,7 @@ class TranslationAnalyzer:
                     files.append(toml_file)
         return sorted(files)
 
-    def find_missing_translations(self, target_file: Path) -> Set[str]:
+    def find_missing_translations(self, target_file: Path) -> set[str]:
         """Find keys that exist in en-US but missing in target file."""
         target_data = self._load_translation_file(target_file)
 
@@ -93,7 +92,7 @@ class TranslationAnalyzer:
         ignore_set = self.ignore_patterns.get(lang_code, set())
         return missing - ignore_set
 
-    def find_untranslated_entries(self, target_file: Path) -> Set[str]:
+    def find_untranslated_entries(self, target_file: Path) -> set[str]:
         """Find entries that appear to be untranslated (identical to en-US)."""
         target_data = self._load_translation_file(target_file)
 
@@ -138,7 +137,7 @@ class TranslationAnalyzer:
 
         return False
 
-    def find_extra_translations(self, target_file: Path) -> Set[str]:
+    def find_extra_translations(self, target_file: Path) -> set[str]:
         """Find keys that exist in target file but not in en-US."""
         target_data = self._load_translation_file(target_file)
 
@@ -147,7 +146,7 @@ class TranslationAnalyzer:
 
         return set(target_flat.keys()) - set(golden_flat.keys())
 
-    def analyze_file(self, target_file: Path) -> Dict:
+    def analyze_file(self, target_file: Path) -> dict:
         """Complete analysis of a single translation file."""
         lang_code = target_file.parent.name
 
@@ -194,7 +193,7 @@ class TranslationAnalyzer:
             "completion_rate": completion_rate,
         }
 
-    def analyze_all_files(self) -> List[Dict]:
+    def analyze_all_files(self) -> list[dict]:
         """Analyze all translation files."""
         results = []
         for file_path in self.get_all_language_files():

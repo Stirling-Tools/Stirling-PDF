@@ -13,15 +13,14 @@ Usage:
     python scripts/translations/validate_json_structure.py [--language LANG]
 """
 
+import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Dict, Set
-import argparse
 import tomllib  # Python 3.11+ (stdlib)
+from pathlib import Path
 
 
-def get_all_keys(d: dict, parent_key: str = "", sep: str = ".") -> Set[str]:
+def get_all_keys(d: dict, parent_key: str = "", sep: str = ".") -> set[str]:
     """Get all keys from nested dict as dot-notation paths."""
     keys = set()
     for k, v in d.items():
@@ -43,8 +42,8 @@ def validate_translation_file(file_path: Path) -> tuple[bool, str]:
 
 
 def validate_structure(
-    en_us_keys: Set[str], lang_keys: Set[str], lang_code: str
-) -> Dict:
+    en_us_keys: set[str], lang_keys: set[str], lang_code: str
+) -> dict:
     """Compare structure between en-US and target language."""
     missing_keys = en_us_keys - lang_keys
     extra_keys = lang_keys - en_us_keys
@@ -60,7 +59,7 @@ def validate_structure(
     }
 
 
-def print_validation_result(result: Dict, verbose: bool = False):
+def print_validation_result(result: dict, verbose: bool = False):
     """Print validation results in readable format."""
     lang = result["language"]
 

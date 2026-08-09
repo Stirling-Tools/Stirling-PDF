@@ -27,8 +27,8 @@ import re
 import shlex
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -72,8 +72,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def discover_pdfs(paths: Sequence[str]) -> List[Path]:
-    pdfs: List[Path] = []
+def discover_pdfs(paths: Sequence[str]) -> list[Path]:
+    pdfs: list[Path] = []
     for raw in paths:
         path = Path(raw).resolve()
         if path.is_file():
@@ -113,8 +113,8 @@ def load_signature_file(path: Path) -> dict:
         return json.load(handle)
 
 
-def collect_known_signatures(signatures_dir: Path) -> Dict[str, dict]:
-    known: Dict[str, dict] = {}
+def collect_known_signatures(signatures_dir: Path) -> dict[str, dict]:
+    known: dict[str, dict] = {}
     if not signatures_dir.exists():
         return known
     for json_file in signatures_dir.rglob("*.json"):
@@ -162,7 +162,7 @@ def run_signature_tool(
         )
 
 
-def extract_fonts_from_payload(payload: dict) -> List[dict]:
+def extract_fonts_from_payload(payload: dict) -> list[dict]:
     pdf = payload.get("pdf")
     fonts = []
     for font in payload.get("fonts", []):
@@ -182,7 +182,7 @@ def extract_fonts_from_payload(payload: dict) -> List[dict]:
     return fonts
 
 
-def write_report(report_path: Path, fonts_by_signature: Dict[str, dict]) -> None:
+def write_report(report_path: Path, fonts_by_signature: dict[str, dict]) -> None:
     ordered = sorted(fonts_by_signature.values(), key=lambda entry: entry["signature"])
     report = {
         "generatedAt": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
@@ -201,7 +201,7 @@ def main() -> None:
     pdfs = discover_pdfs(args.input)
 
     known = collect_known_signatures(signatures_dir)
-    newly_added: List[Tuple[str, str]] = []
+    newly_added: list[tuple[str, str]] = []
 
     for pdf in pdfs:
         signature_path = derive_signature_path(pdf, signatures_dir)

@@ -45,6 +45,10 @@ vars:
   # which owns the version and caches the binary here.
   GITLEAKS_BIN: '.task/bin/gitleaks{{if eq OS "windows"}}.exe{{end}}'
 
+env:
+  # Keep repository-wide checks isolated from the engine runtime environment.
+  UV_PROJECT_ENVIRONMENT: '.venv-pre-commit'
+
 tasks:
   default:
     desc: "Check formatting, spelling, and secrets across the repo"
@@ -76,19 +80,19 @@ tasks:
     desc: "Install the pinned pre-commit Python tools"
     run: once
     cmds:
-      - uv sync --project scripts/pre-commit --locked
+      - uv sync --project engine --locked --group pre-commit
     sources:
-      - scripts/pre-commit/uv.lock
-      - scripts/pre-commit/pyproject.toml
+      - engine/uv.lock
+      - engine/pyproject.toml
     status:
-      - test -d scripts/pre-commit/.venv
+      - test -d engine/.venv-pre-commit
 
   clean:
-    desc: "Remove the cached gitleaks binary and the tool virtualenv"
+    desc: "Remove the cached gitleaks binary and the pre-commit virtualenv"
     cmds:
-      - cmd: rm -rf scripts/pre-commit/.venv .task/bin/gitleaks
+      - cmd: rm -rf engine/.venv-pre-commit .task/bin/gitleaks
         platforms: [linux, darwin]
-      - cmd: cmd /c "rmdir /s /q scripts\pre-commit\.venv & del /q .task\bin\gitleaks.exe"
+      - cmd: cmd /c "rmdir /s /q engine\.venv-pre-commit & del /q .task\bin\gitleaks.exe"
         platforms: [windows]
         ignore_error: true
 
@@ -97,26 +101,26 @@ tasks:
   ruff:
     deps: [install]
     cmds:
-      - uv run --project scripts/pre-commit --no-sync ruff check --line-length=127 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff check --isolated --line-length=127 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
 
   ruff-format:
     deps: [install]
     cmds:
-      - uv run --project scripts/pre-commit --no-sync ruff format {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff format --isolated {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
 
   codespell:
     deps: [install]
     cmds:
-      - uv run --project scripts/pre-commit --no-sync codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
+      - uv run --project engine --locked --group pre-commit codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
 
   toml-sort:
     deps: [install]
     cmds:
-      - uv run --project scripts/pre-commit --no-sync python scripts/pre-commit/sort_locale_toml.py {{if .FIX}}--fix {{end}}{{.LOCALE_TOML}}
+      - uv run --project engine --locked --group pre-commit python scripts/pre-commit/sort_locale_toml.py {{if .FIX}}--fix {{end}}{{.LOCALE_TOML}}
 
   whitespace:
     cmds:
-      - uv run --no-project python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}{{.WS_FILES}}
+      - uv run --project engine --locked --group pre-commit python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}{{.WS_FILES}}
 
   gitleaks:
     deps: [gitleaks-bin]
@@ -130,4 +134,4 @@ tasks:
     internal: true
     desc: "Ensure the pinned, checksum-verified gitleaks binary is cached in .task/bin"
     cmds:
-      - uv run --no-project python scripts/pre-commit/install_gitleaks.py
+      - uv run --project engine --locked --group pre-commit python scripts/pre-commit/install_gitleaks.py
