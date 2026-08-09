@@ -65,7 +65,11 @@ jobs:
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           enable-cache: true
+          cache-dependency-glob: |
+            scripts/pre-commit/pyproject.toml
+            scripts/pre-commit/uv.lock
           cache-suffix: sync-files
+          working-directory: scripts/pre-commit
 
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
