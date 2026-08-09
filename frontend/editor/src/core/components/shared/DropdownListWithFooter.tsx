@@ -56,7 +56,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   value,
   onChange,
   items,
-  placeholder,
+  placeholder = "Select option",
   disabled = false,
   label,
   header,
@@ -73,7 +73,6 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   zIndex = Z_INDEX_AUTOMATE_DROPDOWN,
 }) => {
   const { t } = useTranslation();
-  const resolvedPlaceholder = placeholder ?? t("dropdownList.selectOption");
   const [searchTerm, setSearchTerm] = useState("");
 
   const isMultiValue = Array.isArray(value);
@@ -102,7 +101,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
 
   const getDisplayText = () => {
     if (selectedValues.length === 0) {
-      return resolvedPlaceholder;
+      return placeholder;
     } else if (selectedValues.length === 1) {
       const selectedItem = items.find(
         (item) => item.value === selectedValues[0],
@@ -135,7 +134,11 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
         zIndex={zIndex}
       >
         <Popover.Target>
+          {/* A real button: Popover.Target stamps aria-haspopup/aria-expanded on
+              its child, and those are only permitted on an actual control. */}
           <Box
+            component="button"
+            type="button"
             style={{
               border:
                 "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
@@ -143,6 +146,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
               padding: "8px 12px",
               backgroundColor:
                 "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+              color: "inherit",
+              textAlign: "left",
+              width: "100%",
               opacity: disabled ? 0.6 : 1,
               cursor: disabled ? "not-allowed" : "pointer",
               minHeight: "36px",
@@ -202,8 +208,8 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                 <Box style={{ padding: "12px", textAlign: "center" }}>
                   <Text size="sm" c="dimmed">
                     {searchable && searchTerm
-                      ? t("dropdownList.noResults")
-                      : t("dropdownList.noItems")}
+                      ? "No results found"
+                      : "No items available"}
                   </Text>
                 </Box>
               ) : (

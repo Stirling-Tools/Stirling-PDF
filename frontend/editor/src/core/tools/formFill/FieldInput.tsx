@@ -15,7 +15,6 @@ import {
   MultiSelect,
   Stack,
 } from "@mantine/core";
-import { useTranslation } from "react-i18next";
 import { useFieldValue } from "@app/tools/formFill/FormFillContext";
 import type { FormField } from "@app/tools/formFill/types";
 
@@ -32,7 +31,7 @@ function FieldInputInner({
     (v: string) => onValueChange(field.name, v),
     [onValueChange, field.name],
   );
-  const { t } = useTranslation();
+
   switch (field.type) {
     case "text":
       if (field.multiline) {
@@ -41,10 +40,7 @@ function FieldInputInner({
             size="xs"
             value={value}
             onChange={(e) => onChange(e.currentTarget.value)}
-            placeholder={
-              field.tooltip ||
-              `${t("formFill.placeholderEnter", "Enter")} ${field.label}`
-            }
+            placeholder={field.tooltip || `Enter ${field.label}`}
             disabled={field.readOnly}
             autosize
             minRows={2}
@@ -58,10 +54,7 @@ function FieldInputInner({
           size="xs"
           value={value}
           onChange={(e) => onChange(e.currentTarget.value)}
-          placeholder={
-            field.tooltip ||
-            `${t("formFill.placeholderEnter", "Enter")} ${field.label}`
-          }
+          placeholder={field.tooltip || `Enter ${field.label}`}
           disabled={field.readOnly}
           styles={{ input: { fontSize: "0.8125rem" } }}
         />
@@ -92,7 +85,7 @@ function FieldInputInner({
           data={comboData}
           value={value || null}
           onChange={(v) => onChange(v || "")}
-          placeholder={`${t("formFill.placeholderSelect", "Select")} ${field.label}`}
+          placeholder={`Select ${field.label}`}
           clearable
           searchable
           disabled={field.readOnly}
@@ -116,7 +109,7 @@ function FieldInputInner({
             data={listData}
             value={selectedValues}
             onChange={(vals) => onChange(vals.join(","))}
-            placeholder={`${t("formFill.placeholderSelect", "Select")} ${field.label}`}
+            placeholder={`Select ${field.label}`}
             searchable
             disabled={field.readOnly}
             aria-label={field.label || field.name}
@@ -131,7 +124,7 @@ function FieldInputInner({
           data={listData}
           value={value || null}
           onChange={(v) => onChange(v || "")}
-          placeholder={`${t("formFill.placeholderSelect", "Select")} ${field.label}`}
+          placeholder={`Select ${field.label}`}
           clearable
           searchable
           disabled={field.readOnly}

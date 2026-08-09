@@ -62,6 +62,9 @@ export function ViewerInlineControls() {
             track: { height: 3 },
           }}
           label={null}
+          // The thumb carries role="slider"; thumbLabel is what names it, and
+          // Slider writes an empty aria-label over anything else.
+          thumbLabel={t("viewer.zoomLevel", "Zoom level")}
         />
       </div>
 

@@ -122,7 +122,7 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
                       paddingRight: 16,
                       paddingLeft: 4,
                       textAlign: "right",
-                      color: "var(--mantine-color-gray-5)",
+                      color: "var(--c-text-muted)",
                       userSelect: "none",
                       borderRight: "1px solid var(--mantine-color-gray-2)",
                       minWidth: `${String(lines.length).length + 1}ch`,

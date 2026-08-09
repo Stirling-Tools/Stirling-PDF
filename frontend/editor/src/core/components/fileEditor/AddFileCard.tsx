@@ -70,16 +70,10 @@ const AddFileCard = ({
 
       <div
         className={`${styles.addFileCard} select-none flex flex-col transition-all relative cursor-pointer`}
-        tabIndex={0}
-        role="button"
-        aria-label={t("fileEditor.addFiles", "Add files")}
+        /* The card holds its own Add-files and upload buttons, so making the
+           card a button as well nests one control inside another. The click is
+           a mouse convenience; the buttons carry the keyboard path. */
         onClick={handleCardClick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleCardClick();
-          }
-        }}
       >
         {/* Main content area */}
         <div className={styles.addFileContent}>
@@ -161,7 +155,7 @@ const AddFileCard = ({
                 icon={icons.uploadIconName}
                 width="1.25rem"
                 height="1.25rem"
-                style={{ color: "var(--c-primary)", flexShrink: 0 }}
+                style={{ color: "var(--c-accent-text)", flexShrink: 0 }}
               />
               {isUploadHover && (
                 <span

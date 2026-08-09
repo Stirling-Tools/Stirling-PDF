@@ -107,7 +107,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
             {currentFile && ` • v${currentFile.versionNumber || 1}`}
           </Text>
           {hasMultipleFiles && (
-            <Text size="xs" c="blue">
+            <Text size="xs" c="var(--c-accent-text)">
               {currentFileIndex + 1} of {selectedFiles.length}
             </Text>
           )}

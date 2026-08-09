@@ -255,19 +255,14 @@ const FullscreenToolList = ({
                 >
                   {getSubcategoryIcon(subcategoryId)}
                 </span>
-                <Text
-                  size="sm"
-                  fw={600}
-                  tt="uppercase"
-                  lts={0.5}
-                  style={{
-                    color: categoryColor,
-                  }}
-                >
+                {/* The icon and the section border already carry the category
+                    hue. These are decorative fills — restating one as text
+                    colour drops the label under 4.5:1 on the app surface. */}
+                <Text size="sm" fw={600} tt="uppercase" lts={0.5}>
                   {getSubcategoryLabel(t, subcategoryId)}
                 </Text>
               </div>
-              <Badge size="sm" variant="colored" color={categoryColor}>
+              <Badge size="sm" variant="default">
                 {tools.length}
               </Badge>
             </header>

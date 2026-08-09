@@ -292,15 +292,10 @@ export const AttachmentSidebar = ({
       >
         <div
           className="attachment-item"
+          /* The row carries a labelled download button of its own, so making
+             the row a button too nests one control inside another. The click
+             stays as a mouse convenience; the keyboard path is the button. */
           onClick={(event) => handleDownload(attachment, event)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleDownload(attachment, event as any);
-            }
-          }}
         >
           <div className="attachment-item__content">
             <Text size="sm" fw={500} className="attachment-item__title">
@@ -445,7 +440,7 @@ export const AttachmentSidebar = ({
 
           {attachmentSupport && documentCacheKey && currentError && (
             <Stack gap="xs" align="center" className="sidebar-base__error">
-              <Text size="sm" c="red" ta="center">
+              <Text size="sm" c="var(--color-red-dark)" ta="center">
                 {currentError}
               </Text>
               <ActionIcon

@@ -192,6 +192,9 @@ export function PdfViewerToolbar({
 
       {/* Page Input */}
       <NumberInput
+        /* Only the page count sits beside it, as plain text — the field itself
+           carries no name without this. */
+        aria-label={t("viewer.pageNumber", "Page number")}
         value={pageInput}
         onChange={(value) => {
           const page = Number(value);

@@ -29,14 +29,13 @@ export interface LanguagePickerProps {
 const LanguagePicker: React.FC<LanguagePickerProps> = ({
   value,
   onChange,
-  placeholder,
+  placeholder = "Select languages",
   disabled = false,
   label,
   languagesEndpoint = "/api/v1/ui-data/ocr-pdf",
   autoFillFromBrowserLanguage = true,
 }) => {
   const { t, i18n } = useTranslation();
-  const resolvedPlaceholder = placeholder ?? t("dropdownList.selectLanguages");
   const [availableLanguages, setAvailableLanguages] = useState<DropdownItem[]>(
     [],
   );
@@ -156,20 +155,21 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
             "Looking for additional languages?",
           )}
         </Text>
+        {/* A real anchor: it was styled as a link and opened one, but as a
+            Text with an onClick it could not be reached by keyboard and gave
+            no target cue on hover. */}
         <Text
+          component="a"
+          href="https://docs.stirlingpdf.com/Configuration/OCR"
+          target="_blank"
+          rel="noopener noreferrer"
           size="xs"
           style={{
-            color: "var(--c-primary)",
+            color: "var(--c-accent-text)",
             cursor: "pointer",
             textDecoration: "underline",
             textAlign: "center",
           }}
-          onClick={() =>
-            window.open(
-              "https://docs.stirlingpdf.com/Configuration/OCR",
-              "_blank",
-            )
-          }
         >
           {t("ocr.languagePicker.viewSetupGuide", "View setup guide →")}
         </Text>
@@ -182,7 +182,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
       value={value}
       onChange={(newValue) => onChange(newValue as string[])}
       items={availableLanguages}
-      placeholder={resolvedPlaceholder}
+      placeholder={placeholder}
       disabled={disabled}
       label={label}
       footer={footer}

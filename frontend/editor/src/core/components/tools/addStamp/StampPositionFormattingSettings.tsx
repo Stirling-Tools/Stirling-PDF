@@ -34,6 +34,16 @@ const StampPositionFormattingSettings = ({
 }: StampPositionFormattingSettingsProps) => {
   const { t } = useTranslation();
 
+  // Each formatting pill shows a number field and a slider driving the same
+  // value. The heading above them is plain text, so both controls carry the
+  // label themselves rather than being left unnamed.
+  const sizeLabel =
+    parameters.stampType === "image"
+      ? t("AddStampRequest.imageSize", "Image Size")
+      : t("AddStampRequest.fontSize", "Font Size");
+  const rotationLabel = t("AddStampRequest.rotation", "Rotation");
+  const opacityLabel = t("AddStampRequest.opacity", "Opacity");
+
   return (
     <Stack gap="md" justify="space-between">
       {/* Position Grid - shown in automation settings */}
@@ -144,11 +154,7 @@ const StampPositionFormattingSettings = ({
       {/* Single slider bound to selected pill */}
       {parameters._activePill === "fontSize" && (
         <Stack gap="xs">
-          <Text className={styles.labelText}>
-            {parameters.stampType === "image"
-              ? t("AddStampRequest.imageSize", "Image Size")
-              : t("AddStampRequest.fontSize", "Font Size")}
-          </Text>
+          <Text className={styles.labelText}>{sizeLabel}</Text>
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.fontSize}
@@ -164,6 +170,7 @@ const StampPositionFormattingSettings = ({
               size="sm"
               className={styles.numberInput}
               disabled={disabled}
+              aria-label={sizeLabel}
             />
             <Slider
               value={parameters.fontSize}
@@ -173,15 +180,14 @@ const StampPositionFormattingSettings = ({
               step={1}
               className={styles.slider}
               disabled={disabled}
+              thumbLabel={sizeLabel}
             />
           </Group>
         </Stack>
       )}
       {parameters._activePill === "rotation" && (
         <Stack gap="xs">
-          <Text className={styles.labelText}>
-            {t("AddStampRequest.rotation", "Rotation")}
-          </Text>
+          <Text className={styles.labelText}>{rotationLabel}</Text>
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.rotation}
@@ -195,6 +201,7 @@ const StampPositionFormattingSettings = ({
               className={styles.numberInput}
               hideControls
               disabled={disabled}
+              aria-label={rotationLabel}
             />
             <Slider
               value={parameters.rotation}
@@ -203,15 +210,15 @@ const StampPositionFormattingSettings = ({
               max={180}
               step={1}
               className={styles.sliderWide}
+              disabled={disabled}
+              thumbLabel={rotationLabel}
             />
           </Group>
         </Stack>
       )}
       {parameters._activePill === "opacity" && (
         <Stack gap="xs">
-          <Text className={styles.labelText}>
-            {t("AddStampRequest.opacity", "Opacity")}
-          </Text>
+          <Text className={styles.labelText}>{opacityLabel}</Text>
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.opacity}
@@ -224,6 +231,7 @@ const StampPositionFormattingSettings = ({
               size="sm"
               className={styles.numberInput}
               disabled={disabled}
+              aria-label={opacityLabel}
             />
             <Slider
               value={parameters.opacity}
@@ -232,6 +240,8 @@ const StampPositionFormattingSettings = ({
               max={100}
               step={1}
               className={styles.slider}
+              disabled={disabled}
+              thumbLabel={opacityLabel}
             />
           </Group>
         </Stack>
