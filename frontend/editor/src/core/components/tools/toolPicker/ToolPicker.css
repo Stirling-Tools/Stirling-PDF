@@ -103,6 +103,21 @@
   opacity: 1;
 }
 
+/* Hover-only dismiss X for recommended tools; sits left of the favourite star. */
+.tool-button-dismiss {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 2rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: var(--z-toolpicker-star);
+}
+
+.tool-button-container:hover .tool-button-dismiss {
+  opacity: 1;
+}
+
 .search-input-container {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;

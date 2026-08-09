@@ -1,11 +1,16 @@
-import React, { useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { alert } from "@app/components/toast";
 import { Button } from "@app/ui/Button";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import "@app/components/tools/toolPicker/ToolPicker.css";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
+import {
+  useDismissToolRecommendation,
+  useRecommendationContextTool,
+} from "@app/hooks/useToolRecommendations";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
@@ -70,8 +75,57 @@ const ToolPicker = ({
 
   const scrollableRef = useRef<HTMLDivElement>(null);
 
-  const { sections: visibleSections } = useToolSections(filteredTools);
+  const { sections: visibleSections, dynamicRecommendations } =
+    useToolSections(filteredTools);
   const { favoriteTools, toolRegistry } = useToolWorkflowData();
+  const recommendationContext = useRecommendationContextTool();
+  const dismissRecommendation = useDismissToolRecommendation();
+
+  // Dismiss only applies to usage-derived recommendations; the static list is not persisted.
+  const handleDismissRecommendation = useCallback(
+    (toolId: ToolId, toolName: string) => {
+      const reportFailure = () =>
+        alert({
+          alertType: "error",
+          title: t(
+            "toolPicker.recommendations.dismissFailed",
+            "Could not save that preference. Please try again.",
+          ),
+        });
+
+      void (async () => {
+        try {
+          const undo = await dismissRecommendation(
+            recommendationContext,
+            toolId,
+          );
+          alert({
+            alertType: "neutral",
+            title: t("toolPicker.recommendations.dismissed", {
+              defaultValue: "{{tool}} won't be recommended here again",
+              tool: toolName,
+            }),
+            buttonText: t("toolPicker.recommendations.undo", "Undo"),
+            buttonCallback: () => void undo().catch(reportFailure),
+            durationMs: 6000,
+          });
+        } catch {
+          reportFailure();
+        }
+      })();
+    },
+    [dismissRecommendation, recommendationContext, t],
+  );
+
+  // Shared Signing is pinned by its badge rather than ranked, so dismissing it
+  // could never take effect - offer the control only on ranked entries.
+  const dismissHandlerFor = useCallback(
+    (id: string, tool: ToolRegistryEntry) =>
+      dynamicRecommendations && id !== "sharedSign"
+        ? () => handleDismissRecommendation(id as ToolId, tool.name)
+        : undefined,
+    [dynamicRecommendations, handleDismissRecommendation],
+  );
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
@@ -177,6 +231,7 @@ const ToolPicker = ({
                       badgeCount={
                         id === "sharedSign" ? signingBadgeCount : undefined
                       }
+                      onDismiss={dismissHandlerFor(id, tool)}
                     />
                   ))}
               </div>
@@ -234,6 +289,7 @@ const ToolPicker = ({
                         badgeCount={
                           id === "sharedSign" ? signingBadgeCount : undefined
                         }
+                        onDismiss={dismissHandlerFor(id, tool)}
                       />
                     ))}
                   </div>

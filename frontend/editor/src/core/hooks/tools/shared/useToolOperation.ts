@@ -31,6 +31,7 @@ import { createNewStirlingFileStub } from "@app/types/fileContext";
 import { ToolOperation } from "@app/types/file";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
 import { trackEditorOperation } from "@app/services/analytics";
+import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
@@ -402,6 +403,8 @@ export const useToolOperation = <TParams>(
             config.operationType,
             successSourceIds.length || validFiles.length,
           );
+          // Feeds the dynamic recommended-tools ranking (usage + transition edges).
+          notifyToolCompleted(config.operationType);
 
           actions.setFiles(processedFiles);
 

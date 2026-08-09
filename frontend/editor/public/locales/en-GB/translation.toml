@@ -9863,6 +9863,12 @@ advancedTools = "Advanced Tools"
 recommendedTools = "Recommended Tools"
 standardTools = "Standard Tools"
 
+[toolPicker.recommendations]
+dismiss = "Don't recommend this tool here"
+dismissed = "{{tool}} won't be recommended here again"
+dismissFailed = "Could not save that preference. Please try again."
+undo = "Undo"
+
 [toolPicker.subcategories]
 advancedFormatting = "Advanced Formatting"
 automation = "Automation"

@@ -338,6 +338,12 @@ endpoints:
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
 
+toolRecommendations:
+  enabled: true # 'true' to rank the recommended-tools list from real usage (per user, team and install); 'false' keeps the static list
+  retentionDays: 180 # days of daily usage rollups to keep before the retention sweep removes them
+  windowDays: 30 # scoring lookback window in days
+  recentWindowDays: 7 # events within this many days count double when scoring
+
 # Automatically Generated Settings (Do Not Edit Directly)
 AutomaticallyGenerated:
   key: example

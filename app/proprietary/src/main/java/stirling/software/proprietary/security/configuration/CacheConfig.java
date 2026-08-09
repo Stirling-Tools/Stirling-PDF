@@ -44,6 +44,15 @@ public class CacheConfig {
                         .expireAfterWrite(Duration.ofSeconds(30))
                         .recordStats()
                         .build());
+        // Team/install-wide usage aggregates, shared by every user so the wide scans run once
+        // per TTL regardless of how many people are browsing tools.
+        cacheManager.registerCustomCache(
+                "toolRecommendationSignals",
+                Caffeine.newBuilder()
+                        .maximumSize(10_000)
+                        .expireAfterWrite(Duration.ofMinutes(5))
+                        .recordStats()
+                        .build());
         return cacheManager;
     }
 }
