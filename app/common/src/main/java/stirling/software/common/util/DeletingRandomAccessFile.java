@@ -1,4 +1,4 @@
-package org.apache.pdfbox.examples.util;
+package stirling.software.common.util;
 
 import java.io.File;
 import java.io.IOException;
