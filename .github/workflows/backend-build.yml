@@ -192,12 +192,14 @@ jobs:
           retention-days: 3
           if-no-files-found: warn
 
-      - name: Install defusedxml for coverage summary
-        # coverage-summary.py parses JaCoCo XML through defusedxml to
-        # silence security scanners that pattern-match on the stdlib
-        # xml.etree.ElementTree.parse call.
+      - name: Install uv
         if: always() && matrix.flavor == 'saas'
-        run: python -m pip install --quiet defusedxml
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ff9 # v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
 
       - name: JaCoCo coverage step summary
         # Only the saas leg posts the JUnit summary - it's a strict
@@ -206,7 +208,7 @@ jobs:
         # near-identical tables crowding out the aggregate report.
         if: always() && matrix.flavor == 'saas'
         run: |
-          python scripts/coverage-summary.py \
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Backend JUnit coverage (JDK ${{ matrix.jdk-version }})" \
             --jacoco "common=app/common/build/reports/jacoco/test/jacocoTestReport.xml" \
             --jacoco "core=app/core/build/reports/jacoco/test/jacocoTestReport.xml" \

@@ -6,14 +6,15 @@ batch processing, quality checks, and integration helpers.
 TOML format only.
 """
 
-import json
-from pathlib import Path
-from typing import Dict, List, Any
 import argparse
-import re
-from datetime import datetime
 import csv
+import json
+import re
 import tomllib
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
 import tomli_w
 
 
@@ -22,7 +23,7 @@ class AITranslationHelper:
         self.locales_dir = Path(locales_dir)
         self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
 
-    def _load_translation_file(self, file_path: Path) -> Dict:
+    def _load_translation_file(self, file_path: Path) -> dict:
         """Load TOML translation file."""
         try:
             with open(file_path, "rb") as f:
@@ -31,14 +32,14 @@ class AITranslationHelper:
             print(f"Error loading {file_path}: {e}")
             return {}
 
-    def _save_translation_file(self, data: Dict, file_path: Path) -> None:
+    def _save_translation_file(self, data: dict, file_path: Path) -> None:
         """Save TOML translation file."""
         with open(file_path, "wb") as f:
             tomli_w.dump(data, f)
 
     def create_ai_batch_file(
         self,
-        languages: List[str],
+        languages: list[str],
         output_file: Path,
         max_entries_per_language: int = 50,
     ) -> None:
@@ -101,8 +102,8 @@ class AITranslationHelper:
         print(f"Total entries to translate: {total_entries}")
 
     def _find_untranslated_entries(
-        self, golden_truth: Dict, lang_data: Dict
-    ) -> Dict[str, str]:
+        self, golden_truth: dict, lang_data: dict
+    ) -> dict[str, str]:
         """Find entries that need translation."""
         golden_flat = self._flatten_dict(golden_truth)
         lang_flat = self._flatten_dict(lang_data)
@@ -123,8 +124,8 @@ class AITranslationHelper:
         return untranslated
 
     def _flatten_dict(
-        self, d: Dict, parent_key: str = "", separator: str = "."
-    ) -> Dict[str, Any]:
+        self, d: dict, parent_key: str = "", separator: str = "."
+    ) -> dict[str, Any]:
         """Flatten nested dictionary."""
         items = []
         for k, v in d.items():
@@ -142,8 +143,8 @@ class AITranslationHelper:
         return "language.direction" in key.lower()
 
     def _prioritize_translation_keys(
-        self, untranslated: Dict[str, str], max_count: int
-    ) -> Dict[str, str]:
+        self, untranslated: dict[str, str], max_count: int
+    ) -> dict[str, str]:
         """Prioritize which keys to translate first based on importance."""
         # Define priority order (higher score = higher priority)
         priority_patterns = [
@@ -200,10 +201,10 @@ class AITranslationHelper:
 
         return "General application text"
 
-    def validate_ai_translations(self, batch_file: Path) -> Dict[str, List[str]]:
+    def validate_ai_translations(self, batch_file: Path) -> dict[str, list[str]]:
         """Validate AI translations for common issues."""
         # Batch files are always JSON
-        with open(batch_file, "r", encoding="utf-8") as f:
+        with open(batch_file, encoding="utf-8") as f:
             batch_data = json.load(f)
         issues = {"errors": [], "warnings": []}
 
@@ -246,10 +247,10 @@ class AITranslationHelper:
 
     def apply_ai_batch_translations(
         self, batch_file: Path, validate: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply translations from AI batch file to individual language files."""
         # Batch files are always JSON
-        with open(batch_file, "r", encoding="utf-8") as f:
+        with open(batch_file, encoding="utf-8") as f:
             batch_data = json.load(f)
         results = {"applied": {}, "errors": [], "warnings": []}
 
@@ -291,7 +292,7 @@ class AITranslationHelper:
 
         return results
 
-    def _set_nested_value(self, data: Dict, key_path: str, value: Any) -> None:
+    def _set_nested_value(self, data: dict, key_path: str, value: Any) -> None:
         """Set value in nested dict using dot notation."""
         keys = key_path.split(".")
         current = data
@@ -308,7 +309,7 @@ class AITranslationHelper:
         current[keys[-1]] = value
 
     def export_for_external_translation(
-        self, languages: List[str], output_format: str = "csv"
+        self, languages: list[str], output_format: str = "csv"
     ) -> None:
         """Export translations for external translation services."""
         golden_truth = self._load_translation_file(self.golden_truth_file)

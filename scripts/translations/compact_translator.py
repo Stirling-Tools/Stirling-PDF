@@ -5,11 +5,11 @@ Outputs untranslated entries in minimal JSON format with whitespace stripped.
 TOML format only.
 """
 
+import argparse
 import json
 import sys
-from pathlib import Path
-import argparse
 import tomllib  # Python 3.11+ (stdlib)
+from pathlib import Path
 
 
 class CompactTranslationExtractor:

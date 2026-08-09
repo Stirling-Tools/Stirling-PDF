@@ -9,11 +9,11 @@ Automatically translates JSON batch files to target language while preserving:
 Note: Works with JSON batch files. Translation files can be TOML or JSON format.
 """
 
+import argparse
 import json
 import sys
-import argparse
-from pathlib import Path
 import time
+from pathlib import Path
 
 try:
     from openai import OpenAI
@@ -356,7 +356,7 @@ Examples:
 
         try:
             # Load input file
-            with open(input_file, "r", encoding="utf-8") as f:
+            with open(input_file, encoding="utf-8") as f:
                 batch_data = json.load(f)
 
             # Translate

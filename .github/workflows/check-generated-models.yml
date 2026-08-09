@@ -35,10 +35,9 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
+            engine/pyproject.toml
+            engine/uv.lock
           cache-suffix: generated-models
-          working-directory: engine
 
       - name: Set up JDK 25
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0

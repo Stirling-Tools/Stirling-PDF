@@ -4,14 +4,15 @@
 Usage: verify-updater-signatures.py <dir-to-scan> [tauri.conf.json]
 """
 
-import binascii
-import sys
-import json
 import base64
+import binascii
 import hashlib
+import json
+import sys
 from pathlib import Path
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 ART_ROOT = Path(sys.argv[1])
 CONF = Path(

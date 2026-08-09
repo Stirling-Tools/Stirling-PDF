@@ -17,8 +17,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SIGNATURES = REPO_ROOT / "docs" / "type3" / "signatures"
@@ -35,7 +35,7 @@ DEFAULT_INDEX = (
 )
 
 
-def normalize_alias(value: Optional[str]) -> Optional[str]:
+def normalize_alias(value: str | None) -> str | None:
     if not value:
         return None
     trimmed = value.strip()
@@ -75,9 +75,9 @@ def iter_signature_fonts(signature_file: Path):
         }
 
 
-def make_alias_index(entries: List[Dict]) -> Tuple[Dict[str, Dict], Dict[str, Dict]]:
-    alias_index: Dict[str, Dict] = {}
-    signature_index: Dict[str, Dict] = {}
+def make_alias_index(entries: list[dict]) -> tuple[dict[str, dict], dict[str, dict]]:
+    alias_index: dict[str, dict] = {}
+    signature_index: dict[str, dict] = {}
     for entry in entries:
         for alias in entry.get("aliases", []) or []:
             normalized = normalize_alias(alias)
@@ -91,7 +91,7 @@ def make_alias_index(entries: List[Dict]) -> Tuple[Dict[str, Dict], Dict[str, Di
     return alias_index, signature_index
 
 
-def ensure_list(container: Dict, key: str) -> List:
+def ensure_list(container: dict, key: str) -> list:
     value = container.get(key)
     if isinstance(value, list):
         return value
@@ -100,11 +100,11 @@ def ensure_list(container: Dict, key: str) -> List:
     return value
 
 
-def merge_sorted_unique(values: Iterable[int]) -> List[int]:
+def merge_sorted_unique(values: Iterable[int]) -> list[int]:
     return sorted({int(v) for v in values if isinstance(v, int)})
 
 
-def normalize_source_path(pdf_path: Optional[str]) -> Optional[str]:
+def normalize_source_path(pdf_path: str | None) -> str | None:
     if not pdf_path:
         return None
     try:
@@ -117,13 +117,13 @@ def normalize_source_path(pdf_path: Optional[str]) -> Optional[str]:
 
 def update_library(
     signatures_dir: Path, index_path: Path, apply_changes: bool
-) -> Tuple[int, int, List[Tuple[str, Path]]]:
+) -> tuple[int, int, list[tuple[str, Path]]]:
     entries = load_json(index_path)
     alias_index, signature_index = make_alias_index(entries)
 
     modifications = 0
     updated_entries = set()
-    unmatched: List[Tuple[str, Path]] = []
+    unmatched: list[tuple[str, Path]] = []
 
     signature_files = sorted(signatures_dir.glob("*.json"))
     if not signature_files:

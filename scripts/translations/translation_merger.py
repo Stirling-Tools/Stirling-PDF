@@ -6,16 +6,16 @@ Useful for AI-assisted translation workflows.
 TOML format only.
 """
 
-import os
 import argparse
 import json
+import os
 import shutil
 import sys
+import tomllib
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import tomllib
 import tomli_w
 
 
@@ -512,7 +512,7 @@ def main():
         lang_dir = Path(args.locales_dir) / args.language
         target_file = lang_dir / "translation.toml"
 
-        with open(args.translations_file, "r", encoding="utf-8") as f:
+        with open(args.translations_file, encoding="utf-8") as f:
             translations_data = json.load(f)
 
         # Extract translations from template format or simple dict

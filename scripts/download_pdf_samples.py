@@ -27,7 +27,6 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
 from urllib.parse import unquote, urlparse
 
 import requests
@@ -71,9 +70,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_urls(args: argparse.Namespace) -> List[str]:
-    urls: List[str] = []
-    seen: Set[str] = set()
+def load_urls(args: argparse.Namespace) -> list[str]:
+    urls: list[str] = []
+    seen: set[str] = set()
 
     def add(url: str) -> None:
         clean = url.strip()
@@ -125,7 +124,7 @@ def download_pdf(
     output_dir: Path,
     timeout: int,
     overwrite: bool,
-) -> Tuple[str, Optional[Path], Optional[str]]:
+) -> tuple[str, Path | None, str | None]:
     try:
         dest = build_filename(url, output_dir)
         if dest.exists() and not overwrite:
@@ -167,7 +166,7 @@ def main() -> None:
 
     successes = 0
     skipped = 0
-    failures: List[Tuple[str, str]] = []
+    failures: list[tuple[str, str]] = []
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
         future_to_url = {

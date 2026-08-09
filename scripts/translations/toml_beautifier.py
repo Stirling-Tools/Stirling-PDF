@@ -4,13 +4,13 @@ TOML Beautifier and Structure Fixer for Stirling PDF Frontend
 Restructures translation TOML files to match en-US structure and key order exactly.
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, Any, List
 import argparse
-from collections import OrderedDict
-
+import sys
 import tomllib
+from collections import OrderedDict
+from pathlib import Path
+from typing import Any
+
 import tomli_w
 
 
@@ -20,7 +20,7 @@ class TOMLBeautifier:
         self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
         self.golden_structure = self._load_toml(self.golden_truth_file)
 
-    def _load_toml(self, file_path: Path) -> Dict:
+    def _load_toml(self, file_path: Path) -> dict:
         """Load TOML file with error handling."""
         try:
             with open(file_path, "rb") as f:
@@ -32,7 +32,7 @@ class TOMLBeautifier:
             print(f"Error: Invalid TOML in {file_path}: {e}")
             sys.exit(1)
 
-    def _save_toml(self, data: Dict, file_path: Path, backup: bool = False) -> None:
+    def _save_toml(self, data: dict, file_path: Path, backup: bool = False) -> None:
         """Save TOML file with proper formatting."""
         if backup and file_path.exists():
             backup_path = file_path.with_suffix(".backup.restructured.toml")
@@ -45,8 +45,8 @@ class TOMLBeautifier:
             tomli_w.dump(data, f)
 
     def _flatten_dict(
-        self, d: Dict, parent_key: str = "", separator: str = "."
-    ) -> Dict[str, Any]:
+        self, d: dict, parent_key: str = "", separator: str = "."
+    ) -> dict[str, Any]:
         """Flatten nested dictionary into dot-notation keys."""
         items = []
         for k, v in d.items():
@@ -58,8 +58,8 @@ class TOMLBeautifier:
         return dict(items)
 
     def _rebuild_structure(
-        self, flat_dict: Dict[str, Any], reference_structure: Dict
-    ) -> Dict:
+        self, flat_dict: dict[str, Any], reference_structure: dict
+    ) -> dict:
         """Rebuild nested structure based on reference structure and available translations."""
 
         def build_recursive(ref_obj: Any, current_path: str = "") -> Any:
@@ -94,7 +94,7 @@ class TOMLBeautifier:
 
         return build_recursive(reference_structure) or OrderedDict()
 
-    def restructure_translation_file(self, target_file: Path) -> Dict[str, Any]:
+    def restructure_translation_file(self, target_file: Path) -> dict[str, Any]:
         """Restructure a translation file to match en-US structure exactly."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
@@ -113,7 +113,7 @@ class TOMLBeautifier:
 
     def beautify_and_restructure(
         self, target_file: Path, backup: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Main function to beautify and restructure a translation file."""
         lang_code = target_file.parent.name
         print(f"Restructuring {lang_code} translation file...")
@@ -143,10 +143,10 @@ class TOMLBeautifier:
         print(f"Restructured {lang_code}: {preserved_keys}/{total_keys} keys preserved")
         return result
 
-    def _compare_structures(self, ref: Dict, target: Dict) -> Dict[str, bool]:
+    def _compare_structures(self, ref: dict, target: dict) -> dict[str, bool]:
         """Compare structures between reference and target."""
 
-        def compare_recursive(r: Any, t: Any, path: str = "") -> List[str]:
+        def compare_recursive(r: Any, t: Any, path: str = "") -> list[str]:
             issues = []
 
             if isinstance(r, dict) and isinstance(t, dict):
@@ -176,11 +176,11 @@ class TOMLBeautifier:
             "total_issues": len(issues),
         }
 
-    def validate_key_order(self, target_file: Path) -> Dict[str, Any]:
+    def validate_key_order(self, target_file: Path) -> dict[str, Any]:
         """Validate that keys appear in the same order as en-US."""
         target_data = self._load_toml(target_file)
 
-        def get_key_order(obj: Dict, path: str = "") -> List[str]:
+        def get_key_order(obj: dict, path: str = "") -> list[str]:
             keys = []
             for key in obj.keys():
                 new_path = f"{path}.{key}" if path else key

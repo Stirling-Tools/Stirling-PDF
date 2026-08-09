@@ -16,6 +16,7 @@ To adjust the DPI resolution for rendering PDF pages:
 
 import argparse
 import os
+
 from pdf2image import convert_from_path
 from PIL import Image
 

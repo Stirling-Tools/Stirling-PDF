@@ -51,32 +51,25 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-          cache: "pip" # caching pip dependencies
-
-      - name: Install Python dependencies
-        run: |
-          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt
-
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           enable-cache: true
           cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
+            engine/pyproject.toml
+            engine/uv.lock
           cache-suffix: sync-files
-          working-directory: scripts/pre-commit
+
+      - name: Install Python dependencies
+        run: |
+          uv sync --project engine --locked --group tools
 
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
       - name: Sync translation TOML files
         run: |
-          python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-US/translation.toml" --branch main
+          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-US/translation.toml" --branch main
 
       - name: Sort translation TOML files
         run: |
@@ -89,7 +82,7 @@ jobs:
 
       - name: Sync README.md
         run: |
-          python scripts/counter_translation_v3.py
+          uv run --project engine --locked --group tools python scripts/counter_translation_v3.py
 
       - name: Run git add
         run: |

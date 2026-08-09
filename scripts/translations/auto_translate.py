@@ -5,15 +5,14 @@ Extracts, translates, merges, and beautifies translations for a language.
 TOML format only.
 """
 
-import json
-import sys
 import argparse
+import json
 import os
 import subprocess
-from pathlib import Path
+import sys
 import time
-
 import tomllib
+from pathlib import Path
 
 
 def run_command(cmd, description=""):
@@ -196,7 +195,7 @@ def merge_translations(translated_files, language_code):
             print(f"Error: Translated file not found: {filename}")
             return None
 
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(filename, encoding="utf-8") as f:
             merged.update(json.load(f))
 
     lang_code_safe = language_code.replace("-", "_")

@@ -50,8 +50,7 @@ import glob
 import os
 import re
 import sys
-from collections.abc import Mapping
-from typing import Iterable
+from collections.abc import Iterable, Mapping
 
 # Ensure tomlkit is installed before importing
 try:

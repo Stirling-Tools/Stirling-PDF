@@ -29,10 +29,9 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
+            engine/pyproject.toml
+            engine/uv.lock
           cache-suffix: pre-commit
-          working-directory: scripts/pre-commit
 
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
