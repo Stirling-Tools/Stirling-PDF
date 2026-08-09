@@ -83,10 +83,10 @@
   font-size: 0.6875rem;
 }
 .sui-metric__delta--up {
-  color: var(--color-green-dark);
+  color: var(--color-green);
 }
 .sui-metric__delta--down {
-  color: var(--color-red-dark);
+  color: var(--color-red);
 }
 .sui-metric__delta--flat,
 .sui-metric__desc {

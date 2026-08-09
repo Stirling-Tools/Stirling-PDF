@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import "@app/ui/StepIndicator.css";
 
 export interface StepIndicatorProps {
@@ -21,7 +20,6 @@ export function StepIndicator({
   size = "md",
   className,
 }: StepIndicatorProps) {
-  const { t } = useTranslation();
   return (
     <div
       className={["sui-steps", `sui-steps--${size}`, className ?? ""]
@@ -31,10 +29,6 @@ export function StepIndicator({
       aria-valuemin={1}
       aria-valuemax={total}
       aria-valuenow={current}
-      aria-label={t("common.stepOf", "Step {{current}} of {{total}}", {
-        current,
-        total,
-      })}
     >
       {Array.from({ length: total }, (_, i) => {
         const step = i + 1;

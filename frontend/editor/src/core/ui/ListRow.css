@@ -36,23 +36,23 @@
   background: var(--c-surface-sunken);
 }
 .sui-listrow__leading[data-tone="success"] {
-  color: var(--color-green-dark);
+  color: var(--color-green);
   background: color-mix(in srgb, var(--color-green) 14%, transparent);
 }
 .sui-listrow__leading[data-tone="warning"] {
-  color: var(--color-amber-dark);
+  color: var(--color-amber);
   background: color-mix(in srgb, var(--color-amber) 14%, transparent);
 }
 .sui-listrow__leading[data-tone="danger"] {
-  color: var(--color-red-dark);
+  color: var(--color-red);
   background: color-mix(in srgb, var(--color-red) 14%, transparent);
 }
 .sui-listrow__leading[data-tone="info"] {
-  color: var(--c-accent-text);
+  color: var(--c-primary);
   background: color-mix(in srgb, var(--c-primary) 14%, transparent);
 }
 .sui-listrow__leading[data-tone="purple"] {
-  color: var(--color-purple-dark);
+  color: var(--color-purple);
   background: color-mix(in srgb, var(--color-purple) 14%, transparent);
 }
 

@@ -74,9 +74,7 @@ export function Drawer({
         role="presentation"
       />
       <FocusTrap active>
-        {/* A plain div, not <aside>: ARIA in HTML does not permit role="dialog"
-            on a complementary landmark. */}
-        <div
+        <aside
           className={[
             "sui-drawer",
             `sui-drawer--${side}`,
@@ -130,7 +128,7 @@ export function Drawer({
           )}
           <div className="sui-drawer__body">{children}</div>
           {footer && <footer className="sui-drawer__footer">{footer}</footer>}
-        </div>
+        </aside>
       </FocusTrap>
     </>,
     document.body,

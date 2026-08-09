@@ -46,7 +46,7 @@ button.sui-panelhdr__bar:hover {
   height: 1.75rem;
   border-radius: 9999px;
   background: var(--mantine-color-blue-light);
-  color: var(--c-accent-text);
+  color: var(--mantine-color-blue-filled);
   flex-shrink: 0;
 }
 
@@ -154,15 +154,15 @@ button.sui-panelhdr__bar:hover {
     var(--mantine-color-blue-filled) 18%,
     transparent
   );
-  color: var(--c-accent-text);
+  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
 }
 
 /* Dark mode: the subtle gray close button is too dim against the dark rail —
    brighten it to a clearly-visible light grey (near-white on hover). */
 [data-mantine-color-scheme="dark"] .sui-panelhdr__close {
-  color: var(--c-text-subtle);
+  color: var(--mantine-color-gray-4);
 }
 
 [data-mantine-color-scheme="dark"] .sui-panelhdr__close:hover {
-  color: var(--c-text-subtle);
+  color: var(--mantine-color-gray-2);
 }

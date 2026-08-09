@@ -14,9 +14,7 @@
 }
 
 .sui-field__required {
-  /* The base red is a fill colour; as text on the form background it only
-     reaches 3.4:1. */
-  color: var(--color-red-dark);
+  color: var(--color-red);
 }
 
 .sui-field__control {
@@ -31,5 +29,5 @@
 }
 
 .sui-field--error .sui-field__help {
-  color: var(--color-red-dark);
+  color: var(--color-red);
 }

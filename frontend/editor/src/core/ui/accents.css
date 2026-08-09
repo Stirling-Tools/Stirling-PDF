@@ -9,8 +9,7 @@
     var(--c-btn-inverse)
   );
   --_on: var(--c-btn-inverse);
-  /* Deeper than --c-primary-hover, which lands at 4.28:1 on the accent tint. */
-  --_text: var(--c-accent-text);
+  --_text: var(--c-primary-hover);
   --_bd: color-mix(in srgb, var(--c-primary) 38%, var(--c-surface));
   --_tint: color-mix(in srgb, var(--c-primary) 12%, transparent);
   --_solid-2: var(--c-btn-secondary);
@@ -25,35 +24,30 @@
   --_tert-tint: var(--c-hover);
 }
 /* Danger is pinned to a fixed deep red (not the theme-lightened coral), so the
-   fill and the outline/text are the SAME red in both light and dark. */
+   fill and the outline/text are the SAME red in both light and dark.
+
+   The fill is red-600 rather than red-500 because white sits on it: red-500
+   gives 3.76:1, short of the 4.5:1 body text needs, while red-600 gives 4.85:1
+   and holds in either theme. */
 .sui-acc-danger {
-  /* One step deeper than the base red so the white label on the filled
-     variant clears 4.5:1. */
   --_solid: var(--p-red-600);
-  --_solid-hover: var(--p-red-700);
+  --_solid-hover: color-mix(in srgb, var(--p-red-600) 85%, var(--p-black));
   --_on: #ffffff;
-  /* Theme-aware like the other accents: the mid red only clears 3.6:1 as text
-     on a light surface, so light mode needs the deeper shade while dark mode
-     needs the lighter one. */
-  --_text: var(--color-red-dark);
+  --_text: var(--p-red-500);
   --_bd: color-mix(in srgb, var(--p-red-500) 45%, transparent);
   --_tint: color-mix(in srgb, var(--p-red-500) 12%, transparent);
 }
 .sui-acc-success {
-  /* The base green is a tint/border colour; as a fill behind white text it
-     only reaches 2.3:1, so the solid variant uses the deeper shade. */
-  --_solid: var(--p-green-700);
-  --_solid-hover: var(--p-green-800);
+  --_solid: var(--color-green);
+  --_solid-hover: var(--color-green-dark);
   --_on: #ffffff;
   --_text: var(--color-green-dark);
   --_bd: var(--color-green-border);
   --_tint: color-mix(in srgb, var(--color-green) 12%, transparent);
 }
 .sui-acc-warning {
-  /* Deepened so the white label clears 4.5:1, matching how danger and success
-     resolve the same problem — every filled accent reads white-on-colour. */
-  --_solid: var(--p-amber-700);
-  --_solid-hover: var(--p-amber-800);
+  --_solid: var(--color-amber);
+  --_solid-hover: var(--color-amber-dark);
   --_on: #ffffff;
   --_text: var(--color-amber-dark);
   --_bd: var(--color-amber-border);
@@ -116,9 +110,7 @@
     var(--p-cyan-400) 100%
   );
   --_on: #ffffff;
-  /* The gradient's mid indigo is a fill colour; as text on the light surface
-     it only reaches 4.1:1 (3.6:1 on its own tint). */
-  --_text: var(--p-indigo-600);
+  --_text: var(--p-indigo-500);
   --_bd: var(--p-indigo-200);
   --_tint: color-mix(in srgb, var(--p-indigo-500) 10%, transparent);
 }

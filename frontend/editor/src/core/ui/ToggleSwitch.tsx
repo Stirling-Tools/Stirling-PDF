@@ -6,8 +6,6 @@ export interface ToggleSwitchProps {
   onChange: (checked: boolean) => void;
   /** Accessible label associated to the control. */
   label?: string;
-  /** Names the switch from text rendered elsewhere (e.g. a SettingsRow label). */
-  "aria-labelledby"?: string;
   /** Optional helper text rendered next to the label. */
   description?: string;
   disabled?: boolean;
@@ -25,7 +23,6 @@ export function ToggleSwitch({
   checked,
   onChange,
   label,
-  "aria-labelledby": ariaLabelledBy,
   description,
   disabled,
   size = "md",
@@ -42,7 +39,6 @@ export function ToggleSwitch({
         id={controlId}
         type="checkbox"
         role="switch"
-        aria-labelledby={ariaLabelledBy}
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}

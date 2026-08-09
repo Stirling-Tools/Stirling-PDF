@@ -33,14 +33,10 @@ export function ChatFABWindow({
     .join(" ");
 
   return (
-    // The closed panel stays mounted so it can animate, so `inert` is what keeps
-    // its controls out of the tab order while aria-hidden keeps them off the
-    // accessibility tree.
     <div
       className={classes}
       style={style}
       aria-hidden={!open}
-      inert={!open}
       onDoubleClick={onDoubleClick}
     >
       {children}

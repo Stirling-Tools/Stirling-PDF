@@ -55,7 +55,7 @@
 /* Pills match SUI's Chip component: small rounded tags. */
 .sui-mantine-pill {
   background: var(--c-primary-tint) !important;
-  color: var(--c-accent-text) !important;
+  color: var(--c-primary-hover) !important;
   border: 1px solid var(--c-primary-border) !important;
   border-radius: var(--radius-sm) !important;
   font-size: 0.75rem !important;

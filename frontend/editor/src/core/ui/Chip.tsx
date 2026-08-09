@@ -74,11 +74,11 @@ export function Chip({
 
   // Interactive chips are a <span>, so add button semantics + Enter/Space activation.
   const interactive = !!onClick && !loading;
-  const removable = !!onRemove && !loading;
-  const buttonProps = interactive
+  const interactiveProps = interactive
     ? {
         role: "button",
         tabIndex: 0,
+        onClick,
         onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -87,14 +87,6 @@ export function Chip({
         },
       }
     : {};
-  // A removable chip carries Mantine's remove <button> inside the pill root, and
-  // a control may not nest inside a control — so the button semantics move to
-  // the label, leaving the two as siblings. The click handler stays on the root
-  // either way, so the whole chip remains the pointer target.
-  const rootProps = {
-    ...(interactive ? { onClick } : {}),
-    ...(removable ? {} : buttonProps),
-  };
 
   return (
     <MantinePill
@@ -102,9 +94,9 @@ export function Chip({
       className={classes}
       style={style}
       size={size}
-      withRemoveButton={removable}
+      withRemoveButton={!!onRemove && !loading}
       onRemove={onRemove}
-      {...rootProps}
+      {...interactiveProps}
     >
       {showDot && <span className="sui-chip__dot" aria-hidden />}
       {loading ? (
@@ -114,9 +106,7 @@ export function Chip({
           {leadingIcon}
         </span>
       ) : null}
-      <span className="sui-chip__label" {...(removable ? buttonProps : {})}>
-        {children}
-      </span>
+      <span className="sui-chip__label">{children}</span>
       {trailingIcon && !onRemove && (
         <span className="sui-chip__icon" aria-hidden>
           {trailingIcon}

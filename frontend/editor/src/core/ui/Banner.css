@@ -45,16 +45,16 @@
 }
 
 .sui-banner--info .sui-banner__icon {
-  color: var(--c-accent-text);
+  color: var(--c-primary);
 }
 .sui-banner--success .sui-banner__icon {
-  color: var(--color-green-dark);
+  color: var(--color-green);
 }
 .sui-banner--warning .sui-banner__icon {
   color: var(--color-amber-dark);
 }
 .sui-banner--danger .sui-banner__icon {
-  color: var(--color-red-dark);
+  color: var(--color-red);
 }
 
 .sui-banner__body {

@@ -153,13 +153,6 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     const iconOnly =
       !hasLabel && !fullWidth && (!!leftSection || !!rightSection || loading);
 
-    // A button whose label is momentarily absent while loading still needs an
-    // accessible name; the spinner and any icon are decorative.
-    const fallbackLabel =
-      !hasLabel && loading && !rest["aria-label"] && !rest["aria-labelledby"]
-        ? "Loading"
-        : undefined;
-
     // px/py override p for their axis; each stays undefined (= size default) if unset.
     const padX = px ?? p;
     const padY = py ?? p;
@@ -224,7 +217,6 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         {...rest}
-        aria-label={rest["aria-label"] ?? fallbackLabel}
         ref={ref}
         component={as}
         variant={MANTINE_VARIANT[variant]}

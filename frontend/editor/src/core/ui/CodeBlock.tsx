@@ -70,15 +70,7 @@ export function CodeBlock({
           </Button>
         )}
       </div>
-      {/* Focusable and named: long samples scroll, and a scrollable region needs
-          to be reachable by keyboard to be scrolled at all. */}
-      <pre
-        className="sui-code__pre"
-        style={{ maxHeight }}
-        tabIndex={0}
-        role="group"
-        aria-label={t("common.codeSample", "Code sample")}
-      >
+      <pre className="sui-code__pre" style={{ maxHeight }}>
         <code>{code}</code>
       </pre>
     </div>
