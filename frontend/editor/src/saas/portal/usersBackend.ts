@@ -1,4 +1,5 @@
 import type { UsersBackend } from "@portal/api/usersBackend";
+import { memberAvatars } from "@app/portal/memberAvatars";
 import { apiClient } from "@portal/api/http";
 import { tryGetPortalQueryClient } from "@portal/queryClient";
 import { qk } from "@portal/queries/keys";
@@ -43,6 +44,8 @@ interface TeamMemberDTO {
   /** "LEADER" | "MEMBER". */
   role: string;
   joinedAt?: string;
+  /** Supabase auth uuid; the avatar lives at `<uuid>/avatar` in the profile-pictures bucket. */
+  supabaseAuthId?: string | null;
 }
 
 interface InvitationDTO {
@@ -167,6 +170,17 @@ export const usersBackend: UsersBackend = {
       : [];
 
     const members = (memberDtos ?? []).map((m) => toMember(m, team));
+    const avatarUrls = await memberAvatars.resolve(
+      (memberDtos ?? [])
+        .map((m) => m.supabaseAuthId)
+        .filter((id): id is string => Boolean(id)),
+    );
+    for (const [index, dto] of (memberDtos ?? []).entries()) {
+      const avatarUrl = dto.supabaseAuthId
+        ? avatarUrls[dto.supabaseAuthId]
+        : undefined;
+      if (avatarUrl) members[index].avatarUrl = avatarUrl;
+    }
     // Only genuinely-live invites: PENDING, and not past expiry. The backend
     // returns every status and flips PENDING->EXPIRED on a daily sweep, so a
     // past-expiry PENDING row can linger for up to a day - drop it here.

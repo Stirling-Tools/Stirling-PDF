@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { isAxiosError } from "axios";
 import { Trans, useTranslation } from "react-i18next";
 import {
@@ -36,6 +36,7 @@ import UpdateSeatsButton from "@app/components/shared/UpdateSeatsButton";
 import { useLicense } from "@app/contexts/LicenseContext";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
 import { useAuth } from "@app/auth/UseSession";
+import { useProfilePictureThumbnails } from "@app/hooks/useProfilePictureThumbnails";
 
 export default function PeopleSection() {
   const { t } = useTranslation();
@@ -396,6 +397,12 @@ export default function PeopleSection() {
     user.username.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  const avatarIds = useMemo(
+    () => users.filter((user) => user.hasProfilePicture).map((user) => user.id),
+    [users],
+  );
+  const avatars = useProfilePictureThumbnails(avatarIds);
+
   const roleOptions = [
     {
       value: "ROLE_ADMIN",
@@ -649,6 +656,7 @@ export default function PeopleSection() {
                       <Avatar
                         size={32}
                         color={user.enabled ? "blue" : "gray"}
+                        src={avatars[String(user.id)]}
                         styles={{
                           root: {
                             border: user.isActive

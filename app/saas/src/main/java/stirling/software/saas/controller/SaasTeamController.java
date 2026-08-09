@@ -475,7 +475,8 @@ public class SaasTeamController {
                 user.getUsername(),
                 user.getEmail(),
                 membership.getRole().name(),
-                membership.getAcceptedAt());
+                membership.getAcceptedAt(),
+                user.getSupabaseId() == null ? null : user.getSupabaseId().toString());
     }
 
     private TeamDetailsDTO toTeamDetailsDTO(Team team, boolean isLeader) {
@@ -520,6 +521,9 @@ public class SaasTeamController {
         private final String email;
         private final String role;
         private final LocalDateTime joinedAt;
+
+        /** Supabase auth uuid; the avatar lives at {@code <uuid>/avatar} in profile-pictures. */
+        private final String supabaseAuthId;
     }
 
     @Data

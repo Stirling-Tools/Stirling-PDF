@@ -52,6 +52,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
+import stirling.software.proprietary.security.service.ProfilePictureService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -78,6 +79,7 @@ public class ProprietaryUIDataController {
     private final MfaService mfaService;
     private final LoginAttemptService loginAttemptService;
     private final ResourceAccessService resourceAccessService;
+    private final ProfilePictureService profilePictureService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -94,7 +96,8 @@ public class ProprietaryUIDataController {
             PersistentAuditEventRepository auditRepository,
             MfaService mfaService,
             LoginAttemptService loginAttemptService,
-            ResourceAccessService resourceAccessService) {
+            ResourceAccessService resourceAccessService,
+            ProfilePictureService profilePictureService) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -110,6 +113,7 @@ public class ProprietaryUIDataController {
         this.mfaService = mfaService;
         this.loginAttemptService = loginAttemptService;
         this.resourceAccessService = resourceAccessService;
+        this.profilePictureService = profilePictureService;
     }
 
     /**
@@ -366,9 +370,18 @@ public class ProprietaryUIDataController {
                         .collect(Collectors.toSet());
         Set<Long> portalAccessUserIds =
                 resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
+        // Which roster rows carry an avatar; no image bytes are loaded.
+        Set<Long> usersWithProfilePicture =
+                profilePictureService.withPicture(sortedUsers.stream().map(User::getId).toList());
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
-                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
+                        .map(
+                                user ->
+                                        convertUserToSummary(
+                                                user,
+                                                leaderUserIds,
+                                                portalAccessUserIds,
+                                                usersWithProfilePicture))
                         .toList();
 
         AdminSettingsData data = new AdminSettingsData();
@@ -589,9 +602,13 @@ public class ProprietaryUIDataController {
      * Convert a User to AdminUserSummary (excludes sensitive fields); portal access is passed in.
      */
     private AdminUserSummary convertUserToSummary(
-            User user, Set<Long> leaderUserIds, Set<Long> portalAccessUserIds) {
+            User user,
+            Set<Long> leaderUserIds,
+            Set<Long> portalAccessUserIds,
+            Set<Long> usersWithProfilePicture) {
         AdminUserSummary summary = new AdminUserSummary();
         summary.setId(user.getId());
+        summary.setHasProfilePicture(usersWithProfilePicture.contains(user.getId()));
         summary.setTeamLead(leaderUserIds.contains(user.getId()));
         // Portal access (same policy /me uses).
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));

@@ -28,6 +28,7 @@ import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
+import stirling.software.proprietary.security.database.repository.UserProfilePictureRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
@@ -72,6 +73,7 @@ class UserServiceTest {
 
     @Mock private TeamMembershipService teamMembershipService;
     @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
+    @Mock private UserProfilePictureRepository userProfilePictureRepository;
 
     @Spy @InjectMocks private UserService userService;
 
@@ -267,6 +269,8 @@ class UserServiceTest {
         userService.deleteUser("target");
 
         verify(userServerCertificateService).deleteUserCertificate(1L);
+        // Avatar row keys off users.user_id, so it must go before the user row
+        verify(userProfilePictureRepository).deleteByUserId(1L);
         verify(fileShareAccessRepository).deleteByUser(user);
         // Inbound share (file shared with this user by others) cleaned up
         verify(fileShareAccessRepository).deleteByFileShare(inboundShare);

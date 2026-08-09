@@ -217,7 +217,12 @@ export function UsersDirectory({
     return (
       <div className="portal-users__row" key={m.id}>
         <div className="portal-users__row-main">
-          <Avatar name={m.name} size="sm" tone={avatarToneForMember(m)} />
+          <Avatar
+            src={m.avatarUrl}
+            name={m.name}
+            size="sm"
+            tone={avatarToneForMember(m)}
+          />
           <div className="portal-users__row-id">
             <span className="portal-users__row-name">
               {m.name}

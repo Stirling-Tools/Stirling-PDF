@@ -36,12 +36,16 @@ const MEMBER: Member = {
 };
 const TEAMS: Team[] = [{ id: 1, name: "Acme", userCount: 1, owners: [] }];
 
-function renderDirectory(caps: typeof saasCaps, teams: Team[] = TEAMS) {
+function renderDirectory(
+  caps: typeof saasCaps,
+  teams: Team[] = TEAMS,
+  members: Member[] = [MEMBER],
+) {
   const onRemove = vi.fn();
   render(
     <MantineProvider>
       <UsersDirectory
-        members={[MEMBER]}
+        members={members}
         teams={teams}
         capabilities={caps}
         processorTeamIds={new Set()}
@@ -106,5 +110,29 @@ describe("flavor capabilities — invitations + remove scope", () => {
   it("self-hosted has no pending-invite management and removes at org scope", () => {
     expect(selfHostedCaps.manageInvitations).toBe(false);
     expect(selfHostedCaps.removeScope).toBe("org");
+  });
+});
+
+describe("UsersDirectory - member avatars", () => {
+  // The Avatar wrapper always carries role="img"; the picture is the nested <img>.
+  const pictureOf = () =>
+    document.querySelector<HTMLImageElement>("img.sui-avatar__img");
+
+  it("shows the member's picture when the roster carried one", () => {
+    // Self-hosted supplies a data URL and SaaS a signed URL; the row only cares that it has one.
+    const withPicture: Member = {
+      ...MEMBER,
+      avatarUrl: "data:image/png;base64,AQID",
+    };
+    renderDirectory(selfHostedCaps, TEAMS, [withPicture]);
+
+    expect(pictureOf()).toHaveAttribute("src", "data:image/png;base64,AQID");
+  });
+
+  it("falls back to initials when the member has no picture", () => {
+    renderDirectory(selfHostedCaps);
+
+    expect(pictureOf()).toBeNull();
+    expect(screen.getByText("PR")).toBeInTheDocument();
   });
 });

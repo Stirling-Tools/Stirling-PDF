@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import "@app/ui/Avatar.css";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg";
@@ -43,6 +44,10 @@ export function Avatar({
   ariaLabel,
   className,
 }: AvatarProps) {
+  // A signed avatar URL can expire between render and load; fall back rather than show a broken icon.
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+
   const classes = [
     "sui-avatar",
     `sui-avatar--${size}`,
@@ -53,13 +58,20 @@ export function Avatar({
     .filter(Boolean)
     .join(" ");
 
-  const content = src ? (
-    <img src={src} alt={ariaLabel ?? name} className="sui-avatar__img" />
-  ) : (
-    <span className="sui-avatar__initials" aria-hidden>
-      {initialsOf(name)}
-    </span>
-  );
+  const content =
+    src && !failed ? (
+      // The wrapper already carries the accessible name, so the image itself is decorative.
+      <img
+        src={src}
+        alt=""
+        className="sui-avatar__img"
+        onError={() => setFailed(true)}
+      />
+    ) : (
+      <span className="sui-avatar__initials" aria-hidden>
+        {initialsOf(name)}
+      </span>
+    );
 
   if (onClick) {
     return (
