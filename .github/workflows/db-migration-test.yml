@@ -4,6 +4,9 @@ name: DB migration smoke test
 # releases (v2.0.0 / v2.5.0 / v2.10.0) and verifies admin login still works.
 # Catches schema changes that would break existing user databases under
 # Hibernate's `ddl-auto=update` upgrade path.
+#
+# Also covers the deployment seed databases in testing/seed-databases/, which
+# ship into the PR preview and main demo containers.
 
 on:
   workflow_call:

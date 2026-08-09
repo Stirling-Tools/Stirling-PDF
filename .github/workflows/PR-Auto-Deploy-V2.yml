@@ -243,17 +243,62 @@ jobs:
             BUILD_PORTAL=${{ env.BUILD_PORTAL }}
           platforms: linux/amd64
 
+      # Deploy tooling always comes from main, never the PR branch: the staging
+      # step below runs with the VPS SSH key in scope, and PR branches cut
+      # before the script landed would not have it at all.
+      #
+      # Placed after the image build on purpose - the Dockerfile does `COPY . .`,
+      # so checking this out any earlier would bake it into the image and
+      # invalidate the layer cache on every deploy.
+      - name: Checkout deploy scripts from main
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: ${{ github.repository }}
+          ref: main
+          path: .deploy-main
+          sparse-checkout: scripts/deploy
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
           echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
+      # Puts the demo seed database in place before compose runs, so the
+      # container finds it on first boot.
+      - name: Stage seed database
+        id: assets
+        env:
+          SSH_KEY: ../private.key
+          VPS_USER: ${{ secrets.NEW_VPS_USERNAME }}
+          VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          REMOTE_DIR: /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}
+          # Seed data comes from the PR branch so a PR that changes the fixture
+          # can be exercised in its own preview.
+          SEED_DB: testing/seed-databases/pr-preview.mv.db
+          # Previews are throwaway; every deploy starts from the known-good
+          # fixture rather than whatever the last tester left behind.
+          RESET_SEED: "true"
+        run: bash .deploy-main/scripts/deploy/stage-seed-database.sh
+
       - name: Deploy V2 to VPS
         id: deploy
+        env:
+          # Same enterprise key the enterprise Playwright suite runs on.
+          ENTERPRISE_LICENSE_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
         run: |
           # Use same port strategy as regular PRs - just the PR number
           V2_PORT=${{ needs.check-pr.outputs.pr_number }}
+
+          # Absent on fork PRs, where secrets are not exposed - deploy at the
+          # free tier rather than booting with a blank key.
+          if [ -n "$ENTERPRISE_LICENSE_KEY" ]; then
+            PREMIUM_ENABLED="true"
+            echo "license_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            PREMIUM_ENABLED="false"
+            echo "license_enabled=false" >> "$GITHUB_OUTPUT"
+          fi
 
           # Create docker-compose for V2 with unified embedded image
           cat > docker-compose.yml << EOF
@@ -270,6 +315,8 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/logs:/logs:rw
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/storage:/storage:rw
               environment:
+                PREMIUM_ENABLED: "${PREMIUM_ENABLED}"
+                PREMIUM_KEY: "${ENTERPRISE_LICENSE_KEY}"
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
@@ -379,6 +426,8 @@ jobs:
         env:
           SB_URL: ${{ steps.storybook.outputs.url }}
           SB_FILES: ${{ steps.sb-changes.outputs.storybook_files }}
+          LICENSE_ENABLED: ${{ steps.deploy.outputs.license_enabled }}
+          SEED_STAGED: ${{ steps.assets.outputs.seed_staged }}
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -432,8 +481,20 @@ jobs:
                 `</details>\n\n`;
             }
 
+            // Enterprise tier + pre-seeded accounts are what let a reviewer
+            // exercise teams/audit/portal without setting anything up.
+            const licenseNote = process.env.LICENSE_ENABLED === "true"
+              ? `🏢 **Enterprise licence active** - audit, teams, fleet usage and portal analytics are all unlocked.\n\n`
+              : `⚠️ **No enterprise licence** - the \`PREMIUM_KEY_ENTERPRISE\` secret was not available, so premium features are locked.\n\n`;
+
+            const seedNote = process.env.SEED_STAGED === "true"
+              ? `👥 **Pre-seeded accounts and teams** - see [testing/seed-databases/README.md](https://github.com/${owner}/${repo}/blob/main/testing/seed-databases/README.md) for the logins.\n\n`
+              : ``;
+
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              licenseNote +
+                              seedNote +
                               portalNote +
                               storybookNote +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +

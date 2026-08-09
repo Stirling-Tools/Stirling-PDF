@@ -1,0 +1,216 @@
+name: Auto Main Deployment
+
+# Rebuilds and redeploys the always-on demo from main, using the same image,
+# host and licence plumbing as the PR previews.
+#
+# Port choice: PR previews publish on their bare PR number, so the demo has to
+# sit below every PR number that will ever be open. Open PRs are in the
+# thousands and only climb, so 900 is permanently clear of them and leaves
+# 901+ free for any other static service. The VPS proxy maps
+# <port>.ssl.stirlingpdf.cloud, so this lands on 900.ssl.stirlingpdf.cloud.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      reset_data:
+        description: "Wipe the demo database and reseed from the fixture?"
+        required: false
+        type: choice
+        options:
+          - "true"
+          - "false"
+        default: "true"
+
+permissions:
+  contents: read
+
+env:
+  DEMO_PORT: "900"
+  DEMO_DIR: /stirling/V2-MAIN
+  BUILD_PORTAL: "true"
+
+jobs:
+  deploy-main:
+    runs-on: ubuntu-latest
+    # Never let two pushes to main race for the same directory on the VPS.
+    concurrency:
+      group: v2-deploy-main
+      cancel-in-progress: true
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0 # needed for the commit-hash image tag
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Get commit hash for app
+        id: commit-hash
+        run: |
+          APP_HASH=$(git log -1 --format="%H" -- . 2>/dev/null || echo "")
+          if [ -z "$APP_HASH" ]; then
+            APP_HASH="no-changes"
+            echo "app_short=no-changes" >> $GITHUB_OUTPUT
+          else
+            echo "app_short=${APP_HASH:0:8}" >> $GITHUB_OUTPUT
+          fi
+          echo "App hash: $APP_HASH"
+
+      # Same tag scheme as the PR previews, so a commit already built for a PR
+      # is reused verbatim when it lands on main.
+      - name: Check if image exists
+        id: check-image
+        run: |
+          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }} >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Image already exists, skipping build"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Image needs to be built"
+          fi
+
+      - name: Build and push image
+        if: steps.check-image.outputs.exists == 'false'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: ./docker/embedded/Dockerfile
+          push: true
+          cache-from: type=gha,scope=stirling-pdf-latest
+          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-main-latest
+          build-args: |
+            VERSION_TAG=v2-alpha
+            BUILD_PORTAL=${{ env.BUILD_PORTAL }}
+          platforms: linux/amd64
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Stage seed database
+        id: assets
+        env:
+          SSH_KEY: ../private.key
+          VPS_USER: ${{ secrets.NEW_VPS_USERNAME }}
+          VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          REMOTE_DIR: ${{ env.DEMO_DIR }}
+          SEED_DB: testing/seed-databases/main-demo.mv.db
+          # A demo is only useful if it looks the same every time, so pushes to
+          # main reset it. Dispatch with reset_data=false to keep whatever
+          # state is already there.
+          RESET_SEED: ${{ github.event_name == 'workflow_dispatch' && inputs.reset_data || 'true' }}
+        run: bash scripts/deploy/stage-seed-database.sh
+
+      - name: Deploy to VPS
+        id: deploy
+        env:
+          # Same enterprise key the enterprise Playwright suite runs on.
+          ENTERPRISE_LICENSE_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
+        run: |
+          if [ -n "$ENTERPRISE_LICENSE_KEY" ]; then
+            PREMIUM_ENABLED="true"
+            echo "license_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            PREMIUM_ENABLED="false"
+            echo "license_enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          cat > docker-compose.yml << EOF
+          version: '3.3'
+          services:
+            stirling-pdf-main:
+              container_name: stirling-pdf-v2-main
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
+              ports:
+                - "${{ env.DEMO_PORT }}:8080"
+              volumes:
+                - ${{ env.DEMO_DIR }}/data:/usr/share/tessdata:rw
+                - ${{ env.DEMO_DIR }}/config:/configs:rw
+                - ${{ env.DEMO_DIR }}/logs:/logs:rw
+                - ${{ env.DEMO_DIR }}/storage:/storage:rw
+              environment:
+                PREMIUM_ENABLED: "${PREMIUM_ENABLED}"
+                PREMIUM_KEY: "${ENTERPRISE_LICENSE_KEY}"
+                DISABLE_ADDITIONAL_FEATURES: "false"
+                STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
+                SECURITY_ENABLELOGIN: "true"
+                SYSTEM_DEFAULTLOCALE: en-US
+                UI_APPNAME: "Stirling-PDF Demo (main)"
+                UI_HOMEDESCRIPTION: "Always-on demo built from the main branch"
+                UI_APPNAMENAVBAR: "Demo (main)"
+                SYSTEM_MAXFILESIZE: "100"
+                METRICS_ENABLED: "true"
+                SYSTEM_GOOGLEVISIBILITY: "false"
+                SWAGGER_SERVER_URL: "https://${{ env.DEMO_PORT }}.ssl.stirlingpdf.cloud"
+                baseUrl: "https://${{ env.DEMO_PORT }}.ssl.stirlingpdf.cloud"
+              restart: on-failure:5
+          EOF
+
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose-main.yml
+
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T \
+            ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+            set -e
+            mv /tmp/docker-compose-main.yml ${{ env.DEMO_DIR }}/docker-compose.yml
+            cd ${{ env.DEMO_DIR }}
+            docker-compose down --remove-orphans 2>/dev/null || true
+            docker-compose pull
+            docker-compose up -d
+            # Prune images only - --volumes would take the PR previews' data with it.
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
+          ENDSSH
+
+      - name: Wait for the demo to answer
+        run: |
+          URL="http://${{ secrets.NEW_VPS_HOST }}:${{ env.DEMO_PORT }}/api/v1/info/status"
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL" || true)
+            if [ "$code" = "200" ]; then
+              echo "Demo healthy after $((i * 10))s"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::Demo did not become healthy within 10 minutes"
+          exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Main demo deployment"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| URL | http://${{ secrets.NEW_VPS_HOST }}:${{ env.DEMO_PORT }} |"
+            echo "| Image | \`v2-${{ steps.commit-hash.outputs.app_short }}\` |"
+            echo "| Enterprise licence | ${{ steps.deploy.outputs.license_enabled }} |"
+            echo "| Reseeded | ${{ steps.assets.outputs.seed_staged }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cleanup temporary files
+        if: always()
+        run: rm -f ../private.key
+        continue-on-error: true

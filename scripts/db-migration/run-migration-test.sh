@@ -20,6 +20,10 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIXTURE_DIR="${FIXTURE_DIR:-$REPO_ROOT/app/proprietary/src/test/resources/db-migration-fixtures}"
+# The deployment seed databases are checked here too: they are shipped into the
+# PR preview and main demo containers, so a schema change that breaks one would
+# otherwise only surface as a broken deployment.
+SEED_DIR="${SEED_DIR:-$REPO_ROOT/testing/seed-databases}"
 STIRLING_JAR="${STIRLING_JAR:-}"
 JAVA_BIN="${JAVA_BIN:-${MIGRATION_TEST_JAVA:-}}"
 ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
@@ -227,6 +231,15 @@ main() {
     local fixtures
     mapfile -t fixtures < <(find "$FIXTURE_DIR" -maxdepth 1 -name '*.mv.db' | sort)
     [[ ${#fixtures[@]} -gt 0 ]] || fail "No fixtures under $FIXTURE_DIR"
+
+    if [[ -d "$SEED_DIR" ]]; then
+        local seeds
+        mapfile -t seeds < <(find "$SEED_DIR" -maxdepth 1 -name '*.mv.db' | sort)
+        if [[ ${#seeds[@]} -gt 0 ]]; then
+            log "Including ${#seeds[@]} deployment seed database(s) from $SEED_DIR"
+            fixtures+=("${seeds[@]}")
+        fi
+    fi
 
     local failed=0
     local failed_names=()
