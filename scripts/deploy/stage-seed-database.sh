@@ -1,22 +1,12 @@
 #!/usr/bin/env bash
 #
-# Puts the seed H2 database in place on the VPS before `docker-compose up`, so
-# a preview deployment boots with teams, users and policies already present.
+# Copies the seed H2 database onto the VPS before `docker-compose up`, so a
+# preview deployment boots with teams, users and policies already present.
+# Shared by the PR preview and main demo workflows.
 #
-# Shared by the PR preview and main demo workflows so both behave identically.
-# Seeding is optional and degrades quietly: a deployment without a seed file
-# still boots, just empty.
-#
-# Inputs (env):
-#   SSH_KEY            path to the private key (required)
-#   VPS_USER, VPS_HOST target host (required)
-#   REMOTE_DIR         deployment root on the VPS, e.g. /stirling/V2-PR-123 (required)
-#   SEED_DB            local path to a .mv.db to seed with (optional)
-#   RESET_SEED         "true" reseeds on every deploy, wiping existing data.
-#                      Anything else only seeds when there is no database yet.
-#
-# Outputs (appended to GITHUB_OUTPUT when set):
-#   seed_staged=true|false
+# Inputs (env): SSH_KEY, VPS_USER, VPS_HOST, REMOTE_DIR (all required),
+#   SEED_DB (optional path), RESET_SEED ("true" reseeds and wipes existing data).
+# Outputs: appends seed_staged=true|false to $GITHUB_OUTPUT when set.
 
 set -euo pipefail
 
@@ -44,30 +34,24 @@ emit() {
 STAGING="/tmp/stirling-stage-$(basename "$REMOTE_DIR")-$$"
 
 remote_sh "mkdir -p '$REMOTE_DIR'/{config,logs,data,storage} '$STAGING'"
-# Clean up on any exit path, not just the happy one - a failure part way
-# through would otherwise leave the staging dir (and a copy of the database)
-# behind on the VPS on every retry.
+# Clean up on any exit path: a mid-run failure would otherwise leave a copy of
+# the database on the VPS every retry.
 cleanup_staging() { remote_sh "rm -rf '$STAGING'" 2>/dev/null || true; }
 trap cleanup_staging EXIT
 
-# The previous container has to be down before anything here touches the
-# database file. A running app holds the H2 file open and flushes its own state
-# on shutdown, so replacing the file underneath it loses the seed - or corrupts
-# it. The deploy step's own `docker-compose down` is then a no-op.
+# Must stop first: a running app holds the H2 file open and flushes on shutdown,
+# so swapping the file underneath it loses the seed.
 if remote_sh "test -f '$REMOTE_DIR/docker-compose.yml'"; then
     log "Stopping the running deployment before staging..."
     remote_sh "cd '$REMOTE_DIR' && docker-compose down --remove-orphans 2>/dev/null || true"
 fi
 
-# Must match spring.datasource.url in application.properties; the container's
-# base path is / so this lands at /configs/... inside the container.
+# Matches spring.datasource.url; the container's base path is /.
 DB_NAME="stirling-pdf-DB-2.3.232.mv.db"
 
 seed_staged=false
 if [[ -n "$SEED_DB" && ! -f "$SEED_DB" ]]; then
-    # Expected for PR branches cut before the seed fixtures landed - those
-    # should still deploy, just with an empty database. CI boot-tests the
-    # fixtures on main, so a genuine typo gets caught there instead of here.
+    # Expected on PR branches cut before the fixtures landed; still deploy.
     log "WARNING: SEED_DB '$SEED_DB' not found in this checkout - skipping seed."
     SEED_DB=""
 fi
@@ -84,8 +68,7 @@ if [[ -n "$SEED_DB" ]]; then
     if [[ "$should_seed" == true ]]; then
         log "Seeding database from $(basename "$SEED_DB") (reset=$RESET_SEED)..."
         push "$SEED_DB" "$STAGING/$DB_NAME"
-        # Drop H2's sidecar files too - a stale .trace.db or lock left next to a
-        # replaced .mv.db makes H2 refuse to open the new one.
+        # Stale .trace.db/.lock.db beside a replaced .mv.db blocks H2 opening it.
         remote_sh "rm -f '$REMOTE_DIR/config/stirling-pdf-DB-'*.mv.db \
                          '$REMOTE_DIR/config/stirling-pdf-DB-'*.trace.db \
                          '$REMOTE_DIR/config/stirling-pdf-DB-'*.lock.db; \

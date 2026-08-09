@@ -243,13 +243,9 @@ jobs:
             BUILD_PORTAL=${{ env.BUILD_PORTAL }}
           platforms: linux/amd64
 
-      # Deploy tooling always comes from main, never the PR branch: the staging
-      # step below runs with the VPS SSH key in scope, and PR branches cut
-      # before the script landed would not have it at all.
-      #
-      # Placed after the image build on purpose - the Dockerfile does `COPY . .`,
-      # so checking this out any earlier would bake it into the image and
-      # invalidate the layer cache on every deploy.
+      # Staging runs with the VPS SSH key in scope, so the script comes from
+      # main, not the PR branch. After the build: the Dockerfile does `COPY . .`
+      # and an earlier checkout would thrash the image layer cache.
       - name: Checkout deploy scripts from main
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -264,8 +260,6 @@ jobs:
           echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
-      # Puts the demo seed database in place before compose runs, so the
-      # container finds it on first boot.
       - name: Stage seed database
         id: assets
         env:
@@ -290,8 +284,7 @@ jobs:
           # Use same port strategy as regular PRs - just the PR number
           V2_PORT=${{ needs.check-pr.outputs.pr_number }}
 
-          # Absent on fork PRs, where secrets are not exposed - deploy at the
-          # free tier rather than booting with a blank key.
+          # Absent on fork PRs, where secrets are not exposed.
           if [ -n "$ENTERPRISE_LICENSE_KEY" ]; then
             PREMIUM_ENABLED="true"
             echo "license_enabled=true" >> "$GITHUB_OUTPUT"
@@ -362,48 +355,6 @@ jobs:
           # Set port for output
           echo "v2_port=${V2_PORT}" >> $GITHUB_OUTPUT
 
-      - name: Wait for the preview to answer
-        run: |
-          URL="http://${{ secrets.NEW_VPS_HOST }}:${{ steps.deploy.outputs.v2_port }}/api/v1/info/status"
-          for i in $(seq 1 60); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL" || true)
-            if [ "$code" = "200" ]; then echo "Healthy after $((i * 10))s"; exit 0; fi
-            sleep 10
-          done
-          echo "::error::Preview did not become healthy within 10 minutes"
-          exit 1
-
-      # Demo accounts are created here rather than baked into the seed
-      # database: their passwords are secrets, and a password committed to a
-      # public repo is a published password.
-      #
-      # Gated on the licence: without one the seat cap is the unlicensed
-      # grandfathered 5 and the team endpoints are premium-gated, so
-      # provisioning would half-succeed and fail the deploy over demo data.
-      - name: Provision demo accounts
-        id: provision
-        if: steps.deploy.outputs.license_enabled == 'true'
-        env:
-          BASE_URL: http://${{ secrets.NEW_VPS_HOST }}:${{ steps.deploy.outputs.v2_port }}
-          ADMIN_USERNAME: ${{ secrets.TEST_LOGIN_USERNAME }}
-          ADMIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
-          DEMO_PASSWORD: ${{ secrets.PREVIEW_DEMO_PASSWORD }}
-          MANIFEST: testing/seed-databases/pr-preview-users.json
-        run: |
-          # Without the secret there is no safe password to use, so leave the
-          # preview admin-only rather than inventing a guessable one.
-          if [ -z "$DEMO_PASSWORD" ]; then
-            echo "PREVIEW_DEMO_PASSWORD is not set - skipping demo accounts."
-            echo "users_provisioned=0" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [ ! -f "$MANIFEST" ]; then
-            echo "$MANIFEST not in this checkout - skipping demo accounts."
-            echo "users_provisioned=0" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          python3 .deploy-main/scripts/deploy/provision_demo_users.py
-
       # ---- Storybook preview (only when this PR touches stories/.storybook) ----
       # Runs inside the same approved-contributor-gated deploy job, so it deploys
       # under the exact same access rules as the app preview.
@@ -470,7 +421,6 @@ jobs:
           SB_FILES: ${{ steps.sb-changes.outputs.storybook_files }}
           LICENSE_ENABLED: ${{ steps.deploy.outputs.license_enabled }}
           SEED_STAGED: ${{ steps.assets.outputs.seed_staged }}
-          USERS_PROVISIONED: ${{ steps.provision.outputs.users_provisioned }}
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -524,17 +474,12 @@ jobs:
                 `</details>\n\n`;
             }
 
-            // Enterprise tier + pre-seeded accounts are what let a reviewer
-            // exercise teams/audit/portal without setting anything up.
             const licenseNote = process.env.LICENSE_ENABLED === "true"
-              ? `🏢 **Enterprise licence active** - audit, teams, fleet usage and portal analytics are all unlocked.\n\n`
-              : `⚠️ **No enterprise licence** - the \`PREMIUM_KEY_ENTERPRISE\` secret was not available, so premium features are locked.\n\n`;
+              ? `🏢 **Enterprise licence active** - audit, teams and portal analytics unlocked.\n\n`
+              : `⚠️ **No enterprise licence** - premium features are locked.\n\n`;
 
-            // Credentials are secrets, so point at the docs rather than
-            // printing anything: workflow logs on a public repo are public.
-            const provisioned = Number(process.env.USERS_PROVISIONED || 0);
             const seedNote = process.env.SEED_STAGED === "true"
-              ? `👥 **Seeded teams${provisioned ? ` and ${provisioned} demo accounts` : ""}** - admin is the usual preview login; demo accounts share the \`PREVIEW_DEMO_PASSWORD\` secret. See [testing/seed-databases/README.md](https://github.com/${owner}/${repo}/blob/main/testing/seed-databases/README.md).\n\n`
+              ? `👥 **Seeded teams, users and policies** - credentials are not public; ask if you need them.\n\n`
               : ``;
 
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +

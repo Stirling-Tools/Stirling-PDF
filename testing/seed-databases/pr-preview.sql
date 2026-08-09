@@ -1,43 +1,58 @@
--- Seed data for PR preview deployments: the teams a reviewer needs in order
--- to exercise team scoping without creating anything by hand.
+-- Teams and users for PR preview deployments. Applied by
+-- scripts/seed-db/build-seed-db.sh on top of a freshly booted database.
 --
--- Deliberately contains NO users. Accounts are provisioned after the container
--- boots, by scripts/deploy/provision-demo-users.sh, because their passwords
--- come from repository secrets and must never live in a public repo. Leaving
--- the users table empty also keeps `UserService.hasUsers()` false, so the app
--- still bootstraps its admin from SECURITY_INITIALLOGIN_USERNAME / _PASSWORD
--- exactly as it would on a fresh install.
---
--- Applied by scripts/seed-db/build-seed-db.sh on top of a freshly booted,
--- otherwise-empty database. That boot already created:
---   users        1 = admin, 2 = STIRLING-PDF-BACKEND-API-USER
---   teams        1 = Default, 2 = Internal
---   user_license_settings singleton (left untouched - its integrity signature
---   is derived from a per-database salt and rewriting it trips validation)
+-- Only bcrypt hashes are committed. The plaintexts are 32-char random strings
+-- held outside the repo; rotate by re-hashing and regenerating the .mv.db.
+-- Seeding users means SECURITY_INITIALLOGIN_* is ignored: the app only
+-- bootstraps an admin when the user table is empty.
 
------------------------------------------------------------------- teams ----
--- Explicit ids start at 100 to stay clear of the bootstrap rows. The user
--- manifest (pr-preview-users.json) refers to these teams by name, so renaming
--- one here means renaming it there too.
 INSERT INTO teams (team_id, name) VALUES
   (100, 'Engineering'),
   (101, 'Finance'),
   (102, 'Legal');
 
---------------------------------------------------- clear the placeholders ----
--- The generator's boot left an `admin`/`stirling` row behind. Ship that and
--- `hasUsers()` would be true, so the deployment would silently keep the
--- well-known password instead of taking SECURITY_INITIALLOGIN_* from secrets.
--- Wipe the user tables so the container bootstraps its own admin.
--- Child rows go first: both carry a FK to users.
-DELETE FROM user_settings;
-DELETE FROM team_memberships;
-DELETE FROM authorities;
-DELETE FROM users;
+-- Reset the bootstrap admin to the seeded credentials rather than leaving the
+-- generator's well-known admin/stirling in place.
+UPDATE users
+   SET password = '$2a$10$viXXoaI/5d.U6Niee3UYQ.kGyuXnO26O/qIDUJC4Csc9GbSSV43ky',
+       is_first_login = FALSE,
+       has_completed_initial_setup = TRUE
+ WHERE username = 'admin';
 
-------------------------------------------------- hand back the sequences ----
--- Without this the identity counters still sit low and the first team or user
--- created through the UI collides with a seeded primary key.
+-- role_name stays null: the effective role lives in authorities, matching how
+-- the app writes the bootstrap admin.
+INSERT INTO users (user_id, username, password, enabled, authenticationtype,
+                   is_first_login, has_completed_initial_setup,
+                   force_password_change, oauth_grandfathered, team_id,
+                   email, created_at, updated_at) VALUES
+  (100, 'eng.lead',      '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE, FALSE, FALSE, 100, 'eng.lead@example.com',      CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (101, 'eng.dev',       '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE, FALSE, FALSE, 100, 'eng.dev@example.com',       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (102, 'finance.lead',  '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE, FALSE, FALSE, 101, 'finance.lead@example.com',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (103, 'finance.ap',    '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE, FALSE, FALSE, 101, 'finance.ap@example.com',    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (104, 'legal.counsel', '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE, FALSE, FALSE, 102, 'legal.counsel@example.com', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  -- Disabled: covers the deactivated-account rendering and login rejection.
+  (105, 'former.staff',  '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', FALSE, 'web', FALSE, TRUE, FALSE, FALSE, 102, 'former.staff@example.com',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO authorities (id, authority, user_id) VALUES
+  (100, 'ROLE_ADMIN',            100),
+  (101, 'ROLE_USER',             101),
+  (102, 'ROLE_USER',             102),
+  (103, 'ROLE_WEB_ONLY_USER',    103),
+  (104, 'ROLE_LIMITED_API_USER', 104),
+  (105, 'ROLE_USER',             105);
+
+INSERT INTO team_memberships (membership_id, team_id, user_id, role,
+                              invited_at, accepted_at, created_at, updated_at) VALUES
+  (100, 100, 100, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (101, 100, 101, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (102, 101, 102, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (103, 101, 103, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (104, 102, 104, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  -- Invited but never accepted: exercises the pending-membership state.
+  (105, 102, 105, 'MEMBER', CURRENT_TIMESTAMP, NULL,              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Counters still sit low after bootstrap; without this the first row the app
+-- inserts collides with a seeded id.
 ALTER TABLE teams            ALTER COLUMN team_id       RESTART WITH 200;
 ALTER TABLE users            ALTER COLUMN user_id       RESTART WITH 200;
 ALTER TABLE authorities      ALTER COLUMN id            RESTART WITH 200;

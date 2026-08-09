@@ -20,8 +20,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIXTURE_DIR="${FIXTURE_DIR:-$REPO_ROOT/app/proprietary/src/test/resources/db-migration-fixtures}"
-# The deployment seed databases are checked here too: they are shipped into the
-# PR preview and main demo containers, so a schema change that breaks one would
+# Seed databases are checked too: a schema change that breaks one would
 # otherwise only surface as a broken deployment.
 SEED_DIR="${SEED_DIR:-$REPO_ROOT/testing/seed-databases}"
 STIRLING_JAR="${STIRLING_JAR:-}"
@@ -112,6 +111,9 @@ wait_for_url() {
 
 test_fixture() {
     local fixture_path="$1"
+    # Seed databases ship deliberately non-default admin credentials, so only
+    # the boot and schema checks apply to them.
+    local skip_login="${2:-false}"
     local label
     label=$(basename "$fixture_path" .mv.db)
     log "=== $label ==="
@@ -166,7 +168,12 @@ test_fixture() {
             rc=1
         fi
 
-        if (( rc == 0 )); then
+        if (( rc == 0 )) && [[ "$skip_login" == "true" ]]; then
+            local status_code
+            status_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$base_url/api/v1/info/status" || echo "000")
+            log "  GET /api/v1/info/status -> HTTP $status_code (login check skipped)"
+            if [[ "$status_code" != "200" ]]; then rc=1; else log "  PASS: $label migrated"; fi
+        elif (( rc == 0 )); then
             local login_body; login_body=$(printf '{"username":"%s","password":"%s"}' "$ADMIN_USERNAME" "$ADMIN_PASSWORD")
             local resp_file="$workdir/login.resp"
             local code
@@ -244,9 +251,11 @@ main() {
     local failed=0
     local failed_names=()
     for f in "${fixtures[@]}"; do
+        local skip_login=false
+        [[ "$f" == "$SEED_DIR"/* ]] && skip_login=true
         # set -e would abort the whole run on the first failure; we want to
         # report every fixture's status, so guard with ||.
-        if ! test_fixture "$f"; then
+        if ! test_fixture "$f" "$skip_login"; then
             failed=$(( failed + 1 ))
             failed_names+=("$(basename "$f" .mv.db)")
         fi

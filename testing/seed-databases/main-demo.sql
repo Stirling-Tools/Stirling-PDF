@@ -1,15 +1,11 @@
--- Seed data for the main-branch demo deployment: the teams and saved policies
--- that make the demo look like a real tenant.
+-- Teams, users and saved policies for the main demo deployment. Applied by
+-- scripts/seed-db/build-seed-db.sh on top of a freshly booted database.
 --
--- Deliberately contains NO users. Accounts are provisioned after the container
--- boots, by scripts/deploy/provision-demo-users.sh, because their passwords
--- come from repository secrets and must never live in a public repo. See
--- pr-preview.sql for the full explanation and for what the generator's first
--- boot has already created.
+-- Only bcrypt hashes are committed. The plaintexts are 32-char random strings
+-- held outside the repo; rotate by re-hashing and regenerating the .mv.db.
+-- Seeding users means SECURITY_INITIALLOGIN_* is ignored: the app only
+-- bootstraps an admin when the user table is empty.
 
------------------------------------------------------------------- teams ----
--- The user manifest (main-demo-users.json) refers to these teams by name, so
--- renaming one here means renaming it there too.
 INSERT INTO teams (team_id, name) VALUES
   (100, 'Engineering'),
   (101, 'Finance'),
@@ -18,20 +14,87 @@ INSERT INTO teams (team_id, name) VALUES
   (104, 'Operations'),
   (105, 'Support');
 
---------------------------------------------------------------- policies ----
+-- Reset the bootstrap admin to the seeded credentials rather than leaving the
+-- generator's well-known admin/stirling in place.
+UPDATE users
+   SET password = '$2a$10$viXXoaI/5d.U6Niee3UYQ.kGyuXnO26O/qIDUJC4Csc9GbSSV43ky',
+       is_first_login = FALSE,
+       has_completed_initial_setup = TRUE
+ WHERE username = 'admin';
+
+-- role_name stays null: the effective role lives in authorities, matching how
+-- the app writes the bootstrap admin. new.starter is mid first-login,
+-- former.staff is disabled.
+INSERT INTO users (user_id, username, password, enabled, authenticationtype,
+                   is_first_login, has_completed_initial_setup,
+                   force_password_change, oauth_grandfathered, team_id,
+                   email, created_at, updated_at) VALUES
+  (100, 'eng.lead',       '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 100, 'eng.lead@example.com',       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (101, 'eng.dev',        '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 100, 'eng.dev@example.com',        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (102, 'eng.qa',         '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 100, 'eng.qa@example.com',         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (103, 'finance.lead',   '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 101, 'finance.lead@example.com',   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (104, 'finance.ap',     '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 101, 'finance.ap@example.com',     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (105, 'finance.audit',  '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 101, 'finance.audit@example.com',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (106, 'legal.counsel',  '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 102, 'legal.counsel@example.com',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (107, 'legal.para',     '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 102, 'legal.para@example.com',     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (108, 'marketing.lead', '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 103, 'marketing.lead@example.com', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (109, 'marketing.des',  '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 103, 'marketing.des@example.com',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (110, 'ops.lead',       '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 104, 'ops.lead@example.com',       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (111, 'ops.automation', '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 104, 'ops.automation@example.com', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (112, 'support.lead',   '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 105, 'support.lead@example.com',   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (113, 'support.agent',  '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', FALSE, TRUE,  FALSE, FALSE, 105, 'support.agent@example.com',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (114, 'new.starter',    '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', TRUE,  'web', TRUE,  FALSE, TRUE,  FALSE, 100, 'new.starter@example.com',    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (115, 'former.staff',   '$2a$10$Rw/dExUcJO5OM6Ijj09L0.MQqXzqUsWPfxO1lQne7QO.K.2ryWWai', FALSE, 'web', FALSE, TRUE,  FALSE, FALSE, 102, 'former.staff@example.com',   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO authorities (id, authority, user_id) VALUES
+  (100, 'ROLE_ADMIN',                  100),
+  (101, 'ROLE_USER',                   101),
+  (102, 'ROLE_USER',                   102),
+  (103, 'ROLE_ADMIN',                  103),
+  (104, 'ROLE_WEB_ONLY_USER',          104),
+  (105, 'ROLE_USER',                   105),
+  (106, 'ROLE_LIMITED_API_USER',       106),
+  (107, 'ROLE_WEB_ONLY_USER',          107),
+  (108, 'ROLE_USER',                   108),
+  (109, 'ROLE_USER',                   109),
+  (110, 'ROLE_ADMIN',                  110),
+  (111, 'ROLE_LIMITED_API_USER',       111),
+  (112, 'ROLE_USER',                   112),
+  (113, 'ROLE_EXTRA_LIMITED_API_USER', 113),
+  (114, 'ROLE_USER',                   114),
+  (115, 'ROLE_USER',                   115);
+
+-- former.staff has a null accepted_at: exercises the pending-membership state.
+INSERT INTO team_memberships (membership_id, team_id, user_id, role,
+                              invited_at, accepted_at, created_at, updated_at) VALUES
+  (100, 100, 100, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (101, 100, 101, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (102, 100, 102, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (103, 101, 103, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (104, 101, 104, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (105, 101, 105, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (106, 102, 106, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (107, 102, 107, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (108, 103, 108, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (109, 103, 109, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (110, 104, 110, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (111, 104, 111, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (112, 105, 112, 'LEADER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (113, 105, 113, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (114, 100, 114, 'MEMBER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (115, 102, 115, 'MEMBER', CURRENT_TIMESTAMP, NULL,              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO user_settings (user_id, setting_key, setting_value) VALUES
+  (100, 'language', 'en-GB'),
+  (100, 'theme',    'dark'),
+  (103, 'language', 'en-US'),
+  (106, 'language', 'de-DE'),
+  (108, 'theme',    'dark');
+
 -- policy_json is the serialised Policy record; the columns beside it are
--- denormalised copies the store uses for listing and ordering, so the two
--- must agree. Every step's `operation` is a real Stirling endpoint path.
--- Inputs are empty: these are on-demand policies, runnable from the UI
--- without a configured source connection.
---
--- GET /api/v1/policies is team-scoped, so the first two live in team 1
--- (Default), where the bootstrap admin lands - otherwise a demo admin logs in
--- to an empty policy list. The rest are spread across the demo teams so team
--- scoping is visible by logging in as the relevant team lead.
---
--- `owner` is a plain string, not a foreign key, so naming users who do not
--- exist until provisioning runs is fine.
+-- denormalised copies the store uses for listing and ordering, so they must
+-- agree. GET /api/v1/policies is team-scoped, so the first two sit in team 1
+-- (Default) where admin lands; the rest need their team's lead to be visible.
 INSERT INTO policies (id, name, owner, enabled, team_id, sort_order, policy_json) VALUES
   ('demo-shrink-and-clean', 'Shrink and clean up', 'admin', TRUE, 1, 1,
    '{"id":"demo-shrink-and-clean","name":"Shrink and clean up","owner":"admin","enabled":true,"inputs":[],"steps":[{"operation":"/api/v1/misc/compress-pdf","parameters":{"optimizeLevel":3},"fileParameters":{}},{"operation":"/api/v1/misc/sanitize-pdf","parameters":{"removeJavaScript":true,"removeEmbeddedFiles":true},"fileParameters":{}}],"output":{"type":"inline","options":{}},"outputIds":[],"teamId":1}'),
@@ -51,20 +114,11 @@ INSERT INTO policies (id, name, owner, enabled, team_id, sort_order, policy_json
   ('demo-brochure-merge', 'Merge brochure pages', 'marketing.lead', TRUE, 103, 6,
    '{"id":"demo-brochure-merge","name":"Merge brochure pages","owner":"marketing.lead","enabled":true,"inputs":[],"steps":[{"operation":"/api/v1/general/merge-pdfs","parameters":{"sortType":"orderProvided"},"fileParameters":{}}],"output":{"type":"inline","options":{}},"outputIds":[],"teamId":103}'),
 
-  -- Deliberately disabled so the policy list shows both states.
   ('demo-ocr-scans', 'OCR scanned intake', 'ops.lead', FALSE, 104, 7,
    '{"id":"demo-ocr-scans","name":"OCR scanned intake","owner":"ops.lead","enabled":false,"inputs":[],"steps":[{"operation":"/api/v1/misc/ocr-pdf","parameters":{"languages":["eng"],"ocrType":"skip-text"},"fileParameters":{}}],"output":{"type":"inline","options":{}},"outputIds":[],"teamId":104}');
 
---------------------------------------------------- clear the placeholders ----
--- See pr-preview.sql: shipping the generator's `admin`/`stirling` row would
--- make hasUsers() true and stop the container taking its admin credentials
--- from SECURITY_INITIALLOGIN_*. Child rows go first: both carry a FK to users.
-DELETE FROM user_settings;
-DELETE FROM team_memberships;
-DELETE FROM authorities;
-DELETE FROM users;
-
-------------------------------------------------- hand back the sequences ----
+-- Counters still sit low after bootstrap; without this the first row the app
+-- inserts collides with a seeded id.
 ALTER TABLE teams            ALTER COLUMN team_id       RESTART WITH 200;
 ALTER TABLE users            ALTER COLUMN user_id       RESTART WITH 200;
 ALTER TABLE authorities      ALTER COLUMN id            RESTART WITH 200;

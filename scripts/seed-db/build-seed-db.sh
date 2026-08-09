@@ -1,29 +1,17 @@
 #!/usr/bin/env bash
 #
-# Builds a seed H2 database for the CI preview deployments.
+# Builds a seed H2 database for the CI preview deployments: boots the app once
+# against an empty database so Hibernate creates the schema and bootstrap rows,
+# then applies a plain SQL script to the shut-down file.
 #
-# Two-phase, deliberately: boot the app once against an empty database so
-# Hibernate's ddl-auto=update creates the whole schema and the bootstrap rows
-# (admin, internal API user, Default/Internal teams), then apply a plain SQL
-# script on top of the shut-down file.
-#
-# Why not drive the REST API instead? The team and user-admin endpoints are
-# licence-gated (@PremiumEndpoint, and saveUser refuses past the seat limit),
-# so an API-driven generator would need a live enterprise licence just to
-# build a fixture. SQL against the app's own generated schema needs nothing.
-#
-# Inputs:
-#   --sql <file>      seed script to apply (required)
-#   --out <file>      destination .mv.db (required)
-#   --jar <file>      Stirling-PDF jar (defaults to the :stirling-pdf:bootJar output)
-#   --dump-schema     write the post-boot schema next to --out as .schema.sql
-#                     (handy when writing or updating a seed script)
+# Driving the REST API instead would need a live enterprise licence just to
+# build a fixture - the team endpoints are premium-gated and saveUser stops at
+# the unlicensed 5-seat limit. SQL against the app's own schema needs nothing.
 #
 # Usage:
 #   ./gradlew :stirling-pdf:bootJar -PnoSpotless
-#   scripts/seed-db/build-seed-db.sh \
-#       --sql testing/seed-databases/pr-preview.sql \
-#       --out testing/seed-databases/pr-preview.mv.db
+#   scripts/seed-db/build-seed-db.sh --sql testing/seed-databases/pr-preview.sql \
+#                                    --out testing/seed-databases/pr-preview.mv.db
 
 set -euo pipefail
 
@@ -31,7 +19,6 @@ REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SEED_SQL=""
 OUT_DB=""
 JAR=""
-DUMP_SCHEMA=false
 STARTUP_TIMEOUT_SEC="${STARTUP_TIMEOUT_SEC:-300}"
 
 # Must match spring.datasource.url in application.properties - the app derives
@@ -46,8 +33,7 @@ while [[ $# -gt 0 ]]; do
         --sql)  SEED_SQL="$2"; shift 2 ;;
         --out)  OUT_DB="$2"; shift 2 ;;
         --jar)  JAR="$2"; shift 2 ;;
-        --dump-schema) DUMP_SCHEMA=true; shift ;;
-        -h|--help) sed -n '2,28p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
         *) die "Unknown argument: $1" ;;
     esac
 done
@@ -83,9 +69,8 @@ H2_JAR=$(find "${GRADLE_USER_HOME:-$HOME/.gradle}/caches/modules-2" -name 'h2-*.
          | grep -vE '(sources|javadoc)' | sort | tail -n 1 || true)
 [[ -n "$H2_JAR" ]] || die "Could not find an h2-*.jar in the Gradle cache"
 
-# Paths handed to the JVM must be native. Under Git Bash an MSYS path like
-# /tmp/xyz is resolved by Java against the drive root, which silently creates a
-# *new* empty database instead of opening the one we just built.
+# JVM needs native paths: under Git Bash, Java resolves /tmp/xyz against the
+# drive root and silently creates a new empty database instead.
 to_native() {
     if command -v cygpath >/dev/null 2>&1; then
         cygpath -m "$1"   # mixed mode: C:/like/this, valid in JDBC URLs and file args
@@ -124,9 +109,8 @@ log "workdir=$WORKDIR port=$PORT"
 log "Phase 1/3: booting to generate the schema..."
 
 pushd "$WORKDIR" >/dev/null
-# DISABLE_ADDITIONAL_FEATURES=false pulls in the proprietary module so teams,
-# policies and audit tables exist in the schema. No licence is needed for the
-# tables themselves - the licence only gates endpoints at runtime.
+# DISABLE_ADDITIONAL_FEATURES=false pulls in the proprietary module so the
+# teams/policies/audit tables exist. The licence only gates endpoints.
 DISABLE_ADDITIONAL_FEATURES=false \
 SECURITY_ENABLELOGIN=true \
 SECURITY_INITIALLOGIN_USERNAME=admin \
@@ -161,8 +145,8 @@ DB_FILE="$WORKDIR/configs/$DB_BASENAME.mv.db"
 
 OFFLINE_URL="jdbc:h2:file:$(to_native "$WORKDIR/configs/$DB_BASENAME");MODE=PostgreSQL"
 
-# Guard against the failure mode above: if the URL points somewhere empty, H2
-# happily creates a blank database and every later step "succeeds" on nothing.
+# Guard the above: H2 creates a blank database rather than failing, and every
+# later step would then "succeed" on nothing.
 table_count=$("$JAVA_BIN" -cp "$H2_JAR" org.h2.tools.Shell \
     -url "$OFFLINE_URL" -user sa -sql \
     "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='PUBLIC'" 2>/dev/null \
@@ -171,17 +155,9 @@ table_count=$("$JAVA_BIN" -cp "$H2_JAR" org.h2.tools.Shell \
     || die "Opened database has no tables - the JDBC URL is not pointing at the generated file"
 log "  schema has $table_count tables"
 
-if [[ "$DUMP_SCHEMA" == true ]]; then
-    SCHEMA_OUT="${OUT_DB%.mv.db}.schema.sql"
-    log "Dumping schema to $SCHEMA_OUT"
-    "$JAVA_BIN" -cp "$H2_JAR" org.h2.tools.Script \
-        -url "$OFFLINE_URL" -user sa -script "$(to_native "$SCHEMA_OUT")" -options NODATA
-fi
-
 log "Phase 2/3: applying $(basename "$SEED_SQL")..."
-# RunScript exits non-zero on the first failing statement, so a seed script
-# that has drifted from the schema fails the build instead of silently
-# producing a half-populated fixture.
+# RunScript exits non-zero on the first failing statement, so a drifted seed
+# fails the build instead of half-populating the fixture.
 "$JAVA_BIN" -cp "$H2_JAR" org.h2.tools.RunScript \
     -url "$OFFLINE_URL" -user sa -script "$(to_native "$(realpath "$SEED_SQL")")" -showResults \
     || die "Seed script failed - see the error above"

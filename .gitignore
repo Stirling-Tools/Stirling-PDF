@@ -167,9 +167,8 @@ app/core/src/main/resources/static/**/*.br
 *.tar.gz
 *.rar
 *.db
-# H2 fixtures that are deliberately committed: past-release captures for the
-# migration smoke test, and the deployment seed databases shipped into the PR
-# preview and main demo containers.
+# Deliberately committed H2 fixtures: past-release captures for the migration
+# smoke test, and the seed databases shipped into the preview deployments.
 !app/proprietary/src/test/resources/db-migration-fixtures/*.mv.db
 !testing/seed-databases/*.mv.db
 build

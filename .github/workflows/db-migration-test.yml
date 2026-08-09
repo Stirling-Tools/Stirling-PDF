@@ -5,8 +5,7 @@ name: DB migration smoke test
 # Catches schema changes that would break existing user databases under
 # Hibernate's `ddl-auto=update` upgrade path.
 #
-# Also covers the deployment seed databases in testing/seed-databases/, which
-# ship into the PR preview and main demo containers.
+# Also covers the seed databases in testing/seed-databases/.
 
 on:
   workflow_call:
