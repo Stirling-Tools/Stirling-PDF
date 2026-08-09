@@ -162,7 +162,7 @@ jobs:
 
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
@@ -174,7 +174,7 @@ jobs:
 
       # Temurin has no windows-aarch64 JDK 25 yet; Microsoft OpenJDK does.
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
@@ -386,7 +386,7 @@ jobs:
 
       - name: Build Tauri app (signed)
         if: env.SIGN_BUNDLE == 'true'
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -421,7 +421,7 @@ jobs:
 
       - name: Build Tauri app (unsigned)
         if: env.SIGN_BUNDLE != 'true'
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGN: "0"
@@ -447,7 +447,7 @@ jobs:
       - name: Build Tauri app (Linux AppImage)
         if: matrix.platform == 'ubuntu-22.04' && !inputs.minimal
         continue-on-error: true
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGN: ${{ (inputs.sign && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
