@@ -35,7 +35,7 @@ mkdir -p "$REPORT_DIR"
 run_behave() { # $1=tags  $2=label
   echo "==> behave features/multinode --tags='$1'  ($2)"
   # behave.ini excludes features/multinode by default; -e here overrides that while still excluding the licence-gated enterprise suite.
-  ( cd "$CUKE_DIR" && uv run --project "$REPO_ROOT/engine" --locked --group cucumber python -m behave features/multinode -e "features/enterprise" \
+  ( cd "$CUKE_DIR" && uv run --project ../../engine --locked --group cucumber python -m behave features/multinode -e "features/enterprise" \
       --tags="$1" --no-capture --format plain --format html --outfile "$REPORT_DIR/$2.html" )
   return $?
 }
