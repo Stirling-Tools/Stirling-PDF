@@ -2933,12 +2933,16 @@ text = "Baimen hauek aldaezinak bihurtzeko, erabili Gehitu Pasahitza tresna jabe
 [chat.actions]
 copy = "Kopiatu mezua"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agentearen aukerak"
+assistant = "AI Assistant"
 clearChat = "Garbitu txata"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Jarraitu"
 copied = "Kopiatuta!"
 copy = "Kopiatu"
 done = "Eginda"
+enterValue = "Enter value"
 error = "Errorea"
 expand = "Zabaldu"
 loading = "Kargatzen..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Bilatu..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Editatu"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Dena gordeta"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Ezin izan da CSV erauzi"
 extractXlsxError = "Ezin izan da XLSX erauzi"
+filled = "filled"
 flattenAfterFilling = "Lautu betetze ondoren"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "behar."
 requiredFieldsError = "Bete beharrezko eremu guztiak"
 rescanFields = "Eremuak berriro eskaneatu"
@@ -10130,6 +10144,7 @@ last = "Azken orria"
 maintainRatio = "Aldatu aspektu-erlazioa mantentzea"
 next = "Hurrengo orria"
 noSavedSigs = "Ez da gordetako sinadurarik aurkitu"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Sinadura pertsonalak"
 previous = "Aurreko orria"
 redo = "Berregin"
@@ -10823,6 +10838,9 @@ pageFormatting = "Orri-formatua"
 removal = "Kentzea"
 signing = "Sinatzea"
 verification = "Egiaztapena"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Ez da tresnarik aurkitu"

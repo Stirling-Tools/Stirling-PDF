@@ -2933,12 +2933,16 @@ text = "ഈ അനുമതികൾ മാറ്റാൻ പറ്റാത്
 [chat.actions]
 copy = "സന്ദേശം പകർത്തുക"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling ഏജന്റ് ഓപ്ഷനുകൾ"
+assistant = "AI Assistant"
 clearChat = "ചാറ്റ് മായ്ക്കുക"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "തുടരുക"
 copied = "പകർത്തി!"
 copy = "പകർത്തുക"
 done = "പൂർത്തിയായി"
+enterValue = "Enter value"
 error = "പിശക്"
 expand = "വിപുലീകരിക്കുക"
 loading = "ലോഡുചെയ്യുന്നു..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "തിരയുക..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "തിരുത്തുക"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "എല്ലാം സേവ് ചെയ്തു"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV extract ചെയ്യാനായില്ല"
 extractXlsxError = "XLSX extract ചെയ്യാനായില്ല"
+filled = "filled"
 flattenAfterFilling = "പൂരിപ്പിച്ചതിന് ശേഷം ഫ്ലാറ്റൻ ചെയ്യുക"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "ആവ."
 requiredFieldsError = "ആവശ്യമായ എല്ലാ fields-ഉം പൂരിപ്പിക്കുക"
 rescanFields = "ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ചെയ്യുക"
@@ -10130,6 +10144,7 @@ last = "അവസാന പേജ്"
 maintainRatio = "വീക്ഷണാനുപാതം നിലനിർത്തുക ടോഗിൾ ചെയ്യുക"
 next = "അടുത്ത പേജ്"
 noSavedSigs = "സംരക്ഷിച്ച ഒപ്പുകളൊന്നും കണ്ടെത്തിയില്ല"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "വ്യക്തിഗത ഒപ്പുകൾ"
 previous = "മുമ്പത്തെ പേജ്"
 redo = "വീണ്ടും ചെയ്യുക"
@@ -10823,6 +10838,9 @@ pageFormatting = "പേജ് ഫോർമാറ്റിംഗ്"
 removal = "നീക്കം"
 signing = "ഒപ്പിടൽ"
 verification = "സ്ഥിരീകരണം"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "ഒരു ടൂളും കണ്ടെത്തിയില്ല"

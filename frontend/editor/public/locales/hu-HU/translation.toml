@@ -2933,12 +2933,16 @@ text = "Ezeket a jogosultságokat tegye megváltoztathatatlanná a \"Jelszó hoz
 [chat.actions]
 copy = "Üzenet másolása"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling ügynök beállításai"
+assistant = "AI Assistant"
 clearChat = "Csevegés törlése"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Folytatás"
 copied = "Másolva!"
 copy = "Másolás"
 done = "Kész"
+enterValue = "Enter value"
 error = "Hiba"
 expand = "Kibontás"
 loading = "Betöltés..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Keresés..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Szerkesztés"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Minden mentve"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV kinyerése sikertelen"
 extractXlsxError = "XLSX kinyerése sikertelen"
+filled = "filled"
 flattenAfterFilling = "Kitöltés után lapítás"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "kötelező"
 requiredFieldsError = "Kérjük, töltse ki az összes kötelező mezőt"
 rescanFields = "Mezők újraolvasása"
@@ -10130,6 +10144,7 @@ last = "Utolsó oldal"
 maintainRatio = "Képarány fenntartása váltása"
 next = "Következő oldal"
 noSavedSigs = "Nincsenek mentett aláírások"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Személyes aláírások"
 previous = "Előző oldal"
 redo = "Újra"
@@ -10823,6 +10838,9 @@ pageFormatting = "Oldalformázás"
 removal = "Eltávolítás"
 signing = "Aláírás"
 verification = "Ellenőrzés"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Nem találhatók eszközök"

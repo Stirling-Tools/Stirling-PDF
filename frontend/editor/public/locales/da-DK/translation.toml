@@ -2933,12 +2933,16 @@ text = "For at gøre disse tilladelser uændrerlige skal du bruge værktøjet Ti
 [chat.actions]
 copy = "Kopiér besked"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling-agentindstillinger"
+assistant = "AI Assistant"
 clearChat = "Ryd chat"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Fortsæt"
 copied = "Kopieret!"
 copy = "Kopiér"
 done = "Færdig"
+enterValue = "Enter value"
 error = "Fejl"
 expand = "Udvid"
 loading = "Indlæser..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Søg..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Redigér"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Alt gemt"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Kunne ikke udtrække CSV"
 extractXlsxError = "Kunne ikke udtrække XLSX"
+filled = "filled"
 flattenAfterFilling = "Fladgør efter udfyldning"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obl"
 requiredFieldsError = "Udfyld alle obligatoriske felter"
 rescanFields = "Scan felter igen"
@@ -10130,6 +10144,7 @@ last = "Sidste side"
 maintainRatio = "Skift bevarelse af billedforhold"
 next = "Næste side"
 noSavedSigs = "Ingen Gemte Signaturer Fundet"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Personlige Signaturer"
 previous = "Forrige side"
 redo = "Gentag"
@@ -10823,6 +10838,9 @@ pageFormatting = "Sideformatering"
 removal = "Fjernelse"
 signing = "Signering"
 verification = "Verifikation"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Ingen værktøjer fundet"

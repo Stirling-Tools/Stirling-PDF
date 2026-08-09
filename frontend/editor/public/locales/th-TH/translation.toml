@@ -2933,12 +2933,16 @@ text = "เพื่อให้สิทธิ์เหล่านี้ไม
 [chat.actions]
 copy = "คัดลอกข้อความ"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "ตัวเลือกเอเจนต์ของ Stirling"
+assistant = "AI Assistant"
 clearChat = "ล้างแชต"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "ดำเนินการต่อ"
 copied = "คัดลอกแล้ว!"
 copy = "คัดลอก"
 done = "เสร็จสิ้น"
+enterValue = "Enter value"
 error = "ข้อผิดพลาด"
 expand = "ขยาย"
 loading = "กำลังโหลด..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "ค้นหา..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "แก้ไข"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "บันทึกทั้งหมดแล้ว"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "ดึง CSV ไม่สำเร็จ"
 extractXlsxError = "ดึง XLSX ไม่สำเร็จ"
+filled = "filled"
 flattenAfterFilling = "ทำให้แบนหลังจากกรอก"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "จำเป็น"
 requiredFieldsError = "โปรดกรอกช่องที่จำเป็นทั้งหมด"
 rescanFields = "สแกนฟิลด์อีกครั้ง"
@@ -10130,6 +10144,7 @@ last = "หน้าสุดท้าย"
 maintainRatio = "สลับคงอัตราส่วนภาพ"
 next = "หน้าถัดไป"
 noSavedSigs = "ไม่พบลายเซ็นที่บันทึกไว้"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "ลายเซ็นส่วนตัว"
 previous = "หน้าก่อนหน้า"
 redo = "ทำซ้ำ"
@@ -10823,6 +10838,9 @@ pageFormatting = "การจัดรูปแบบหน้า"
 removal = "การลบ"
 signing = "การลงนาม"
 verification = "การตรวจสอบ"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "ไม่พบเครื่องมือ"

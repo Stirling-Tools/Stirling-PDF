@@ -2933,12 +2933,16 @@ text = "Um diese Berechtigungen unveränderlich zu machen, verwenden Sie das Pas
 [chat.actions]
 copy = "Nachricht kopieren"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling-Agent-Optionen"
+assistant = "AI Assistant"
 clearChat = "Chat löschen"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Weiter"
 copied = "Kopiert!"
 copy = "Kopieren"
 done = "Fertig"
+enterValue = "Enter value"
 error = "Fehler"
 expand = "Ausklappen"
 loading = "Laden..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Suchen..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Bearbeiten"
@@ -10135,6 +10144,7 @@ last = "Letzte Seite"
 maintainRatio = "Seitenverhältnis beibehalten ein-/ausschalten"
 next = "Nächste Seite"
 noSavedSigs = "Es wurden keine gespeicherten Signaturen gefunden"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Persönliche Signaturen"
 previous = "Vorherige Seite"
 redo = "Wiederherstellen"
@@ -10828,6 +10838,9 @@ pageFormatting = "Seitenformatierung"
 removal = "Entfernung"
 signing = "Signierung"
 verification = "Verifizierung"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Keine Tools gefunden"

@@ -2933,12 +2933,16 @@ text = "これらの権限を変更不可にするには、パスワード追加
 [chat.actions]
 copy = "メッセージをコピー"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling エージェントのオプション"
+assistant = "AI Assistant"
 clearChat = "チャットをクリア"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "続行"
 copied = "コピーしました！"
 copy = "コピー"
 done = "完了"
+enterValue = "Enter value"
 error = "エラー"
 expand = "展開"
 loading = "読み込み中..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "検索..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "編集"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "すべて保存済み"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV の抽出に失敗しました"
 extractXlsxError = "XLSX の抽出に失敗しました"
+filled = "filled"
 flattenAfterFilling = "入力後にフラット化"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "必須"
 requiredFieldsError = "必須フィールドをすべて入力してください"
 rescanFields = "フィールドを再スキャン"
@@ -10130,6 +10144,7 @@ last = "最後のページ"
 maintainRatio = "アスペクト比を維持を切替え"
 next = "次のページ"
 noSavedSigs = "保存された署名が見つかりません"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "個人署名"
 previous = "前のページ"
 redo = "やり直す"
@@ -10823,6 +10838,9 @@ pageFormatting = "ページ整形"
 removal = "削除"
 signing = "署名"
 verification = "検証"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "ツールが見つかりません"

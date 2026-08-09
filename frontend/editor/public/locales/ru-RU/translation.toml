@@ -2933,12 +2933,16 @@ text = "Чтобы сделать эти разрешения неизменяе
 [chat.actions]
 copy = "Копировать сообщение"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Параметры агента Stirling"
+assistant = "AI Assistant"
 clearChat = "Очистить чат"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Продолжить"
 copied = "Скопировано!"
 copy = "Копировать"
 done = "Готово"
+enterValue = "Enter value"
 error = "Ошибка"
 expand = "Развернуть"
 loading = "Загрузка..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Поиск..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Изменить"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Все сохранено"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Не удалось извлечь CSV"
 extractXlsxError = "Не удалось извлечь XLSX"
+filled = "filled"
 flattenAfterFilling = "Сплющить после заполнения"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "обяз."
 requiredFieldsError = "Заполните все обязательные поля"
 rescanFields = "Пересканировать поля"
@@ -10130,6 +10144,7 @@ last = "Последняя страница"
 maintainRatio = "Переключить сохранение пропорций"
 next = "Следующая страница"
 noSavedSigs = "Сохраненные подписи не найдены"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Личные подписи"
 previous = "Предыдущая страница"
 redo = "Повторить"
@@ -10823,6 +10838,9 @@ pageFormatting = "Форматирование страниц"
 removal = "Удаление"
 signing = "Подписание"
 verification = "Проверка"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Инструменты не найдены"

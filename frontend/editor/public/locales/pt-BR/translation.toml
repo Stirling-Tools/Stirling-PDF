@@ -2933,12 +2933,16 @@ text = "Para tornar essas permissões imutáveis, use a ferramenta Adicionar sen
 [chat.actions]
 copy = "Copiar mensagem"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Opções do agente Stirling"
+assistant = "AI Assistant"
 clearChat = "Limpar chat"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Continuar"
 copied = "Copiado!"
 copy = "Copiar"
 done = "Concluído"
+enterValue = "Enter value"
 error = "Erro"
 expand = "Expandir"
 loading = "Carregando..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Pesquisar..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Editar"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Tudo salvo"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Falha ao extrair CSV"
 extractXlsxError = "Falha ao extrair XLSX"
+filled = "filled"
 flattenAfterFilling = "Achatar após o preenchimento"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obr"
 requiredFieldsError = "Preencha todos os campos obrigatórios"
 rescanFields = "Escanear campos novamente"
@@ -10130,6 +10144,7 @@ last = "Last page"
 maintainRatio = "Toggle maintain aspect ratio"
 next = "Next page"
 noSavedSigs = "No saved signatures found"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Personal Signatures"
 previous = "Previous page"
 redo = "Redo"
@@ -10823,6 +10838,9 @@ pageFormatting = "Page Formatting"
 removal = "Removal"
 signing = "Signing"
 verification = "Verification"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "No tools found"

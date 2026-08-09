@@ -2933,12 +2933,16 @@ text = "Pentru ca aceste permisiuni să nu poată fi schimbate, utilizați instr
 [chat.actions]
 copy = "Copiați mesajul"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Opțiuni agent Stirling"
+assistant = "AI Assistant"
 clearChat = "Goliți chatul"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Continuă"
 copied = "Copiat!"
 copy = "Copiați"
 done = "Gata"
+enterValue = "Enter value"
 error = "Eroare"
 expand = "Extinde"
 loading = "Se încarcă..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Căutați..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Editați"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Totul salvat"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Extragerea CSV a eșuat"
 extractXlsxError = "Extragerea XLSX a eșuat"
+filled = "filled"
 flattenAfterFilling = "Aplatizați după completare"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obl"
 requiredFieldsError = "Completați toate câmpurile obligatorii"
 rescanFields = "Rescanați câmpurile"
@@ -10130,6 +10144,7 @@ last = "Ultima pagină"
 maintainRatio = "Comută menținerea raportului de aspect"
 next = "Pagina următoare"
 noSavedSigs = "Nu s-au găsit semnături salvate"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Semnături personale"
 previous = "Pagina anterioară"
 redo = "Refă"
@@ -10823,6 +10838,9 @@ pageFormatting = "Formatare pagini"
 removal = "Eliminare"
 signing = "Semnare"
 verification = "Verificare"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Nu s-au găsit instrumente"

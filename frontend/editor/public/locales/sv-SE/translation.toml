@@ -2933,12 +2933,16 @@ text = "För att göra dessa behörigheter oföränderliga, använd verktyget L�
 [chat.actions]
 copy = "Kopiera meddelande"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Alternativ för Stirling-agent"
+assistant = "AI Assistant"
 clearChat = "Rensa chatt"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Fortsätt"
 copied = "Kopierat!"
 copy = "Kopiera"
 done = "Klar"
+enterValue = "Enter value"
 error = "Fel"
 expand = "Fäll ut"
 loading = "Läser in..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Sök..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Redigera"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Allt sparat"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Kunde inte extrahera CSV"
 extractXlsxError = "Kunde inte extrahera XLSX"
+filled = "filled"
 flattenAfterFilling = "Platta ut efter ifyllning"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obl"
 requiredFieldsError = "Fyll i alla obligatoriska fält"
 rescanFields = "Skanna fält igen"
@@ -10130,6 +10144,7 @@ last = "Sista sidan"
 maintainRatio = "Växla bibehållet bildförhållande"
 next = "Nästa sida"
 noSavedSigs = "Inga sparade signaturer hittades"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Personliga signaturer"
 previous = "Föregående sida"
 redo = "Gör om"
@@ -10823,6 +10838,9 @@ pageFormatting = "Sidformatering"
 removal = "Borttagning"
 signing = "Signering"
 verification = "Verifiering"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Inga verktyg hittades"

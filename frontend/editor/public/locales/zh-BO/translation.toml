@@ -2933,12 +2933,16 @@ text = "要使这些权限不可更改，请使用添加密码工具设置所有
 [chat.actions]
 copy = "复制消息"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling 代理选项"
+assistant = "AI Assistant"
 clearChat = "清空聊天"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "继续"
 copied = "已复制！"
 copy = "复制"
 done = "完成"
+enterValue = "Enter value"
 error = "错误"
 expand = "展开"
 loading = "正在加载..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "搜索..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "编辑"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "全部已保存"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "提取 CSV 失败"
 extractXlsxError = "提取 XLSX 失败"
+filled = "filled"
 flattenAfterFilling = "填写后扁平化"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "必填"
 requiredFieldsError = "请填写所有必填字段"
 rescanFields = "重新扫描字段"
@@ -10130,6 +10144,7 @@ last = "ཤོག་ངོས་མཐའ་མ།"
 maintainRatio = "བསྡུར་ཚད་རྒྱུན་འཁྱོངས་སྒོ་རྒྱག་པ།"
 next = "ཤོག་ངོས་རྗེས་མ།"
 noSavedSigs = "ཉར་ཚགས་བྱས་པའི་མིང་རྟགས་མ་རྙེད།"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "སྒེར་གྱི་མིང་རྟགས།"
 previous = "ཤོག་ངོས་སྔོན་མ།"
 redo = "重做"
@@ -10823,6 +10838,9 @@ pageFormatting = "页面格式化"
 removal = "移除"
 signing = "签名"
 verification = "验证"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "未找到工具"

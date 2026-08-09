@@ -2933,12 +2933,16 @@ text = "Om deze machtigingen niet wijzigbaar te maken, gebruik de tool Wachtwoor
 [chat.actions]
 copy = "Bericht kopiëren"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling-agentopties"
+assistant = "AI Assistant"
 clearChat = "Chat wissen"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Doorgaan"
 copied = "Gekopieerd!"
 copy = "Kopiëren"
 done = "Gereed"
+enterValue = "Enter value"
 error = "Fout"
 expand = "Uitvouwen"
 loading = "Laden..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Zoeken..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Bewerken"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Alles opgeslagen"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV extraheren mislukt"
 extractXlsxError = "XLSX extraheren mislukt"
+filled = "filled"
 flattenAfterFilling = "Afvlakken na invullen"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "verpl."
 requiredFieldsError = "Vul alle verplichte velden in"
 rescanFields = "Velden opnieuw scannen"
@@ -10130,6 +10144,7 @@ last = "Laatste pagina"
 maintainRatio = "Aspectverhouding behouden"
 next = "Volgende pagina"
 noSavedSigs = "Geen opgeslagen signatuuren gevonden"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Persoonlijke Signatuuren"
 previous = "Vorige pagina"
 redo = "Opnieuw"
@@ -10823,6 +10838,9 @@ pageFormatting = "Pagina-opmaak"
 removal = "Verwijdering"
 signing = "Ondertekenen"
 verification = "Verificatie"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Geen tools gevonden"

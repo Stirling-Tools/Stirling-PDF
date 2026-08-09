@@ -2933,12 +2933,16 @@ text = "لجعل هذه الأذونات غير قابلة للتغيير، اس
 [chat.actions]
 copy = "نسخ الرسالة"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "خيارات وكيل Stirling"
+assistant = "AI Assistant"
 clearChat = "مسح الدردشة"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "متابعة"
 copied = "تم النسخ!"
 copy = "نسخ"
 done = "تم"
+enterValue = "Enter value"
 error = "خطأ"
 expand = "توسيع"
 loading = "جارٍ التحميل..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "بحث..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "تحرير"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "تم حفظ الكل"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "فشل استخراج CSV"
 extractXlsxError = "فشل استخراج XLSX"
+filled = "filled"
 flattenAfterFilling = "تسطيح بعد التعبئة"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "مطلوب"
 requiredFieldsError = "يُرجى ملء جميع الحقول المطلوبة"
 rescanFields = "إعادة فحص الحقول"
@@ -10130,6 +10144,7 @@ last = "الصفحة الأخيرة"
 maintainRatio = "تبديل الحفاظ على نسبة الأبعاد"
 next = "الصفحة التالية"
 noSavedSigs = "لم يتم العثور على توقيعات محفوظة"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "توقيعات شخصية"
 previous = "الصفحة السابقة"
 redo = "إعادة"
@@ -10823,6 +10838,9 @@ pageFormatting = "تنسيق الصفحات"
 removal = "إزالة"
 signing = "توقيع"
 verification = "تحقق"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "لم يتم العثور على أدوات"

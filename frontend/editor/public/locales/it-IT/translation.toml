@@ -2933,12 +2933,16 @@ text = "Per rendere questi permessi immodificabili, usa lo strumento Aggiungi pa
 [chat.actions]
 copy = "Copia messaggio"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Chiudi chat"
 open = "Apri Stirling assistente IA"
 
 [chat.header]
 agentMenu = "Opzioni agente Stirling"
+assistant = "AI Assistant"
 clearChat = "Cancella chat"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Continua"
 copied = "Copiato!"
 copy = "Copia"
 done = "Fatto"
+enterValue = "Enter value"
 error = "Errore"
 expand = "Espandi"
 loading = "Caricamento..."
@@ -3565,7 +3570,11 @@ tags = "automazione,cartella,scansione,cartella di controllo,cartella di tendenz
 tags = "SSO,single sign-on,autenticazione,SAML,OAuth,OIDC,login,enterprise,provider di identità,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Cerca..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Modifica"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Tutto salvato"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Impossibile estrarre CSV"
 extractXlsxError = "Impossibile estrarre XLSX"
+filled = "filled"
 flattenAfterFilling = "Appiattisci dopo la compilazione"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obb"
 requiredFieldsError = "Compila tutti i campi obbligatori"
 rescanFields = "Riscansiona campi"
@@ -10130,6 +10144,7 @@ last = "Ultima pagina"
 maintainRatio = "Attiva il mantenimento delle proporzioni"
 next = "Prossima pagina"
 noSavedSigs = "Nessuna firma salvata trovata"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Firme personali"
 previous = "Pagina precedente"
 redo = "Rifare"
@@ -10823,6 +10838,9 @@ pageFormatting = "Formattazione pagine"
 removal = "Rimozione"
 signing = "Firma"
 verification = "Verifica"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Nessuno strumento trovato"

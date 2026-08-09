@@ -2933,12 +2933,16 @@ text = "Για να καταστούν αυτά τα δικαιώματα μη �
 [chat.actions]
 copy = "Αντιγραφή μηνύματος"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Επιλογές πράκτορα Stirling"
+assistant = "AI Assistant"
 clearChat = "Καθαρισμός συνομιλίας"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Συνέχεια"
 copied = "Αντιγράφηκε!"
 copy = "Αντιγραφή"
 done = "Τέλος"
+enterValue = "Enter value"
 error = "Σφάλμα"
 expand = "Ανάπτυξη"
 loading = "Φόρτωση..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Αναζήτηση..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Επεξεργασία"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Όλα αποθηκεύτηκαν"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Απέτυχε η εξαγωγή CSV"
 extractXlsxError = "Απέτυχε η εξαγωγή XLSX"
+filled = "filled"
 flattenAfterFilling = "Επιπεδοποίηση μετά τη συμπλήρωση"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "απαιτ."
 requiredFieldsError = "Συμπληρώστε όλα τα απαιτούμενα πεδία"
 rescanFields = "Επανασάρωση πεδίων"
@@ -10130,6 +10144,7 @@ last = "Τελευταία σελίδα"
 maintainRatio = "Εναλλαγή διατήρησης αναλογίας διαστάσεων"
 next = "Επόμενη σελίδα"
 noSavedSigs = "Δεν βρέθηκαν αποθηκευμένες υπογραφές"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Προσωπικές υπογραφές"
 previous = "Προηγούμενη σελίδα"
 redo = "Επανάληψη"
@@ -10823,6 +10838,9 @@ pageFormatting = "Μορφοποίηση σελίδας"
 removal = "Αφαίρεση"
 signing = "Υπογραφή"
 verification = "Επαλήθευση"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Δεν βρέθηκαν εργαλεία"

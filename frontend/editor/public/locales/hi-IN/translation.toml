@@ -2933,12 +2933,16 @@ text = "इन अनुमतियों को अपरिवर्तनी
 [chat.actions]
 copy = "संदेश कॉपी करें"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling एजेंट विकल्प"
+assistant = "AI Assistant"
 clearChat = "चैट साफ़ करें"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "जारी रखें"
 copied = "कॉपी हो गया!"
 copy = "कॉपी करें"
 done = "पूर्ण"
+enterValue = "Enter value"
 error = "त्रुटि"
 expand = "विस्तारित करें"
 loading = "लोड हो रहा है..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "खोजें..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "संपादित करें"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "सब सहेजा गया"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV extract करने में विफल"
 extractXlsxError = "XLSX extract करने में विफल"
+filled = "filled"
 flattenAfterFilling = "भरने के बाद समतल करें"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "आव."
 requiredFieldsError = "कृपया सभी आवश्यक fields भरें"
 rescanFields = "फ़ील्ड्स दोबारा स्कैन करें"
@@ -10130,6 +10144,7 @@ last = "अंतिम पृष्ठ"
 maintainRatio = "आनुपातिक अनुपात बनाए रखें टॉगल करें"
 next = "अगला पृष्ठ"
 noSavedSigs = "कोई सहेजा गया हस्ताक्षर नहीं मिला"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "व्यक्तिगत हस्ताक्षर"
 previous = "पिछला पृष्ठ"
 redo = "फिर करें"
@@ -10823,6 +10838,9 @@ pageFormatting = "पेज फ़ॉर्मेटिंग"
 removal = "हटाना"
 signing = "हस्ताक्षर"
 verification = "सत्यापन"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "कोई टूल नहीं मिला"

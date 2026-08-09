@@ -2933,12 +2933,16 @@ text = "Щоб зробити ці дозволи незмінними, скор
 [chat.actions]
 copy = "Копіювати повідомлення"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Параметри агента Stirling"
+assistant = "AI Assistant"
 clearChat = "Очистити чат"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Продовжити"
 copied = "Скопійовано!"
 copy = "Копіювати"
 done = "Готово"
+enterValue = "Enter value"
 error = "Помилка"
 expand = "Розгорнути"
 loading = "Завантаження..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Пошук..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Редагувати"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Усе збережено"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Не вдалося витягти CSV"
 extractXlsxError = "Не вдалося витягти XLSX"
+filled = "filled"
 flattenAfterFilling = "Сплющити після заповнення"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "обов."
 requiredFieldsError = "Заповніть усі обов’язкові поля"
 rescanFields = "Повторно сканувати поля"
@@ -10130,6 +10144,7 @@ last = "Остання сторінка"
 maintainRatio = "Переключити збереження пропорцій"
 next = "Наступна сторінка"
 noSavedSigs = "Збережені підписи не знайдено"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Особисті підписи"
 previous = "Попередня сторінка"
 redo = "Повторити"
@@ -10823,6 +10838,9 @@ pageFormatting = "Форматування сторінок"
 removal = "Видалення"
 signing = "Підписання"
 verification = "Перевірка"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Інструментів не знайдено"

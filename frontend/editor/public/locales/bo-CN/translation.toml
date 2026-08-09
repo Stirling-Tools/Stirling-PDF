@@ -2933,12 +2933,16 @@ text = "ཆོག་མཆན་འདི་དག་འགྱུར་བ་མ
 [chat.actions]
 copy = "འཕྲིན་དོན་འདྲ་བཤུས"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agent འདེམས་ཚན"
+assistant = "AI Assistant"
 clearChat = "གླེང་མོལ་བཤོལ"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "མུ་མཐུད"
 copied = "འདྲ་བཤུས་བྱས།"
 copy = "འདྲ་བཤུས།"
 done = "བགྱིས་པ"
+enterValue = "Enter value"
 error = "ནོར་འཁྲུལ"
 expand = "རྒྱ་སྐྱེད་གཏོང"
 loading = "ཁུར་པོ།"
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "འཚོལ..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "ཞུན་དག"
@@ -4241,9 +4250,14 @@ issues = "གྷི་ཊི་ཧབ།"
 
 [formFill]
 allSaved = "ཚང་མ་ཉར་ཚགས་བྱས་ཟིན"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV ཕྱིར་འདོན་མ་ཐུབ"
 extractXlsxError = "XLSX ཕྱིར་འདོན་མ་ཐུབ"
+filled = "filled"
 flattenAfterFilling = "བཀངས་རྗེས་རྡོག་བཟོ"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "དགོས"
 requiredFieldsError = "ངེས་པར་དགོས་པའི་ས་སྒོ་ཚང་མ་སྐོང་རོགས"
 rescanFields = "ས་ཁོངས་བསྐྱར་ཞིབ"
@@ -10130,6 +10144,7 @@ last = "ཤོག་ངོས་མཐའ་མ།"
 maintainRatio = "འགྱུར་ལྡོག་རྒྱུན་འཛིན་གྱི་ཆ་སྙོམས།"
 next = "ཤོག་ངོས་རྗེས་མ།"
 noSavedSigs = "ཉར་ཚགས་བྱས་པའི་མཚན་རྟགས་རྙེད་མེད།"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "མི་སྒེར་གྱི་མཚན་རྟགས།"
 previous = "ཤོག་ངོས་གོང་མ།"
 redo = "བསྐྱར་དུ་བྱེད།"
@@ -10823,6 +10838,9 @@ pageFormatting = "ཤོག་བུ་བཟོ་བ།"
 removal = "བཏོན་པ།"
 signing = "མིང་རྟགས་བཀོད་པ།"
 verification = "བདེན་དཔང་།"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "ལག་ཆ་གང་ཡང་མཐོང་མ་བྱུང་།"

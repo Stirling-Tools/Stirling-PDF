@@ -2933,12 +2933,16 @@ text = "Bu icazələri dəyişdirilməz etmək üçün, Parol əlavə etmə alə
 [chat.actions]
 copy = "Mesajı kopyala"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agent seçimləri"
+assistant = "AI Assistant"
 clearChat = "Söhbəti təmizlə"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Davam et"
 copied = "Kopyalandı!"
 copy = "Kopyala"
 done = "Bitdi"
+enterValue = "Enter value"
 error = "Xəta"
 expand = "Genişləndir"
 loading = "Yüklənir..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Axtar..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Redaktə et"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Hamısı saxlanıldı"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV çıxarmaq alınmadı"
 extractXlsxError = "XLSX çıxarmaq alınmadı"
+filled = "filled"
 flattenAfterFilling = "Doldurduqdan sonra yastılaşdır"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "təl."
 requiredFieldsError = "Bütün tələb olunan sahələri doldurun"
 rescanFields = "Sahələri yenidən skan et"
@@ -10130,6 +10144,7 @@ last = "Son səhifə"
 maintainRatio = "Nisbətin qorunmasını dəyiş"
 next = "Növbəti səhifə"
 noSavedSigs = "Saxlanmış imza tapılmadı"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Şəxsi İmzalar"
 previous = "Əvvəlki səhifə"
 redo = "Yenidən et"
@@ -10823,6 +10838,9 @@ pageFormatting = "Səhifə Formatlama"
 removal = "Silmə"
 signing = "İmzalama"
 verification = "Yoxlama"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Heç bir alət tapılmadı"

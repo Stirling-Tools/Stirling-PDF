@@ -2933,12 +2933,16 @@ text = "Para tornar estas permissões imutáveis, use a ferramenta Adicionar pal
 [chat.actions]
 copy = "Copiar mensagem"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Opções do agente Stirling"
+assistant = "AI Assistant"
 clearChat = "Limpar chat"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Continuar"
 copied = "Copiado!"
 copy = "Copiar"
 done = "Concluído"
+enterValue = "Enter value"
 error = "Erro"
 expand = "Expandir"
 loading = "A carregar..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Pesquisar..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Editar"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Tudo guardado"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Falha ao extrair CSV"
 extractXlsxError = "Falha ao extrair XLSX"
+filled = "filled"
 flattenAfterFilling = "Achatar após o preenchimento"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obrig."
 requiredFieldsError = "Preencha todos os campos obrigatórios"
 rescanFields = "Reanalisar campos"
@@ -10130,6 +10144,7 @@ last = "Última página"
 maintainRatio = "Alternar manter proporção"
 next = "Próxima página"
 noSavedSigs = "Nenhuma assinatura guardada encontrada"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Assinaturas Pessoais"
 previous = "Página anterior"
 redo = "Refazer"
@@ -10823,6 +10838,9 @@ pageFormatting = "Formatação de páginas"
 removal = "Remoção"
 signing = "Assinatura"
 verification = "Verificação"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Nenhuma ferramenta encontrada"

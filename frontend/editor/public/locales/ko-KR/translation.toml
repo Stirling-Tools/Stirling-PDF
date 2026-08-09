@@ -2933,12 +2933,16 @@ text = "이 권한을 변경할 수 없도록 하려면, 비밀번호 추가 도
 [chat.actions]
 copy = "메시지 복사"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling 에이전트 옵션"
+assistant = "AI Assistant"
 clearChat = "채팅 지우기"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "계속"
 copied = "복사됨!"
 copy = "복사"
 done = "완료"
+enterValue = "Enter value"
 error = "오류"
 expand = "펼치기"
 loading = "불러오는 중..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "검색..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "편집"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "모두 저장됨"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV 추출 실패"
 extractXlsxError = "XLSX 추출 실패"
+filled = "filled"
 flattenAfterFilling = "채운 후 평면화"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "필수"
 requiredFieldsError = "모든 필수 필드를 입력하세요"
 rescanFields = "필드 재검색"
@@ -10130,6 +10144,7 @@ last = "마지막 페이지"
 maintainRatio = "종횡비 유지 토글"
 next = "다음 페이지"
 noSavedSigs = "저장된 서명이 없습니다"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "개인 서명"
 previous = "이전 페이지"
 redo = "다시 실행"
@@ -10823,6 +10838,9 @@ pageFormatting = "페이지 서식"
 removal = "제거"
 signing = "서명"
 verification = "검증"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "도구를 찾을 수 없습니다"

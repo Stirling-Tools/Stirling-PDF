@@ -2933,12 +2933,16 @@ text = "Per fer que aquests permisos no es puguin canviar, utilitzeu l’eina Af
 [chat.actions]
 copy = "Copia el missatge"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Opcions de l'agent Stirling"
+assistant = "AI Assistant"
 clearChat = "Neteja el xat"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Continua"
 copied = "Copiat!"
 copy = "Copia"
 done = "Fet"
+enterValue = "Enter value"
 error = "Error"
 expand = "Desplega"
 loading = "Carregant..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Cerca..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Edita"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Tot desat"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "No s'ha pogut extreure el CSV"
 extractXlsxError = "No s'ha pogut extreure l'XLSX"
+filled = "filled"
 flattenAfterFilling = "Aplana després d'emplenar"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obl."
 requiredFieldsError = "Emplena tots els camps obligatoris"
 rescanFields = "Torna a analitzar els camps"
@@ -10130,6 +10144,7 @@ last = "Última pàgina"
 maintainRatio = "Activa/desactiva mantenir la relació d'aspecte"
 next = "Pàgina següent"
 noSavedSigs = "No s'han trobat signatures desades"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Signatures Personals"
 previous = "Pàgina anterior"
 redo = "Refer"
@@ -10823,6 +10838,9 @@ pageFormatting = "Format de pàgina"
 removal = "Eliminació"
 signing = "Signatura"
 verification = "Verificació"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "No s’han trobat eines"

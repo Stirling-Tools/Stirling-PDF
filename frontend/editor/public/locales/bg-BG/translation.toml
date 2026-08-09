@@ -2933,12 +2933,16 @@ text = "За да направите тези разрешения непром�
 [chat.actions]
 copy = "Копирайте съобщение"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Опции на агента Stirling"
+assistant = "AI Assistant"
 clearChat = "Изчистете чата"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Продължи"
 copied = "Копирано!"
 copy = "Копирай"
 done = "Готово"
+enterValue = "Enter value"
 error = "Грешка"
 expand = "Разгъни"
 loading = "Зареждане..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Търсене..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Редактиране"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Всичко е запазено"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Неуспешно извличане на CSV"
 extractXlsxError = "Неуспешно извличане на XLSX"
+filled = "filled"
 flattenAfterFilling = "Фиксиране след попълване"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "зад."
 requiredFieldsError = "Моля, попълнете всички задължителни полета"
 rescanFields = "Пресканирайте полетата"
@@ -10130,6 +10144,7 @@ last = "Последна страница"
 maintainRatio = "Превключване за поддържане на съотношението на страните"
 next = "Следваща страница"
 noSavedSigs = "Не са намерени запазени подписи"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Лични подписи"
 previous = "Предишна стараница"
 redo = "Повтори"
@@ -10823,6 +10838,9 @@ pageFormatting = "Форматиране на страници"
 removal = "Премахване"
 signing = "Подписване"
 verification = "Проверка"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Няма намерени инструменти"

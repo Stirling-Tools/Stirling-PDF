@@ -2933,12 +2933,16 @@ text = "Kako bi ove dozvole bile nepromjenjive, upotrijebite alat Dodaj lozinku 
 [chat.actions]
 copy = "Kopiraj poruku"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Opcije Stirling agenta"
+assistant = "AI Assistant"
 clearChat = "Obriši chat"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Nastavi"
 copied = "Kopirano!"
 copy = "Kopiraj"
 done = "Gotovo"
+enterValue = "Enter value"
 error = "Pogreška"
 expand = "Proširi"
 loading = "Učitavanje..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Pretraži..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Uredi"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Sve spremljeno"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Izdvajanje CSV-a nije uspjelo"
 extractXlsxError = "Izdvajanje XLSX-a nije uspjelo"
+filled = "filled"
 flattenAfterFilling = "Izravnaj nakon ispunjavanja"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obv"
 requiredFieldsError = "Ispunite sva obavezna polja"
 rescanFields = "Ponovno skeniraj polja"
@@ -10130,6 +10144,7 @@ last = "Zadnja stranica"
 maintainRatio = "Uključi/isključi održavanje omjera"
 next = "Sljedeća stranica"
 noSavedSigs = "Nema sacuvanih potpisa pronađenih"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Osobni potpisi"
 previous = "Prethodna stranica"
 redo = "Ponovi"
@@ -10823,6 +10838,9 @@ pageFormatting = "Formatiranje stranica"
 removal = "Uklanjanje"
 signing = "Potpisivanje"
 verification = "Provjera"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Nije pronađen nijedan alat"
