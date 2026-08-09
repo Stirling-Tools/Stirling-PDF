@@ -6,12 +6,13 @@
  */
 
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { defaultRunOn } from "@app/policies/runOn";
 import type { PoliciesByCategory, PolicyState } from "@app/types/policies";
 
 const STORAGE_KEY = "stirling-policies-state";
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
-function defaultState(): PolicyState {
+function defaultState(categoryId: string): PolicyState {
   // Unconfigured by default. The backend is the source of truth for what's
   // actually configured + active; this is just the empty local-cache shape.
   return {
@@ -26,8 +27,8 @@ function defaultState(): PolicyState {
     outputMode: "new_version",
     // No rename by default — the output keeps the input's filename.
     outputName: "",
-    // Enforce on upload by default; export enforcement is the alternative.
-    runOn: "upload",
+    // Per-category default: Security enforces on export, the rest on upload.
+    runOn: defaultRunOn(categoryId),
     // Every catalog category is a shipped, built-in policy → default (not
     // deletable).
     isDefault: true,
@@ -54,7 +55,7 @@ export function loadPolicies(): PoliciesByCategory {
   // category gets a default rather than being undefined.
   const out: PoliciesByCategory = {};
   loadPolicyCatalog().categories.forEach((cat, index) => {
-    const merged = { ...defaultState(), ...(parsed[cat.id] ?? {}) };
+    const merged = { ...defaultState(cat.id), ...(parsed[cat.id] ?? {}) };
     // Migration: clear the obsolete persisted reviewer email so it re-defaults
     // to the real signed-in user.
     if (merged.reviewerEmail === STALE_REVIEWER_EMAIL)
@@ -91,7 +92,7 @@ export function updatePolicy(
     // Fall back to defaults so a not-yet-seeded category id still yields a
     // complete PolicyState rather than a partial.
     [categoryId]: {
-      ...defaultState(),
+      ...defaultState(categoryId),
       ...current[categoryId],
       ...patch,
     },
@@ -121,7 +122,7 @@ export function reorderPolicies(
 /** Reset a category to its unconfigured default (the "Delete policy" action). */
 export function resetPolicy(categoryId: string): PoliciesByCategory {
   return updatePolicy(categoryId, {
-    ...defaultState(),
+    ...defaultState(categoryId),
     configured: false,
     status: "default",
     // Drop the backing-folder + backend links (the caller deletes those).

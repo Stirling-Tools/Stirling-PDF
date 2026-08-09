@@ -11,6 +11,7 @@
  * using that registry.
  */
 
+import { resolveRunOn } from "@app/policies/runOn";
 import type { AutomationConfig } from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { PolicyFolderSettings } from "@app/types/policies";
@@ -241,6 +242,7 @@ export interface DecodedPolicy {
   order?: number;
 }
 
+// Only the retry numbers are read from this; runOn defaults per category.
 const DEFAULT_FOLDER: PolicyFolderSettings = {
   runOn: "upload",
   outputMode: "new_version",
@@ -301,9 +303,10 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     typeof v === "string" ? v : fallback;
   const num = (v: unknown, fallback: number) =>
     typeof v === "number" ? v : fallback;
+  const categoryId = str(meta.categoryId);
   return {
     id: policy.id,
-    categoryId: str(meta.categoryId),
+    categoryId,
     name: policy.name,
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,
@@ -315,7 +318,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     fieldValues:
       (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
-      runOn: meta.runOn === "export" ? "export" : "upload",
+      runOn: resolveRunOn(meta.runOn, categoryId),
       // Legacy/missing output.mode defaults to new_version, not new_file.
       outputMode: output.mode === "new_file" ? "new_file" : "new_version",
       outputName: str(output.name),

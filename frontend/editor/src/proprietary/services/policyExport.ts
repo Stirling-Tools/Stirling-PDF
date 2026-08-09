@@ -12,6 +12,7 @@
 
 import { loadPolicies } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { resolveRunOn } from "@app/policies/runOn";
 import {
   runStoredPolicy,
   getPolicyRun,
@@ -64,12 +65,12 @@ function activeExportPolicies(): ExportPolicy[] {
   );
   return Object.entries(loadPolicies())
     .filter(
-      ([, s]) =>
+      ([id, s]) =>
         s.configured &&
         s.status === "active" &&
         s.backendId &&
         (s.sources.length === 0 || s.sources.includes("editor")) &&
-        s.runOn === "export",
+        resolveRunOn(s.runOn, id) === "export",
     )
     .map(([id, s]) => ({
       categoryId: id,
