@@ -57,15 +57,42 @@ guarded and only logs.) An offline licence file - `PREMIUM_KEY=file:/path.crt`,
 checked out as `base64+ed25519` - avoids all of the above if that ever becomes
 a problem.
 
+## Demo data and credentials
+
+Seeding is split by whether the data contains a secret. Teams and policies ship
+in a committed H2 database; user accounts are created over the API once the
+container is up, because their passwords are secrets and this repo is public.
+
+The seed databases contain **no users**, which is what lets the admin come from
+`SECURITY_INITIALLOGIN_USERNAME` / `_PASSWORD`: `UserService.hasUsers()` ignores
+the internal API user, so an empty user table leaves it false and the container
+bootstraps its admin normally. One leftover user row and the app skips that
+bootstrap, silently keeping whatever password was baked into the fixture.
+
+Demo accounts share the `PREVIEW_DEMO_PASSWORD` secret. Leave it unset and
+provisioning is skipped - the deployment stays admin-only rather than falling
+back to anything guessable. Full detail in
+[testing/seed-databases/README.md](../../testing/seed-databases/README.md).
+
 ## Scripts
 
-* **`stage-seed-database.sh`** - runs on the GitHub runner; stops the previous
-  container and copies the seed database into place before `docker-compose up`.
-  Seeding is optional and skipped quietly when the file is absent.
+* **`stage-seed-database.sh`** - runs on the GitHub runner before
+  `docker-compose up`; stops the previous container and copies the seed
+  database into place. Optional, skipped quietly when the file is absent.
+* **`provision_demo_users.py`** - runs after the deployment answers its health
+  check; creates the demo accounts from a JSON manifest. Stdlib only, since
+  runners have `python3` but not necessarily `jq`.
 
 Stopping the container first is load-bearing, not tidiness: a running app holds
 the H2 file open and flushes its own state on shutdown, so replacing the file
 underneath it would lose the seed.
+
+Provisioning is gated on the licence being live. `TeamController` is
+`@PremiumEndpoint`, and unlicensed `saveUser` caps out at the grandfathered 5
+seats, so an unlicensed run would half-populate the deployment and then fail
+the job over demo data. It is also idempotent the hard way: `saveUser` is
+create-only and answers 409 for an existing username, so accounts already
+present are reconciled through `changeRole` + `changePasswordForUser` instead.
 
 The PR workflow deliberately runs `stage-seed-database.sh` from a sparse
 checkout of `main`, not from the PR branch: that step has the VPS SSH key in

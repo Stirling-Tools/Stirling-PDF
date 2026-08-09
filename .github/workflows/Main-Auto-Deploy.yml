@@ -155,6 +155,11 @@ jobs:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
+                # The seed database ships with no users, so the container
+                # bootstraps its admin from these on first boot. Without them
+                # it would fall back to the well-known admin/stirling.
+                SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
+                SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
                 SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF Demo (main)"
                 UI_HOMEDESCRIPTION: "Always-on demo built from the main branch"
@@ -196,6 +201,32 @@ jobs:
           echo "::error::Demo did not become healthy within 10 minutes"
           exit 1
 
+      # Demo accounts are created here rather than baked into the seed
+      # database: their passwords are secrets, and a password committed to a
+      # public repo is a published password.
+      #
+      # Gated on the licence: without one the seat cap is the unlicensed
+      # grandfathered 5 and the team endpoints are premium-gated, so
+      # provisioning would half-succeed and fail the deploy over demo data.
+      - name: Provision demo accounts
+        id: provision
+        if: steps.deploy.outputs.license_enabled == 'true'
+        env:
+          BASE_URL: http://${{ secrets.NEW_VPS_HOST }}:${{ env.DEMO_PORT }}
+          ADMIN_USERNAME: ${{ secrets.TEST_LOGIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
+          DEMO_PASSWORD: ${{ secrets.PREVIEW_DEMO_PASSWORD }}
+          MANIFEST: testing/seed-databases/main-demo-users.json
+        run: |
+          # Without the secret there is no safe password to use, so leave the
+          # demo admin-only rather than inventing a guessable one.
+          if [ -z "$DEMO_PASSWORD" ]; then
+            echo "PREVIEW_DEMO_PASSWORD is not set - skipping demo accounts."
+            echo "users_provisioned=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 scripts/deploy/provision_demo_users.py
+
       - name: Summary
         if: always()
         run: |
@@ -208,6 +239,7 @@ jobs:
             echo "| Image | \`v2-${{ steps.commit-hash.outputs.app_short }}\` |"
             echo "| Enterprise licence | ${{ steps.deploy.outputs.license_enabled }} |"
             echo "| Reseeded | ${{ steps.assets.outputs.seed_staged }} |"
+            echo "| Demo accounts | ${{ steps.provision.outputs.users_provisioned || 0 }} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Cleanup temporary files
