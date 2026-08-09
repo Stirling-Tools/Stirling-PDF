@@ -397,7 +397,16 @@ export default function MobileUploadModal({
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}
           >
-            <QRCodeSVG value={mobileUrl} size={256} level="H" includeMargin />
+            <QRCodeSVG
+              value={mobileUrl}
+              size={256}
+              level="H"
+              includeMargin
+              title={t(
+                "mobileUpload.qrCodeTitle",
+                "QR code linking to the mobile upload page",
+              )}
+            />
           </Box>
 
           {filesReceived > 0 && (

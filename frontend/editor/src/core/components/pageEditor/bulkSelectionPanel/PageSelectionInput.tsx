@@ -60,7 +60,7 @@ const PageSelectionInput = ({
               size="sm"
               checked={!!advancedOpened}
               onChange={(e) => onToggleAdvanced?.(e.currentTarget.checked)}
-              title={t("bulkSelection.advanced.title", "Advanced")}
+              aria-label={t("bulkSelection.advanced.title", "Advanced")}
               className={classes.advancedSwitch}
             />
           </Flex>
