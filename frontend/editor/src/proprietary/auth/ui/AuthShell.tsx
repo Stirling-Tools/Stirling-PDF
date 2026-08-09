@@ -15,11 +15,7 @@ export interface AuthShellProps {
 export function AuthShell({ children, footer }: AuthShellProps) {
   return (
     <div className={styles.authContainer}>
-      {/* The card caps at 96vh and hides its scrollbar, so on a short viewport
-          it scrolls with nothing to grab. Focusable so a keyboard can scroll
-          it; the group role keeps it announced as one region rather than an
-          unlabelled interactive element. */}
-      <div className={styles.authCard} tabIndex={0} role="group">
+      <div className={styles.authCard}>
         <div className={styles.authContent}>{children}</div>
       </div>
       {footer && (

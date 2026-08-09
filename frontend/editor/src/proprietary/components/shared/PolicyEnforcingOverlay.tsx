@@ -106,6 +106,9 @@ export function PolicyEnforcingOverlay({
               w="100%"
               size="xs"
               radius="xl"
+              /* The heading above is plain text, so the bar carries its own
+                 name rather than being announced as an unlabelled progressbar. */
+              aria-label={t("policy.enforcingTitle", "Enforcing policy…")}
               value={progress}
               striped
               animated
