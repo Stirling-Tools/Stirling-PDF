@@ -101,12 +101,12 @@ tasks:
   ruff:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff check --isolated --line-length=127 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff check --isolated --line-length=120 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
 
   ruff-format:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff format --isolated {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff format --isolated --line-length=120 {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
 
   codespell:
     deps: [install]

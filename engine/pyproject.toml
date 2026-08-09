@@ -46,7 +46,6 @@ cucumber = [
 ]
 # Shared Python utilities used by repository scripts and CI workflows.
 tools = [
-    "brotli @ git+https://github.com/google/brotli.git@028fb5a23661f123017c060daa546b55cf4bde29",
     "deep-translator>=1.11.4",
     "defusedxml>=0.7.1",
     "fonttools>=4.63.0",
