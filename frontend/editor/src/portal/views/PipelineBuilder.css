@@ -139,7 +139,7 @@
   font-size: 0.6875rem;
   font-weight: 600;
   background: var(--c-primary-tint);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-builder__step--active .portal-builder__step-index {
@@ -166,7 +166,7 @@
 
 /* A step that cannot run on what the one before it produces. */
 .portal-builder__step-note--danger {
-  color: var(--c-danger);
+  color: var(--color-red-dark);
 }
 
 /* A picker entry that cannot run on what the chain currently produces. */
@@ -229,7 +229,7 @@
 
 .portal-builder__add-step:hover {
   border-color: var(--c-primary);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 /* Pipeline settings (above the operation list) */
@@ -418,7 +418,7 @@
 
 .portal-builder__add-step.sui-btn:hover {
   border-color: var(--c-primary);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-pipelines__picker-item.sui-btn {
