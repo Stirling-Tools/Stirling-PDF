@@ -121,7 +121,7 @@ jobs:
           fi
       - name: Install uv
         if: always()
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ff9 # v9.0.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -175,10 +175,10 @@ jobs:
       - name: Playwright frontend coverage step summary
         if: always() && steps.pw-frontend-coverage.outputs.summary == 'true'
         run: |
-            uv run --project engine --locked --group tools python scripts/coverage-summary.py \
-            --title "Playwright (live) frontend coverage" \
-            --vitest .test-state/playwright/coverage-pw-summary/coverage-summary.json \
-            --github-step-summary
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
+          --title "Playwright (live) frontend coverage" \
+          --vitest .test-state/playwright/coverage-pw-summary/coverage-summary.json \
+          --github-step-summary
 
       - name: Upload Playwright frontend coverage
         # Bundle both the aggregated summary and the raw V8 dumps so
