@@ -27,11 +27,12 @@ export default function EditableSecretField({
   description,
   value,
   onChange,
-  placeholder = "Enter value",
+  placeholder,
   disabled = false,
   error,
 }: EditableSecretFieldProps) {
   const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("common.enterValue");
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -113,7 +114,7 @@ export default function EditableSecretField({
           ref={inputRef}
           value={tempValue}
           onChange={(e) => setTempValue(e.currentTarget.value)}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled}
           error={error}
           autoComplete="new-password"
@@ -127,7 +128,7 @@ export default function EditableSecretField({
         <PasswordInput
           value={value}
           onChange={(e) => onChange(e.currentTarget.value)}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled}
           error={error}
           autoComplete="new-password"
