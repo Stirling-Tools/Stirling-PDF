@@ -57,7 +57,9 @@ interface FixtureOptions {
   recentFiles?: StirlingFileStub[];
   activeFileIds?: FileId[];
   isLoading?: boolean;
-  config?: Partial<typeof BASE_CONFIG>;
+  /** Any AppConfig field, not just the few defaulted below — stories reach for
+   *  Drive and tool-visibility flags too. */
+  config?: Record<string, unknown>;
 }
 
 export function withFileManager({
