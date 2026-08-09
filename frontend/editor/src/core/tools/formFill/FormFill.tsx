@@ -436,7 +436,7 @@ const FormFill = (_props: BaseToolProps) => {
                 >
                   <Loader size={14} />
                   <Text size="xs" c="dimmed">
-                    {t("formFill.analyzingFields", "Analysing form fields...")}
+                    Analysing form fields...
                   </Text>
                 </div>
                 <Skeleton height={48} radius="sm" />
@@ -464,12 +464,10 @@ const FormFill = (_props: BaseToolProps) => {
                 <div>
                   <div className={styles.progressRow}>
                     <span className={styles.progressLabel}>
-                      {filledCount} / {fillableCount}{" "}
-                      {t("formFill.filled", "filled")}
+                      {filledCount} / {fillableCount} filled
                       {requiredCount > 0 && (
                         <span style={{ marginLeft: "0.5rem", opacity: 0.7 }}>
-                          ({filledRequiredCount}/{requiredCount}{" "}
-                          {t("formFill.requiredAbbreviation", "req")}.)
+                          ({filledRequiredCount}/{requiredCount} req.)
                         </span>
                       )}
                     </span>
@@ -590,10 +588,7 @@ const FormFill = (_props: BaseToolProps) => {
                 <div className={styles.emptyState}>
                   <DescriptionIcon className={styles.emptyStateIcon} />
                   <span className={styles.emptyStateText}>
-                    {t(
-                      "formFill.noFields",
-                      "No fillable form fields found in this PDF.",
-                    )}
+                    No fillable form fields found in this PDF.
                   </span>
                 </div>
               )}
@@ -610,7 +605,7 @@ const FormFill = (_props: BaseToolProps) => {
                       style={i === 0 ? { marginTop: 0 } : undefined}
                     >
                       <Text className={styles.pageDividerLabel}>
-                        {t("page", "Page")} {pageIdx + 1}
+                        Page {pageIdx + 1}
                       </Text>
                     </div>
 

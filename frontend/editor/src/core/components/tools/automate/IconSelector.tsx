@@ -92,7 +92,16 @@ export default function IconSelector({
                 return (
                   <Tooltip key={option.value} label={option.label}>
                     <Box
+                      role="button"
+                      tabIndex={0}
+                      aria-label={option.label}
                       onClick={() => handleIconSelect(option.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleIconSelect(option.value);
+                        }
+                      }}
                       style={{
                         display: "flex",
                         alignItems: "center",
