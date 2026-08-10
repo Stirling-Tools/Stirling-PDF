@@ -180,6 +180,8 @@ const humanizeLabel = (s) =>
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
 const pageTitles = {
+  // The editor's own URL ("/" only routes, by role).
+  "/editor": "Editor",
   "/login": "Sign In",
   "/signup": "Sign Up",
   "/mobile-scanner": "Mobile Scanner",

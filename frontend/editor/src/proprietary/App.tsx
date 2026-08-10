@@ -18,7 +18,7 @@ import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFo
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
-import { LoginLandingRedirect } from "@app/components/LoginLandingRedirect";
+import { RootGate } from "@app/routes/RootGate";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -74,26 +74,29 @@ export default function App() {
             before the catch-all. Absent from core/desktop builds (empty stub). */}
         {getAdminRouteExtensions()}
 
-        {/* All other routes need AppProviders for backend integration */}
+        {/* All other routes need AppProviders for backend integration.
+            RootGate makes "/" route by role BEFORE any of it mounts, so a user
+            bound for the processor never boots the editor on the way. */}
         <Route
           path="*"
           element={
-            <AppProviders>
-              <AppLayout>
-                <LoginLandingRedirect />
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/invite/:token" element={<InviteAccept />} />
-                  <Route path="/share/:token" element={<ShareLinkPage />} />
-                  {/* Main app routes - Landing handles auth logic */}
-                  <Route path="/*" element={<Landing />} />
-                </Routes>
-                <Onboarding />
-                {WATCHED_FOLDERS_ENABLED && <WatchedFoldersRegistration />}
-              </AppLayout>
-            </AppProviders>
+            <RootGate>
+              <AppProviders>
+                <AppLayout>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/invite/:token" element={<InviteAccept />} />
+                    <Route path="/share/:token" element={<ShareLinkPage />} />
+                    {/* The editor and its tool routes - Landing handles auth logic */}
+                    <Route path="/*" element={<Landing />} />
+                  </Routes>
+                  <Onboarding />
+                  {WATCHED_FOLDERS_ENABLED && <WatchedFoldersRegistration />}
+                </AppLayout>
+              </AppProviders>
+            </RootGate>
           }
         />
       </Routes>

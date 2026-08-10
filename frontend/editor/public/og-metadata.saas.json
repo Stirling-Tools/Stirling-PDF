@@ -306,6 +306,12 @@
       "title": "Air-gapped Setup - Stirling PDF",
       "description": "Link to air-gapped setup guide"
     },
+    "/editor": {
+      "image": "/og_images/saas/app-editor.png",
+      "title": "Stirling - The world's most secure PDF editor",
+      "ogTitle": "The world's most secure PDF editor",
+      "description": "Edit, sign, redact, and convert PDFs in your browser. Free forever, open source, and self-hostable."
+    },
     "/login": {
       "image": "/og_images/home.png",
       "title": "Sign In - Stirling PDF",
@@ -541,12 +547,6 @@
       "title": "Stirling Processor - Govern every PDF your organization touches",
       "ogTitle": "Govern every PDF your organization touches",
       "description": "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF."
-    },
-    "/editor": {
-      "image": "/og_images/saas/app-editor.png",
-      "title": "Stirling - The world's most secure PDF editor",
-      "ogTitle": "The world's most secure PDF editor",
-      "description": "Edit, sign, redact, and convert PDFs in your browser. Free forever, open source, and self-hostable."
     }
   },
   "byPath": {
@@ -663,6 +663,7 @@
     "/overlay-pdf": "overlayPdfs",
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
+    "/editor": "/editor",
     "/login": "/login",
     "/signup": "/signup",
     "/mobile-scanner": "/mobile-scanner",
@@ -709,7 +710,6 @@
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link",
-    "/processor": "/processor",
-    "/editor": "/editor"
+    "/processor": "/processor"
   }
 }

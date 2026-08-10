@@ -20,7 +20,7 @@ import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
-import { LoginLandingRedirect } from "@app/components/LoginLandingRedirect";
+import { RootGate } from "@app/routes/RootGate";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 
@@ -87,32 +87,35 @@ export default function App() {
             before the catch-all. */}
         {getAdminRouteExtensions()}
 
-        {/* Everything else needs the auth/backend providers. */}
+        {/* Everything else needs the auth/backend providers. RootGate makes "/"
+            route by role BEFORE any of it mounts, so a user bound for the
+            processor never boots the editor on the way. */}
         <Route
           path="*"
           element={
-            <AppProviders
-              appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
-            >
-              <AppLayout>
-                <NonAuthBootstraps />
-                <LoginLandingRedirect />
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/auth/reset" element={<ResetPassword />} />
-                  <Route path="/oauth/consent" element={<OAuthConsent />} />
-                  {/* Shared-file links. Team invites are NOT routed here: on
-                      SaaS they are accepted in-app via the Supabase team
-                      invitation banner, not the Spring password-based
-                      /invite/:token page used by the self-hosted build. */}
-                  <Route path="/share/:token" element={<ShareLinkPage />} />
-                  <Route path="/*" element={<Landing />} />
-                </Routes>
-                <OnboardingTour />
-              </AppLayout>
-            </AppProviders>
+            <RootGate>
+              <AppProviders
+                appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
+              >
+                <AppLayout>
+                  <NonAuthBootstraps />
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/auth/reset" element={<ResetPassword />} />
+                    <Route path="/oauth/consent" element={<OAuthConsent />} />
+                    {/* Shared-file links. Team invites are NOT routed here: on
+                        SaaS they are accepted in-app via the Supabase team
+                        invitation banner, not the Spring password-based
+                        /invite/:token page used by the self-hosted build. */}
+                    <Route path="/share/:token" element={<ShareLinkPage />} />
+                    <Route path="/*" element={<Landing />} />
+                  </Routes>
+                  <OnboardingTour />
+                </AppLayout>
+              </AppProviders>
+            </RootGate>
           }
         />
       </Routes>
