@@ -1,0 +1,205 @@
+name: Auto SaaS Dev Deployment
+
+# Dev SaaS server, built from this branch and deployed beside the PR previews
+# and the main demo.
+#
+# Unlike those two, SaaS cannot be seeded from a committed H2 file: the saas
+# profile overrides the H2 datasource with Postgres and fails fast when the
+# credentials are missing, and identities live in Supabase Auth rather than the
+# local user table. A dev Supabase project therefore has to exist first - this
+# workflow deploys against it, it does not create it.
+#
+# Ports: frontend 901, backend 902. Both sit below every PR number (previews
+# publish on the bare PR number) and beside the main demo on 900.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FRONTEND_PORT: "901"
+  BACKEND_PORT: "902"
+  DEPLOY_DIR: /stirling/SAAS-DEV
+
+jobs:
+  deploy-saas-dev:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: saas-dev-deploy
+      cancel-in-progress: true
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      # The dev Supabase project is the one thing this workflow cannot stand up
+      # for itself. Without it the backend would boot-loop on a missing
+      # datasource, so skip the whole deploy rather than leave a broken server.
+      - name: Check SaaS configuration
+        id: config
+        env:
+          DB_URL: ${{ secrets.SAAS_DEV_DB_URL }}
+          PROJECT_REF: ${{ secrets.SAAS_DEV_PROJECT_REF }}
+          SUPABASE_URL: ${{ secrets.SAAS_DEV_SUPABASE_URL }}
+        run: |
+          missing=""
+          [ -z "$DB_URL" ]       && missing="$missing SAAS_DEV_DB_URL"
+          [ -z "$PROJECT_REF" ]  && missing="$missing SAAS_DEV_PROJECT_REF"
+          [ -z "$SUPABASE_URL" ] && missing="$missing SAAS_DEV_SUPABASE_URL"
+          if [ -n "$missing" ]; then
+            echo "::warning::Skipping SaaS dev deploy - missing secrets:$missing"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        if: steps.config.outputs.ready == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        if: steps.config.outputs.ready == 'true'
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Login to Docker Hub
+        if: steps.config.outputs.ready == 'true'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Get commit hash
+        if: steps.config.outputs.ready == 'true'
+        id: commit-hash
+        run: echo "app_short=$(git rev-parse --short=8 HEAD)" >> $GITHUB_OUTPUT
+
+      # SaaS ships as two images: a backend-only JAR and a separately-built UI.
+      - name: Build and push backend image
+        if: steps.config.outputs.ready == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: ./docker/backend/Dockerfile
+          push: true
+          cache-from: type=gha,scope=stirling-saas-backend
+          cache-to: type=gha,mode=max,scope=stirling-saas-backend
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:saas-backend-${{ steps.commit-hash.outputs.app_short }}
+          build-args: |
+            VERSION_TAG=v2-alpha
+            STIRLING_FLAVOR=saas
+          platforms: linux/amd64
+
+      # The Supabase URL and publishable key are baked in at build time by vite,
+      # so a dev server needs its own frontend image - a prod-built one would
+      # point the browser at the wrong Supabase. Both values are client-safe.
+      - name: Build and push frontend image
+        if: steps.config.outputs.ready == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: ./docker/frontend/Dockerfile
+          push: true
+          cache-from: type=gha,scope=stirling-saas-frontend
+          cache-to: type=gha,mode=max,scope=stirling-saas-frontend
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:saas-frontend-${{ steps.commit-hash.outputs.app_short }}
+          build-args: |
+            VERSION_TAG=v2-alpha
+            STIRLING_FLAVOR=saas
+            VITE_BUILD_MODE=development
+            VITE_SUPABASE_URL=${{ secrets.SAAS_DEV_SUPABASE_URL }}
+            VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_DEV_SUPABASE_PUBLISHABLE_KEY }}
+          platforms: linux/amd64
+
+      - name: Set up SSH
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Deploy to VPS
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          cat > docker-compose.yml << EOF
+          version: '3.3'
+          services:
+            saas-backend:
+              container_name: stirling-saas-dev-backend
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:saas-backend-${{ steps.commit-hash.outputs.app_short }}
+              ports:
+                - "${{ env.BACKEND_PORT }}:8080"
+              volumes:
+                - ${{ env.DEPLOY_DIR }}/config:/configs:rw
+                - ${{ env.DEPLOY_DIR }}/logs:/logs:rw
+                - ${{ env.DEPLOY_DIR }}/storage:/storage:rw
+              environment:
+                # Nothing activates the saas profile implicitly - every SaaS
+                # bean is @Profile("saas"), so this has to be explicit.
+                SPRING_PROFILES_ACTIVE: "saas"
+                DISABLE_ADDITIONAL_FEATURES: "false"
+                SAAS_DB_URL: "${{ secrets.SAAS_DEV_DB_URL }}"
+                SAAS_DB_USERNAME: "${{ secrets.SAAS_DEV_DB_USERNAME }}"
+                SAAS_DB_PASSWORD: "${{ secrets.SAAS_DEV_DB_PASSWORD }}"
+                SAAS_DB_PROJECT_REF: "${{ secrets.SAAS_DEV_PROJECT_REF }}"
+                SUPABASE_EDGE_FUNCTION_SECRET: "${{ secrets.SAAS_DEV_EDGE_FUNCTION_SECRET }}"
+                SYSTEM_DEFAULTLOCALE: en-US
+                SYSTEM_MAXFILESIZE: "100"
+                METRICS_ENABLED: "true"
+                SYSTEM_GOOGLEVISIBILITY: "false"
+                SWAGGER_SERVER_URL: "https://${{ env.FRONTEND_PORT }}.ssl.stirlingpdf.cloud"
+                baseUrl: "https://${{ env.FRONTEND_PORT }}.ssl.stirlingpdf.cloud"
+              restart: on-failure:5
+
+            saas-frontend:
+              container_name: stirling-saas-dev-frontend
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:saas-frontend-${{ steps.commit-hash.outputs.app_short }}
+              ports:
+                - "${{ env.FRONTEND_PORT }}:80"
+              environment:
+                VITE_API_BASE_URL: "http://${{ secrets.NEW_VPS_HOST }}:${{ env.BACKEND_PORT }}"
+              depends_on:
+                - saas-backend
+              restart: on-failure:5
+          EOF
+
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose-saas-dev.yml
+
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T \
+            ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+            set -e
+            mkdir -p ${{ env.DEPLOY_DIR }}/{config,logs,storage}
+            mv /tmp/docker-compose-saas-dev.yml ${{ env.DEPLOY_DIR }}/docker-compose.yml
+            cd ${{ env.DEPLOY_DIR }}
+            docker-compose down --remove-orphans 2>/dev/null || true
+            docker-compose pull
+            docker-compose up -d
+            # Images only - --volumes would take the other deployments' data.
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
+          ENDSSH
+
+      - name: Wait for the backend to answer
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          URL="http://${{ secrets.NEW_VPS_HOST }}:${{ env.BACKEND_PORT }}/api/v1/info/status"
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL" || true)
+            if [ "$code" = "200" ]; then echo "Healthy after $((i * 10))s"; exit 0; fi
+            sleep 10
+          done
+          echo "::error::SaaS dev backend did not become healthy within 10 minutes"
+          exit 1
+
+      - name: Cleanup temporary files
+        if: always()
+        run: rm -f ../private.key
+        continue-on-error: true
