@@ -137,7 +137,7 @@ html[data-app-theme="midnight"] {
 
   --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-300);
+  --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
@@ -300,10 +300,14 @@ html[data-app-theme="custom"] {
 /* ── DARK — editor dark theme: neutral text/borders/icons + accent-tinted surfaces (default override opts out). After :root so it wins for dark. ── */
 html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   --c-accent-text: var(--p-blue-400);
+  /* Shade 600 is the ramp's text-capable step (Mantine's shade 6 — link colour
+     and the tuple's default text). The light theme reaches it by mixing toward
+     black; on a dark ground it has to travel the other way to stay readable. */
+  --color-primary-600: color-mix(in srgb, var(--c-primary) 85%, var(--p-white));
   /* Neutral text / borders / overlay (not accent-tinted). */
   --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-300);
+  --c-text-subtle: var(--p-zinc-250);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);

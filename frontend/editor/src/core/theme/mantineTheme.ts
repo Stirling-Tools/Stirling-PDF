@@ -89,52 +89,69 @@ const dark: MantineColorsTuple = [
 ];
 
 /**
- * Mantine derives the "light" variant's text colour from the palette itself,
- * landing around 3.7:1 on its own tint — too low for badge/button labels. Point
- * each hue's light-variant text at the accessible on-light shade instead.
+ * Mantine derives each variant's text colour from the palette itself, landing
+ * around 3.7:1 on its own tint — too low for badge, button and helper text.
+ * These slots point at the accessible shade for the scheme instead.
+ *
+ * Slots whose values are written in tokens that already flip with the colour
+ * scheme (`--c-accent-text`, `--color-*-dark`, `--c-text-muted`), plus the
+ * solid fills, which are chosen to carry a white label on either ground. Both
+ * schemes therefore take the same map; only the slots naming a fixed primitive
+ * need a per-scheme value.
  */
+const accessibleColorSlots = {
+  // Link colour: Mantine derives it from the accent's shade 6.
+  "--mantine-color-anchor": "var(--c-accent-text)",
+  "--mantine-color-primary-light-color": "var(--c-accent-text)",
+  "--mantine-color-blue-light-color": "var(--c-accent-text)",
+  "--mantine-color-red-light-color": "var(--color-red-dark)",
+  "--mantine-color-green-light-color": "var(--color-green-dark)",
+  "--mantine-color-yellow-light-color": "var(--color-amber-dark)",
+  // Colour names the app never registers still reach Mantine's own palette
+  // through `color="..."` props, so pin their light-variant text too.
+  "--mantine-color-orange-light-color": "var(--color-amber-dark)",
+  "--mantine-color-grape-light-color": "var(--color-purple-dark)",
+  "--mantine-color-teal-light-color": "var(--color-green-dark)",
+  "--mantine-color-cyan-light-color": "var(--c-accent-text)",
+  // Mantine's own semantic slots. The -text variants back input errors and
+  // text-only variants; the -filled ones back solid badges, and the stock
+  // orange and grey are too light to carry a white label.
+  "--mantine-color-dimmed": "var(--c-text-muted)",
+  // Neutral badges and chips derive their label from the grey ramp, which lands
+  // mid-scale and reads against neither ground.
+  "--mantine-color-gray-light-color": "var(--c-text-muted)",
+  "--mantine-color-error": "var(--color-red-dark)",
+  "--mantine-color-red-text": "var(--color-red-dark)",
+  "--mantine-color-green-text": "var(--color-green-dark)",
+  "--mantine-color-orange-text": "var(--color-amber-dark)",
+  "--mantine-color-blue-text": "var(--c-accent-text)",
+  "--mantine-color-orange-filled": "var(--p-amber-700)",
+  "--mantine-color-green-filled": "var(--p-green-700)",
+  "--mantine-color-yellow-filled": "var(--p-amber-700)",
+  // Outline variants paint their label with the hue's -outline slot, which
+  // defaults to the solid fill and is therefore too light to read.
+  "--mantine-color-red-outline": "var(--color-red-dark)",
+  "--mantine-color-green-outline": "var(--color-green-dark)",
+  "--mantine-color-teal-outline": "var(--color-green-dark)",
+  "--mantine-color-orange-outline": "var(--color-amber-dark)",
+  "--mantine-color-yellow-outline": "var(--color-amber-dark)",
+  "--mantine-color-blue-outline": "var(--c-accent-text)",
+  "--mantine-color-primary-outline": "var(--c-accent-text)",
+  "--mantine-color-teal-filled": "var(--p-green-700)",
+  "--mantine-color-gray-filled": "var(--p-gray-600)",
+} as const;
+
 export const editorCssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
   light: {
-    // Link colour: Mantine derives it from the accent's shade 6.
-    "--mantine-color-anchor": "var(--c-accent-text)",
-    "--mantine-color-primary-light-color": "var(--c-accent-text)",
-    "--mantine-color-blue-light-color": "var(--c-accent-text)",
-    "--mantine-color-red-light-color": "var(--color-red-dark)",
-    "--mantine-color-green-light-color": "var(--color-green-dark)",
-    "--mantine-color-yellow-light-color": "var(--color-amber-dark)",
-    // Colour names the app never registers still reach Mantine's own palette
-    // through `color="..."` props, so pin their light-variant text too.
-    "--mantine-color-orange-light-color": "var(--color-amber-dark)",
+    ...accessibleColorSlots,
+    // Indigo has no semantic token to flip, so each scheme names its own step.
     "--mantine-color-indigo-light-color": "var(--p-indigo-600)",
-    "--mantine-color-grape-light-color": "var(--color-purple-dark)",
-    "--mantine-color-teal-light-color": "var(--color-green-dark)",
-    "--mantine-color-cyan-light-color": "var(--c-accent-text)",
-    // Mantine's own semantic slots. The -text variants back input errors and
-    // text-only variants; the -filled ones back solid badges, and the stock
-    // orange and grey are too light to carry a white label.
-    "--mantine-color-dimmed": "var(--c-text-muted)",
-    "--mantine-color-error": "var(--color-red-dark)",
-    "--mantine-color-red-text": "var(--color-red-dark)",
-    "--mantine-color-green-text": "var(--color-green-dark)",
-    "--mantine-color-orange-text": "var(--color-amber-dark)",
-    "--mantine-color-blue-text": "var(--c-accent-text)",
-    "--mantine-color-orange-filled": "var(--p-amber-700)",
-    "--mantine-color-green-filled": "var(--p-green-700)",
-    "--mantine-color-yellow-filled": "var(--p-amber-700)",
-    // Outline variants paint their label with the hue's -outline slot, which
-    // defaults to the solid fill and is therefore too light to read.
-    "--mantine-color-red-outline": "var(--color-red-dark)",
-    "--mantine-color-green-outline": "var(--color-green-dark)",
-    "--mantine-color-teal-outline": "var(--color-green-dark)",
-    "--mantine-color-orange-outline": "var(--color-amber-dark)",
-    "--mantine-color-yellow-outline": "var(--color-amber-dark)",
-    "--mantine-color-blue-outline": "var(--c-accent-text)",
-    "--mantine-color-primary-outline": "var(--c-accent-text)",
-    "--mantine-color-teal-filled": "var(--p-green-700)",
-    "--mantine-color-gray-filled": "var(--p-gray-600)",
   },
-  dark: {},
+  dark: {
+    ...accessibleColorSlots,
+    "--mantine-color-indigo-light-color": "var(--p-indigo-300)",
+  },
 });
 
 export const mantineTheme = createTheme({

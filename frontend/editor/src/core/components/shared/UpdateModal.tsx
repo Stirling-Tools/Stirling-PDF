@@ -411,6 +411,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={handleExternalLink(WINDOWS_INSTALL_DOCS_URL)}
+                      // Sits inside a sentence, so the accent alone does not
+                      // separate it from the surrounding copy.
+                      underline="always"
                     >
                       {t(
                         "desktopUpdate.blocked.docsLink",

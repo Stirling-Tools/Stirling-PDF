@@ -215,7 +215,9 @@ const CompressSettings = ({
           <Stack
             gap="xs"
             style={{
-              opacity: disabled || imageMagickAvailable === false ? 0.6 : 1,
+              // Dimmed enough to read as inactive, but not so far that the
+              // muted labels inside drop below the 4.5:1 text floor.
+              opacity: disabled || imageMagickAvailable === false ? 0.8 : 1,
             }}
           >
             <Text size="sm" fw={600}>

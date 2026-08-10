@@ -215,7 +215,10 @@
   --color-red: var(--p-red-400);
   --color-red-light: var(--p-zinc-800);
   --color-red-border: var(--p-red-600);
-  --color-red-dark: var(--p-red-500);
+  /* The -dark shades are this theme's TEXT colours. On the dark card and
+     raised surfaces red-500 only reaches ~3.9:1, so error copy runs a step
+     lighter than the base hue. */
+  --color-red-dark: var(--p-red-400);
   --color-amber: var(--p-amber-400);
   --color-amber-light: color-mix(
     in srgb,
@@ -243,7 +246,9 @@
   --color-tooltip-bg: var(--p-gray-250);
   --color-tooltip-text: var(--p-blue-700);
 
-  --color-section-label: var(--p-gray-600);
+  /* Uppercase 12px label text: the light theme's grey only reaches 2.3:1
+     on the dark surfaces, so this theme takes a real on-dark shade. */
+  --color-section-label: var(--p-zinc-200);
 
   --color-search-border-hover: var(--p-gray-600);
   --color-search-text: var(--p-gray-500);
