@@ -2,7 +2,7 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { Box, Loader, Center } from "@mantine/core";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import {
   useNavigationState,
   useNavigationActions,
@@ -41,11 +41,10 @@ export default function Workbench() {
   useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
-  const { selectors } = useFileState();
+  const { files: activeFiles } = useAllFiles();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const activeFiles = selectors.getFiles();
   const {
     previewFile,
     pageEditorFunctions,
