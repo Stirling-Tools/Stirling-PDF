@@ -226,11 +226,13 @@ function findToolByEndpoint(
   step: ToolApiStep,
   registry: Partial<ToolRegistry>,
 ): [ToolId, ToolRegistryEntry] | undefined {
+  const staticMatches: [ToolId, ToolRegistryEntry][] = [];
   let dynamic: [ToolId, ToolRegistryEntry] | undefined;
   for (const [id, entry] of Object.entries(registry)) {
     const endpoint = entry?.operationConfig?.endpoint;
     if (typeof endpoint === "string") {
-      if (endpoint === step.operation) return [id as ToolId, entry];
+      if (endpoint === step.operation)
+        staticMatches.push([id as ToolId, entry]);
     } else if (typeof endpoint === "function" && !dynamic) {
       const declared = entry?.operationConfig?.endpoints;
       const matched = declared
@@ -239,7 +241,31 @@ function findToolByEndpoint(
       if (matched) dynamic = [id as ToolId, entry];
     }
   }
+  if (staticMatches.length > 0) {
+    return disambiguateStaticMatches(staticMatches, step.parameters);
+  }
   return dynamic;
+}
+
+/**
+ * Most endpoints belong to one tool, so the single match is returned unchanged. When several
+ * share an endpoint (Add Password and its permissions-only alias Change Permissions), prefer the
+ * specialised tool that claims the stored parameters; otherwise fall back to the general owner
+ * that declares no such claim.
+ */
+function disambiguateStaticMatches(
+  matches: [ToolId, ToolRegistryEntry][],
+  parameters: Record<string, unknown>,
+): [ToolId, ToolRegistryEntry] {
+  if (matches.length === 1) return matches[0];
+  const claimed = matches.find(([, entry]) =>
+    entry.operationConfig?.claimsStoredStep?.(parameters),
+  );
+  if (claimed) return claimed;
+  const general = matches.find(
+    ([, entry]) => !entry.operationConfig?.claimsStoredStep,
+  );
+  return general ?? matches[0];
 }
 
 /** A stored step kept verbatim because its endpoint maps to no known tool. */

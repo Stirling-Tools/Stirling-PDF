@@ -24,6 +24,8 @@ import { SPLIT_METHODS } from "@app/constants/splitConstants";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
 import { defaultParameters as autoRotateDefaults } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
+import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
+import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 
 function entry(over: Partial<ToolRegistryEntry>): ToolRegistryEntry {
   return {
@@ -252,6 +254,46 @@ describe("serialize/deserialize round-trip", () => {
     expect(back.operation).toBe("/api/v1/security/auto-redact");
     expect(back.params).toMatchObject({ mode: "automatic" });
   });
+});
+
+describe("shared-endpoint disambiguation", () => {
+  const addPassword = entry({
+    name: "Add Password",
+    automationSettings: NoopSettings,
+    operationConfig: asRegistryConfig(addPasswordOperationConfig),
+  });
+  const changePermissions = entry({
+    name: "Change Permissions",
+    automationSettings: NoopSettings,
+    operationConfig: asRegistryConfig(changePermissionsOperationConfig),
+  });
+  const ADD_PASSWORD = "/api/v1/security/add-password";
+
+  // Permissions only, no encryption fields: this is Change Permissions.
+  const permsOnly = {
+    operation: ADD_PASSWORD,
+    parameters: { preventPrinting: true },
+  };
+  // Carries keyLength (and a password): this is Add Password, even with a blank owner password.
+  const withPassword = {
+    operation: ADD_PASSWORD,
+    parameters: { password: "s3cret", ownerPassword: "", keyLength: 256 },
+  };
+
+  // Both share an endpoint, so the wrong one would win by registry order without a discriminator.
+  for (const [label, registry] of [
+    ["add-password declared first", { addPassword, changePermissions }],
+    ["change-permissions declared first", { changePermissions, addPassword }],
+  ] as const) {
+    test(`each stored step reloads as its own tool (${label})`, () => {
+      expect(deserializeToolStep(permsOnly, registry).toolId).toBe(
+        "changePermissions",
+      );
+      expect(deserializeToolStep(withPassword, registry).toolId).toBe(
+        "addPassword",
+      );
+    });
+  }
 });
 
 describe("stepRequiresUpload", () => {

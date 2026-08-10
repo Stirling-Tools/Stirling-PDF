@@ -102,6 +102,13 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   fromApiParams?(apiParams: ToolApiParams[TEndpoint]): Partial<TParams>;
 
   /**
+   * Whether a stored step belongs to this tool, used only to tell apart tools that share an endpoint.
+   * Receives the raw stored request body. Absent means the tool is the general owner of its
+   * endpoint and claims any step no specialised sibling claims.
+   */
+  claimsStoredStep?(apiParams: Record<string, unknown>): boolean;
+
+  /**
    * For custom tools: if true, success implies all input files were successfully processed.
    * Use this for tools like Automate or Merge where Many-to-One relationships exist
    * and exact input-output mapping is difficult.
