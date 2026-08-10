@@ -7,7 +7,7 @@ ARG TARGETPLATFORM
 # Stage 1: Build and strip Calibre
 FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS calibre-build
 ARG TARGETPLATFORM
-ARG CALIBRE_VERSION=9.9.0
+ARG CALIBRE_VERSION=9.13.0
 ARG CALIBRE_STRIP_WEBENGINE=false
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -17,7 +17,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       ca-certificates curl xz-utils libnss3 libfontconfig1 \
       libgl1 libegl1 libdbus-1-3 libasound2t64 libxcomposite1 \
       libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0 \
-      poppler-utils; \
+      poppler-utils tzdata; \
     rm -rf /var/lib/apt/lists/*; \
     \
     case "$(uname -m)" in \
