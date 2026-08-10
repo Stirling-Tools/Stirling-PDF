@@ -147,7 +147,9 @@ jobs:
                 SPRING_PROFILES_ACTIVE: "saas"
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 SAAS_DB_URL: "${{ secrets.SAAS_DEV_DB_URL }}"
-                SAAS_DB_USERNAME: "${{ secrets.SAAS_DEV_DB_USERNAME }}"
+                # Fall back explicitly: the property default (${SAAS_DB_USERNAME:postgres})
+                # only applies when the var is unset, and compose would set it empty.
+                SAAS_DB_USERNAME: "${{ secrets.SAAS_DEV_DB_USERNAME || 'postgres' }}"
                 SAAS_DB_PASSWORD: "${{ secrets.SAAS_DEV_DB_PASSWORD }}"
                 SAAS_DB_PROJECT_REF: "${{ secrets.SAAS_DEV_PROJECT_REF }}"
                 SUPABASE_EDGE_FUNCTION_SECRET: "${{ secrets.SAAS_DEV_EDGE_FUNCTION_SECRET }}"
