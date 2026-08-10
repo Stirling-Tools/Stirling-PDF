@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { Button } from "@app/ui/Button";
+import { isSafePostLoginRedirect } from "@app/auth";
 import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -29,11 +30,11 @@ export default function Login() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
-  // Same-origin relative paths only. Rejects protocol-relative "//host" (same
-  // guard as the SaaS `next`) so a crafted /login?from=... can't bounce the
-  // user off-origin once they sign in.
-  const sameOriginPath = (path: string | null | undefined): string | null =>
-    path && path.startsWith("/") && !path.startsWith("//") ? path : null;
+  // Reuses the shared guard rather than re-deriving one: same-origin relative
+  // paths only, rejecting "//host", "/\host" (browsers normalise the backslash)
+  // and auth routes (a ?from=/login would cost a pointless hop back here).
+  const safePath = (path: unknown): string | null =>
+    isSafePostLoginRedirect(path) ? path : null;
 
   // Where to return to after signing in. Router state first (set when Landing
   // bounces an unauthenticated visitor), then the query, which is what survives
@@ -43,13 +44,13 @@ export default function Login() {
     const fromState = (
       location.state as { from?: { pathname?: string } } | null
     )?.from?.pathname;
-    if (fromState) return sameOriginPath(fromState);
+    if (fromState) return safePath(fromState);
     const fromQuery = searchParams.get("from");
     if (!fromQuery) return null;
     try {
-      return sameOriginPath(decodeURIComponent(fromQuery));
+      return safePath(decodeURIComponent(fromQuery));
     } catch {
-      return sameOriginPath(fromQuery);
+      return safePath(fromQuery);
     }
   };
   const { refetch } = useAppConfig();

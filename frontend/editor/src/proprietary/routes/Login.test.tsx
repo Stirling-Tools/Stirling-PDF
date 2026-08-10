@@ -248,17 +248,20 @@ describe("Login", () => {
       });
     });
 
-    it("rejects an off-origin return path and lands normally", async () => {
+    // Delegated to the shared isSafePostLoginRedirect, so the backslash form
+    // (browsers normalise "\" to "/") and auth routes are covered too.
+    it.each([
+      ["protocol-relative", "//evil.example.com"],
+      ["backslash-escaped", "/\\evil.example.com"],
+      ["an auth route", "/login"],
+    ])("rejects %s and lands normally", async (_label, from) => {
       signedIn();
-      renderAtLogin(`?from=${encodeURIComponent("//evil.example.com")}`);
+      renderAtLogin(`?from=${encodeURIComponent(from)}`);
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith("/editor", { replace: true });
       });
-      expect(mockNavigate).not.toHaveBeenCalledWith(
-        "//evil.example.com",
-        expect.anything(),
-      );
+      expect(mockNavigate).not.toHaveBeenCalledWith(from, expect.anything());
     });
   });
 
