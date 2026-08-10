@@ -15,9 +15,6 @@ interface KeyboardShortcutCallbacks {
   onDelete: () => void;
   onDuplicate: () => void;
   onSelectAll: () => void;
-  onCopySelected: () => void;
-  onCutSelected: () => void;
-  onPaste: (stripFormatting: boolean) => void;
   onToggleHelp: () => void;
   onOpenFind: () => void;
   onFindNext: (reverse: boolean) => void;
@@ -35,9 +32,6 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onDelete,
     onDuplicate,
     onSelectAll,
-    onCopySelected,
-    onCutSelected,
-    onPaste,
     onToggleHelp,
     onOpenFind,
     onFindNext,
@@ -98,25 +92,10 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           e.preventDefault();
           onSelectAll();
           return;
-        case "c":
-          if (isFocusInContentEditable()) return;
-          onCopySelected();
-          return;
-        case "x":
-          if (isFocusInContentEditable()) return;
-          if (
-            store.selection.value.runIds.length === 0 &&
-            store.selection.value.imageIds.length === 0
-          )
-            return;
-          e.preventDefault();
-          onCutSelected();
-          return;
-        case "v":
-          if (isFocusInContentEditable()) return;
-          e.preventDefault();
-          onPaste(e.shiftKey);
-          return;
+        // c / x / v are deliberately NOT handled here. Calling
+        // preventDefault on them stops the browser dispatching the native
+        // cut/copy/paste ClipboardEvent, which is the only clipboard route
+        // that works outside Chromium-on-HTTPS. See useEditorClipboard.
         case "f":
           e.preventDefault();
           onOpenFind();
@@ -202,9 +181,6 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onDelete,
     onDuplicate,
     onSelectAll,
-    onCopySelected,
-    onCutSelected,
-    onPaste,
     onToggleHelp,
     onOpenFind,
     onFindNext,

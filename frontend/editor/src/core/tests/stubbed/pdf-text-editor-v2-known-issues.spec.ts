@@ -506,6 +506,13 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     );
     await caretEndInsert(page, id, "\n");
     await caretEndInsert(page, id, "Z");
+    // Pause past the history coalesce window before clicking away, the way a
+    // real user does. Clicking Undo blurs the run, which fires the wrap
+    // reflow; that reflow must still merge into the typing step. Without the
+    // pause this passed only because a fast machine kept everything inside
+    // the window - which is why CI's slowest browser leg was the one that
+    // caught it.
+    await page.waitForTimeout(1200);
     await page.getByTestId("v2-undo").click();
     // Poll for the revert rather than a fixed wait - the undo's store update can
     // lag the click under load, which made a single fixed timeout flaky.

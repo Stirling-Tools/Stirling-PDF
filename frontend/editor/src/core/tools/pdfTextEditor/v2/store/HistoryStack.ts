@@ -61,12 +61,10 @@ export class HistoryStack {
     // Group with the previous command when it shares a coalesce key and ran
     // within the time window. The child was already applied above; the group
     // only re-applies / reverts as a unit.
-    if (
-      key !== null &&
-      key === this.lastCoalesceKey &&
-      top &&
-      now - this.lastExecuteAt <= COALESCE_WINDOW_MS
-    ) {
+    const inWindow =
+      now - this.lastExecuteAt <= COALESCE_WINDOW_MS ||
+      cmd.coalesceIgnoresTimeWindow?.() === true;
+    if (key !== null && key === this.lastCoalesceKey && top && inWindow) {
       if (top instanceof CompositeCommand) {
         top.push(cmd);
       } else {

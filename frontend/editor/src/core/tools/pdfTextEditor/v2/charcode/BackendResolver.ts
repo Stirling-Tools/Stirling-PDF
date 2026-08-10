@@ -111,16 +111,21 @@ interface EncodeCharcodesResponse {
  * network error, etc.) - callers treat null as "no charcode for this
  * char, fall through".
  *
- * `suppressErrorToast: true` keeps an individual probe failure quiet:
- * we fire dozens of probes in parallel during prewarm, and a single
- * one going sideways shouldn't pop a toast at the user.
+ * `suppressErrorToast` keeps an individual probe failure quiet: we fire
+ * dozens of probes in parallel during prewarm, and a single one going
+ * sideways shouldn't pop a toast at the user. `skipAuthRedirect` stops a
+ * 401 on this background probe navigating the whole app to /login, which
+ * unmounts the editor and throws away the user's unsaved edits. Both are
+ * top-level axios config, NOT headers - the interceptor reads
+ * `error.config.<flag>` (see services/httpErrorHandler.ts).
  */
 async function postCharcodes(
   body: Record<string, unknown>,
 ): Promise<EncodeCharcodesResponse | null> {
   try {
     const resp = await apiClient.post<EncodeCharcodesResponse>(ENDPOINT, body, {
-      headers: { suppressErrorToast: "true" },
+      suppressErrorToast: true,
+      skipAuthRedirect: true,
     });
     return resp.data ?? null;
   } catch {

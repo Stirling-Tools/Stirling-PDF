@@ -292,6 +292,16 @@ export class ReflowWrapCommand implements Command {
   coalesceKey(): string {
     return `edit-text:${this.pageIndex}:${this.runId}`;
   }
+
+  /**
+   * The gap between the last keystroke and the blur is the user's think-time,
+   * so the 600ms coalesce window must not apply here. Without this, pausing
+   * before clicking away splits one edit into two undo steps and the first
+   * Ctrl+Z reverts only the invisible reflow - it reads as a dead undo.
+   */
+  coalesceIgnoresTimeWindow(): boolean {
+    return true;
+  }
 }
 
 /** Read every leaf object's ACTUAL geometry + text straight from PDFium. */

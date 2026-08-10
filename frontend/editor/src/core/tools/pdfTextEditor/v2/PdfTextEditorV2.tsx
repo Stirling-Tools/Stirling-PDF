@@ -12,6 +12,7 @@ import { useUnsavedChangesGuard } from "@app/tools/pdfTextEditor/v2/hooks/useUns
 import { useEditorTestGlobal } from "@app/tools/pdfTextEditor/v2/hooks/useEditorTestGlobal";
 import { useSelectionActions } from "@app/tools/pdfTextEditor/v2/hooks/useSelectionActions";
 import { useEditorKeyboardShortcuts } from "@app/tools/pdfTextEditor/v2/hooks/useEditorKeyboardShortcuts";
+import { useEditorClipboard } from "@app/tools/pdfTextEditor/v2/hooks/useEditorClipboard";
 import { FindBar } from "@app/tools/pdfTextEditor/v2/components/FindBar";
 import { HelpOverlay } from "@app/tools/pdfTextEditor/v2/components/HelpOverlay";
 import { SaveRiskModal } from "@app/tools/pdfTextEditor/v2/components/SaveRiskModal";
@@ -216,62 +217,34 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     [store, t],
   );
 
-  const handleCopySelected = useCallback(() => {
+  /** Text of the object-level selection, or null when it carries none. */
+  const getSelectedText = useCallback((): string | null => {
     const ids = store.selection.value.runIds;
-    if (ids.length === 0) return;
+    if (ids.length === 0) return null;
     const texts = store
       .getState()
       .pages.flatMap((p) => p.runs)
       .filter((r) => ids.includes(r.id))
       .map((r) => r.text);
-    if (texts.length === 0) return;
-    // Guard against non-secure contexts where navigator.clipboard is undefined.
-    if (navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(texts.join("\n")).catch(() => {});
-    }
+    return texts.length === 0 ? null : texts.join("\n");
+  }, [store]);
+
+  const hasSelection = useCallback(() => {
+    const s = store.selection.value;
+    return s.runIds.length > 0 || s.imageIds.length > 0;
   }, [store]);
 
   /**
-   * Ctrl+X: copy the selected runs' text to the clipboard AND remove
-   * them. Browser's native cut on a contentEditable would just remove
-   * the text inside the focused run; we want the editor-level
-   * behaviour: clipboard gets the run text(s), the selected runs are
-   * deleted as text/image objects. The clipboard write is fire-and-
-   * forget (no await) so the delete fires immediately even if the
-   * clipboard API is slow.
-   */
-  const handleCutSelected = useCallback(() => {
-    handleCopySelected();
-    sel.deleteSelection();
-  }, [handleCopySelected, sel]);
-
-  /**
-   * Ctrl+V: read clipboard and create a fresh InsertTextCommand on
-   * the currently-visible page, positioned in roughly the centre. The
-   * whole clipboard string (newlines preserved) is inserted as a single
-   * multi-line text run.
+   * Paste: create a fresh InsertTextCommand on the currently-visible page,
+   * positioned in roughly the centre. The whole clipboard string (newlines
+   * preserved) is inserted as a single multi-line text run.
    *
-   * Skipped silently when:
-   *   - no document loaded
-   *   - clipboard API unavailable / permission denied
-   *   - clipboard is empty
-   *   - focus is in a contentEditable run (the browser's default paste
-   *     into the active text run is what the user intends in that case)
+   * Skipped silently when no document is loaded or the text is blank.
    */
-  const handlePaste = useCallback(
-    async (stripFormatting: boolean) => {
+  const insertPastedText = useCallback(
+    (text: string, stripFormatting: boolean) => {
       const doc = store.document;
       if (!doc) return;
-      // Don't hijack the browser paste when the caret is in a text run.
-      const active = document.activeElement as HTMLElement | null;
-      if (active && active.isContentEditable) return;
-      let text: string;
-      try {
-        text = await navigator.clipboard.readText();
-      } catch {
-        return;
-      }
-      if (!text) return;
       // `stripFormatting` is honoured by normalising line endings and
       // collapsing leading/trailing whitespace - the underlying paste
       // already drops everything but plain text since the clipboard
@@ -402,17 +375,18 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         .pages.flatMap((p) => p.runs.map((r) => r.id));
       if (ids.length > 0) store.selection.selectMany(ids);
     }, [store]),
-    onCopySelected: handleCopySelected,
-    onCutSelected: handleCutSelected,
-    onPaste: useCallback(
-      (stripFormatting: boolean) => void handlePaste(stripFormatting),
-      [handlePaste],
-    ),
     onToggleHelp: useCallback(() => setHelpOpen((v) => !v), []),
     onOpenFind: useCallback(() => setFindOpen(true), []),
     onFindNext: handleFindNext,
     onEscape: handleEscape,
     onMergeSelection: handleMergeSelection,
+  });
+
+  useEditorClipboard({
+    hasSelection,
+    getSelectedText,
+    deleteSelection: sel.deleteSelection,
+    insertPastedText,
   });
 
   const canGroup = selection.runIds.length >= 2;

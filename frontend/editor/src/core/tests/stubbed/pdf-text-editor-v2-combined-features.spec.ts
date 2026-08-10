@@ -127,6 +127,17 @@ async function totalRuns(page: Page): Promise<number> {
       .reduce((n: number, p) => n + p.runs.length, 0),
   );
 }
+/** Text of the single selected run - paste selects the run it inserts. */
+async function selectedRunText(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
+    const ids = s.selection.value.runIds;
+    if (ids.length !== 1) return `(selection holds ${ids.length} runs)`;
+    for (const p of s.doc.loadedPages())
+      for (const r of p.runs) if (r.id === ids[0]) return r.text;
+    return "(gone)";
+  });
+}
 async function countRunsContaining(page: Page, sub: string): Promise<number> {
   return page.evaluate((sub: string) => {
     const s = (window as unknown as V2TestWindow).__v2_editor_store;
@@ -311,14 +322,10 @@ test.describe("v2 editor - combined feature set", () => {
   test("cut (Ctrl+X) removes the run and paste (Ctrl+V) brings it back", async ({
     page,
   }) => {
-    // Cut/paste round-trips through the real system clipboard; the headless
-    // context blocks clipboard.read by default, so grant it explicitly.
-    await page
-      .context()
-      .grantPermissions(["clipboard-read", "clipboard-write"]);
     await open(page, 1);
     const id = await runId(page, 1, "Comprehensive\\s+toolkit");
     const before = await totalRuns(page);
+    const cutText = await runText(page, 1, id);
     await selectRun(page, id);
     // Cut is suppressed while focus is inside a contentEditable run (so the
     // browser's native cut wins there). The real editor-level cut path fires
@@ -326,14 +333,23 @@ test.describe("v2 editor - combined feature set", () => {
     await page.evaluate(() =>
       (document.activeElement as HTMLElement | null)?.blur(),
     );
+    // Ctrl+X / Ctrl+V ride the native cut/paste ClipboardEvent, which needs no
+    // permission grant and behaves identically on every engine. Do NOT add
+    // context.grantPermissions back here: it is Chromium-only, and it hid a
+    // real bug where the editor could not paste on WebKit or on any
+    // plain-HTTP origin (where navigator.clipboard is undefined).
     await page.keyboard.press("Control+x");
-    await page.waitForTimeout(400);
+    await expect
+      .poll(() => totalRuns(page), { message: "cut removes the run" })
+      .toBeLessThan(before);
     const afterCut = await totalRuns(page);
-    expect(afterCut, "cut removes the run").toBeLessThan(before);
     await page.keyboard.press("Control+v");
-    await page.waitForTimeout(600);
-    const afterPaste = await totalRuns(page);
-    expect(afterPaste, "paste re-adds a run").toBeGreaterThan(afterCut);
+    await expect
+      .poll(() => totalRuns(page), { message: "paste re-adds a run" })
+      .toBeGreaterThan(afterCut);
+    expect(await selectedRunText(page), "paste restores the cut text").toBe(
+      cutText,
+    );
   });
 
   test("z-order: bring-to-front on an inserted image applies and undoes cleanly", async ({

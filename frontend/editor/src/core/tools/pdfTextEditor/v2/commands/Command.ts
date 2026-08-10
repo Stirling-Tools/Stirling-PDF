@@ -24,4 +24,13 @@ export interface Command {
    * undefined to never coalesce.
    */
   coalesceKey?(): string | null;
+  /**
+   * Optional - when true, a matching `coalesceKey` merges this command into
+   * the previous undo step however long ago that step ran. For follow-ups
+   * that are never a user action in their own right (the wrap reflow a blur
+   * triggers): the gap before them is the user's think-time, so a time
+   * window would split one logical edit into two undo steps, the first of
+   * which looks like a dead Ctrl+Z.
+   */
+  coalesceIgnoresTimeWindow?(): boolean;
 }
