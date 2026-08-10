@@ -174,7 +174,12 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     $("lbl-dark").classList.toggle("on", state.theme === "dark");
   }
 
-  function srcFor(v) { return state.theme === "dark" ? (v.dark || v.light) : (v.light || v.dark); }
+  // Resolve through D.assets when present, so a self-contained report can inline each image
+  // once as a data URI instead of repeating it in both the stage and the thumbnail rail.
+  function srcFor(v) {
+    var key = state.theme === "dark" ? (v.dark || v.light) : (v.light || v.dark);
+    return key ? ((D.assets && D.assets[key]) || key) : "";
+  }
 
   function findingsForView(id) {
     var all = (D.findings && D.findings.visual || []).concat(D.findings && D.findings.ux || []);
@@ -229,8 +234,10 @@ window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated
     fs.forEach(function (f) {
       var li = document.createElement("li"); li.className = "finding";
       li.innerHTML = '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
-        '<span><b>' + (f.title || "") + '</b> — ' + (f.detail || "") +
-        (f.fix ? ' <span class="fix"><b>Fix:</b> ' + f.fix + '</span>' : '') + '</span>';
+        '<span>' + (f.fixed ? '<b style="color:var(--ok,#16a34a)">FIXED</b> ' : '') +
+        '<b>' + (f.title || "") + '</b> — ' + (f.detail || "") +
+        (f.fixed && f.fixNote ? ' <span class="fix"><b>Change:</b> ' + f.fixNote + '</span>'
+          : f.fix ? ' <span class="fix"><b>Fix:</b> ' + f.fix + '</span>' : '') + '</span>';
       notes.appendChild(li);
     });
     $("prev").disabled = state.i === 0;
