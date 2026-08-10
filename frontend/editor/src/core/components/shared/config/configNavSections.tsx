@@ -1,17 +1,38 @@
-import React from "react";
+import React, { lazy } from "react";
 import { useTranslation } from "react-i18next";
-import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
-import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import HelpSection from "@app/components/shared/config/configSections/HelpSection";
-import LegalSection from "@app/components/shared/config/configSections/LegalSection";
-import {
-  BackendThirdPartyLicensesSection,
-  FrontendThirdPartyLicensesSection,
-} from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
 import type {
   ConfigNavItem,
   ConfigNavSection,
 } from "@app/components/shared/config/types";
+
+// Keep the modal shell light. Settings sections are independent screens and
+// do not need to be evaluated just to build the navigation list.
+const HotkeysSection = lazy(
+  () => import("@app/components/shared/config/configSections/HotkeysSection"),
+);
+const GeneralSection = lazy(
+  () => import("@app/components/shared/config/configSections/GeneralSection"),
+);
+const HelpSection = lazy(
+  () => import("@app/components/shared/config/configSections/HelpSection"),
+);
+const LegalSection = lazy(
+  () => import("@app/components/shared/config/configSections/LegalSection"),
+);
+const BackendThirdPartyLicensesSection = lazy(() =>
+  import("@app/components/shared/config/configSections/ThirdPartyLicensesSection").then(
+    ({ BackendThirdPartyLicensesSection: Component }) => ({
+      default: Component,
+    }),
+  ),
+);
+const FrontendThirdPartyLicensesSection = lazy(() =>
+  import("@app/components/shared/config/configSections/ThirdPartyLicensesSection").then(
+    ({ FrontendThirdPartyLicensesSection: Component }) => ({
+      default: Component,
+    }),
+  ),
+);
 
 // Re-exported for the many existing importers; the definitions live in
 // config/types so type-only consumers don't pull the section tree in.

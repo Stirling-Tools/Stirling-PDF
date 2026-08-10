@@ -1,7 +1,10 @@
-import type { ComponentProps } from "react";
+import { lazy, type ComponentProps } from "react";
 import { Stack } from "@mantine/core";
-import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import { LoginLandingSetting } from "@app/components/shared/config/LoginLandingSetting";
+
+const GeneralSection = lazy(
+  () => import("@app/components/shared/config/configSections/GeneralSection"),
+);
 
 type GeneralSectionProps = ComponentProps<typeof GeneralSection>;
 
