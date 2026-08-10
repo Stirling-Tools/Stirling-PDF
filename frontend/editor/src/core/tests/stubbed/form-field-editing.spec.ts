@@ -1,8 +1,13 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import {
+  captureMultipartPart,
+  readCapturedPart,
+} from "@app/tests/helpers/multipart-capture";
 import { readFileSync } from "fs";
 import path from "path";
 import type { Page, Route } from "@playwright/test";
+import type { FieldEditBatch } from "@app/tools/formFill/types";
 
 /**
  * Stubbed coverage for the form field editor (PR #5777 — create / modify /
@@ -74,13 +79,20 @@ const STUB_FIELDS = [
   },
 ];
 
+const EDIT_FIELDS_PATH = "/api/v1/form/edit-fields";
+
 /**
  * Install form-endpoint stubs. `fields` is what the extraction endpoint returns
  * (default: none, so create-mode drags land on an unobstructed overlay).
- * Returns a record of captured request bodies.
+ * Returns a record of captured multipart envelopes (part headers only - see
+ * `readEditBatch` for the JSON payload).
  */
 async function stubFormEndpoints(page: Page, fields: unknown[] = []) {
   const captured: Record<string, string> = {};
+
+  // The edits JSON is a Blob part, whose body Playwright cannot read back on
+  // WebKit; capture it in-page instead. Must be installed before navigation.
+  await captureMultipartPart(page, "edits");
 
   await page.route("**/api/v1/form/fields-with-coordinates", (route: Route) =>
     route.fulfill({ json: fields }),
@@ -97,6 +109,27 @@ async function stubFormEndpoints(page: Page, fields: unknown[] = []) {
   });
 
   return captured;
+}
+
+/**
+ * Assert the multipart envelope the commit actually put on the wire. Part
+ * headers are readable on every engine (only Blob part *bodies* are elided on
+ * WebKit), and this is the shape the backend's `@RequestPart` binding needs.
+ */
+function expectEditFieldsEnvelope(envelope: string) {
+  expect(envelope).toContain('name="file"');
+  expect(envelope).toContain('filename="sample.pdf"');
+  expect(envelope).toContain('name="edits"');
+  expect(envelope).toMatch(/content-type:\s*application\/json/i);
+}
+
+/** The parsed `edits` JSON the app posted to /edit-fields. */
+async function readEditBatch(page: Page): Promise<FieldEditBatch> {
+  await expect
+    .poll(() => readCapturedPart(page, EDIT_FIELDS_PATH))
+    .toBeTruthy();
+  const json = await readCapturedPart(page, EDIT_FIELDS_PATH);
+  return JSON.parse(json as string) as FieldEditBatch;
 }
 
 async function openFormTool(page: Page) {
@@ -196,9 +229,20 @@ test.describe("Form field editor", () => {
     await expect(page.getByTestId("form-create-commit")).toBeEnabled();
 
     await page.getByTestId("form-create-commit").click();
+
+    const batch = await readEditBatch(page);
+    expect(batch.add).toHaveLength(1);
+    expect(batch.add?.[0]?.type).toBe("text");
+    // The drawn rectangle, not a degenerate one - guards the drag geometry.
+    expect(batch.add?.[0]?.pageIndex).toBe(0);
+    expect(batch.add?.[0]?.width).toBeGreaterThan(0);
+    expect(batch.add?.[0]?.height).toBeGreaterThan(0);
+
     await expect.poll(() => captured["edit-fields"]).toBeTruthy();
-    expect(captured["edit-fields"]).toContain('"add"');
-    expect(captured["edit-fields"]).toContain('"type":"text"');
+    expectEditFieldsEnvelope(captured["edit-fields"]);
+
+    // Committing clears the queue, so there is nothing left to add.
+    await expect(page.getByTestId("form-create-commit")).toBeDisabled();
   });
 
   test("create mode: drawing a radio field commits a radio definition", async ({
@@ -214,8 +258,13 @@ test.describe("Form field editor", () => {
     await expect(page.getByTestId("form-create-commit")).toBeEnabled();
     await page.getByTestId("form-create-commit").click();
 
+    const batch = await readEditBatch(page);
+    expect(batch.add).toHaveLength(1);
+    expect(batch.add?.[0]?.type).toBe("radio");
+    expect(batch.add?.[0]?.options).toEqual(["Option 1", "Option 2"]);
+
     await expect.poll(() => captured["edit-fields"]).toBeTruthy();
-    expect(captured["edit-fields"]).toContain('"type":"radio"');
+    expectEditFieldsEnvelope(captured["edit-fields"]);
   });
 
   test("create mode: a choice field auto-shows seeded options", async ({
@@ -271,9 +320,17 @@ test.describe("Form field editor", () => {
     await expect(commit).toBeEnabled();
 
     await commit.click();
+
+    const batch = await readEditBatch(page);
+    expect(batch.delete).toEqual(["firstName"]);
+    // A field queued for deletion is not also sent as a modification.
+    expect(batch.modify ?? []).toHaveLength(0);
+
     await expect.poll(() => captured["edit-fields"]).toBeTruthy();
-    expect(captured["edit-fields"]).toContain('"delete"');
-    expect(captured["edit-fields"]).toContain("firstName");
+    expectEditFieldsEnvelope(captured["edit-fields"]);
+
+    // The staged deletion is cleared once it has been saved.
+    await expect(commit).toBeDisabled();
   });
 
   test("modify mode: editing a property commits via /edit-fields", async ({
@@ -294,9 +351,15 @@ test.describe("Form field editor", () => {
     await expect(commit).toBeEnabled();
     await commit.click();
 
+    const batch = await readEditBatch(page);
+    expect(batch.modify).toHaveLength(1);
+    expect(batch.modify?.[0]?.targetName).toBe("firstName");
+    expect(batch.modify?.[0]?.label).toBe("Given name");
+    expect(batch.delete ?? []).toHaveLength(0);
+
     await expect.poll(() => captured["edit-fields"]).toBeTruthy();
-    expect(captured["edit-fields"]).toContain('"modify"');
-    expect(captured["edit-fields"]).toContain("firstName");
-    expect(captured["edit-fields"]).toContain("Given name");
+    expectEditFieldsEnvelope(captured["edit-fields"]);
+
+    await expect(commit).toBeDisabled();
   });
 });
