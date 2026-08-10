@@ -128,13 +128,19 @@ export function usePairing(
     };
   }, [active, apply, restart]);
 
+  // Read the fields out first so the timer depends on the values it actually uses.
+  // Depending on `view` itself would tear down and rebuild the interval on every
+  // poll response, since each one is a new object.
+  const phase = view?.phase;
+  const expiresAt = view?.expiresAt ?? null;
+  const intervalSeconds = view?.intervalSeconds ?? 0;
+
   useEffect(() => {
-    if (!active || view?.phase !== "waiting") return;
-    const intervalMs =
-      Math.max(MIN_INTERVAL_SECONDS, view.intervalSeconds || 0) * 1000;
+    if (!active || phase !== "waiting") return;
+    const intervalMs = Math.max(MIN_INTERVAL_SECONDS, intervalSeconds) * 1000;
 
     const tick = setInterval(() => {
-      setSecondsLeft(secondsUntil(view.expiresAt));
+      setSecondsLeft(secondsUntil(expiresAt));
       if (busy.current || Date.now() - lastPolled.current < intervalMs) return;
       busy.current = true;
       lastPolled.current = Date.now();
@@ -149,14 +155,7 @@ export function usePairing(
         });
     }, 1000);
     return () => clearInterval(tick);
-  }, [
-    active,
-    view?.phase,
-    view?.expiresAt,
-    view?.intervalSeconds,
-    apply,
-    view,
-  ]);
+  }, [active, phase, expiresAt, intervalSeconds, apply]);
 
   return { view, secondsLeft, starting, error, restart, abandon };
 }

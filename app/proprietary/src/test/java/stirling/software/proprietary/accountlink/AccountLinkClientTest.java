@@ -259,4 +259,115 @@ class AccountLinkClientTest {
                 client.reportUsage(
                         "dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairStartParsesBothCodesAndSendsNoCredential() throws Exception {
+        HttpResponse<String> resp =
+                response(
+                        201,
+                        "{\"userCode\":\"WXYZ-4821\",\"deviceCode\":\"dc-1\","
+                                + "\"verificationUri\":\"https://s/link\",\"expiresInSeconds\":600,"
+                                + "\"intervalSeconds\":5}");
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+
+        AccountLinkClient.PairStartResult result = client.pairStart("pdf-prod-01", "1.4.2");
+
+        assertEquals("WXYZ-4821", result.userCode());
+        assertEquals("dc-1", result.deviceCode());
+        assertEquals("https://s/link", result.verificationUri());
+        assertEquals(600L, result.expiresInSeconds());
+        assertEquals(5, result.intervalSeconds());
+
+        HttpRequest sent = captor.getValue();
+        assertEquals("https://saas.example.com/api/v1/pair/start", sent.uri().toString());
+        // An unlinked instance has no credential to present, and must not imply otherwise.
+        assertNull(sent.headers().firstValue("X-Device-Id").orElse(null));
+        assertNull(sent.headers().firstValue("X-Device-Secret").orElse(null));
+        assertNull(sent.headers().firstValue("Authorization").orElse(null));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairStartFallsBackToADefaultIntervalWhenSaasOmitsIt() throws Exception {
+        HttpResponse<String> resp =
+                response(201, "{\"userCode\":\"AAAA2222\",\"deviceCode\":\"dc\"}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        assertEquals(5, client.pairStart(null, null).intervalSeconds());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairStartRejectsAResponseMissingEitherCode() throws Exception {
+        HttpResponse<String> resp = response(201, "{\"userCode\":\"AAAA2222\"}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        assertThrows(java.io.IOException.class, () -> client.pairStart("x", "1.0"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairStartSurfacesTheUpstreamStatus() throws Exception {
+        HttpResponse<String> resp = response(429, "{}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        AccountLinkClient.UpstreamException ex =
+                assertThrows(
+                        AccountLinkClient.UpstreamException.class,
+                        () -> client.pairStart("x", "1.0"));
+        // The controller maps 429 through rather than flattening it to a 502.
+        assertEquals(429, ex.status());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairPollReturnsTheStatusWithoutACredentialWhileWaiting() throws Exception {
+        HttpResponse<String> resp = response(200, "{\"status\":\"pending\"}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        AccountLinkClient.PairPollResult result = client.pairPoll("dc-1");
+
+        assertEquals("pending", result.status());
+        assertNull(result.credential());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairPollParsesTheCredentialOnApproval() throws Exception {
+        HttpResponse<String> resp =
+                response(
+                        200,
+                        "{\"status\":\"approved\",\"deviceId\":\"dev-9\","
+                                + "\"deviceSecret\":\"sec-9\",\"teamId\":7}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        AccountLinkClient.PairPollResult result = client.pairPoll("dc-1");
+
+        assertNotNull(result.credential());
+        assertEquals("dev-9", result.credential().deviceId());
+        assertEquals("sec-9", result.credential().deviceSecret());
+        assertEquals(7L, result.credential().teamId());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairPollRejectsAnApprovalWithNoCredential() throws Exception {
+        // Better to fail loudly than to store a half-credential and fail every later call.
+        HttpResponse<String> resp = response(200, "{\"status\":\"approved\"}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        assertThrows(java.io.IOException.class, () -> client.pairPoll("dc-1"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairPollRejectsAResponseWithNoStatus() throws Exception {
+        HttpResponse<String> resp = response(200, "{}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        assertThrows(java.io.IOException.class, () -> client.pairPoll("dc-1"));
+    }
 }

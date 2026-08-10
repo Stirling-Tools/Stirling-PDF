@@ -44,7 +44,10 @@ public class PairingService {
     /** Short enough that a leaked code is near-useless, long enough to walk to another device. */
     static final Duration LIFETIME = Duration.ofMinutes(10);
 
-    /** Advertised poll interval. Polling faster than this earns a SLOW_DOWN. */
+    /**
+     * Advertised poll interval. Polling the waiting loop faster than this earns a SLOW_DOWN; an
+     * already-approved pairing is always delivered immediately (see {@link #poll}).
+     */
     static final int INTERVAL_SECONDS = 5;
 
     /** Concurrent pairings one address may start within {@link #LIFETIME}. */
@@ -123,7 +126,8 @@ public class PairingService {
         request.setExpiresAt(now.plus(LIFETIME));
         repo.save(request);
 
-        log.info("Pairing: started {} for label {}", userCode, request.getInstanceLabel());
+        // The user code is a live secret while the pairing is open, so it stays out of the log.
+        log.info("Pairing: started for label {}", request.getInstanceLabel());
         return new StartResult(userCode, deviceCode, request.getExpiresAt(), INTERVAL_SECONDS);
     }
 
@@ -163,7 +167,7 @@ public class PairingService {
             request.setInstanceLabel(trim(name, 128));
         }
         repo.save(request);
-        log.info("Pairing: {} approved for team {}", request.getUserCode(), teamId);
+        log.info("Pairing: approved for team {}", teamId);
         return true;
     }
 
@@ -176,7 +180,7 @@ public class PairingService {
         PairingRequest request = found.get();
         request.setStatus(PairingRequest.Status.DENIED);
         repo.save(request);
-        log.info("Pairing: {} denied", request.getUserCode());
+        log.info("Pairing: declined");
         return true;
     }
 
@@ -209,11 +213,16 @@ public class PairingService {
         }
 
         LocalDateTime lastPolled = request.getLastPolledAt();
-        boolean tooFast =
-                lastPolled != null && lastPolled.plusSeconds(INTERVAL_SECONDS).isAfter(now);
         request.setLastPolledAt(now);
 
         if (request.getStatus() == PairingRequest.Status.PENDING) {
+            // The interval throttles the waiting loop, which is the only part that repeats. It is
+            // deliberately NOT applied to an approved pairing below: that is a one-shot terminal
+            // step, the credential is already sitting there, and delaying it would just make
+            // pairing feel slow. Nothing is protected by stalling it, since the CONSUMED flip plus
+            // the row lock already make minting happen exactly once.
+            boolean tooFast =
+                    lastPolled != null && lastPolled.plusSeconds(INTERVAL_SECONDS).isAfter(now);
             repo.save(request);
             return PollResult.of(tooFast ? PollOutcome.SLOW_DOWN : PollOutcome.PENDING);
         }
@@ -226,9 +235,9 @@ public class PairingService {
         request.setStatus(PairingRequest.Status.CONSUMED);
         request.setConsumedAt(now);
         repo.save(request);
+        // Don't log the user code: it is a live secret for as long as the pairing is open.
         log.info(
-                "Pairing: {} consumed, instance {} bound to team {}",
-                request.getUserCode(),
+                "Pairing: consumed, instance {} bound to team {}",
                 credential.instanceId(),
                 request.getTeamId());
         return new PollResult(PollOutcome.APPROVED, credential, request.getTeamId());

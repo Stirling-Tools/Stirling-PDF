@@ -129,6 +129,27 @@ class PairingServiceTest {
     }
 
     @Test
+    void poll_approvedIsDeliveredEvenWhenThePollIsEarly() {
+        // Intentional, and pinned so it is not "fixed" later: the interval throttles the waiting
+        // loop, not the one-shot handover. Stalling an approved pairing would only make linking
+        // feel slow, and minting is already exactly-once via the CONSUMED flip and the row lock.
+        PairingRequest row = pending("WXYZ4821");
+        row.setStatus(PairingRequest.Status.APPROVED);
+        row.setTeamId(TEAM);
+        row.setApprovedByUserId(USER);
+        row.setLastPolledAt(LocalDateTime.now());
+        when(repo.findByDeviceCodeHashForUpdate(anyString())).thenReturn(Optional.of(row));
+        when(accountLinkService.register(TEAM, USER, "pdf-prod-01"))
+                .thenReturn(
+                        new AccountLinkService.RegisteredInstance(1L, "device-id", "secret", null));
+
+        PairingService.PollResult result = service.poll("device-code");
+
+        assertThat(result.outcome()).isEqualTo(PairingService.PollOutcome.APPROVED);
+        assertThat(result.credential().deviceSecret()).isEqualTo("secret");
+    }
+
+    @Test
     void poll_approvedMintsOnceAndThenRefusesAReplay() {
         PairingRequest row = pending("WXYZ4821");
         row.setStatus(PairingRequest.Status.APPROVED);
