@@ -44,7 +44,7 @@ test.describe("4. PDF Tool Pages - Common Patterns", () => {
       await homeLink.click();
 
       // Step 3: Verify navigation back to the home dashboard
-      await expect(page).toHaveURL("/");
+      await expect(page).toHaveURL("/editor");
 
       // Step 4: Use browser back button
       await page.goBack();
