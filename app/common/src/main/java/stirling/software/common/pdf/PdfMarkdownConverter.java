@@ -983,7 +983,7 @@ public class PdfMarkdownConverter {
         ordered.sort(Comparator.comparingDouble((Line l) -> l.y).reversed());
         StringBuilder sb = new StringBuilder();
         for (Line l : ordered) {
-            if (sb.length() > 0) {
+            if (!sb.isEmpty()) {
                 sb.append(' ');
             }
             sb.append(l.text);
