@@ -1,7 +1,7 @@
 [project]
 name = "engine"
 version = "0.1.0"
-description = "AI Document Engine for Stirling PDF"
+description = "Stirling PDF Python projects"
 requires-python = ">=3.13,<3.14"
 dependencies = []
 
