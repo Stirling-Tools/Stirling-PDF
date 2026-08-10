@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -79,7 +82,17 @@ class FormDetectionModelManagerTest {
         Mockito.when(catalog.getById(Mockito.argThat(s -> !"test-model".equals(s))))
                 .thenReturn(Optional.empty());
         Mockito.when(catalog.getAll()).thenReturn(List.of(entry));
-        return new FormDetectionModelManager(paths, catalog, new ApplicationProperties(), ep);
+        // The real fetch only allows the catalog host, so stub the hop to the local test server.
+        return new FormDetectionModelManager(paths, catalog, new ApplicationProperties(), ep) {
+            @Override
+            HttpURLConnection openModelDownload(String url) throws IOException {
+                HttpURLConnection conn =
+                        (HttpURLConnection) URI.create(url).toURL().openConnection();
+                conn.setConnectTimeout(5000);
+                conn.setReadTimeout(10000);
+                return conn;
+            }
+        };
     }
 
     private void awaitState(FormDetectionModelManager m, String wire, long timeoutMs)
@@ -159,6 +172,25 @@ class FormDetectionModelManagerTest {
         FormDetectionModelManager m =
                 manager(dir, entry("", ""), Mockito.mock(EndpointConfiguration.class));
         assertThrows(IllegalStateException.class, () -> m.startInstall("test-model"));
+    }
+
+    @Test
+    void rejectsDownloadUrlOutsideAllowlist(@TempDir Path dir) {
+        RuntimePathConfig paths = Mockito.mock(RuntimePathConfig.class);
+        Mockito.when(paths.getFormDetectionModelPath()).thenReturn(dir.toString());
+        FormDetectionModelManager m =
+                new FormDetectionModelManager(
+                        paths,
+                        Mockito.mock(ModelCatalogService.class),
+                        new ApplicationProperties(),
+                        Mockito.mock(EndpointConfiguration.class));
+
+        assertThrows(
+                IOException.class,
+                () -> m.openModelDownload("http://127.0.0.1:" + port + "/model.onnx"));
+        assertThrows(
+                IOException.class,
+                () -> m.openModelDownload("https://huggingface.co.evil.example/model.onnx"));
     }
 
     @Test

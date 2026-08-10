@@ -201,6 +201,41 @@ export interface AddWatermarkRequest {
    */
   widthSpacer?: number;
 }
+export interface AutoRotatePdfRequest {
+  /**
+   * Minimum Tesseract OSD orientation confidence required before a correction is applied. Matches OCRmyPDF's --rotate-pages-threshold scale
+   */
+  confidenceThreshold?: number;
+  /**
+   * Detection method. 'auto' tries embedded-text direction first and falls back to Tesseract OSD for pages without usable text; 'text' uses only embedded-text direction; 'osd' forces Tesseract OSD for every page
+   */
+  detectionMode?: "auto" | "text" | "osd";
+  /**
+   * If true, no rotation is applied; returns a JSON report of the per-page detection results instead of a PDF
+   */
+  dryRun?: boolean;
+  /**
+   * When a page cannot be decided on its own but the pages that could be decided agree on a single correction for that same current rotation, apply that shared correction to the undecided page. Handles documents rotated uniformly where some pages are too sparse to detect alone
+   */
+  inferUndetected?: boolean;
+  /**
+   * Optional pre-computed corrections to apply without running detection. Pages not listed are left unchanged, and a page may only appear once
+   */
+  pageRotations?: PageRotation[];
+}
+/**
+ * Optional pre-computed corrections to apply without running detection. Pages not listed are left unchanged, and a page may only appear once
+ */
+export interface PageRotation {
+  /**
+   * 1-based page number to rotate
+   */
+  pageNumber: number;
+  /**
+   * Additional clockwise rotation to add to the page's current rotation, in degrees. Must be a multiple of 90
+   */
+  rotation: number;
+}
 export interface AutoSplitPdfRequest {
   /**
    * Flag indicating if the duplex mode is active, where the page after the divider also gets removed.
@@ -240,6 +275,16 @@ export interface BookletImpositionRequest {
    * The spine location for the booklet.
    */
   spineLocation?: "LEFT" | "RIGHT";
+}
+export interface ContainsTextRequest {
+  /**
+   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   */
+  pageNumbers?: string;
+  /**
+   * The text to check for
+   */
+  text?: string;
 }
 export interface ConvertCbrToPdfRequest {
   /**
@@ -460,6 +505,16 @@ export interface ExtractImageScansRequest {
    */
   tolerance?: number;
 }
+export interface FileSizeRequest {
+  /**
+   * The comparison type, accepts Greater, Equal, Less than
+   */
+  comparator: "Greater" | "Equal" | "Less";
+  /**
+   * Size of the file in bytes
+   */
+  fileSize?: number;
+}
 export interface FlattenRequest {
   /**
    * True to flatten only the forms, false to flatten full PDF (Convert page to image)
@@ -481,6 +536,33 @@ export interface HTMLToPdfRequest {
    * Zoom level for displaying the website. Default is '1'.
    */
   zoom?: number;
+}
+export interface IntegrationExternalApiCallRequest {
+  bodyMode?: string;
+  bodyTemplate?: string;
+  connectionId: string;
+  fields?: string;
+  fileFieldName?: string;
+  headers?: string;
+  includeContext?: boolean;
+  includeFile?: boolean;
+  method?: string;
+  path?: string;
+  requireTrue?: string;
+  responseMode?: string;
+  responseSelect?: string;
+  resultUrlHeader?: string;
+  resultUrlPath?: string;
+}
+export interface IntegrationPurviewApplyLabelRequest {
+  connectionId: string;
+  contentBits?: number;
+  labelId: string;
+  labelName?: string;
+  method?: string;
+}
+export interface IntegrationPurviewReadLabelRequest {
+  connectionId: string;
 }
 export type ListAttachmentsRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
@@ -737,6 +819,16 @@ export interface OverlayPdfsRequest {
    */
   overlayPosition: 0 | 1;
 }
+export interface PDFComparisonAndCount {
+  /**
+   * The comparison type, accepts Greater, Equal, Less than
+   */
+  comparator: "Greater" | "Equal" | "Less";
+  /**
+   * Count
+   */
+  pageCount?: number;
+}
 export interface PDFExtractImagesRequest {
   /**
    * The output image format e.g., 'png', 'jpeg', or 'gif'
@@ -755,6 +847,35 @@ export interface PDFWithPageNums {
    * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
    */
   pageNumbers?: string;
+}
+export interface PageRotationRequest {
+  /**
+   * The comparison type, accepts Greater, Equal, Less than
+   */
+  comparator: "Greater" | "Equal" | "Less";
+  /**
+   * Rotation in degrees
+   */
+  rotation?: number;
+}
+export interface PageSizeRequest {
+  /**
+   * The comparison type, accepts Greater, Equal, Less than
+   */
+  comparator: "Greater" | "Equal" | "Less";
+  /**
+   * Standard Page Size
+   */
+  standardPageSize?:
+    | "A0"
+    | "A1"
+    | "A2"
+    | "A3"
+    | "A4"
+    | "A5"
+    | "A6"
+    | "LETTER"
+    | "LEGAL";
 }
 export interface PdfToPdfARequest {
   /**
@@ -1348,6 +1469,12 @@ export type ToolEndpoint =
   | "/api/v1/convert/text-editor/pdf"
   | "/api/v1/convert/url/pdf"
   | "/api/v1/convert/vector/pdf"
+  | "/api/v1/filter/filter-contains-image"
+  | "/api/v1/filter/filter-contains-text"
+  | "/api/v1/filter/filter-file-size"
+  | "/api/v1/filter/filter-page-count"
+  | "/api/v1/filter/filter-page-rotation"
+  | "/api/v1/filter/filter-page-size"
   | "/api/v1/general/booklet-imposition"
   | "/api/v1/general/crop"
   | "/api/v1/general/edit-table-of-contents"
@@ -1367,12 +1494,16 @@ export type ToolEndpoint =
   | "/api/v1/general/split-pages"
   | "/api/v1/general/split-pdf-by-chapters"
   | "/api/v1/general/split-pdf-by-sections"
+  | "/api/v1/integration/external-api-call"
+  | "/api/v1/integration/purview-apply-label"
+  | "/api/v1/integration/purview-read-label"
   | "/api/v1/misc/add-attachments"
   | "/api/v1/misc/add-comments"
   | "/api/v1/misc/add-image"
   | "/api/v1/misc/add-page-numbers"
   | "/api/v1/misc/add-stamp"
   | "/api/v1/misc/auto-rename"
+  | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
   | "/api/v1/misc/compress-pdf"
   | "/api/v1/misc/decompress-pdf"
@@ -1438,6 +1569,12 @@ export interface ToolApiParams {
   "/api/v1/convert/text-editor/pdf": GeneralFile;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
   "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
+  "/api/v1/filter/filter-contains-image": PDFWithPageNums;
+  "/api/v1/filter/filter-contains-text": ContainsTextRequest;
+  "/api/v1/filter/filter-file-size": FileSizeRequest;
+  "/api/v1/filter/filter-page-count": PDFComparisonAndCount;
+  "/api/v1/filter/filter-page-rotation": PageRotationRequest;
+  "/api/v1/filter/filter-page-size": PageSizeRequest;
   "/api/v1/general/booklet-imposition": BookletImpositionRequest;
   "/api/v1/general/crop": CropPdfForm;
   "/api/v1/general/edit-table-of-contents": EditTableOfContentsRequest;
@@ -1457,12 +1594,16 @@ export interface ToolApiParams {
   "/api/v1/general/split-pages": SplitPagesRequest;
   "/api/v1/general/split-pdf-by-chapters": SplitPdfByChaptersRequest;
   "/api/v1/general/split-pdf-by-sections": SplitPdfBySectionsRequest;
+  "/api/v1/integration/external-api-call": IntegrationExternalApiCallRequest;
+  "/api/v1/integration/purview-apply-label": IntegrationPurviewApplyLabelRequest;
+  "/api/v1/integration/purview-read-label": IntegrationPurviewReadLabelRequest;
   "/api/v1/misc/add-attachments": AddAttachmentRequest;
   "/api/v1/misc/add-comments": AddCommentsRequest;
   "/api/v1/misc/add-image": OverlayImageRequest;
   "/api/v1/misc/add-page-numbers": AddPageNumbersRequest;
   "/api/v1/misc/add-stamp": AddStampRequest;
   "/api/v1/misc/auto-rename": ExtractHeaderRequest;
+  "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
@@ -1529,6 +1670,12 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/text-editor/pdf",
   "/api/v1/convert/url/pdf",
   "/api/v1/convert/vector/pdf",
+  "/api/v1/filter/filter-contains-image",
+  "/api/v1/filter/filter-contains-text",
+  "/api/v1/filter/filter-file-size",
+  "/api/v1/filter/filter-page-count",
+  "/api/v1/filter/filter-page-rotation",
+  "/api/v1/filter/filter-page-size",
   "/api/v1/general/booklet-imposition",
   "/api/v1/general/crop",
   "/api/v1/general/edit-table-of-contents",
@@ -1548,12 +1695,16 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/general/split-pages",
   "/api/v1/general/split-pdf-by-chapters",
   "/api/v1/general/split-pdf-by-sections",
+  "/api/v1/integration/external-api-call",
+  "/api/v1/integration/purview-apply-label",
+  "/api/v1/integration/purview-read-label",
   "/api/v1/misc/add-attachments",
   "/api/v1/misc/add-comments",
   "/api/v1/misc/add-image",
   "/api/v1/misc/add-page-numbers",
   "/api/v1/misc/add-stamp",
   "/api/v1/misc/auto-rename",
+  "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
   "/api/v1/misc/compress-pdf",
   "/api/v1/misc/decompress-pdf",

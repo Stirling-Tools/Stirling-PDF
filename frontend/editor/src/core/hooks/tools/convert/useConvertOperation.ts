@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import apiClient from "@app/services/apiClient";
 import { useTranslation } from "react-i18next";
 import {
+  validateConvertParameters,
   ConvertParameters,
   defaultParameters,
 } from "@app/hooks/tools/convert/useConvertParameters";
@@ -209,8 +210,8 @@ export const buildConvertFormData = (
 
 // Static function that can be used by both the hook and automation executor
 export const createFileFromResponse = (
-  responseData: any,
-  headers: any,
+  responseData: Blob,
+  headers: Record<string, unknown>,
   originalFileName: string,
   targetExtension: string,
 ): File => {
@@ -301,6 +302,7 @@ export const convertProcessor = async (
 
 // Static configuration object
 export const convertOperationConfig = defineCustomTool({
+  validateParams: validateConvertParameters,
   customProcessor: convertProcessor, // Can't use callback version here
   operationType: "convert",
   defaultParameters,

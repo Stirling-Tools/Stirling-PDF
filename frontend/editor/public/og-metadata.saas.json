@@ -101,6 +101,11 @@
       "title": "Rotate - Stirling PDF",
       "description": "Easily rotate your PDFs."
     },
+    "autoRotate": {
+      "image": "/og_images/home.png",
+      "title": "Auto Rotate - Stirling PDF",
+      "description": "Detect each page's orientation and rotate it upright automatically."
+    },
     "annotate": {
       "image": "/og_images/annotate.png",
       "title": "Annotate - Stirling PDF",
@@ -265,6 +270,11 @@
       "image": "/og_images/form-fill.png",
       "title": "Fill Form - Stirling PDF",
       "description": "Fill PDF form fields interactively with a visual editor"
+    },
+    "autoFormDetection": {
+      "image": "/og_images/home.png",
+      "title": "Auto Form Detection - Stirling PDF",
+      "description": "Automatically detect form fields with AI and make your PDF fillable."
     },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
@@ -564,6 +574,7 @@
     "/ocr": "ocr",
     "/add-image": "addImage",
     "/rotate": "rotate",
+    "/auto-rotate": "autoRotate",
     "/annotate": "annotate",
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
@@ -597,6 +608,7 @@
     "/booklet-imposition": "bookletImposition",
     "/pdf-text-editor": "pdfTextEditor",
     "/form-fill": "formFill",
+    "/auto-form-detection": "autoFormDetection",
     "/multi-tool": "multiTool",
     "/read": "read",
     "/automate": "automate",

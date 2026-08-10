@@ -150,8 +150,6 @@ export const getSubcategoryIcon = (
   }
 };
 
-export const getCategoryLabel = (t: TFunction, id: ToolCategoryId): string =>
-  t(`toolPicker.categories.${id}`, id);
 export const getSubcategoryLabel = (t: TFunction, id: SubcategoryId): string =>
   t(`toolPicker.subcategories.${id}`, id);
 export const getSubcategoryColor = (subcategory: SubcategoryId): string =>

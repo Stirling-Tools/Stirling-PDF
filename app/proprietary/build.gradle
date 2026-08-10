@@ -47,6 +47,18 @@ dependencies {
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
 
+    // ONNX Runtime (Java) for SERVER-SIDE Auto Form Detection inference.
+    // Compiled against everywhere so the module always builds, but the multi-platform native
+    // (~42MB) is only BUNDLED when explicitly requested via -PbundleOnnxRuntime=true - i.e. the
+    // Docker server image (which then slims it to one Linux arch, ~8MB). Desktop/local/core builds
+    // ship WITHOUT it: server-side detection cleanly reports "unavailable" and the in-browser
+    // (onnxruntime-web) engine handles detection instead. Tests always get it.
+    compileOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    testImplementation "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    if ((project.findProperty('bundleOnnxRuntime') ?: 'false').toString().toBoolean()) {
+        runtimeOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    }
+
     // jinjava/jjwt transitively request older Jackson 2 versions; declare the current
     // version directly so it is selected consistently (root build.gradle pins are the fallback).
     runtimeOnly "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
@@ -61,31 +73,28 @@ dependencies {
         exclude group: 'com.hubspot.immutables', module: 'immutable-collection-encodings'
     }
 
-    // ONNX Runtime (Java) for SERVER-SIDE Auto Form Detection inference.
-    // Compiled against everywhere so the module always builds, but the multi-platform native
-    // (~42MB) is only BUNDLED when explicitly requested via -PbundleOnnxRuntime=true - i.e. the
-    // Docker server image (which then slims it to one Linux arch, ~8MB). Desktop/local/core builds
-    // ship WITHOUT it: server-side detection cleanly reports "unavailable" and the in-browser
-    // (onnxruntime-web) engine handles detection instead. Tests always get it.
-    compileOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
-    testImplementation "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
-    if ((project.findProperty('bundleOnnxRuntime') ?: 'false').toString().toBoolean()) {
-        runtimeOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
-    }
-
     api 'io.micrometer:micrometer-registry-prometheus'
 
     api "io.jsonwebtoken:jjwt-api:${jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
-    runtimeOnly 'org.postgresql:postgresql:42.7.11'
+    runtimeOnly 'org.postgresql:postgresql:42.7.13'
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
 
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:url-connection-client:${awsSdkVersion}"
+
+    // Network policy sources (SFTP/FTP/SMB drop folders). All permissively licensed:
+    // jsch fork BSD, commons-net Apache-2.0, smbj Apache-2.0 (BouncyCastle already on classpath).
+    implementation "com.github.mwiede:jsch:${jschVersion}"
+    implementation "commons-net:commons-net:${commonsNetVersion}"
+    implementation "com.hierynomus:smbj:${smbjVersion}"
+
+    // Streaming AEAD (AES-GCM-HKDF segments) for storage encryption at rest. Apache-2.0.
+    implementation "com.google.crypto.tink:tink:${tinkVersion}"
 
     // @DataJpaTest slice (Boot 4 ships test slices as separate starters, like webmvc-test at the
     // root) so policy.source repositories can be exercised against embedded H2.

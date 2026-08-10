@@ -14,7 +14,6 @@ import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
-import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -73,7 +72,7 @@ public class PolicyOverviewService {
                 policy.name(),
                 policy.enabled(),
                 policy.enabled() ? "active" : "paused",
-                triggerSummary(policy.trigger()),
+                triggerSummary(policy),
                 sources,
                 steps,
                 outputSummary(policy, sourceNames),
@@ -95,9 +94,13 @@ public class PolicyOverviewService {
         return outputSummary(policy.output());
     }
 
-    /** A null trigger is a manual-only policy; otherwise the trigger's type keys the summary. */
-    private static String triggerSummary(TriggerConfig trigger) {
-        return trigger == null ? "manual" : trigger.type();
+    /**
+     * Summarise a policy's triggers for the overview row: "manual" when no input is triggered,
+     * otherwise the distinct trigger types across its inputs (e.g. "folder-watch, schedule").
+     */
+    private static String triggerSummary(Policy policy) {
+        List<String> types = policy.triggerTypes();
+        return types.isEmpty() ? "manual" : String.join(", ", types);
     }
 
     private static String outputSummary(OutputSpec output) {

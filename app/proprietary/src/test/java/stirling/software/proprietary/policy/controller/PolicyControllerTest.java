@@ -2,7 +2,11 @@ package stirling.software.proprietary.policy.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -31,6 +35,7 @@ import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.inprocess.InProcessJobStore;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
@@ -44,6 +49,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
@@ -113,6 +119,59 @@ class PolicyControllerTest {
                         jobStore);
     }
 
+    @Test
+    void validateReportsAChainThatCannotRun() {
+        // Delegates to PolicyValidator so the endpoint and the save-time gate cannot disagree.
+        ToolDiagnostic mismatch =
+                ToolDiagnostic.error(
+                        1, ToolDiagnostic.FORMAT_MISMATCH, "rotate cannot take an image");
+        when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of(mismatch));
+
+        PipelineValidation.Response response =
+                controller.validateChain(
+                        new PipelineValidation.Request(
+                                List.of(
+                                        new PipelineStep(
+                                                "/api/v1/misc/extract-images", Map.of(), Map.of()),
+                                        new PipelineStep(
+                                                "/api/v1/general/rotate-pdf", Map.of(), Map.of())),
+                                null));
+
+        assertFalse(response.valid());
+        assertEquals(List.of(mismatch), response.diagnostics());
+    }
+
+    @Test
+    void validateReportsAWorkableChainAsValid() {
+        // Warnings and fan-out notes come back without making the chain invalid.
+        ToolDiagnostic fanOut =
+                ToolDiagnostic.info(1, ToolDiagnostic.FAN_OUT, "runs once per file");
+        when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of(fanOut));
+
+        PipelineValidation.Response response =
+                controller.validateChain(
+                        new PipelineValidation.Request(
+                                List.of(
+                                        new PipelineStep(
+                                                "/api/v1/general/split-pages", Map.of(), Map.of()),
+                                        new PipelineStep(
+                                                "/api/v1/general/rotate-pdf", Map.of(), Map.of())),
+                                null));
+
+        assertTrue(response.valid());
+        assertEquals(List.of(fanOut), response.diagnostics());
+    }
+
+    @Test
+    void validateToleratesNoSteps() {
+        when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of());
+
+        PipelineValidation.Response response =
+                controller.validateChain(new PipelineValidation.Request(null, null));
+
+        assertTrue(response.valid());
+    }
+
     private static stirling.software.proprietary.policy.trigger.PolicyTrigger trigger(
             String type, boolean requiresSource, java.util.Set<String> sourceTypes) {
         return new stirling.software.proprietary.policy.trigger.PolicyTrigger() {
@@ -139,7 +198,7 @@ class PolicyControllerTest {
     }
 
     private static Policy policy(String id, Long teamId) {
-        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), null, teamId);
+        return new Policy(id, "name", "owner", true, List.of(), List.of(), null, teamId);
     }
 
     private static Policy s3OutputPolicy(String id, String secret) {
@@ -150,7 +209,7 @@ class PolicyControllerTest {
                                 "bucket", "outbox",
                                 "accessKeyId", "AKIAEXAMPLE",
                                 "secretAccessKey", secret));
-        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), output, 1L);
+        return new Policy(id, "name", "owner", true, List.of(), List.of(), output, 1L);
     }
 
     private static PolicyRunHandle handle(String runId) {
@@ -401,8 +460,7 @@ class PolicyControllerTest {
         void updatePreservesOwnership() {
             applicationProperties.getSecurity().setEnableLogin(false);
             Policy existing =
-                    new Policy(
-                            "p2", "name", "origOwner", true, null, List.of(), List.of(), null, 3L);
+                    new Policy("p2", "name", "origOwner", true, List.of(), List.of(), null, 3L);
             when(policyStore.get("p2")).thenReturn(Optional.of(existing));
             when(policyAccessGuard.canAccess(existing)).thenReturn(true);
             when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -410,8 +468,7 @@ class PolicyControllerTest {
             ResponseEntity<Policy> response =
                     controller.savePolicy(
                             new Policy(
-                                    "p2", "name", "forged", true, null, List.of(), List.of(), null,
-                                    77L));
+                                    "p2", "name", "forged", true, List.of(), List.of(), null, 77L));
 
             assertThat(response.getBody().owner()).isEqualTo("origOwner");
             assertThat(response.getBody().teamId()).isEqualTo(3L);

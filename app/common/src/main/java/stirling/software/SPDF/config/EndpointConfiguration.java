@@ -338,6 +338,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "split-pages");
         addEndpointToGroup("PageOps", "rearrange-pages");
         addEndpointToGroup("PageOps", "rotate-pdf");
+        addEndpointToGroup("PageOps", "auto-rotate-pdf");
         addEndpointToGroup("PageOps", "multi-page-layout");
         addEndpointToGroup("PageOps", "booklet-imposition");
         addEndpointToGroup("PageOps", "scale-pages");

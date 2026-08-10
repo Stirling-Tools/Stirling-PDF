@@ -59,6 +59,14 @@ public class FormDetectionModelManager {
     private static final Pattern SAFE_ID = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
     private static final Pattern SHA256_HEX = Pattern.compile("[0-9a-f]{64}");
 
+    /** The only origin the bundled catalog downloads from; also rejects userinfo/lookalikes. */
+    private static final String ALLOWED_MODEL_URL_PREFIX = "https://huggingface.co/";
+
+    /** Hugging Face hands the file off to its own CDN, so redirects must stay in these domains. */
+    private static final List<String> ALLOWED_REDIRECT_HOSTS = List.of("huggingface.co", "hf.co");
+
+    private static final int MAX_REDIRECTS = 5;
+
     /**
      * Whether the server-side ONNX engine is bundled in this build (the onnxruntime jar is only
      * included via {@code -PbundleOnnxRuntime=true}, e.g. the Docker server image). The frontend
@@ -244,16 +252,7 @@ public class FormDetectionModelManager {
 
         HttpURLConnection conn = null;
         try {
-            conn = (HttpURLConnection) URI.create(url).toURL().openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("User-Agent", "Stirling-PDF-App");
-            conn.setRequestProperty("Accept", "application/octet-stream");
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(60000);
-            int http = conn.getResponseCode();
-            if (http != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Download failed: HTTP " + http + " from " + url);
-            }
+            conn = openModelDownload(url);
             long total =
                     entry.getSizeBytes() > 0 ? entry.getSizeBytes() : conn.getContentLengthLong();
             try (InputStream in = conn.getInputStream();
@@ -303,6 +302,66 @@ public class FormDetectionModelManager {
         activate(modelId, expectedSha);
     }
 
+    /**
+     * Open the model download after checking the URL against the allowlist. Redirects are followed
+     * by hand so every hop is re-checked; auto-follow would skip that. Package-private for tests.
+     */
+    HttpURLConnection openModelDownload(String url) throws IOException {
+        if (!url.startsWith(ALLOWED_MODEL_URL_PREFIX)) {
+            throw new IOException("Model download URL is not on the allowlist: " + url);
+        }
+        String current = url;
+        for (int hop = 0; hop <= MAX_REDIRECTS; hop++) {
+            HttpURLConnection conn =
+                    (HttpURLConnection) URI.create(current).toURL().openConnection();
+            conn.setInstanceFollowRedirects(false);
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "Stirling-PDF-App");
+            conn.setRequestProperty("Accept", "application/octet-stream");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(60000);
+            int http = conn.getResponseCode();
+            if (http == HttpURLConnection.HTTP_OK) {
+                return conn;
+            }
+            String location = isRedirect(http) ? conn.getHeaderField("Location") : null;
+            conn.disconnect();
+            if (StringUtils.isBlank(location)) {
+                throw new IOException("Download failed: HTTP " + http + " from " + current);
+            }
+            current = requireAllowedRedirect(current, location);
+        }
+        throw new IOException("Too many redirects downloading model from " + url);
+    }
+
+    private static boolean isRedirect(int status) {
+        return status == HttpURLConnection.HTTP_MOVED_PERM
+                || status == HttpURLConnection.HTTP_MOVED_TEMP
+                || status == HttpURLConnection.HTTP_SEE_OTHER
+                || status == 307
+                || status == 308;
+    }
+
+    /** Resolve a redirect target and re-apply the https + host allowlist to it. */
+    private static String requireAllowedRedirect(String from, String location) throws IOException {
+        URI next;
+        try {
+            next = URI.create(from).resolve(location);
+        } catch (IllegalArgumentException e) {
+            throw new IOException("Model download redirect is not a valid URL: " + location, e);
+        }
+        String host = next.getHost() == null ? "" : next.getHost().toLowerCase(Locale.ROOT);
+        boolean allowed =
+                "https".equalsIgnoreCase(next.getScheme())
+                        && next.getUserInfo() == null
+                        && ALLOWED_REDIRECT_HOSTS.stream()
+                                .anyMatch(h -> host.equals(h) || host.endsWith("." + h));
+        if (!allowed) {
+            throw new IOException("Model download redirect is not on the allowlist: " + next);
+        }
+        return next.toString();
+    }
+
     /** Mark a verified, on-disk model as the active one and (re)enable the feature. */
     private void activate(String modelId, String expectedSha) {
         applicationProperties.getFormDetection().setActiveModelId(modelId);
@@ -343,15 +402,13 @@ public class FormDetectionModelManager {
         if (StringUtils.isBlank(id) || !SAFE_ID.matcher(id).matches()) {
             return;
         }
-        Path base = modelDir().toAbsolutePath().normalize();
-        Path file = base.resolve(id + ".onnx").normalize();
-        if (!file.startsWith(base)) {
-            return; // path-traversal guard (SAFE_ID already blocks it; this also satisfies CodeQL)
-        }
-        try {
-            Files.deleteIfExists(file);
-        } catch (IOException e) {
-            log.warn("Failed to delete model file {}", file, e);
+        Optional<Path> file = installedModelFile(id);
+        if (file.isPresent()) {
+            try {
+                Files.deleteIfExists(file.get());
+            } catch (IOException e) {
+                log.warn("Failed to delete model file {}", file.get(), e);
+            }
         }
         if (id.equals(activeModelId())) {
             applicationProperties.getFormDetection().setActiveModelId("");
@@ -397,12 +454,32 @@ public class FormDetectionModelManager {
     }
 
     public Optional<Path> getActiveModelFile() {
-        String id = activeModelId();
-        if (StringUtils.isBlank(id)) {
+        return installedModelFile(activeModelId());
+    }
+
+    /**
+     * Locate an installed model by listing the model dir, so the path handed to the file API comes
+     * from the directory itself and can never escape it via the supplied id.
+     */
+    private Optional<Path> installedModelFile(String id) {
+        if (StringUtils.isBlank(id) || !SAFE_ID.matcher(id).matches()) {
             return Optional.empty();
         }
-        Path f = modelDir().resolve(id + ".onnx");
-        return Files.isRegularFile(f) ? Optional.of(f) : Optional.empty();
+        Path dir = modelDir();
+        if (!Files.isDirectory(dir)) {
+            return Optional.empty();
+        }
+        String wanted = id + ".onnx";
+        try (DirectoryStream<Path> s = Files.newDirectoryStream(dir, "*.onnx")) {
+            for (Path p : s) {
+                if (wanted.equals(p.getFileName().toString()) && Files.isRegularFile(p)) {
+                    return Optional.of(p);
+                }
+            }
+        } catch (IOException e) {
+            log.debug("Could not list installed models in {}", dir, e);
+        }
+        return Optional.empty();
     }
 
     public Optional<ModelCatalogEntry> getActiveEntry() {

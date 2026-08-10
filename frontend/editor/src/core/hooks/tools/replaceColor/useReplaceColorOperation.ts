@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateReplaceColorParameters,
   ReplaceColorParameters,
   defaultParameters,
 } from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
@@ -63,6 +64,7 @@ export const buildReplaceColorFormData = (
   objectToFormData(replaceColorToApiParams(parameters), { fileInput: file });
 
 export const replaceColorOperationConfig = defineSingleFileTool({
+  validateParams: validateReplaceColorParameters,
   buildFormData: buildReplaceColorFormData,
   toApiParams: replaceColorToApiParams,
   fromApiParams: replaceColorFromApiParams,
