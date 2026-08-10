@@ -249,9 +249,7 @@ function ChatFABFullFlowDemo() {
               padding: "4px 10px",
               borderRadius: 6,
               background:
-                step === s
-                  ? "var(--c-accent-text)"
-                  : "var(--c-surface-sunken)",
+                step === s ? "var(--c-accent-text)" : "var(--c-surface-sunken)",
               color: step === s ? "#fff" : "inherit",
               fontWeight: step === s ? 600 : 400,
             }}
