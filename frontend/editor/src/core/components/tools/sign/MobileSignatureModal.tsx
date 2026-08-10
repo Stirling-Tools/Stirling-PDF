@@ -1,13 +1,6 @@
 import { useCallback } from "react";
-import { Modal, Stack, Text, Box, Alert } from "@mantine/core";
-import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
-import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
-import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
-import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
+import MobileTransferModal from "@app/components/shared/MobileTransferModal";
 
 /**
  * What the phone sent, routed to the matching signature source: ink and
@@ -46,10 +39,9 @@ function readFileAsText(file: File): Promise<string> {
 }
 
 /**
- * QR modal for drawing a signature on a phone or tablet. The phone opens the
- * public `/mobile-sign` page and uploads a PNG through the mobile transfer
- * session; the first image to arrive becomes the drawn signature and the
- * modal closes.
+ * QR modal for creating a signature on a phone or tablet. The phone opens the
+ * public `/mobile-sign` page; the first valid arrival becomes the signature
+ * and the modal closes.
  */
 export default function MobileSignatureModal({
   opened,
@@ -57,7 +49,6 @@ export default function MobileSignatureModal({
   onSignatureReceived,
 }: MobileSignatureModalProps) {
   const { t } = useTranslation();
-  const { config } = useAppConfig();
 
   // The session endpoints accept any upload from anyone holding the QR URL,
   // so nothing here is trusted: images pass as pixels, a typed signature is
@@ -123,119 +114,42 @@ export default function MobileSignatureModal({
     [onSignatureReceived, onClose],
   );
 
-  const { mobileUrl, error, timeRemaining, showExpiryWarning } =
-    useMobileTransferSession({
-      active: opened,
-      routePath: "mobile-sign",
-      onFileReceived: handleFileReceived,
-      sessionCreateErrorMessage: t(
-        "sign.mobile.sessionCreateError",
-        "Failed to create session",
-      ),
-      pollingErrorMessage: t(
-        "sign.mobile.pollingError",
-        "Error checking for the signature",
-      ),
-      // In dev the backend-advertised frontendUrl is the backend origin, which
-      // serves no SPA — the phone must open the Vite origin this page runs on,
-      // so let the URL builder fall back to it. An explicit server_url still
-      // wins, as an escape hatch.
-      configuredUrl:
-        localStorage.getItem("server_url") ||
-        (import.meta.env.DEV ? "" : config?.frontendUrl || ""),
-    });
-
   return (
-    <Modal
+    <MobileTransferModal
       opened={opened}
       onClose={onClose}
+      routePath="mobile-sign"
+      onFileReceived={handleFileReceived}
+      qrSize={220}
       title={t("sign.mobile.title", "Draw on your phone")}
-      centered
-      size="md"
-      radius="lg"
-      zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
-      overlayProps={{ opacity: 0.35, blur: 2 }}
-      styles={{ body: { paddingTop: "1.5rem" } }}
-    >
-      <Stack gap="md">
-        <Alert
-          icon={<InfoRoundedIcon style={{ fontSize: "1rem" }} />}
-          color="blue"
-          variant="light"
-        >
-          <Text size="sm">
-            {t(
-              "sign.mobile.description",
-              "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically.",
-            )}
-          </Text>
-        </Alert>
-
-        {showExpiryWarning && timeRemaining !== null && (
-          <Alert
-            icon={<WarningRoundedIcon style={{ fontSize: "1rem" }} />}
-            title={t("sign.mobile.expiryWarning", "QR Code Expiring Soon")}
-            color="orange"
-          >
-            <Text size="sm">
-              {t(
-                "sign.mobile.expiryWarningMessage",
-                "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically.",
-                { seconds: Math.ceil(timeRemaining / 1000) },
-              )}
-            </Text>
-          </Alert>
-        )}
-
-        {error && (
-          <Alert
-            icon={<ErrorRoundedIcon style={{ fontSize: "1rem" }} />}
-            title={t("sign.mobile.error", "Connection Error")}
-            color="red"
-          >
-            <Text size="sm">{error}</Text>
-          </Alert>
-        )}
-
-        <Box
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "1rem",
-          }}
-        >
-          <Box
-            style={{
-              padding: "1.5rem",
-              background: "white",
-              borderRadius: "8px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            }}
-          >
-            <QRCodeSVG value={mobileUrl} size={220} level="H" includeMargin />
-          </Box>
-
-          <Text size="xs" c="dimmed" ta="center" style={{ maxWidth: "300px" }}>
-            {t(
-              "sign.mobile.instructions",
-              "Open the camera app on your phone and scan this code. Keep this window open while you draw.",
-            )}
-          </Text>
-
-          <Text
-            size="xs"
-            c="dimmed"
-            style={{
-              wordBreak: "break-all",
-              textAlign: "center",
-              fontFamily: "monospace",
-            }}
-          >
-            {mobileUrl}
-          </Text>
-        </Box>
-      </Stack>
-    </Modal>
+      description={t(
+        "sign.mobile.description",
+        "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically.",
+      )}
+      instructions={t(
+        "sign.mobile.instructions",
+        "Open the camera app on your phone and scan this code. Keep this window open while you draw.",
+      )}
+      expiryWarningTitle={t(
+        "sign.mobile.expiryWarning",
+        "QR Code Expiring Soon",
+      )}
+      formatExpiryWarning={(seconds) =>
+        t(
+          "sign.mobile.expiryWarningMessage",
+          "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically.",
+          { seconds },
+        )
+      }
+      errorTitle={t("sign.mobile.error", "Connection Error")}
+      sessionCreateErrorMessage={t(
+        "sign.mobile.sessionCreateError",
+        "Failed to create session",
+      )}
+      pollingErrorMessage={t(
+        "sign.mobile.pollingError",
+        "Error checking for the signature",
+      )}
+    />
   );
 }
