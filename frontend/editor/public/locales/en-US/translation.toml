@@ -7200,6 +7200,7 @@ sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
+actions = "Actions"
 document = "Document"
 product = "Product"
 status = "Status"
@@ -7943,6 +7944,7 @@ paused = "Paused"
 
 [portal.pipelines.table]
 name = "Pipeline"
+open = "Open"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
@@ -8834,6 +8836,7 @@ unused = "Unused"
 
 [portal.sources.table]
 documents = "Documents"
+open = "Open"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
