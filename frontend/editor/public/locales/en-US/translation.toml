@@ -7949,6 +7949,7 @@ paused = "Paused"
 
 [portal.pipelines.table]
 name = "Pipeline"
+open = "Open pipeline"
 sources = "Sources"
 status = "Status"
 steps = "Steps"

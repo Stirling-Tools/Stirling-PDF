@@ -1850,12 +1850,13 @@
     "color-contrast"
   ],
   "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Default": [
-    "color-contrast",
-    "empty-table-header"
+    "color-contrast"
   ],
   "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Empty": [
-    "color-contrast",
-    "empty-table-header"
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Not Authored Here": [
+    "color-contrast"
   ],
   "editor/src/portal/components/pipelines/ToolPicker.stories.tsx :: Default": [
     "color-contrast"

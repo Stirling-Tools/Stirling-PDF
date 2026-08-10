@@ -2007,11 +2007,10 @@
     "color-contrast"
   ],
   "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Default": [
-    "color-contrast",
-    "empty-table-header"
+    "color-contrast"
   ],
-  "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Empty": [
-    "empty-table-header"
+  "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Not Authored Here": [
+    "color-contrast"
   ],
   "editor/src/portal/components/policies/PolicyCategoryCard.stories.tsx :: Coming Soon": [
     "color-contrast"
