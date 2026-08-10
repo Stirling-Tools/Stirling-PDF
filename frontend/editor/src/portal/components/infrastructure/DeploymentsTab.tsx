@@ -1,10 +1,5 @@
 import { useTranslation } from "react-i18next";
-import {
-  column,
-  DataTable,
-  type DataTableColumn,
-  EmptyState,
-} from "@app/ui";
+import { column, DataTable, type DataTableColumn, EmptyState } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
@@ -43,7 +38,8 @@ export function DeploymentsTab() {
       key: "latency",
       header: t("portal.infrastructure.deployments.regionColumns.latency"),
       get: (r) => r.latencyMs,
-      format: (n) => t("portal.infrastructure.deployments.msValue", { value: n }),
+      format: (n) =>
+        t("portal.infrastructure.deployments.msValue", { value: n }),
     }),
     column.progress({
       key: "load",
@@ -53,7 +49,10 @@ export function DeploymentsTab() {
     column.badge({
       key: "status",
       header: t("portal.infrastructure.deployments.regionColumns.status"),
-      get: (r) => ({ tone: REGION_TONE[r.status], label: t(REGION_LABEL[r.status]) }),
+      get: (r) => ({
+        tone: REGION_TONE[r.status],
+        label: t(REGION_LABEL[r.status]),
+      }),
     }),
     column.mono({
       key: "version",
@@ -84,7 +83,8 @@ export function DeploymentsTab() {
       key: "p99",
       header: t("portal.infrastructure.deployments.regionColumns.p99"),
       get: (r) => r.p99Ms,
-      format: (n) => t("portal.infrastructure.deployments.msValue", { value: n }),
+      format: (n) =>
+        t("portal.infrastructure.deployments.msValue", { value: n }),
     }),
   ];
 
@@ -94,20 +94,11 @@ export function DeploymentsTab() {
       header: t("portal.infrastructure.deployments.deployColumns.version"),
       get: (d) => d.version,
     }),
-    column.chips({
+    column.text({
       key: "environment",
       header: t("portal.infrastructure.deployments.deployColumns.environment"),
-      get: (d) => [
-        {
-          label: d.environment,
-          accent:
-            d.environment === "production"
-              ? "default"
-              : d.environment === "canary"
-                ? "premium"
-                : "neutral",
-        },
-      ],
+      get: (d) =>
+        d.environment.charAt(0).toUpperCase() + d.environment.slice(1),
     }),
     column.text({
       key: "product",
@@ -117,7 +108,10 @@ export function DeploymentsTab() {
     column.badge({
       key: "status",
       header: t("portal.infrastructure.deployments.deployColumns.status"),
-      get: (d) => ({ tone: DEPLOY_TONE[d.status], label: t(DEPLOY_LABEL[d.status]) }),
+      get: (d) => ({
+        tone: DEPLOY_TONE[d.status],
+        label: t(DEPLOY_LABEL[d.status]),
+      }),
     }),
     column.mono({
       key: "deployedBy",

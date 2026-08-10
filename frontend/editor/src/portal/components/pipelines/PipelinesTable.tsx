@@ -29,13 +29,14 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         header: t("portal.pipelines.table.name"),
         icon: () => <AccountTreeRounded />,
         primary: (p) => p.name,
-        tags: (p) => [
-          {
-            label: t(`portal.pipelines.trigger.${p.trigger}`, {
-              defaultValue: p.trigger,
-            }),
-          },
-        ],
+      }),
+      column.text({
+        key: "trigger",
+        header: t("portal.pipelines.table.trigger", "Trigger"),
+        get: (p) =>
+          t(`portal.pipelines.trigger.${p.trigger}`, {
+            defaultValue: p.trigger,
+          }),
       }),
       column.badge({
         key: "status",

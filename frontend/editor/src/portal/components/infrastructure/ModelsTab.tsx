@@ -23,7 +23,6 @@ import {
   MODEL_PROVIDER_LABEL,
   MODEL_TONE,
   MODEL_TYPE_LABEL,
-  MODEL_TYPE_TONE,
   modelCost,
   pct,
 } from "@portal/components/infrastructure/infraFormat";
@@ -40,17 +39,24 @@ export function ModelsTab() {
       key: "name",
       header: t("portal.infrastructure.models.columns.model"),
       primary: (m) => m.name,
-      tags: (m) => [{ label: MODEL_PROVIDER_LABEL[m.provider] }],
     }),
-    column.chips({
+    column.text({
+      key: "provider",
+      header: t("portal.infrastructure.models.columns.provider", "Provider"),
+      get: (m) => MODEL_PROVIDER_LABEL[m.provider],
+    }),
+    column.text({
       key: "type",
       header: t("portal.infrastructure.models.columns.type"),
-      get: (m) => [{ label: t(MODEL_TYPE_LABEL[m.type]), accent: MODEL_TYPE_TONE[m.type] }],
+      get: (m) => t(MODEL_TYPE_LABEL[m.type]),
     }),
     column.badge({
       key: "status",
       header: t("portal.infrastructure.models.columns.status"),
-      get: (m) => ({ tone: MODEL_TONE[m.status], label: t(MODEL_LABEL[m.status]) }),
+      get: (m) => ({
+        tone: MODEL_TONE[m.status],
+        label: t(MODEL_LABEL[m.status]),
+      }),
     }),
     column.progress({
       key: "load",
@@ -92,15 +98,17 @@ export function ModelsTab() {
       key: "operation",
       header: t("portal.infrastructure.models.routingColumns.operation"),
       primary: (r) => r.operation,
-      tags: (r) =>
+    }),
+    column.text({
+      key: "default",
+      header: t(
+        "portal.infrastructure.models.routingColumns.defaultColumn",
+        "Default",
+      ),
+      get: (r) =>
         r.isDefault
-          ? [
-              {
-                label: t("portal.infrastructure.models.routingColumns.default"),
-                accent: "default",
-              },
-            ]
-          : [],
+          ? t("portal.infrastructure.models.routingColumns.default")
+          : "",
     }),
     column.text({
       key: "docType",
@@ -113,9 +121,12 @@ export function ModelsTab() {
       get: (r) => ({
         defaultValue: r.modelId,
         options: modelOptions,
-        ariaLabel: t("portal.infrastructure.models.routingColumns.modelForAria", {
-          operation: r.operation,
-        }),
+        ariaLabel: t(
+          "portal.infrastructure.models.routingColumns.modelForAria",
+          {
+            operation: r.operation,
+          },
+        ),
       }),
     }),
   ];

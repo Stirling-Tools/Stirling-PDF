@@ -86,7 +86,13 @@ function ChevronGlyph() {
 
 function SortGlyph() {
   return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
       <path d="M12 8 6 15h12z" />
     </svg>
   );
@@ -187,11 +193,11 @@ export function DataTable<T extends RowData>({
     body = Array.from({ length: skeletonRows }).map((_, r) => (
       <tr key={`skeleton-${r}`} className="sui-datatable__row">
         {effectiveColumns.map((c) => (
-          <td
-            key={c.key}
-            className={cellClass(c.align, c.nowrap, c.fit)}
-          >
-            <Skeleton height="0.75rem" width={c.align === "right" || c.fit ? "40%" : "70%"} />
+          <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
+            <Skeleton
+              height="0.75rem"
+              width={c.align === "right" || c.fit ? "40%" : "70%"}
+            />
           </td>
         ))}
       </tr>
@@ -236,7 +242,9 @@ export function DataTable<T extends RowData>({
               ? "sui-datatable__row sui-datatable__row--interactive"
               : "sui-datatable__row"
           }
-          onClick={rowInteractive ? () => onRowClick?.(row.original) : undefined}
+          onClick={
+            rowInteractive ? () => onRowClick?.(row.original) : undefined
+          }
           tabIndex={rowInteractive ? 0 : undefined}
           role={rowInteractive ? "button" : undefined}
           onKeyDown={
@@ -338,7 +346,11 @@ export function DataTable<T extends RowData>({
   );
 }
 
-function cellClass(align: "left" | "right", nowrap: boolean, fit: boolean): string {
+function cellClass(
+  align: "left" | "right",
+  nowrap: boolean,
+  fit: boolean,
+): string {
   return [
     "sui-datatable__td",
     `sui-datatable__td--${align}`,

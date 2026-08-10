@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  type CellChip,
+  type CellLabel,
   column,
   DataTable,
   type DataTableColumn,
@@ -10,7 +10,6 @@ import {
   classificationTone,
   DOCUMENT_STATUS_LABEL,
   DOCUMENT_STATUS_TONE,
-  PRODUCT_CHIP_TONE,
   type ReviewDocument,
 } from "@portal/api/documents";
 
@@ -31,30 +30,38 @@ export function ReviewQueueTable({
         key: "document",
         header: t("portal.documents.table.columns.document"),
         primary: (d) => d.name,
-        tags: (d) => {
-          const tags: CellChip[] = [];
+        note: (d) => d.note,
+      }),
+      column.labels({
+        key: "labels",
+        header: t("portal.documents.table.columns.labels", "Labels"),
+        get: (d) => {
+          const out: CellLabel[] = [];
           if (d.classification) {
-            tags.push({ label: d.classification, accent: classificationTone(d) });
+            out.push({
+              label: d.classification,
+              accent: classificationTone(d),
+            });
           }
           if (d.auto) {
-            tags.push({ label: t("portal.documents.table.auto"), accent: "success" });
+            out.push({
+              label: t("portal.documents.table.auto"),
+              accent: "success",
+            });
           }
           if (d.sensitive) {
-            tags.push({
+            out.push({
               label: t("portal.documents.table.sensitive", "Sensitive"),
               accent: "warning",
             });
           }
-          return tags;
+          return out;
         },
-        note: (d) => d.note,
       }),
-      column.chips({
+      column.text({
         key: "product",
         header: t("portal.documents.table.columns.product"),
-        get: (d) => [
-          { label: d.product, accent: PRODUCT_CHIP_TONE[d.product], showDot: false },
-        ],
+        get: (d) => d.product,
       }),
       column.text({
         key: "action",

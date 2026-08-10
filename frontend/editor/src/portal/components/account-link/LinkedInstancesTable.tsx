@@ -1,11 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import {
-  column,
-  DataTable,
-  type DataTableColumn,
-  EmptyState,
-} from "@app/ui";
+import { column, DataTable, type DataTableColumn, EmptyState } from "@app/ui";
 import type { LinkedInstanceRow } from "@portal/api/link";
 
 interface Props {

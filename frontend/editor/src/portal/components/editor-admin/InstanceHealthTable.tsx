@@ -1,15 +1,8 @@
 import { useTranslation } from "react-i18next";
-import {
-  type ChipAccent,
-  column,
-  DataTable,
-  type DataTableColumn,
-  EmptyState,
-} from "@app/ui";
+import { column, DataTable, type DataTableColumn, EmptyState } from "@app/ui";
 import {
   INSTANCE_STATUS_LABEL,
   INSTANCE_STATUS_TONE,
-  TARGET_META,
   type EditorInstance,
 } from "@portal/api/editorDeploy";
 
@@ -18,13 +11,6 @@ const TARGET_LABEL: Record<EditorInstance["target"], string> = {
   cloud: "Cloud",
   docker: "Docker",
   kubernetes: "K8s",
-};
-
-/** Map the target palette tone onto the shared Chip accent set. */
-const TARGET_CHIP_ACCENT: Record<"neutral" | "blue" | "purple", ChipAccent> = {
-  neutral: "neutral",
-  blue: "default",
-  purple: "premium",
 };
 
 interface Props {
@@ -40,12 +26,11 @@ export function InstanceHealthTable({ instances }: Props) {
       key: "host",
       header: t("portal.editorAdmin.health.columns.host"),
       primary: (i) => i.host,
-      tags: (i) => [
-        {
-          label: TARGET_LABEL[i.target],
-          accent: TARGET_CHIP_ACCENT[TARGET_META[i.target].tone],
-        },
-      ],
+    }),
+    column.text({
+      key: "target",
+      header: t("portal.editorAdmin.health.columns.target", "Target"),
+      get: (i) => TARGET_LABEL[i.target],
     }),
     column.mono({
       key: "version",

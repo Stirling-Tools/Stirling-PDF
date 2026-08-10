@@ -185,15 +185,14 @@
 .sui-dtc__num {
   font-variant-numeric: tabular-nums;
 }
-
-.sui-dtc__chips {
+.sui-dtc__labels {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.375rem;
 }
 
-/* entity: leading icon + bold name + inline tags/markers + optional note */
+/* entity: leading icon + bold name + optional muted note */
 .sui-dtc__entity {
   display: flex;
   align-items: center;
@@ -220,12 +219,6 @@
   flex-direction: column;
   gap: 0.1875rem;
   min-width: 0;
-}
-.sui-dtc__entity-head {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 .sui-dtc__entity-name {
   font-weight: 600;

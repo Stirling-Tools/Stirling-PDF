@@ -34,11 +34,10 @@ export function PolicyCatalogueTable({
         icon: (entry) => policyCategoryIcon(entry.category.id),
         primary: (entry) => t(entry.category.label),
       }),
-      column.chips({
+      column.text({
         key: "enforces",
         header: t("portal.policies.table.enforces", "Enforces"),
-        get: (entry) =>
-          entry.config.rules.map((r) => ({ label: t(r), accent: "neutral" })),
+        get: (entry) => entry.config.rules.map((r) => t(r)).join(", "),
       }),
       column.muted({
         key: "scope",
@@ -58,7 +57,10 @@ export function PolicyCatalogueTable({
         // itself (click + chevron), so there's no bespoke button in the cell.
         get: (entry) => {
           if (entry.category.comingSoon) {
-            return { tone: "neutral", label: t("portal.policies.card.comingSoon") };
+            return {
+              tone: "neutral",
+              label: t("portal.policies.card.comingSoon"),
+            };
           }
           if (isLocked?.(entry)) {
             return {
@@ -75,7 +77,10 @@ export function PolicyCatalogueTable({
                 : t("portal.policies.status.active"),
             };
           }
-          return { tone: "neutral", label: t("portal.policySummary.action.setUp") };
+          return {
+            tone: "neutral",
+            label: t("portal.policySummary.action.setUp"),
+          };
         },
       }),
     ],

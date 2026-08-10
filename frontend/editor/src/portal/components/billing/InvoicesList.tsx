@@ -90,7 +90,10 @@ export function InvoicesList() {
     }),
     column.number({
       key: "pdfs",
-      header: t("portal.billing.invoices.columnPdfsProcessed", "PDFs processed"),
+      header: t(
+        "portal.billing.invoices.columnPdfsProcessed",
+        "PDFs processed",
+      ),
       // Billed units on the invoice's metered line item; blank when the
       // line-item table isn't synced into the Stripe mirror.
       get: (inv) => inv.pdfsProcessed,
@@ -182,7 +185,11 @@ export function InvoicesList() {
 
       {invoices !== null && invoices.length > 0 && (
         <>
-          <DataTable columns={columns} rows={visibleRows} rowKey={(inv) => inv.id} />
+          <DataTable
+            columns={columns}
+            rows={visibleRows}
+            rowKey={(inv) => inv.id}
+          />
           {hasMore && (
             <div className="portal-billing__invoice-footer">
               <Button

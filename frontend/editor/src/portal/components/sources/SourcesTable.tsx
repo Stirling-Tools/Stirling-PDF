@@ -34,16 +34,19 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
         header: t("portal.sources.table.source"),
         icon: (s) => <SourceTypeIcon type={s.type} />,
         // The editor is a system source with no instance name: label it from its
-        // type and drop the chip, which would just repeat the name.
+        // type (and leave its Type cell blank, so it isn't repeated).
         primary: (s) =>
           s.type === EDITOR_SOURCE_TYPE
             ? t(sourceTypeMeta(s.type).labelKey)
             : s.name,
-        tags: (s) => {
-          if (s.type === EDITOR_SOURCE_TYPE) return [];
-          const meta = sourceTypeMeta(s.type);
-          return [{ label: t(meta.labelKey), accent: meta.accent }];
-        },
+      }),
+      column.text({
+        key: "type",
+        header: t("portal.sources.table.type", "Type"),
+        get: (s) =>
+          s.type === EDITOR_SOURCE_TYPE
+            ? ""
+            : t(sourceTypeMeta(s.type).labelKey),
       }),
       column.badge({
         key: "status",

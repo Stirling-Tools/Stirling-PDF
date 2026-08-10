@@ -35,18 +35,18 @@ export type CellGlyph = "kebab";
 
 function KebabGlyph() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
       <circle cx="12" cy="5" r="1.6" />
       <circle cx="12" cy="12" r="1.6" />
       <circle cx="12" cy="19" r="1.6" />
     </svg>
   );
-}
-
-/** A chip inside a cell - a dot-less label pill. */
-export interface CellChip {
-  label: string;
-  accent?: ChipAccent;
 }
 
 /** A row action. Rendered as a locked button; call-sites supply intent + handler. */
@@ -112,7 +112,10 @@ function mono<T>(o: Common & { get: (row: T) => string }): DataTableColumn<T> {
 }
 
 function muted<T>(
-  o: Common & { get: (row: T) => string | null | undefined; placeholder?: string },
+  o: Common & {
+    get: (row: T) => string | null | undefined;
+    placeholder?: string;
+  },
 ): DataTableColumn<T> {
   return base<T>(o, {
     align: "left",
@@ -120,7 +123,9 @@ function muted<T>(
     fit: false,
     sortValue: (r) => o.get(r) ?? null,
     renderCell: (r) => (
-      <span className="sui-dtc__muted">{o.get(r) || (o.placeholder ?? "-")}</span>
+      <span className="sui-dtc__muted">
+        {o.get(r) || (o.placeholder ?? "-")}
+      </span>
     ),
   });
 }
@@ -177,27 +182,36 @@ function badge<T>(
   });
 }
 
-function ChipRun({ chips }: { chips: CellChip[] }) {
-  return (
-    <>
-      {chips.map((c) => (
-        <Chip key={c.label} accent={c.accent ?? "neutral"} size="sm" showDot={false}>
-          {c.label}
-        </Chip>
-      ))}
-    </>
-  );
+/**
+ * A user-defined label, rendered as a dot-less pill. Use this ONLY for labels
+ * that come from data / the user (e.g. a document's classification). Values from
+ * a fixed set we define (types, environments, providers) are `text`, not pills.
+ */
+export interface CellLabel {
+  label: string;
+  accent?: ChipAccent;
 }
 
-function chips<T>(o: Common & { get: (row: T) => CellChip[] }): DataTableColumn<T> {
+function labels<T>(
+  o: Common & { get: (row: T) => CellLabel[] },
+): DataTableColumn<T> {
   return base<T>(o, {
     align: "left",
     nowrap: false,
     fit: false,
     sortValue: (r) => o.get(r)[0]?.label ?? null,
     renderCell: (r) => (
-      <div className="sui-dtc__chips">
-        <ChipRun chips={o.get(r)} />
+      <div className="sui-dtc__labels">
+        {o.get(r).map((l) => (
+          <Chip
+            key={l.label}
+            accent={l.accent ?? "neutral"}
+            size="sm"
+            showDot={false}
+          >
+            {l.label}
+          </Chip>
+        ))}
       </div>
     ),
   });
@@ -208,8 +222,6 @@ function entity<T>(
     /** Semantic leading icon (component owns its size + colour container). */
     icon?: (row: T) => ReactNode;
     primary: (row: T) => string;
-    /** Inline chips after the name. */
-    tags?: (row: T) => CellChip[];
     /** Secondary muted line under the name. */
     note?: (row: T) => string | null | undefined;
     sortBy?: (row: T) => SortValue;
@@ -222,7 +234,6 @@ function entity<T>(
     sortValue: o.sortBy ?? ((r) => o.primary(r)),
     renderCell: (r) => {
       const icon = o.icon?.(r);
-      const tags = o.tags?.(r) ?? [];
       const note = o.note?.(r);
       return (
         <div className="sui-dtc__entity">
@@ -232,10 +243,7 @@ function entity<T>(
             </span>
           )}
           <div className="sui-dtc__entity-body">
-            <div className="sui-dtc__entity-head">
-              <span className="sui-dtc__entity-name">{o.primary(r)}</span>
-              <ChipRun chips={tags} />
-            </div>
+            <span className="sui-dtc__entity-name">{o.primary(r)}</span>
             {note && <span className="sui-dtc__note">{note}</span>}
           </div>
         </div>
@@ -244,9 +252,11 @@ function entity<T>(
   });
 }
 
-function actions<T>(
-  o: { key: string; header?: ReactNode; get: (row: T) => CellAction[] },
-): DataTableColumn<T> {
+function actions<T>(o: {
+  key: string;
+  header?: ReactNode;
+  get: (row: T) => CellAction[];
+}): DataTableColumn<T> {
   return {
     key: o.key,
     header: o.header ?? "",
@@ -382,7 +392,7 @@ export const column = {
   muted,
   number,
   badge,
-  chips,
+  labels,
   entity,
   actions,
   progress,
