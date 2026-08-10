@@ -306,32 +306,45 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
     const refreshStubs = useCallback(async () => {
-      // Leaf files from IDB - same source as the file selection modal.
-      const stubs = await indexedDB.loadLeafMetadata();
-      const idbIds = new Set(stubs.map((s) => s.id as string));
+      // `stubsLoaded` gates the spinner, so the `finally` below must set it on
+      // every path - callers never await this, so a rejection goes nowhere.
+      let stubs: StirlingFileStub[] = [];
+      try {
+        // Leaf files from IDB - same source as the file selection modal.
+        stubs = await indexedDB.loadLeafMetadata();
+      } catch (error) {
+        // Carry on with the in-memory workbench files: an unreadable library
+        // should cost the user their history, not the file they're working on.
+        console.error("Failed to read the file library from storage:", error);
+      }
 
-      // Also include workbench files not yet flushed to IDB.
-      const pendingStubs = state.files.ids
-        .map((id) => state.files.byId[id])
-        .filter(
-          (stub): stub is NonNullable<typeof stub> =>
-            !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
+      try {
+        const idbIds = new Set(stubs.map((s) => s.id as string));
+
+        // Also include workbench files not yet flushed to IDB.
+        const pendingStubs = state.files.ids
+          .map((id) => state.files.byId[id])
+          .filter(
+            (stub): stub is NonNullable<typeof stub> =>
+              !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
+          );
+
+        const allStubs = [...stubs, ...pendingStubs];
+        // A version swap briefly lists both the old leaf (IDB) and its replacement (workbench); two stubs for one lineage collide on the row key and corrupt React reconciliation, so drop any stub another names as its parent.
+        const superseded = new Set(
+          allStubs.map((s) => s.parentFileId as string | undefined),
         );
-
-      const allStubs = [...stubs, ...pendingStubs];
-      // A version swap briefly lists both the old leaf (IDB) and its replacement (workbench); two stubs for one lineage collide on the row key and corrupt React reconciliation, so drop any stub another names as its parent.
-      const superseded = new Set(
-        allStubs.map((s) => s.parentFileId as string | undefined),
-      );
-      const currentStubs = allStubs.filter(
-        (s) => !superseded.has(s.id as string),
-      );
-      setAllFileStubs(
-        currentStubs.sort(
-          (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
-        ),
-      );
-      setStubsLoaded(true);
+        const currentStubs = allStubs.filter(
+          (s) => !superseded.has(s.id as string),
+        );
+        setAllFileStubs(
+          currentStubs.sort(
+            (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
+          ),
+        );
+      } finally {
+        setStubsLoaded(true);
+      }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
     // Refresh on mount, workbench changes, or external IndexedDB writes —
