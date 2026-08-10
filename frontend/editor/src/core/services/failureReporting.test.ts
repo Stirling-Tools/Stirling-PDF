@@ -119,9 +119,8 @@ describe("reportToolFailure", () => {
       fileIds: ["f-1"],
     });
 
-    expect((post.mock.calls[0]?.[1] as { detail: string }).detail).toBe(
-      "Failed on Q4 report.pdf",
-    );
+    const body = post.mock.calls[0]?.[1] as { detail: string };
+    expect(body.detail).toBe("Failed on Q4 report.pdf");
   });
 
   it("sends no team, because the server derives it", async () => {
