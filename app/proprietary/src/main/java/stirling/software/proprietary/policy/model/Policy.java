@@ -24,13 +24,34 @@ public record Policy(
         List<PipelineStep> steps,
         OutputSpec output,
         List<String> outputIds,
-        Long teamId) {
+        Long teamId,
+        String origin) {
+
+    /** Converted from a legacy watched-folder JSON config that predates the policy engine. */
+    public static final String ORIGIN_MIGRATED = "migrated";
 
     public Policy {
         inputs = inputs == null ? List.of() : List.copyOf(inputs);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
+    }
+
+    /**
+     * Without a provenance marker: a policy someone built here, which is the ordinary case and
+     * carries no badge. Also what pre-existing stored rows deserialise to.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId) {
+        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, null);
     }
 
     /**
@@ -82,12 +103,23 @@ public record Policy(
 
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
-        return new Policy(id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId);
+        return new Policy(
+                id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId, origin);
     }
 
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
-        return new Policy(id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId);
+        return new Policy(
+                id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId, origin);
+    }
+
+    /**
+     * A copy stamped with where it came from. The controller uses this to keep provenance
+     * server-side: a caller cannot label its own creation as a migrated one.
+     */
+    public Policy withOrigin(String newOrigin) {
+        return new Policy(
+                id, name, owner, enabled, inputs, steps, output, outputIds, teamId, newOrigin);
     }
 
     /**

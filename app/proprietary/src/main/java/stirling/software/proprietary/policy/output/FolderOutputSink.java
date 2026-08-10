@@ -10,6 +10,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +37,9 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  * atomically renamed into place, so the producing policy's row exists before the file is
  * discoverable and half-written outputs are never visible. Returned {@link ResultFile}s carry a
  * synthetic id since the deliverable is the file on disk, not a {@code FileStorage} entry.
+ *
+ * <p>An optional {@code filenamePattern} renames each delivered file; see {@link
+ * OutputNames#applyPattern}. Without one, files keep the names the pipeline produced.
  */
 @Slf4j
 @Service
@@ -44,6 +48,9 @@ public class FolderOutputSink implements PolicyOutputSink {
 
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
     static final String DIRECTORY_OPTION = "directory";
+
+    /** Optional naming template for delivered files; see {@link OutputNames#applyPattern}. */
+    static final String FILENAME_PATTERN_OPTION = "filenamePattern";
 
     // Staging entries are renamed away within one delivery; anything older is a crash leftover.
     private static final Duration STALE_TMP_AGE = Duration.ofDays(1);
@@ -76,10 +83,19 @@ public class FolderOutputSink implements PolicyOutputSink {
         Files.createDirectories(tmpDir);
         sweepStaleTmp(tmpDir);
 
+        String pattern = patternOf(spec);
+        // One timestamp for the whole delivery, so a run's files share a {date}/{time} stamp.
+        LocalDateTime deliveredAt = LocalDateTime.now();
+
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
-            String name = OutputNames.safeName(resource.getFilename(), i);
+            String name =
+                    OutputNames.applyPattern(
+                            pattern,
+                            OutputNames.safeName(resource.getFilename(), i),
+                            i,
+                            deliveredAt);
             Path staged = tmpDir.resolve(UUID.randomUUID().toString());
             String contentHash = stage(resource, staged, delivery.policyId() != null);
             long size = Files.size(staged);
@@ -184,6 +200,11 @@ public class FolderOutputSink implements PolicyOutputSink {
         } catch (IOException e) {
             log.debug("Could not sweep staging dir {}: {}", tmpDir, e.getMessage());
         }
+    }
+
+    private static String patternOf(OutputSpec spec) {
+        Object pattern = spec.options().get(FILENAME_PATTERN_OPTION);
+        return pattern == null ? null : pattern.toString();
     }
 
     private static Path directoryOf(OutputSpec spec) {

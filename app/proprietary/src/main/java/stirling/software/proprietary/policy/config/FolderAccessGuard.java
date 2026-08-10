@@ -42,6 +42,9 @@ public class FolderAccessGuard {
 
     public static final String IMPLIED_WATCHED_FOLDER = "watchedFolder";
 
+    /** Where watched-folder pipelines deliver their results; the other half of that pair. */
+    public static final String IMPLIED_FINISHED_FOLDER = "finishedFolder";
+
     /** A directory implicitly permitted regardless of {@code allowedFolderRoots}, and why. */
     public record ImpliedRoot(Path path, String reason) {}
 
@@ -123,6 +126,12 @@ public class FolderAccessGuard {
         }
         for (Path path : normalizeAll(runtimePathConfig.getPipelineWatchedFoldersPaths())) {
             roots.add(new ImpliedRoot(path, IMPLIED_WATCHED_FOLDER));
+        }
+        // A watched folder's outputs land here, so an automation that reads one of Stirling's own
+        // drop folders can write its results without the admin allowlisting anything.
+        for (Path path :
+                normalizeAll(List.of(runtimePathConfig.getPipelineFinishedFoldersPath()))) {
+            roots.add(new ImpliedRoot(path, IMPLIED_FINISHED_FOLDER));
         }
         return List.copyOf(roots);
     }

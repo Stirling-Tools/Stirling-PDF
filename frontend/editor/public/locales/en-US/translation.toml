@@ -1101,6 +1101,7 @@ title = "Folder Access"
 
 [admin.settings.folderAccess.implied]
 description = "These Stirling-managed directories are always permitted and can't be changed here."
+finishedFolder = "Pipeline finished folder"
 serverStorage = "Server file storage"
 title = "Always allowed"
 watchedFolder = "Pipeline watched folder"
@@ -7887,6 +7888,11 @@ title = "No pipelines yet"
 active = "Active"
 paused = "Paused"
 total = "Pipelines"
+
+[portal.pipelines.origin.migrated]
+detail = "Converted automatically from a watched-folder JSON config. The original file was archived to .stirling/migrated beside that folder, and the folder is now driven by this pipeline."
+hint = "Converted from a watched-folder JSON config. The original file was archived beside the folder."
+label = "Migrated"
 
 [portal.pipelines.run]
 allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."

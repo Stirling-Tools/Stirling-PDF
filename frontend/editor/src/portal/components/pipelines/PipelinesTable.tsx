@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import AccountTreeRounded from "@mui/icons-material/AccountTreeRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import HistoryRounded from "@mui/icons-material/HistoryRounded";
 import {
   Chip,
   StatusBadge,
@@ -9,12 +10,46 @@ import {
   Table,
   type TableColumn,
 } from "@app/ui";
-import type { PipelineStatus, PipelineView } from "@portal/api/pipelines";
+import type {
+  PipelineOrigin,
+  PipelineStatus,
+  PipelineView,
+} from "@portal/api/pipelines";
 
 const STATUS_TONE: Record<PipelineStatus, StatusTone> = {
   active: "success",
   paused: "neutral",
 };
+
+const ORIGIN_ICON: Record<PipelineOrigin, typeof HistoryRounded> = {
+  migrated: HistoryRounded,
+};
+
+/**
+ * Says so when a pipeline wasn't built here but converted from a legacy watched-folder config, so
+ * one nobody remembers creating isn't mistaken for the team's own work. Renders nothing for the
+ * ordinary case.
+ */
+function OriginChip({ origin }: { origin?: PipelineOrigin | null }) {
+  const { t } = useTranslation();
+  if (!origin || !(origin in ORIGIN_ICON)) return null;
+  const Icon = ORIGIN_ICON[origin];
+  return (
+    <Chip
+      accent="brand"
+      size="sm"
+      leadingIcon={<Icon style={{ fontSize: "0.875rem" }} />}
+      title={t(`portal.pipelines.origin.${origin}.hint`, {
+        defaultValue:
+          "Converted from a watched-folder JSON config. The original file was archived beside the folder.",
+      })}
+    >
+      {t(`portal.pipelines.origin.${origin}.label`, {
+        defaultValue: "Migrated",
+      })}
+    </Chip>
+  );
+}
 
 interface PipelinesTableProps {
   pipelines: PipelineView[];
@@ -36,11 +71,14 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
             </span>
             <div className="portal-pipelines__name-text">
               <strong>{p.name}</strong>
-              <Chip accent="neutral" size="sm">
-                {t(`portal.pipelines.trigger.${p.trigger}`, {
-                  defaultValue: p.trigger,
-                })}
-              </Chip>
+              <div className="portal-pipelines__name-chips">
+                <Chip accent="neutral" size="sm">
+                  {t(`portal.pipelines.trigger.${p.trigger}`, {
+                    defaultValue: p.trigger,
+                  })}
+                </Chip>
+                <OriginChip origin={p.origin} />
+              </div>
             </div>
           </div>
         ),
