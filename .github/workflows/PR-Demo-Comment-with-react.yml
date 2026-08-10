@@ -35,6 +35,7 @@ permissions:
 
 jobs:
   check-comment:
+    environment: bot-identity
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -174,6 +175,8 @@ jobs:
             }
 
   deploy-pr:
+    # also needs DOCKER_HUB_API (docker-publish) and GH_APP_PRIVATE_KEY (bot-identity); both still resolve from repo scope
+    environment: pr-preview
     needs: check-comment
     runs-on: ubuntu-latest
     permissions:
@@ -485,6 +488,7 @@ jobs:
         continue-on-error: true
 
   handle-label-commands:
+    environment: bot-identity
     if: ${{ github.event.issue.pull_request != null }}
     runs-on: ubuntu-latest
     steps:

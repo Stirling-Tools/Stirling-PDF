@@ -97,6 +97,8 @@ jobs:
           echo "allow_fork=${allow_fork:-false}" >> $GITHUB_OUTPUT
 
   deploy-v2-pr:
+    # also needs DOCKER_HUB_API and GH_APP_PRIVATE_KEY from repo scope
+    environment: pr-preview
     needs: check-pr
     runs-on: ubuntu-latest
     if: needs.check-pr.outputs.should_deploy == 'true' && (needs.check-pr.outputs.is_fork == 'false' || needs.check-pr.outputs.allow_fork == 'true')
@@ -458,6 +460,8 @@ jobs:
             });
 
   cleanup-v2-deployment:
+    # also needs GH_APP_PRIVATE_KEY from repo scope
+    environment: pr-preview
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:

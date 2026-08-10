@@ -66,6 +66,7 @@ jobs:
           echo "jar_sha256=$JAR_SHA" >> "$GITHUB_OUTPUT"
 
   publish-aur:
+    environment: package-publish
     needs: get-release-info
     runs-on: ubuntu-latest
     steps:

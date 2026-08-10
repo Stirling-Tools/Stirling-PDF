@@ -13,6 +13,8 @@ env:
 
 jobs:
   cleanup:
+    # also needs GH_APP_PRIVATE_KEY from repo scope
+    environment: pr-preview
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:

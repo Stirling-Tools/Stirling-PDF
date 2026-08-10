@@ -11,6 +11,8 @@ permissions:
 
 jobs:
   deploy-v2-on-push:
+    # also needs DOCKER_HUB_API from repo scope
+    environment: pr-preview
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-v2-push-V2

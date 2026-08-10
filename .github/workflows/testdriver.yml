@@ -21,6 +21,8 @@ permissions:
 
 jobs:
   deploy:
+    # also needs DOCKER_HUB_API from repo scope
+    environment: pr-preview
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     steps:
@@ -156,6 +158,7 @@ jobs:
           filters: ".github/config/.files.yaml"
 
   test:
+    environment: pr-preview
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [deploy, files-changed]
     runs-on: ubuntu-latest
@@ -191,6 +194,7 @@ jobs:
           FORCE_COLOR: "3"
 
   cleanup:
+    environment: pr-preview
     needs: [deploy, test]
     runs-on: ubuntu-latest
     if: always()
