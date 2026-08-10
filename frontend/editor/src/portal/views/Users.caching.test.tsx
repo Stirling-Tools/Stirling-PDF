@@ -26,6 +26,16 @@ import { qk } from "@portal/queries/keys";
  * one /team/my resolve. Same SaaS mocks as Users.saas.test.tsx.
  */
 
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    available: false,
+    connect: vi.fn(),
+    guard: (fn: unknown) => fn,
+  }),
+}));
+
 vi.mock("@app/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),

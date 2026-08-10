@@ -24,6 +24,7 @@ import {
 } from "@portal/components/sources/connectionTypes";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import { COMING_SOON_SOURCE_TYPES } from "@portal/components/sources/sourceTypes";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Integrations.css";
 
 /**
@@ -73,6 +74,7 @@ interface TypeGroup {
 
 export function Integrations() {
   const { t } = useTranslation();
+  const { guard } = useConnectGate();
   const [connections, setConnections] = useState<IntegrationConfig[] | null>(
     null,
   );
@@ -200,13 +202,14 @@ export function Integrations() {
     });
   }
 
-  function openCreate(typeId: string) {
+  // Connecting an integration and editing one both need a linked account.
+  const openCreate = guard((typeId: string) => {
     setModal({ open: true, editing: null, fixedTypeId: typeId });
-  }
+  });
 
-  function openEdit(connection: IntegrationConfig) {
+  const openEdit = guard((connection: IntegrationConfig) => {
     setModal({ open: true, editing: connection });
-  }
+  });
 
   async function remove(connection: IntegrationConfig) {
     if (busy) return;

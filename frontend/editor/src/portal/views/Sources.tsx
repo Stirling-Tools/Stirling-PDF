@@ -11,11 +11,14 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceModal } from "@portal/components/sources/SourceModal";
+import { LinkGate } from "@portal/components/account-link/LinkGate";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Sources.css";
 
 export function Sources() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { guard } = useConnectGate();
 
   const state = useSources();
   const { data, loading } = state;
@@ -43,9 +46,11 @@ export function Sources() {
   const configuredCount = sources.filter((s) => s.type !== "editor").length;
   const showEmpty = !isLoading && configuredCount === 0;
 
-  const openCreate = () => setModal({ open: true, sourceId: null });
-  const openSource = (source: SourceView) =>
-    setModal({ open: true, sourceId: source.id });
+  // Connecting a source and editing one both need a linked account.
+  const openCreate = guard(() => setModal({ open: true, sourceId: null }));
+  const openSource = guard((source: SourceView) =>
+    setModal({ open: true, sourceId: source.id }),
+  );
 
   // The Connections tab moved to its own Integrations view.
   if (searchParams.get("tab") === "connections") {
@@ -80,19 +85,23 @@ export function Sources() {
       )}
 
       {showEmpty && (
-        <EmptyState
-          icon={<SourcesIcon size={28} />}
-          title={t("portal.sources.empty.title")}
-          description={t("portal.sources.empty.description")}
-          actions={
-            <Button
-              onClick={openCreate}
-              leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
-            >
-              {t("portal.sources.actions.connectSource")}
-            </Button>
-          }
-        />
+        <LinkGate feature={t("portal.sources.title")} bare>
+          <EmptyState
+            icon={<SourcesIcon size={28} />}
+            title={t("portal.sources.empty.title")}
+            description={t("portal.sources.empty.description")}
+            actions={
+              <Button
+                onClick={openCreate}
+                leftSection={
+                  <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.sources.actions.connectSource")}
+              </Button>
+            }
+          />
+        </LinkGate>
       )}
 
       {!isLoading && sources.length > 0 && (

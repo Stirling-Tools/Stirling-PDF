@@ -32,6 +32,16 @@ import {
  */
 
 // Keep apiClient.local's transport hermetic (no real token / Supabase at import).
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    available: false,
+    connect: vi.fn(),
+    guard: (fn: unknown) => fn,
+  }),
+}));
+
 vi.mock("@app/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),

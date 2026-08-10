@@ -6363,9 +6363,15 @@ title = "Sign in to Stirling"
 
 [portal.accountLink.gate]
 action = "Connect account"
-description = "Connect this org's Stirling account to use this feature."
-title = "Connect to unlock"
-titleFeature = "Connect to unlock {{feature}}"
+description = "Connect your Stirling account to use this. Manual PDF tools keep working either way."
+title = "This needs a connected account"
+titleFeature = "{{feature}} need a connected account"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Later"
+sub = "Unlocks teams, the processor, pipelines and policies. Manual PDF editing stays free."
+title = "Connect your Stirling account"
 
 [portal.accountLink.instances]
 active = "Active"

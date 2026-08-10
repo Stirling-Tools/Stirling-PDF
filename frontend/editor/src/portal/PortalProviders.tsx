@@ -8,6 +8,7 @@ import {
   useAccountLinkContext,
 } from "@portal/contexts/AccountLinkContext";
 import { PortalChrome } from "@portal/components/PortalChrome";
+import { useConnectPrompt } from "@portal/hooks/useConnectPrompt";
 
 /**
  * The one and only account-link login modal. Mounted at the app root (never
@@ -20,6 +21,8 @@ function LinkModalHost() {
   const { linkModalOpen, linkModalMode, closeLinkModal } = useUI();
   const { markSaasSessionChanged } = useLink();
   const link = useAccountLinkContext();
+  // Ask once a session while the instance is unlinked, rather than waiting to be found.
+  useConnectPrompt();
   // "reauth" only refreshes the browser SaaS session for attended reads — the
   // sign-in already applied it to the Supabase client, so we just signal a
   // refetch. It must NOT call completeLink (that re-registers → duplicate row).
