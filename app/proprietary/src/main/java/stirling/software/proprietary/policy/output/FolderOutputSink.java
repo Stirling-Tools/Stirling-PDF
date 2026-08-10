@@ -39,7 +39,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  * synthetic id since the deliverable is the file on disk, not a {@code FileStorage} entry.
  *
  * <p>An optional {@code filenamePattern} renames each delivered file; see {@link
- * OutputNames#applyPattern}. Without one, files keep the names the pipeline produced.
+ * OutputNames#applyPattern}.
  */
 @Slf4j
 @Service

@@ -18,24 +18,14 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Reads a legacy pipeline JSON and translates it into the pieces a {@code Policy} is built from:
- * ordered {@link PipelineStep}s, a destination directory, and an output naming pattern.
- *
- * <p>Two deliberate departures from the legacy runner, both fixing behaviour that was broken rather
- * than relied upon: {@code {folderName}} expands to the watched folder's own name (the legacy
- * runner substituted its full path and then string-stripped {@code watchedFolders} out of the
- * middle, which produced a mangled path for any absolute location), and an output pattern that
- * already carries an extension keeps it instead of having the real one appended after it (the
- * legacy runner turned {@code pre_publish_{filename}.PDF} into {@code pre_publish_x.PDF.pdf}).
+ * Reads a legacy pipeline JSON into the pieces a {@code Policy} is built from: ordered {@link
+ * PipelineStep}s, a destination directory, and an output naming pattern.
  */
 @Component
 @RequiredArgsConstructor
 public class LegacyPipelineConverter {
 
-    /**
-     * The legacy marker for "the files come from the pipeline itself". It named a multipart file
-     * field, so carrying it over as a scalar form field would corrupt the request.
-     */
+    /** Legacy marker naming a multipart field; sent as a form value it corrupts the request. */
     private static final String LEGACY_FILE_INPUT_PARAMETER = "fileInput";
 
     static final String OUTPUT_FOLDER_TOKEN = "{outputFolder}";
@@ -45,7 +35,6 @@ public class LegacyPipelineConverter {
     private final ObjectMapper objectMapper;
     private final RuntimePathConfig runtimePathConfig;
 
-    /** Parse a legacy config file. Throws {@link IOException} if unreadable or malformed. */
     public LegacyPipelineConfig read(Path jsonFile) throws IOException {
         return objectMapper.readValue(
                 Files.readString(jsonFile, java.nio.charset.StandardCharsets.UTF_8),
@@ -67,10 +56,8 @@ public class LegacyPipelineConverter {
     }
 
     /**
-     * The directory a watched folder's results are written to. {@code {outputFolder}} is the
-     * configured finished-folders location and {@code {folderName}} the watched folder's own name;
-     * a relative result is resolved under the finished-folders location so a run can never write
-     * into the server's working directory.
+     * Where results are written. {@code {folderName}} is the folder's own name; the legacy runner
+     * used its full path and produced mangled output paths.
      */
     public Path resolveOutputDirectory(LegacyPipelineConfig config, Path watchedDir) {
         String finishedFolders = runtimePathConfig.getPipelineFinishedFoldersPath();
@@ -89,9 +76,8 @@ public class LegacyPipelineConverter {
     }
 
     /**
-     * The config's output naming pattern with {@code {pipelineName}} already substituted, since it
-     * is fixed for a given pipeline; {@code {filename}}, {@code {date}} and {@code {time}} stay for
-     * the sink to expand per file. Null when the config names outputs the default way.
+     * The naming pattern with {@code {pipelineName}} already substituted (it is fixed per
+     * pipeline); the per-file tokens stay for the sink. Null when outputs keep their own names.
      */
     public String resolveFilenamePattern(LegacyPipelineConfig config) {
         String pattern = config.outputFileName();
@@ -103,7 +89,6 @@ public class LegacyPipelineConverter {
         return "{filename}".equals(resolved.trim()) ? null : resolved;
     }
 
-    /** A pipeline name safe to embed in a filename. */
     private static String safeName(String name) {
         if (name == null || name.isBlank()) {
             return "pipeline";

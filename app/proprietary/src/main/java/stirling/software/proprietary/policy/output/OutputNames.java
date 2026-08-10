@@ -14,10 +14,8 @@ final class OutputNames {
     private OutputNames() {}
 
     /**
-     * Rename an output according to a pattern of {@code {filename}} (the produced name without its
-     * extension), {@code {date}} and {@code {time}}. The produced extension is appended unless the
-     * pattern already supplies one, and the result is re-sanitised so a pattern cannot introduce a
-     * path separator. A blank pattern, or one that yields nothing, leaves the name untouched.
+     * Rename an output by a pattern of {@code {filename}}, {@code {date}} and {@code {time}}. The
+     * extension is appended unless the pattern supplies one; the result is re-sanitised.
      */
     static String applyPattern(String pattern, String filename, int index, LocalDateTime now) {
         if (pattern == null || pattern.isBlank()) {

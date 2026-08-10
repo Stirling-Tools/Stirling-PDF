@@ -87,9 +87,8 @@ public class PipelineDirectoryProcessor {
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
 
-    // Ordered listeners run first, so every watched-folder-to-policy conversion has been recorded
-    // before this flips; without it the first scan can claim a file out of a folder that is about
-    // to become policy-managed.
+    // Ordered listeners run first, so conversions are recorded before this flips; otherwise the
+    // first scan can claim a file out of a folder about to become policy-managed.
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
         applicationReady = true;
@@ -150,8 +149,7 @@ public class PipelineDirectoryProcessor {
                                         dir.getFileName() != null
                                                 ? dir.getFileName().toString()
                                                 : "";
-                                // Hidden directories are Stirling's own working state (e.g.
-                                // ".stirling"), never a user's pipeline folder.
+                                // Hidden dirs are Stirling's own state, never a pipeline folder.
                                 if (!dir.equals(watchedFolderPath) && dirName.startsWith(".")) {
                                     return FileVisitResult.SKIP_SUBTREE;
                                 }
@@ -193,8 +191,7 @@ public class PipelineDirectoryProcessor {
             return;
         }
 
-        // A folder converted into a policy is driven by the policy engine now; touching it here
-        // would process every dropped file twice.
+        // A converted folder is driven by the policy engine; scanning it here double-processes.
         MigratedWatchedFolders migrated = migratedWatchedFolders.getIfAvailable();
         if (migrated != null && migrated.isMigrated(normalizedDir)) {
             log.debug("Directory {} is managed by a policy; skipping legacy scan", normalizedDir);

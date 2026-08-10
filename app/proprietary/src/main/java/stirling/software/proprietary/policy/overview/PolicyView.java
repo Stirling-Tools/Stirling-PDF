@@ -18,11 +18,7 @@ public record PolicyView(
         List<String> steps,
         String output,
         String owner,
-        /**
-         * Where this pipeline came from when it wasn't built here - a converted legacy config - so
-         * the list can say so rather than passing it off as the team's own work. Null for the
-         * ordinary case.
-         */
+        /** Set only when this wasn't built here, so the list can say so. Usually null. */
         String origin) {
 
     /** A source a policy pulls documents from, resolved to its display name. */

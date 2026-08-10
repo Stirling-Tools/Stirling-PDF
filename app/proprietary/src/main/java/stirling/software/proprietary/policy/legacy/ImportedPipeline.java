@@ -13,9 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A legacy pipeline config that has been offered as a policy, keyed by its import key. The row is
- * never removed when the policy it created is deleted - that is the point: its presence is what
- * stops the config being re-imported from a file that is still on disk.
+ * A converted legacy config. The row outlives the policy it created; that is what stops the config
+ * being re-imported from a file still on disk.
  */
 @Entity
 @Table(name = "policy_imported_pipelines")

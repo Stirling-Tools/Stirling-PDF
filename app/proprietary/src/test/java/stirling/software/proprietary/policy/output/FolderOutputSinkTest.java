@@ -223,7 +223,6 @@ class FolderOutputSinkTest {
                             .map(path -> path.getFileName().toString())
                             .toList();
             assertEquals(1, names.size());
-            // "report-20260809-143001.pdf": the real extension is not appended a second time.
             assertTrue(names.get(0).matches("report-\\d{8}-\\d{6}\\.pdf"), names.get(0));
         }
     }

@@ -25,11 +25,7 @@ const ORIGIN_ICON: Record<PipelineOrigin, typeof HistoryRounded> = {
   migrated: HistoryRounded,
 };
 
-/**
- * Says so when a pipeline wasn't built here but converted from a legacy watched-folder config, so
- * one nobody remembers creating isn't mistaken for the team's own work. Renders nothing for the
- * ordinary case.
- */
+/** Marks a pipeline converted from a legacy config, so it isn't taken for the team's own work. */
 function OriginChip({ origin }: { origin?: PipelineOrigin | null }) {
   const { t } = useTranslation();
   if (!origin || !(origin in ORIGIN_ICON)) return null;

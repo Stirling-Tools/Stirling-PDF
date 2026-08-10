@@ -30,12 +30,7 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Tests for {@link WatchedFolderPipelineImport}: a legacy watched folder becomes an enabled,
- * folder-watched policy with input and destination locations; its config is moved out of the
- * pipeline folder so it is neither re-scanned nor treated as a document; and the conversion happens
- * once, permanently, so deleting the policy does not undo it.
- */
+/** Tests for {@link WatchedFolderPipelineImport}. */
 class WatchedFolderPipelineImportTest {
 
     @TempDir Path watchedRoot;
@@ -104,8 +99,8 @@ class WatchedFolderPipelineImportTest {
 
         importer.importWatchedFolders();
 
-        // A placeholder name here fails every run: the engine turns the owner into the audit
-        // principal and the tool dispatch looks up that user's API key.
+        // A placeholder here fails every run: the owner becomes the audit principal, whose API
+        // key the tool dispatch then looks up.
         assertNull(policyStore.all().get(0).owner());
         assertTrue(sourceStore.all().stream().allMatch(source -> source.owner() == null));
     }

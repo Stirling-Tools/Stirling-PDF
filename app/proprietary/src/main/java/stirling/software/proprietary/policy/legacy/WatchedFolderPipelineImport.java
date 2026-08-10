@@ -40,17 +40,8 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
 /**
- * Converts each legacy watched folder into a live policy: the folder becomes a consuming input
- * source, its JSON config's operations become the pipeline steps, its {@code outputDir} becomes a
- * destination source, and a folder-watch trigger takes over from the legacy 60-second scan. The
- * result is enabled, so an operator's existing drop-folder automations keep running without being
- * re-created by hand.
- *
- * <p>Each folder is imported at most once ever, tracked in {@link ImportedPipelines}: deleting the
- * policy afterwards is permanent even though the JSON is still on disk. The config file is moved
- * into a hidden {@code .stirling/migrated} directory beside it, which both keeps it out of the new
- * input source's document stream and stops the legacy scanner finding anything to do; {@link
- * #isMigrated} closes the remaining gap by telling that scanner to leave the folder alone.
+ * Converts each legacy watched folder into an enabled, folder-watched policy so existing
+ * drop-folder automations keep running. Converted once ever, tracked in {@link ImportedPipelines}.
  */
 @Slf4j
 @Component
@@ -62,7 +53,7 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     /** Matches the legacy scanner's own recursion limit, so the same folders are found. */
     private static final int MAX_DEPTH = 50;
 
-    /** The legacy scanner's staging directory; never a pipeline folder in its own right. */
+    /** The legacy scanner's staging directory, never a pipeline folder itself. */
     private static final String LEGACY_PROCESSING_DIR = "processing";
 
     private static final String ARCHIVE_DIR = ".stirling";
@@ -86,9 +77,8 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
         return importedPipelines.isImported(importKey(directory));
     }
 
-    // Runs after the inline-output and S3-credential migrations so the sources it creates match the
-    // shape those have already normalised existing policies onto. Each folder is its own unit of
-    // work: one that fails is logged and left to the legacy scanner rather than failing the boot.
+    // After the inline-output and S3 migrations, so created sources match the shape those leave
+    // behind. A folder that fails is logged and left to the legacy scanner, never failing the boot.
     @Order(3)
     @EventListener(ApplicationReadyEvent.class)
     public void importWatchedFolders() {
@@ -116,9 +106,7 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
         }
     }
 
-    /**
-     * @return whether a policy was created for this directory.
-     */
+    /** Returns whether a policy was created for this directory. */
     private boolean importDirectory(Path directory, Long teamId) throws IOException {
         String key = importKey(directory);
         if (importedPipelines.isImported(key)) {
@@ -142,11 +130,8 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
                         new Policy(
                                 null,
                                 policyName(config, directory),
-                                // No creating user: a watched folder is server configuration. The
-                                // engine treats a null owner as "no acting principal" and its tool
-                                // calls fall back to the internal API user, which is what a
-                                // trigger-fired run with no logged-in caller needs. A fabricated
-                                // name here would fail every run at API-key lookup.
+                                // No acting principal: tool calls use the internal API user.
+                                // A fabricated name fails every run at API-key lookup.
                                 null,
                                 true,
                                 List.of(
@@ -159,8 +144,8 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
                                 teamId,
                                 Policy.ORIGIN_MIGRATED));
 
-        // The config must stop being visible to both runners before the policy goes live, or the
-        // new input source would hand its own JSON to the pipeline as a document.
+        // Must happen before the policy goes live, or the new input source hands the pipeline its
+        // own JSON as a document.
         if (!archiveConfig(configFile.get())) {
             policyStore.delete(policy.id());
             return false;
@@ -194,10 +179,8 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     }
 
     /**
-     * The destination the legacy config wrote to, as a stored location. A config that returned its
-     * results to the caller has no such location in a watched folder - there is no caller - so it
-     * lands in the finished-folders directory, which is where the legacy runner put everything
-     * else.
+     * The destination the legacy config wrote to, as a stored location. A return-to-caller config
+     * has no caller in a watched folder, so it lands in the finished-folders directory.
      */
     private Source destinationSourceFor(LegacyPipelineConfig config, Path directory, Long teamId) {
         Path outputDirectory = converter.resolveOutputDirectory(config, directory);
@@ -224,10 +207,8 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     }
 
     /**
-     * An identically-configured folder source already owned by this team, so a re-imported location
-     * is configured once. Scoped to the team so a conversion can never bind to another team's
-     * location, and matched on the whole option set so a plain input source is not silently reused
-     * as a destination that renames what it writes.
+     * An identical folder source already owned by this team. Team-scoped so a conversion never
+     * binds to another team's location; matched on the whole option set, not just the directory.
      */
     private Optional<Source> existingSource(Map<String, Object> options, Long teamId) {
         return sourceStore.findByTeam(teamId).stream()
@@ -237,9 +218,8 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     }
 
     /**
-     * Move the legacy config out of the pipeline folder, keeping it for reference. Failure is not
-     * an error to shout about but it does abort the import, since leaving it in place would feed
-     * the JSON to the pipeline as an input document.
+     * Move the legacy config aside, keeping it for reference. Failure aborts the import: left in
+     * place the JSON would be fed to the pipeline as an input document.
      */
     private static boolean archiveConfig(Path configFile) {
         Path parent = configFile.getParent();
@@ -264,10 +244,7 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
         }
     }
 
-    /**
-     * Every directory the legacy scanner would treat as a pipeline folder: the whole watched tree
-     * except the root itself and the scanner's own staging directories.
-     */
+    /** Every directory the legacy scanner would treat as a pipeline folder. */
     private static List<Path> pipelineDirectories(Path root) {
         if (!Files.isDirectory(root)) {
             return List.of();
@@ -316,7 +293,7 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
         }
     }
 
-    /** Stable across boots and independent of how the path was spelled in configuration. */
+    /** Stable across boots, whatever the configured path looked like. */
     private static String importKey(Path directory) {
         return IMPORT_KEY_PREFIX + directory.toAbsolutePath().normalize();
     }
@@ -331,11 +308,7 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
         return name == null ? directory.toString() : name.toString();
     }
 
-    /**
-     * Watched folders are server-level configuration with no creating user, so their policies are
-     * stamped with the default team. Null when no team exists, which is the login-disabled case
-     * where team scoping is not enforced anyway.
-     */
+    /** Server-level config has no creating user, so it lands on the default team. */
     private Long defaultTeamId() {
         return teamRepository
                 .findByName(TeamService.DEFAULT_TEAM_NAME)

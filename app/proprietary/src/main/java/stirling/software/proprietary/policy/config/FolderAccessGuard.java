@@ -127,8 +127,7 @@ public class FolderAccessGuard {
         for (Path path : normalizeAll(runtimePathConfig.getPipelineWatchedFoldersPaths())) {
             roots.add(new ImpliedRoot(path, IMPLIED_WATCHED_FOLDER));
         }
-        // A watched folder's outputs land here, so an automation that reads one of Stirling's own
-        // drop folders can write its results without the admin allowlisting anything.
+        // Where watched-folder automations write, so they work without an admin allowlisting it.
         for (Path path :
                 normalizeAll(List.of(runtimePathConfig.getPipelineFinishedFoldersPath()))) {
             roots.add(new ImpliedRoot(path, IMPLIED_FINISHED_FOLDER));

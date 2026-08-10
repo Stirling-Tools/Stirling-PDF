@@ -3,10 +3,7 @@ package stirling.software.proprietary.policy.legacy;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * In-memory {@link ImportedPipelines} for tests and any future no-database mode. {@link
- * JpaImportedPipelines} is the runtime bean.
- */
+/** In-memory {@link ImportedPipelines} for tests. */
 public class InProcessImportedPipelines implements ImportedPipelines {
 
     private final Set<String> imported = ConcurrentHashMap.newKeySet();

@@ -37,10 +37,7 @@ public record Policy(
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
     }
 
-    /**
-     * Without a provenance marker: a policy someone built here, which is the ordinary case and
-     * carries no badge. Also what pre-existing stored rows deserialise to.
-     */
+    /** Without a provenance marker: built here, and what pre-existing rows deserialise to. */
     public Policy(
             String id,
             String name,
@@ -113,10 +110,7 @@ public record Policy(
                 id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId, origin);
     }
 
-    /**
-     * A copy stamped with where it came from. The controller uses this to keep provenance
-     * server-side: a caller cannot label its own creation as a migrated one.
-     */
+    /** Provenance is stamped server-side; a caller cannot label its own creation as migrated. */
     public Policy withOrigin(String newOrigin) {
         return new Policy(
                 id, name, owner, enabled, inputs, steps, output, outputIds, teamId, newOrigin);

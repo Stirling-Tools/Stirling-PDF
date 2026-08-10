@@ -759,7 +759,6 @@ export function PipelineBuilder() {
         </div>
       </header>
 
-      {/* Says where a pipeline nobody here authored came from, before its steps read as ours. */}
       {policyState.data?.origin === "migrated" && (
         <Banner
           tone="info"

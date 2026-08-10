@@ -67,10 +67,7 @@ export interface Policy {
    */
   outputIds: string[];
   teamId?: number | null;
-  /**
-   * Provenance, stamped server-side and read-only: a value sent here is ignored, so a pipeline
-   * created through this API can never claim to be a migrated one. See {@link PipelineView}.
-   */
+  /** Stamped server-side and read-only: a value sent here is ignored. */
   origin?: PipelineOrigin | null;
 }
 
@@ -97,14 +94,11 @@ export interface PipelineView {
   /** Output sink type (e.g. "inline", "folder"). */
   output: string;
   owner: string;
-  /**
-   * Set only when this pipeline wasn't built here: `"migrated"` for one converted from a legacy
-   * watched-folder config. Null/absent otherwise.
-   */
+  /** Set only when this pipeline wasn't built here. */
   origin?: PipelineOrigin | null;
 }
 
-/** Provenance for a pipeline nobody on this instance authored. Mirrors `Policy.ORIGIN_*`. */
+/** Provenance for a pipeline nobody here authored. Mirrors `Policy.ORIGIN_*`. */
 export type PipelineOrigin = "migrated";
 
 export interface PipelineKpi {

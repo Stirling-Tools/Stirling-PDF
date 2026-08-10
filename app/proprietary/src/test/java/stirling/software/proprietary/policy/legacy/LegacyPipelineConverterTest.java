@@ -19,10 +19,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Tests for {@link LegacyPipelineConverter}: legacy JSON parses into engine steps without the
- * legacy file-input marker, and the output templates resolve to a directory and naming pattern.
- */
+/** Tests for {@link LegacyPipelineConverter}. */
 class LegacyPipelineConverterTest {
 
     private static final String FINISHED = Path.of("/var/finished").toString();
@@ -135,7 +132,6 @@ class LegacyPipelineConverterTest {
 
     @Test
     void convertsARealWorldConfigIncludingItsListParameter(@TempDir Path dir) throws IOException {
-        // A representative legacy config: nested list parameter, extra keys, the fileInput marker.
         LegacyPipelineConfig config =
                 converter.read(
                         write(
