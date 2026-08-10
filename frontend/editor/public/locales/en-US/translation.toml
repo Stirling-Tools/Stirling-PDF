@@ -7183,11 +7183,11 @@ editorAction = "Editor"
 empty = "No documents match this filter."
 rowActions = "Row actions"
 sensitiveLabel = "Sensitive"
-sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
 document = "Document"
+labels = "Labels"
 product = "Product"
 status = "Status"
 time = "Time"
@@ -7203,6 +7203,7 @@ host = "Host"
 lastSeen = "Last seen"
 region = "Region"
 status = "Status"
+target = "Target"
 version = "Version"
 
 [portal.editorAdmin.health.empty]
@@ -7396,6 +7397,7 @@ noEventsInCategory = "No events in this category."
 subheading = "Every authentication, configuration, and processing event across your workspace."
 
 [portal.infrastructure.audit.columns]
+action = "Action"
 actor = "Actor"
 event = "Event"
 latency = "Latency"
@@ -7496,6 +7498,7 @@ version = "Version"
 when = "When"
 
 [portal.infrastructure.deployments.recent]
+empty = "No recent deployments"
 heading = "Recent deployments"
 subheading = "The latest rollouts across products and environments."
 
@@ -7550,6 +7553,7 @@ cost = "Cost"
 latency = "Latency"
 load = "Load"
 model = "Model"
+provider = "Provider"
 status = "Status"
 type = "Type"
 version = "Version"
@@ -7576,6 +7580,7 @@ title = "Model routing is a paid feature"
 
 [portal.infrastructure.models.routingColumns]
 default = "Default"
+defaultColumn = "Default"
 docType = "Document type"
 modelForAria = "Model for {{operation}}"
 operation = "Operation"
@@ -7898,6 +7903,7 @@ name = "Pipeline"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Folder watch"
@@ -8788,6 +8794,7 @@ unused = "Unused"
 documents = "Documents"
 source = "Source"
 status = "Status"
+type = "Type"
 usedBy = "Policies"
 
 [portal.sources.types.box]

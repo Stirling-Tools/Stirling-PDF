@@ -51,7 +51,7 @@ export function ReviewQueueTable({
           }
           if (d.sensitive) {
             out.push({
-              label: t("portal.documents.table.sensitive", "Sensitive"),
+              label: t("portal.documents.table.sensitiveLabel"),
               accent: "warning",
             });
           }
