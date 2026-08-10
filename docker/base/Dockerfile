@@ -7,7 +7,7 @@ ARG TARGETPLATFORM
 # Stage 1: Build and strip Calibre
 FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS calibre-build
 ARG TARGETPLATFORM
-ARG CALIBRE_VERSION=9.4.0
+ARG CALIBRE_VERSION=9.13.0
 ARG CALIBRE_STRIP_WEBENGINE=false
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -272,7 +272,7 @@ RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
 # Stage 2: Build Ghostscript from source
 FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS gs-build
 ARG TARGETPLATFORM
-ARG GS_VERSION=10.06.0
+ARG GS_VERSION=10.07.1
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/gs-build,id=gs-build-${TARGETPLATFORM:-local} \
@@ -297,7 +297,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS pdf-tools-build
 ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.3.2
-ARG IM_VERSION=7.1.2-13
+ARG IM_VERSION=7.1.2-29
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/pdf-tools-build,id=pdf-tools-${TARGETPLATFORM:-local} \
@@ -341,7 +341,7 @@ RUN mkdir -p /magick-export/usr/bin \
 # Stage 4: Build Python venv
 FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS python-venv-build
 ARG TARGETPLATFORM
-ARG UNOSERVER_VERSION=3.6
+ARG UNOSERVER_VERSION=3.7
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
@@ -373,7 +373,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
     TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
-ARG UNOSERVER_VERSION=3.6
+ARG UNOSERVER_VERSION=3.7
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     set -eux; \
