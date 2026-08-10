@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
 import { alert } from "@app/components/toast";
 import { fileStorage } from "@app/services/fileStorage";
@@ -333,8 +334,8 @@ export function useSigningSessionController(enabled: boolean) {
           pdfFile = new File([pdfResponse.data], session.documentName, {
             type: "application/pdf",
           });
-        } catch (pdfError: any) {
-          if (pdfError?.response?.status === 404) {
+        } catch (pdfError) {
+          if (isAxiosError(pdfError) && pdfError.response?.status === 404) {
             alert({
               alertType: "warning",
               title: t("certSign.sessions.pdfNotReady", "PDF Not Ready"),

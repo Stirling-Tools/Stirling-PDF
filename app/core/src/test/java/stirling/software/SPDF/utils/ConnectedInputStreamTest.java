@@ -1,4 +1,4 @@
-package org.apache.pdfbox.examples.util;
+package stirling.software.SPDF.utils;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

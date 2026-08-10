@@ -2933,12 +2933,16 @@ text = "To make these permissions unchangeable, use the Add Password tool to set
 [chat.actions]
 copy = "Copy message"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agent options"
+assistant = "AI Assistant"
 clearChat = "Clear chat"
 
 [chat.input]
@@ -3013,6 +3017,7 @@ continue = "Continue"
 copied = "Copied!"
 copy = "Copy"
 done = "Done"
+enterValue = "Enter value"
 error = "Error"
 expand = "Expand"
 loading = "Loading..."
@@ -3565,7 +3570,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Search..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Edit"
@@ -4241,9 +4250,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "All saved"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Failed to extract CSV"
 extractXlsxError = "Failed to extract XLSX"
+filled = "filled"
 flattenAfterFilling = "Flatten after filling"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "req"
 requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Re-scan fields"
@@ -10158,6 +10172,7 @@ last = "Last page"
 maintainRatio = "Toggle maintain aspect ratio"
 next = "Next page"
 noSavedSigs = "No saved signatures found"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Personal Signatures"
 previous = "Previous page"
 redo = "Redo"
@@ -10863,6 +10878,9 @@ pageFormatting = "Page Formatting"
 removal = "Removal"
 signing = "Signing"
 verification = "Verification"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "No tools found"
