@@ -46,6 +46,12 @@
   height: 2.5rem;
   font-size: 1rem;
 }
+/* Profile-picture preview: large enough to actually judge the image you uploaded. */
+.sui-avatar--xl {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 1.75rem;
+}
 
 .sui-avatar__img {
   width: 100%;

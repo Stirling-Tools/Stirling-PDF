@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "@app/ui/Avatar.css";
 
-export type AvatarSize = "xs" | "sm" | "md" | "lg";
+export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarTone =
   | "blue"
   | "purple"

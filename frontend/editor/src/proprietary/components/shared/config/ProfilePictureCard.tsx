@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
-import { Alert, Group, Paper, Stack, Text } from "@mantine/core";
+import { Alert, Group, Modal, Paper, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Avatar } from "@app/ui/Avatar";
 import { Button } from "@app/ui/Button";
 import { FilePicker } from "@app/ui/FilePicker";
 import { ProfilePictureCropper } from "@app/components/shared/config/ProfilePictureCropper";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import {
   MAX_PROFILE_PICTURE_BYTES,
   PROFILE_PICTURE_ACCEPT,
@@ -40,6 +41,7 @@ export default function ProfilePictureCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cropperFile, setCropperFile] = useState<File | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   // Mantine keeps the picked file on the hidden input, so re-picking the same one after Cancel
   // fires no change event. Reset first, before any guard can return early.
   const resetPicker = useRef<() => void>(null);
@@ -86,6 +88,7 @@ export default function ProfilePictureCard({
   };
 
   const handleRemove = async () => {
+    setConfirmRemove(false);
     setBusy(true);
     setError(null);
     try {
@@ -133,7 +136,7 @@ export default function ProfilePictureCard({
           <Avatar
             src={pictureUrl ?? undefined}
             name={displayName}
-            size="lg"
+            size="xl"
             ariaLabel={t(
               "account.profilePicture.current",
               "Your profile picture",
@@ -154,7 +157,8 @@ export default function ProfilePictureCard({
               </FilePicker>
               <Button
                 variant="secondary"
-                onClick={handleRemove}
+                accent="danger"
+                onClick={() => setConfirmRemove(true)}
                 disabled={busy || !pictureUrl}
               >
                 {t("account.profilePicture.remove", "Remove")}
@@ -163,7 +167,7 @@ export default function ProfilePictureCard({
             <Text size="xs" c="dimmed">
               {t(
                 "account.profilePicture.help",
-                "PNG, JPG or WebP, up to {{megabytes}}MB. Images are cropped to a square and resized.",
+                "PNG, JPG or WebP, up to {{megabytes}}MB. Pictures are cropped and resized automatically.",
                 {
                   megabytes: Math.round(
                     MAX_PROFILE_PICTURE_BYTES / (1024 * 1024),
@@ -171,12 +175,19 @@ export default function ProfilePictureCard({
                 },
               )}
             </Text>
-            <Text size="xs" c="dimmed">
-              {t(
-                "account.profilePicture.visibility",
-                "Visible to you, your administrators, and people on your teams.",
-              )}
-            </Text>
+            <Group gap={6} align="center" mt={2}>
+              <LocalIcon
+                icon="visibility-rounded"
+                width="0.875rem"
+                height="0.875rem"
+              />
+              <Text size="xs" c="dimmed">
+                {t(
+                  "account.profilePicture.visibility",
+                  "Visible to you, your administrators, and people on your teams.",
+                )}
+              </Text>
+            </Group>
           </Stack>
         </Group>
       </Stack>
@@ -187,6 +198,34 @@ export default function ProfilePictureCard({
         onClose={() => setCropperFile(null)}
         onCropComplete={handleCropComplete}
       />
+
+      <Modal
+        opened={confirmRemove}
+        onClose={() => setConfirmRemove(false)}
+        title={t(
+          "account.profilePicture.removeTitle",
+          "Remove profile picture",
+        )}
+        withinPortal
+        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            {t(
+              "account.profilePicture.removeConfirm",
+              "Your picture will be deleted and teammates will see your initials again. You can upload a new one at any time.",
+            )}
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="secondary" onClick={() => setConfirmRemove(false)}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button accent="danger" onClick={handleRemove} loading={busy}>
+              {t("account.profilePicture.remove", "Remove")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Paper>
   );
 }
