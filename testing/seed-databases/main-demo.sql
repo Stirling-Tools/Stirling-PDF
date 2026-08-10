@@ -1,8 +1,8 @@
 -- Teams, users and saved policies for the main demo deployment. Applied by
 -- scripts/seed-db/build-seed-db.sh on top of a freshly booted database.
 --
--- Only bcrypt hashes are committed. The plaintexts are 32-char random strings
--- held outside the repo; rotate by re-hashing and regenerating the .mv.db.
+-- Only bcrypt hashes are committed; the demo-account plaintext is a 32-char
+-- random string held outside the repo. Rotate by re-hashing and rebuilding.
 -- Seeding users means SECURITY_INITIALLOGIN_* is ignored: the app only
 -- bootstraps an admin when the user table is empty.
 
@@ -17,7 +17,7 @@ INSERT INTO teams (team_id, name) VALUES
 -- Reset the bootstrap admin to the seeded credentials rather than leaving the
 -- generator's well-known admin/stirling in place.
 UPDATE users
-   SET password = '$2a$10$viXXoaI/5d.U6Niee3UYQ.kGyuXnO26O/qIDUJC4Csc9GbSSV43ky',
+   SET password = '$2a$10$yUh3LFp9Vp6Av5jkYm/L.uQZlkd61zUIJ6oARXIl9crydZjtHWSWa',
        is_first_login = FALSE,
        has_completed_initial_setup = TRUE
  WHERE username = 'admin';
