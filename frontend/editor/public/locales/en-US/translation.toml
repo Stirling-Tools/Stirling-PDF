@@ -7200,6 +7200,7 @@ sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
+actions = "Actions"
 document = "Document"
 product = "Product"
 status = "Status"
@@ -7289,6 +7290,41 @@ running = "Running"
 description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
 retry = "Try again"
 title = "Something went wrong on this page"
+
+[portal.failures]
+occurrences = "{{count}} occurrences"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Back"
@@ -7943,6 +7979,7 @@ paused = "Paused"
 
 [portal.pipelines.table]
 name = "Pipeline"
+open = "Open"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
@@ -8834,6 +8871,7 @@ unused = "Unused"
 
 [portal.sources.table]
 documents = "Documents"
+open = "Open"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
