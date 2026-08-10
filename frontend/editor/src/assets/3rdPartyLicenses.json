@@ -393,6 +393,13 @@
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
+      "moduleName": "onnxruntime-web",
+      "moduleUrl": "https://github.com/Microsoft/onnxruntime",
+      "moduleVersion": "1.26.0",
+      "moduleLicense": "MIT",
+      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+    },
+    {
       "moduleName": "pdfjs-dist",
       "moduleUrl": "https://github.com/mozilla/pdf.js",
       "moduleVersion": "5.5.207",
