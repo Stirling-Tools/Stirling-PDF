@@ -131,9 +131,6 @@ export interface MockAppApiOptions {
   languages?: string[];
   /** Default locale. */
   defaultLocale?: string;
-  /** Advertise server-side storage. Off by default - a spec that stubs or
-   *  blocks `/api/v1/storage/files` must set this or the route is never hit. */
-  storageEnabled?: boolean;
   /** Merge overrides into the endpoint availability map. */
   endpointsAvailability?: Record<string, { enabled: boolean }>;
   /** Backend probe status. Set to `"DOWN"` to exercise offline-mode UI. */
@@ -159,7 +156,6 @@ export async function mockAppApis(
     },
     languages = ["en-US"],
     defaultLocale = "en-US",
-    storageEnabled = false,
     endpointsAvailability = {},
     backendStatus = "UP",
   } = opts;
@@ -177,7 +173,6 @@ export async function mockAppApis(
         isAdmin,
         languages,
         defaultLocale,
-        storageEnabled,
       },
     }),
   );

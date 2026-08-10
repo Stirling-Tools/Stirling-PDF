@@ -201,27 +201,13 @@ export function FileSelectorPicker({
     setSortDir(lsGet(LS_SORT_DIR, "desc", ["asc", "desc"]));
   }, [isOpen]);
 
-  // Load saved files when the saved tab is active and the picker is open.
-  // Cancellable: storage reads can be slow or reject, and outlive the popover.
+  // Load saved files when the saved tab is active and the picker is open
   useEffect(() => {
     if (activeTab !== "saved" || !isOpen) return;
-    let cancelled = false;
     setSavedLoading(true);
     loadRecentFiles()
-      .then((stubs) => {
-        if (!cancelled) setSavedStubs(stubs);
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) setSavedStubs([]);
-        console.warn("Failed to load saved files for the picker:", error);
-      })
-      .finally(() => {
-        if (!cancelled) setSavedLoading(false);
-      });
-    return () => {
-      cancelled = true;
-      setSavedLoading(false);
-    };
+      .then(setSavedStubs)
+      .finally(() => setSavedLoading(false));
   }, [activeTab, isOpen, loadRecentFiles]);
 
   const workbenchIdSet = useMemo(
@@ -555,9 +541,7 @@ export function FileSelectorPicker({
           </div>
 
           <ScrollArea h={260} className={styles.list}>
-            {/* Workbench renders from memory, so a stuck storage read must not
-                spin it too. */}
-            {savedLoading && activeTab === "saved" ? (
+            {savedLoading ? (
               <div className={styles.emptyState}>
                 <Loader size="sm" />
               </div>

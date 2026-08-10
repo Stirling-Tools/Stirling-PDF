@@ -21,8 +21,6 @@ import {
  * Contains all data needed for both StirlingFile and StirlingFileStub
  */
 const THUMBNAIL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-/** Don't rewrite a record to slide its TTL more often than this. */
-const THUMBNAIL_TTL_REFRESH_MS = 24 * 60 * 60 * 1000; // 1 day
 
 export interface StoredStirlingFileRecord extends BaseFileMetadata {
   // Blob since the large-file OOM fix (stored by reference, no JS-side copy);
@@ -137,13 +135,6 @@ class FileStorageService {
     if (!record.thumbnail) return false;
     if (!record.thumbnailStoredAt) return false;
     return Date.now() - record.thumbnailStoredAt < THUMBNAIL_TTL_MS;
-  }
-
-  /** Worth rewriting? A bump rewrites the whole record, bytes included, so on a
-   *  30-day TTL once a day is indistinguishable from every read. */
-  private thumbnailTTLIsStale(record: StoredStirlingFileRecord): boolean {
-    if (!record.thumbnailStoredAt) return true;
-    return Date.now() - record.thumbnailStoredAt > THUMBNAIL_TTL_REFRESH_MS;
   }
 
   /** Fire-and-forget: bump thumbnailStoredAt (or clear expired thumbnail) for a set of ids. */
@@ -521,8 +512,8 @@ class FileStorageService {
           if (record && record.name && typeof record.size === "number") {
             const fresh = this.isThumbnailFresh(record);
             if (record.thumbnail) {
-              if (!fresh) toexpire.push(record.id);
-              else if (this.thumbnailTTLIsStale(record)) tobump.push(record.id);
+              if (fresh) tobump.push(record.id);
+              else toexpire.push(record.id);
             }
             stubs.push({
               id: record.id,
@@ -614,8 +605,8 @@ class FileStorageService {
           ) {
             const fresh = this.isThumbnailFresh(record);
             if (record.thumbnail) {
-              if (!fresh) toexpire.push(record.id);
-              else if (this.thumbnailTTLIsStale(record)) tobump.push(record.id);
+              if (fresh) tobump.push(record.id);
+              else toexpire.push(record.id);
             }
             leafStubs.push({
               id: record.id,
