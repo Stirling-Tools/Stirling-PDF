@@ -30,4 +30,17 @@ public class ProcurementConfigurationProperties {
      * /go-live is a stand-in for the invoice.paid webhook and would let a leader activate unpaid.
      */
     private boolean demoControlsEnabled = false;
+
+    /**
+     * Smallest annual fee, in minor units, that may be quoted. The pricing curve has no natural
+     * floor — a small enough committed volume rounds the meter to zero — and every registered user
+     * is the leader of their own team, so without this any signup could price a $0 enterprise
+     * quote, accept it, and be provisioned a committed licence. 12_000_00 is USD 12,000/yr, the
+     * self-hosted deploy fee, chosen so the floor cannot sit below a line item the quote itself can
+     * contain.
+     *
+     * <p>This is a commercial number, not a technical one: set it to whatever the smallest
+     * enterprise deal you will actually sign is. Zero disables the check.
+     */
+    private long minAnnualNetMinor = 12_000_00L;
 }

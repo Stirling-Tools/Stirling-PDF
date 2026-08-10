@@ -191,7 +191,7 @@ export function SpendLimitCard({
           >
             {t("portal.billing.spendLimit.cancel", "Cancel")}
           </Button>
-          <Button accent="premium" size="sm" loading={saving} onClick={save}>
+          <Button size="sm" loading={saving} onClick={save}>
             {t("portal.billing.spendLimit.save", "Save limit")}
           </Button>
         </div>
