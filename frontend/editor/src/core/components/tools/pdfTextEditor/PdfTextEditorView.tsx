@@ -52,6 +52,14 @@ import {
 const MAX_RENDER_WIDTH = 820;
 const MIN_BOX_SIZE = 18;
 
+// Firefox-only fallback for document.caretRangeFromPoint (not in lib.dom.d.ts).
+const docWithCaret = document as Document & {
+  caretPositionFromPoint?: (
+    x: number,
+    y: number,
+  ) => { offsetNode: Node; offset: number } | null;
+};
+
 const normalizeFontFormat = (format?: string | null): string => {
   if (!format) {
     return "ttf";
@@ -352,7 +360,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     new Map(),
   );
   const draggingImageRef = useRef<string | null>(null);
-  const rndRefs = useRef<Map<string, any>>(new Map());
+  const rndRefs = useRef<Map<string, Rnd>>(new Map());
   const pendingDragUpdateRef = useRef<number | null>(null);
   const [fontFamilies, setFontFamilies] = useState<Map<string, string>>(
     new Map(),
@@ -1378,7 +1386,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       const cssTop = (pageHeight - bounds.top) * scale;
 
       // Get current position from Rnd component
-      const currentState = rndRef.state || {};
+      const currentState = (rndRef.state as { x?: number; y?: number }) || {};
       const currentX = currentState.x ?? 0;
       const currentY = currentState.y ?? 0;
 
@@ -2851,11 +2859,13 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                         }
                                       }
                                     } else if (
-                                      (document as any).caretPositionFromPoint
+                                      docWithCaret.caretPositionFromPoint
                                     ) {
-                                      const pos = (
-                                        document as any
-                                      ).caretPositionFromPoint(clickX, clickY);
+                                      const pos =
+                                        docWithCaret.caretPositionFromPoint(
+                                          clickX,
+                                          clickY,
+                                        );
                                       if (pos) {
                                         const range = document.createRange();
                                         range.setStart(

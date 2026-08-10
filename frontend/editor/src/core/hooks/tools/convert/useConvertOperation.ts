@@ -210,8 +210,8 @@ export const buildConvertFormData = (
 
 // Static function that can be used by both the hook and automation executor
 export const createFileFromResponse = (
-  responseData: any,
-  headers: any,
+  responseData: Blob,
+  headers: Record<string, unknown>,
   originalFileName: string,
   targetExtension: string,
 ): File => {
@@ -345,11 +345,15 @@ export const useConvertOperation = (parameters?: ConvertParameters) => {
     ...convertOperationConfig,
     customProcessor: customConvertProcessor, // Use instance-specific processor for translation support
     getErrorMessage: (error) => {
-      if (error.response?.data && typeof error.response.data === "string") {
-        return error.response.data;
+      const err = error as {
+        response?: { data?: unknown };
+        message?: string;
+      };
+      if (err.response?.data && typeof err.response.data === "string") {
+        return err.response.data;
       }
-      if (error.message) {
-        return error.message;
+      if (err.message) {
+        return err.message;
       }
       return t(
         "convert.errorConversion",

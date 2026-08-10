@@ -70,7 +70,7 @@ export function CodeBlock({
           </Button>
         )}
       </div>
-      <pre className="sui-code__pre" style={{ maxHeight }}>
+      <pre className="sui-code__pre" style={{ maxHeight }} tabIndex={0}>
         <code>{code}</code>
       </pre>
     </div>
