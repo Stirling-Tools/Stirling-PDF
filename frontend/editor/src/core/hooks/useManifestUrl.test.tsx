@@ -8,9 +8,12 @@ import {
   type MockInstance,
 } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import {
+  PreferencesProvider,
+  usePreferences,
+} from "@app/contexts/PreferencesContext";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { allowConsole } from "@app/tests/failOnConsole";
 import {
@@ -98,6 +101,14 @@ function readBlobText(blob: Blob): Promise<string> {
     reader.onerror = () => reject(reader.error);
     reader.readAsText(blob);
   });
+}
+
+/** Parse the most recently created blob as the merged manifest. */
+async function readBlobManifest(
+  createObjectURLSpy: MockInstance<typeof URL.createObjectURL>,
+): Promise<StaticManifest> {
+  const blob = createObjectURLSpy.mock.calls.at(-1)?.[0] as Blob;
+  return JSON.parse(await readBlobText(blob)) as StaticManifest;
 }
 
 describe("resolveAppName", () => {
@@ -225,6 +236,34 @@ describe("useManifestUrl", () => {
     return wrapper;
   };
 
+  test("T6b: URL members are rewritten against the manifest URL, not the page URL (deep-link safe)", async () => {
+    // Page is on a deep route; the manifest lives at the app root. Members
+    // must resolve against the manifest's directory, not the deep link.
+    Object.defineProperty(window, "location", {
+      value: new URL("https://pdf.example.com/share/abc123"),
+      writable: true,
+    });
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify(MODERN_MANIFEST)),
+    );
+
+    const { result } = renderUseManifestUrl({
+      wrapper: wrapperFor("Acme Docs"),
+    });
+
+    await waitFor(() => {
+      expect(result.current.manifestHref).toMatch(/^blob:/);
+    });
+
+    const manifest = await readBlobManifest(createObjectURLSpy);
+    // start_url "." resolves against the manifest URL (/manifest.json) -> app root.
+    expect(manifest.start_url).toBe("https://pdf.example.com/");
+    for (const icon of manifest.icons ?? []) {
+      expect(icon.src).toMatch(/^https:\/\/pdf\.example\.com\/modern-logo\//);
+      expect(icon.src).not.toContain("/share/");
+    }
+  });
+
   test("T1: returns a blob URL and the blob manifest uses appName", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
@@ -238,9 +277,7 @@ describe("useManifestUrl", () => {
       expect(result.current.manifestHref).toMatch(/^blob:/);
     });
 
-    const blob = createObjectURLSpy.mock.calls.at(-1)?.[0] as Blob;
-    const text = await readBlobText(blob);
-    const manifest = JSON.parse(text) as StaticManifest;
+    const manifest = await readBlobManifest(createObjectURLSpy);
     expect(manifest.name).toBe("Acme Docs");
     expect(manifest.short_name).toBe("Acme Docs");
     // URL members must be origin-absolute in the produced blob (T6b).
@@ -249,7 +286,9 @@ describe("useManifestUrl", () => {
       expect(icon.src).toMatch(/^https?:\/\//);
     }
 
-    expect(fetchMock).toHaveBeenCalledWith("/manifest.json");
+    expect(fetchMock).toHaveBeenCalledWith("/manifest.json", {
+      signal: expect.any(AbortSignal),
+    });
   });
 
   test("T2: static manifestHref returned unchanged when appName is unset", async () => {
@@ -279,8 +318,7 @@ describe("useManifestUrl", () => {
     });
 
     await waitFor(() => expect(result.current.manifestHref).toMatch(/^blob:/));
-    const blob = createObjectURLSpy.mock.calls.at(-1)?.[0] as Blob;
-    const manifest = JSON.parse(await readBlobText(blob)) as StaticManifest;
+    const manifest = await readBlobManifest(createObjectURLSpy);
     expect(manifest.name).toBe("A Very Long Product Name That Exceeds Twelve");
     expect(manifest.short_name).toBe("A Very Long\u2026");
     expect(Array.from(manifest.short_name!).length).toBe(
@@ -298,8 +336,7 @@ describe("useManifestUrl", () => {
     });
 
     await waitFor(() => expect(result.current.manifestHref).toMatch(/^blob:/));
-    const blob = createObjectURLSpy.mock.calls.at(-1)?.[0] as Blob;
-    const manifest = JSON.parse(await readBlobText(blob)) as StaticManifest;
+    const manifest = await readBlobManifest(createObjectURLSpy);
     expect(manifest.short_name).toBe("Acme Docs");
   });
 
@@ -313,8 +350,7 @@ describe("useManifestUrl", () => {
     const { result } = renderUseManifestUrl({ wrapper: wrapperFor(longEmoji) });
 
     await waitFor(() => expect(result.current.manifestHref).toMatch(/^blob:/));
-    const blob = createObjectURLSpy.mock.calls.at(-1)?.[0] as Blob;
-    const manifest = JSON.parse(await readBlobText(blob)) as StaticManifest;
+    const manifest = await readBlobManifest(createObjectURLSpy);
     expect(Array.from(manifest.short_name!).length).toBe(
       MAX_SHORT_NAME_CODE_POINTS,
     );
@@ -410,26 +446,39 @@ describe("useManifestUrl", () => {
   });
 
   test("picks manifest-classic.json for the classic logo variant", async () => {
-    localStorage.setItem(
-      "stirlingpdf_preferences",
-      JSON.stringify({ logoVariant: "classic" }),
-    );
+    // Set the preference through the provider seam (a mount effect) rather
+    // than writing the raw storage key directly, matching production usage.
+    const ClassicWrapper = ({ children }: { children: ReactNode }) => {
+      const { updatePreference } = usePreferences();
+      useEffect(() => {
+        updatePreference("logoVariant", "classic");
+      }, [updatePreference]);
+      return <>{children}</>;
+    };
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(JSON.stringify(CLASSIC_MANIFEST)));
+      .mockImplementation(() =>
+        Promise.resolve(new Response(JSON.stringify(CLASSIC_MANIFEST))),
+      );
 
     const { result } = renderUseManifestUrl({
-      wrapper: wrapperFor("Acme Docs"),
+      // ClassicWrapper sits INSIDE ConfigHarness so usePreferences is
+      // available; its mount effect flips the variant before the hook reads it.
+      wrapper: (props) => (
+        <ConfigHarness appName="Acme Docs">
+          <ClassicWrapper>{props.children}</ClassicWrapper>
+        </ConfigHarness>
+      ),
     });
 
     await waitFor(() => expect(result.current.manifestHref).toMatch(/^blob:/));
-    expect(fetchMock).toHaveBeenCalledWith("/manifest-classic.json");
+    expect(fetchMock).toHaveBeenCalledWith("/manifest-classic.json", {
+      signal: expect.any(AbortSignal),
+    });
 
-    const blob = createObjectURLSpy.mock.calls.at(-1)?.[0] as Blob;
-    const manifest = JSON.parse(await readBlobText(blob)) as StaticManifest;
+    const manifest = await readBlobManifest(createObjectURLSpy);
     expect(
       manifest.icons?.some((icon) => icon.src?.includes("classic-logo")),
     ).toBe(true);
-    localStorage.removeItem("stirlingpdf_preferences");
   });
 });

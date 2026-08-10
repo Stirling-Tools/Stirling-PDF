@@ -110,10 +110,8 @@ export function absolutizeManifestUrls(
   }
   if (Array.isArray(next.icons)) {
     next.icons = next.icons.map((icon) => {
-      if (typeof icon.src === "string" && icon.src.trim() !== "") {
-        return { ...icon, src: new URL(icon.src, origin).toString() };
-      }
-      return icon;
+      const resolved = resolveManifestUrl(icon.src, origin);
+      return resolved !== undefined ? { ...icon, src: resolved } : icon;
     });
   }
   return next;
@@ -160,17 +158,28 @@ export function useManifestUrl(): UseManifestUrlResult {
     }
 
     let cancelled = false;
+    const controller = new AbortController();
 
     async function buildManifestUrl() {
       try {
-        const response = await fetch(manifestHref);
+        const response = await fetch(manifestHref, {
+          signal: controller.signal,
+        });
         if (!response.ok) {
           throw new Error(`Failed to fetch manifest (HTTP ${response.status})`);
         }
         const staticManifest = (await response.json()) as StaticManifest;
 
         const merged = mergeManifestName(staticManifest, appName);
-        const resolved = absolutizeManifestUrls(merged, window.location.href);
+        // The manifest spec resolves URL members against the manifest URL,
+        // not the page URL. The static manifest lives at `${BASE_PATH}/`,
+        // so resolve against the manifest's own URL to stay correct on
+        // subpath deploys and deep-linked routes.
+        const manifestBase = new URL(manifestHref, window.location.origin);
+        const resolved = absolutizeManifestUrls(
+          merged,
+          manifestBase.toString(),
+        );
         const blob = new Blob([JSON.stringify(resolved)], {
           type: "application/manifest+json",
         });
@@ -190,14 +199,22 @@ export function useManifestUrl(): UseManifestUrlResult {
         createdUrlRef.current = newUrl;
         setHref(newUrl);
       } catch (error) {
-        // Graceful degradation: keep serving the static manifest (R7).
+        if (cancelled) {
+          // Teardown aborted the fetch (StrictMode double-mount, dep change,
+          // unmount): a normal transition, not a failure worth logging.
+          return;
+        }
+        // Graceful degradation: keep serving the static manifest (R7), and
+        // release the runtime blob it is replacing so none is orphaned.
+        if (createdUrlRef.current) {
+          URL.revokeObjectURL(createdUrlRef.current);
+          createdUrlRef.current = null;
+        }
         console.error(
           "[useManifestUrl] Failed to build runtime manifest:",
           error,
         );
-        if (!cancelled) {
-          setHref(manifestHref);
-        }
+        setHref(manifestHref);
       }
     }
 
@@ -205,6 +222,7 @@ export function useManifestUrl(): UseManifestUrlResult {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [manifestHref, appName]);
 
