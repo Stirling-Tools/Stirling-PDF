@@ -1,4 +1,4 @@
-package org.apache.pdfbox.examples.signature;
+package stirling.software.SPDF.pdf.signature;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

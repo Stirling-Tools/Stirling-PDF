@@ -14,9 +14,9 @@ import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface BookletImpositionSettingsProps {
   parameters: BookletImpositionParameters;
-  onParameterChange: (
-    key: keyof BookletImpositionParameters,
-    value: any,
+  onParameterChange: <K extends keyof BookletImpositionParameters>(
+    key: K,
+    value: BookletImpositionParameters[K],
   ) => void;
   disabled?: boolean;
 }
@@ -214,7 +214,10 @@ const BookletImpositionSettings = ({
                   )}
                   value={parameters.gutterSize}
                   onChange={(value) =>
-                    onParameterChange("gutterSize", value || 12)
+                    onParameterChange(
+                      "gutterSize",
+                      typeof value === "number" ? value : 12,
+                    )
                   }
                   min={6}
                   max={72}
