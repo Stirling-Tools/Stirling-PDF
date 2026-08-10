@@ -286,7 +286,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       accent="neutral"
       onClick={() => handleClick(id)}
       size="sm"
-      p="sm"
+      p="none"
       fullWidth
       justify="start"
       className="tool-button"
@@ -297,6 +297,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
         borderRadius: 0,
         cursor: visuallyUnavailable ? "not-allowed" : undefined,
         overflow: "visible",
+        ...selectedBg,
       }}
     >
       {buttonContent}

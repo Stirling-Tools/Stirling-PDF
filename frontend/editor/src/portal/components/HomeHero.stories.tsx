@@ -16,17 +16,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Pay-as-you-go tier: welcome header + setup checklist until onboarding completes. */
-export const Default: Story = {
-  args: { tier: "pro" },
-};
-
-/** Free tier renders the same welcome-header composition as pro. */
-export const FreeTier: Story = {
-  args: { tier: "free" },
-};
-
-/** Enterprise tier hides the status chips — the procurement deal hero owns the invite step. */
-export const EnterpriseTier: Story = {
-  args: { tier: "enterprise" },
-};
+/**
+ * The hero is the Editor deployment rail on every tier and in both editions — it reports its own
+ * deployment state and deploy ask, so there is nothing tier-specific left to compose. A live
+ * procurement deal attaches the deal-status hero as the rail's footer; that comes from
+ * useProcurement, so it follows the mocked backend rather than a story arg.
+ */
+export const Default: Story = {};

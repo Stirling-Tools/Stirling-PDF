@@ -47,7 +47,9 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   WATCHED_FOLDER_VIEW_ID,
   WATCHED_FOLDER_WORKBENCH_ID,
-} from "@app/components/watchedFolders/WatchedFoldersRegistration";
+  timeAgo,
+  humaniseOp,
+} from "@app/components/watchedFolders/watchedFolderShared";
 import { automationStorage } from "@app/services/automationStorage";
 import {
   useFolderAutomation,
@@ -58,10 +60,7 @@ import { AutomationConfig } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId, StirlingFile } from "@app/types/fileContext";
-import {
-  WatchedFolderHomePage,
-  humaniseOp,
-} from "@app/components/watchedFolders/WatchedFolderHomePage";
+import { WatchedFolderHomePage } from "@app/components/watchedFolders/WatchedFolderHomePage";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { FilePreviewModal } from "@app/components/watchedFolders/FilePreviewModal";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
@@ -172,28 +171,6 @@ interface WatchedFolderWorkbenchViewProps {
     pendingFileId?: string;
     pendingFileIds?: string[];
   };
-}
-
-export function timeAgo(date: Date, t: TFunction): string {
-  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (secs < 60) return t("watchedFolders.time.justNow", "just now");
-  const mins = Math.floor(secs / 60);
-  if (mins < 60)
-    return t("watchedFolders.time.minutesAgo", {
-      count: mins,
-      defaultValue: `${mins}m ago`,
-    });
-  const hours = Math.floor(mins / 60);
-  if (hours < 24)
-    return t("watchedFolders.time.hoursAgo", {
-      count: hours,
-      defaultValue: `${hours}h ago`,
-    });
-  const days = Math.floor(hours / 24);
-  return t("watchedFolders.time.daysAgo", {
-    count: days,
-    defaultValue: `${days}d ago`,
-  });
 }
 
 function RetryCountdown({
