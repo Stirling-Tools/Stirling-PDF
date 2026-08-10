@@ -20,8 +20,9 @@
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
+  "ruff.configuration": "${workspaceFolder}/engine/pyproject.toml",
   "[gradle-kotlin-dsl]": {
     "editor.defaultFormatter": "vscjava.vscode-gradle"
   },
@@ -134,13 +135,57 @@
   "html.format.indentHandlebars": true,
   "html.format.preserveNewLines": true,
   "html.format.maxPreserveNewLines": 2,
-  "stylelint.configFile": "devTools/.stylelintrc.json",
+  "stylelint.configFile": "${workspaceFolder}/devTools/.stylelintrc.json",
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
   "java.project.sourcePaths": [
     "app/core/src/main/java",
     "app/common/src/main/java",
     "app/proprietary/src/main/java"
   ],
+  "[javascript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.oxc": "explicit"
+    }
+  },
+  "[javascriptreact]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.oxc": "explicit"
+    }
+  },
   "[typescript]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.oxc": "explicit"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.oxc": "explicit"
+    }
+  },
+  "oxc.enable.oxlint": true,
+  "oxc.enable.oxfmt": false,
+  "oxc.configPath": "frontend/oxlint.config.ts",
+  "oxc.requireConfig": true,
+  "oxc.lint.run": "onType",
+  "oxc.fixKind": "safe_fix",
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml",
+    // Keep TOML formatting compatible with .editorconfig and the pre-commit
+    // locale sorter. Key ordering itself is handled by task pre-commit:toml-sort.
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.rulers": [127],
+    "evenBetterToml.formatter.alignEntries": false,
+    "evenBetterToml.formatter.alignComments": false,
+    "evenBetterToml.formatter.indentString": "    ",
+    "evenBetterToml.formatter.columnWidth": 127,
+    "evenBetterToml.formatter.reorderKeys": false,
+    "evenBetterToml.formatter.reorderArrays": false,
+    "evenBetterToml.formatter.reorderInlineTables": false,
+    "evenBetterToml.formatter.trailingNewline": true,
+    "evenBetterToml.formatter.crlf": false
   }
 }
