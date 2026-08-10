@@ -2,6 +2,10 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
+import {
+  downloadBytes,
+  saveAndDownload,
+} from "@app/tests/stubbed/v2SaveHelpers";
 
 /**
  * Client-side Unicode fallback font (Noto Sans, embedded on demand).
@@ -51,9 +55,12 @@ async function gotoEditor(page: Page): Promise<Promise<unknown>> {
 
 // Load SAMPLE, append `text` to the first run, blur, save, and reopen the
 // produced bytes. Returns the reopened page-0 model text plus any page errors.
+// `expectRisk` says whether this text is droppable and so must raise the
+// save-risk modal - covered scripts embed cleanly and never raise it.
 async function appendSaveReopen(
   page: Page,
   text: string,
+  expectRisk: boolean,
 ): Promise<{ reopened: string; errs: string[]; runId: string }> {
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(e.message));
@@ -96,21 +103,7 @@ async function appendSaveReopen(
   await page.waitForTimeout(1000);
 
   // Save, then reopen the produced bytes.
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("v2-save").click();
-  // Edits that drop unrepresentable chars raise the save-risk modal - the
-  // download only fires once the user (this test) acknowledges it.
-  {
-    const risk = page.getByTestId("v2-save-risk-confirm");
-    if (await risk.isVisible({ timeout: 2500 }).catch(() => false)) {
-      await risk.click();
-    }
-  }
-  const dl = await downloadPromise;
-  const stream = await dl.createReadStream();
-  const chunks: Buffer[] = [];
-  for await (const c of stream) chunks.push(c as Buffer);
-  const saved = Buffer.concat(chunks);
+  const saved = await downloadBytes(await saveAndDownload(page, expectRisk));
 
   await page.locator('[data-testid="v2-file-input"]').setInputFiles({
     name: "round-trip.pdf",
@@ -138,7 +131,9 @@ for (const { name, text } of COVERED) {
   }) => {
     test.setTimeout(120_000);
 
-    const { reopened, errs } = await appendSaveReopen(page, text);
+    // Covered scripts embed cleanly, so nothing is dropped and no save-risk
+    // modal is raised.
+    const { reopened, errs } = await appendSaveReopen(page, text, false);
 
     // The reopened document must still carry the text (embedded, not dropped).
     expect(reopened).toContain(text);
@@ -152,7 +147,9 @@ for (const { name, text } of UNCOVERED) {
   }) => {
     test.setTimeout(120_000);
 
-    const { reopened, errs } = await appendSaveReopen(page, text);
+    // The bundled font lacks this script, so the chars are dropped and the
+    // save-risk modal always gates the save.
+    const { reopened, errs } = await appendSaveReopen(page, text, true);
 
     // The bundled font lacks this script, so it is dropped on save - but
     // without injecting U+00FF tofu or a lone surrogate, and the original
@@ -246,22 +243,9 @@ for (const { name, text } of RTL_SAMPLES) {
       "RTL run must not extend past the page width",
     ).toBeLessThanOrEqual(fits.pageWidth + 2);
 
-    // (c) save+reopen preserves the text.
-    const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
-    // Edits that drop unrepresentable chars raise the save-risk modal - the
-    // download only fires once the user (this test) acknowledges it.
-    {
-      const risk = page.getByTestId("v2-save-risk-confirm");
-      if (await risk.isVisible({ timeout: 2500 }).catch(() => false)) {
-        await risk.click();
-      }
-    }
-    const dl = await downloadPromise;
-    const stream = await dl.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const c of stream) chunks.push(c as Buffer);
-    const saved = Buffer.concat(chunks);
+    // (c) save+reopen preserves the text. Noto Sans lacks Arabic/Hebrew, so
+    // these are always dropped and the save-risk modal always gates the save.
+    const saved = await downloadBytes(await saveAndDownload(page, true));
 
     await page.locator('[data-testid="v2-file-input"]').setInputFiles({
       name: "rtl-round-trip.pdf",
@@ -296,7 +280,9 @@ test("bidi mix preserves logical character order in the model", async ({
 
   // Logical order is the order the characters are typed, not the visual order.
   const BIDI = "abc مرحبا 123";
-  const { reopened, errs } = await appendSaveReopen(page, BIDI);
+  // The Arabic span has no Noto coverage, so it is dropped and the save-risk
+  // modal gates the save.
+  const { reopened, errs } = await appendSaveReopen(page, BIDI, true);
 
   // The Arabic span is dropped (no Noto coverage), but the covered Latin/digit
   // parts survive in logical order without tofu or reordering.

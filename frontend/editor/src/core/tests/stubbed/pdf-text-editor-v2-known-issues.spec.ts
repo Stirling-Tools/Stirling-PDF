@@ -2,6 +2,10 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
+import {
+  downloadBytes,
+  saveAndDownload,
+} from "@app/tests/stubbed/v2SaveHelpers";
 
 /**
  * REGRESSION suite for the 12 issues found by the QA sweep of the v2 PDF text
@@ -272,22 +276,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     await caretEndInsert(page, id, " 🎉");
     await blur(page, id);
 
-    // Save, then reopen the produced bytes.
-    const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
-    // Edits that drop unrepresentable chars raise the save-risk modal - the
-    // download only fires once the user (this test) acknowledges it.
-    {
-      const risk = page.getByTestId("v2-save-risk-confirm");
-      if (await risk.isVisible({ timeout: 2500 }).catch(() => false)) {
-        await risk.click();
-      }
-    }
-    const dl = await downloadPromise;
-    const stream = await dl.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const c of stream) chunks.push(c as Buffer);
-    const saved = Buffer.concat(chunks);
+    // Save, then reopen the produced bytes. The emoji is unrepresentable, so
+    // it is dropped and the save-risk modal always gates the save.
+    const saved = await downloadBytes(await saveAndDownload(page, true));
 
     await page.locator('[data-testid="v2-file-input"]').setInputFiles({
       name: "emoji-round-trip.pdf",

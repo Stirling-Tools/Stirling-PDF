@@ -4,6 +4,10 @@ import path from "path";
 // @cantoo/pdf-lib the fixture generators use, so a malformed-but-
 // PDFium-self-consistent save can't pass invisibly.
 import { PDFDocument } from "@cantoo/pdf-lib";
+import {
+  stashCurrentDocument,
+  waitForReopenedPage,
+} from "@app/tests/stubbed/v2SaveHelpers";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -3137,6 +3141,11 @@ test.describe("PDF text editor v2 - multi-page", () => {
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
 
+    // Remember the document we are replacing: after the re-upload the OLD
+    // document's page-2 runs are still mounted, so DOM visibility alone is
+    // satisfied instantly and the model below can still be empty. Gate on a
+    // changed document identity plus a populated page 2 instead.
+    await stashCurrentDocument(page);
     await page.locator('[data-testid="v2-file-input"]').setInputFiles({
       name: "round-trip.pdf",
       mimeType: "application/pdf",
@@ -3145,9 +3154,7 @@ test.describe("PDF text editor v2 - multi-page", () => {
     await expect(page.getByTestId("v2-page-2")).toBeVisible({
       timeout: 30_000,
     });
-    await expect(
-      page.locator('[data-testid^="v2-run-p2-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
+    await waitForReopenedPage(page, 2);
 
     // Re-read the page-2 run text through PdfiumTextReader + LineGrouper.
     // The per-word emit path may split the line into multiple runs, so
