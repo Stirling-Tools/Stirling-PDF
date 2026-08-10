@@ -250,9 +250,14 @@ const withProviders: Decorator = (Story, context) => {
   // the portal's base.css keys its reset/typography on. Give portal stories
   // the same wrapper (and only them — the scoping exists precisely so portal
   // styles never apply to editor components).
-  const isPortalStory = (context.parameters.fileName ?? "").includes(
-    "/portal/",
-  );
+  // `fileName` is only injected by the dev/build pipeline — under the Vitest
+  // runner it is absent, so path alone would silently drop every portal story
+  // onto the editor theme (where portal-only palette entries like `amber`
+  // resolve to nothing and render unstyled). The title prefix is the fallback
+  // that survives both environments.
+  const isPortalStory =
+    (context.parameters.fileName ?? "").includes("/portal/") ||
+    context.title.startsWith("Portal/");
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
