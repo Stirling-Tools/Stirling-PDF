@@ -45,10 +45,12 @@ vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
 // Force the SaaS flavor: the portal vitest project resolves @app to proprietary,
 // so redirect the two flavor seams to their real SaaS implementations.
 vi.mock("@app/portal/usersCapabilities", async () => ({
+  // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
   usersCapabilities: (await import("../../saas/portal/usersCapabilities"))
     .usersCapabilities,
 }));
 vi.mock("@app/portal/usersBackend", async () => ({
+  // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
   usersBackend: (await import("../../saas/portal/usersBackend")).usersBackend,
 }));
 
