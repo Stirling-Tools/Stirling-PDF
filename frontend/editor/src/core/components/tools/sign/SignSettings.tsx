@@ -641,15 +641,16 @@ const SignSettings = ({
   // signature, and typed text stays editable text rather than baked pixels.
   const handleMobileSignatureReceived = useCallback(
     (payload: MobileSignaturePayload) => {
+      // Receiving a signature is as clear an intent to place it as drawing
+      // one, so placement goes live even if it was paused beforehand.
+      setPlacementManuallyPaused(false);
+      lastAppliedPlacementKey.current = null;
       if (payload.kind === "draw") {
         if (parameters.signatureType !== "canvas") {
           onParameterChange("signatureType", "canvas");
         }
-        // Placement activation rides the canvas-change handler.
         handleCanvasSignatureChange(payload.dataUrl);
-        return;
-      }
-      if (payload.kind === "photo") {
+      } else if (payload.kind === "photo") {
         if (parameters.signatureType !== "image") {
           onParameterChange("signatureType", "image");
         }
@@ -674,11 +675,19 @@ const SignSettings = ({
         lastSyncedTextDraft.current = nextDraft;
         setSignatureDrafts((prev) => ({ ...prev, text: nextDraft }));
       }
+      // Activate directly for every kind: the canvas-change handler only
+      // activates when the data actually changed, and the auto-activate
+      // effect only reacts to state transitions - neither fires for a
+      // repeat of the same signature. Fired twice because the first shot can
+      // land between the receive commit and the ready-state settling, where
+      // the placement effect immediately deactivates it; the second shot is
+      // after everything has settled, and re-activating is idempotent.
       if (typeof window !== "undefined") {
         window.setTimeout(
           () => onActivateSignaturePlacement?.(),
           PLACEMENT_ACTIVATION_DELAY,
         );
+        window.setTimeout(() => onActivateSignaturePlacement?.(), 500);
       } else {
         onActivateSignaturePlacement?.();
       }
