@@ -15,13 +15,22 @@ tasks:
     cmds:
       - npx playwright test --project=stubbed {{.CLI_ARGS}}
 
+  stubbed-project:
+    desc: "Run the stubbed E2E suite for a single Playwright project"
+    dir: frontend/editor
+    deps: [ ':frontend:prepare' ]
+    vars:
+      PROJECT: '{{.PROJECT | default "stubbed"}}'
+    cmds:
+      - npx playwright test --project={{.PROJECT}} {{.CLI_ARGS}}
+
   capabilities:
     desc: "Run the engine-capability smoke tests on Chromium, Firefox, and WebKit"
     summary: |
       Asserts the PDF engine primitives actually work on each engine - text
       extraction, page rasterisation, and an IndexedDB byte round-trip - rather
-      than that the UI rendered. Small enough to run on every browser on every
-      pull request, which is the point.
+      than that the UI rendered. The quickest way to check all three engines
+      locally without sitting through the whole cross-browser suite.
 
       Pass extra Playwright flags via -- :
         task e2e:capabilities -- --headed

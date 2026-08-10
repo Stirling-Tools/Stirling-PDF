@@ -447,10 +447,8 @@ export async function addFiles(
       if (file.type === "application/pdf") {
         try {
           if (await FileAnalyzer.isPDFUserPasswordProtected(file)) {
-            fileStub.processedFile = (fileStub.processedFile || {
-              pages: [],
-            }) as any;
-            fileStub.processedFile!.isEncrypted = true;
+            fileStub.processedFile = fileStub.processedFile || { pages: [] };
+            fileStub.processedFile.isEncrypted = true;
           }
         } catch (error) {
           // Never block upload on analysis failure — but log so it's debuggable
@@ -699,7 +697,7 @@ export async function undoConsumeFiles(
       file: File,
       fileId: FileId,
       existingThumbnail?: string,
-    ) => Promise<any>;
+    ) => Promise<StirlingFileStub>;
     deleteFile: (fileId: FileId) => Promise<void>;
     bumpRevision?: () => void;
   } | null,

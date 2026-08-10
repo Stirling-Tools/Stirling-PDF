@@ -2,10 +2,8 @@ name: Playwright E2E (stubbed)
 
 # Reusable workflow called from build.yml. Backend-free Playwright suite —
 # fast, no Spring Boot required. Runs against the `stubbed` project which
-# mocks API responses in the browser.
-#
-# Chromium-only for speed, except the `@engine-capability` specs, which run on
-# all three engines here - nightly-only let two WebKit outages sit on main.
+# mocks API responses in the browser. Fans out one job per browser
+# (chromium/firefox/webkit) so all three run in parallel on their own runner.
 on:
   workflow_call:
 
@@ -14,7 +12,19 @@ permissions:
 
 jobs:
   playwright-e2e:
+    name: playwright-e2e (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    strategy:
+      # One browser breaking must not mask a failure in another - report all.
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chromium
+            project: stubbed
+          - browser: firefox
+            project: stubbed-firefox
+          - browser: webkit
+            project: stubbed-webkit
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -30,46 +40,29 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
-      - name: Install Playwright (chromium, firefox, webkit)
-        run: task e2e:install -- chromium firefox webkit
+      - name: Install Playwright (${{ matrix.browser }})
+        run: task e2e:install -- ${{ matrix.browser }}
       - name: Build frontend (production bundle for vite preview)
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
-      - name: Run engine-capability smoke tests (chromium, firefox, webkit)
-        # First, so "this engine can't read a PDF" lands at the top of the log.
-        # Own JSON path: the Chromium run below would overwrite it.
-        env:
-          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/capability-results.json
-        run: task e2e:capabilities
-      - name: Upload engine-capability Playwright report
-        # Uploaded here because the Chromium run below writes the same directory.
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: playwright-report-capabilities-${{ github.run_id }}
-          path: frontend/playwright-report/
-          retention-days: 7
-      - name: Run stubbed E2E tests (chromium)
-        # Runs even if the smoke tests failed, so a PR gets both signals at once.
-        if: ${{ !cancelled() }}
+      - name: Run stubbed E2E tests (${{ matrix.browser }})
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
-        run: task e2e:stubbed -- --workers=3
+        run: task e2e:stubbed-project PROJECT=${{ matrix.project }} -- --workers=3
       - name: Flag flaky tests
         # Runs regardless of the test outcome: a flaky test (passed on retry)
         # leaves the step green, so this is the only place it surfaces. Emits
         # ::warning:: annotations + a job summary; never fails the job.
         if: always()
         working-directory: frontend
-        run: >-
-          npx tsx editor/scripts/report-flaky-tests.mts
-          "${{ github.workspace }}/frontend/playwright-report/results.json"
-          "${{ github.workspace }}/frontend/playwright-report/capability-results.json"
+        run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report-stubbed-${{ github.run_id }}
+          name: playwright-report-stubbed-${{ matrix.browser }}-${{ github.run_id }}
           path: frontend/playwright-report/
           retention-days: 7

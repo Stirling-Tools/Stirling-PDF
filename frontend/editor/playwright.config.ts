@@ -58,7 +58,8 @@ export default defineConfig({
   },
 
   projects: [
-    // Stubbed - no backend required, chromium-only for CI speed
+    // Stubbed - no backend required. The chromium arm of the cross-browser
+    // set below; CI fans all three out, one job per engine.
     {
       name: "stubbed",
       testDir: "./src/core/tests/stubbed",
