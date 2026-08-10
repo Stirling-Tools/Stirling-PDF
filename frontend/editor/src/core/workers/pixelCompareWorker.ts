@@ -14,8 +14,7 @@ import type {
   PixelCompareWorkerResponse,
   PixelCompareWorkerWarnings,
 } from "@app/types/compare";
-// oxlint-disable-next-line no-restricted-imports -- workers are bundled in their own Rollup pass, which resolves no path aliases, so a relative import is required here
-import { lossyEncodeOptions } from "../utils/canvasImageEncoding";
+import { lossyEncodeOptions } from "@app/utils/canvasImageEncoding";
 
 declare const self: DedicatedWorkerGlobalScope;
 
