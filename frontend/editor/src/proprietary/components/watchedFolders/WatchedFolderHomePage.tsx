@@ -32,18 +32,9 @@ import { useNavigationActions } from "@app/contexts/NavigationContext";
 import {
   WATCHED_FOLDER_VIEW_ID,
   WATCHED_FOLDER_WORKBENCH_ID,
-} from "@app/components/watchedFolders/WatchedFoldersRegistration";
-import { timeAgo } from "@app/components/watchedFolders/WatchedFolderWorkbenchView";
+  timeAgo,
+} from "@app/components/watchedFolders/watchedFolderShared";
 import "@app/components/watchedFolders/WatchedFolders.css";
-
-export function humaniseOp(op: string): string {
-  return op
-    .replace(/-pdf$|-pages$|-documents?$/i, "")
-    .replace(/[-_]/g, " ")
-    .replace(/\bocr\b/gi, "OCR")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
 
 interface FolderCardProps {
   folder: WatchedFolder;

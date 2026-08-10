@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.service.ToolChainValidator;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
@@ -47,7 +48,6 @@ class DefaultClassificationPolicySeederTest {
                 "Classification Policy",
                 "system",
                 true,
-                null,
                 List.of(),
                 List.of(),
                 new OutputSpec("inline", Map.of("categoryId", "classification")),
@@ -66,7 +66,8 @@ class DefaultClassificationPolicySeederTest {
                         List.of(),
                         List.of(inlineSink),
                         List.of(new WatermarkStepValidator(), new RedactStepValidator()),
-                        new InProcessSourceStore());
+                        new InProcessSourceStore(),
+                        new ToolChainValidator(path -> java.util.Optional.empty()));
 
         validator.validate(DefaultClassificationPolicySeeder.defaultPolicy(7L));
     }

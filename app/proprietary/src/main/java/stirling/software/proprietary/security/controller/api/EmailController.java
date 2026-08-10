@@ -46,9 +46,7 @@ public class EmailController {
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Send an email with an attachment",
-            description =
-                    "This endpoint sends an email with an attachment. Input:PDF"
-                            + " Output:Success/Failure Type:MISO")
+            description = "This endpoint sends an email with an attachment.")
     public ResponseEntity<String> sendEmailWithAttachment(@Valid @ModelAttribute Email email) {
         log.info("Sending email to: {}", email.toString());
         try {

@@ -74,10 +74,18 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   responseHandler?: ResponseHandler;
 
   /** Extract user-friendly error messages from API errors */
-  getErrorMessage?: (error: any) => string;
+  getErrorMessage?: (error: unknown) => string;
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * Whether these parameters are complete enough to run. The same predicate a tool gives
+   * `useBaseParameters` as its `validateFn`, so the Run button in the editor and anything composing
+   * the tool without rendering it (a pipeline step, an AI-authored plan) agree on what "configured"
+   * means. Absent means the tool runs happily on its defaults.
+   */
+  validateParams?: (params: TParams) => boolean;
 
   /**
    * Typed frontend params -> backend request model. When a tool provides this,
