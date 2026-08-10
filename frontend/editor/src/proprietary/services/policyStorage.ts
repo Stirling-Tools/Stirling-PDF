@@ -27,7 +27,6 @@ function defaultState(categoryId: string): PolicyState {
     outputMode: "new_version",
     // No rename by default — the output keeps the input's filename.
     outputName: "",
-    // Per-category default: Security enforces on export, the rest on upload.
     runOn: defaultRunOn(categoryId),
     // Every catalog category is a shipped, built-in policy → default (not
     // deletable).

@@ -242,7 +242,6 @@ export interface DecodedPolicy {
   order?: number;
 }
 
-// Only the retry numbers are read from this; runOn defaults per category.
 const DEFAULT_FOLDER: PolicyFolderSettings = {
   runOn: "upload",
   outputMode: "new_version",

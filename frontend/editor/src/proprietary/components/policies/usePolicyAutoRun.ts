@@ -22,7 +22,6 @@ import {
   useFileContext,
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
-import { resolveRunOn } from "@app/policies/runOn";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import i18n from "@app/i18n";
 import {
@@ -180,7 +179,7 @@ export function usePolicyAutoRun(): void {
             (!s.sources ||
               s.sources.length === 0 ||
               s.sources.includes("editor")) &&
-            resolveRunOn(s.runOn, id) === "upload" &&
+            (s.runOn ?? "upload") === "upload" &&
             // Non-AI systems classify in the browser (useClientSideClassification), so keep the
             // Classification policy out of the server chain when the AI engine is off.
             !(id === "classification" && !aiEnabled),

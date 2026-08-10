@@ -18,7 +18,6 @@ export interface WirePipelineStep {
 }
 
 export interface WireOutputOptions {
-  /** Absent on legacy records; decoded via `resolveRunOn` (per-category default). */
   runOn: "upload" | "export";
   mode: "new_file" | "new_version";
   name: string;
