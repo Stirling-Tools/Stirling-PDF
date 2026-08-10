@@ -2295,6 +2295,10 @@
     "color-contrast",
     "landmark-unique"
   ],
+  "editor/src/portal/views/Documents.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/portal/views/Documents.stories.tsx :: Empty": ["color-contrast"],
   "editor/src/portal/views/Home.stories.tsx :: Enterprise Tier": [
     "color-contrast",
     "landmark-no-duplicate-banner",

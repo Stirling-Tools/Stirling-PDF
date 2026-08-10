@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.engine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -10,9 +11,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -22,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +54,7 @@ import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -87,6 +92,7 @@ class PolicyEngineTest {
     @Mock private JobOwnershipService jobOwnershipService;
     @Mock private ResourceMonitor resourceMonitor;
     @Mock private JobQueue jobQueue;
+    @Mock private PolicyFailureRecorder failureRecorder;
 
     @TempDir Path tempDir;
 
@@ -114,6 +120,7 @@ class PolicyEngineTest {
                         executor,
                         taskManager,
                         registry,
+                        failureRecorder,
                         fileStorage,
                         jobOwnershipService,
                         List.of(sink, recordingSink),
@@ -215,6 +222,52 @@ class PolicyEngineTest {
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
         verify(taskManager).setError(eq(runId), anyString());
         verify(taskManager, never()).setComplete(runId);
+        // A failed run is recorded durably, so an admin can see it after the in-memory run expires.
+        verify(failureRecorder)
+                .recordRunFailure(
+                        eq(runId), any(), any(), any(), anyString(), any(Throwable.class));
+    }
+
+    @Test
+    void recordingAFailureNeverChangesTheRunsOutcome() throws Exception {
+        // Recording is best-effort: losing the incident row is bad, but turning a classified
+        // failure
+        // into a different, confusing failure is worse.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+        doThrow(new RuntimeException("event store unavailable"))
+                .when(failureRecorder)
+                .recordRunFailure(
+                        anyString(), any(), any(), any(), anyString(), any(Throwable.class));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        // The original failure message survives, rather than being replaced by the store's.
+        assertTrue(run.getError().contains("boom"));
+    }
+
+    @Test
+    void successfulRunRecordsNoFailureEvent() throws Exception {
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new StoredFile("file-1", 7L));
+
+        engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP)
+                .completion()
+                .get(10, TimeUnit.SECONDS);
+
+        verifyNoInteractions(failureRecorder);
     }
 
     @Test
@@ -408,6 +461,43 @@ class PolicyEngineTest {
     @Test
     void cancelUnknownRunReturnsFalse() {
         assertFalse(engine.cancel("does-not-exist"));
+    }
+
+    @Test
+    void cancellingARunRecordsNoFailureEvent() throws Exception {
+        // A cancellation is an intended outcome, not an incident. Recording one would put a row in
+        // front of an admin describing something a user deliberately did.
+        //
+        // The cancel happens while the tool call is in flight, held on a latch: an earlier version
+        // of this test awaited completion first, and cancel() on a finished run is a documented
+        // no-op, so it asserted nothing.
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        CountDownLatch toolEntered = new CountDownLatch(1);
+        CountDownLatch releaseTool = new CountDownLatch(1);
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        invocation -> {
+                            toolEntered.countDown();
+                            assertTrue(
+                                    releaseTool.await(10, TimeUnit.SECONDS),
+                                    "test never released the tool call");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new StoredFile("file-1", 7L));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        assertTrue(toolEntered.await(10, TimeUnit.SECONDS), "run never reached the tool call");
+        assertTrue(engine.cancel(handle.runId()), "cancel was a no-op, so this asserts nothing");
+        releaseTool.countDown();
+        handle.completion().get(10, TimeUnit.SECONDS);
+
+        verifyNoInteractions(failureRecorder);
     }
 
     // --- helpers ---

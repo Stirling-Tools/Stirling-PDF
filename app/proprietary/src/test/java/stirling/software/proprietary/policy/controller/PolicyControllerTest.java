@@ -216,7 +216,7 @@ class PolicyControllerTest {
     }
 
     private static PolicyRunHandle handle(String runId) {
-        PolicyRun run = new PolicyRun(runId, null, definitionWithStep());
+        PolicyRun run = new PolicyRun(runId, null, definitionWithStep(), null);
         return new PolicyRunHandle(runId, CompletableFuture.completedFuture(run));
     }
 
@@ -317,7 +317,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("returns the run view when present")
         void found() {
-            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep());
+            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep(), null);
             when(runRegistry.get("run-3")).thenReturn(run);
 
             ResponseEntity<PolicyRunView> response = controller.status("run-3");
@@ -346,9 +346,9 @@ class PolicyControllerTest {
         @Test
         @DisplayName("excludes ad-hoc runs and runs owned by others")
         void filtersRuns() {
-            PolicyRun adHoc = new PolicyRun("adhoc", null, definitionWithStep());
-            PolicyRun ownedStored = new PolicyRun("owned", "policy-A", definitionWithStep());
-            PolicyRun otherStored = new PolicyRun("other", "policy-B", definitionWithStep());
+            PolicyRun adHoc = new PolicyRun("adhoc", null, definitionWithStep(), null);
+            PolicyRun ownedStored = new PolicyRun("owned", "policy-A", definitionWithStep(), null);
+            PolicyRun otherStored = new PolicyRun("other", "policy-B", definitionWithStep(), null);
             when(runRegistry.all()).thenReturn(List.of(adHoc, ownedStored, otherStored));
 
             // ownedByCurrentUser: strip then re-apply scope reproduces the key only for the owned
