@@ -53,21 +53,25 @@ export const addWatermarkToApiParams = (
 export const addWatermarkFromApiParams = (
   apiParams: AddWatermarkApiParams,
 ): Partial<AddWatermarkParameters> => {
+  // Every absent numeric falls back to the tool default rather than an empty
+  // field. A stored step missing these binds them to 0 at run time (primitive
+  // fields on the request model), so surfacing the defaults here means saving
+  // from the settings UI completes the step the way a fresh one would be.
   const result: Partial<AddWatermarkParameters> = {
     watermarkType: apiParams.watermarkType,
-    fontSize: apiParams.fontSize,
-    rotation: apiParams.rotation,
-    widthSpacer: apiParams.widthSpacer,
-    heightSpacer: apiParams.heightSpacer,
+    fontSize: apiParams.fontSize ?? defaultParameters.fontSize,
+    rotation: apiParams.rotation ?? defaultParameters.rotation,
+    widthSpacer: apiParams.widthSpacer ?? defaultParameters.widthSpacer,
+    heightSpacer: apiParams.heightSpacer ?? defaultParameters.heightSpacer,
     alphabet: apiParams.alphabet ?? defaultParameters.alphabet,
     customColor: apiParams.customColor ?? defaultParameters.customColor,
     convertPDFToImage:
       apiParams.convertPDFToImage ?? defaultParameters.convertPDFToImage,
+    opacity:
+      apiParams.opacity !== undefined
+        ? apiParams.opacity * 100
+        : defaultParameters.opacity,
   };
-
-  if (apiParams.opacity !== undefined) {
-    result.opacity = apiParams.opacity * 100;
-  }
   if (apiParams.watermarkText !== undefined) {
     result.watermarkText = apiParams.watermarkText;
   }
