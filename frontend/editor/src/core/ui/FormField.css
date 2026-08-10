@@ -10,7 +10,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-section-label);
+  color: var(--c-text-muted);
 }
 
 .sui-field__required {

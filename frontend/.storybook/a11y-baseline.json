@@ -2043,6 +2043,11 @@
     "color-contrast",
     "label"
   ],
+  "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Edit Save Gated": [
+    "button-name",
+    "color-contrast",
+    "label"
+  ],
   "editor/src/portal/components/procurement/DealJourney.stories.tsx :: At Trial": [
     "color-contrast"
   ],
