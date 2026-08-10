@@ -218,8 +218,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Keep iso639.calibre_msgpack (required)
     # Keep only en-US.pak from qtwebengine_locales (required for WebEngine)
     rm -rf /opt/calibre/lib/qt6/translations; \
-    find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} +; \
-    find /opt/calibre/translations/qtwebengine_locales -type f ! -name 'en-US.pak' -delete 2>/dev/null || true; \
+    if [ -d /opt/calibre/translations ]; then \
+      find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} + 2>/dev/null || true; \
+      if [ -d /opt/calibre/translations/qtwebengine_locales ]; then \
+        find /opt/calibre/translations/qtwebengine_locales -type f ! -name 'en-US.pak' -delete 2>/dev/null || true; \
+      fi; \
+    fi; \
     if [ -d /opt/calibre/resources/localization ]; then \
       rm -rf /opt/calibre/resources/localization/locales.zip \
              /opt/calibre/resources/localization/stats.calibre_msgpack \
@@ -296,7 +300,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
 FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS pdf-tools-build
 ARG TARGETPLATFORM
-ARG QPDF_VERSION=12.3.2
+ARG QPDF_VERSION=12.4.0
 ARG IM_VERSION=7.1.2-29
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
