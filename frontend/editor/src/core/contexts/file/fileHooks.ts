@@ -1,27 +1,187 @@
 /**
- * Performant file hooks - Clean API using FileContext
+ * Performant file hooks — selector subscriptions over the FileStateStore.
+ * Each hook re-renders its consumer only when the slice it selects changes,
+ * not on every file-state change.
  */
 
-import { useContext, useMemo } from "react";
+import { useContext, useLayoutEffect, useMemo, useRef } from "react";
+import { useSyncExternalStoreWithSelector } from "use-sync-external-store/shim/with-selector.js";
 import {
-  FileStateContext,
+  FileStoreContext,
   FileActionsContext,
+  FileStateStore,
   FileContextStateValue,
   FileContextActionsValue,
 } from "@app/contexts/file/contexts";
-import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
+import {
+  StirlingFileStub,
+  StirlingFile,
+  FileContextState,
+  FileContextSelectors,
+} from "@app/types/fileContext";
 import { FileId } from "@app/types/file";
+
+const GUARD_MISUSE = process.env.NODE_ENV !== "production";
+
+/** Shallow equality over object/array slices assembled by selectors. */
+export function shallowEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (
+    typeof a !== "object" ||
+    a === null ||
+    typeof b !== "object" ||
+    b === null
+  ) {
+    return false;
+  }
+  const keysA = Object.keys(a);
+  if (keysA.length !== Object.keys(b).length) return false;
+  return keysA.every((key) =>
+    Object.is(
+      (a as Record<string, unknown>)[key],
+      (b as Record<string, unknown>)[key],
+    ),
+  );
+}
+
+function useFileStore(): FileStateStore {
+  const store = useContext(FileStoreContext);
+  if (!store) {
+    throw new Error("File hooks must be used within a FileContextProvider");
+  }
+  return store;
+}
+
+/**
+ * Subscribe to a slice of file state. The component re-renders only when the
+ * selected value changes (Object.is by default; pass shallowEqual for slices
+ * assembled into fresh objects/arrays).
+ */
+export function useFileSelector<T>(
+  selector: (state: FileContextState) => T,
+  isEqual?: (a: T, b: T) => boolean,
+): T {
+  const store = useFileStore();
+  return useSyncExternalStoreWithSelector(
+    store.subscribe,
+    store.getState,
+    store.getState,
+    selector,
+    isEqual,
+  );
+}
+
+/** Selectors that read `ui.selectedFileIds`. A hook that doesn't subscribe to
+ *  that slice must not let consumers call these during render. */
+const SELECTION_SELECTORS: ReadonlyArray<keyof FileContextSelectors> = [
+  "getSelectedFiles",
+  "getSelectedStirlingFileStubs",
+];
+
+/** Wrap selectors so a call made during render logs loudly (dev/test only).
+ *  Render-time vs event-time isn't statically lintable, so this is the guard.
+ *  `keys` limits the wrap to the selectors whose slice the calling hook does NOT
+ *  subscribe to — the rest are safe to read during render and pass through. */
+function guardSelectors(
+  selectors: FileContextSelectors,
+  isRendering: () => boolean,
+  hookName: string,
+  keys?: ReadonlyArray<keyof FileContextSelectors>,
+): FileContextSelectors {
+  const guardedKeys =
+    keys ?? (Object.keys(selectors) as Array<keyof FileContextSelectors>);
+  const guarded: Record<string, unknown> = { ...selectors };
+  for (const key of guardedKeys) {
+    const original = selectors[key] as unknown as (
+      ...args: unknown[]
+    ) => unknown;
+    guarded[key] = (...args: unknown[]) => {
+      if (isRendering()) {
+        console.error(
+          `[${hookName}] ${key}() was called during render. This read doesn't ` +
+            "subscribe to the state it depends on, so the UI can go stale — use " +
+            "useFileSelector / useFileSelection / useAllFiles for render-time data.",
+        );
+      }
+      return original(...args);
+    };
+  }
+  return guarded as unknown as FileContextSelectors;
+}
+
+/**
+ * Wrap a hook's exposed selectors in the render-phase misuse guard (no-op in
+ * production). `keys` names the selectors the calling hook doesn't subscribe to;
+ * omit it to guard every selector (for hooks that subscribe to nothing).
+ */
+function useGuardedSelectors(
+  selectors: FileContextSelectors,
+  hookName: string,
+  keys?: ReadonlyArray<keyof FileContextSelectors>,
+): FileContextSelectors {
+  // True exactly while this consumer is rendering: set on every render, cleared
+  // by the layout effect once that render commits.
+  const renderPhase = useRef(false);
+  renderPhase.current = GUARD_MISUSE;
+  useLayoutEffect(() => {
+    renderPhase.current = false;
+  });
+  return useMemo(
+    () =>
+      GUARD_MISUSE
+        ? guardSelectors(selectors, () => renderPhase.current, hookName, keys)
+        : selectors,
+    [selectors, hookName, keys],
+  );
+}
+
+/**
+ * Stable selector API with NO state subscription — never re-renders. For
+ * event-time reads (callbacks/effects), which see live state when invoked.
+ * Render-time reads need a reactive hook (useAllFiles/useFileSelector) or
+ * they go stale — calling one during render logs an error outside production.
+ */
+export function useFileSelectors(): FileContextSelectors {
+  const { selectors } = useFileStore();
+  return useGuardedSelectors(selectors, "useFileSelectors");
+}
+
+/**
+ * Position of `fileId` in the resolved file list — the SAME array useAllFiles()
+ * returns, which drops ids whose bytes haven't hydrated into memory yet, so the
+ * index lines up with what consumers actually index into. 0 when unset/absent.
+ *
+ * Selects a NUMBER, so the consumer re-renders only when the index actually
+ * moves. useAllFiles() would do the job too, but it re-renders on every
+ * unrelated stub update (thumbnail hydration, labels, …) — too costly for a
+ * high-level provider whose context value isn't memoized.
+ */
+export function useFileIndex(fileId: string | null | undefined): number {
+  // Raw (unguarded) selectors: the read below runs inside the subscription
+  // selector, so it IS reactive and the render-phase guard doesn't apply.
+  const { selectors } = useFileStore();
+  return useFileSelector((s) => {
+    if (!fileId) return 0;
+    const index = selectors
+      .getFiles(s.files.ids)
+      .findIndex((file) => file.fileId === fileId);
+    return index >= 0 ? index : 0;
+  });
+}
 
 /**
  * Hook for accessing file state (will re-render on any state change)
  * Use individual selector hooks below for better performance
  */
 export function useFileState(): FileContextStateValue {
-  const context = useContext(FileStateContext);
-  if (!context) {
-    throw new Error("useFileState must be used within a FileContextProvider");
-  }
-  return context;
+  const store = useFileStore();
+  const state = useFileSelector((s) => s);
+  // Selectors are exposed unguarded on purpose: this hook subscribes to the
+  // WHOLE state, so a render-time selector read can't go stale.
+  return useMemo(
+    () => ({ state, selectors: store.selectors }),
+    [state, store.selectors],
+  );
 }
 
 /**
@@ -39,21 +199,21 @@ export function useFileActions(): FileContextActionsValue {
  * Hook for current/primary file (first in list)
  */
 export function useCurrentFile(): { file?: File; record?: StirlingFileStub } {
-  const { state, selectors } = useFileState();
-
-  const primaryFileId = state.files.ids[0];
-  const primaryFileRecord = primaryFileId
-    ? state.files.byId[primaryFileId]
-    : undefined;
+  const { selectors } = useFileStore();
+  const { primaryFileId, record } = useFileSelector(
+    (s) => ({
+      primaryFileId: s.files.ids[0],
+      record: s.files.ids[0] ? s.files.byId[s.files.ids[0]] : undefined,
+    }),
+    shallowEqual,
+  );
 
   return useMemo(
     () => ({
       file: primaryFileId ? selectors.getFile(primaryFileId) : undefined,
-      record: primaryFileId
-        ? selectors.getStirlingFileStub(primaryFileId)
-        : undefined,
+      record,
     }),
-    [primaryFileId, primaryFileRecord, selectors],
+    [primaryFileId, record, selectors],
   );
 }
 
@@ -61,27 +221,35 @@ export function useCurrentFile(): { file?: File; record?: StirlingFileStub } {
  * Hook for file selection state and actions
  */
 export function useFileSelection() {
-  const { state, selectors } = useFileState();
+  const { selectors } = useFileStore();
   const { actions } = useFileActions();
+  const selectedFileIds = useFileSelector((s) => s.ui.selectedFileIds);
+  const selectedPageNumbers = useFileSelector((s) => s.ui.selectedPageNumbers);
+  // Only the SELECTED files' records — an unrelated file's update never
+  // re-renders selection consumers.
+  const selectedStubs = useFileSelector(
+    (s) => s.ui.selectedFileIds.map((id) => s.files.byId[id]),
+    shallowEqual,
+  );
 
   // Memoize selected files to avoid recreating arrays
   const selectedFiles = useMemo(() => {
     return selectors.getSelectedFiles();
-  }, [state.ui.selectedFileIds, state.files.byId, selectors]);
+  }, [selectedFileIds, selectedStubs, selectors]);
 
   return useMemo(
     () => ({
       selectedFiles,
-      selectedFileIds: state.ui.selectedFileIds,
-      selectedPageNumbers: state.ui.selectedPageNumbers,
+      selectedFileIds,
+      selectedPageNumbers,
       setSelectedFiles: actions.setSelectedFiles,
       setSelectedPages: actions.setSelectedPages,
       clearSelections: actions.clearSelections,
     }),
     [
       selectedFiles,
-      state.ui.selectedFileIds,
-      state.ui.selectedPageNumbers,
+      selectedFileIds,
+      selectedPageNumbers,
       actions.setSelectedFiles,
       actions.setSelectedPages,
       actions.clearSelections,
@@ -111,57 +279,64 @@ export function useFileManagement() {
  * Hook for UI state
  */
 export function useFileUI() {
-  const { state } = useFileState();
   const { actions } = useFileActions();
+  const ui = useFileSelector(
+    (s) => ({
+      isProcessing: s.ui.isProcessing,
+      processingProgress: s.ui.processingProgress,
+      hasUnsavedChanges: s.ui.hasUnsavedChanges,
+    }),
+    shallowEqual,
+  );
 
   return useMemo(
     () => ({
-      isProcessing: state.ui.isProcessing,
-      processingProgress: state.ui.processingProgress,
-      hasUnsavedChanges: state.ui.hasUnsavedChanges,
+      ...ui,
       setProcessing: actions.setProcessing,
       setUnsavedChanges: actions.setHasUnsavedChanges,
     }),
-    [state.ui, actions],
+    [ui, actions],
   );
 }
 
 /**
- * Hook for specific file by ID (optimized for individual file access)
+ * Hook for specific file by ID (optimized for individual file access):
+ * re-renders only when THAT file's record changes.
  */
 export function useStirlingFileStub(fileId: FileId): {
   file?: File;
   record?: StirlingFileStub;
 } {
-  const { state, selectors } = useFileState();
-  const fileRecord = state.files.byId[fileId];
+  const { selectors } = useFileStore();
+  const record = useFileSelector((s) => s.files.byId[fileId]);
 
   return useMemo(
     () => ({
       file: selectors.getFile(fileId),
-      record: selectors.getStirlingFileStub(fileId),
+      record,
     }),
-    [fileId, fileRecord, selectors],
+    [fileId, record, selectors],
   );
 }
 
 /**
- * Hook for all files (use sparingly - causes re-renders on file list changes)
+ * Hook for all files: re-renders on file-list changes only (not selection/UI).
  */
 export function useAllFiles(): {
   files: StirlingFile[];
   fileStubs: StirlingFileStub[];
   fileIds: FileId[];
 } {
-  const { state, selectors } = useFileState();
+  const { selectors } = useFileStore();
+  const files = useFileSelector((s) => s.files);
 
   return useMemo(
     () => ({
-      files: selectors.getFiles(),
-      fileStubs: selectors.getStirlingFileStubs(),
-      fileIds: state.files.ids,
+      files: selectors.getFiles(files.ids),
+      fileStubs: selectors.getStirlingFileStubs(files.ids),
+      fileIds: files.ids,
     }),
-    [state.files.ids, state.files.byId, selectors],
+    [files, selectors],
   );
 }
 
@@ -173,30 +348,47 @@ export function useSelectedFiles(): {
   selectedFileStubs: StirlingFileStub[];
   selectedFileIds: FileId[];
 } {
-  const { state, selectors } = useFileState();
+  const { selectors } = useFileStore();
+  const selectedFileIds = useFileSelector((s) => s.ui.selectedFileIds);
+  // Only the SELECTED files' records — see useFileSelection.
+  const selectedStubs = useFileSelector(
+    (s) => s.ui.selectedFileIds.map((id) => s.files.byId[id]),
+    shallowEqual,
+  );
 
   return useMemo(
     () => ({
       selectedFiles: selectors.getSelectedFiles(),
       selectedFileStubs: selectors.getSelectedStirlingFileStubs(),
-      selectedFileIds: state.ui.selectedFileIds,
+      selectedFileIds,
     }),
-    [state.ui.selectedFileIds, state.files.byId, selectors],
+    [selectedFileIds, selectedStubs, selectors],
   );
 }
 
-// Navigation management removed - moved to NavigationContext
-
 /**
- * Primary API hook for file context operations
- * Used by tools for core file context functionality
+ * Primary API hook for file context operations. Used by tools for core file
+ * context functionality. Re-renders only when the slices it exposes reactively
+ * (files, pinned files) change — not on selection/UI changes.
  */
 export function useFileContext() {
-  const { state, selectors } = useFileState();
+  const store = useFileStore();
   const { actions } = useFileActions();
+  const { files, pinnedFiles } = useFileSelector(
+    (s) => ({ files: s.files, pinnedFiles: s.pinnedFiles }),
+    shallowEqual,
+  );
+  // This hook subscribes to files + pinnedFiles, so those selectors are safe to
+  // read during render; the SELECTION ones aren't (no subscription to
+  // ui.selectedFileIds), so they carry the misuse guard.
+  const selectors = useGuardedSelectors(
+    store.selectors,
+    "useFileContext",
+    SELECTION_SELECTORS,
+  );
 
-  return useMemo(
-    () => ({
+  return useMemo(() => {
+    return {
       // Lifecycle management
       trackBlobUrl: actions.trackBlobUrl,
       scheduleCleanup: actions.scheduleCleanup,
@@ -213,10 +405,11 @@ export function useFileContext() {
         _operationId: string,
         _error: string,
       ) => {}, // Operation tracking not implemented
-      // File ID lookup
+      // File ID lookup (reads live state at call time)
       findFileId: (file: File) => {
-        return state.files.ids.find((id) => {
-          const record = state.files.byId[id];
+        const { files: liveFiles } = store.getState();
+        return liveFiles.ids.find((id) => {
+          const record = liveFiles.byId[id];
           return (
             record &&
             record.name === file.name &&
@@ -227,19 +420,18 @@ export function useFileContext() {
       },
 
       // Pinned files
-      pinnedFiles: state.pinnedFiles,
+      pinnedFiles,
       pinFile: actions.pinFile,
       unpinFile: actions.unpinFile,
       isFilePinned: selectors.isFilePinned,
 
       // Active files
-      activeFiles: selectors.getFiles(),
+      activeFiles: selectors.getFiles(files.ids),
       openEncryptedUnlockPrompt: actions.openEncryptedUnlockPrompt,
 
       // Direct access to actions and selectors (for advanced use cases)
       actions,
       selectors,
-    }),
-    [state, selectors, actions],
-  );
+    };
+  }, [files, pinnedFiles, actions, store, selectors]);
 }
