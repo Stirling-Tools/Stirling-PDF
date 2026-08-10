@@ -3,9 +3,12 @@ import { Button, Card, EmptyState } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
 
 /**
- * Unlinked state — the billing page asks the admin to link their Stirling
- * account to claim the 500-PDF free grant. The CTA opens the login modal
- * directly (no detour through Settings).
+ * Unlinked state on the billing page. The CTA opens the Connect flow directly, so the admin gets
+ * the full case for connecting rather than a bare login box.
+ *
+ * <p>The copy states the free grant as a property of a new account, not as a reward for connecting:
+ * the allowance is seeded per team at team creation, so an existing account that has spent it gains
+ * nothing by linking.
  */
 export function LinkAccountPrompt() {
   const { t } = useTranslation();
@@ -16,15 +19,15 @@ export function LinkAccountPrompt() {
         size="default"
         title={t(
           "portal.billing.linkPrompt.title",
-          "Link your Stirling account",
+          "Connect your Stirling account",
         )}
         description={t(
           "portal.billing.linkPrompt.description",
-          "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use.",
+          "Manual PDF editing is always free, connected or not. Connecting adds teams, the processor, pipelines and policies, and a new Stirling account starts with 500 free credits for automation, AI and the API.",
         )}
         actions={
           <Button variant="primary" onClick={() => openLinkModal()}>
-            {t("portal.billing.linkPrompt.cta", "Link Stirling account")}
+            {t("portal.billing.linkPrompt.cta", "Connect account")}
           </Button>
         }
       />

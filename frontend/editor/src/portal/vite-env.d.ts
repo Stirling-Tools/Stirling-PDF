@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
   /** Stirling Supabase publishable/anon key (public). */
   readonly VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: string;
+  /** "true" only when this origin is on the Supabase project's redirect allow-list, so an OAuth sign-in can return here. Otherwise the Connect flow offers email and password only. */
+  readonly VITE_SAAS_OAUTH_ENABLED: string;
   /** Hosted SaaS Java backend base URL — attended portal→SaaS reads (wallet, invoices, …) via apiClient.saas with the admin's JWT. */
   readonly VITE_SAAS_API_URL: string;
   /** Stripe publishable key (pk_live_… / pk_test_…) used by embedded Checkout. */

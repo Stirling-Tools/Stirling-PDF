@@ -31,20 +31,20 @@ export function LinkGate({ children, feature }: Props) {
         feature
           ? t(
               "portal.accountLink.gate.titleFeature",
-              "Link to unlock {{feature}}",
+              "Connect to unlock {{feature}}",
               {
                 feature,
               },
             )
-          : t("portal.accountLink.gate.title", "Link to unlock")
+          : t("portal.accountLink.gate.title", "Connect to unlock")
       }
       description={t(
         "portal.accountLink.gate.description",
-        "Link this org's Stirling account to use billable features.",
+        "Connect this org's Stirling account to use this feature.",
       )}
       action={
         <Button size="sm" onClick={() => openLinkModal()}>
-          {t("portal.accountLink.gate.action", "Link account")}
+          {t("portal.accountLink.gate.action", "Connect account")}
         </Button>
       }
     />

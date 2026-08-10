@@ -33,6 +33,8 @@ function LinkModalHost() {
       mode={linkModalMode}
       onClose={closeLinkModal}
       onLinked={onLinked}
+      status={link.status}
+      linkError={link.error}
     />
   );
 }
