@@ -35,7 +35,11 @@ class AccountLinkControllerTest {
         syncService = mock(UsageSyncService.class);
         syncProvider = mock(ObjectProvider.class);
         controller =
-                new AccountLinkController(service, mock(LocalUsageService.class), syncProvider);
+                new AccountLinkController(
+                        service,
+                        mock(LocalUsageService.class),
+                        mock(PairingService.class),
+                        syncProvider);
     }
 
     @Test

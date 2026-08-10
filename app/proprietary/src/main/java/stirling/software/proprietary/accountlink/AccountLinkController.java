@@ -42,16 +42,61 @@ public class AccountLinkController {
 
     private final AccountLinkService service;
     private final LocalUsageService localUsageService;
+    private final PairingService pairingService;
     // Present only when metering is on (its own flag); absent → /sync-now reports 409.
     private final ObjectProvider<UsageSyncService> syncServiceProvider;
 
     public AccountLinkController(
             AccountLinkService service,
             LocalUsageService localUsageService,
+            PairingService pairingService,
             ObjectProvider<UsageSyncService> syncServiceProvider) {
         this.service = service;
         this.localUsageService = localUsageService;
+        this.pairingService = pairingService;
         this.syncServiceProvider = syncServiceProvider;
+    }
+
+    /** Optional label for this server, shown to the leader who approves the pairing. */
+    public record PairStartRequest(String name) {}
+
+    /**
+     * Starts a device-grant pairing and returns the code to display. The device code stays on the
+     * server; the response carries only what the admin needs to read out.
+     */
+    @PostMapping("/pair/start")
+    public ResponseEntity<?> pairStart(@RequestBody(required = false) PairStartRequest req) {
+        try {
+            return ResponseEntity.ok(pairingService.start(req != null ? req.name() : null));
+        } catch (AccountLinkClient.UpstreamException e) {
+            log.warn("Pairing start rejected upstream: HTTP {}", e.status());
+            HttpStatus status =
+                    e.status() == HttpStatus.TOO_MANY_REQUESTS.value()
+                            ? HttpStatus.TOO_MANY_REQUESTS
+                            : HttpStatus.BAD_GATEWAY;
+            return ResponseEntity.status(status)
+                    .body(java.util.Map.of("error", "PAIR_START_FAILED"));
+        } catch (IOException e) {
+            // Don't echo the message: a DNS/TLS failure can carry the configured SaaS host.
+            log.warn("Pairing start failed (transport): {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(java.util.Map.of("error", "PAIR_START_FAILED"));
+        }
+    }
+
+    /**
+     * Advances the pairing, polling SaaS at most once per advertised interval. The portal calls
+     * this on a timer while the code is on screen.
+     */
+    @GetMapping("/pair/status")
+    public ResponseEntity<PairingService.PairingView> pairStatus() {
+        return ResponseEntity.ok(pairingService.advance());
+    }
+
+    @PostMapping("/pair/cancel")
+    public ResponseEntity<Void> pairCancel() {
+        pairingService.cancel();
+        return ResponseEntity.noContent().build();
     }
 
     /** {@code supabaseJwt} is the admin's short-lived token the portal already holds. */

@@ -118,6 +118,53 @@ export async function triggerLocalSync(): Promise<void> {
 }
 
 /**
+ * The in-flight device-grant pairing for THIS instance
+ * (GET /api/v1/account-link/pair/status).
+ *
+ * `phase` drives what the modal renders:
+ *   idle    — nothing started yet
+ *   waiting — a code is live; show it and keep polling
+ *   linked  — approved and the credential is stored; we are done
+ *   denied  — a leader declined it
+ *   expired — the code timed out; offer a restart
+ *
+ * The device code never appears here. Only `userCode` is meant for human eyes.
+ */
+export interface PairingView {
+  phase: "idle" | "waiting" | "linked" | "denied" | "expired";
+  userCode: string | null;
+  verificationUri: string | null;
+  /** ISO timestamp the code stops working. */
+  expiresAt: string | null;
+  /** Seconds SaaS asks us to wait between polls. */
+  intervalSeconds: number;
+}
+
+/**
+ * Start pairing this instance. The local backend calls SaaS, keeps the device
+ * code server-side, and returns only the code the admin reads out.
+ */
+export async function startPairing(name?: string): Promise<PairingView> {
+  return apiClient.local.json<PairingView>(`${BASE}/pair/start`, {
+    method: "POST",
+    body: name ? { name } : {},
+  });
+}
+
+/**
+ * Advance the pairing. The local backend rate-limits its own upstream polling to
+ * the interval SaaS advertised, so calling this on a short timer is safe.
+ */
+export async function fetchPairingStatus(): Promise<PairingView> {
+  return apiClient.local.json<PairingView>(`${BASE}/pair/status`);
+}
+
+/** Abandon the in-flight pairing. The SaaS-side request is left to expire. */
+export async function cancelPairing(): Promise<void> {
+  await apiClient.local.json<void>(`${BASE}/pair/cancel`, { method: "POST" });
+}
+
+/**
  * Every linked instance for the team — SaaS-direct call with the admin's
  * Supabase JWT (no longer takes an accessToken parameter; the saas client
  * resolves the live session itself).

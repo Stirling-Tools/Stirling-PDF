@@ -146,6 +146,96 @@ public class AccountLinkClient {
         return new RegisterResult(deviceId, deviceSecret, teamId);
     }
 
+    /** What a successful {@link #pairStart} returns; {@code deviceCode} never leaves the server. */
+    public record PairStartResult(
+            String userCode,
+            String deviceCode,
+            String verificationUri,
+            long expiresInSeconds,
+            int intervalSeconds) {}
+
+    /**
+     * Outcome of one {@link #pairPoll}. {@code credential} is non-null only when {@code status} is
+     * {@code approved}, and SaaS returns it exactly once per pairing.
+     */
+    public record PairPollResult(String status, RegisterResult credential) {}
+
+    /**
+     * Starts a device-grant pairing. Unauthenticated: an unlinked instance has no credential yet,
+     * and the returned device code is what authorises its subsequent polling.
+     */
+    public PairStartResult pairStart(String instanceName, String version) throws IOException {
+        ObjectNode payload = mapper.createObjectNode();
+        if (instanceName != null && !instanceName.isBlank()) {
+            payload.put("name", instanceName);
+        }
+        if (version != null && !version.isBlank()) {
+            payload.put("version", version);
+        }
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(uri("/api/v1/pair/start"))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/json")
+                        .timeout(timeout())
+                        .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
+                        .build();
+
+        HttpResponse<String> response = send(request);
+        if (response.statusCode() / 100 != 2) {
+            throw new UpstreamException(response.statusCode(), response.body());
+        }
+        JsonNode root = mapper.readTree(response.body());
+        String userCode = text(root, "userCode");
+        String deviceCode = text(root, "deviceCode");
+        if (userCode == null || deviceCode == null) {
+            throw new IOException("SaaS pair/start response missing userCode/deviceCode");
+        }
+        return new PairStartResult(
+                userCode,
+                deviceCode,
+                text(root, "verificationUri"),
+                root.hasNonNull("expiresInSeconds") ? root.get("expiresInSeconds").asLong() : 0L,
+                root.hasNonNull("intervalSeconds") ? root.get("intervalSeconds").asInt() : 5);
+    }
+
+    /**
+     * Polls a pairing. SaaS answers 200 with a status for every non-exceptional case, including
+     * "still waiting", so only transport and genuine server faults raise here.
+     */
+    public PairPollResult pairPoll(String deviceCode) throws IOException {
+        ObjectNode payload = mapper.createObjectNode();
+        payload.put("deviceCode", deviceCode);
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(uri("/api/v1/pair/poll"))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/json")
+                        .timeout(timeout())
+                        .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
+                        .build();
+
+        HttpResponse<String> response = send(request);
+        if (response.statusCode() / 100 != 2) {
+            throw new UpstreamException(response.statusCode(), response.body());
+        }
+        JsonNode root = mapper.readTree(response.body());
+        String status = text(root, "status");
+        if (status == null) {
+            throw new IOException("SaaS pair/poll response missing status");
+        }
+        if (!"approved".equals(status)) {
+            return new PairPollResult(status, null);
+        }
+        String deviceId = text(root, "deviceId");
+        String deviceSecret = text(root, "deviceSecret");
+        if (deviceId == null || deviceSecret == null) {
+            throw new IOException("SaaS pair/poll approved without a credential");
+        }
+        Long teamId = root.hasNonNull("teamId") ? root.get("teamId").asLong() : null;
+        return new PairPollResult(status, new RegisterResult(deviceId, deviceSecret, teamId));
+    }
+
     /**
      * Revokes this instance's own credential on the SaaS side, authenticated by that credential.
      * Best-effort: returns {@code false} if SaaS is unreachable or rejects, so the caller (local

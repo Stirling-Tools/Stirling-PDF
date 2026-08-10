@@ -105,6 +105,13 @@ public class SupabaseSecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/actuator/health", "/api/v1/config/**")
                                         .permitAll()
+                                        // Device-grant pairing: an unlinked instance has no
+                                        // account, so it cannot authenticate here. The device code
+                                        // returned by /start is the bearer secret that authorises
+                                        // its own /poll. Approval stays authenticated and
+                                        // leader-only. Both 404 unless account-link is enabled.
+                                        .requestMatchers("/api/v1/pair/start", "/api/v1/pair/poll")
+                                        .permitAll()
                                         .requestMatchers(
                                                 req ->
                                                         RequestUriUtils.isStaticResource(

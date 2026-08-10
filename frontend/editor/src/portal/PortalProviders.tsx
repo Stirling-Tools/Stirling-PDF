@@ -22,11 +22,19 @@ function LinkModalHost() {
   const link = useAccountLinkContext();
   // "reauth" only refreshes the browser SaaS session for attended reads — the
   // sign-in already applied it to the Supabase client, so we just signal a
-  // refetch. It must NOT call completeLink (that re-registers → duplicate row).
-  const onLinked =
-    linkModalMode === "reauth"
-      ? () => markSaasSessionChanged()
-      : (session: SupabaseLoginSession) => link.completeLink(session);
+  // refetch. It must NOT re-register (that would mint a duplicate credential).
+  //
+  // Linking now pairs with a code, which stores the credential on the server
+  // before the modal ever hears about it, so there is no session to hand over
+  // and nothing to register: we only re-read the resulting status.
+  const onLinked = (session?: SupabaseLoginSession) => {
+    if (linkModalMode === "reauth") {
+      markSaasSessionChanged();
+      return;
+    }
+    void link.refreshStatus();
+    void session;
+  };
   return (
     <LinkAccountModal
       open={linkModalOpen}

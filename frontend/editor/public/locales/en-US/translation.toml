@@ -5508,6 +5508,39 @@ title = "Page Ranges"
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
 
+[pair.confirm]
+address = "Address"
+approve = "Pair server"
+code = "Code"
+decline = "Decline"
+name = "Name"
+sub = "Check these details match the server you are connecting. If they do not, decline."
+title = "Pair this server?"
+unknown = "Unknown"
+unnamed = "Not set"
+version = "Version"
+
+[pair.declined]
+sub = "Nothing was connected. If you did not expect this code, someone may have sent it to you by mistake."
+title = "Pairing declined"
+
+[pair.done]
+sub = "You can close this page. The server picks up the connection within a few seconds."
+title = "Server paired"
+
+[pair.entry]
+label = "Pairing code"
+sub = "From the screen on the server you are connecting."
+submit = "Continue"
+title = "Enter your pairing code"
+
+[pair.error]
+failed = "That did not go through. Only a team owner can pair a server."
+notFound = "That code is not valid. It may have expired, or already been used. Ask the server for a new one."
+
+[pair.meta]
+title = "Pair a server"
+
 [payg.activity]
 docs = "docs"
 empty = "No billable activity yet this period."
@@ -6316,17 +6349,42 @@ minutesAgo_other = "{{count}}m ago"
 never = "never"
 
 [portal.accountLink.modal]
-linkSubtitle = "Sign in to the account this server should bill against."
-linkTitle = "Link your Stirling account"
-reauthSubtitle = "Your session expired — sign back in to your Stirling account. Your instance stays linked."
+pairSubtitle = "Connect this server to your Stirling account to unlock teams, the processor, pipelines and policies."
+pairTitle = "Pair this server"
+reauthSubtitle = "Your session expired. Sign back in to your Stirling account; this server stays linked."
 reauthTitle = "Sign in again"
 simulateSignIn = "Simulate sign-in (dev)"
 
 [portal.accountLink.modal.loginNotConfigured]
-after = "to enable in-app linking against the hosted Stirling account."
+after = "to enable in-app sign-in against the hosted Stirling account."
 and = "and"
 before = "Set"
 title = "SaaS login not configured"
+
+[portal.accountLink.pairing]
+codeLabel = "Your pairing code"
+lead = "Open this address on any device and enter the code below."
+leaderHint = "A team owner has to approve it. They will be shown this server's name and address so they can check it is yours."
+newCode = "Get a new code"
+retry = "Try again"
+waiting = "Waiting for approval on the Stirling site."
+waitingWithExpiry = "Waiting for approval. Expires in {{countdown}}."
+
+[portal.accountLink.pairing.denied]
+body = "Someone declined this pairing on the Stirling site. Generate a new code if that was not intended."
+title = "Pairing declined"
+
+[portal.accountLink.pairing.error]
+body = "This server could not start a pairing. Check its outbound network access, then try again."
+title = "Could not reach Stirling"
+
+[portal.accountLink.pairing.expired]
+body = "Pairing codes are short lived. Generate a new one to try again."
+title = "Code expired"
+
+[portal.accountLink.pairing.linked]
+body = "This server is now connected to your Stirling account."
+title = "Server paired"
 
 [portal.accountLink.panel]
 instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."

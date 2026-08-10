@@ -10,6 +10,7 @@ const base: UseAccountLink = {
   phase: "idle",
   error: null,
   completeLink: async () => {},
+  refreshStatus: async () => {},
   unlink: async () => {},
 };
 

@@ -15,6 +15,7 @@ import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
+import PairDevice from "@app/routes/PairDevice";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
@@ -103,6 +104,11 @@ export default function App() {
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/auth/reset" element={<ResetPassword />} />
                   <Route path="/oauth/consent" element={<OAuthConsent />} />
+                  {/* Where a self-hosted server's pairing code is approved. It
+                      has to be on this origin: the identity provider will only
+                      redirect to allow-listed URLs, so a customer's own
+                      hostname can never complete a sign-in round trip. */}
+                  <Route path="/link" element={<PairDevice />} />
                   {/* Shared-file links. Team invites are NOT routed here: on
                       SaaS they are accepted in-app via the Supabase team
                       invitation banner, not the Spring password-based

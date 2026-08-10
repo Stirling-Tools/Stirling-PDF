@@ -13,27 +13,39 @@ import {
   PENDING_LINK_KEY,
   SAAS_OAUTH_PROVIDERS,
 } from "@portal/auth/saasSupabase";
+import { PairingPanel } from "@portal/components/account-link/PairingPanel";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   /**
-   * "link" registers this instance against the signed-in account; "reauth" only
-   * refreshes an expired SaaS session (the instance is already linked). The mode
-   * is persisted across the OAuth redirect so the SSO-return handler doesn't
-   * re-register on a reauth.
+   * "link" pairs this instance to a Stirling team with a device-grant code;
+   * "reauth" only refreshes an expired SaaS session for attended reads (the
+   * instance stays linked), which still needs an in-browser sign-in because it
+   * is a browser session we are renewing, not a server credential.
    */
   mode?: "link" | "reauth";
-  /** Called with the SaaS session after a successful sign-in. */
-  onLinked: (session: SupabaseLoginSession) => void | Promise<void>;
+  /**
+   * Called once the instance is linked. Carries the refreshed SaaS session on the
+   * reauth path; pairing produces no browser session, so it is called with no
+   * argument there.
+   */
+  onLinked: (session?: SupabaseLoginSession) => void | Promise<void>;
 }
 
 /**
- * In-app account-link login. Signs the admin in to their Stirling (SaaS) account
- * via the shared Supabase login (SSO + email/password), then hands the resulting
- * session to the caller to register this instance. No popup; the device secret
- * never reaches the browser. SSO redirects away and is finished by useAccountLink
- * on return.
+ * Connect this server to a Stirling account.
+ *
+ * <p>Linking uses a pairing code (device grant): the server displays a short code
+ * and the admin approves it on the Stirling site from any device. That indirection
+ * is not decoration. A self-hosted instance runs on an origin the identity
+ * provider will never have on its redirect allow-list, so an in-browser sign-in
+ * here cannot complete SSO or a sign-up confirmation. Moving the human half of
+ * the flow to our own origin is the only thing that makes those work, and it also
+ * covers servers with no browser at all.
+ *
+ * <p>Re-auth is the exception and keeps the in-browser Supabase login: there we
+ * genuinely want a session in this browser, and the admin already has an account.
  */
 export function LinkAccountModal({
   open,
@@ -42,15 +54,14 @@ export function LinkAccountModal({
   onLinked,
 }: Props) {
   const { t } = useTranslation();
-  useEffect(() => {
-    if (open) ensureSaasSupabase();
-  }, [open]);
-
   const reauth = mode === "reauth";
+
+  useEffect(() => {
+    if (open && reauth) ensureSaasSupabase();
+  }, [open, reauth]);
+
   const login = useSupabaseLogin({
     providers: SAAS_OAUTH_PROVIDERS,
-    // Return to the current page after SSO; the SSO-return handler in
-    // useAccountLink reads the persisted mode so it links vs. only refreshes.
     redirectTo: window.location.href,
     onBeforeOAuth: () => sessionStorage.setItem(PENDING_LINK_KEY, mode),
     onSuccess: async (session) => {
@@ -67,24 +78,29 @@ export function LinkAccountModal({
       title={
         reauth
           ? t("portal.accountLink.modal.reauthTitle", "Sign in again")
-          : t(
-              "portal.accountLink.modal.linkTitle",
-              "Link your Stirling account",
-            )
+          : t("portal.accountLink.modal.pairTitle", "Pair this server")
       }
       subtitle={
         reauth
           ? t(
               "portal.accountLink.modal.reauthSubtitle",
-              "Your session expired — sign back in to your Stirling account. Your instance stays linked.",
+              "Your session expired. Sign back in to your Stirling account; this server stays linked.",
             )
           : t(
-              "portal.accountLink.modal.linkSubtitle",
-              "Sign in to the account this server should bill against.",
+              "portal.accountLink.modal.pairSubtitle",
+              "Connect this server to your Stirling account to unlock teams, the processor, pipelines and policies.",
             )
       }
     >
-      {isSaasSupabaseConfigured ? (
+      {!reauth ? (
+        <PairingPanel
+          active={open}
+          onLinked={() => {
+            void onLinked();
+            onClose();
+          }}
+        />
+      ) : isSaasSupabaseConfigured ? (
         <SupabaseLoginForm state={login} />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -101,7 +117,7 @@ export function LinkAccountModal({
             <code>VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>{" "}
             {t(
               "portal.accountLink.modal.loginNotConfigured.after",
-              "to enable in-app linking against the hosted Stirling account.",
+              "to enable in-app sign-in against the hosted Stirling account.",
             )}
           </Banner>
           {import.meta.env.DEV && (

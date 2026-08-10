@@ -19,13 +19,6 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.enumeration.TeamRole;
-import stirling.software.proprietary.model.TeamMembership;
-import stirling.software.proprietary.security.database.repository.UserRepository;
-import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.security.repository.TeamMembershipRepository;
-import stirling.software.saas.util.AuthenticationUtils;
-
 /**
  * Account-link registration surface (combined-billing "Mode A").
  *
@@ -47,16 +40,12 @@ import stirling.software.saas.util.AuthenticationUtils;
 public class AccountLinkController {
 
     private final AccountLinkService service;
-    private final TeamMembershipRepository memberRepo;
-    private final UserRepository userRepository;
+    private final LeaderTeamResolver leaderTeamResolver;
 
     public AccountLinkController(
-            AccountLinkService service,
-            TeamMembershipRepository memberRepo,
-            UserRepository userRepository) {
+            AccountLinkService service, LeaderTeamResolver leaderTeamResolver) {
         this.service = service;
-        this.memberRepo = memberRepo;
-        this.userRepository = userRepository;
+        this.leaderTeamResolver = leaderTeamResolver;
     }
 
     /** Optional display name for the instance (hostname / label). */
@@ -78,7 +67,7 @@ public class AccountLinkController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<RegisterResponse> register(
             @RequestBody(required = false) RegisterRequest req, Authentication auth) {
-        LeaderTeam lt = resolveLeaderTeam(auth);
+        LeaderTeamResolver.LeaderTeam lt = resolveLeaderTeam(auth);
         if (lt.error() != null) {
             return ResponseEntity.status(lt.error()).build();
         }
@@ -98,7 +87,7 @@ public class AccountLinkController {
     @GetMapping("/instances")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<InstanceRow>> list(Authentication auth) {
-        LeaderTeam lt = resolveLeaderTeam(auth);
+        LeaderTeamResolver.LeaderTeam lt = resolveLeaderTeam(auth);
         if (lt.error() != null) {
             return ResponseEntity.status(lt.error()).build();
         }
@@ -124,7 +113,7 @@ public class AccountLinkController {
     @PostMapping("/instances/{instanceId}/revoke")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> revoke(@PathVariable Long instanceId, Authentication auth) {
-        LeaderTeam lt = resolveLeaderTeam(auth);
+        LeaderTeamResolver.LeaderTeam lt = resolveLeaderTeam(auth);
         if (lt.error() != null) {
             return ResponseEntity.status(lt.error()).build();
         }
@@ -132,30 +121,8 @@ public class AccountLinkController {
         return ok ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Helpers — team always derived from the caller; instance linking is a leader (billing) action.
-    // ---------------------------------------------------------------------------------------
-
-    /**
-     * Resolved caller team, or an {@code error} status to return (teamId/userId null when error).
-     */
-    private record LeaderTeam(Long teamId, Long userId, HttpStatus error) {}
-
-    private LeaderTeam resolveLeaderTeam(Authentication auth) {
-        User user;
-        try {
-            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
-        } catch (SecurityException e) {
-            return new LeaderTeam(null, null, HttpStatus.UNAUTHORIZED);
-        }
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(user.getId());
-        if (rows.isEmpty()) {
-            return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
-        }
-        TeamMembership m = rows.get(0);
-        if (m.getRole() != TeamRole.LEADER) {
-            return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
-        }
-        return new LeaderTeam(m.getTeam().getId(), user.getId(), null);
+    /** Delegates to the shared rule so the register and pairing paths cannot diverge. */
+    private LeaderTeamResolver.LeaderTeam resolveLeaderTeam(Authentication auth) {
+        return leaderTeamResolver.resolve(auth);
     }
 }

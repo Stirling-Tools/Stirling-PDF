@@ -40,6 +40,12 @@ export interface UseAccountLink {
   error: string | null;
   /** Finish linking THIS instance with a SaaS session minted by the login modal. */
   completeLink: (session: SupabaseLoginSession, name?: string) => Promise<void>;
+  /**
+   * Re-read the link status from the local backend. The pairing flow stores the
+   * credential server-side before the browser is told anything, so there is no
+   * session to hand over: the UI just asks what the state is now.
+   */
+  refreshStatus: () => Promise<void>;
   /** Unlink this instance. */
   unlink: () => Promise<void>;
 }
@@ -71,27 +77,23 @@ export function useAccountLink(): UseAccountLink {
     [applyLinkFacts],
   );
 
+  const refreshStatus = useCallback(async () => {
+    try {
+      const next = await fetchStatus();
+      setStatus(next);
+      // A linked instance is at least linked-free; subscription comes from the wallet.
+      if (next.linked) applyLinkFacts(true, false);
+    } catch {
+      // Status endpoint absent (flag off) / unreachable → treat as not linked.
+      // Don't surface an error for the expected flag-off case.
+      setStatus({ linked: false, name: null });
+    }
+  }, [applyLinkFacts]);
+
   // Read the current link status on mount.
   useEffect(() => {
-    let cancelled = false;
-    void fetchStatus()
-      .then((s) => {
-        if (!cancelled) {
-          setStatus(s);
-          // A linked instance is at least linked-free; subscription comes from the wallet.
-          if (s.linked) applyLinkFacts(true, false);
-        }
-      })
-      .catch(() => {
-        // Status endpoint absent (flag off) / unreachable → leave status null,
-        // which renders as "Not linked". Don't surface an error or leak an
-        // unhandled rejection for the expected flag-off case.
-        if (!cancelled) setStatus({ linked: false, name: null });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [applyLinkFacts]);
+    void refreshStatus();
+  }, [refreshStatus]);
 
   // SSO return: an SSO sign-in we kicked off has redirected back and the SaaS
   // session is now in the shared Supabase client. The pending marker carries the
@@ -137,6 +139,7 @@ export function useAccountLink(): UseAccountLink {
     phase,
     error,
     completeLink,
+    refreshStatus,
     unlink,
   };
 }
