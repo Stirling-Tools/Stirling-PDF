@@ -12,7 +12,7 @@ const mockSignatures: SavedSignature[] = [
     signerName: "Jordan Lee",
     fontFamily: "cursive",
     fontSize: 32,
-    textColor: "#1a1a1a",
+    textColor: "#1a1a1a", // theme-allow-color signature ink is user data
     createdAt: Date.now(),
     updatedAt: Date.now(),
   },
