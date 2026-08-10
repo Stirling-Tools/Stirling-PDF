@@ -56,6 +56,10 @@ const snapshot: ProcurementSnapshot = {
   trialExtensionsUsed: 0,
   licensed: false,
   licenseKey: null,
+  agreementSignedVersion: null,
+  businessName: null,
+  contactName: null,
+  contactEmail: null,
   latestQuote: quote,
 };
 
@@ -88,10 +92,14 @@ function makeController(
     onConfirmSetup: () => {},
     onExtendTrial: () => {},
     onReset: () => {},
-    onGenerate: () => {},
+    onGenerate: async () => {},
     onAgree: () => {},
     onDownloadPdf: async () => {},
     onDownloadOfflineLicense: async () => {},
+    downloadingAgreement: false,
+    onAcceptQuote: async () => {},
+    onDownloadSignedAgreement: async () => {},
+    onExploreEnterprise: () => {},
     ...overrides,
   };
 }
