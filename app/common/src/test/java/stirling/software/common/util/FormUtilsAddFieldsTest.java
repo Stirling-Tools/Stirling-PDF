@@ -82,4 +82,65 @@ class FormUtilsAddFieldsTest {
             assertEquals(null, doc.getDocumentCatalog().getAcroForm());
         }
     }
+
+    @Test
+    void skipsZeroAreaRectsInsteadOfInventingDefaults() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(new PDRectangle(612, 792)));
+
+            FormUtils.addFields(
+                    doc,
+                    List.of(
+                            def("text", 0, 100f, 700f, 200f, 20f),
+                            def("text", 0, 100f, 650f, 0f, 20f), // zero width -> skipped
+                            def("text", 0, 100f, 600f, 50f, 0f))); // zero height -> skipped
+
+            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+            List<PDField> fields = new ArrayList<>();
+            form.getFieldTree().forEach(fields::add);
+            assertEquals(1, fields.size(), "degenerate rects must not become fields");
+        }
+    }
+
+    @Test
+    void signatureDetectionsBecomeFillableTextFields() throws IOException {
+        // Parity contract with the browser engine: pdf-lib cannot create signature widgets, so
+        // both paths deliberately emit a text field for detected signature areas.
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(new PDRectangle(612, 792)));
+
+            FormUtils.addFields(doc, List.of(def("signature", 0, 100f, 200f, 220f, 48f)));
+
+            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+            List<PDField> fields = new ArrayList<>();
+            form.getFieldTree().forEach(fields::add);
+            assertEquals(1, fields.size());
+            assertTrue(
+                    fields.get(0) instanceof PDTextField,
+                    "signature areas are written as fillable text fields");
+        }
+    }
+
+    @Test
+    void addingFieldsKeepsExistingFieldAppearanceStreamsUntouched() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(new PDRectangle(612, 792)));
+            FormUtils.addFields(doc, List.of(def("text", 0, 100f, 700f, 200f, 20f)));
+
+            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+            PDTextField existing = (PDTextField) form.getFieldTree().iterator().next();
+            existing.setValue("existing value");
+            var normalBefore =
+                    existing.getWidgets().get(0).getNormalAppearanceStream().getCOSObject();
+            assertNotNull(normalBefore, "setting a value generates an appearance");
+
+            FormUtils.addFields(doc, List.of(def("text", 0, 100f, 650f, 200f, 20f)));
+
+            var normalAfter =
+                    existing.getWidgets().get(0).getNormalAppearanceStream().getCOSObject();
+            assertTrue(
+                    normalBefore == normalAfter,
+                    "pre-existing field appearances must not be regenerated");
+        }
+    }
 }

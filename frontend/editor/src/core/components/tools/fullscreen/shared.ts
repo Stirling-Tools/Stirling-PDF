@@ -82,7 +82,10 @@ export const resolveDisabledMessage = (
   disabledReason: ToolDisabledReason,
   tool: ToolRegistryEntry,
 ): string => {
-  if (tool.unavailableMessage && AVAILABILITY_REASONS.includes(disabledReason)) {
+  if (
+    tool.unavailableMessage &&
+    AVAILABILITY_REASONS.includes(disabledReason)
+  ) {
     return tool.unavailableMessage;
   }
   const { key, fallback } = getDisabledLabel(disabledReason);

@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Text, Paper, Group, Switch, Loader, Divider } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Paper,
+  Group,
+  Switch,
+  Loader,
+  Divider,
+} from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
@@ -8,6 +16,7 @@ import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { ProgressBar } from "@app/ui/ProgressBar";
 import { Banner } from "@app/ui/Banner";
 import { Collapsible } from "@app/ui/Collapsible";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   useFormDetectionModelStatus,
@@ -15,7 +24,10 @@ import {
   FormDetectionExecutionMode,
 } from "@app/hooks/useFormDetectionModelStatus";
 
-function formatSize(t: (k: string, d: string) => string, bytes: number): string {
+function formatSize(
+  t: (k: string, d: string) => string,
+  bytes: number,
+): string {
   if (!bytes || bytes <= 0)
     return t("admin.formDetection.sizeUnknown", "size unknown");
   const mb = bytes / (1024 * 1024);
@@ -97,7 +109,8 @@ export default function AdminFormDetectionSection() {
   const inFlight = st === "downloading" || st === "verifying";
   const activeId = status?.activeModelId || null;
   const installedIds = status?.installed ?? [];
-  const downloadingId = status?.downloadingModelId || (inFlight ? busyId : null);
+  const downloadingId =
+    status?.downloadingModelId || (inFlight ? busyId : null);
 
   const statusTone: StatusTone =
     st === "ready"
@@ -210,11 +223,19 @@ export default function AdminFormDetectionSection() {
         p="sm"
         style={
           isActive
-            ? { borderColor: "var(--c-primary)", background: "var(--c-primary-subtle)" }
+            ? {
+                borderColor: "var(--c-primary)",
+                background: "var(--c-primary-subtle)",
+              }
             : undefined
         }
       >
-        <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
+        <Group
+          justify="space-between"
+          align="flex-start"
+          wrap="nowrap"
+          gap="sm"
+        >
           <div style={{ minWidth: 0 }}>
             <Group gap={6} wrap="wrap">
               <Text fw={600} size="sm">
@@ -252,7 +273,10 @@ export default function AdminFormDetectionSection() {
                 }
               >
                 {confirmUninstallId === entry.id
-                  ? t("admin.formDetection.confirmUninstall", "Click to confirm")
+                  ? t(
+                      "admin.formDetection.confirmUninstall",
+                      "Click to confirm",
+                    )
                   : t("admin.formDetection.uninstall", "Uninstall")}
               </Button>
             ) : (
@@ -352,26 +376,40 @@ export default function AdminFormDetectionSection() {
               <Text fw={600} size="sm">
                 {t("admin.formDetection.title", "AI Form Detection")}
               </Text>
+              <Tooltip
+                content={t(
+                  "admin.formDetection.description",
+                  "Lets users make PDFs fillable by detecting text fields, checkboxes and signature areas with a local AI model. No data leaves your deployment.",
+                )}
+                position="top"
+                arrow
+              >
+                <LocalIcon
+                  icon="info-outline-rounded"
+                  width="1rem"
+                  height="1rem"
+                  style={{ color: "var(--c-text-subtle)", cursor: "help" }}
+                />
+              </Tooltip>
               {status ? (
-                <StatusBadge tone={statusTone} size="sm" pulse={inFlight}>
+                <StatusBadge tone={statusTone} size="sm">
                   {statusLabel}
                 </StatusBadge>
               ) : null}
             </Group>
             <Switch
               checked={enabled}
-              onChange={(e) => doSetConfig({ enabled: e.currentTarget.checked })}
+              onChange={(e) =>
+                doSetConfig({ enabled: e.currentTarget.checked })
+              }
               disabled={configBusy || (loading && !status)}
               size="sm"
-              aria-label={t("admin.formDetection.enableFeature", "Enable feature")}
+              aria-label={t(
+                "admin.formDetection.enableFeature",
+                "Enable feature",
+              )}
             />
           </Group>
-          <Text size="xs" c="dimmed" mt={4}>
-            {t(
-              "admin.formDetection.description",
-              "Lets users make PDFs fillable by detecting text fields, checkboxes and signature areas with a local AI model. No data leaves your deployment.",
-            )}
-          </Text>
         </div>
 
         {loading && !status ? (
@@ -388,7 +426,10 @@ export default function AdminFormDetectionSection() {
                     height="1.1rem"
                   />
                 }
-                title={t("admin.formDetection.errorTitle", "Something went wrong")}
+                title={t(
+                  "admin.formDetection.errorTitle",
+                  "Something went wrong",
+                )}
                 description={anyError}
               />
             ) : null}
@@ -431,7 +472,10 @@ export default function AdminFormDetectionSection() {
                     value: "browser",
                   },
                   {
-                    label: t("admin.formDetection.engine.server", "This server"),
+                    label: t(
+                      "admin.formDetection.engine.server",
+                      "This server",
+                    ),
                     value: "server",
                     disabled: !serverEngineAvailable,
                   },

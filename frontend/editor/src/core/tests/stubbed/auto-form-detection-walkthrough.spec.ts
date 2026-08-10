@@ -10,7 +10,10 @@ const SHOT_DIR =
   process.env.SHOT_DIR ??
   path.join(import.meta.dirname, "../../../../screenshots/auto-form-detection");
 
-const SAMPLE_PDF = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 function shot(name: string): string {
   fs.mkdirSync(SHOT_DIR, { recursive: true });
@@ -112,7 +115,11 @@ async function stubDetect(
     if (opts.delayMs) await new Promise((res) => setTimeout(res, opts.delayMs));
     const body = r.request().postData() ?? "";
     if (body.includes("applyToPdf") && body.includes("true")) {
-      await r.fulfill({ status: 200, contentType: "application/pdf", body: pdf });
+      await r.fulfill({
+        status: 200,
+        contentType: "application/pdf",
+        body: pdf,
+      });
     } else {
       await r.fulfill({ json: { detections } });
     }
@@ -407,7 +414,9 @@ test.describe("rtl tool", () => {
       await applyTheme(page, theme);
       await enableRtl(page);
       await stubStatus(page);
-      await page.goto("/auto-form-detection", { waitUntil: "domcontentloaded" });
+      await page.goto("/auto-form-detection", {
+        waitUntil: "domcontentloaded",
+      });
       await expect(page.locator('[data-tour="run-button"]')).toBeVisible({
         timeout: 15_000,
       });

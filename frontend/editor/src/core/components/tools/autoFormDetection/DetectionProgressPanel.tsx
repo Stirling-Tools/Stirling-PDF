@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ProgressBar } from "@app/ui/ProgressBar";
-import {
-  DetectionStage,
-  onStage,
-} from "@app/services/formDetection/progress";
+import { DetectionStage, onStage } from "@app/services/formDetection/progress";
 
 function mb(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / (1024 * 1024)))} MB`;
@@ -27,7 +24,10 @@ export default function DetectionProgressPanel({
   if (!active || !stage || stage.kind === "done") return null;
 
   let value = 0.05;
-  let label = t("autoFormDetection.progress.starting", "Preparing detection...");
+  let label = t(
+    "autoFormDetection.progress.starting",
+    "Preparing detection...",
+  );
   let note: string | null = null;
 
   switch (stage.kind) {

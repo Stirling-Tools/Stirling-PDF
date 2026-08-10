@@ -49,6 +49,12 @@ import stirling.software.proprietary.formdetection.service.FormDetectionModelMan
 @Tag(name = "Auto Form Detection")
 public class FormDetectionController {
 
+    /** Hard bound on pages per request; inference is ~1s/page, so this caps worst-case work. */
+    static final int MAX_PAGES = 500;
+
+    /** Cap on total fields; past this an output PDF is unusable and NMS cost is O(n^2). */
+    static final int MAX_FIELDS = 2000;
+
     private final FormDetectionModelManager manager;
     private final OnnxFormDetector detector;
     private final PageRasterizer rasterizer;
@@ -87,18 +93,38 @@ public class FormDetectionController {
                                     "message",
                                     "Active model spec unavailable"));
         }
-        float score = confThreshold != null ? confThreshold : spec.getScoreThreshold();
+        // An out-of-range or NaN threshold would keep essentially every anchor.
+        float score =
+                confThreshold != null && !confThreshold.isNaN()
+                        ? Math.clamp(confThreshold, 0f, 1f)
+                        : spec.getScoreThreshold();
         byte[] pdfBytes = file.getBytes();
 
         List<DetectedField> detections = new ArrayList<>();
         try {
-            for (PageRasterizer.RasterPage page :
-                    rasterizer.rasterize(pdfBytes, spec.getInputSize())) {
+            List<PageRasterizer.RasterPage> pages =
+                    rasterizer.rasterize(pdfBytes, spec.getInputSize());
+            if (pages.size() > MAX_PAGES) {
+                return ResponseEntity.badRequest()
+                        .body(
+                                Map.of(
+                                        "reason",
+                                        "LIMIT",
+                                        "message",
+                                        "PDF has "
+                                                + pages.size()
+                                                + " pages; the limit is "
+                                                + MAX_PAGES));
+            }
+            for (PageRasterizer.RasterPage page : pages) {
                 Yolo.Preprocessed pre =
                         Yolo.preprocess(page.rgba(), page.widthPx(), page.heightPx(), spec);
                 Yolo.RawOutput out = detector.infer(pre.chw(), spec.getInputSize());
                 for (Yolo.Detection d : Yolo.decode(out, spec, pre, score)) {
                     DetectedField.RectPt rect = CoordinateMapper.toPdfPoints(d, page);
+                    if (rect.w() <= 0 || rect.h() <= 0) {
+                        continue;
+                    }
                     detections.add(
                             new DetectedField(
                                     fieldType(spec, d.classId()),
@@ -106,6 +132,14 @@ public class FormDetectionController {
                                     rect,
                                     d.score()));
                 }
+            }
+            if (detections.size() > MAX_FIELDS) {
+                log.info(
+                        "Capping {} detections to {} highest-confidence fields",
+                        detections.size(),
+                        MAX_FIELDS);
+                detections.sort((a, b) -> Double.compare(b.confidence(), a.confidence()));
+                detections = new ArrayList<>(detections.subList(0, MAX_FIELDS));
             }
         } catch (IllegalStateException e) {
             // e.g. ONNX Runtime native unavailable for this OS/arch - report unavailable cleanly

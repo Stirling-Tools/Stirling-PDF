@@ -23,7 +23,7 @@ RUN apt-get update \
 # Pre-download the default Auto Form Detection model (FFDNet-S, ~37MB) so the feature works
 # out-of-the-box - especially important for this air-gapped fat image (no runtime internet).
 # Verified by checksum; seeded into the writable configs model dir at startup.
-ARG FORM_DETECTION_MODEL_URL=https://huggingface.co/jbarrow/FFDNet-S-cpu/resolve/main/FFDNet-S.onnx
+ARG FORM_DETECTION_MODEL_URL=https://huggingface.co/jbarrow/FFDNet-S-cpu/resolve/d6cb18cb4bf31d7f5adfe8fbc7cc3744b516d1fe/FFDNet-S.onnx
 ARG FORM_DETECTION_MODEL_SHA256=93bccf47c048f9f947f9b1b52d002edf144a8a583dae39f164d9e5725321acc0
 RUN mkdir -p /preinstalled-models \
     && curl -fSL "${FORM_DETECTION_MODEL_URL}" -o /preinstalled-models/ffdnet-s.onnx \

@@ -30,6 +30,7 @@ class FormDetectionModelServeControllerTest {
 
     private FormDetectionModelManager managerWith(Path model) {
         FormDetectionModelManager manager = Mockito.mock(FormDetectionModelManager.class);
+        Mockito.when(manager.isFeatureEnabled()).thenReturn(true);
         Mockito.when(manager.getActiveModelFile())
                 .thenReturn(model == null ? Optional.empty() : Optional.of(model));
         Mockito.when(manager.getActiveEtag()).thenReturn(Optional.of("a".repeat(64)));
@@ -76,6 +77,19 @@ class FormDetectionModelServeControllerTest {
         ResponseEntity<Object> resp =
                 new FormDetectionModelServeController(managerWith(null))
                         .serveModel(new HttpHeaders());
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+    }
+
+    @Test
+    void returns404WhenFeatureDisabledEvenIfModelOnDisk(@TempDir Path dir) throws Exception {
+        Path model = dir.resolve("m.onnx");
+        Files.write(model, "abcdefghij".getBytes());
+        FormDetectionModelManager manager = managerWith(model);
+        Mockito.when(manager.isFeatureEnabled()).thenReturn(false);
+
+        ResponseEntity<Object> resp =
+                new FormDetectionModelServeController(manager).serveModel(new HttpHeaders());
+
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
     }
 }

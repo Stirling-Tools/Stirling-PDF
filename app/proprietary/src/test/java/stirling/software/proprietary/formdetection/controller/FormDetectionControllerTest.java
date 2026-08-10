@@ -67,4 +67,42 @@ class FormDetectionControllerTest {
                 .andExpect(jsonPath("$.detections").isArray())
                 .andExpect(jsonPath("$.detections").isEmpty());
     }
+
+    @Test
+    void detectRejectsPdfsOverThePageLimit() throws Exception {
+        FormDetectionModelManager manager = Mockito.mock(FormDetectionModelManager.class);
+        Mockito.when(manager.isReady()).thenReturn(true);
+        Mockito.when(manager.getActiveEntry()).thenReturn(Optional.of(new ModelCatalogEntry()));
+
+        PageRasterizer.RasterPage blank =
+                new PageRasterizer.RasterPage(
+                        0, new byte[0], 1, 1, 1f, 1f, 1f, 1f, 0, 1f, 1f, 0f, 0f);
+        List<PageRasterizer.RasterPage> tooMany =
+                java.util.Collections.nCopies(FormDetectionController.MAX_PAGES + 1, blank);
+        PageRasterizer rasterizer = Mockito.mock(PageRasterizer.class);
+        Mockito.when(rasterizer.rasterize(Mockito.any(), Mockito.anyInt())).thenReturn(tooMany);
+
+        mvc(manager, Mockito.mock(OnnxFormDetector.class), rasterizer)
+                .perform(multipart("/api/v1/ai/form-detection/detect").file(pdf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.reason").value("LIMIT"));
+    }
+
+    @Test
+    void detectToleratesOutOfRangeConfThreshold() throws Exception {
+        FormDetectionModelManager manager = Mockito.mock(FormDetectionModelManager.class);
+        Mockito.when(manager.isReady()).thenReturn(true);
+        Mockito.when(manager.getActiveEntry()).thenReturn(Optional.of(new ModelCatalogEntry()));
+
+        PageRasterizer rasterizer = Mockito.mock(PageRasterizer.class);
+        Mockito.when(rasterizer.rasterize(Mockito.any(), Mockito.anyInt())).thenReturn(List.of());
+
+        mvc(manager, Mockito.mock(OnnxFormDetector.class), rasterizer)
+                .perform(
+                        multipart("/api/v1/ai/form-detection/detect")
+                                .file(pdf())
+                                .param("confThreshold", "-42"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.detections").isEmpty());
+    }
 }

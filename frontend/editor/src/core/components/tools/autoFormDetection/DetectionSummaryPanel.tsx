@@ -4,7 +4,10 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { Banner } from "@app/ui/Banner";
 import { DetectionSummary } from "@app/services/formDetection/progress";
 
-const TYPE_META: Record<string, { icon: string; labelKey: string; fallback: string }> = {
+const TYPE_META: Record<
+  string,
+  { icon: string; labelKey: string; fallback: string }
+> = {
   text: {
     icon: "text-fields-rounded",
     labelKey: "autoFormDetection.summary.textFields",
@@ -38,7 +41,9 @@ export default function DetectionSummaryPanel({
     return (
       <Banner
         tone="warning"
-        icon={<LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />}
+        icon={
+          <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
+        }
         title={t("autoFormDetection.summary.noneTitle", "No form fields found")}
         description={t(
           "autoFormDetection.summary.noneBody",

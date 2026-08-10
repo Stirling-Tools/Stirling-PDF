@@ -13,7 +13,10 @@ const SHOT_DIR =
   process.env.SHOT_DIR ??
   path.join(import.meta.dirname, "../../../../screenshots/ui-review");
 
-const SAMPLE_PDF = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 function shot(name: string): string {
   fs.mkdirSync(SHOT_DIR, { recursive: true });
@@ -154,7 +157,9 @@ test.use({ autoGoto: false });
 test("tool-01-home-tile", async ({ page }) => {
   await stubStatus(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  const tile = page.locator('[data-tour="tool-button-autoFormDetection"]').first();
+  const tile = page
+    .locator('[data-tour="tool-button-autoFormDetection"]')
+    .first();
   await expect(tile).toBeVisible({ timeout: 15_000 });
   await tile.scrollIntoViewIfNeeded();
   await settle(page);
@@ -208,14 +213,22 @@ test("tool-05-results", async ({ page }) => {
   await uploadSample(page);
   await page.locator('[data-tour="run-button"]').click();
   await expect(
-    page.getByText(/Detection results|Review fillable|Detected Form Fields|Review/i).first(),
+    page
+      .getByText(
+        /Detection results|Review fillable|Detected Form Fields|Review/i,
+      )
+      .first(),
   ).toBeVisible({ timeout: 30_000 });
   await settle(page, 1_200);
   await panel(page).screenshot({ path: shot("tool-05-results") });
 });
 
 test("tool-06-endpoint-disabled", async ({ page }) => {
-  await stubStatus(page, { status: "not_installed", activeModelId: "", installed: [] });
+  await stubStatus(page, {
+    status: "not_installed",
+    activeModelId: "",
+    installed: [],
+  });
   const disabledMap = {
     "form-detection": { enabled: false, reason: "DEPENDENCY" },
   };
@@ -269,7 +282,11 @@ test("tool-08-dark-results", async ({ page }) => {
   await uploadSample(page);
   await page.locator('[data-tour="run-button"]').click();
   await expect(
-    page.getByText(/Detection results|Review fillable|Detected Form Fields|Review/i).first(),
+    page
+      .getByText(
+        /Detection results|Review fillable|Detected Form Fields|Review/i,
+      )
+      .first(),
   ).toBeVisible({ timeout: 30_000 });
   await settle(page, 1_200);
   await panel(page).screenshot({ path: shot("tool-08-dark-results") });
@@ -316,7 +333,11 @@ async function openFormDetectionSettings(page: Page) {
 }
 
 /** Screenshot the settings card (ancestor Paper of the section title). */
-async function shootCard(page: Page, dialog: ReturnType<Page["locator"]>, name: string) {
+async function shootCard(
+  page: Page,
+  dialog: ReturnType<Page["locator"]>,
+  name: string,
+) {
   const paper = dialog
     .locator(".mantine-Paper-root")
     .filter({ hasText: "AI Form Detection" })
@@ -365,9 +386,7 @@ test.describe("admin", () => {
     await page.setViewportSize({ width: 1920, height: 1900 });
     await stubStatus(page);
     const { dialog } = await openFormDetectionSettings(page);
-    const toggle = dialog
-      .getByText(/Air-gapped|offline install/i)
-      .first();
+    const toggle = dialog.getByText(/Air-gapped|offline install/i).first();
     if (await toggle.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await toggle.click();
       await settle(page);
@@ -384,7 +403,10 @@ test.describe("admin", () => {
   });
 
   test("admin-05-server-unavailable", async ({ page }) => {
-    await stubStatus(page, { serverEngineAvailable: false, executionMode: "auto" });
+    await stubStatus(page, {
+      serverEngineAvailable: false,
+      executionMode: "auto",
+    });
     const { dialog } = await openFormDetectionSettings(page);
     await shootCard(page, dialog, "admin-05-server-unavailable");
   });

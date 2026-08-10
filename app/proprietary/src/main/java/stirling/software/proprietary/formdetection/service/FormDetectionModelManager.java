@@ -129,7 +129,7 @@ public class FormDetectionModelManager {
         }
     }
 
-    private boolean isFeatureEnabled() {
+    public boolean isFeatureEnabled() {
         return applicationProperties.getFormDetection().isEnabled();
     }
 
@@ -362,8 +362,25 @@ public class FormDetectionModelManager {
         return next.toString();
     }
 
+    /**
+     * Tombstone marking a model an admin explicitly uninstalled, so the pre-installed seeding on
+     * the next boot does not silently resurrect it. Cleared by an explicit (re)install.
+     */
+    private Path tombstoneFor(String id) {
+        return modelDir().resolve(id + ".onnx.removed");
+    }
+
+    private void clearTombstone(String id) {
+        try {
+            Files.deleteIfExists(tombstoneFor(id));
+        } catch (IOException e) {
+            log.debug("Could not clear uninstall tombstone for {}", id, e);
+        }
+    }
+
     /** Mark a verified, on-disk model as the active one and (re)enable the feature. */
     private void activate(String modelId, String expectedSha) {
+        clearTombstone(modelId);
         applicationProperties.getFormDetection().setActiveModelId(modelId);
         try {
             GeneralUtils.saveKeyToSettings("formDetection.activeModelId", modelId);
@@ -409,6 +426,15 @@ public class FormDetectionModelManager {
             } catch (IOException e) {
                 log.warn("Failed to delete model file {}", file.get(), e);
             }
+        }
+        // Record the explicit removal so a pre-installed copy is not re-seeded on restart.
+        try {
+            Path tombstone = tombstoneFor(id);
+            if (!Files.exists(tombstone)) {
+                Files.createFile(tombstone);
+            }
+        } catch (IOException e) {
+            log.warn("Could not record uninstall tombstone for {}", id, e);
         }
         if (id.equals(activeModelId())) {
             applicationProperties.getFormDetection().setActiveModelId("");
@@ -535,6 +561,10 @@ public class FormDetectionModelManager {
                 String fn = p.getFileName().toString();
                 String id = fn.substring(0, fn.length() - ".onnx".length());
                 if (!SAFE_ID.matcher(id).matches() || catalog.getById(id).isEmpty()) {
+                    continue;
+                }
+                if (Files.exists(tombstoneFor(id))) {
+                    log.info("Skipping pre-installed model '{}': an admin uninstalled it", id);
                     continue;
                 }
                 Path target = dir.resolve(id + ".onnx");

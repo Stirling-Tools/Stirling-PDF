@@ -1,6 +1,7 @@
 package stirling.software.proprietary.formdetection.service;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -75,6 +76,14 @@ class FormDetectionModelManagerTest {
 
     private FormDetectionModelManager manager(
             Path dir, ModelCatalogEntry entry, EndpointConfiguration ep) {
+        return manager(dir, entry, ep, new ApplicationProperties());
+    }
+
+    private FormDetectionModelManager manager(
+            Path dir,
+            ModelCatalogEntry entry,
+            EndpointConfiguration ep,
+            ApplicationProperties props) {
         RuntimePathConfig paths = Mockito.mock(RuntimePathConfig.class);
         Mockito.when(paths.getFormDetectionModelPath()).thenReturn(dir.toString());
         ModelCatalogService catalog = Mockito.mock(ModelCatalogService.class);
@@ -83,7 +92,7 @@ class FormDetectionModelManagerTest {
                 .thenReturn(Optional.empty());
         Mockito.when(catalog.getAll()).thenReturn(List.of(entry));
         // The real fetch only allows the catalog host, so stub the hop to the local test server.
-        return new FormDetectionModelManager(paths, catalog, new ApplicationProperties(), ep) {
+        return new FormDetectionModelManager(paths, catalog, props, ep) {
             @Override
             HttpURLConnection openModelDownload(String url) throws IOException {
                 HttpURLConnection conn =
@@ -201,5 +210,44 @@ class FormDetectionModelManagerTest {
                         entry("http://127.0.0.1:" + port + "/model.onnx", modelSha),
                         Mockito.mock(EndpointConfiguration.class));
         assertThrows(IllegalArgumentException.class, () -> m.startInstall("unknown"));
+    }
+
+    @Test
+    void uninstallTombstoneStopsReseedUntilExplicitReinstall(@TempDir Path root) throws Exception {
+        Path modelDir = root.resolve("models");
+        Path preDir = root.resolve("preinstalled");
+        Files.createDirectories(preDir);
+        Files.write(preDir.resolve("test-model.onnx"), modelBytes);
+        ModelCatalogEntry e = entry("http://127.0.0.1:" + port + "/model.onnx", modelSha);
+
+        ApplicationProperties props = new ApplicationProperties();
+        props.getFormDetection().setPreinstalledModelDir(preDir.toString());
+        FormDetectionModelManager m =
+                manager(modelDir, e, Mockito.mock(EndpointConfiguration.class), props);
+        m.init();
+        assertTrue(Files.exists(modelDir.resolve("test-model.onnx")), "seeded on first boot");
+        assertEquals("test-model", m.status().getActiveModelId());
+
+        m.deleteModel("test-model");
+        assertFalse(Files.exists(modelDir.resolve("test-model.onnx")));
+        assertTrue(
+                Files.exists(modelDir.resolve("test-model.onnx.removed")),
+                "uninstall records a tombstone");
+
+        // Simulate a container restart over the same volume: seeding must not resurrect it.
+        ApplicationProperties props2 = new ApplicationProperties();
+        props2.getFormDetection().setPreinstalledModelDir(preDir.toString());
+        FormDetectionModelManager m2 =
+                manager(modelDir, e, Mockito.mock(EndpointConfiguration.class), props2);
+        m2.init();
+        assertFalse(
+                Files.exists(modelDir.resolve("test-model.onnx")),
+                "tombstoned model must not be re-seeded");
+        assertEquals("not_installed", m2.status().getStatus());
+
+        // An explicit reinstall clears the tombstone and seeding works again afterwards.
+        m2.startInstall("test-model");
+        awaitState(m2, "ready", 5000);
+        assertFalse(Files.exists(modelDir.resolve("test-model.onnx.removed")));
     }
 }

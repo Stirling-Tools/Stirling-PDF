@@ -24,8 +24,7 @@ const detectSignaturesInFile = async (
   file: File,
 ): Promise<SignatureDetectionResult> => {
   try {
-    // pdfRender.ts narrowly types window.pdfjsLib; this service uses more of the API.
-    const pdfjsLib = window.pdfjsLib as any;
+    const pdfjsLib = (window as { pdfjsLib?: any }).pdfjsLib;
     if (!pdfjsLib) {
       return {
         hasSignatures: false,

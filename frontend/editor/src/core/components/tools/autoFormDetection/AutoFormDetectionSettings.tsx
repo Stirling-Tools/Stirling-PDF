@@ -18,7 +18,11 @@ interface AutoFormDetectionSettingsProps {
 
 const FIELD_TYPES = [
   { icon: "text-fields-rounded", key: "text", fallback: "Text fields" },
-  { icon: "check-box-outline-rounded", key: "checkboxes", fallback: "Checkboxes" },
+  {
+    icon: "check-box-outline-rounded",
+    key: "checkboxes",
+    fallback: "Checkboxes",
+  },
   { icon: "signature-rounded", key: "signatures", fallback: "Signatures" },
 ] as const;
 

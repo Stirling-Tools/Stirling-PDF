@@ -47,6 +47,10 @@ public class FormDetectionModelServeController {
     @Operation(summary = "Stream the installed model (.onnx); supports HTTP range requests")
     public ResponseEntity<Object> serveModel(@RequestHeader HttpHeaders headers)
             throws IOException {
+        // Honour the feature master switch: with the feature off, no engine should be fed.
+        if (!manager.isFeatureEnabled()) {
+            return ResponseEntity.notFound().build();
+        }
         Optional<Path> active = manager.getActiveModelFile();
         if (active.isEmpty()) {
             return ResponseEntity.notFound().build();

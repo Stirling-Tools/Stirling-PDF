@@ -64,9 +64,8 @@ async function serverDetect(
       ?.detections ?? []) as DetectedField[];
 
     emitStage({ kind: "applying" });
-    const { applyFields } = await import(
-      "@app/services/formDetection/applyFields"
-    );
+    const { applyFields } =
+      await import("@app/services/formDetection/applyFields");
     const bytes = await file.arrayBuffer();
     const appliedPdf = await applyFields(bytes, fields);
 
