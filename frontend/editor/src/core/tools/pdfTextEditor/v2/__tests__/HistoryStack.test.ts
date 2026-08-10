@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HistoryStack } from "@app/tools/pdfTextEditor/v2/store/HistoryStack";
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
@@ -84,5 +84,149 @@ describe("HistoryStack", () => {
     h.execute(makeCmd("c").cmd, fakeDoc);
     h.execute(makeCmd("d").cmd, fakeDoc);
     expect(h.size().undo).toBe(3);
+  });
+});
+
+/**
+ * Coalescing is what decides how much one Ctrl+Z reverts, and until now it
+ * was only ever exercised through the browser suite - where it turned on
+ * real wall-clock timing and so failed on whichever engine happened to
+ * render slowest. These drive the clock directly.
+ */
+describe("HistoryStack coalescing", () => {
+  /** A command that groups with others sharing `key`. */
+  function keyed(key: string | null, opts: { ignoresWindow?: boolean } = {}) {
+    const { cmd, apply, revert } = makeCmd("keyed");
+    const full: Command = {
+      ...cmd,
+      apply,
+      revert,
+      coalesceKey: () => key,
+      ...(opts.ignoresWindow ? { coalesceIgnoresTimeWindow: () => true } : {}),
+    };
+    return full;
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-01-01T00:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("groups same-key commands inside the 600ms window into one undo step", () => {
+    const h = new HistoryStack();
+    h.execute(keyed("run:1"), fakeDoc);
+    vi.advanceTimersByTime(300);
+    h.execute(keyed("run:1"), fakeDoc);
+    expect(h.size().undo).toBe(1);
+  });
+
+  it("starts a new undo step once the window has elapsed", () => {
+    const h = new HistoryStack();
+    h.execute(keyed("run:1"), fakeDoc);
+    vi.advanceTimersByTime(601);
+    h.execute(keyed("run:1"), fakeDoc);
+    expect(h.size().undo).toBe(2);
+  });
+
+  it("never groups commands with different keys", () => {
+    const h = new HistoryStack();
+    h.execute(keyed("run:1"), fakeDoc);
+    h.execute(keyed("run:2"), fakeDoc);
+    expect(h.size().undo).toBe(2);
+  });
+
+  it("never groups commands that opt out of coalescing", () => {
+    const h = new HistoryStack();
+    h.execute(keyed(null), fakeDoc);
+    h.execute(keyed(null), fakeDoc);
+    expect(h.size().undo).toBe(2);
+  });
+
+  it("coalesceIgnoresTimeWindow groups however long the gap was", () => {
+    const h = new HistoryStack();
+    h.execute(keyed("run:1"), fakeDoc);
+    vi.advanceTimersByTime(60_000);
+    h.execute(keyed("run:1", { ignoresWindow: true }), fakeDoc);
+    expect(h.size().undo).toBe(1);
+  });
+
+  it("hands the hook the previous command, unwrapped from its group", () => {
+    const h = new HistoryStack();
+    const first = keyed("run:1");
+    const second = keyed("run:1");
+    h.execute(first, fakeDoc);
+    h.execute(second, fakeDoc);
+    expect(h.size().undo).toBe(1); // first+second are now a CompositeCommand
+
+    const seen: Array<Command | null> = [];
+    const third: Command = {
+      ...keyed("run:1"),
+      coalesceIgnoresTimeWindow: (previous: Command | null) => {
+        seen.push(previous);
+        return true;
+      },
+    };
+    vi.advanceTimersByTime(60_000);
+    h.execute(third, fakeDoc);
+    // The group's most recent child, not the CompositeCommand wrapper.
+    expect(seen).toEqual([second]);
+  });
+
+  it("passes null to the hook when the undo stack is empty", () => {
+    const h = new HistoryStack();
+    const seen: Array<Command | null> = [];
+    h.execute(
+      {
+        ...keyed("run:1"),
+        coalesceIgnoresTimeWindow: (previous: Command | null) => {
+          seen.push(previous);
+          return false;
+        },
+      },
+      fakeDoc,
+    );
+    expect(seen).toEqual([null]);
+  });
+
+  it("does not charge a command's own apply() time to the idle window", () => {
+    const h = new HistoryStack();
+    h.execute(keyed("run:1"), fakeDoc);
+    vi.advanceTimersByTime(300);
+    // A slow command: 500ms of PDFium/render work inside apply(). The gap the
+    // user actually left is 300ms, so this must still coalesce - measuring
+    // both ends after apply() would see 800ms and wrongly split the step.
+    const slow: Command = {
+      type: "slow",
+      apply: () => vi.advanceTimersByTime(500),
+      revert: () => {},
+      coalesceKey: () => "run:1",
+    };
+    h.execute(slow, fakeDoc);
+    expect(h.size().undo).toBe(1);
+  });
+
+  it("undo ends the burst so the next edit cannot rejoin the step below", () => {
+    const h = new HistoryStack();
+    h.execute(keyed("run:1"), fakeDoc);
+    vi.advanceTimersByTime(700);
+    h.execute(keyed("run:1"), fakeDoc);
+    expect(h.size().undo).toBe(2);
+    h.undo(fakeDoc);
+    expect(h.size().undo).toBe(1);
+    // Immediately after the undo, so inside the window - but the burst was
+    // ended, so this must not merge into the step that is still on the stack.
+    h.execute(keyed("run:1"), fakeDoc);
+    expect(h.size().undo).toBe(2);
+  });
+
+  it("breakCoalescing splits an otherwise groupable pair", () => {
+    const h = new HistoryStack();
+    h.execute(keyed("run:1"), fakeDoc);
+    h.breakCoalescing();
+    h.execute(keyed("run:1"), fakeDoc);
+    expect(h.size().undo).toBe(2);
   });
 });

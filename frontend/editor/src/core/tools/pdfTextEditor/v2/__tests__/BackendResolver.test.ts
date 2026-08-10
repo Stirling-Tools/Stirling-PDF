@@ -146,7 +146,7 @@ afterEach(() => {
 
 describe("BackendResolver", () => {
   describe("HTTP transport via shared apiClient (regression #111)", () => {
-    it("routes the encode POST through apiClient.post with the suppressErrorToast header", async () => {
+    it("routes the encode POST through apiClient.post with the suppressErrorToast and skipAuthRedirect config flags", async () => {
       // One glyph 'M' on the page, rendered by font handle 7. Prewarm walks
       // the page, finds one probe, serializes the doc (mocked) and POSTs.
       const module = makeFakeModule("M", 7);
@@ -164,7 +164,11 @@ describe("BackendResolver", () => {
           locatorChar: "M",
           text: "M",
         }),
-        { headers: { suppressErrorToast: "true" } },
+        // Top-level axios config, NOT headers: handleHttpError reads
+        // `error.config.<flag>`, so the header spelling was inert. The
+        // behavioural half of this contract is asserted in
+        // services/__tests__/httpErrorHandler.test.ts.
+        { suppressErrorToast: true, skipAuthRedirect: true },
       );
     });
 
@@ -211,7 +215,9 @@ describe("BackendResolver", () => {
       expect(post).toHaveBeenCalledWith(
         ENDPOINT,
         expect.objectContaining({ text: "AB" }),
-        { headers: { suppressErrorToast: "true" } },
+        // This test's subject is the request body; the transport config is
+        // pinned in full by the first test in this file.
+        expect.objectContaining({ suppressErrorToast: true }),
       );
       // Both chars cached under font 7 in request order.
       const r = new BackendResolver();
@@ -312,7 +318,9 @@ describe("BackendResolver", () => {
           text: "M",
           fontSha256: sha256Hex(fontBytes),
         }),
-        { headers: { suppressErrorToast: "true" } },
+        // This test's subject is the request body; the transport config is
+        // pinned in full by the first test in this file.
+        expect.objectContaining({ suppressErrorToast: true }),
       );
     });
 

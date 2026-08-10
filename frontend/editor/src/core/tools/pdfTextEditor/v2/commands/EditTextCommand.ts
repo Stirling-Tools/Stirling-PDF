@@ -1185,6 +1185,71 @@ export class EditTextCommand implements Command {
   coalesceKey(): string {
     return `edit-text:${this.pageIndex}:${this.runId}`;
   }
+
+  /** The text this edit produced - lets the history compare adjacent edits. */
+  get resultText(): string {
+    return this.nextText;
+  }
+
+  /**
+   * True when this edit's ENTIRE delta was one or more line breaks, i.e. the
+   * user pressed Enter and changed nothing else.
+   */
+  private isLineBreakOnlyInsertion(): boolean {
+    if (this.prevText === null) return false;
+    const inserted = insertedChunk(this.prevText, this.nextText);
+    return inserted !== null && /^(?:\r?\n)+$/.test(inserted);
+  }
+
+  /**
+   * "Press Enter, then type" is ONE logical action, so it must cost one
+   * undo - which is what makes a bare line break merge forward here.
+   *
+   * The 600ms window cannot express that. `onEdit` is dispatched
+   * synchronously from the run's `input` event, so the gap the window sees
+   * is the app's own render + PDFium latency between the two input events,
+   * not the user's think-time. That is engine-dependent (measured on the
+   * same Linux container: ~220ms on Chromium, ~270ms on Firefox, 700ms-1.7s
+   * on WebKit under load), so whether Enter+type took one undo or two came
+   * down to how fast the browser was. Widening the window would only move
+   * the threshold; keying off what the previous command actually did
+   * removes timing from the decision entirely.
+   *
+   * Deliberately narrow: it fires only when the immediately preceding
+   * command was itself a bare line-break insertion that this edit continues
+   * from character-for-character. Ordinary typing granularity and the 600ms
+   * window are untouched, and the merge stops as soon as one edit carries
+   * real text - so "Enter Enter type" is one step, but the next keystroke
+   * after that is governed by the window again.
+   */
+  coalesceIgnoresTimeWindow(previous: Command | null): boolean {
+    if (!(previous instanceof EditTextCommand)) return false;
+    if (this.prevText === null) return false;
+    // Contiguity: this edit must start from exactly what that one produced.
+    if (previous.resultText !== this.prevText) return false;
+    return previous.isLineBreakOnlyInsertion();
+  }
+}
+
+/**
+ * The text `next` adds to `prev` when the change is a pure insertion at a
+ * single point, or null when it is anything else (a deletion, a replacement,
+ * or two separate insertions).
+ */
+function insertedChunk(prev: string, next: string): string | null {
+  if (next.length <= prev.length) return null;
+  let head = 0;
+  while (head < prev.length && prev[head] === next[head]) head++;
+  let tail = 0;
+  while (
+    tail < prev.length - head &&
+    prev[prev.length - 1 - tail] === next[next.length - 1 - tail]
+  ) {
+    tail++;
+  }
+  // Everything outside the inserted chunk must be untouched original text.
+  if (head + tail !== prev.length) return null;
+  return next.slice(head, next.length - tail);
 }
 
 /**

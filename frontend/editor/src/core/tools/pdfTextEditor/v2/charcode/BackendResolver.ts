@@ -113,11 +113,14 @@ interface EncodeCharcodesResponse {
  *
  * `suppressErrorToast` keeps an individual probe failure quiet: we fire
  * dozens of probes in parallel during prewarm, and a single one going
- * sideways shouldn't pop a toast at the user. `skipAuthRedirect` stops a
- * 401 on this background probe navigating the whole app to /login, which
- * unmounts the editor and throws away the user's unsaved edits. Both are
- * top-level axios config, NOT headers - the interceptor reads
- * `error.config.<flag>` (see services/httpErrorHandler.ts).
+ * sideways shouldn't pop a toast at the user. It also short-circuits the
+ * handler ahead of its 401 branch, so it already stops a background probe's
+ * 401 from navigating the whole app to /login (which would unmount the
+ * editor and throw away the user's unsaved edits). `skipAuthRedirect` is
+ * belt-and-braces for that same redirect, independent of where the toast
+ * check sits. Both are top-level axios config, NOT headers - the
+ * interceptor reads `error.config.<flag>` (see services/httpErrorHandler.ts),
+ * so a header of the same name is inert.
  */
 async function postCharcodes(
   body: Record<string, unknown>,

@@ -54,16 +54,25 @@ export class HistoryStack {
   }
 
   execute(cmd: Command, doc: EditorDocument): void {
+    // Read the clock BEFORE apply(): the window is meant to measure the
+    // user's idle time between edits, and `lastExecuteAt` is stamped after
+    // the previous apply(), so `startedAt - lastExecuteAt` is the gap with
+    // neither command's own work in it. Timing both ends after apply() also
+    // charged this command's PDFium/render cost to the user's think-time
+    // budget, which made undo granularity depend on how fast the engine is.
+    const startedAt = Date.now();
     cmd.apply(doc);
     const key = cmd.coalesceKey?.() ?? null;
-    const now = Date.now();
     const top = this.undoStack[this.undoStack.length - 1];
+    // The command a merge would join. Unwrap a group to its most recent
+    // child so the hook compares against a real edit, not the wrapper.
+    const previous = (top instanceof CompositeCommand ? top.last : top) ?? null;
     // Group with the previous command when it shares a coalesce key and ran
     // within the time window. The child was already applied above; the group
     // only re-applies / reverts as a unit.
     const inWindow =
-      now - this.lastExecuteAt <= COALESCE_WINDOW_MS ||
-      cmd.coalesceIgnoresTimeWindow?.() === true;
+      startedAt - this.lastExecuteAt <= COALESCE_WINDOW_MS ||
+      cmd.coalesceIgnoresTimeWindow?.(previous) === true;
     if (key !== null && key === this.lastCoalesceKey && top && inWindow) {
       if (top instanceof CompositeCommand) {
         top.push(cmd);
@@ -80,7 +89,8 @@ export class HistoryStack {
       }
     }
     this.lastCoalesceKey = key;
-    this.lastExecuteAt = now;
+    // Stamped after apply() so the next execute() measures the idle gap.
+    this.lastExecuteAt = Date.now();
     this.redoStack.length = 0;
   }
 

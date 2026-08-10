@@ -31,6 +31,13 @@ export interface Command {
    * triggers): the gap before them is the user's think-time, so a time
    * window would split one logical edit into two undo steps, the first of
    * which looks like a dead Ctrl+Z.
+   *
+   * `previous` is the command the merge would join (a group's most recent
+   * child, already unwrapped), or null when the undo stack is empty. It lets
+   * a command decide from what actually came before rather than from elapsed
+   * time - see EditTextCommand, which uses it so "press Enter, then type"
+   * stays one undo step no matter how slowly the engine renders between the
+   * two input events. Implementations may ignore the argument.
    */
-  coalesceIgnoresTimeWindow?(): boolean;
+  coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
 }
