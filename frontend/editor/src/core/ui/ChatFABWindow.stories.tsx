@@ -29,7 +29,7 @@ function MockChat() {
       <div
         style={{
           padding: "14px 16px 10px",
-          borderBottom: "1px solid var(--c-border, #e3e8ee)",
+          borderBottom: "1px solid var(--c-border)",
           fontSize: 14,
           fontWeight: 600,
         }}
@@ -54,8 +54,8 @@ function MockChat() {
               maxWidth: "80%",
               background:
                 m.role === "user"
-                  ? "#3b82f6"
-                  : "var(--c-surface-sunken, #f3f4f6)",
+                  ? "var(--c-primary)"
+                  : "var(--c-surface-sunken)",
               color: m.role === "user" ? "#fff" : "inherit",
               borderRadius: 10,
               padding: "8px 12px",
@@ -69,16 +69,16 @@ function MockChat() {
       <div
         style={{
           padding: "10px 12px 14px",
-          borderTop: "1px solid var(--c-border, #e3e8ee)",
+          borderTop: "1px solid var(--c-border)",
         }}
       >
         <div
           style={{
-            background: "var(--c-surface-sunken, #f3f4f6)",
+            background: "var(--c-surface-sunken)",
             borderRadius: 10,
             padding: "8px 12px",
             fontSize: 13,
-            color: "var(--c-text-subtle, #64748b)",
+            color: "var(--c-text-subtle)",
           }}
         >
           What do you want to do?
@@ -129,7 +129,7 @@ export const Toggle: Story = {
             position: "absolute",
             bottom: -48,
             right: 0,
-            background: "#3b82f6",
+            background: "var(--c-primary)",
             color: "#fff",
             border: "none",
             borderRadius: 8,
