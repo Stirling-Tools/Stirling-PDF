@@ -113,12 +113,11 @@ export default function HomePage() {
     return () => window.removeEventListener("appConfig:open", handler);
   }, []);
 
+  // AppConfigModal already unwinds the /settings entry it pushed. Navigating
+  // here too raced that pop with a second history write on the same close.
   const handleCloseConfig = useCallback(() => {
     setConfigModalOpen(false);
-    if (location.pathname.startsWith("/settings")) {
-      navigate("/", { replace: true });
-    }
-  }, [location.pathname, navigate]);
+  }, []);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
