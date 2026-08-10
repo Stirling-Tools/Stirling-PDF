@@ -119,9 +119,8 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
       {
         key: "open",
         // Icon-only column: the header still needs a name a screen reader can read.
-        header: (
-          <span className="sr-only">{t("portal.pipelines.table.open")}</span>
-        ),
+        header: t("portal.pipelines.table.open"),
+        headerHidden: true,
         align: "right",
         width: "2.5rem",
         render: () => (

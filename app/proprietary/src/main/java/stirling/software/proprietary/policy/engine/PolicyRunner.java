@@ -79,7 +79,7 @@ public class PolicyRunner {
             // Generator pipeline: one run with no input. Still fall through to the cleanup
             // below so rows recorded for its folder outputs are pruned like anything else,
             // instead of accumulating until the policy is deleted.
-            runIds.add(startRun(policy, PolicyInputs.of(List.of()), unused -> {}));
+            runIds.add(startRun(policy, PolicyInputs.of(List.of()), null, unused -> {}));
         }
         for (PipelineInput input : inputs) {
             String sourceId = input.sourceId();
@@ -167,17 +167,18 @@ public class PolicyRunner {
         List<String> runIds = new ArrayList<>();
         long docsFed = 0;
         for (ResolvedInput unit : work) {
-            runIds.add(startRun(policy, unit.inputs(), unit.onComplete()));
+            runIds.add(startRun(policy, unit.inputs(), unit.fileIdentity(), unit.onComplete()));
             docsFed += unit.inputs().primary().size();
         }
         docCounter.record(sourceId, docsFed);
         return runIds;
     }
 
-    private String startRun(Policy policy, PolicyInputs inputs, Consumer<Boolean> onComplete) {
+    private String startRun(
+            Policy policy, PolicyInputs inputs, String fileIdentity, Consumer<Boolean> onComplete) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
         PolicyRunHandle handle =
-                policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP);
+                policyEngine.runPolicy(policy, inputs, fileIdentity, PolicyProgressListener.NOOP);
         handle.completion()
                 .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
         return handle.runId();
