@@ -25,9 +25,10 @@
   outline-offset: -1px;
 }
 
+/* Muted, not subtle: subtle only reaches 3.9:1 on the dark input surface. */
 .portal-varfield__editor:empty::before {
   content: attr(data-placeholder);
-  color: var(--c-text-subtle);
+  color: var(--c-text-muted);
 }
 
 /* Single line: the field keeps one row and the add button rides inside it. */
@@ -204,9 +205,10 @@
   flex: 1 1 auto;
 }
 
+/* Muted, not subtle: subtle only reaches 3.9:1 on the dark toolbar. */
 .portal-varfield__hint {
   font-size: 0.6875rem;
-  color: var(--c-text-subtle);
+  color: var(--c-text-muted);
   padding-right: 0.1875rem;
 }
 
