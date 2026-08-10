@@ -210,8 +210,8 @@ export const buildConvertFormData = (
 
 // Static function that can be used by both the hook and automation executor
 export const createFileFromResponse = (
-  responseData: any,
-  headers: any,
+  responseData: Blob,
+  headers: Record<string, unknown>,
   originalFileName: string,
   targetExtension: string,
 ): File => {
