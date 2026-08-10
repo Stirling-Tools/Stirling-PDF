@@ -49,13 +49,11 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         key: "steps",
         header: t("portal.pipelines.table.steps"),
         get: (p) => p.steps.length,
-        mutedWhenZero: true,
       }),
       column.number({
         key: "sources",
         header: t("portal.pipelines.table.sources"),
         get: (p) => p.sources.length,
-        mutedWhenZero: true,
       }),
     ],
     [t],

@@ -50,7 +50,6 @@ export function LinkedInstancesTable({
       primary: (i) =>
         i.name ?? t("portal.accountLink.instances.unnamed", "Unnamed instance"),
       note: (i) => i.deviceId,
-      noteMono: true,
     }),
     column.badge({
       key: "status",

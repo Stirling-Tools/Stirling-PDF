@@ -37,15 +37,16 @@ export function ReviewQueueTable({
             tags.push({ label: d.classification, accent: classificationTone(d) });
           }
           if (d.auto) {
+            tags.push({ label: t("portal.documents.table.auto"), accent: "success" });
+          }
+          if (d.sensitive) {
             tags.push({
-              label: t("portal.documents.table.auto"),
-              accent: "success",
-              glyph: "bolt",
+              label: t("portal.documents.table.sensitive", "Sensitive"),
+              accent: "warning",
             });
           }
           return tags;
         },
-        markers: (d) => (d.sensitive ? ["lock"] : []),
         note: (d) => d.note,
       }),
       column.chips({

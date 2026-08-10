@@ -186,11 +186,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.sui-dtc__badgetext {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 .sui-dtc__chips {
   display: flex;
   align-items: center;
@@ -240,21 +235,12 @@
   font-size: 0.75rem;
   color: var(--c-text-subtle);
 }
-.sui-dtc__marker {
-  display: inline-flex;
-  align-items: center;
-  color: var(--c-text-subtle);
-}
 
 .sui-dtc__actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 0.25rem;
-}
-
-.sui-dtc__note--mono {
-  font-family: var(--font-mono);
 }
 
 .sui-dtc__progress {
@@ -288,9 +274,6 @@
 }
 .sui-dtc__link:hover {
   text-decoration: underline;
-}
-.sui-dtc__link-icon {
-  display: inline-flex;
 }
 
 .sui-dtc__select {

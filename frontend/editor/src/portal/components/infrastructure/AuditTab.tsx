@@ -61,14 +61,18 @@ export function AuditTab() {
       header: t("portal.infrastructure.audit.columns.timestamp"),
       get: (e) => e.timestamp,
     }),
-    column.badgeText({
-      key: "event",
+    column.badge({
+      key: "category",
       header: t("portal.infrastructure.audit.columns.event"),
       get: (e) => ({
         tone: AUDIT_CAT_TONE[e.category],
         label: t(AUDIT_CAT_LABEL[e.category]),
-        text: e.action,
       }),
+    }),
+    column.text({
+      key: "action",
+      header: t("portal.infrastructure.audit.columns.action", "Action"),
+      get: (e) => e.action,
     }),
     column.mono({
       key: "actor",

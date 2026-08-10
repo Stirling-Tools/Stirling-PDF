@@ -8,10 +8,8 @@ import { Select, type SelectOption } from "@app/ui/Select";
 /**
  * The column vocabulary for {@link DataTable}. Call-sites pick a cell KIND and
  * supply the data + semantics; the component owns 100% of the appearance. There
- * is no raw-JSX / className escape hatch by design; a cell can only look the
- * way the design system draws its kind, so every table looks and behaves the
- * same. Rich cells compose from the richer kinds (`entity`, `badgeText`) rather
- * than from bespoke markup.
+ * is no raw-JSX / className escape hatch by design; a cell can only look the way
+ * the design system draws its kind, so every table looks and behaves the same.
  */
 
 type Align = "left" | "right";
@@ -32,38 +30,10 @@ export interface DataTableColumn<T> {
   renderCell: (row: T) => ReactNode;
 }
 
-/** A small, closed set of design-system glyphs cells may use. */
-export type CellGlyph = "bolt" | "lock" | "kebab" | "external" | "download";
+/** The only design-system glyph a cell may use (icon-only actions). */
+export type CellGlyph = "kebab";
 
-function Glyph({ name }: { name: CellGlyph }) {
-  if (name === "bolt") {
-    return (
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-        <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
-      </svg>
-    );
-  }
-  if (name === "lock") {
-    return (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-        <path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z" />
-      </svg>
-    );
-  }
-  if (name === "external") {
-    return (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" />
-      </svg>
-    );
-  }
-  if (name === "download") {
-    return (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16" />
-      </svg>
-    );
-  }
+function KebabGlyph() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <circle cx="12" cy="5" r="1.6" />
@@ -73,12 +43,10 @@ function Glyph({ name }: { name: CellGlyph }) {
   );
 }
 
-/** A chip inside a cell. Appearance is fixed; the call-site chooses tone + label. */
+/** A chip inside a cell - a dot-less label pill. */
 export interface CellChip {
   label: string;
   accent?: ChipAccent;
-  glyph?: CellGlyph;
-  showDot?: boolean;
 }
 
 /** A row action. Rendered as a locked button; call-sites supply intent + handler. */
@@ -90,6 +58,13 @@ export interface CellAction {
   tone?: "default" | "danger";
   onClick: () => void;
   loading?: boolean;
+}
+
+/** An external link inside a cell. */
+export interface CellLink {
+  label: string;
+  href: string;
+  ariaLabel?: string;
 }
 
 interface Common {
@@ -154,7 +129,6 @@ function number<T>(
   o: Common & {
     get: (row: T) => number | null | undefined;
     format?: (n: number, row: T) => string;
-    mutedWhenZero?: boolean;
     placeholder?: string;
   },
 ): DataTableColumn<T> {
@@ -172,9 +146,8 @@ function number<T>(
           </span>
         );
       }
-      const dim = n === 0 && o.mutedWhenZero;
       return (
-        <span className={dim ? "sui-dtc__num sui-dtc__muted" : "sui-dtc__num"}>
+        <span className="sui-dtc__num">
           {o.format ? o.format(n, r) : String(n)}
         </span>
       );
@@ -185,8 +158,6 @@ function number<T>(
 function badge<T>(
   o: Common & {
     get: (row: T) => { tone: StatusTone; label: string };
-    /** Drop the status dot for a plain toned pill (e.g. a confidence %). */
-    showDot?: boolean;
     sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
@@ -198,31 +169,9 @@ function badge<T>(
     renderCell: (r) => {
       const b = o.get(r);
       return (
-        <StatusBadge tone={b.tone} size="sm" showDot={o.showDot}>
+        <StatusBadge tone={b.tone} size="sm">
           {b.label}
         </StatusBadge>
-      );
-    },
-  });
-}
-
-function badgeText<T>(
-  o: Common & { get: (row: T) => { tone: StatusTone; label: string; text: string } },
-): DataTableColumn<T> {
-  return base<T>(o, {
-    align: "left",
-    nowrap: false,
-    fit: false,
-    sortValue: (r) => o.get(r).text,
-    renderCell: (r) => {
-      const b = o.get(r);
-      return (
-        <span className="sui-dtc__badgetext">
-          <StatusBadge tone={b.tone} size="sm">
-            {b.label}
-          </StatusBadge>
-          <span className="sui-dtc__text">{b.text}</span>
-        </span>
       );
     },
   });
@@ -232,13 +181,7 @@ function ChipRun({ chips }: { chips: CellChip[] }) {
   return (
     <>
       {chips.map((c) => (
-        <Chip
-          key={c.label}
-          accent={c.accent ?? "neutral"}
-          size="sm"
-          showDot={c.showDot}
-          leadingIcon={c.glyph ? <Glyph name={c.glyph} /> : undefined}
-        >
+        <Chip key={c.label} accent={c.accent ?? "neutral"} size="sm" showDot={false}>
           {c.label}
         </Chip>
       ))}
@@ -267,12 +210,8 @@ function entity<T>(
     primary: (row: T) => string;
     /** Inline chips after the name. */
     tags?: (row: T) => CellChip[];
-    /** Inline marker glyphs after the name (e.g. a lock). */
-    markers?: (row: T) => CellGlyph[];
-    /** Secondary line under the name. */
+    /** Secondary muted line under the name. */
     note?: (row: T) => string | null | undefined;
-    /** Render the secondary line monospaced (ids, codes). */
-    noteMono?: boolean;
     sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
@@ -284,7 +223,6 @@ function entity<T>(
     renderCell: (r) => {
       const icon = o.icon?.(r);
       const tags = o.tags?.(r) ?? [];
-      const markers = o.markers?.(r) ?? [];
       const note = o.note?.(r);
       return (
         <div className="sui-dtc__entity">
@@ -297,21 +235,8 @@ function entity<T>(
             <div className="sui-dtc__entity-head">
               <span className="sui-dtc__entity-name">{o.primary(r)}</span>
               <ChipRun chips={tags} />
-              {markers.map((m) => (
-                <span key={m} className="sui-dtc__marker" aria-hidden>
-                  <Glyph name={m} />
-                </span>
-              ))}
             </div>
-            {note && (
-              <span
-                className={
-                  o.noteMono ? "sui-dtc__note sui-dtc__note--mono" : "sui-dtc__note"
-                }
-              >
-                {note}
-              </span>
-            )}
+            {note && <span className="sui-dtc__note">{note}</span>}
           </div>
         </div>
       );
@@ -338,7 +263,7 @@ function actions<T>(
             accent={a.tone === "danger" ? "danger" : undefined}
             size="sm"
             shape={a.iconOnly ? "circle" : undefined}
-            leftSection={a.glyph ? <Glyph name={a.glyph} /> : undefined}
+            leftSection={a.glyph ? <KebabGlyph /> : undefined}
             loading={a.loading}
             aria-label={a.iconOnly ? a.label : undefined}
             onClick={(e) => {
@@ -378,14 +303,6 @@ function progress<T>(
   });
 }
 
-/** An external link inside a cell. */
-export interface CellLink {
-  label: string;
-  href: string;
-  glyph?: CellGlyph;
-  ariaLabel?: string;
-}
-
 function links<T>(o: {
   key: string;
   header?: ReactNode;
@@ -410,11 +327,6 @@ function links<T>(o: {
             aria-label={l.ariaLabel}
           >
             {l.label}
-            {l.glyph && (
-              <span className="sui-dtc__link-icon" aria-hidden>
-                <Glyph name={l.glyph} />
-              </span>
-            )}
           </a>
         ))}
       </div>
@@ -460,54 +372,6 @@ function select<T>(o: {
   };
 }
 
-/** One of a status badge, an info chip, or a call-to-action button per row. */
-export type CellStatus =
-  | { kind: "badge"; tone: StatusTone; label: string }
-  | { kind: "chip"; label: string; accent?: ChipAccent }
-  | { kind: "action"; label: string; onClick: () => void };
-
-function status<T>(
-  o: { key: string; header: ReactNode; get: (row: T) => CellStatus },
-): DataTableColumn<T> {
-  return {
-    key: o.key,
-    header: o.header,
-    align: "right",
-    nowrap: true,
-    fit: false,
-    sortable: false,
-    renderCell: (r) => {
-      const s = o.get(r);
-      if (s.kind === "badge") {
-        return (
-          <StatusBadge tone={s.tone} size="sm">
-            {s.label}
-          </StatusBadge>
-        );
-      }
-      if (s.kind === "chip") {
-        return (
-          <Chip accent={s.accent ?? "neutral"} size="sm" showDot={false}>
-            {s.label}
-          </Chip>
-        );
-      }
-      return (
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={(e) => {
-            e.stopPropagation();
-            s.onClick();
-          }}
-        >
-          {s.label}
-        </Button>
-      );
-    },
-  };
-}
-
 /**
  * The DataTable column vocabulary. Each builder produces a locked-appearance
  * column; call-sites choose the kind + supply data, never styling.
@@ -518,12 +382,10 @@ export const column = {
   muted,
   number,
   badge,
-  badgeText,
   chips,
   entity,
   actions,
   progress,
   links,
   select,
-  status,
 };

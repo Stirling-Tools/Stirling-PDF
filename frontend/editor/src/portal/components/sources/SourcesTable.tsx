@@ -58,13 +58,11 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
         header: t("portal.sources.table.documents"),
         get: (s) => s.docsTotal,
         format: (n) => n.toLocaleString(),
-        mutedWhenZero: true,
       }),
       column.number({
         key: "referenceCount",
         header: t("portal.sources.table.usedBy"),
         get: (s) => s.referenceCount,
-        mutedWhenZero: true,
       }),
     ],
     [t],

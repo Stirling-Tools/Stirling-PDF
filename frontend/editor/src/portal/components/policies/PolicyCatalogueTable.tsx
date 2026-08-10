@@ -51,36 +51,31 @@ export function PolicyCatalogueTable({
         get: (entry) => (entry.policy ? entry.policy.stats.enforced : null),
         format: (n) => n.toLocaleString(),
       }),
-      column.status({
+      column.badge({
         key: "status",
         header: t("portal.policies.table.status", "Status"),
+        // Every state reads as one badge; the "set up" affordance is the row
+        // itself (click + chevron), so there's no bespoke button in the cell.
         get: (entry) => {
-          // One consistent neutral chip for every "Upgrade to Enterprise" - the
-          // same action should read the same on every row.
           if (entry.category.comingSoon) {
-            return { kind: "chip", label: t("portal.policies.card.comingSoon") };
+            return { tone: "neutral", label: t("portal.policies.card.comingSoon") };
           }
           if (isLocked?.(entry)) {
             return {
-              kind: "chip",
+              tone: "neutral",
               label: lockedLabel ?? t("portal.policies.card.requiresAiEngine"),
             };
           }
           if (entry.policy) {
             const paused = entry.policy.state.status === "paused";
             return {
-              kind: "badge",
               tone: paused ? "warning" : "success",
               label: paused
                 ? t("portal.policies.status.paused")
                 : t("portal.policies.status.active"),
             };
           }
-          return {
-            kind: "action",
-            label: t("portal.policySummary.action.setUp"),
-            onClick: () => onOpen(entry),
-          };
+          return { tone: "neutral", label: t("portal.policySummary.action.setUp") };
         },
       }),
     ],
@@ -96,6 +91,7 @@ export function PolicyCatalogueTable({
       isRowInteractive={(e) =>
         !(e.category.comingSoon || (isLocked?.(e) ?? false))
       }
+      rowAffordance="chevron"
     />
   );
 }

@@ -42,7 +42,6 @@ export function DocumentExtractions({
         tone: confidenceTone(e.confidence),
         label: confidencePct(e.confidence),
       }),
-      showDot: false,
     }),
   ];
 

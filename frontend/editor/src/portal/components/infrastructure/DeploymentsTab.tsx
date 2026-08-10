@@ -38,7 +38,6 @@ export function DeploymentsTab() {
       header: t("portal.infrastructure.deployments.regionColumns.region"),
       primary: (r) => r.name,
       note: (r) => r.code,
-      noteMono: true,
     }),
     column.number({
       key: "latency",
