@@ -16,6 +16,11 @@ updates:
     cooldown:
       default-days: 7
     rebase-strategy: "auto"
+    groups:
+      simple-java-mail:
+        patterns:
+          - "org.simplejavamail:simple-java-mail"
+          - "org.simplejavamail:outlook-module"
 
   - package-ecosystem: "docker"
     directories:

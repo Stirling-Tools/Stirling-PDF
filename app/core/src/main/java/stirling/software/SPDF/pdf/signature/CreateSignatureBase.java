@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.apache.pdfbox.examples.signature;
+package stirling.software.SPDF.pdf.signature;
 
 import java.io.IOException;
 import java.io.InputStream;
