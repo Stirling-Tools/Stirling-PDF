@@ -4,6 +4,7 @@ import { apiClient } from "@portal/api/http";
 import { qk } from "@portal/queries/keys";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
+import { useDevConnectBypass } from "@portal/hooks/useDevConnectBypass";
 
 interface AppConfigShape {
   accountLinkAvailable?: boolean;
@@ -41,6 +42,7 @@ export interface ConnectGate {
 export function useConnectGate(): ConnectGate {
   const { isLinked } = useLink();
   const { openLinkModal } = useUI();
+  const devBypass = useDevConnectBypass();
 
   const query = useQuery({
     queryKey: qk.appConfig(),
@@ -50,7 +52,9 @@ export function useConnectGate(): ConnectGate {
 
   const available = Boolean(query.data?.accountLinkAvailable);
   const loading = query.isPending;
-  const gated = available && !isLinked;
+  // Dev-only, and absent from every build. See useDevConnectBypass for why this cannot be a
+  // setting: the gate is currently the only thing enforcing that these features need a link.
+  const gated = available && !isLinked && !devBypass;
 
   const connect = useCallback(() => openLinkModal(), [openLinkModal]);
 
