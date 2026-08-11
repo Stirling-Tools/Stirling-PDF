@@ -271,7 +271,7 @@ export const ColorInput_Default: Story = {
 export const ColorInput_Preselected: Story = {
   render: () => {
     function Bound() {
-      const [color, setColor] = useState("#3B82F6");
+      const [color, setColor] = useState("#3B82F6"); // theme-allow-color the ColorInput value is the datum
       return (
         <FormField label="Accent color">
           <ColorInput value={color} onChange={setColor} />
@@ -285,7 +285,7 @@ export const ColorInput_Preselected: Story = {
 export const ColorInput_SmSize: Story = {
   render: () => {
     function Bound() {
-      const [color, setColor] = useState("#EF4444");
+      const [color, setColor] = useState("#EF4444"); // theme-allow-color the ColorInput value is the datum
       return (
         <FormField label="Badge color">
           <ColorInput value={color} onChange={setColor} inputSize="sm" />
@@ -308,10 +308,12 @@ export const ColorInput_Error: Story = {
   ),
 };
 
+const DISABLED_COLOR_VALUE = "#3B82F6"; // theme-allow-color the ColorInput value is the datum
+
 export const ColorInput_Disabled: Story = {
   render: () => (
     <FormField label="Watermark color">
-      <ColorInput value="#3B82F6" onChange={() => {}} disabled />
+      <ColorInput value={DISABLED_COLOR_VALUE} onChange={() => {}} disabled />
     </FormField>
   ),
 };
