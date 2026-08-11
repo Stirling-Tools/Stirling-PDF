@@ -7,10 +7,11 @@ vars:
   # File selections as git pathspecs: git does the include/exclude matching, so
   # there is no grep/xargs and it behaves identically on every platform.
   PY_FILES: >-
-    'scripts/*.py'
+    'scripts/**/*.py'
     '.github/scripts/*.py'
     'app/core/src/main/resources/static/python/*.py'
     ':(exclude)*split_photos.py'
+    'testing/**/*.py'
   SPELL_FILES: >-
     '*.html'
     '*.css'
@@ -101,12 +102,12 @@ tasks:
   ruff:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff check --isolated --line-length=120 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff check --config engine/pyproject.toml --line-length=127 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
 
   ruff-format:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff format --isolated --line-length=120 {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff format --config engine/pyproject.toml --line-length=127 {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
 
   codespell:
     deps: [install]
