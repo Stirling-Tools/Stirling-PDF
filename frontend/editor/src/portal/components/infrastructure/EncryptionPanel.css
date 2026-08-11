@@ -1,0 +1,144 @@
+/*
+ * Encryption-at-rest panel. Own `portal-enc__` namespace rather than extending
+ * `portal-infra__`, so this section can move out of the Storage tab later
+ * without dragging shared selectors with it.
+ */
+
+.portal-enc__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Own copies of the three text treatments this panel needs. Borrowing the
+   portal-infra__ equivalents coupled the panel to a file that is being trimmed
+   as Infrastructure tabs come and go; one of them has already gone. */
+.portal-enc__cell-strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-enc__mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+
+.portal-enc__muted {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-enc__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.portal-enc__coverage {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.portal-enc__coverage-bar {
+  margin-top: 0.5rem;
+}
+
+/* Master key + rotation sit side by side, stacking on narrow viewports. */
+.portal-enc__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 60rem) {
+  .portal-enc__split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-enc__kv {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.portal-enc__kv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.portal-enc__kv-label {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-enc__fingerprint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.portal-enc__fingerprint code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--c-text);
+  letter-spacing: 0.02em;
+}
+
+.portal-enc__scope {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.portal-enc__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.portal-enc__note {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  margin: 0.5rem 0 0;
+}
+
+/* Revoke dialog: the consequences list is the point of the dialog, so it gets
+   more room than a typical confirm body. */
+.portal-enc__consequences {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+.portal-enc__consequences strong {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.portal-enc__migration-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.portal-enc__badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

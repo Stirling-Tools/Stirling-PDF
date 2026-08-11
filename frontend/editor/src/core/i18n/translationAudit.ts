@@ -115,6 +115,11 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // invisible to the static scan. The raw catalogue value is the fallback.
       /^policies\.field\./,
       /^policyOption\./,
+      // Encryption panel copy keyed by backend enum values: key status, write
+      // state, migration state, and the reason a status read was refused. Each
+      // is t(`...${value}`) where the value comes from the API response.
+      /^portal\.infrastructure\.encryption\.(status|writeState|unavailable)\./,
+      /^portal\.infrastructure\.encryption\.migration\.state\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,
