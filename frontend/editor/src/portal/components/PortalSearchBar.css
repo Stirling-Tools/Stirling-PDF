@@ -5,7 +5,6 @@
   justify-content: center;
   padding: 0.22rem 1rem;
   background: var(--c-bg-raised);
-  border-bottom: 1px solid var(--c-border-subtle);
   flex-shrink: 0;
 }
 
