@@ -375,13 +375,13 @@ tasks:
     desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
-      - npx prettier --write .
+      - npx oxfmt --write .
 
   format:check:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx prettier --check .
+      - npx oxfmt --check .
 
   fix:
     desc: "Auto-fix lint and format"
