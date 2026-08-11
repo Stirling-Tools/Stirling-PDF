@@ -46,7 +46,7 @@ export function seedPolicies(): WirePolicy[] {
       output: {
         type: "inline",
         options: {
-          runOn: "upload",
+          runOn: "export",
           mode: "new_version",
           name: "",
           position: "suffix",
