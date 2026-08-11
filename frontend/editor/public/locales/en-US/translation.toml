@@ -7200,6 +7200,7 @@ sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
+actions = "Actions"
 document = "Document"
 product = "Product"
 status = "Status"
@@ -7289,6 +7290,41 @@ running = "Running"
 description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
 retry = "Try again"
 title = "Something went wrong on this page"
+
+[portal.failures]
+occurrences = "{{count}} occurrences"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Back"
@@ -7800,7 +7836,6 @@ title = "Pipelines"
 newPipeline = "New pipeline"
 
 [portal.pipelines.builder]
-addStep = "Add tool"
 back = "Back to pipelines"
 cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
@@ -7813,58 +7848,63 @@ inputs = "Input"
 inputSource = "Input source"
 inputTrigger = "Trigger"
 keepEditing = "Keep editing"
+moreActions = "More actions"
 needsConfiguring = "Needs setting up"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 needsUpload = "Needs an uploaded file"
-noSources = "No sources connected yet. Create one to use it as an input."
 noToolMatches = "No tools match your search."
-pipelineSettings = "Pipeline settings"
 searchTools = "Search tools"
-selectToolBody = "Add a tool to build your pipeline."
-selectToolTitle = "No tools yet"
 sendToSystem = "Send to another system"
 stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
 stepsNeedSetup = "These steps still need setting up before saving: {{tools}}."
-toolSettings = "Tool settings"
+testRun = "Test with a file"
 unknownStep = "Unrecognized operation, kept as-is."
 unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
 unsavedTitle = "Unsaved changes"
 uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
+viewDefinition = "View definition"
 
 [portal.pipelines.builder.diagnostic]
-fan-in = "Combines every file from the previous step"
-fan-out = "Runs once per file from the previous step"
-format-mismatch = "Needs {{accepts}}, but the previous step produces {{produced}}"
-output-uncertain = "May not run: the previous step's output depends on how it's set up"
-source-mismatch = "Needs {{accepts}}, but this pipeline's input is {{produced}}"
+fan-in = "Combines every incoming file"
+fan-out = "Runs once per incoming file"
+format-mismatch = "Sends {{produced}}, needs {{accepts}}"
+output-uncertain = "May not run: output depends on setup"
+source-mismatch = "Input is {{produced}}, needs {{accepts}}"
 undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.composer]
-addTool = "Add tool"
+addTool = "Add a tool"
 cancel = "Cancel"
-chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
-moveDown = "Move down"
-moveUp = "Move up"
+editSource = "Edit source"
 name = "Name"
 namePlaceholder = "e.g. Redaction sweep"
 noToolSettings = "This tool has no configurable settings."
-operations_one = "Operation ({{count}})"
-operations_other = "Operations ({{count}})"
 output = "Destination"
-removeStep = "Remove operation"
 save = "Save changes"
 scheduleEvery = "Run every"
-sources = "Sources"
-sourcesLoading = "Loading sources..."
 trigger = "Trigger"
 triggerManual = "Manual only"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "days"
 hours = "hours"
 minutes = "minutes"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Delete \"{{name}}\"? This can't be undone."
@@ -7882,6 +7922,37 @@ action = "Create a pipeline"
 connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
+
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
 
 [portal.pipelines.kpi]
 active = "Active"
@@ -7908,6 +7979,7 @@ paused = "Paused"
 
 [portal.pipelines.table]
 name = "Pipeline"
+open = "Open"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
@@ -8799,6 +8871,7 @@ unused = "Unused"
 
 [portal.sources.table]
 documents = "Documents"
+open = "Open"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
