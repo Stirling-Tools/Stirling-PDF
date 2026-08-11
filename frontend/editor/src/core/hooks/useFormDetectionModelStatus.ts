@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import apiClient from "@app/services/apiClient";
-import { invalidateEndpointCache } from "@app/hooks/useEndpointConfig";
+import { qk } from "@app/query/keys";
 
 export interface FormDetectionCatalogEntry {
   id: string;
@@ -60,6 +61,7 @@ const MODEL_URL = "/api/v1/ai/form-detection-model";
  * endpoint-availability cache is invalidated so the tool tile re-enables/disables.
  */
 export function useFormDetectionModelStatus() {
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<FormDetectionModelStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,9 +96,14 @@ export function useFormDetectionModelStatus() {
   // When readiness flips, the tool availability cache must be refreshed.
   useEffect(() => {
     if (active === "ready" || active === "not_installed") {
-      invalidateEndpointCache();
+      void queryClient.invalidateQueries({
+        queryKey: qk.endpointsAvailability(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: qk.endpointEnabled("form-detection"),
+      });
     }
-  }, [active]);
+  }, [active, queryClient]);
 
   const install = useCallback(
     async (modelId: string) => {

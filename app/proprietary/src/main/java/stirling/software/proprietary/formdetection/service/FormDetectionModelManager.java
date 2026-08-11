@@ -364,10 +364,17 @@ public class FormDetectionModelManager {
 
     /**
      * Tombstone marking a model an admin explicitly uninstalled, so the pre-installed seeding on
-     * the next boot does not silently resurrect it. Cleared by an explicit (re)install.
+     * the next boot does not silently resurrect it. Cleared by an explicit (re)install. The id is
+     * SAFE_ID-validated by every caller; the containment check keeps the resolve provably inside
+     * the model dir regardless.
      */
     private Path tombstoneFor(String id) {
-        return modelDir().resolve(id + ".onnx.removed");
+        Path base = modelDir().normalize();
+        Path tombstone = base.resolve(id + ".onnx.removed").normalize();
+        if (!tombstone.startsWith(base)) {
+            throw new IllegalArgumentException("Blocked path traversal for model id " + id);
+        }
+        return tombstone;
     }
 
     private void clearTombstone(String id) {

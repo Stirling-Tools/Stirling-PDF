@@ -99,11 +99,3 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     refetch: reload,
   };
 }
-
-/**
- * Invalidate the cached endpoint-availability map so the next check refetches.
- * Call after an admin action changes availability (e.g. installing the form-detection model).
- */
-export function invalidateEndpointCache() {
-  resetGlobalCache();
-}
