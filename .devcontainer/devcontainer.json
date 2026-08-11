@@ -43,14 +43,14 @@
                 "editor.guides.bracketPairsHorizontal": "active",
                 "cSpell.enabled": false,
                 "[java]": {
-                    "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
+                    "editor.defaultFormatter": "dennismok2018.palantir-java-format-vscode"
                 },
                 "java.compile.nullAnalysis.mode": "automatic",
                 "java.configuration.updateBuildConfiguration": "interactive",
-                "java.format.enabled": true,
-                "java.format.settings.profile": "GoogleStyle",
-                "java.format.settings.google.version": "1.28.0",
-                "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
+                "java.format.enabled": false,
+                "palantir-java-format-vscode.style": "palantir",
+                "palantir-java-format-vscode.skipSortingImports": true,
+                "palantir-java-format-vscode.skipRemovingUnusedImports": false,
                 "java.saveActions.cleanup": true,
                 "java.cleanup.actions": [
                     "invertEquals",
@@ -118,7 +118,7 @@
             },
             "extensions": [
                 "elagil.pre-commit-helper", // Support for pre-commit hooks to enforce code quality
-                "josevseb.google-java-format-for-vs-code", // Google Java code formatter to follow the Google Java Style Guide
+                "dennismok2018.palantir-java-format-vscode", // Palantir Java formatter (120 chars, lambda-friendly)
                 "ms-python.black-formatter", // Python code formatter using Black
                 "ms-python.flake8", // Flake8 linter for Python to enforce code quality
                 "ms-python.python", // Official Microsoft Python extension with IntelliSense, debugging, and Jupyter support

@@ -8,7 +8,7 @@
     "editor.defaultFormatter": "alexkrechik.cucumberautocomplete"
   },
   "[java]": {
-    "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
+    "editor.defaultFormatter": "dennismok2018.palantir-java-format-vscode"
   },
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
@@ -39,10 +39,10 @@
   },
   "java.compile.nullAnalysis.mode": "automatic",
   "java.configuration.updateBuildConfiguration": "interactive",
-  "java.format.enabled": true,
-  "java.format.settings.profile": "GoogleStyle",
-  "java.format.settings.google.version": "1.28.0",
-  "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
+  "java.format.enabled": false,
+  "palantir-java-format-vscode.style": "palantir",
+  "palantir-java-format-vscode.skipSortingImports": true,
+  "palantir-java-format-vscode.skipRemovingUnusedImports": false,
   // (DE) Aktiviert Kommentare im Java-Format.
   // (EN) Enables comments in Java formatting.
   // "java.format.comments.enabled": true,
