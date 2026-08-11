@@ -306,8 +306,8 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 7
 
-  # Multi-node regression: builds + seeds the clustered stack (testing/compose/docker-compose-multinode.yml)
-  # and runs behave features/multinode. Licence-gated, so it runs after the Playwright job (not in parallel).
+  # Multi-node regression: builds + seeds the clustered stack once per Valkey topology and runs behave
+  # features/multinode. Licence-gated, so it runs after the Playwright job (not in parallel).
   multinode-e2e:
     needs: [pick, playwright-e2e-enterprise]
     # Nightly cron + manual dispatch only (heavy build), fork-gated for the licence secret.
@@ -316,12 +316,19 @@ jobs:
       && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
     timeout-minutes: 60
+    strategy:
+      # One leg per Valkey topology. fail-fast off so a sentinel break still reports cluster.
+      fail-fast: false
+      matrix:
+        valkey: [standalone, sentinel, cluster]
     env:
       PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
       PREMIUM_ENABLED: "true"
       SYSTEM_ENABLEANALYTICS: "false"
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
-      MN_COMPOSE: docker-compose-multinode.yml
+      # Unquoted at every use site so it word-splits into repeated -f flags. The topology overlay
+      # must come last: it overrides valkey.command and compose REPLACES command.
+      MN_FILES: -f docker-compose-multinode.yml ${{ matrix.valkey != 'standalone' && format('-f docker-compose-multinode.valkey-{0}.yml', matrix.valkey) || '' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -341,11 +348,11 @@ jobs:
           uv sync --project engine --locked --group cucumber
       - name: Build the multi-node image
         working-directory: testing/compose
-        run: docker compose -f "$MN_COMPOSE" build
+        run: docker compose $MN_FILES build
       - name: Bring up the cluster and wait for both nodes healthy
         working-directory: testing/compose
         run: |
-          docker compose -f "$MN_COMPOSE" up -d
+          docker compose $MN_FILES up -d
           for i in $(seq 1 90); do
             h1=$(docker inspect -f '{{.State.Health.Status}}' multinode-stirling-1 2>/dev/null || echo starting)
             h2=$(docker inspect -f '{{.State.Health.Status}}' multinode-stirling-2 2>/dev/null || echo starting)
@@ -353,11 +360,11 @@ jobs:
             sleep 5
           done
           echo "::error::nodes did not become healthy"
-          docker compose -f "$MN_COMPOSE" logs --tail=200 stirling-1 stirling-2
+          docker compose $MN_FILES logs --tail=200 stirling-1 stirling-2
           exit 1
       - name: Seed the cluster (teams, users, S3 connection, policy)
         working-directory: testing/compose
-        run: docker compose -f "$MN_COMPOSE" --profile seed run --rm seed
+        run: docker compose $MN_FILES --profile seed run --rm seed
       - name: Run multi-node regression (implemented guarantees)
         working-directory: testing/cucumber
         # -e overrides behave.ini's exclusion of features/multinode; ~@known_gap skips any tracked-gap scenarios.
@@ -368,8 +375,8 @@ jobs:
       - name: Dump node logs on failure
         if: failure()
         working-directory: testing/compose
-        run: docker compose -f "$MN_COMPOSE" logs --tail=400 stirling-1 stirling-2
+        run: docker compose $MN_FILES logs --tail=400 stirling-1 stirling-2
       - name: Tear down
         if: always()
         working-directory: testing/compose
-        run: docker compose -f "$MN_COMPOSE" --profile seed down -v --remove-orphans
+        run: docker compose $MN_FILES --profile seed down -v --remove-orphans

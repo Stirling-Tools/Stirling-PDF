@@ -1,5 +1,5 @@
-# Multi-node Stirling-PDF processor test stack: shared Postgres/MinIO/Valkey behind an nginx LB fronting N app nodes, with enterprise features unlocked via a local test licence key.
-# Bring up: ./start-multinode-test.sh   Validate: ./validate-multinode-test.sh   Access: http://localhost:8080 (admin / stirling)
+# Multi-node test stack. Up: ./start-multinode-test.sh [--valkey sentinel|cluster] - default is
+# standalone. Every topology keeps container 'multinode-valkey', so docker-exec steps still work.
 
 x-stirling-node: &stirling-node
   build:
@@ -67,6 +67,14 @@ x-stirling-node: &stirling-node
     CLUSTER_BACKPLANE: "valkey"
     CLUSTER_ARTIFACTSTORE: "s3"
     CLUSTER_VALKEY_URL: "redis://valkey:6379"
+    # Named connections so CLIENT LIST attributes load per node in any Valkey monitor; overridden per node below.
+    CLUSTER_VALKEY_CLIENTNAME: "stirling-node-base"
+    # Pooling is on by default in the app; pinned here so the test stack asserts a known pool size.
+    CLUSTER_VALKEY_POOL_ENABLED: "true"
+    CLUSTER_VALKEY_POOL_MAXACTIVE: "16"
+    CLUSTER_VALKEY_POOL_MAXIDLE: "16"
+    CLUSTER_VALKEY_POOL_MINIDLE: "4"
+    CLUSTER_VALKEY_POOL_MAXWAITMILLIS: "2000"
     # SPRING_DATA_REDIS_REPOSITORIES_ENABLED is not needed: DataRedisRepositoriesAutoConfiguration is excluded (see application.properties, multinode/README.md).
 
     # --- Shared credential-encryption key (REQUIRED in cluster mode) ---
@@ -166,6 +174,7 @@ services:
     environment:
       <<: *stirling-env
       SYSTEM_NODEID: "node-1"
+      CLUSTER_VALKEY_CLIENTNAME: "stirling-node-1"
 
   # ---- App node 2 -----------------------------------------------------------
   # No ordering vs node-1 needed - each node mints its own signing key at boot and publishes the public half to the shared DB, so both verify each other's tokens.
@@ -175,6 +184,7 @@ services:
     environment:
       <<: *stirling-env
       SYSTEM_NODEID: "node-2"
+      CLUSTER_VALKEY_CLIENTNAME: "stirling-node-2"
 
   # ---- One-shot seeder: teams, ~40 users, S3 connection, policies -----------
   # Profile-gated so plain `docker compose up` skips it; the start script runs it once, using postgres:alpine for psql with curl+jq added for the HTTP calls.

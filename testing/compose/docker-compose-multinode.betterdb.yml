@@ -1,0 +1,117 @@
+# BetterDB observability over the Valkey backplane plus an on-demand load generator. Dashboard: http://localhost:3001
+# Up: docker compose -f docker-compose-multinode.yml -f docker-compose-multinode.betterdb.yml up -d   (load: append --profile load run --rm loadgen)
+
+services:
+  # Same Valkey, retuned so the observability panels have data on a local box.
+  valkey:
+    command:
+      - valkey-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      # Default 10000us never trips locally, so the slowlog stays empty; 500us shows real command spread.
+      - --slowlog-log-slower-than
+      - "500"
+      - --slowlog-max-len
+      - "1024"
+      # 0 disables latency monitoring; 50ms populates LATENCY HISTORY/LATEST.
+      - --latency-monitor-threshold
+      - "50"
+      - --maxmemory-policy
+      - "noeviction"
+    ports:
+      - "6379:6379" # host access for valkey-cli inspection
+
+  # One-shot: BetterDB runs as UID 1001 and cannot write a root-owned volume.
+  betterdb-init:
+    image: alpine:3.20
+    container_name: multinode-betterdb-init
+    command: ["sh", "-c", "chown -R 1001:1001 /data && echo 'betterdb data dir ready'"]
+    volumes:
+      - betterdb-data:/data
+    networks:
+      - stirling-multinode
+
+  # One-shot: its own database on the stack's Postgres, so BetterDB history survives restarts.
+  betterdb-db-init:
+    image: postgres:17-alpine
+    container_name: multinode-betterdb-db-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: stirling
+      PGPASSWORD: stirling
+      PGDATABASE: stirling
+    command:
+      - sh
+      - -c
+      - psql -tAc "SELECT 1 FROM pg_database WHERE datname='betterdb'" | grep -q 1 || psql -c "CREATE DATABASE betterdb"
+    networks:
+      - stirling-multinode
+
+  betterdb:
+    image: betterdb/monitor:latest
+    container_name: multinode-betterdb
+    restart: unless-stopped
+    depends_on:
+      valkey:
+        condition: service_healthy
+      betterdb-init:
+        condition: service_completed_successfully
+      betterdb-db-init:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: valkey
+      DB_PORT: "6379"
+      DB_TYPE: valkey
+      # postgres (not the default memory store) so history survives a restart; sqlite is not
+      # compiled into the published image despite the docs listing it.
+      STORAGE_TYPE: postgres
+      STORAGE_URL: "postgresql://stirling:stirling@postgres:5432/betterdb"
+      BETTERDB_DATA_DIR: /app/data
+      # Encrypts stored connection secrets at rest; test-only value.
+      ENCRYPTION_KEY: "multinode-betterdb-test-encryption-key"
+      ANOMALY_DETECTION_ENABLED: "true"
+      ANOMALY_POLL_INTERVAL_MS: "1000"
+      AUDIT_POLL_INTERVAL_MS: "15000"
+      CLIENT_ANALYTICS_POLL_INTERVAL_MS: "15000"
+      KEY_ANALYTICS_INTERVAL_MS: "60000"
+      # No phoning home from a local test stack.
+      BETTERDB_TELEMETRY: "false"
+    ports:
+      - "3001:3001"
+    volumes:
+      - betterdb-data:/app/data
+    # The image's own healthcheck probes "localhost", which resolves to ::1 while the server
+    # binds IPv4 only, so it always reports unhealthy. Pin it to 127.0.0.1.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3001/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - stirling-multinode
+
+  # Profile-gated so `up` skips it; run on demand to drive traffic through the LB.
+  loadgen:
+    image: python:3.12-alpine
+    container_name: multinode-loadgen
+    profiles: ["load"]
+    environment:
+      BASE_URL: "http://nginx:8080"
+      DURATION_SECONDS: "${DURATION_SECONDS:-300}"
+      CONCURRENCY: "${CONCURRENCY:-24}"
+      ASYNC_RATIO: "${ASYNC_RATIO:-0.35}"
+      USER_COUNT: "${USER_COUNT:-40}"
+    volumes:
+      - ./multinode/loadgen.py:/loadgen.py:ro
+    command: ["python3", "-u", "/loadgen.py"]
+    networks:
+      - stirling-multinode
+
+volumes:
+  betterdb-data:
