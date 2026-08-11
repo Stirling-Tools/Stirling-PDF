@@ -57,6 +57,39 @@ function fileInputToGooglePickerMimeTypes(accept?: string): string | null {
   return mimeTypes.join(",").replace(/\s+/g, "");
 }
 
+const PICKER_ZINDEX_STYLE_ID = "google-picker-zindex";
+
+/**
+ * Raise the picker above the file manager modal.
+ *
+ * The picker renders into elements Google appends to <body>, outside the React
+ * tree, so its stacking has to be raised from the outside. `setZIndex` is not
+ * part of the public PickerBuilder API — it is absent from both Google's
+ * reference and @types/google.picker — so calling it unconditionally throws
+ * `TypeError: setZIndex is not a function` and the picker never opens.
+ * Feature-detect it, and style the injected dialog as the fallback that
+ * actually does the work today.
+ */
+function raisePickerAboveModals(builder: unknown): void {
+  const zIndexAwareBuilder = builder as {
+    setZIndex?: (zIndex: number) => void;
+  };
+  if (typeof zIndexAwareBuilder.setZIndex === "function") {
+    zIndexAwareBuilder.setZIndex(Z_INDEX_OVER_FILE_MANAGER_MODAL);
+  }
+
+  if (document.getElementById(PICKER_ZINDEX_STYLE_ID) !== null) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = PICKER_ZINDEX_STYLE_ID;
+  // Class names of the dialog and backdrop that the picker appends to <body>.
+  // The backdrop is appended first, so an equal z-index keeps the dialog above it.
+  style.textContent = `.picker-dialog, .picker-dialog-bg { z-index: ${Z_INDEX_OVER_FILE_MANAGER_MODAL} !important; }`;
+  document.head.appendChild(style);
+}
+
 class GoogleDrivePickerService {
   private config: GoogleDriveConfig | null = null;
   private tokenClient: any = null;
@@ -203,9 +236,7 @@ class GoogleDrivePickerService {
         .addView(view2)
         .setCallback((data: any) => this.pickerCallback(data, resolve, reject));
 
-      (builder as unknown as { setZIndex(z: number): void }).setZIndex(
-        Z_INDEX_OVER_FILE_MANAGER_MODAL,
-      );
+      raisePickerAboveModals(builder);
 
       if (options.multiple) {
         builder.enableFeature(window.google.picker.Feature.MULTISELECT_ENABLED);
