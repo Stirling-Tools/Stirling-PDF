@@ -56,9 +56,10 @@ public class LegalDocumentRegistry {
         subprocessorUrl = root.path("subprocessorUrl").asText("");
         eulaUrl = root.path("eulaUrl").asText("");
         JsonNode docs = root.path("documents");
-        docs.fieldNames()
+        docs.fields()
                 .forEachRemaining(
-                        id -> {
+                        entry -> {
+                            String id = entry.getKey();
                             JsonNode d = docs.get(id);
                             List<String> parts =
                                     objectMapper.convertValue(
