@@ -115,20 +115,18 @@ jobs:
         id: frontend-coverage
         continue-on-error: true
         run: task frontend:test:coverage
-      - name: Set up Python for coverage summary
+      - name: Install uv
         if: always()
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: "3.12"
-      - name: Install defusedxml for coverage summary
-        # See coverage-summary.py header - it parses XML through defusedxml
-        # to dodge the stdlib parser's exposure to XXE / billion-laughs.
-        if: always()
-        run: python -m pip install --quiet defusedxml
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
       - name: Vitest coverage step summary
         if: always()
         run: |
-          python scripts/coverage-summary.py \
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Frontend Vitest coverage" \
             --vitest frontend/editor/coverage/coverage-summary.json \
             --github-step-summary
