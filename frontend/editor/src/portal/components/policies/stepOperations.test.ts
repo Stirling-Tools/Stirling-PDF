@@ -229,6 +229,91 @@ describe("the Cloudmersive scan gate", () => {
   });
 });
 
+describe("the n8n operations", () => {
+  it("covers each of the engine's response behaviours exactly once", () => {
+    // The reason n8n has four entries where Zapier has one: an n8n Webhook node can reply, so it
+    // reaches replace and requireTrue as well as report. If a refactor collapsed these onto the
+    // notify() helper the extra three would silently become fire-and-forget notifications.
+    const shape = (id: string) => {
+      const params = buildStepParameters(operationById(id)!, "1", {
+        message: "x",
+      });
+      return {
+        includeFile: params.includeFile,
+        responseMode: params.responseMode,
+        requireTrue: params.requireTrue,
+      };
+    };
+
+    expect(shape("n8nNotify")).toEqual({
+      includeFile: "false",
+      responseMode: "report",
+      requireTrue: "",
+    });
+    expect(shape("n8nSend")).toEqual({
+      includeFile: "true",
+      responseMode: "report",
+      requireTrue: "",
+    });
+    expect(shape("n8nTransform")).toEqual({
+      includeFile: "true",
+      responseMode: "replace",
+      requireTrue: "",
+    });
+    expect(shape("n8nGate")).toEqual({
+      includeFile: "true",
+      responseMode: "report",
+      requireTrue: "approved",
+    });
+  });
+
+  it("sends the facts as fields rather than one sentence to parse", () => {
+    const params = buildStepParameters(operationById("n8nNotify")!, "1", {
+      message: "done",
+    });
+    const body = JSON.parse(params.bodyTemplate) as Record<string, unknown>;
+
+    expect(body.message).toBe("done");
+    expect(body.document).toEqual({
+      filename: "{{document.filename}}",
+      extension: "{{document.extension}}",
+      contentType: "{{document.contentType}}",
+      sizeBytes: "{{document.sizeBytes}}",
+      sha256: "{{document.sha256}}",
+    });
+    expect(body.run).toMatchObject({ policy: "{{run.policyName}}" });
+  });
+
+  it("uses no PDF-only placeholder in a fixed body", () => {
+    // document.pageCount is added only for PDFs, and the backend throws on a placeholder it cannot
+    // resolve - baking it in would fail the step on the first non-PDF that reached it.
+    for (const id of ["n8nNotify", "n8nSend", "n8nTransform", "n8nGate"]) {
+      const params = buildStepParameters(operationById(id)!, "1", {
+        message: "x",
+      });
+      expect(params.bodyTemplate, id).not.toContain("pageCount");
+    }
+  });
+
+  it("gives the workflow the run's context beside the file", () => {
+    for (const id of ["n8nSend", "n8nTransform", "n8nGate"]) {
+      const params = buildStepParameters(operationById(id)!, "1", {});
+      expect(params.includeContext, id).toBe("true");
+      expect(params.bodyMode, id).toBe("multipart");
+    }
+  });
+
+  it("leaves every other vendor's context off", () => {
+    // includeContext used to be hardcoded false; now that it is per-operation, a vendor with a
+    // fixed API would reject the extra part.
+    const optedIn = STEP_OPERATIONS.filter(
+      (op) => buildStepParameters(op, "1", {}).includeContext === "true",
+    ).map((op) => op.id);
+
+    expect(optedIn.sort()).toEqual(["n8nGate", "n8nSend", "n8nTransform"]);
+  });
+});
+
 describe("substituting an answer into the URL path", () => {
   it("percent-encodes the answer so a slash stays a value, not a new segment", () => {
     // A Jira key like "OPS/1" (or a space) must not add a path segment or reach another endpoint.
