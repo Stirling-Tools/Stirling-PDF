@@ -316,11 +316,6 @@
       "title": "Sign In - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
-    "/signup": {
-      "image": "/og_images/home.png",
-      "title": "Sign Up - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
-    },
     "/mobile-scanner": {
       "image": "/og_images/home.png",
       "title": "Mobile Scanner - Stirling PDF",
@@ -541,6 +536,11 @@
       "title": "Account Link Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/signup": {
+      "image": "/og_images/home.png",
+      "title": "Sign Up - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/processor": {
       "image": "/og_images/saas/app-processor.png",
       "title": "Stirling Processor - Govern every PDF your organization touches",
@@ -670,7 +670,6 @@
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
     "/login": "/login",
-    "/signup": "/signup",
     "/mobile-scanner": "/mobile-scanner",
     "/files": "/files",
     "/settings": "/settings",
@@ -715,6 +714,7 @@
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link",
+    "/signup": "/signup",
     "/processor": "/processor",
     "/editor": "/editor"
   }

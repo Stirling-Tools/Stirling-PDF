@@ -315,11 +315,6 @@
       "title": "Sign In - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
-    "/signup": {
-      "image": "/og_images/home.png",
-      "title": "Sign Up - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
-    },
     "/mobile-scanner": {
       "image": "/og_images/home.png",
       "title": "Mobile Scanner - Stirling PDF",
@@ -657,7 +652,6 @@
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
     "/login": "/login",
-    "/signup": "/signup",
     "/mobile-scanner": "/mobile-scanner",
     "/files": "/files",
     "/settings": "/settings",
