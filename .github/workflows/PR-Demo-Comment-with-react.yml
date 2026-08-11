@@ -445,6 +445,8 @@ jobs:
       - name: Post deployment URL to PR
         if: success()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         with:
           github-token: ${{ github.token }}
           script: |
@@ -453,7 +455,7 @@ jobs:
             const prNumber = ${{ needs.check-comment.outputs.pr_number }};
             const securityStatus = process.env.security_status || "Security Disabled";
 
-            const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${prNumber}`;
+            const deploymentUrl = `http://${process.env.NEW_VPS_HOST}:${prNumber}`;
             const commentBody = `## 🚀 PR Test Deployment\n\n` +
                               `Your PR has been deployed for testing!\n\n` +
                               `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n` +

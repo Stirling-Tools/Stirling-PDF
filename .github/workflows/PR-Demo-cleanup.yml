@@ -98,6 +98,10 @@ jobs:
         env:
           NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
 
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
       - name: Cleanup PR deployment
         if: steps.remove-label-comment.outputs.present == 'true'
         id: cleanup
@@ -119,8 +123,8 @@ jobs:
               rm -rf /stirling/PR-${{ github.event.pull_request.number }}
 
               # Remove the Docker images
-              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
-              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ github.event.pull_request.number }} || true
+              docker rmi --no-prune ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ github.event.pull_request.number }} || true
+              docker rmi --no-prune ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:engine-pr-${{ github.event.pull_request.number }} || true
 
               echo "PERFORMED_CLEANUP"
             else

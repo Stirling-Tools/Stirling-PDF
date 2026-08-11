@@ -177,7 +177,8 @@ jobs:
         with:
           repository: ${{ needs.check-pr.outputs.pr_repository }}
           ref: ${{ needs.check-pr.outputs.pr_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # untrusted tree is built below - never leave credentials in .git/config
+          persist-credentials: false
           fetch-depth: 0 # Fetch full history for commit hash detection
 
       - name: Set up Docker Buildx
@@ -392,6 +393,8 @@ jobs:
         env:
           SB_URL: ${{ steps.storybook.outputs.url }}
           SB_FILES: ${{ steps.sb-changes.outputs.storybook_files }}
+        env:
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         with:
           github-token: ${{ github.token }}
           script: |
@@ -414,7 +417,7 @@ jobs:
               }
             }
 
-            const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${v2Port}`;
+            const deploymentUrl = `http://${process.env.NEW_VPS_HOST}:${v2Port}`;
 
             // Only mention the portal when this image actually embeds it.
             // Use the direct IP URL - the SSL hostname isn't supported yet.
