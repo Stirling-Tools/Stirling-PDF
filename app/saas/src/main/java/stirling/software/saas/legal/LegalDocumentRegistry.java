@@ -56,29 +56,26 @@ public class LegalDocumentRegistry {
         subprocessorUrl = root.path("subprocessorUrl").asText("");
         eulaUrl = root.path("eulaUrl").asText("");
         JsonNode docs = root.path("documents");
-        docs.fields()
-                .forEachRemaining(
-                        entry -> {
-                            String id = entry.getKey();
-                            JsonNode d = docs.get(id);
-                            List<String> parts =
-                                    objectMapper.convertValue(
-                                            d.path("parts"),
-                                            objectMapper
-                                                    .getTypeFactory()
-                                                    .constructCollectionType(
-                                                            List.class, String.class));
-                            documents.put(
+        docs.forEachEntry(
+                (id, d) -> {
+                    List<String> parts =
+                            objectMapper.convertValue(
+                                    d.path("parts"),
+                                    objectMapper
+                                            .getTypeFactory()
+                                            .constructCollectionType(
+                                                    List.class, String.class));
+                    documents.put(
+                            id,
+                            new LegalDocumentMeta(
                                     id,
-                                    new LegalDocumentMeta(
-                                            id,
-                                            d.path("label").asText(id),
-                                            d.path("displayName").asText(id),
-                                            d.path("version").asText("0"),
-                                            d.path("effectiveDate").asText(""),
-                                            d.path("status").asText("draft"),
-                                            parts == null ? List.of() : parts));
-                        });
+                                    d.path("label").asText(id),
+                                    d.path("displayName").asText(id),
+                                    d.path("version").asText("0"),
+                                    d.path("effectiveDate").asText(""),
+                                    d.path("status").asText("draft"),
+                                    parts == null ? List.of() : parts));
+                });
         log.info("[legal] loaded {} document(s) from {}", documents.size(), MANIFEST);
     }
 
