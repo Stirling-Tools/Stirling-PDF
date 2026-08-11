@@ -5,15 +5,15 @@ Extracts, translates, merges, and beautifies translations for a language.
 TOML format only.
 """
 
-import json
-import sys
 import argparse
+import json
 import os
 import subprocess
-from pathlib import Path
+import sys
+from concurrent.futures import ThreadPoolExecutor
 import time
-
 import tomllib
+from pathlib import Path
 
 
 def run_command(cmd, description=""):
@@ -49,27 +49,19 @@ def load_translation_file(file_path):
 
 def extract_untranslated(language_code, batch_size=500, include_existing=False):
     """Extract untranslated entries and split into batches."""
-    mode = (
-        "all untranslated (including existing)" if include_existing else "new (missing)"
-    )
+    mode = "all untranslated (including existing)" if include_existing else "new (missing)"
     print(f"\n🔍 Extracting {mode} entries for {language_code}...")
 
     # Load files
     golden_path = find_translation_file(Path("frontend/editor/public/locales/en-US"))
-    lang_path = find_translation_file(
-        Path(f"frontend/editor/public/locales/{language_code}")
-    )
+    lang_path = find_translation_file(Path(f"frontend/editor/public/locales/{language_code}"))
 
     if not golden_path:
-        print(
-            "Error: Golden truth file not found in frontend/editor/public/locales/en-US"
-        )
+        print("Error: Golden truth file not found in frontend/editor/public/locales/en-US")
         return None
 
     if not lang_path:
-        print(
-            f"Error: Language file not found in frontend/editor/public/locales/{language_code}"
-        )
+        print(f"Error: Language file not found in frontend/editor/public/locales/{language_code}")
         return None
 
     def flatten_dict(d, parent_key="", separator="."):
@@ -100,10 +92,7 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False):
             if (
                 key not in lang_flat
                 or lang_flat.get(key) == value
-                or (
-                    isinstance(lang_flat.get(key), str)
-                    and lang_flat.get(key).startswith("[UNTRANSLATED]")
-                )
+                or (isinstance(lang_flat.get(key), str) and lang_flat.get(key).startswith("[UNTRANSLATED]"))
             ):
                 untranslated[key] = value
         else:
@@ -140,28 +129,36 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False):
     return batch_files
 
 
-def translate_batches(
-    batch_files, language_code, api_key, timeout=600, model="gpt-5.5"
-):
+def translate_batches(batch_files, language_code, api_key, timeout=600, model="gpt-5.5", parallel=1):
     """Translate all batch files using the given OpenAI model."""
     if not batch_files:
         return []
 
-    print(f"\n🤖 Translating {len(batch_files)} batches using {model}...")
+    total = len(batch_files)
+    print(f"\n🤖 Translating {total} batches using {model}...")
     print(f"Timeout: {timeout}s ({timeout // 60} minutes) per batch")
+    if parallel > 1:
+        print(f"Running up to {parallel} batches in parallel")
 
-    translated_files = []
+    def translate_one(numbered_batch):
+        i, batch_file = numbered_batch
+        translated_file = batch_file.replace(".json", "_translated.json")
 
-    for i, batch_file in enumerate(batch_files, 1):
-        print(f"\n[{i}/{len(batch_files)}] Translating {batch_file}...")
+        # Resume: an existing output means this batch is already paid for
+        if Path(translated_file).exists():
+            print(f"\n[{i}/{total}] ✓ {batch_file} already translated, skipping")
+            return translated_file
+
+        print(f"\n[{i}/{total}] Translating {batch_file}...")
 
         # Always pass API key since it's required
         cmd = f'python3 scripts/translations/batch_translator.py "{batch_file}" --language {language_code} --api-key "{api_key}" --model {model}'
 
-        # Run with timeout
-        result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True, timeout=timeout
-        )
+        try:
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            print(f"✗ Timed out after {timeout}s: {batch_file}", file=sys.stderr)
+            return None
 
         if result.stdout:
             print(result.stdout)
@@ -172,14 +169,27 @@ def translate_batches(
             print(f"✗ Failed to translate {batch_file}")
             return None
 
-        translated_file = batch_file.replace(".json", "_translated.json")
-        translated_files.append(translated_file)
+        return translated_file
 
-        # Small delay between batches
-        if i < len(batch_files):
-            time.sleep(1)
+    numbered = list(enumerate(batch_files, 1))
 
-    print(f"\n✓ All {len(batch_files)} batches translated successfully")
+    if parallel > 1:
+        with ThreadPoolExecutor(max_workers=parallel) as pool:
+            translated_files = list(pool.map(translate_one, numbered))
+    else:
+        translated_files = []
+        for i, numbered_batch in enumerate(numbered, 1):
+            translated_files.append(translate_one(numbered_batch))
+            # Small delay between batches
+            if i < total:
+                time.sleep(1)
+
+    if any(f is None for f in translated_files):
+        failed = sum(1 for f in translated_files if f is None)
+        print(f"\n✗ {failed}/{total} batches failed")
+        return None
+
+    print(f"\n✓ All {total} batches translated successfully")
     return translated_files
 
 
@@ -196,7 +206,7 @@ def merge_translations(translated_files, language_code):
             print(f"Error: Translated file not found: {filename}")
             return None
 
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(filename, encoding="utf-8") as f:
             merged.update(json.load(f))
 
     lang_code_safe = language_code.replace("-", "_")
@@ -287,18 +297,10 @@ Examples:
     )
 
     parser.add_argument("language", help="Language code (e.g., es-ES, de-DE, zh-CN)")
-    parser.add_argument(
-        "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
-    )
-    parser.add_argument(
-        "--batch-size", type=int, default=500, help="Entries per batch (default: 500)"
-    )
-    parser.add_argument(
-        "--no-cleanup", action="store_true", help="Keep temporary batch files"
-    )
-    parser.add_argument(
-        "--skip-verification", action="store_true", help="Skip final completion check"
-    )
+    parser.add_argument("--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)")
+    parser.add_argument("--batch-size", type=int, default=500, help="Entries per batch (default: 500)")
+    parser.add_argument("--no-cleanup", action="store_true", help="Keep temporary batch files")
+    parser.add_argument("--skip-verification", action="store_true", help="Skip final completion check")
     parser.add_argument(
         "--timeout",
         type=int,
@@ -311,6 +313,12 @@ Examples:
         help="Also retranslate existing keys that match English (default: only translate missing keys)",
     )
     parser.add_argument(
+        "--parallel",
+        type=int,
+        default=1,
+        help="Batches to translate concurrently (default: 1 = sequential)",
+    )
+    parser.add_argument(
         "--model",
         default="gpt-5.5",
         help="OpenAI model (default: gpt-5.5; gpt-5.6-sol/terra/luna if your org has 5.6 access)",
@@ -321,9 +329,7 @@ Examples:
     # Verify API key
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print(
-            "Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable"
-        )
+        print("Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable")
         sys.exit(1)
 
     print("=" * 60)
@@ -337,9 +343,7 @@ Examples:
 
     try:
         # Step 1: Extract and split
-        batch_files = extract_untranslated(
-            args.language, args.batch_size, args.include_existing
-        )
+        batch_files = extract_untranslated(args.language, args.batch_size, args.include_existing)
         if batch_files is None:
             sys.exit(1)
 
@@ -349,7 +353,7 @@ Examples:
 
         # Step 2: Translate all batches
         translated_files = translate_batches(
-            batch_files, args.language, api_key, args.timeout, args.model
+            batch_files, args.language, api_key, args.timeout, args.model, args.parallel
         )
         if translated_files is None:
             sys.exit(1)

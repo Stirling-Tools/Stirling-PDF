@@ -46,6 +46,8 @@ import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CertificateFileUtils;
 import stirling.software.common.util.ExceptionUtils;
@@ -74,12 +76,12 @@ public class ValidateSignatureController {
     }
 
     @JsonDataResponse
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Validate PDF Digital Signature",
             description =
-                    "Validates the digital signatures in a PDF file using PKIX path building"
-                            + " and time-of-signing semantics. Supports custom trust anchors."
-                            + " Input:PDF Output:JSON Type:SISO")
+                    "Validates the digital signatures in a PDF file using PKIX path building and"
+                            + " time-of-signing semantics. Supports custom trust anchors.")
     @AutoJobPostMapping(
             value = "/validate-signature",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -141,11 +143,15 @@ public class ValidateSignatureController {
                     // covers the TSTInfo, which can never match.
                     boolean isDocTimeStamp = SUBFILTER_RFC3161.equals(sig.getSubFilter());
                     CMSSignedData signedData;
+                    // Parse from a stream: /Contents is zero-padded to its reserved length and the
+                    // byte[] constructors reject those trailing bytes since BC 1.85.
                     if (isDocTimeStamp) {
-                        signedData = new CMSSignedData(signatureBytes);
+                        signedData = new CMSSignedData(new ByteArrayInputStream(signatureBytes));
                     } else {
                         CMSProcessable content = new CMSProcessableByteArray(signedContent);
-                        signedData = new CMSSignedData(content, signatureBytes);
+                        signedData =
+                                new CMSSignedData(
+                                        content, new ByteArrayInputStream(signatureBytes));
                     }
 
                     // What actually binds a timestamp to this document: the TSTInfo's message

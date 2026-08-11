@@ -138,6 +138,26 @@ export function stepRequiresUpload(step: WorkingToolStep): boolean {
 }
 
 /**
+ * True if a step still needs the user to make a choice before it can run - the tool declares some
+ * of its parameters mandatory and this step has not filled them in yet.
+ *
+ * This asks the tool the same question its own Run button asks (`validateParams` is the predicate
+ * the tool passes `useBaseParameters` as `validateFn`), so a step is "configured" in a pipeline
+ * exactly when it would be runnable in the editor. Tools that declare no predicate run happily on
+ * their defaults, and an unknown step is nobody's to judge.
+ */
+export function stepNeedsConfiguring(
+  step: WorkingToolStep,
+  registry: Partial<ToolRegistry>,
+): boolean {
+  if (step.toolId === null) return false;
+  const config = registry[step.toolId]?.operationConfig;
+  if (!config?.validateParams) return false;
+  const merged = { ...(config.defaultParameters ?? {}), ...step.params };
+  return !config.validateParams(merged);
+}
+
+/**
  * The tools that can be run as a backend operation step, sorted by name. Includes only automatable
  * tools whose endpoint resolves from defaults (so they can become a backend step); this drops
  * tools with no operationConfig and tools whose endpoint needs runtime input (e.g. convert).
@@ -206,11 +226,13 @@ function findToolByEndpoint(
   step: ToolApiStep,
   registry: Partial<ToolRegistry>,
 ): [ToolId, ToolRegistryEntry] | undefined {
+  const staticMatches: [ToolId, ToolRegistryEntry][] = [];
   let dynamic: [ToolId, ToolRegistryEntry] | undefined;
   for (const [id, entry] of Object.entries(registry)) {
     const endpoint = entry?.operationConfig?.endpoint;
     if (typeof endpoint === "string") {
-      if (endpoint === step.operation) return [id as ToolId, entry];
+      if (endpoint === step.operation)
+        staticMatches.push([id as ToolId, entry]);
     } else if (typeof endpoint === "function" && !dynamic) {
       const declared = entry?.operationConfig?.endpoints;
       const matched = declared
@@ -219,7 +241,31 @@ function findToolByEndpoint(
       if (matched) dynamic = [id as ToolId, entry];
     }
   }
+  if (staticMatches.length > 0) {
+    return disambiguateStaticMatches(staticMatches, step.parameters);
+  }
   return dynamic;
+}
+
+/**
+ * Most endpoints belong to one tool, so the single match is returned unchanged. When several
+ * share an endpoint (Add Password and its permissions-only alias Change Permissions), prefer the
+ * specialised tool that claims the stored parameters; otherwise fall back to the general owner
+ * that declares no such claim.
+ */
+function disambiguateStaticMatches(
+  matches: [ToolId, ToolRegistryEntry][],
+  parameters: Record<string, unknown>,
+): [ToolId, ToolRegistryEntry] {
+  if (matches.length === 1) return matches[0];
+  const claimed = matches.find(([, entry]) =>
+    entry.operationConfig?.claimsStoredStep?.(parameters),
+  );
+  if (claimed) return claimed;
+  const general = matches.find(
+    ([, entry]) => !entry.operationConfig?.claimsStoredStep,
+  );
+  return general ?? matches[0];
 }
 
 /** A stored step kept verbatim because its endpoint maps to no known tool. */
@@ -245,12 +291,22 @@ export function deserializeToolStep(
   if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
-  const params: ErasedToolParams = config?.fromApiParams
-    ? {
-        ...(config.defaultParameters ?? {}),
-        ...config.fromApiParams(step.parameters as never),
-      }
-    : { ...(config?.defaultParameters ?? {}) };
+  // Mappers echo missing stored fields as explicit `undefined`, which would
+  // clobber the default underneath; strip those so defaults always win.
+  const mapped = config?.fromApiParams
+    ? Object.fromEntries(
+        Object.entries(
+          config.fromApiParams(step.parameters as never) as Record<
+            string,
+            unknown
+          >,
+        ).filter(([, value]) => value !== undefined),
+      )
+    : {};
+  const params: ErasedToolParams = {
+    ...(config?.defaultParameters ?? {}),
+    ...mapped,
+  } as ErasedToolParams;
   // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
     resolveEndpoint(config, params) ??

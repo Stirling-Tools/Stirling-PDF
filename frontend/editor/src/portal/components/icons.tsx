@@ -289,3 +289,43 @@ export function ExternalLinkIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function IntegrationsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 7V2.5" />
+      <path d="M15 7V2.5" />
+      <path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z" />
+      <path d="M12 16v2a3 3 0 0 1-3 3H7" />
+    </Svg>
+  );
+}
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <line x1="8" y1="3" x2="8" y2="7" />
+      <line x1="16" y1="3" x2="16" y2="7" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </Svg>
+  );
+}
+
+export function KeyIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="8" cy="16" r="5" />
+      <line x1="11.6" y1="12.4" x2="21" y2="3" />
+      <line x1="17" y1="7" x2="20" y2="10" />
+    </Svg>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <polyline points="4,12.5 9.5,18 20,6.5" />
+    </Svg>
+  );
+}

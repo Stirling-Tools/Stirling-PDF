@@ -40,7 +40,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get PDF page count",
-            description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
+            description = "Returns total number of pages in PDF.")
     public ResponseEntity<?> getPageCount(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             return ResponseEntity.ok(Map.of("pageCount", document.getNumberOfPages()));
@@ -54,7 +54,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get basic PDF information",
-            description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
+            description = "Returns page count, version, file size.")
     public ResponseEntity<?> getBasicInfo(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> info = new HashMap<>();
@@ -72,7 +72,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get PDF document properties",
-            description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
+            description = "Returns title, author, subject, etc.")
     public ResponseEntity<?> getDocumentProperties(@ModelAttribute PDFFile file)
             throws IOException {
         // Load the document in read-only mode to prevent modifications and ensure the integrity of
@@ -105,7 +105,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get page dimensions for all pages",
-            description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
+            description = "Returns width and height of each page.")
     public ResponseEntity<?> getPageDimensions(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             List<Map<String, Float>> dimensions = new ArrayList<>();
@@ -128,8 +128,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get form field information",
-            description =
-                    "Returns count and details of form fields. Input:PDF Output:JSON Type:SISO")
+            description = "Returns count and details of form fields.")
     public ResponseEntity<?> getFormFields(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> formInfo = new HashMap<>();
@@ -155,7 +154,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get annotation information",
-            description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
+            description = "Returns count and types of annotations.")
     public ResponseEntity<?> getAnnotationInfo(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> annotInfo = new HashMap<>();
@@ -183,8 +182,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get font information",
-            description =
-                    "Returns list of fonts used in the document. Input:PDF Output:JSON Type:SISO")
+            description = "Returns list of fonts used in the document.")
     public ResponseEntity<?> getFontInfo(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> fontInfo = new HashMap<>();
@@ -212,8 +210,7 @@ public class AnalysisController {
     @JsonDataResponse
     @Operation(
             summary = "Get security information",
-            description =
-                    "Returns encryption and permission details. Input:PDF Output:JSON Type:SISO")
+            description = "Returns encryption and permission details.")
     public ResponseEntity<?> getSecurityInfo(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> securityInfo = new HashMap<>();

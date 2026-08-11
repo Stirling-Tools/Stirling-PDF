@@ -17,14 +17,14 @@ button.sui-sectionhdr {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 .sui-sectionhdr__count {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 .sui-sectionhdr__chevron {
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   flex-shrink: 0;
   transition: transform var(--motion-fast);
 }

@@ -36,6 +36,7 @@ import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -77,13 +78,13 @@ class PolicyRunnerTest {
     @Test
     void runsOnceWithNoFilesWhenThePolicyHasNoSources() {
         Policy policy = policy(List.of());
-        when(policyEngine.runPolicy(eq(policy), any(), any()))
+        when(policyEngine.runPolicy(eq(policy), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
         ArgumentCaptor<PolicyInputs> inputs = ArgumentCaptor.forClass(PolicyInputs.class);
-        verify(policyEngine).runPolicy(eq(policy), inputs.capture(), any());
+        verify(policyEngine).runPolicy(eq(policy), inputs.capture(), any(), any());
         assertTrue(inputs.getValue().primary().isEmpty());
         // Ledger hygiene still runs: rows recorded for a generator policy's folder outputs
         // are pruned by its own sweeps rather than accumulating until the policy is deleted.
@@ -136,12 +137,12 @@ class PolicyRunnerTest {
                         List.of(
                                 ResolvedInput.of(PolicyInputs.of(List.of())),
                                 ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
-        verify(policyEngine, times(2)).runPolicy(eq(policy), any(), any());
+        verify(policyEngine, times(2)).runPolicy(eq(policy), any(), any(), any());
     }
 
     @Test
@@ -149,11 +150,11 @@ class PolicyRunnerTest {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         AtomicBoolean outcome = new AtomicBoolean(false);
-        ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), outcome::set);
+        ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), null, outcome::set);
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));
 
         runner.run(policy);
@@ -170,11 +171,11 @@ class PolicyRunnerTest {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         AtomicBoolean outcome = new AtomicBoolean(true);
-        ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), outcome::set);
+        ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), null, outcome::set);
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));
 
         runner.run(policy);
@@ -223,12 +224,12 @@ class PolicyRunnerTest {
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any()))
                 .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy, SweepKind.LIGHT);
 
-        verify(policyEngine).runPolicy(eq(policy), any(), any());
+        verify(policyEngine).runPolicy(eq(policy), any(), any(), any());
         verify(processedLedger, never()).markSeen(any(), any());
         verify(processedLedger, never()).deleteUnseen(any(), anyLong());
     }
@@ -243,12 +244,12 @@ class PolicyRunnerTest {
         when(folderSource.resolve(eq(broken), any())).thenThrow(new IOException("mount gone"));
         when(folderSource.resolve(eq(healthy), any()))
                 .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
-        verify(policyEngine).runPolicy(eq(policy), any(), any()); // healthy source still ran
+        verify(policyEngine).runPolicy(eq(policy), any(), any(), any()); // healthy source still ran
         verify(processedLedger, never()).deleteUnseen(any(), anyLong()); // history preserved
     }
 
@@ -306,7 +307,6 @@ class PolicyRunnerTest {
                         "p",
                         "owner",
                         true,
-                        null,
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
@@ -338,8 +338,7 @@ class PolicyRunnerTest {
                 "p",
                 "owner",
                 true,
-                null,
-                sourceIds,
+                sourceIds.stream().map(PipelineInput::manual).toList(),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }
