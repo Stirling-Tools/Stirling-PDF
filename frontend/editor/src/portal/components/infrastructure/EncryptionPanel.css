@@ -40,22 +40,35 @@
 
 .portal-enc__coverage {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 1.5rem;
   flex-wrap: wrap;
   margin-bottom: 0.75rem;
+}
+
+.portal-enc__coverage-tiles {
+  display: flex;
+  align-items: baseline;
+  gap: 2rem;
 }
 
 .portal-enc__coverage-bar {
   margin-top: 0.5rem;
 }
 
-/* Master key + rotation sit side by side, stacking on narrow viewports. */
+/* Master key + rotation sit side by side, stacking on narrow viewports.
+   Stretch keeps the pair the same height instead of leaving the shorter card
+   floating against a taller neighbour. */
 .portal-enc__split {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
+}
+
+.portal-enc__split > * {
+  height: 100%;
 }
 
 @media (max-width: 60rem) {
@@ -82,10 +95,19 @@
   color: var(--c-text-subtle);
 }
 
+/* Label, value and copy sit together: across a wide card, a space-between row
+   separates the fingerprint from the word "Fingerprint" by half a screen. */
 .portal-enc__fingerprint {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Banners inside a card need breathing room from whatever follows them. */
+.portal-enc__stack .sui-banner,
+.portal-enc__split .sui-banner {
+  margin: 0.75rem 0 0;
 }
 
 .portal-enc__fingerprint code {

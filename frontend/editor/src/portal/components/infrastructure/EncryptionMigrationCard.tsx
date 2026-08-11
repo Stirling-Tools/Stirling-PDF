@@ -84,6 +84,14 @@ export function EncryptionMigrationCard({
           <ProgressBar
             value={fraction}
             height={10}
+            // A stopped run should not read as healthy progress.
+            color={
+              state === "FAILED"
+                ? "var(--c-text-subtle)"
+                : state === "COMPLETED"
+                  ? "var(--color-green)"
+                  : undefined
+            }
             label={t(
               "portal.infrastructure.encryption.migration.progressLabel",
               { processed, total },
@@ -117,14 +125,28 @@ export function EncryptionMigrationCard({
           {plaintextFiles > 0
             ? t("portal.infrastructure.encryption.migration.backlog", {
                 count: plaintextFiles,
+                // count drives plural selection; formatted is what is rendered,
+                // so large backlogs read as 1,840 rather than 1840.
+                formatted: plaintextFiles.toLocaleString(),
               })
             : t("portal.infrastructure.encryption.migration.noBacklog")}
         </p>
       )}
 
-      <p className="portal-enc__note">
-        {t("portal.infrastructure.encryption.migration.restartNote")}
-      </p>
+      {/* Start is disabled without the write flag; say why rather than leaving a
+          dead button next to a backlog the copy says can be encrypted. */}
+      {!writeEnabled && plaintextFiles > 0 ? (
+        <p className="portal-enc__note">
+          {t("portal.infrastructure.encryption.migration.requiresEncryptionOn")}
+        </p>
+      ) : null}
+
+      {/* Only worth saying once a run exists to lose. */}
+      {state !== "IDLE" ? (
+        <p className="portal-enc__note">
+          {t("portal.infrastructure.encryption.migration.restartNote")}
+        </p>
+      ) : null}
 
       <div className="portal-enc__actions">
         <Button

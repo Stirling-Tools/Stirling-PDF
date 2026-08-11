@@ -174,21 +174,36 @@ export function EncryptionPanel({
 
   if (loadError || !status) {
     const reason = unavailableReason(loadError);
+    // Keep the section heading: without it this is an unexplained message
+    // floating in the middle of the Storage tab.
     return (
-      <EmptyState
-        size="compact"
-        title={t(
-          `portal.infrastructure.encryption.unavailable.${reason}.title`,
-        )}
-        description={t(
-          `portal.infrastructure.encryption.unavailable.${reason}.description`,
-        )}
-      />
+      <div className="portal-enc__stack">
+        <SectionHeader
+          title={t("portal.infrastructure.encryption.heading")}
+          sub={t("portal.infrastructure.encryption.subheading")}
+        />
+        <Card padding="loose">
+          <EmptyState
+            size="compact"
+            title={t(
+              `portal.infrastructure.encryption.unavailable.${reason}.title`,
+            )}
+            description={t(
+              `portal.infrastructure.encryption.unavailable.${reason}.description`,
+            )}
+          />
+        </Card>
+      </div>
     );
   }
 
   const totalFiles = status.encryptedFiles + status.plaintextFiles;
   const coverage = totalFiles > 0 ? status.encryptedFiles / totalFiles : 0;
+  // Nothing encrypted, no keys, machinery never started: the key, rotation and
+  // revocation cards describe machinery that does not exist yet, so showing
+  // them is five cards of noise. Coverage and the backlog are the whole story.
+  const neverUsed =
+    !status.writeEnabled && !status.active && status.keys.length === 0;
   const writeStateTone = status.writeEnabled
     ? "success"
     : status.active
@@ -238,20 +253,33 @@ export function EncryptionPanel({
           sub={t("portal.infrastructure.encryption.coverage.subheading")}
         />
         <div className="portal-enc__coverage">
-          <StatTile
-            label={t("portal.infrastructure.encryption.coverage.encrypted")}
-            value={status.encryptedFiles.toLocaleString()}
-          />
-          <StatTile
-            label={t("portal.infrastructure.encryption.coverage.plaintext")}
-            value={status.plaintextFiles.toLocaleString()}
-            tone={status.plaintextFiles > 0 ? "warning" : "default"}
-          />
+          <div className="portal-enc__coverage-tiles">
+            <StatTile
+              label={t("portal.infrastructure.encryption.coverage.encrypted")}
+              value={status.encryptedFiles.toLocaleString()}
+            />
+            <StatTile
+              label={t("portal.infrastructure.encryption.coverage.plaintext")}
+              value={status.plaintextFiles.toLocaleString()}
+              tone={status.plaintextFiles > 0 ? "warning" : "default"}
+            />
+          </div>
+          {totalFiles > 0 ? (
+            <StatusBadge
+              tone={coverage === 1 ? "success" : "warning"}
+              size="sm"
+            >
+              {t("portal.infrastructure.encryption.coverage.percentEncrypted", {
+                percent: Math.round(coverage * 100),
+              })}
+            </StatusBadge>
+          ) : null}
         </div>
         <div className="portal-enc__coverage-bar">
           <ProgressBar
             value={coverage}
             height={10}
+            color={coverage === 1 ? "var(--color-green)" : undefined}
             label={t(
               "portal.infrastructure.encryption.coverage.progressLabel",
               {
@@ -267,68 +295,81 @@ export function EncryptionPanel({
         ) : null}
       </Card>
 
-      <section className="portal-enc__split">
-        <Card padding="loose">
-          <SectionHeader
-            title={t("portal.infrastructure.encryption.masterKey.heading")}
-            sub={t("portal.infrastructure.encryption.masterKey.subheading")}
+      {neverUsed ? null : (
+        <>
+          <section className="portal-enc__split">
+            <Card padding="loose">
+              <SectionHeader
+                title={t("portal.infrastructure.encryption.masterKey.heading")}
+                sub={t("portal.infrastructure.encryption.masterKey.subheading")}
+              />
+              {status.masterKeyFingerprint ? (
+                <>
+                  <div className="portal-enc__kv">
+                    <div className="portal-enc__fingerprint">
+                      <span className="portal-enc__kv-label">
+                        {t(
+                          "portal.infrastructure.encryption.masterKey.fingerprint",
+                        )}
+                      </span>
+                      <code>{status.masterKeyFingerprint}</code>
+                      <Button
+                        variant="quiet"
+                        size="sm"
+                        onClick={() =>
+                          void navigator.clipboard?.writeText(
+                            status.masterKeyFingerprint ?? "",
+                          )
+                        }
+                      >
+                        {t("portal.infrastructure.encryption.masterKey.copy")}
+                      </Button>
+                    </div>
+                    <div className="portal-enc__kv-row">
+                      <span className="portal-enc__kv-label">
+                        {t(
+                          "portal.infrastructure.encryption.masterKey.version",
+                        )}
+                      </span>
+                      <span className="portal-enc__cell-strong">
+                        {status.masterKeyVersion}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Only meaningful next to an actual fingerprint. */}
+                  <p className="portal-enc__note">
+                    {t(
+                      "portal.infrastructure.encryption.masterKey.compareNote",
+                    )}
+                  </p>
+                </>
+              ) : (
+                <p className="portal-enc__note">
+                  {t(
+                    "portal.infrastructure.encryption.masterKey.notMaterialised",
+                  )}
+                </p>
+              )}
+            </Card>
+
+            <EncryptionRotationCard
+              masterKeyVersion={status.masterKeyVersion}
+              pendingRows={pendingRotationCount(status)}
+              rotating={rotating}
+              lastRewrapped={lastRewrapped}
+              onRotate={() => void onRotate()}
+            />
+          </section>
+
+          <EncryptionKeyTable
+            keys={status.keys}
+            clusterEnabled={clusterEnabled}
+            busyKeyId={busyKeyId}
+            onRevoke={(key) => void runKeyAction(key, disableEncryptionKey)}
+            onRestore={(key) => void runKeyAction(key, enableEncryptionKey)}
           />
-          {status.masterKeyFingerprint ? (
-            <div className="portal-enc__kv">
-              <div className="portal-enc__kv-row">
-                <span className="portal-enc__kv-label">
-                  {t("portal.infrastructure.encryption.masterKey.fingerprint")}
-                </span>
-                <span className="portal-enc__fingerprint">
-                  <code>{status.masterKeyFingerprint}</code>
-                  <Button
-                    variant="quiet"
-                    size="sm"
-                    onClick={() =>
-                      void navigator.clipboard?.writeText(
-                        status.masterKeyFingerprint ?? "",
-                      )
-                    }
-                  >
-                    {t("portal.infrastructure.encryption.masterKey.copy")}
-                  </Button>
-                </span>
-              </div>
-              <div className="portal-enc__kv-row">
-                <span className="portal-enc__kv-label">
-                  {t("portal.infrastructure.encryption.masterKey.version")}
-                </span>
-                <span className="portal-enc__cell-strong">
-                  {status.masterKeyVersion}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="portal-enc__note">
-              {t("portal.infrastructure.encryption.masterKey.notMaterialised")}
-            </p>
-          )}
-          <p className="portal-enc__note">
-            {t("portal.infrastructure.encryption.masterKey.compareNote")}
-          </p>
-        </Card>
-
-        <EncryptionRotationCard
-          masterKeyVersion={status.masterKeyVersion}
-          pendingRows={pendingRotationCount(status)}
-          rotating={rotating}
-          lastRewrapped={lastRewrapped}
-          onRotate={() => void onRotate()}
-        />
-      </section>
-
-      <EncryptionKeyTable
-        keys={status.keys}
-        clusterEnabled={clusterEnabled}
-        busyKeyId={busyKeyId}
-        onRevoke={(key) => void runKeyAction(key, disableEncryptionKey)}
-        onRestore={(key) => void runKeyAction(key, enableEncryptionKey)}
-      />
+        </>
+      )}
 
       <EncryptionMigrationCard
         status={migration}

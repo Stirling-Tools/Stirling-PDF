@@ -131,20 +131,18 @@ export function EncryptionKeyTable({
         title={t("portal.infrastructure.encryption.keys.heading")}
         sub={t("portal.infrastructure.encryption.keys.subheading")}
       />
-      <Table
-        columns={columns}
-        rows={keys}
-        rowKey={(row) => row.keyId}
-        empty={
-          <EmptyState
-            size="compact"
-            title={t("portal.infrastructure.encryption.keys.empty.title")}
-            description={t(
-              "portal.infrastructure.encryption.keys.empty.description",
-            )}
-          />
-        }
-      />
+      {/* Column headers over an empty body are chrome around nothing. */}
+      {keys.length === 0 ? (
+        <EmptyState
+          size="compact"
+          title={t("portal.infrastructure.encryption.keys.empty.title")}
+          description={t(
+            "portal.infrastructure.encryption.keys.empty.description",
+          )}
+        />
+      ) : (
+        <Table columns={columns} rows={keys} rowKey={(row) => row.keyId} />
+      )}
 
       <Modal
         open={pendingRevoke !== null}
