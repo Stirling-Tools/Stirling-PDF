@@ -16,7 +16,7 @@ import java.util.List;
  * "unknown" — never a substituted default.
  *
  * @param teamId the caller's primary team_id. Needed by the frontend so it can pass it to the
- *     Supabase edge functions that create Stripe Checkout / processor sessions — those run outside
+ *     Supabase edge functions that create Stripe Checkout / portal sessions — those run outside
  *     Spring Security and have no other way to resolve the caller's team.
  * @param status {@code "free"} when the team has no Stripe subscription; {@code "subscribed"} once
  *     a card is on file and the engine bills meter events.

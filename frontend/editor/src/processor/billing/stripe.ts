@@ -3,7 +3,7 @@ import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import { ensureSaasSupabase } from "@processor/auth/saasSupabase";
 
 /**
- * Stripe checkout + processor sessions, minted via the SaaS Supabase edge
+ * Stripe checkout + portal sessions, minted via the SaaS Supabase edge
  * functions (no new Java endpoints). Same pattern the SaaS web app uses for
  * its Plan page — `supabase.functions.invoke` carries the admin's JWT
  * automatically, and the edge functions resolve the team via the
@@ -248,7 +248,7 @@ export async function getLatestBundleQuote(
  * Result of {@link createCheckoutSession}. Exactly ONE of {@code clientSecret}
  * or {@code redirectUrl} is set: clientSecret drives embedded Stripe Checkout
  * (the default UX, matching the SaaS web app); redirectUrl is used for the
- * already-subscribed short-circuit (processor URL) or any hosted-mode fallback.
+ * already-subscribed short-circuit (portal URL) or any hosted-mode fallback.
  */
 export interface CheckoutSession {
   clientSecret: string | null;
@@ -260,7 +260,7 @@ export interface CheckoutSession {
  * Mint a Stripe Checkout session for PAYG subscription. Defaults to embedded
  * Checkout (returns {@code clientSecret}) so the processor can mount
  * &lt;EmbeddedCheckoutProvider&gt; inline. If the team is already subscribed the
- * edge function short-circuits to a Customer Processor URL — surfaced as
+ * edge function short-circuits to a Customer Portal URL — surfaced as
  * {@code redirectUrl} + {@code alreadySubscribed=true} so the caller can open it
  * in a new tab instead of trying to mount a checkout iframe with no secret.
  */
@@ -504,7 +504,7 @@ export function loadStripeOnce(pk: string): Promise<Stripe | null> {
 }
 
 /**
- * Mint a Stripe Customer Processor session. The admin can manage their card,
+ * Mint a Stripe Customer Portal session. The admin can manage their card,
  * view invoices, and cancel from Stripe's hosted UI. The edge function returns
  * 404 with {@code team_not_subscribed} if called for a free team — surfaced
  * here as a StripeFunctionError the caller can toast.

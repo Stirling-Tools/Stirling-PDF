@@ -136,7 +136,7 @@ function shotPath(name: string): string {
 }
 
 async function settle(page: Page, ms = 350): Promise<void> {
-  // Let Mantine processor transitions settle.
+  // Let Mantine portal transitions settle.
   await page.waitForTimeout(ms);
 }
 

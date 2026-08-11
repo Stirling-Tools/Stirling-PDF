@@ -3,7 +3,7 @@ import apiClient from "@app/services/apiClient";
 import { useAuth } from "@app/auth/UseSession";
 
 /**
- * Whether the current user can open the processor (admin processor), straight
+ * Whether the current user can open the processor, straight
  * from the backend (`/api/v1/auth/me` → `processorAccess`) — the same signal the
  * processor's own SaasProcessorGate uses. Components that must mirror processor
  * access (e.g. the sidebar's editor⇄processor switcher) ask here.

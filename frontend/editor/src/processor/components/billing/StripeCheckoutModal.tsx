@@ -54,7 +54,7 @@ const DEFAULT_CAP_USD = 100;
  * the first processed PDF.
  *
  * If the team is already subscribed the edge function short-circuits to a Stripe
- * Customer Processor URL; we open it in a new tab and close.
+ * Customer Portal URL; we open it in a new tab and close.
  */
 
 /** Payment done, waiting for the subscription webhook to activate the plan. */

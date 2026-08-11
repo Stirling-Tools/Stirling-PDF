@@ -69,7 +69,7 @@ export function getStripePublishableKey(): string {
 }
 
 /**
- * Mint a Stripe Customer Processor session via the PAYG
+ * Mint a Stripe Customer Portal session via the PAYG
  * {@code create-customer-portal-session} edge function (its RPC enforces team
  * membership). return_url is the current location so Stripe brings the user
  * back to this page on close.
@@ -87,7 +87,7 @@ export async function createPortalSession(
     throw error;
   }
   if (!data?.url) {
-    throw new Error(data?.error ?? "Processor session response missing url");
+    throw new Error(data?.error ?? "Portal session response missing url");
   }
   return { url: data.url };
 }

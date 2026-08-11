@@ -85,7 +85,7 @@ function ToastViewport({
   entries: ToastEntry[];
   onDismiss: (id: number) => void;
 }) {
-  // Processor keeps toasts above any stacking context; document check is SSR safety.
+  // Portal keeps toasts above any stacking context; document check is SSR safety.
   if (typeof document === "undefined") return null;
   return createPortal(
     <div

@@ -82,7 +82,7 @@ function RedactionSelectionMenuInner({
     }
   }, [provides, item, pageIndex, setRedactionsApplied]);
 
-  // Calculate position for processor based on wrapper element
+  // Calculate position for portal based on wrapper element
   useEffect(() => {
     if (!selected || !isRedaction || !item || !wrapperRef.current) {
       setMenuPosition(null);

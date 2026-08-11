@@ -53,7 +53,7 @@ interface PaygProps {
    */
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
   /**
-   * Open the Stripe Customer Processor. When omitted the Stripe card is hidden.
+   * Open the Stripe Customer Portal. When omitted the Stripe card is hidden.
    * On error the implementation shows a friendly toast and resolves — callers
    * don't need to wrap in try/catch.
    */
@@ -626,7 +626,7 @@ function StripePortalLink({
       // team was force-subscribed via dev hooks). Both are user-actionable
       // in roughly the same way ("try again later or contact support") so
       // we don't bother branching the copy.
-      console.warn("[Payg] processor session failed", e);
+      console.warn("[Payg] portal session failed", e);
       showToast({
         alertType: "warning",
         title: t(

@@ -1241,7 +1241,7 @@
      Details panel visibility is controlled by JSX (conditional Drawer)
      at this width, not CSS, so we don't blanket-hide .files-page-details
      here - that would also hide it when it lives inside the Drawer's
-     processored overlay tree. */
+     portaled overlay tree. */
   .files-page-tree {
     display: none;
   }

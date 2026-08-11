@@ -12,7 +12,7 @@
 }
 
 .sui-modal {
-  /* Set our own font: the modal processors to <body>, so it can't inherit the
+  /* Set our own font: the modal portals to <body>, so it can't inherit the
      app's font through the DOM (the processor's .processor-scope isn't an ancestor). */
   font-family: var(--font-sans);
   background: var(--c-surface);

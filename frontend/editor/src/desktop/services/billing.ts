@@ -1,7 +1,7 @@
 /**
  * Desktop (Tauri) implementation of the @app/services/billing seam.
  *
- * Routes Stripe session/processor creation through the desktop supabase-js client's
+ * Routes Stripe session/portal creation through the desktop supabase-js client's
  * functions.invoke with an EXPLICIT Authorization: Bearer header carrying the
  * authService token (the desktop client is configured persistSession:false /
  * autoRefreshToken:false, so it never auto-attaches a JWT). The request is
@@ -89,7 +89,7 @@ export async function createCheckoutSession(
 }
 
 /**
- * Mint a Stripe Customer Processor session via the PAYG
+ * Mint a Stripe Customer Portal session via the PAYG
  * {@code create-customer-portal-session} edge function (its RPC enforces team
  * membership), through the desktop supabase client with an explicit bearer and
  * the deep-link return URL.
@@ -110,7 +110,7 @@ export async function createPortalSession(
     throw error;
   }
   if (!data?.url) {
-    throw new Error(data?.error ?? "Processor session response missing url");
+    throw new Error(data?.error ?? "Portal session response missing url");
   }
   return { url: data.url };
 }

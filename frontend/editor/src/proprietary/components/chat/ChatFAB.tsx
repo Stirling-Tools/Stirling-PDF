@@ -32,7 +32,7 @@ import {
 } from "@app/components/chat/chatFabLayout";
 import "@app/components/chat/ChatFAB.css";
 
-// Raise Mantine popup z-index so Menu/Popover processors appear above the FAB overlay.
+// Raise Mantine popup z-index so Menu/Popover portals appear above the FAB overlay.
 const FAB_PANEL_THEME = createTheme({
   components: {
     Popover: Popover.extend({

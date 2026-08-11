@@ -81,7 +81,7 @@ describe("FreeLimitReachedModal — render smoke", () => {
 
     // i18n is stubbed in setupTests to echo the key, so the CTA shows as its
     // translation key. Asserting on it confirms the modal mounted through the
-    // Mantine processor without throwing.
+    // Mantine portal without throwing.
     expect(screen.getByText("plan.freeLimit.cta")).toBeInTheDocument();
     expect(screen.getByText("plan.freeLimit.dismiss")).toBeInTheDocument();
   });

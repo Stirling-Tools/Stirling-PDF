@@ -1,7 +1,7 @@
 /**
  * Billing data seam (@app/services/billing).
  *
- * Creating Stripe Checkout / Customer Processor sessions touches platform-specific
+ * Creating Stripe Checkout / Customer Portal sessions touches platform-specific
  * transport (saas: supabase-js web client; desktop: Tauri native HTTP with an
  * explicit bearer + deep-link return URL). Cloud code can't reach those
  * directly, so it mints sessions through this seam. This module is the DEFAULT +
@@ -42,16 +42,16 @@ export interface CheckoutSession {
 
 /** Result of {@link createPortalSession}. */
 export interface PortalSession {
-  /** Stripe Customer Processor URL to send the user to. */
+  /** Stripe Customer Portal URL to send the user to. */
   url: string;
 }
 
 /**
- * Parameters for {@link createPortalSession}. The PAYG processor edge function
+ * Parameters for {@link createPortalSession}. The PAYG portal edge function
  * needs the caller's {@code teamId} (runs outside Spring Security).
  */
 export interface PortalParams {
-  /** The caller's team id; required by the PAYG processor edge function. */
+  /** The caller's team id; required by the PAYG portal edge function. */
   teamId: number;
 }
 
@@ -62,7 +62,7 @@ export async function createCheckoutSession(
   throw new Error("billing: platform impl required");
 }
 
-/** Mint a Stripe Customer Processor session via the SaaS billing backend (platform impl required). */
+/** Mint a Stripe Customer Portal session via the SaaS billing backend (platform impl required). */
 export async function createPortalSession(
   _params: PortalParams,
 ): Promise<PortalSession> {
