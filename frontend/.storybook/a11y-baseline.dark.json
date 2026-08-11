@@ -1828,6 +1828,21 @@
   "editor/src/portal/components/infrastructure/SectionHeader.stories.tsx :: Short Sub": [
     "color-contrast"
   ],
+  "editor/src/portal/components/pipelines/PipelineDefinitionModal.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Failed Step": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Multiple Selected": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Nothing Selected": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Settings": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/pipelines/PipelineStepSettings.stories.tsx :: No Settings": [
     "color-contrast"
   ],
@@ -1843,6 +1858,12 @@
     "empty-table-header"
   ],
   "editor/src/portal/components/pipelines/ToolPicker.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/ToolPicker.stories.tsx :: Incompatible Preceding Output": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/ToolPicker.stories.tsx :: No Matches": [
     "color-contrast"
   ],
   "editor/src/portal/components/policies/CatalogueSummary.stories.tsx :: Default": [
@@ -2235,9 +2256,13 @@
     "color-contrast"
   ],
   "editor/src/portal/views/Pipelines.stories.tsx :: Default": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
-  "editor/src/portal/views/Pipelines.stories.tsx :: Empty": ["color-contrast"],
+  "editor/src/portal/views/Pipelines.stories.tsx :: Empty": [
+    "color-contrast",
+    "empty-table-header"
+  ],
   "editor/src/portal/views/Policies.stories.tsx :: Default": ["color-contrast"],
   "editor/src/portal/views/Policies.stories.tsx :: Empty": ["color-contrast"],
   "editor/src/portal/views/Sources.stories.tsx :: Default": ["color-contrast"],

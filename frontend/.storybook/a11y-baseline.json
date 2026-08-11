@@ -1404,8 +1404,7 @@
     "color-contrast"
   ],
   "editor/src/core/ui/CodeBlock.stories.tsx :: Long Scrolling": [
-    "color-contrast",
-    "scrollable-region-focusable"
+    "color-contrast"
   ],
   "editor/src/core/ui/CodeBlock.stories.tsx :: Playground": ["color-contrast"],
   "editor/src/core/ui/Collapsible.stories.tsx :: Accordion": [
@@ -1977,6 +1976,30 @@
   "editor/src/portal/components/infrastructure/ModelsTab.stories.tsx :: Free": [
     "color-contrast"
   ],
+  "editor/src/portal/components/pipelines/PipelineDefinitionModal.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Editing": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Paused": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Testing": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: With Failed Run": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: With Run Result": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Failed Step": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Settings": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/pipelines/PipelineStepSettings.stories.tsx :: No Settings": [
     "color-contrast"
   ],
@@ -1989,6 +2012,9 @@
   ],
   "editor/src/portal/components/pipelines/PipelinesTable.stories.tsx :: Empty": [
     "empty-table-header"
+  ],
+  "editor/src/portal/components/pipelines/ToolPicker.stories.tsx :: Default": [
+    "color-contrast"
   ],
   "editor/src/portal/components/policies/PolicyCategoryCard.stories.tsx :: Coming Soon": [
     "color-contrast"
@@ -2272,6 +2298,10 @@
     "color-contrast",
     "landmark-unique"
   ],
+  "editor/src/portal/views/Documents.stories.tsx :: Default": [
+    "color-contrast"
+  ],
+  "editor/src/portal/views/Documents.stories.tsx :: Empty": ["color-contrast"],
   "editor/src/portal/views/Home.stories.tsx :: Enterprise Tier": [
     "color-contrast",
     "landmark-no-duplicate-banner",
@@ -2294,13 +2324,14 @@
   "editor/src/portal/views/Integrations.stories.tsx :: No Connections": [
     "color-contrast"
   ],
-  "editor/src/portal/views/PipelineBuilder.stories.tsx :: Default": [
-    "color-contrast"
-  ],
   "editor/src/portal/views/Pipelines.stories.tsx :: Default": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
-  "editor/src/portal/views/Pipelines.stories.tsx :: Empty": ["color-contrast"],
+  "editor/src/portal/views/Pipelines.stories.tsx :: Empty": [
+    "color-contrast",
+    "empty-table-header"
+  ],
   "editor/src/portal/views/Sources.stories.tsx :: Default": ["color-contrast"],
   "editor/src/portal/views/Sources.stories.tsx :: Empty": ["color-contrast"],
   "editor/src/proprietary/auth/ui/AuthScreens.stories.tsx :: Signup": [
