@@ -49,7 +49,7 @@ function KebabGlyph() {
   );
 }
 
-/** A row action. Rendered as a locked button; call-sites supply intent + handler. */
+/** A row/group action. Rendered as a locked button. */
 export interface CellAction {
   label: string;
   glyph?: CellGlyph;
@@ -58,6 +58,35 @@ export interface CellAction {
   tone?: "default" | "danger";
   onClick: () => void;
   loading?: boolean;
+  disabled?: boolean;
+}
+
+/** Renders a row of locked action buttons. Shared by the `actions` cell kind
+ *  and grouped-table headers. */
+export function renderCellActions(actions: CellAction[]): ReactNode {
+  return (
+    <div className="sui-dtc__actions">
+      {actions.map((a) => (
+        <Button
+          key={a.label}
+          variant={a.iconOnly ? "quiet" : "tertiary"}
+          accent={a.tone === "danger" ? "danger" : undefined}
+          size="sm"
+          shape={a.iconOnly ? "circle" : undefined}
+          leftSection={a.glyph ? <KebabGlyph /> : undefined}
+          loading={a.loading}
+          disabled={a.disabled}
+          aria-label={a.iconOnly ? a.label : undefined}
+          onClick={(e) => {
+            e.stopPropagation();
+            a.onClick();
+          }}
+        >
+          {a.iconOnly ? undefined : a.label}
+        </Button>
+      ))}
+    </div>
+  );
 }
 
 /** An external link inside a cell. */
@@ -264,28 +293,7 @@ function actions<T>(o: {
     nowrap: true,
     fit: true,
     sortable: false,
-    renderCell: (r) => (
-      <div className="sui-dtc__actions">
-        {o.get(r).map((a) => (
-          <Button
-            key={a.label}
-            variant={a.iconOnly ? "quiet" : "tertiary"}
-            accent={a.tone === "danger" ? "danger" : undefined}
-            size="sm"
-            shape={a.iconOnly ? "circle" : undefined}
-            leftSection={a.glyph ? <KebabGlyph /> : undefined}
-            loading={a.loading}
-            aria-label={a.iconOnly ? a.label : undefined}
-            onClick={(e) => {
-              e.stopPropagation();
-              a.onClick();
-            }}
-          >
-            {a.iconOnly ? undefined : a.label}
-          </Button>
-        ))}
-      </div>
-    ),
+    renderCell: (r) => renderCellActions(o.get(r)),
   };
 }
 

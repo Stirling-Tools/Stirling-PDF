@@ -11018,11 +11018,14 @@ usernamePlaceholder = "jsmith"
 by = "Invited by {{who}}"
 cancel = "Cancel"
 count = "{{count}} pending"
-desc = "Invited people who haven't joined yet. They hold a seat until they accept."
 expiresInDays_one = "Expires in {{count}} day"
 expiresInDays_other = "Expires in {{count}} days"
 expiresToday = "Expires today"
 title = "Pending invitations"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Something went wrong reaching the backend, or you don't have access. Try again."

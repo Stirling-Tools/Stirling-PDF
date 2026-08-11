@@ -200,16 +200,12 @@
   min-width: 0;
 }
 .sui-dtc__entity-icon {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
   flex: none;
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-sm);
-  background: var(--c-surface-sunken, var(--c-hover));
   color: var(--c-text-muted);
 }
-/* The component sizes whatever icon the call-site supplies. */
+/* The component sizes bare icons; self-styled marks (Avatar) render as-is. */
 .sui-dtc__entity-icon svg {
   width: 1.2rem;
   height: 1.2rem;
@@ -234,6 +230,54 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.25rem;
+}
+
+/* Grouped tables: section header row + per-group "show all" toggle. */
+.sui-datatable__group-cell {
+  padding: 0.5rem 0.875rem;
+  background: var(--c-surface-sunken, var(--c-hover));
+  border-bottom: 1px solid var(--c-border);
+}
+.sui-datatable__table
+  tbody
+  tr.sui-datatable__group:not(:first-child)
+  .sui-datatable__group-cell {
+  border-top: 1px solid var(--c-border);
+}
+.sui-datatable__group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.sui-datatable__group-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.sui-datatable__group-title strong {
+  font-size: 0.8125rem;
+  color: var(--c-text);
+}
+.sui-datatable__group-meta {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+.sui-datatable__group-more {
+  padding: 0.5rem 0.875rem;
+}
+.sui-datatable__show-all {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--c-accent-fg, var(--c-primary));
+}
+.sui-datatable__show-all:hover {
+  text-decoration: underline;
 }
 
 .sui-dtc__progress {

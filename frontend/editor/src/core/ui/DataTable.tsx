@@ -11,7 +11,11 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { Skeleton } from "@app/ui/Skeleton";
-import { type DataTableColumn } from "@app/ui/dataTableColumns";
+import {
+  type CellAction,
+  type DataTableColumn,
+  renderCellActions,
+} from "@app/ui/dataTableColumns";
 import "@app/ui/DataTable.css";
 
 export * from "@app/ui/dataTableColumns";
@@ -37,10 +41,31 @@ type DataTableFeatures = typeof DATA_TABLE_FEATURES;
 /** Closed appearance dial — the only look choice a call-site may make. */
 export type DataTableVariant = "default" | "compact";
 
+/**
+ * A collapsible section of rows under a locked header. Group headers are
+ * structured (title + muted meta + optional right-aligned actions), never raw
+ * markup, so grouped tables stay as opinionated as flat ones. Provide `groups`
+ * instead of `rows`.
+ */
+export interface DataTableGroup<T> {
+  key: string;
+  title: string;
+  /** Muted sub-text on the header (e.g. "5 people · led by Dana"). */
+  meta?: string;
+  /** Right-aligned header actions (e.g. "Add to team", a kebab menu). */
+  actions?: CellAction[];
+  rows: T[];
+  /** Collapse rows past this count behind a "Show all N" toggle. */
+  collapseAfter?: number;
+}
+
 export interface DataTableProps<T> {
   /** Columns built with the `column` vocabulary — never raw JSX. */
   columns: DataTableColumn<T>[];
-  rows: T[];
+  /** Flat rows. Provide this OR `groups`, not both. */
+  rows?: T[];
+  /** Grouped rows with section headers. Takes precedence over `rows`. */
+  groups?: DataTableGroup<T>[];
   rowKey: (row: T) => string;
 
   /** Makes rows interactive (hover + click + keyboard). */
@@ -68,6 +93,8 @@ export interface DataTableProps<T> {
   variant?: DataTableVariant;
   /** Accessible caption for the table. */
   caption?: string;
+  /** Labels for a group's "show all / show less" toggle (pass translated). */
+  collapseLabels?: { showAll: (remaining: number) => string; showLess: string };
 }
 
 function ChevronGlyph() {
@@ -109,7 +136,8 @@ const CHEVRON_COLUMN_KEY = "__affordance";
  */
 export function DataTable<T extends RowData>({
   columns,
-  rows,
+  rows = [],
+  groups,
   rowKey,
   onRowClick,
   isRowInteractive,
@@ -122,11 +150,30 @@ export function DataTable<T extends RowData>({
   toolbar,
   variant = "default",
   caption,
+  collapseLabels = {
+    showAll: (n) => `Show ${n} more`,
+    showLess: "Show less",
+  },
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>(
     defaultSort
       ? [{ id: defaultSort.key, desc: defaultSort.direction === "desc" }]
       : [],
+  );
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = (key: string) =>
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  // The data source is either grouped or flat; TanStack (headers, sorting for
+  // the flat path) is fed the flattened rows.
+  const flatRows = useMemo(
+    () => (groups ? groups.flatMap((g) => g.rows) : rows),
+    [groups, rows],
   );
 
   const interactive = Boolean(onRowClick);
@@ -179,7 +226,7 @@ export function DataTable<T extends RowData>({
 
   const table = useTable({
     features: DATA_TABLE_FEATURES,
-    data: rows,
+    data: flatRows,
     columns: tanstackColumns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -214,6 +261,55 @@ export function DataTable<T extends RowData>({
         </td>
       </tr>
     );
+  } else if (groups) {
+    body = groups.flatMap((g) => {
+      const limit = g.collapseAfter ?? Infinity;
+      const open = openGroups.has(g.key);
+      const overflow = g.rows.length > limit;
+      const shown = overflow && !open ? g.rows.slice(0, limit) : g.rows;
+      const header = (
+        <tr key={`group-${g.key}`} className="sui-datatable__group">
+          <td colSpan={colCount} className="sui-datatable__group-cell">
+            <div className="sui-datatable__group-head">
+              <div className="sui-datatable__group-title">
+                <strong>{g.title}</strong>
+                {g.meta && (
+                  <span className="sui-datatable__group-meta">{g.meta}</span>
+                )}
+              </div>
+              {g.actions &&
+                g.actions.length > 0 &&
+                renderCellActions(g.actions)}
+            </div>
+          </td>
+        </tr>
+      );
+      const rowEls = shown.map((row) => (
+        <tr key={rowKey(row)} className="sui-datatable__row">
+          {columns.map((c) => (
+            <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
+              {c.renderCell(row)}
+            </td>
+          ))}
+        </tr>
+      ));
+      const moreEl = overflow ? (
+        <tr key={`more-${g.key}`}>
+          <td colSpan={colCount} className="sui-datatable__group-more">
+            <button
+              type="button"
+              className="sui-datatable__show-all"
+              onClick={() => toggleGroup(g.key)}
+            >
+              {open
+                ? collapseLabels.showLess
+                : collapseLabels.showAll(g.rows.length - limit)}
+            </button>
+          </td>
+        </tr>
+      ) : null;
+      return moreEl ? [header, ...rowEls, moreEl] : [header, ...rowEls];
+    });
   } else if (rows.length === 0) {
     const isNode = typeof empty === "object" && empty !== null;
     body = (
