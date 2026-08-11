@@ -33,6 +33,9 @@ interface MobileTransferModalProps {
   pollingErrorMessage: string;
   /** Rendered under the QR once files have arrived (e.g. a received-count badge). */
   renderReceived?: (count: number) => ReactNode;
+  /** Accessible name for the QR image. Defaults to the modal's own title, which
+   *  already names the feature the code belongs to. */
+  qrTitle?: string;
   qrSize?: number;
 }
 
@@ -50,6 +53,7 @@ export default function MobileTransferModal({
   sessionCreateErrorMessage,
   pollingErrorMessage,
   renderReceived,
+  qrTitle = title,
   qrSize = 240,
 }: MobileTransferModalProps) {
   const { config } = useAppConfig();
@@ -134,10 +138,7 @@ export default function MobileTransferModal({
               size={qrSize}
               level="H"
               includeMargin
-              title={t(
-                "mobileUpload.qrCodeTitle",
-                "QR code linking to the mobile upload page",
-              )}
+              title={qrTitle}
             />
           </Box>
 

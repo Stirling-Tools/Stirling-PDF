@@ -4998,7 +4998,6 @@ filesReceived_other = "{{count}} files received"
 instructions = "Scan with your phone camera. Images convert to PDF automatically."
 instructionsNoConvert = "Scan with your phone camera to upload files."
 pollingError = "Error checking for files"
-qrCodeTitle = "QR code linking to the mobile upload page"
 sessionCreateError = "Failed to create session"
 title = "Upload from Mobile"
 
