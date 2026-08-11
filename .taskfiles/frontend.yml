@@ -211,11 +211,13 @@ tasks:
       - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
 
   storybook:a11y:
-    desc: "a11y regression gate over every story: fail only on NEW axe violations"
+    desc: "a11y regression gate over every story, light and dark: fail only on NEW axe violations"
     deps: [prepare, storybook:browser]
     cmds:
       - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
 
   storybook:a11y:changed:
     desc: "a11y gate over the stories this branch affects (default base origin/main)"
@@ -244,13 +246,17 @@ tasks:
           fi
           node .storybook/a11y-scan.mjs {{.CHANGED}}
           node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+          SCAN_THEME=dark node .storybook/a11y-scan.mjs {{.CHANGED}}
+          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
 
   storybook:a11y:record:
-    desc: "Re-record the a11y baseline (run after intentionally fixing/adding violations)"
+    desc: "Re-record both a11y baselines (run after intentionally fixing/adding violations)"
     deps: [prepare, storybook:browser]
     cmds:
       - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record --baseline .storybook/a11y-baseline.dark.json
 
   # ============================================================
   # Code quality

@@ -74,7 +74,7 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   responseHandler?: ResponseHandler;
 
   /** Extract user-friendly error messages from API errors */
-  getErrorMessage?: (error: any) => string;
+  getErrorMessage?: (error: unknown) => string;
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
@@ -100,6 +100,13 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
    * can be re-hydrated into this tool's settings UI.
    */
   fromApiParams?(apiParams: ToolApiParams[TEndpoint]): Partial<TParams>;
+
+  /**
+   * Whether a stored step belongs to this tool, used only to tell apart tools that share an endpoint.
+   * Receives the raw stored request body. Absent means the tool is the general owner of its
+   * endpoint and claims any step no specialised sibling claims.
+   */
+  claimsStoredStep?(apiParams: Record<string, unknown>): boolean;
 
   /**
    * For custom tools: if true, success implies all input files were successfully processed.
