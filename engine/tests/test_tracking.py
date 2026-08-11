@@ -73,9 +73,7 @@ def test_processor_property_helpers_add_optional_values() -> None:
     properties: dict[str, object] = {}
     attrs = {
         tracking.GEN_AI_INPUT_MESSAGES: json.dumps([{"role": "user"}]),
-        tracking.GEN_AI_OUTPUT_MESSAGES: json.dumps(
-            [{"role": "assistant", "parts": [{"type": "text", "content": "done"}]}]
-        ),
+        tracking.GEN_AI_OUTPUT_MESSAGES: json.dumps([{"role": "assistant", "parts": [{"type": "text", "content": "done"}]}]),
         tracking.GEN_AI_REQUEST_TEMPERATURE: 0.2,
         tracking.GEN_AI_REQUEST_MAX_TOKENS: 100,
         tracking.GEN_AI_TOOL_DEFINITIONS: json.dumps([{"name": "search"}]),
@@ -115,9 +113,7 @@ def test_processor_emits_generation_and_one_trace_event_per_trace() -> None:
             tracking.GEN_AI_OPERATION_NAME: tracking.GenAiOperationNameValues.CHAT.value,
             tracking.GEN_AI_SYSTEM: "provider",
             tracking.GEN_AI_RESPONSE_MODEL: "model",
-            tracking.GEN_AI_INPUT_MESSAGES: json.dumps(
-                [{"role": "user", "parts": [{"type": "text", "content": "question"}]}]
-            ),
+            tracking.GEN_AI_INPUT_MESSAGES: json.dumps([{"role": "user", "parts": [{"type": "text", "content": "question"}]}]),
         },
         context=context,
         parent=parent,

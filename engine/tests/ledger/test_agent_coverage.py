@@ -98,9 +98,7 @@ async def test_audit_processes_arithmetic_formulas_figures_and_statements() -> N
 @pytest.mark.anyio
 async def test_internal_llm_helpers_return_structured_outputs() -> None:
     agent = _agent()
-    agent._table_analyser = SimpleNamespace(
-        run=AsyncMock(return_value=SimpleNamespace(output=TableFormulas(formulas=[])))
-    )
+    agent._table_analyser = SimpleNamespace(run=AsyncMock(return_value=SimpleNamespace(output=TableFormulas(formulas=[]))))
     agent._statement_verifier = SimpleNamespace(
         run=AsyncMock(return_value=SimpleNamespace(output=StatementsResult(statements=[])))
     )
@@ -109,9 +107,7 @@ async def test_internal_llm_helpers_return_structured_outputs() -> None:
     )
 
     assert await agent._infer_formulas("a,b\n1,2") == TableFormulas(formulas=[])
-    assert await agent._verify_statements(Folio(page=0, text="text", tables=["a,b\n1,2"])) == StatementsResult(
-        statements=[]
-    )
+    assert await agent._verify_statements(Folio(page=0, text="text", tables=["a,b\n1,2"])) == StatementsResult(statements=[])
     assert await agent._verify_statements(Folio(page=0, text=" ")) == StatementsResult(statements=[])
     assert await agent._extract_figures_for_page(Folio(page=0, text="text")) == []
     assert await agent._extract_figures_for_page(Folio(page=0, text=" ")) == []

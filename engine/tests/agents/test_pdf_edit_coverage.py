@@ -49,14 +49,9 @@ def test_pdf_edit_agent_builds_selection_and_need_content_responses(runtime: App
     selection = PdfEditNeedContentSelection(reason="need text", file_names=["a.pdf"], max_pages=2)
     response = agent._build_need_content_response(selection, request)
     assert response.files[0].file.name == "a.pdf"
+    assert agent._build_need_content_response(PdfEditNeedContentSelection(reason="all"), request).files[0].file.name == "a.pdf"
     assert (
-        agent._build_need_content_response(PdfEditNeedContentSelection(reason="all"), request).files[0].file.name
-        == "a.pdf"
-    )
-    assert (
-        agent._build_need_content_response(
-            PdfEditNeedContentSelection(reason="fallback", file_names=["missing.pdf"]), request
-        )
+        agent._build_need_content_response(PdfEditNeedContentSelection(reason="fallback", file_names=["missing.pdf"]), request)
         .files[0]
         .file.name
         == "a.pdf"
