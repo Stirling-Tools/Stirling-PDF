@@ -535,8 +535,11 @@ export function PipelineBuilder() {
   // generated tool I/O table rather than by running the pipeline, so an impossible chain (say,
   // Extract Images then Rotate) is caught while it is being built.
   const chainDiagnostics = useMemo(
-    () => validateToolChain(validationSteps),
-    [validationSteps],
+    () =>
+      validateToolChain(validationSteps).filter(
+        (d) => !stepNeedsConfiguring(steps[d.stepIndex], allTools),
+      ),
+    [validationSteps, steps, allTools],
   );
   const blockingSteps = chainDiagnostics
     .filter((d) => d.severity === "ERROR")

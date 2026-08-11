@@ -406,6 +406,21 @@ describe("PipelineBuilder", () => {
     ).toBeDisabled();
   });
 
+  it("stays quiet on the wires around a step that still needs setting up", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await addTool("OCR");
+
+    // The node itself flags that it needs setting up...
+    await screen.findByText("portal.pipelines.builder.needsConfiguring");
+    // ...but the wires around it don't nag: an unconfigured step's operation is unknown, so neither
+    // the wire into it nor the one out of it shows a compatibility warning until it is configured.
+    expect(
+      screen.queryByText(
+        "portal.pipelines.builder.diagnostic.undeclared-operation",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it("clears the warning once the step is configured", async () => {
     renderBuilder("/processor/pipelines/new");
     await addTool("OCR");
