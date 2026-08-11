@@ -22,11 +22,11 @@ import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 
 /**
- * Admin endpoint exposing free-editor fleet usage for the portal Usage card. Audit-derived figures
- * (active editors, PDFs processed) are null (rendered as "N/A") rather than a misleading 0 whenever
- * the data can't exist: the events they count (PDF_PROCESS, FILE_OPERATION, HTTP_REQUEST) are all
- * STANDARD level, so a gate on {@code isEnabled()} alone would still return 0 at level=OFF/BASIC —
- * we gate on {@code isLevelEnabled(STANDARD)} instead.
+ * Admin endpoint exposing free-editor fleet usage for the processor Usage card. Audit-derived
+ * figures (active editors, PDFs processed) are null (rendered as "N/A") rather than a misleading 0
+ * whenever the data can't exist: the events they count (PDF_PROCESS, FILE_OPERATION, HTTP_REQUEST)
+ * are all STANDARD level, so a gate on {@code isEnabled()} alone would still return 0 at
+ * level=OFF/BASIC — we gate on {@code isLevelEnabled(STANDARD)} instead.
  *
  * <p>Known limitation: on a login-disabled self-hosted instance every request is anonymous, so its
  * audit origin is SYSTEM (not WEB) and it is excluded from these WEB-only counts — active/PDFs then

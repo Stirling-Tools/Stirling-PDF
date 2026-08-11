@@ -46,8 +46,8 @@ public enum FailureKind {
             offer(ACKNOWLEDGE),
             offer(DISMISS));
 
-    private static final String KEY_PREFIX = "portal.failures.kind.";
-    private static final String ACTION_KEY_PREFIX = "portal.failures.action.";
+    private static final String KEY_PREFIX = "processor.failures.kind.";
+    private static final String ACTION_KEY_PREFIX = "processor.failures.action.";
 
     /**
      * Every claimed {@code ErrorCode}, to the kind claiming it. Indexed once rather than scanned
@@ -95,7 +95,7 @@ public enum FailureKind {
      * One action this kind offers, with the key to label it by. One ordered list rather than ids
      * plus a parallel map of overrides, which could disagree with each other.
      *
-     * @param labelKeySuffix key under {@code portal.failures.action.}, or null for the generic
+     * @param labelKeySuffix key under {@code processor.failures.action.}, or null for the generic
      *     label
      */
     private record Offer(FailureActionId id, String labelKeySuffix) {}

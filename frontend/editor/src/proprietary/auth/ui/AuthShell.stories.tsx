@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 
 /**
- * The login card shell shared by the editor and the portal: a centered card
+ * The login card shell shared by the editor and the processor: a centered card
  * that expands to two columns (form + right panel) on wide/tall viewports.
  */
 const meta = {

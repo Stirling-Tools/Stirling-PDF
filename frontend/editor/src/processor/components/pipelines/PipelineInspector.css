@@ -1,0 +1,34 @@
+/**
+ * The builder's right-hand panel: the selected node's settings.
+ */
+
+.processor-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.125rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+  /* The builder caps its columns so the page itself does not scroll, which means a settings form
+     taller than the viewport has to scroll in here - otherwise its lower half is unreachable. */
+  max-height: 100%;
+}
+
+.processor-inspector__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Names the node being edited, so the panel is not just a nameless form. */
+.processor-inspector__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-text);
+}

@@ -1,0 +1,230 @@
+/**
+ * The builder claims the shell's view rather than lengthening it, so a long chain scrolls *inside*
+ * the graph while the header and the inspector stay put. A chain grows 112px per step, so it passes
+ * a typical viewport at around five steps - and if the page scrolled instead, clicking a node near
+ * the bottom would put the inspector (and Save) off-screen, which is the one interaction this whole
+ * layout exists to serve.
+ *
+ * The shell already makes .processor-shell__view the scroll container, so height here resolves against
+ * a definite box; capping the columns is what stops that view scrolling at all.
+ */
+.processor-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+  height: 100%;
+  min-height: 0;
+}
+
+/* The header and any banners keep their own size; only the grid absorbs (or gives up) space. Left
+   to the flex default they would all shrink together and squash on a short viewport. */
+.processor-builder > *:not(.processor-builder__grid) {
+  flex: none;
+}
+
+.processor-builder__loading {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+/* Two-pane layout */
+.processor-builder__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.25rem;
+  /* Takes whatever the header leaves, and pins the row to exactly that. `minmax(0, 1fr)` rather
+     than the implicit `auto` row is what makes the columns' `max-height: 100%` mean anything: an
+     auto row is sized BY its tallest item, so a long settings form would size the row to itself and
+     then resolve its own 100% against it - capping nothing, and clipping the form with no scrollbar.
+     `align-items: start` still lets a short column hug its content inside the bounded row. */
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: start;
+}
+
+/* Stacked, the inspector sits below the graph, so there is nothing to hold in view - and capping
+   here would nest a scroll region inside a scrolling page, which is worse than a long page. Let the
+   builder grow and hand scrolling back to the shell. */
+@media (max-width: 60rem) {
+  .processor-builder {
+    height: auto;
+  }
+
+  .processor-builder__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    flex: none;
+  }
+}
+
+/* The input's source dropdown and its edit affordance, in the inspector. */
+.processor-builder__input-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processor-builder__input-field {
+  flex: 1 1 11rem;
+  min-width: 10rem;
+}
+
+/* Tool picker */
+/* The picker fills the modal hosting it rather than sitting in a card of its own: same surface,
+   same radius, so a bordered box in here would frame nothing. Its rows carry the structure, and
+   they run to the panel's edges - which is what lets the search divider span the full width. */
+.processor-pipelines__picker-modal .sui-modal__body {
+  padding: 0;
+}
+
+/* Holds the shared Input, which brings its own border/focus ring; the row just insets it and rules
+   it off from the list below. */
+.processor-pipelines__picker-search {
+  padding: 0.75rem 0.75rem 0.625rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.processor-pipelines__picker-search .sui-input {
+  width: 100%;
+}
+
+.processor-pipelines__picker-list {
+  max-height: 20rem;
+  overflow-y: auto;
+  padding: 0.25rem 0;
+}
+
+.processor-pipelines__picker-group-label {
+  padding: 0.5rem 1.125rem 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.processor-pipelines__picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0.4375rem 1.125rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--c-text);
+  transition: background var(--motion-fast);
+}
+
+.processor-pipelines__picker-item:hover {
+  background: var(--c-hover);
+}
+
+.processor-pipelines__picker-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--c-text-subtle);
+  font-size: 1.125rem;
+}
+
+.processor-pipelines__picker-icon svg {
+  display: block;
+}
+
+/* Name over its optional note - a two-line item, so the note reads as a sub-line rather than
+   running straight on from the name. */
+.processor-pipelines__picker-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+
+.processor-pipelines__picker-name {
+  font-size: 0.8125rem;
+}
+
+/* Why this tool cannot follow the step before it. Advisory: the item is still pickable, just dimmed
+   and captioned so the reason is clear without shouting. */
+.processor-pipelines__picker-note {
+  font-size: 0.6875rem;
+  color: var(--c-text-muted);
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* Muted via a token, not opacity: opacity on text drops the contrast below the floor. The name
+   still reads as de-emphasised, and the icon (not text) can take the opacity. */
+.processor-pipelines__picker-item.is-incompatible
+  .processor-pipelines__picker-name {
+  color: var(--c-text-muted);
+}
+
+.processor-pipelines__picker-item.is-incompatible
+  .processor-pipelines__picker-icon {
+  opacity: 0.55;
+}
+
+.processor-pipelines__picker-empty {
+  padding: 1rem 1.125rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  margin: 0;
+}
+
+/* The tool-picker item is the shared Button carrying bespoke styling, so re-assert its look over
+   the design-system base (which otherwise imposes a fixed height, its own padding and an accent
+   text colour). */
+.processor-pipelines__picker-item.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0.4375rem 1.125rem;
+  font-weight: 400;
+  color: var(--c-text);
+}
+
+.processor-pipelines__picker-item.sui-btn:hover {
+  background: var(--c-hover);
+}
+
+/* A quiet way into the chosen source's own settings, beside its dropdown. */
+.processor-builder__input-row .processor-builder__source-edit {
+  color: var(--c-text-subtle);
+}
+
+.processor-builder__input-row
+  .processor-builder__source-edit:hover:not(:disabled) {
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+/* The input's schedule row, its number field, and a builder-owned muted line. These lived in
+   Pipelines.css and only rendered because the router bundles both views together; a code-split (or
+   any Storybook story of the builder alone) left them unstyled. Kept here so the builder is
+   self-contained. */
+.processor-builder__schedule {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processor-builder__schedule-count {
+  width: 5rem;
+}
+
+.processor-builder__muted {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  margin: 0;
+}
+
+/* The space-between button row shared by the builder's modal footers. */
+.processor-builder__composer-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}

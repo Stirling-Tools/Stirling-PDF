@@ -14,7 +14,7 @@
 
 /* Header text kept for assistive tech only, so a column of controls can be named
    without putting a heading above it. Defined here rather than borrowing a global
-   utility, since the portal loads its own stylesheet. */
+   utility, since the processor loads its own stylesheet. */
 .sui-table__th-sr {
   position: absolute;
   width: 1px;

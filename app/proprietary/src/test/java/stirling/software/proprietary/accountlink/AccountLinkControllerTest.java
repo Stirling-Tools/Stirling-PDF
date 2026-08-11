@@ -18,7 +18,7 @@ import stirling.software.proprietary.accountlink.AccountLinkController.LinkReque
 
 /**
  * The local (self-hosted) account-link controller's error mapping: an upstream auth rejection
- * surfaces as 401/403 (so the portal can prompt a re-sign-in) while other upstream / transport
+ * surfaces as 401/403 (so the processor can prompt a re-sign-in) while other upstream / transport
  * faults are a 502.
  */
 class AccountLinkControllerTest {

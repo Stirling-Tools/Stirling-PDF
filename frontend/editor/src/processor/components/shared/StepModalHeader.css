@@ -1,0 +1,92 @@
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Stepped flow-modal header (prepay wizard, metered checkout, quote builder) */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.processor-stepmodal__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  /* No bottom margin: the host band owns the space beneath it (FlowModal's header padding, or
+     billing's own .processor-billing__bundle-head). Keeping one here doubled the header's inset. */
+}
+
+.processor-stepmodal__head-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.processor-stepmodal__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--c-text);
+}
+
+/* Trademarked wordmark SVG (theme-switched via .wordmark-light-only/.wordmark-dark-only). Height
+   matches the processor nav's 22px wordmark so the modal and app read as one brand. No `display` here —
+   the theme-switch utilities own visibility. */
+.processor-stepmodal__wordmark {
+  height: 1.375rem;
+  width: auto;
+}
+
+/* Flow title, for modals that head with their own name rather than the wordmark. */
+.processor-stepmodal__ident {
+  min-width: 0;
+}
+.processor-stepmodal__flow-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+/* Qualifies the title — for a step whose heading names a document that needs saying what it covers. */
+.processor-stepmodal__flow-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--c-text-subtle);
+  line-height: 1.45;
+}
+
+.processor-stepmodal__head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processor-stepmodal__step {
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+}
+
+.processor-stepmodal__progress {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.processor-stepmodal__progress > span {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--c-border-subtle);
+}
+
+.processor-stepmodal__progress > span.is-filled {
+  background: var(--c-primary);
+}
+
+.processor-stepmodal__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--c-text);
+}

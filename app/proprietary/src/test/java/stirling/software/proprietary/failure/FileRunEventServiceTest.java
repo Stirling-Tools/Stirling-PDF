@@ -267,7 +267,7 @@ class FileRunEventServiceTest {
             assertThat(actions)
                     .allMatch(
                             action ->
-                                    "portal.failures.disabled.closed"
+                                    "processor.failures.disabled.closed"
                                             .equals(action.disabledReasonKey()));
         }
 
@@ -277,7 +277,7 @@ class FileRunEventServiceTest {
 
             assertThat(service.availableActions(event))
                     .extracting(FileRunEventService.AvailableAction::labelKey)
-                    .contains("portal.failures.action.dismissSkipFile");
+                    .contains("processor.failures.action.dismissSkipFile");
         }
 
         @Test
@@ -287,7 +287,8 @@ class FileRunEventServiceTest {
             assertThat(service.availableActions(event))
                     .extracting(FileRunEventService.AvailableAction::labelKey)
                     .containsExactlyInAnyOrder(
-                            "portal.failures.action.acknowledge", "portal.failures.action.dismiss");
+                            "processor.failures.action.acknowledge",
+                            "processor.failures.action.dismiss");
         }
     }
 

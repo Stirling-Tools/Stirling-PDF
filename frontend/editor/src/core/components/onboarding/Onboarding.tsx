@@ -182,7 +182,7 @@ export default function Onboarding() {
         }
         case "open-processor":
           actions.complete();
-          navigate("/portal");
+          navigate("/processor");
           break;
         case "skip-to-license":
           actions.complete();

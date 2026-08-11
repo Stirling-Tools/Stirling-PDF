@@ -3,10 +3,10 @@
  *
  * The editor's saas build keeps its own richer client (profile pictures, pro
  * status, teams). This module is the portable Supabase path used by the shared
- * unified auth provider - notably so the portal can run in Supabase mode
+ * unified auth provider - notably so the processor can run in Supabase mode
  * against a hosted backend. The client is created lazily via
  * {@link configureSupabase}; until then {@link getSupabaseClient} returns null,
- * so hosts that never configure it (e.g. the portal in Spring mode) don't pull
+ * so hosts that never configure it (e.g. the processor in Spring mode) don't pull
  * Supabase into their session at all.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";

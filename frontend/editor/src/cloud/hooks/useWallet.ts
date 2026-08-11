@@ -60,7 +60,7 @@ import type {
 } from "@app/billing";
 
 // ─── Public types ───────────────────────────────────────────────────────
-// The wallet contract lives in @app/billing (shared with the admin portal).
+// The wallet contract lives in @app/billing (shared with the admin processor).
 // Re-exported so existing `@app/hooks/useWallet` importers keep their imports.
 export type {
   Wallet,
@@ -92,9 +92,9 @@ export interface UseWalletResult {
    */
   updateCap: (capUsd: number | null) => Promise<void>;
   /**
-   * Mint a Stripe Customer Portal session and send the user to it. Mints the
+   * Mint a Stripe Customer Processor session and send the user to it. Mints the
    * session via the {@code @app/services/billing} seam (passing the caller's
-   * {@code teamId}, which the PAYG portal edge function needs to resolve the
+   * {@code teamId}, which the PAYG processor edge function needs to resolve the
    * team outside Spring Security) and opens the returned URL via the
    * {@code @app/platform/openExternal} seam — so web and desktop each route it
    * the platform-appropriate way (new tab on web, system browser on desktop).
@@ -321,8 +321,8 @@ export function useWallet(): UseWalletResult {
       await openExternal("https://billing.stripe.com/p/login/mock");
       return;
     }
-    // Mint the portal session through the billing seam, passing teamId: the
-    // PAYG portal edge function needs it to resolve the caller's team outside
+    // Mint the processor session through the billing seam, passing teamId: the
+    // PAYG processor edge function needs it to resolve the caller's team outside
     // Spring Security (its RPC enforces team membership). Then hand the URL to
     // the openExternal seam so each platform routes it appropriately. The seam
     // throws on error (e.g. 404 team_not_subscribed) so callers can toast.

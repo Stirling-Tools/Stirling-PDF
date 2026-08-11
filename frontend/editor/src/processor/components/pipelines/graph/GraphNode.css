@@ -1,0 +1,140 @@
+/**
+ * Graph-only extras layered on the shared NodeCard tile (see @app/ui/NodeCard): the config warning
+ * line, drag dimming, the remove control and run-state glyphs. The surface, selection ring and
+ * icon/title/detail layout all live in NodeCard.
+ */
+
+/* Amber carries the tone on the glyph; the words stay body-coloured. --c-warning is amber-600,
+   which is only 3.18:1 on a light surface at this size (axe) - readable as an icon, not as text. */
+.processor-graph-node__warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--c-text);
+}
+
+.processor-graph-node__warning svg {
+  color: var(--c-warning);
+  flex: none;
+}
+
+/* Lifted out of the chain: the origin dims so the drop target reads as the real position. */
+.processor-graph-node.is-dragging {
+  opacity: 0.4;
+}
+
+/* Steps can be picked up and moved; the input and output are fixed ends. */
+.processor-graph-node--step .sui-node-card__select.sui-btn {
+  cursor: grab;
+}
+
+.processor-graph-node--step.is-dragging .sui-node-card__select.sui-btn {
+  cursor: grabbing;
+}
+
+/* Remove: quiet until the node is hovered or focused, so the chain stays calm. */
+.processor-graph-node__remove.sui-ai {
+  position: absolute;
+  top: -0.4375rem;
+  /* Logical, so in RTL the remove sits on the card's trailing (left) corner rather than on top of
+     the leading icon badge. */
+  inset-inline-end: -0.4375rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text-subtle);
+  opacity: 0;
+  transition:
+    opacity var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.processor-graph-node:hover .processor-graph-node__remove.sui-ai,
+.processor-graph-node.is-selected .processor-graph-node__remove.sui-ai,
+.processor-graph-node__remove.sui-ai:focus-visible {
+  opacity: 1;
+}
+
+.processor-graph-node__remove.sui-ai:hover {
+  color: var(--c-danger);
+  border-color: var(--c-danger);
+}
+
+/* Run state: a status glyph on the card's trailing edge, inside the node. The state is carried by
+   the icon's shape as well as its colour, with the wording kept for assistive tech. */
+.processor-graph-node__run {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-inline-end: 0.625rem;
+  color: var(--c-text-subtle);
+}
+
+/* A failed step's glyph is a button (it opens the error), so re-assert the plain glyph look over
+   the shared ActionIcon base. */
+.processor-graph-node__run--open.sui-ai {
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  border: none;
+  background: none;
+  color: var(--c-danger);
+}
+
+.processor-graph-node__run-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.processor-graph-node.is-done .processor-graph-node__run {
+  color: var(--c-success);
+}
+
+.processor-graph-node.is-failed .processor-graph-node__run {
+  color: var(--c-danger);
+}
+
+/* Running is carried by the pulsing glyph alone: a primary border here would be the selected
+   treatment, and "the step I am editing" must stay distinguishable from "the step running now". */
+.processor-graph-node.is-running .processor-graph-node__run {
+  color: var(--c-primary);
+}
+
+.processor-graph-node__pulse {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+  animation: processor-graph-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes processor-graph-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .processor-graph-node__pulse {
+    animation: none;
+  }
+}

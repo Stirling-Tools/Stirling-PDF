@@ -3,14 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { isAuthRoute } from "@app/constants/routes";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
 import {
   consumeLoginLandingPending,
   fetchLandsOnProcessor,
   hasLoginLandingPending,
-  isPortalAvailable,
+  isProcessorAvailable,
   loginLandingMode,
 } from "@app/utils/loginLanding";
 
@@ -26,7 +26,7 @@ import {
  * a would-be processor user, a full-screen loader is shown so the editor never
  * flashes before the redirect resolves.
  *
- * Mounted once (in AppProviders) for every flavor; not on the portal route-set,
+ * Mounted once (in AppProviders) for every flavor; not on the processor route-set,
  * which is a separate top-level route.
  */
 export function LoginLandingRedirect() {
@@ -42,12 +42,12 @@ export function LoginLandingRedirect() {
   const [resolving, setResolving] = useState(false);
 
   // One-time config log so a live instance reveals the silent build gates
-  // (soft-release mode off, or portal not bundled) even before any login.
+  // (soft-release mode off, or processor not bundled) even before any login.
   useEffect(() => {
     console.debug("[login-landing] config", {
       mode: loginLandingMode(),
-      portalAvailable: isPortalAvailable(),
-      basename: PORTAL_BASENAME,
+      processorAvailable: isProcessorAvailable(),
+      basename: PROCESSOR_BASENAME,
     });
   }, []);
 
@@ -62,7 +62,7 @@ export function LoginLandingRedirect() {
     console.debug("[login-landing] pending", {
       isSignedIn,
       onAuthRoute: isAuthRoute(location.pathname),
-      portalAvailable: isPortalAvailable(),
+      processorAvailable: isProcessorAvailable(),
       landingView,
       path: location.pathname,
     });
@@ -76,12 +76,12 @@ export function LoginLandingRedirect() {
       if (!active) return;
       consumeLoginLandingPending();
       setResolving(false);
-      if (goToProcessor) navigate(PORTAL_BASENAME, { replace: true });
+      if (goToProcessor) navigate(PROCESSOR_BASENAME, { replace: true });
     };
 
     // A user who chose "editor" opts out, and no processor to route to -
     // decide synchronously, no lookup needed.
-    if (landingView === "editor" || !isPortalAvailable()) {
+    if (landingView === "editor" || !isProcessorAvailable()) {
       settle(false);
       return;
     }

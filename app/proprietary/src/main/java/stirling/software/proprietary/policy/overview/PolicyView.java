@@ -3,8 +3,8 @@ package stirling.software.proprietary.policy.overview;
 import java.util.List;
 
 /**
- * One row in the Pipelines overview: a stored policy shown for the admin portal, with its
- * referenced sources resolved to names and its pipeline summarised. The portal's "all pipelines"
+ * One row in the Pipelines overview: a stored policy shown for the admin processor, with its
+ * referenced sources resolved to names and its pipeline summarised. The processor's "all pipelines"
  * surface lists every backend policy (the user-facing Policies page builds only a friendly subset
  * of these).
  */

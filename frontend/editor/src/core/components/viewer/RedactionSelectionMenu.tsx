@@ -82,7 +82,7 @@ function RedactionSelectionMenuInner({
     }
   }, [provides, item, pageIndex, setRedactionsApplied]);
 
-  // Calculate position for portal based on wrapper element
+  // Calculate position for processor based on wrapper element
   useEffect(() => {
     if (!selected || !isRedaction || !item || !wrapperRef.current) {
       setMenuPosition(null);
@@ -99,7 +99,7 @@ function RedactionSelectionMenuInner({
       const wrapperRect = wrapper.getBoundingClientRect();
       // Position menu below the wrapper, centered
       // Use getBoundingClientRect which gives viewport-relative coordinates
-      // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
+      // Since we're using fixed positioning in the processor, we don't need to add scroll offsets
       setMenuPosition({
         top: wrapperRect.bottom + 8,
         left: wrapperRect.left + wrapperRect.width / 2,

@@ -94,7 +94,7 @@ With structured tips and a header:
 | `open`           | `boolean`                                | `undefined`  | Controlled open state. If provided, the component is controlled.                                                             |
 | `onOpenChange`   | `(open: boolean) => void`                | `undefined`  | Callback when open state would change.                                                                                       |
 | `arrow`          | `boolean`                                | `false`      | Shows a directional arrow (suppressed in sidebar mode).                                                                      |
-| `portalTarget`   | `HTMLElement`                            | `undefined`  | DOM node to portal the tooltip into.                                                                                         |
+| `portalTarget`   | `HTMLElement`                            | `undefined`  | DOM node to processor the tooltip into.                                                                                         |
 | `header`         | `{ title: string; logo?: ReactNode }`    | `undefined`  | Optional header with title and logo.                                                                                         |
 | `delay`          | `number`                                 | `0`          | Hover/focus open delay in ms.                                                                                                |
 | `containerStyle` | `React.CSSProperties`                    | `{}`         | Inline style overrides for the tooltip container.                                                                            |

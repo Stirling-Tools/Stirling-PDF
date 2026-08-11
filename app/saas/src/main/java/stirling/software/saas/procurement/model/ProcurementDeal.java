@@ -20,7 +20,7 @@ import lombok.Setter;
 
 /**
  * A linked team's enterprise commercial journey (one per team). Stage mirrors the buyer journey the
- * portal renders (trial -&gt; quote -&gt; agreement -&gt; payment -&gt; live). The entitlement that
+ * processor renders (trial -&gt; quote -&gt; agreement -&gt; payment -&gt; live). The entitlement that
  * actually unlocks the product is the Keygen licence in {@code licenseRef}; the paid subscription,
  * once commercial, is mirrored in {@code billing_subscriptions} and referenced by {@code
  * subscriptionId}.

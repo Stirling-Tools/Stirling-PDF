@@ -49,7 +49,7 @@ async function navigateToConvert(page: Page) {
 // ---------------------------------------------------------------------------
 // Helper: select the TO format in the convert dropdown
 // The FROM format is auto-detected from the uploaded file (e.g. PDF → "Document (PDF)").
-// Opening the TO dropdown renders format-option-{value} buttons in a portal.
+// Opening the TO dropdown renders format-option-{value} buttons in a processor.
 // ---------------------------------------------------------------------------
 async function selectToFormat(page: Page, toValue: string) {
   await page.getByTestId("convert-to-dropdown").click();

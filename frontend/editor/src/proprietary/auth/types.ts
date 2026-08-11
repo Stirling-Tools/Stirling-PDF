@@ -1,5 +1,5 @@
 /**
- * Provider-agnostic auth model shared by the editor and the portal.
+ * Provider-agnostic auth model shared by the editor and the processor.
  *
  * Both the Spring (self-hosted JWT) and Supabase (cloud) backends are mapped
  * onto these shapes so consumers can read `useAuth()` without knowing which
@@ -16,8 +16,8 @@ export interface AuthUser {
   is_anonymous?: boolean;
   isFirstLogin?: boolean;
   authenticationType?: string;
-  /** Whether the backend grants this user portal/processor access. */
-  portalAccess?: boolean;
+  /** Whether the backend grants this user processor access. */
+  processorAccess?: boolean;
   /** Whether the user owns (leads) any team; drives elevated self-serve UI. */
   teamLead?: boolean;
   /** The user's team (self-hosted single-team model), when they have one. */
@@ -55,7 +55,7 @@ export type AuthChangeEvent =
  * The unified value exposed by `useAuth()` regardless of backend. The editor's
  * existing consumers destructure session/user/displayName/isAnonymous/loading/
  * error/signOut/refreshSession; `role` and `isAdmin` are additive and drive the
- * portal's admin gate.
+ * processor's admin gate.
  */
 export interface AuthContextValue {
   session: AuthSession | null;
@@ -64,8 +64,8 @@ export interface AuthContextValue {
   isAnonymous: boolean;
   /** True when the current user holds an admin role. */
   isAdmin: boolean;
-  /** True when the user may access the portal/processor (admins + ACL grants). */
-  portalAccess: boolean;
+  /** True when the user may access the processor (admins + ACL grants). */
+  processorAccess: boolean;
   /** Raw backend role string, or null when signed out. */
   role: string | null;
   loading: boolean;
@@ -79,7 +79,7 @@ export type AuthMode = "spring" | "supabase";
 
 /**
  * Translate hook for user-facing auth copy. Apps with i18n (the editor) pass a
- * function backed by their `t`; apps without it (the portal) omit it and get
+ * function backed by their `t`; apps without it (the processor) omit it and get
  * the English fallback.
  */
 export type AuthTranslate = (key: string, fallback: string) => string;

@@ -4,14 +4,14 @@ import apiClient from "@app/services/apiClient";
 /**
  * Role-based login landing, shared by every flavor (self-hosted + SaaS).
  *
- * On a fresh sign-in, users who can use the processor (portal) land there;
+ * On a fresh sign-in, users who can use the processor land there;
  * everyone else lands on the editor. The decision is driven by the shared
  * `/api/v1/auth/me` endpoint so there is a single code path for all flavors:
  *
- * - Self-hosted: `portalAccess` from `/me` (admin, ACL grant, or team owner) is
+ * - Self-hosted: `processorAccess` from `/me` (admin, ACL grant, or team owner) is
  *   the clean signal - there are no personal teams, and `/api/v1/team/my` does
  *   not exist (404).
- * - SaaS: every user leads their own personal team, so `portalAccess`/`teamLead`
+ * - SaaS: every user leads their own personal team, so `processorAccess`/`teamLead`
  *   are true for everyone and useless. SaaS additionally exposes
  *   `/api/v1/team/my`, so there we require admin, or leadership of a NON-personal
  *   team, which excludes members and solo/personal users.
@@ -35,10 +35,12 @@ export function leadsRealTeam(teams: LandingTeam[]): boolean {
   return teams.some((team) => team.isLeader && !team.isPersonal);
 }
 
-// The processor/portal route-set is only bundled in some builds (mirrors
+// The processor route-set is only bundled in some builds (mirrors
 // adminRouteExtensions); redirecting to it otherwise would 404 to the editor.
-export function isPortalAvailable(): boolean {
-  return import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
+export function isProcessorAvailable(): boolean {
+  return (
+    import.meta.env.VITE_INCLUDE_PROCESSOR === "true" || import.meta.env.DEV
+  );
 }
 
 /**
@@ -87,7 +89,7 @@ export function consumeLoginLandingPending(): boolean {
 
 interface MeUser {
   role?: string;
-  portalAccess?: boolean;
+  processorAccess?: boolean;
 }
 
 /**
@@ -117,9 +119,9 @@ export async function fetchLandsOnProcessor(): Promise<boolean> {
   } catch (e) {
     const status = (e as { response?: { status?: number } })?.response?.status;
     if (status === 404) {
-      // Self-hosted: no /team/my. portalAccess (admin / grant / team owner) is
+      // Self-hosted: no /team/my. processorAccess (admin / grant / team owner) is
       // the clean signal there.
-      return user.portalAccess === true;
+      return user.processorAccess === true;
     }
     return false; // ambiguous lookup failure → stay on the editor
   }

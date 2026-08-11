@@ -6,7 +6,7 @@ import { usePreferences } from "@app/contexts/PreferencesContext";
 import type { LoginLandingView } from "@app/services/preferencesService";
 import {
   fetchLandsOnProcessor,
-  isPortalAvailable,
+  isProcessorAvailable,
   loginLandingMode,
 } from "@app/utils/loginLanding";
 
@@ -22,8 +22,8 @@ export function LoginLandingSetting() {
   const [eligible, setEligible] = useState(false);
 
   // Only look up eligibility when the control could actually show; skip the
-  // request entirely in soft-release / no-portal builds.
-  const active = loginLandingMode() === "dynamic" && isPortalAvailable();
+  // request entirely in soft-release / no-processor builds.
+  const active = loginLandingMode() === "dynamic" && isProcessorAvailable();
   useEffect(() => {
     if (!active) return;
     let cancelled = false;

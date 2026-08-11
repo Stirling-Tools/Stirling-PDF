@@ -42,7 +42,7 @@ import stirling.software.saas.util.AuthenticationUtils;
  * an empty list rather than 500 — the UI renders "no invoices yet". This keeps the page working
  * through every link/subscription state.
  *
- * <p>{@code hostedInvoiceUrl} + {@code invoicePdf} are Stripe-hosted links the portal can deep-link
+ * <p>{@code hostedInvoiceUrl} + {@code invoicePdf} are Stripe-hosted links the processor can deep-link
  * from. We don't proxy the PDF ourselves; Stripe handles auth + caching.
  */
 @Slf4j
@@ -71,7 +71,7 @@ public class PaygInvoicesController {
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
     }
 
-    /** The shape the portal renders. Trimmed; never echoes raw Stripe object fields verbatim. */
+    /** The shape the processor renders. Trimmed; never echoes raw Stripe object fields verbatim. */
     public record InvoiceResponse(
             String id,
             String number,

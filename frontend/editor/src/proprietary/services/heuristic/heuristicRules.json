@@ -13172,7 +13172,7 @@
         {
           "pattern": "rightmove|zoopla|zillow|redfin",
           "weight": 26,
-          "name": "listing portal filename"
+          "name": "listing processor filename"
         },
         {
           "pattern": "listing",
@@ -13190,7 +13190,7 @@
           "field": "any",
           "pattern": "rightmove|zoopla|zillow|redfin|matterport",
           "weight": 14,
-          "name": "listing portal metadata"
+          "name": "listing processor metadata"
         },
         {
           "field": "title",

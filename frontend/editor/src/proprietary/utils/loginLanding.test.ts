@@ -8,7 +8,7 @@ import {
   consumeLoginLandingPending,
   fetchLandsOnProcessor,
   hasLoginLandingPending,
-  isPortalAvailable,
+  isProcessorAvailable,
   leadsRealTeam,
   loginLandingMode,
   markLoginLandingPending,
@@ -26,8 +26,8 @@ function httpError(status: number) {
   return { isAxiosError: true, message: "http", response: { status } };
 }
 
-function mockMe(role: string | null, portalAccess: boolean) {
-  return { data: { user: { role, portalAccess } } };
+function mockMe(role: string | null, processorAccess: boolean) {
+  return { data: { user: { role, processorAccess } } };
 }
 
 describe("leadsRealTeam", () => {
@@ -72,12 +72,12 @@ describe("loginLandingMode", () => {
   });
 });
 
-describe("isPortalAvailable", () => {
+describe("isProcessorAvailable", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("is true when VITE_INCLUDE_PORTAL is set", () => {
-    vi.stubEnv("VITE_INCLUDE_PORTAL", "true");
-    expect(isPortalAvailable()).toBe(true);
+  it("is true when VITE_INCLUDE_PROCESSOR is set", () => {
+    vi.stubEnv("VITE_INCLUDE_PROCESSOR", "true");
+    expect(isProcessorAvailable()).toBe(true);
   });
 });
 
@@ -86,14 +86,14 @@ describe("fetchLandsOnProcessor", () => {
 
   // fetchLandsOnProcessor calls /me first, then /team/my. mockRejectedValueOnce
   // is vitest's rejection helper (tracks the rejection so it isn't flagged).
-  it("self-hosted (no /team/my): uses portalAccess = true", async () => {
+  it("self-hosted (no /team/my): uses processorAccess = true", async () => {
     h.get
       .mockResolvedValueOnce(mockMe("USER", true))
       .mockRejectedValueOnce(httpError(404));
     expect(await fetchLandsOnProcessor()).toBe(true);
   });
 
-  it("self-hosted (no /team/my): portalAccess false → editor", async () => {
+  it("self-hosted (no /team/my): processorAccess false → editor", async () => {
     h.get
       .mockResolvedValueOnce(mockMe("USER", false))
       .mockRejectedValueOnce(httpError(404));
@@ -122,7 +122,7 @@ describe("fetchLandsOnProcessor", () => {
     expect(await fetchLandsOnProcessor()).toBe(true);
   });
 
-  it("saas: member → editor (ignores polluted portalAccess)", async () => {
+  it("saas: member → editor (ignores polluted processorAccess)", async () => {
     h.get.mockImplementation((url: string) => {
       if (url === "/api/v1/auth/me")
         return Promise.resolve(mockMe("USER", true));

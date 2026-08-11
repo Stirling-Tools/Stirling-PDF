@@ -42,7 +42,7 @@ export function BrandSwitcher({
             variant="quiet"
             data-brandmark-morph
             className={`sui-brand-switcher__trigger${open ? " is-open" : ""}`}
-            aria-label={t("portal.shell.sidebar.switchApp", "Switch app")}
+            aria-label={t("processor.shell.sidebar.switchApp", "Switch app")}
             leftSection={<BrandMark height="1.6rem" />}
           >
             {!collapsed && <Logo variant="textOnly" textHeight="1.3rem" />}

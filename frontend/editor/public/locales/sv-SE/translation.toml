@@ -6245,10 +6245,13 @@ thirtyDays = "30 dagar"
 threeYears = "3 år"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "Skriv ut fil"
+
+[processor]
 comingSoon = "Kommer snart"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "Obemannad bearbetning faktureras mot din organisationsplånbok."
 eyebrow = "Kontolänk"
 linkButton = "Länka ditt Stirling-konto"
@@ -6259,37 +6262,37 @@ notLinked = "Inte länkat"
 title = "Länka den här organisationen till dess Stirling-konto"
 unlink = "Ta bort länk"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "Det gick inte att länka"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "för att aktivera kontolänkning mot det hostade Stirling-kontot. I dev kan du simulera inloggning från länkningsdialogen."
 before = "Ange"
 title = "SaaS-inloggning är inte konfigurerad"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "Länka konto"
 description = "Länka den här organisationens Stirling-konto för att använda fakturerbara funktioner."
 title = "Länka för att låsa upp"
 titleFeature = "Länka för att låsa upp {{feature}}"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "Aktiv"
 revoke = "Återkalla"
 revoked = "Återkallad"
 unnamed = "Namnlös instans"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "Instans"
 lastSeen = "Senast sedd"
 linked = "Länkad"
 status = "Status"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "Länka den här organisationens konto och registrera sedan dina self-hosted instanser för att se dem här."
 title = "Inga länkade instanser"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "{{count}} d sedan"
 daysAgo_other = "{{count}} d sedan"
 hoursAgo_one = "{{count}} h sedan"
@@ -6299,36 +6302,36 @@ minutesAgo_one = "{{count}} min sedan"
 minutesAgo_other = "{{count}} min sedan"
 never = "aldrig"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "Logga in på kontot som den här servern ska faktureras mot."
 linkTitle = "Länka ditt Stirling-konto"
 reauthSubtitle = "Din session har gått ut — logga in på ditt Stirling-konto igen. Din instans förblir länkad."
 reauthTitle = "Logga in igen"
 simulateSignIn = "Simulera inloggning (dev)"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "för att aktivera länkning i appen mot det hostade Stirling-kontot."
 and = "och"
 before = "Ange"
 title = "SaaS-inloggning är inte konfigurerad"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "Varje self-hosted instans som är registrerad för den här organisationen. Återkalla en autentiseringsuppgift för att omedelbart stänga av dess obemannade åtkomst."
 instancesTitle = "Länkade instanser"
 revokeError = "Det gick inte att återkalla instansen"
 sub = "Länka den här self-hosted organisationen till dess Stirling-konto så att obemannad bearbetning faktureras mot din organisationsplånbok."
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "Endast teamägaren kan visa organisationens länkade instanser."
 generic = "Det gick inte att läsa in teamets länkade instanser. Försök igen om en stund."
 title = "Det gick inte att läsa in länkade instanser"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "Editor-plan"
 subscribed = "Processor-plan"
 unlinked = "Inte länkat"
 
-[portal.assistant]
+[processor.assistant]
 close = "Stäng assistenten"
 error = "Det gick inte att nå assistenten."
 errorWithDetail = "Det gick inte att nå assistenten: {{detail}}"
@@ -6340,33 +6343,33 @@ title = "Assistent"
 tryAsking = "Prova att fråga"
 typing = "Skriver"
 
-[portal.auth]
+[processor.auth]
 loading = "Läser in"
 redirectingToEditor = "Omdirigerar till redigeraren..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "Kanske senare"
 title = "Slå på Processor"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "Ange en månadsgräns. Betala för det du kör."
 title = "Betala per användning"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "2 månader gratis"
 sub = "En faktura, kort eller banköverföring."
 title = "Förbetala ett år"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Edge-funktionen returnerade ingen client_secret."
 title = "Aktivera Processor-planen"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "Din betalning lyckades, men aktiveringen tar lite längre tid än vanligt. Den aktiveras automatiskt – stäng detta så visas den här inom kort."
 close = "Stäng"
 title = "Nästan klart"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "Månatlig utgiftsgräns"
 back = "Tillbaka"
 continue = "Fortsätt till betalning"
@@ -6377,30 +6380,30 @@ note = "Du debiteras aldrig över din gräns. Bearbetningen pausas bara."
 perMonth = "/ mån"
 title = "Ange din utgiftsgräns"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "Kortnummer · MM / ÅÅ · CVC · ZIP"
 label = "Kortuppgifter"
 note = "Kortuppgifter samlas in av Stripe. Stirling lagrar aldrig PAN eller CVC."
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "Det gick inte att starta kassan"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "Din betalning gick igenom. Vi aktiverar nu mätt bearbetning över dina länkade instanser – det tar vanligtvis några sekunder."
 hint = "Låt det här fönstret vara öppet."
 title = "Aktiverar din Processor-plan..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "Månatlig utgiftsgräns {{amount}}/mån. Bearbetningen pausas vid gränsen."
 limitNoCap = "Ingen utgiftsgräns. Bearbetningen pausas inte. Fakturor skickas månadsvis."
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "Skapa din Enterprise-offert"
 description = "Volymrabatter med åtagande, air-gapped distribution, anpassad MSA och säkerhetsgranskningar samt partnerskap med tredjepartsdistributörer."
 eyebrow = "Volymrabatt · 1M+ PDF:er"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "Aktiva denna månad"
 cost = "Kostnad"
 editorsDeployed = "Redigerare distribuerade"
@@ -6409,7 +6412,7 @@ pdfsEdited = "PDF:er redigerade"
 subtitle = "Distribuera var som helst, för hela ditt team."
 title = "Gratis PDF-redigerare"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "Det gick inte att starta kassan"
 currentPlan = "Aktuell plan"
 freeForever = "Gratis för alltid"
@@ -6422,7 +6425,7 @@ switchOnProcessor = "Aktivera Processor →"
 unlimitedUsers = "Obegränsat antal användare"
 viewQuote = "Visa offert"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "Belopp"
 columnDate = "Datum"
 columnDescription = "Beskrivning"
@@ -6446,12 +6449,12 @@ title = "Fakturahistorik"
 viewAriaLabel = "Visa faktura {{number}} i Stripe"
 viewLink = "Visa ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "Länka Stirling-konto"
 description = "Manuell PDF-redigering — visa, signera, slå samman, dela, vattenmärka, komprimera, konvertera, manuell OCR — är alltid gratis, länkad eller inte. Länka för att få 500 gratis PDF:er med mätt bearbetning (automatisering, AI och API); när du behöver mer aktiverar du Processor-planen och betalar bara för det du använder."
 title = "Länka ditt Stirling-konto"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "Faktureras månadsvis"
 cardEnding = "{{brand}} som slutar på {{last4}}"
 cardFallback = "Kort"
@@ -6461,7 +6464,7 @@ managedSub = "Ditt kort och dina faktureringsuppgifter lagras säkert i Stripes 
 managedTitle = "Hanteras i Stripe"
 update = "Uppdatera"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "Ingen mätt bearbetning ännu under den här perioden."
 eyebrow = "PDF:er bearbetade denna period"
 legendValue_one = "{{formatted}} PDF:er"
@@ -6480,14 +6483,14 @@ unit = "mätta PDF:er"
 unitsPending_one = "{{units}} mätarenhet väntar på synk från länkade instanser"
 unitsPending_other = "{{units}} mätarenheter väntar på synk från länkade instanser"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "av {{total}} förbetalda krediter"
 expires = "Förfaller {{date}}"
 eyebrow = "Förbetald kapacitet"
 note = "Används före debitering efter användning och utanför din utgiftsgräns."
 topUp = "Fyll på"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "Tillbaka"
 calcTitle = "Beräkna din årsbetalning"
 cancel = "Avbryt"
@@ -6500,7 +6503,7 @@ loadingTitle = "Läser in din offert"
 payTitle = "Betala för ditt år"
 step = "Steg {{current}} av {{total}}"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "Ändra"
 deployRow = "Distribution"
 done = "Klart"
@@ -6519,10 +6522,10 @@ sizingRow = "Storleksanpassning"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "Totalt antal användare"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "Jag förstår att när min förbetalda kapacitet är förbrukad eller förfaller efter 12 månader fortsätter bearbetningen automatiskt till standardpriset för debitering efter användning (upp till min utgiftsgräns) om jag inte avbryter, och att jag kan avbryta när som helst från faktureringsportalen."
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "Hanteras av Stirling. Live på några minuter."
 cloudValue = "Stirling Cloud · Hanterad"
@@ -6530,12 +6533,12 @@ selfhost = "Självhostad"
 selfhostDesc = "Körs på privat infrastruktur. Samma pris."
 selfhostValue = "Självhostad · Privat infrastruktur"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "Granska erbjudande"
 subtitle = "Förbetala ett år av PDF-bearbetning och få två månader gratis, används före debitering efter användning, utanför din utgiftsgräns."
 title = "Få 12 månader till priset av 10"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "Kontoinnehavarens namn"
 accountNamePlaceholder = "t.ex. Jane Smith"
 companyName = "Företagsnamn (valfritt)"
@@ -6545,7 +6548,7 @@ payOnline = "Betala online"
 poNumber = "PO-nummer (valfritt)"
 poNumberPlaceholder = "t.ex. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "Avancerad"
 advancedDesc = "Pipelines driver det mesta av din bearbetning."
 none = "Inga"
@@ -6553,7 +6556,7 @@ noneDesc = "Kör inga pipelines ännu. Slå på dem när som helst."
 standard = "Standard"
 standardDesc = "Några pipelines ombearbetar inkommande PDFs."
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "Grundläggande"
 essentialsDesc = "Klassificering, standarden, plus Delning"
 governed = "Styrd"
@@ -6561,12 +6564,12 @@ governedDesc = "Lägger till Säkerhet och Routing"
 regulated = "Reglerad"
 regulatedDesc = "Varje kategori, inkl. Compliance, Retention, Ingestion"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "Ladda ner offert (PDF)"
 downloading = "Förbereder…"
 share = "dela för godkännande"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "Kompakt"
 compactDesc = "Filer under 25 MB, inga dataavgifter"
 heavy = "Tung"
@@ -6574,12 +6577,12 @@ heavyDesc = "Skannad eller bildtung, rutinmässigt 50 MB+"
 standard = "Standard"
 standardDesc = "Mestadels små, vissa skanningar över 25 MB"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "Förbrukad"
 healthy = "Gott om kvar"
 low = "Börjar ta slut"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "Justera gräns"
 cancel = "Avbryt"
 capControlNote = "Ändringar gäller omedelbart — höj eller sänk taket när som helst."
@@ -6599,12 +6602,12 @@ thisPeriodUncapped = "{{amount}} denna period · utan tak"
 usedThisMonth = "{{amount}} använt denna månad"
 useSuggested = "Använd föreslagen · {{amount}} / månad"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "Med {{rate}}/dag når du taket om ~{{count}} dag (~{{monthEnd}} vid månadsslut). Föreslagen gräns ~{{suggested}}."
 body_other = "Med {{rate}}/dag når du taket om ~{{count}} dagar (~{{monthEnd}} vid månadsslut). Föreslagen gräns ~{{suggested}}."
 label = "Prognos att överskridas."
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "Utgifter denna månad"
 freeRemaining_one = "{{formatted}} gratis PDF återstår"
 freeRemaining_other = "{{formatted}} gratis PDFs återstår"
@@ -6613,17 +6616,17 @@ processed_other = "{{formattedCount}} PDF:er bearbetade."
 processedWithRate_one = "{{formattedCount}} PDF bearbetad, med {{rate}} styck."
 processedWithRate_other = "{{formattedCount}} PDF:er bearbetade, med {{rate}} styck."
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "Höj den nu så att automatisk bearbetning aldrig pausas."
 approachingTitle = "Du har nått {{pct}}% av din månatliga utgiftsgräns"
 raiseLimit = "Höj gräns"
 reachedBody = "Mätt bearbetning är pausad tills du höjer gränsen eller cykeln återställs. Obegränsad PDF-redigering fortsätter fungera."
 reachedTitle = "Månatlig utgiftsgräns nådd"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "Det gick inte att öppna Stripe-portalen"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 capSuffix_one = "av {{allowance}} gratis PDF:er använda"
 capSuffix_other = "av {{allowance}} gratis PDF:er använda"
 eyebrow = "Processor-provperiod"
@@ -6635,7 +6638,7 @@ title_other = "Bearbeta {{allowance}} PDF:er gratis"
 titleWithRate_one = "Bearbeta {{allowance}} PDF:er gratis, sedan {{rate}}/PDF"
 titleWithRate_other = "Bearbeta {{allowance}} PDF:er gratis, sedan {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "godkännande"
 check = "kontroll"
 event = "händelse"
@@ -6644,11 +6647,11 @@ review = "granskning"
 session = "session"
 signature = "signatur"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "Ny anslutning"
 createTitleFor = "Anslut {{name}}"
 delete = "Ta bort"
@@ -6656,343 +6659,343 @@ edit = "Redigera"
 editTitle = "Redigera anslutning"
 unsupportedType = "Den här anslutningstypen kan inte redigeras här."
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "För en tjänst som vi inte stöder ännu."
 label = "Avancerat"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "Registrera vad som hände med ett dokument, där dina revisorer redan tittar."
 label = "Granskning och efterlevnadsloggning"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "Berätta för ett annat system att något har hänt."
 label = "Avisering och arbetsflöde"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "Skanna eller etikettera ett dokument innan det går vidare."
 label = "Säkerhet och klassificering"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "Skicka ut ett dokument för signering eller notarisering."
 label = "E-signatur och notarisering"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "Där bearbetade dokument hamnar – en bucket, en enhet, ett ärende eller en sida."
 label = "Fil och bifoga"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling lagrar detta krypterat och visar det aldrig igen."
 label = "Access token"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API key"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "Steg som använder denna anslutning kan bara anropa sökvägar under denna URL, aldrig en annan host."
 label = "Server-URL"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "E-post"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Host"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "Lösenord"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Port"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "Användarnamn"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "Klistra in URL som tjänsten gav dig. Endast sökvägar under den kan anropas."
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "Anslutningsnamn"
 namePlaceholder = "t.ex. Produktion"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "Avbryt"
 createNew = "Ny anslutning..."
 placeholder = "Välj en anslutning"
 save = "Spara anslutning"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "Ändra integration"
 heading = "Vad vill du ansluta?"
 noResultsBody = "Vi stöder det inte ännu – berätta om det så tittar vi på att lägga till det."
 noResultsTitle = "Inget matchar \"{{query}}\""
 searchPlaceholder = "Sök integrationer – prova \"sign\", \"ocr\" eller ett produktnamn"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "Anropa valfritt HTTP API från en policy. Du väljer URL, autentisering och payload."
 label = "Anpassat API"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "Autentisering"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "Användarnamn och lösenord"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "Token i en anpassad header"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "Ingen"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "Logga in för en token"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "Steg som använder denna anslutning kan bara anropa sökvägar under denna URL, aldrig en annan host."
 label = "Base URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "Header-namn"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "Inloggningssökväg"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "Lösenord"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "Om API svarar med en nedladdningslänk får endast dessa hosts hämtas. Separera med kommatecken. Lämna tomt för att endast tillåta base URL:ens egen host."
 label = "Tillåtna resultathosts"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "Skicka token som denna header"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "Svarsheadern som inloggningsanropet returnerar token i, t.ex. X-Auth-Token."
 label = "Token response header"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "Användarnamn"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Skanna dokument efter skadlig kod på en server du kör – inget lämnar ditt nätverk."
 label = "ClamAV (självhostad)"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "Virus- och innehållsskanning för dokument i en policy."
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "Blockera dokument som innehåller makron, körbara filer, skript eller inbäddade objekt – inte bara känd skadlig kod."
 label = "Cloudmersive Advanced Scan"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "Bifoga bearbetade dokument till en Confluence-sida."
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "Skicka dokument till ConsignO Cloud (Notarius) för elektronisk signatur och notarisering."
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "Din ConsignO Cloud-miljö, inklusive /api/v1."
 label = "Server-URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API key"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API secret"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "Lösenord"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "Behövs bara om din organisation använder tenants."
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "Användarnamn"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "Publicera ett meddelande till Discord när en policy bearbetar ett dokument."
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Indexera en granskningshändelse i Elasticsearch varje gång en policy hanterar ett dokument."
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "Hämta nya dokument från en FTP- eller FTPS-server."
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "Anslutningsläge"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "Aktiv"
 passive = "Passiv (rekommenderas)"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "Vanlig FTP skickar inloggningsuppgifter och filer okrypterat; välj FTPS om servern stöder det."
 label = "Kryptering"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS (explicit / AUTH TLS)"
 implicit = "FTPS (implicit)"
 none = "Ingen (vanlig FTP)"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Publicera ett meddelande till ett Google Chat-utrymme när en policy körs."
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Bifoga bearbetade dokument till ett Jira-ärende."
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "Skicka ett dokument eller en avisering via e-post när en policy körs."
 label = "Mailgun"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Lagra bearbetade dokument i Nextcloud."
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "Applösenord"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Identifiera personuppgifter i dokumenttext med en Presidio-server som du kör."
 label = "Presidio (självhostad)"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "Läs och tillämpa Microsoft Purview-känslighetsetiketter på PDFs."
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "Valfritt. Behövs bara för att välja etiketter efter namn; etikettering fungerar utan det."
 label = "Application (client) ID"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Client secret"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "Stämplas på varje etikett som dess SiteId, så Purview-medvetna verktyg vet vilken organisation som tillämpade den."
 label = "Directory (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "En S3 bucket som källor kan läsa från och pipeline-utdata kan skriva till."
 label = "S3-lagring"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "Lämna tomt för AWS. Ange detta för MinIO eller en annan S3-kompatibel lagring."
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Region"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "Skicka ett dokument eller en avisering via e-post när en policy körs."
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "Hämta nya dokument från en SFTP (SSH)-server."
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Valfritt. Serverns SHA-256 host key fingerprint (från `ssh-keyscan host | ssh-keygen -lf -`). När den anges accepteras endast en server som presenterar denna nyckel; när den lämnas tom fästs nyckeln som ses vid första anslutningen och senare ändringar nekas."
 label = "Host key fingerprint"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Key passphrase"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "Lämna tomt om du autentiserar med en privat nyckel istället."
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "Valfritt. Klistra in en privat OpenSSH-nyckel för att autentisera med en nyckel istället för ett lösenord."
 label = "Privat nyckel"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "Publicera ett meddelande till Slack när en policy bearbetar ett dokument."
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "Övervaka en SMB / CIFS-nätverksresurs (Windows eller Samba)."
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / Nätverksresurs"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "Valfritt. Windows-domänen eller arbetsgruppen, om din server använder en."
 label = "Domän"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Resurs"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "Skicka en granskningshändelse till Splunk varje gång en policy hanterar ett dokument."
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "Skicka en granskningshändelse till en Sumo Logic HTTP-insamlare."
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Publicera ett meddelande till en Teams-kanal när en policy körs."
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Publicera varje dokument, eller bara detaljerna, till en URL du väljer."
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "Utlös ett Zap- eller Make-scenario från en policy."
 label = "Zapier och Make"
 
-[portal.docs]
+[processor.docs]
 browse = "Bläddra i dokumentation"
 viewSource = "Visa källa på GitHub"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "varje förfrågan"
 eyebrow = "KOM IGÅNG"
 lead = "Alla förfrågningar autentiseras med en bearer token. Nycklar är avgränsade per miljö och upphör aldrig om de inte roteras."
@@ -7000,13 +7003,13 @@ liveKey = "Produktionsnycklar — fakturerade, hastighetsbegränsade enligt din 
 testKey = "Sandbox-nycklar — gratis, returnerar syntetiska fixtures."
 title = "Autentisering"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "bädda in visaren"
 eyebrow = "KOMPONENTER"
 lead = "Inbäddningsbart UI för granskningsköer och dokumentinspektion. Ta med egna stilar eller använd det medföljande temat."
 title = "Drop-in-visare"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API-REFERENS"
 fieldCount_one = "{{count}} fält"
 fieldCount_other = "{{count}} fält"
@@ -7015,45 +7018,45 @@ filterAriaLabel = "Filtrera endpoints efter vertikal"
 lead = "Varje dokumenttyp är en typad endpoint. POST:a en fil, ta emot schemavaliderad JSON. Filtrera efter vertikal nedan."
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API-REFERENS"
 lead = "Fel returnerar en stabil maskinläsbar kod plus ett mänskligt meddelande. 4xx-body innehåller alltid ett request_id för support."
 title = "Fel"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "Dokumentation"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "Dokumentationsindexet kunde inte läsas in."
 title = "Dokumentation otillgänglig"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "KOM IGÅNG"
 lead = "Skicka ditt första dokument till en typad endpoint och få strukturerad JSON tillbaka i tre steg. Ingen modellträning, ingen prompt engineering."
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "för copy-paste-recept."
 bodyBeforeLink = "koppla samma anrop till en pipeline för att kedja validering, maskering och leverans — eller exponera det för en agent över MCP. Se"
 label = "Nästa:"
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "Skapa en avgränsad nyckel från fliken Infrastruktur. Nycklar har hastighetsgränser och en valfri IP-allowlist. Exportera den till ditt shell:"
 title = "Utfärda en API-nyckel"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "POST:a en fil till valfri typad endpoint. Endpointen avgör schemat du får tillbaka — här, fakturaextraheraren."
 snippetCaption = "extrahera en faktura"
 title = "Skicka ett dokument"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "Varje svar valideras mot endpoint-schemat, med en konfidenspoäng och proveniens per fält."
 codeCaption = "200 OK"
 title = "Läs det strukturerade resultatet"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
 concurrency = "Samtidighet"
@@ -7062,52 +7065,52 @@ lead = "Gränser skalar med din plan. Ett 429-svar innehåller en Retry-After-he
 requestsPerMinute = "Förfrågningar / minut"
 title = "Hastighetsgränser och kvoter"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "Klona recept"
 eyebrow = "PLAYBOOKS"
 lead = "End-to-end-mönster som kedjar källor, åtgärder och destinationer. Varje mappar till en pipeline som du kan klona."
 title = "Recept"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "Förstapartsklienter med typade svar, automatiska omförsök och strömmande uppladdningar. Alla följer samma endpoint-katalog."
 title = "Officiella SDK:er"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "Föråldrad"
 
-[portal.docs.search]
+[processor.docs.search]
 empty = "Inga matchande dokument"
 placeholder = "Sök i dokumentation"
 results = "{{count}} resultat"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "SKILLS"
 lead = "Medföljande, namngivna förmågor som din agent anropar som ett enda verktyg. Varje skill är en deterministisk åtgärdskedja med kopplade evals."
 title = "Agent-skills"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "På denna sida"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API-REFERENS"
 lead = "Prenumerera på händelserna document.processed, pipeline.completed och quota.threshold. Payloads signeras med HMAC-SHA256."
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "helper."
 beforeHelper = "headern mot din signeringshemlighet innan du litar på en payload. SDK:er levereras med en"
 beforeSignature = "Verifiera"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "Exportera CSV"
 search = "Sök efter filnamn, ID..."
 subtitle = "Varje dokument som din organisation har bearbetat, med dess fullständiga bearbetningspost. Innehållsåtkomst kräver begäran."
 title = "Dokument"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "Godkänd"
 archived = "Arkiverad"
 elevation = "Åtkomsthöjning"
@@ -7117,44 +7120,44 @@ flagged = "Behöver granskas"
 ingested = "Inläst"
 reviewed = "Under granskning"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "Avsnitt med dokumentinformation"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "Granskning"
 extractions = "Extraheringar"
 overview = "Översikt"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "Begär åtkomst"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "Tillfälligt beviljande — åtkomst loggas och är tidsbegränsad."
 descriptionFourEyes = "Tillfälligt beviljande — en kollegial granskare har meddelats (fyra ögon)."
 title = "Åtkomst upphör om {{time}}"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "Innehåll skyddas av zero-standing-access. En begäran startar ett tidsbegränsat beviljande."
 descriptionFourEyes = "Innehåll skyddas av zero-standing-access. En begäran startar ett tidsbegränsat beviljande och meddelar en kollegial granskare (fyra ögon)."
 title = "Känsligt dokument"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "Inga fält extraherades från det här dokumentet."
 masked = "Extraherade fält är dolda. Begär tidsbegränsad åtkomst för att visa dokumentets innehåll."
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "Konfidens"
 field = "Fält"
 value = "Värde"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "Alla"
 ariaLabel = "Filtrera dokument efter status"
 flagged = "Flaggade"
 inReview = "Under granskning"
 processed = "Bearbetade"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "Pipeline / Åtgärd"
 product = "Produkt"
 received = "Tid"
@@ -7162,19 +7165,19 @@ status = "Status"
 type = "Typ"
 user = "Användare"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "Anslut en källa"
 createPipeline = "Skapa en pipeline"
 description = "När källor matar in dokument i dina pipelines visas de här för granskning."
 title = "Inga dokument i kön"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "Fel"
 flagged = "Behöver granskas"
 inReview = "Under granskning"
 processed = "Bearbetad"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "Auto"
 editorAction = "Redigerare"
 empty = "Inga dokument matchar det här filtret."
@@ -7182,7 +7185,7 @@ rowActions = "Radåtgärder"
 sensitiveLabel = "Känsligt"
 sensitiveTitle = "Känsligt — åtkomst krävs"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "Pipeline / Åtgärd"
 document = "Dokument"
 product = "Produkt"
@@ -7190,11 +7193,11 @@ status = "Status"
 time = "Tid"
 user = "Användare"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "Distribuera Stirling PDF Editor, koppla självhostade instanser till din organisation och hantera den körande miljön — mål, hälsa, autentiseringsuppgifter och offlineaktivering på ett ställe."
 title = "Editor-distribution"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "Aktiva användare"
 host = "Host"
 lastSeen = "Senast sedd"
@@ -7202,11 +7205,11 @@ region = "Region"
 status = "Status"
 version = "Version"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "Distribuera ett mål och koppla det för att se instanshälsa i realtid här."
 title = "Inga instanser rapporterar"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "Generera offlinepaket"
 lockCopy = "Offline- och lokal aktivering ingår i Enterprise."
@@ -7214,67 +7217,67 @@ subtitle = "Generera ett signerat aktiveringspaket för en offline- eller lokal 
 talkToSales = "Kontakta säljteamet"
 title = "Aktivering i isolerad miljö"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}} är signerat och klart att överföra. Det aktiverar en instans och upphör att gälla om 14 dagar."
 title = "Paketet är klart"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "Genererad ✓"
 generateNewCode = "Generera ny kod"
 lockCopy = "IaC-provisionering ingår i Enterprise."
 rotate = "Rotera"
 talkToSales = "Kontakta säljteamet"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "Varje Editor-instans som rapporterar in — version, region, status, senast sedd och aktiva användare."
 title = "Instanshälsa"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "Anslut en självhostad redigerare till den här organisationen. Generera en token, lämna över en kort kod eller koppla den via IaC."
 title = "Koppling"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "Där Editor körs. Kopiera ett utdrag för att starta en självhostad instans, eller använd Managed Cloud utan driftarbete."
 title = "Distributionsmål"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "Aktuell token"
 lastRotated = "Senast roterad"
 rotateButton = "Rotera servicetoken"
 subtitle = "Instanser autentiserar mot organisationen med den här autentiseringsuppgiften. Rotera den enligt schema eller omedelbart efter ett misstänkt läckage."
 title = "Servicetoken"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "En ny token har utfärdats. Uppdatera varje självhostad instans STIRLING_SERVICE_TOKEN inom respitperioden på 24 h, annars kopplas de från."
 title = "Rotera körande instanser"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "Försämrad"
 healthy = "Frisk"
 offline = "Offline"
 pairing = "Kopplar"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} instans"
 instanceCount_other = "{{count}} instanser"
 talkToSales = "Kontakta säljteamet"
 upgradePlan = "Uppgradera plan"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "Lokal självhosting och Kubernetes-självhosting ingår i Enterprise."
 paid = "Självhosting med Docker och Kubernetes låses upp med en betalplan."
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "Tillgänglig"
 locked = "Låst"
 running = "Körs"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "Den här vyn stötte på ett oväntat fel. Försök igen eller välj ett annat avsnitt i sidofältet."
 retry = "Försök igen"
 title = "Något gick fel på den här sidan"
 
-[portal.home.download]
+[processor.home.download]
 back = "Tillbaka"
 body = "Ladda ner desktop-appen eller självhosta servern."
 done = "Klart"
@@ -7284,7 +7287,7 @@ sectionDesktop = "Desktop-app"
 sectionSelfHosted = "Självhostad"
 title = "Installera Stirling PDF Editor"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "Kör den officiella imagen på din server."
 note = "Öppnas på :8080. Standardinloggning: admin / stirling."
 tagline = "Kör servern i en container"
@@ -7293,27 +7296,27 @@ variantFat = "Fat"
 variantLite = "Ultra-Lite"
 variantStandard = "Standard"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "Installera det officiella Helm chart."
 note = "Lägg till en PVC för /configs för att spara inställningar."
 tagline = "Distribuera till ett kluster med Helm"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "Inbyggda byggen för din distribution."
 guideBtn = "Visa installationsalternativ för Linux"
 note = "AppImage-, .deb- och .rpm-byggen är tillgängliga för vanliga distributioner."
 tagline = "Inbyggd skrivbordsapp för din distribution"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "Eller via Homebrew"
 detailBody = "Kör installationsprogrammet eller använd Homebrew."
 downloadBtn = "Ladda ner för macOS"
 tagline = "Inbyggd app för Apple silicon och Intel"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "Kör .jar på en bare metal-server."
 downloadBtn = "Ladda ner .jar"
 note = "Kräver Java 21+. Öppnas på :8080; standardinloggning admin / stirling."
@@ -7321,78 +7324,78 @@ runLabel = "Kör den sedan"
 tagline = "Kör .jar på en bare metal-server"
 title = "Manuell serverkonfiguration"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "Eller via winget"
 detailBody = "Kör installationsprogrammet eller använd en pakethanterare."
 downloadBtn = "Ladda ner installationsprogram"
 tagline = "Inbyggd app för Microsoft Windows"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "{{active}} av {{total}} aktiva denna månad"
 name = "Stirling PDF Editor"
 open = "Öppna i webbläsare"
 updated = "uppdaterad {{time}}"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "Slutför distribution"
 options = "Visa distributionsalternativ"
 start = "Distribuera editorn"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "Självhostad · Docker"
 kubernetes = "Självhostad · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "God eftermiddag"
 evening = "God kväll"
 morning = "God morgon"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "Hantera Editor-distribution"
 sectionsAriaLabel = "Infrastrukturavsnitt"
 subtitle = "Distributioner, autentiseringsuppgifter, säkerhetsläge, lagring och granskningsspåret för din Stirling-arbetsyta."
 title = "Infrastruktur"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "Skapa nyckel"
 heading = "API-nycklar"
 subheading = "Avgränsade autentiseringsuppgifter med hastighetsgränser per nyckel, behörigheter och IP-tillåtelselistor."
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "Skapad"
 lastUsed = "Senast använd"
 revoke = "Återkalla nyckel"
 usageMonth = "Användning denna månad"
 usageToday = "Användning idag"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "Skapa en avgränsad nyckel för att börja anropa Stirling API."
 title = "Inga API-nycklar ännu"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "Kunde inte läsa in dina API-nycklar. Försök igen."
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "Återkalla \"{{name}}\"? Alla integrationer som fortfarande använder den här nyckeln kommer omedelbart att börja få 401-fel. Detta kan inte ångras."
 cancel = "Avbryt"
 confirm = "Återkalla nyckel"
 title = "Återkalla API-nyckel"
 
-[portal.infrastructure.attestationLabel]
+[processor.infrastructure.attestationLabel]
 attested = "Intygad"
 inScope = "Inom omfång"
 notApplicable = "N/A"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "Filtrera granskningshändelser efter kategori"
 heading = "Granskningsloggar"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "Inga händelser i den här kategorin."
 subheading = "Varje autentiserings-, konfigurations- och bearbetningshändelse i din arbetsyta."
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "Aktör"
 event = "Händelse"
 latency = "Latens"
@@ -7400,11 +7403,11 @@ status = "Status"
 target = "Resurs"
 timestamp = "Tidsstämpel"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "Arbetsyteaktivitet visas här när den sker."
 title = "Inga granskningshändelser"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "Avbryt"
 error = "Export misslyckades. Försök igen."
 exportButton = "Exportera"
@@ -7415,7 +7418,7 @@ open = "Exportera"
 subtitle = "Ladda ner granskningshändelser som CSV eller JSON. Välj vilka kolumner som ska inkluderas."
 title = "Exportera granskningslogg"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "Datum"
 documentName = "Dokumentnamn"
 ipAddress = "IP-adress"
@@ -7423,7 +7426,7 @@ outcome = "Resultat"
 tool = "Verktyg"
 username = "Användarnamn"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "Alla"
 auth = "Auth"
 config = "Konfiguration"
@@ -7432,17 +7435,17 @@ policy = "Policy"
 processing = "Bearbetning"
 security = "Säkerhet"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "Granskningsloggen är tillgänglig för teamledare och administratörer. Be din teamledare eller en administratör om åtkomst."
 title = "Du har inte åtkomst"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "Konfiguration"
 policy = "Policy"
 processing = "Bearbetning"
 totalEvents = "Totalt antal händelser · 24 h"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "Autentisering"
 config = "Konfiguration"
 elevation = "Behörighetshöjning"
@@ -7450,18 +7453,18 @@ policy = "Policy"
 processing = "Bearbetning"
 security = "Säkerhet"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "Fel"
 info = "Info"
 success = "Klart"
 warning = "Varning"
 
-[portal.infrastructure.certLabel]
+[processor.infrastructure.certLabel]
 certified = "Certifierad"
 inProgress = "Pågår"
 notStarted = "Inte startad"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "Avbryt"
 createKey = "Skapa nyckel"
 done = "Klar"
@@ -7474,17 +7477,17 @@ subtitleCreated = "Kopiera den här hemligheten nu — den visas inte igen."
 title = "Skapa API-nyckel"
 titleCreated = "Nyckel skapad"
 
-[portal.infrastructure.deployLabel]
+[processor.infrastructure.deployLabel]
 live = "Live"
 queued = "Köad"
 rolledBack = "Återställd"
 rolling = "Rullas ut"
 
-[portal.infrastructure.deployments]
+[processor.infrastructure.deployments]
 msValue = "{{value}} ms"
 throughputValue = "{{value}}/min"
 
-[portal.infrastructure.deployments.deployColumns]
+[processor.infrastructure.deployments.deployColumns]
 deployedBy = "Distribuerad av"
 environment = "Miljö"
 product = "Produkt"
@@ -7492,11 +7495,11 @@ status = "Status"
 version = "Version"
 when = "När"
 
-[portal.infrastructure.deployments.recent]
+[processor.infrastructure.deployments.recent]
 heading = "Senaste distributioner"
 subheading = "De senaste utrullningarna över produkter och miljöer."
 
-[portal.infrastructure.deployments.regionColumns]
+[processor.infrastructure.deployments.regionColumns]
 instances = "Instanser"
 latency = "Latens"
 load = "Belastning"
@@ -7507,42 +7510,42 @@ throughput = "Genomströmning"
 uptime = "Drifttid"
 version = "Version"
 
-[portal.infrastructure.deployments.regions]
+[processor.infrastructure.deployments.regions]
 heading = "Regioner"
 subheading = "Livehälsa för varje distribuerad Stirling-region — latens, belastning och utrullningsversion."
 
-[portal.infrastructure.deployments.regions.empty]
+[processor.infrastructure.deployments.regions.empty]
 description = "Distribuerade regioner visas här när din arbetsyta har provisionerats."
 title = "Inga regioner distribuerade"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "Aktiv"
 revoked = "Återkallad"
 
-[portal.infrastructure.modelLabel]
+[processor.infrastructure.modelLabel]
 active = "Aktiv"
 degraded = "Försämrad"
 disabled = "Inaktiverad"
 
-[portal.infrastructure.models]
+[processor.infrastructure.models]
 heading = "Modeller"
 msValue = "{{value}} ms"
 subheading = "Modellkatalogen och routingen som driver dokumentbearbetning i din arbetsyta."
 
-[portal.infrastructure.models.byom]
+[processor.infrastructure.models.byom]
 description = "Registrera en lokal eller självhostad modell och fäst den vid en region för behandling som är bunden till dataresidens."
 title = "Ta med din egen modell"
 
-[portal.infrastructure.models.catalogue]
+[processor.infrastructure.models.catalogue]
 heading = "Katalog"
 sub = "Hanterade modeller tillgängliga för din arbetsyta, med live-latens och kostnad."
 subEnterprise = "Hanterade, egna och lokala modeller — med fästning per region tillgänglig."
 
-[portal.infrastructure.models.catalogue.empty]
+[processor.infrastructure.models.catalogue.empty]
 description = "Modeller i din arbetsytas katalog visas här."
 title = "Inga modeller tillgängliga"
 
-[portal.infrastructure.models.columns]
+[processor.infrastructure.models.columns]
 cost = "Kostnad"
 latency = "Latens"
 load = "Belastning"
@@ -7551,95 +7554,95 @@ status = "Status"
 type = "Typ"
 version = "Version"
 
-[portal.infrastructure.models.cost]
+[processor.infrastructure.models.cost]
 perCall = "{{price}}/anrop"
 perThousand = "{{price}}/1k"
 
-[portal.infrastructure.models.metrics]
+[processor.infrastructure.models.metrics]
 activeModels = "Aktiva modeller"
 avgLatency = "Genomsnittlig latens"
 included = "Inkluderat"
 monthlySpend = "Månatlig modellkostnad"
 
-[portal.infrastructure.models.routing]
+[processor.infrastructure.models.routing]
 empty = "Inga routingregler konfigurerade."
 heading = "Routingregler"
 sub = "Vilken modell som hanterar varje åtgärd. Standardvärdet används när ingen smalare regel matchar."
 subLocked = "Routa åtgärder till specifika modeller — tillgängligt med betalplaner."
 
-[portal.infrastructure.models.routing.lockedBanner]
+[processor.infrastructure.models.routing.lockedBanner]
 description = "Uppgradera till Pro för att styra vilken modell som hanterar varje åtgärd och dokumenttyp."
 title = "Modellrouting är en betalfunktion"
 
-[portal.infrastructure.models.routingColumns]
+[processor.infrastructure.models.routingColumns]
 default = "Standard"
 docType = "Dokumenttyp"
 modelForAria = "Modell för {{operation}}"
 operation = "Åtgärd"
 routedTo = "Routas till"
 
-[portal.infrastructure.modelTypeLabel]
+[processor.infrastructure.modelTypeLabel]
 classification = "Klassificering"
 extraction = "Extrahering"
 llm = "LLM"
 ocr = "OCR"
 
-[portal.infrastructure.regionLabel]
+[processor.infrastructure.regionLabel]
 degraded = "Försämrad"
 down = "Nere"
 healthy = "Felfri"
 
-[portal.infrastructure.security.access.byok]
+[processor.infrastructure.security.access.byok]
 description = "Tillhandahåll en nyckel från din egen KMS. Stirling krypterar med den men kan fortfarande läsa."
 label = "Ta med din egen nyckel (BYOK)"
 
-[portal.infrastructure.security.access.hyok]
+[processor.infrastructure.security.access.hyok]
 description = "Nycklar lämnar aldrig din KMS. Stirling lagrar endast chiffertext."
 label = "Behåll din egen nyckel (HYOK)"
 
-[portal.infrastructure.security.access.stirling]
+[processor.infrastructure.security.access.stirling]
 description = "Stirling hanterar krypteringsnycklar. Enklast — ingen nyckeldrift på din sida."
 label = "Nycklar som hålls av Stirling"
 
-[portal.infrastructure.security.accessPolicy]
+[processor.infrastructure.security.accessPolicy]
 heading = "Policy för dokumentåtkomst"
 subheading = "Styr vem som kan dekryptera bearbetade dokument i vila."
 
-[portal.infrastructure.security.attestations]
+[processor.infrastructure.security.attestations]
 heading = "Efterlevnadsintyg"
 noReport = "Ingen rapport tillgänglig"
 subheading = "Granskningsläge per ramverk, med rapporter tillgängliga för intygade kontroller."
 viewReport = "Visa rapport →"
 
-[portal.infrastructure.security.compliance]
+[processor.infrastructure.security.compliance]
 heading = "Efterlevnad"
 subheading = "Intyg och certifieringar som täcker Stirling-plattformen."
 
-[portal.infrastructure.security.empty]
+[processor.infrastructure.security.empty]
 description = "Din arbetsytas säkerhetskonfiguration visas här."
 title = "Säkerhetsläge inte tillgängligt"
 
-[portal.infrastructure.security.hyokBanner]
+[processor.infrastructure.security.hyokBanner]
 description = "Med HYOK lämnar krypteringsnycklar aldrig din KMS. Stirling lagrar och bearbetar endast chiffertext som du kan återkalla när som helst."
 title = "Stirling kan inte dekryptera dina dokument"
 
-[portal.infrastructure.security.ipAllowlist]
+[processor.infrastructure.security.ipAllowlist]
 empty = "Inga IP-intervall konfigurerade — alla IP-adresser tillåtna."
 heading = "IP-tillåtelselista"
 sub = "API-åtkomst är begränsad till dessa CIDR-intervall."
 subLocked = "Begränsa API-åtkomst till kända IP-intervall — tillgängligt med betalplaner."
 
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
+[processor.infrastructure.security.ipAllowlist.lockedBanner]
 description = "Uppgradera till Pro för att begränsa API-åtkomst till specifika nätverk."
 title = "IP-tillåtelselista är en betalfunktion"
 
-[portal.infrastructure.security.ipColumns]
+[processor.infrastructure.security.ipColumns]
 added = "Tillagd"
 addedBy = "Tillagd av"
 cidr = "CIDR"
 label = "Etikett"
 
-[portal.infrastructure.security.keyManagement]
+[processor.infrastructure.security.keyManagement]
 algorithm = "Algoritm"
 heading = "Hantering av krypteringsnycklar"
 keyId = "Nyckelidentifierare"
@@ -7648,35 +7651,35 @@ rotateKey = "Rotera nyckel"
 rotationPolicy = "Rotationspolicy"
 subheading = "Förvaring av nycklarna som krypterar dokument i vila — vem som kan dekryptera och hur nycklar roteras."
 
-[portal.infrastructure.security.managedBanner]
+[processor.infrastructure.security.managedBanner]
 description = "Förvaring med bring-your-own-key (BYOK) och hold-your-own-key (HYOK) är tillgänglig i Enterprise. Uppgradera för att tillhandahålla nycklar från din egen KMS."
 title = "Nycklar hanteras av Stirling i din plan"
 
-[portal.infrastructure.security.residency.apac]
+[processor.infrastructure.security.residency.apac]
 description = "ap-southeast-1"
 label = "Asien och Stillahavsområdet"
 
-[portal.infrastructure.security.residency.eu]
+[processor.infrastructure.security.residency.eu]
 description = "eu-west-1 · GDPR-datagräns"
 label = "Europeiska unionen"
 
-[portal.infrastructure.security.residency.us]
+[processor.infrastructure.security.residency.us]
 description = "us-east-1 · us-west-2"
 label = "USA"
 
-[portal.infrastructure.security.residencyHeader]
+[processor.infrastructure.security.residencyHeader]
 heading = "Dataresidens"
 subheading = "Var dokument lagras och bearbetas."
 
-[portal.infrastructure.storage]
+[processor.infrastructure.storage]
 gbValue = "{{value}} GB"
 percentUsed = "{{value}} används"
 
-[portal.infrastructure.storage.empty]
+[processor.infrastructure.storage.empty]
 description = "Ansluten lagring och användning visas här."
 title = "Ingen lagring konfigurerad"
 
-[portal.infrastructure.storage.lifecycle]
+[processor.infrastructure.storage.lifecycle]
 active = "Aktiv"
 activeRange = "0–{{value}} d"
 archived = "Arkiverad"
@@ -7685,28 +7688,28 @@ deleted = "Borttagen"
 never = "aldrig"
 purged = "rensad"
 
-[portal.infrastructure.storage.providers]
+[processor.infrastructure.storage.providers]
 connect = "Anslut"
 connected = "Ansluten"
 heading = "Anslutna leverantörer"
 subheading = "Där bearbetade artefakter skrivs."
 
-[portal.infrastructure.storage.retention]
+[processor.infrastructure.storage.retention]
 heading = "Lagringstid"
 subheading = "Hur länge artefakter behålls innan livscykelborttagning."
 windowLabel = "Standardfönster för lagringstid"
 
-[portal.infrastructure.storage.retentionOption]
+[processor.infrastructure.storage.retentionOption]
 days_one = "{{count}} dag"
 days_other = "{{count}} dagar"
 never = "Ta aldrig bort"
 
-[portal.infrastructure.storage.totalUsage]
+[processor.infrastructure.storage.totalUsage]
 heading = "Total användning"
 progressLabel = "Lagring använd"
 subheading = "Lagring som förbrukats över alla anslutna leverantörer."
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API-nycklar"
 audit = "Granskningsloggar"
 deployments = "Distributioner"
@@ -7714,7 +7717,7 @@ models = "Modeller"
 security = "Säkerhet"
 storage = "Lagring"
 
-[portal.integrations]
+[processor.integrations]
 addAnother = "Lägg till en till"
 availableHeading = "Tillgängliga"
 comingSoonHeading = "Kommer snart"
@@ -7728,7 +7731,7 @@ subtitle = "Allt som Stirling kan kommunicera med. Inloggningsuppgifter skapas e
 title = "Integrationer"
 typedName = "{{tool}}-namn"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "Alla"
 audit = "Granskning"
 connected = "Anslutna"
@@ -7737,25 +7740,25 @@ security = "Säkerhet"
 signing = "Signering"
 storage = "Lagring"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "Ansluten"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "Integration"
 worksWith = "Fungerar med"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "Pipelines"
 policies = "Policies"
 sources = "Källor"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · utkast"
 loadError = "Kunde inte läsa in det här dokumentet. Försök igen."
 loading = "Läser in…"
 title = "Juridiskt dokument"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Agentbyggare"
 components = "Komponenter"
 docs = "Utvecklardokumentation"
@@ -7772,18 +7775,18 @@ sources = "Källor"
 usage = "Användning och fakturering"
 users = "Användare"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "PDF-plattform"
 processor = "PDF-processor"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "Varje automatiserad dokumentpipeline på backend: en ordnad kedja av åtgärder över en uppsättning källor, körd vid en trigger. Klicka på en rad för dess steg och källor."
 title = "Pipelines"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "Ny pipeline"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 addStep = "Lägg till verktyg"
 back = "Tillbaka till pipelines"
 cannotFollow = "Kan inte ta emot {{produced}}"
@@ -7815,7 +7818,7 @@ unsavedTitle = "Osparade ändringar"
 uploadUnsupported = "Uppladdade filer stöds inte i pipelines ännu, så de här stegen kan inte sparas: {{tools}}."
 usesDefaults = "Körs med standardinställningar"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "Kombinerar varje fil från föregående steg"
 fan-out = "Körs en gång per fil från föregående steg"
 format-mismatch = "Behöver {{accepts}}, men föregående steg producerar {{produced}}"
@@ -7823,7 +7826,7 @@ output-uncertain = "Kanske inte körs: föregående stegs utdata beror på hur d
 source-mismatch = "Behöver {{accepts}}, men denna pipelines indata är {{produced}}"
 undeclared-operation = "Kan inte kontrollera vad det här steget accepterar"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "Lägg till verktyg"
 cancel = "Avbryt"
 chainEmpty = "Lägg till ett verktyg för att börja bygga din pipeline."
@@ -7845,34 +7848,34 @@ sourcesLoading = "Läser in källor..."
 trigger = "Trigger"
 triggerManual = "Endast manuellt"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "dagar"
 hours = "timmar"
 minutes = "minuter"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "Ta bort \"{{name}}\"? Detta kan inte ångras."
 cancel = "Avbryt"
 confirm = "Ta bort"
 title = "Ta bort pipeline?"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "Rensa historik"
 delete = "Ta bort pipeline"
 run = "Kör nu"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "Skapa en pipeline"
 connectSource = "Anslut en källa"
 description = "Skapa din första pipeline: välj källorna den körs över, kedja åtgärderna och välj vart utdata ska skickas."
 title = "Inga pipelines ännu"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "Aktiva"
 paused = "Pausade"
 total = "Pipelines"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "Inget att köra: källans {{count}} dokument har redan bearbetats."
 allProcessed_other = "Inget att köra: alla {{count}} dokument i källorna har redan bearbetats."
 completed_one = "Körning slutförd."
@@ -7886,150 +7889,150 @@ parked_other = "Inget att köra: {{count}} dokument misslyckades tidigare och ä
 running = "Körning startad; pågår fortfarande."
 timeout = "Körningen tar längre tid än väntat; den kan fortfarande slutföras i bakgrunden."
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "Aktiv"
 paused = "Pausad"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "Pipeline"
 sources = "Källor"
 status = "Status"
 steps = "Steg"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "Mappbevakning"
 manual = "Manuell"
 schedule = "Schemalagd"
 
-[portal.policies]
+[processor.policies]
 defaultName = "{{category}}-policy"
 subtitle = "Stående automatiseringar som tillämpar en verktygspipeline på varje dokument. Varje policy utlöses vid uppladdning eller export, kör sin verktygskedja och sparar den tillämpade versionen bredvid originalet."
 title = "Policyer"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "Uppgradera till Enterprise"
 notSetUp = "Inte konfigurerad"
 requiresAiEngine = "Kräver AI-motor"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "Identifiera varje dokuments typ vid uppladdning och tagga dess metadata för arkivering och sökning."
 label = "Klassificering"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "Tillämpa HIPAA-, GDPR-, SOC 2- eller FedRAMP-krav på varje dokument."
 label = "Efterlevnad"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "Klassificera dokument, extrahera strukturerade data, tillämpa namnkonventioner och normalisera sidor."
 label = "Inläsning"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "Ange hur länge dokument behålls, när de arkiveras och när de tas bort."
 label = "Lagringstid"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "Dirigera dokument automatiskt till rätt team, mapp eller system."
 label = "Routing"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "Upptäck PII, maskera, ta bort aktivt innehåll och vattenmärk dokument."
 label = "Säkerhet"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "Alla dokument"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "Klassificerar varje uppladdat dokument mot ditt teams etiketter och taggar dess metadata."
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "Klassificera"
 1 = "Tagga metadata"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "Validerar dokument mot regelverksramverk innan de lämnar systemet."
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "Åtkomstlogg"
 auditTrail = "Granskningsspår"
 frameworks = "Ramverk"
 onViolation = "Vid bristande efterlevnad"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "Ramverksskanning"
 1 = "Tillämpa åtgärd"
 2 = "Granskningsspår"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "Klassificerar dokument, extraherar strukturerade data, tillämpar namngivning och normaliserar sidor."
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "Under tröskelvärde"
 minConfidence = "Minsta konfidens"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "Klassificera"
 1 = "Extrahera"
 2 = "Namnge"
 3 = "Normalisera"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "Tillämpa en känslighetsetikett från Microsoft Purview"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Purview-klientorganisation"
 labelId = "Etikett-ID"
 labelIdHelp = "Etikettens GUID från Purview-portalen. När en etikett tillämpas skrivs dess metadata till PDF:en; den kan inte kryptera, vilket kräver Microsoft-klienten."
 labelName = "Etikettnamn (valfritt)"
 labelNameHelp = "Sparas tillsammans med ID så att personer och verktyg kan känna igen etiketten."
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview skiljer en etikett som en policy tillämpade från en som en person valde."
 label = "Hur etiketten sparas"
 privileged = "Som vald av en person"
 standard = "Som tillämpad automatiskt"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "Läs en Microsoft Purview-etikett"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Purview-klientorganisation"
 connectionHelp = "Läser etiketten som dokumentet redan har, så att senare steg kan agera på den."
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "Tillämpar hur länge dokument behålls, när de arkiveras och när de tas bort."
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "Arkivera efter"
 immutableHold = "Oföränderligt bevarande"
 keepFor = "Behåll i"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "Bevarandehållning"
 1 = "Autoarkivera"
 2 = "Borttagningsblockering"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "Dirigerar dokument till rätt destination baserat på typ och klassificering."
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "Destination"
 notify = "Meddela vid routing"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "Autoklassificera"
 1 = "Dirigera till mapp"
 2 = "Webhook-meddelande"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "Upptäcker och maskerar PII, tar bort aktivt innehåll (JavaScript) och vattenmärker dokument."
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "Maskera PII"
 1 = "Ta bort JavaScript"
 2 = "Vattenmärke"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "Tillämpningar"
 onEveryExport = "Vid varje export"
 onEveryUpload = "Vid varje uppladdning"
@@ -8041,7 +8044,7 @@ showLess = "Visa mindre"
 showMore = "Visa mer"
 sources = "Källor"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "Rensa bearbetningshistorik"
 delete = "Ta bort"
 editSettings = "Redigera inställningar"
@@ -8049,17 +8052,17 @@ pause = "Pausa"
 resume = "Återuppta"
 runNow = "Kör nu"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "Den här policyn kommer att glömma alla filer den redan har bearbetat och bearbeta om allt som för närvarande finns i dess källor vid nästa körning. Själva filerna ändras inte. Detta kan inte ångras."
 cancel = "Avbryt"
 confirm = "Rensa historik"
 title = "Rensa bearbetningshistorik?"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "Dokument visas här när denna policy har körts."
 title = "Ingen aktivitet än"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "Vattenstämpel"
 autoRedact = "Maskera PII"
 classifyAndLabel = "Klassificera"
@@ -8068,357 +8071,357 @@ flatten = "Platta ut"
 ocrPdf = "OCR"
 sanitizePdf = "Ta bort JavaScript"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "Dina policyer sparas och visas när anslutningen har återställts."
 retry = "Försök igen"
 title = "Backend inte tillgänglig"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "Ändra vad det här steget gör"
 noResults = "Inget steg matchar det. Prova ett produktnamn eller \"skanna\", \"notifiera\", \"bifoga\"."
 searchPlaceholder = "Sök steg – prova \"skanna\", \"bifoga\" eller ett produktnamn"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "Råa filbytes"
 json = "Inuti en JSON-payload"
 multipart = "Som en filuppladdning (multipart)"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "Din egen ClamAV-server kontrollerar dokumentet; ingenting lämnar ditt nätverk."
 label = "Skanna efter virus (egenhostad)"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "Avvisar dokument som innehåller makron, körbara filer, skript eller inbäddade objekt."
 label = "Blockera aktivt innehåll"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive kontrollerar dokumentet och körningen stoppas om det inte är rent."
 label = "Skanna efter virus"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "Arkiverar det bearbetade dokumentet på en sida."
 label = "Bifoga till en Confluence-sida"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "Skickar dokumentet till ConsignO Cloud för signering."
 label = "Skicka för signatur (ConsignO)"
 note = "Skickar dokumentet. Hämtning av den signerade kopian stöds inte ännu, eftersom ett steg inte kan skicka ett resultat till ett senare steg."
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "Skapa anropet själv: sökväg, metod, body och svarshantering."
 label = "Anropa ett anpassat API"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "Meddelar en kanal att policyn hanterade ett dokument."
 label = "Publicera ett meddelande på Discord"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "Registrerar vad policyn gjorde som ett sökbart dokument."
 label = "Indexera en granskningshändelse i Elasticsearch"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart passar uppladdnings-API:er; JSON passar API:er som vill ha filen i en payload; binary skickar de råa byten."
 label = "Hur dokumentet ska skickas"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "En JSON-body som skickas som den är. {{document.base64}} innehåller filen; {{document.*}} och {{run.*}} fylls i per dokument."
 label = "JSON-body"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "Konto"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Mailgun-domän"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "Formulärfältet som API:et förväntar sig dokumentet i."
 label = "Filfältsnamn"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "Från"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "Ett JSON-objekt med par av header-namn/värde. Anslutningens inloggningsuppgift läggs till åt dig."
 label = "Headers"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Index"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "Ärendenyckel"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "Skickas som meddelandets body. {{document.*}} och {{run.*}} fylls i per dokument."
 label = "Meddelande"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Metod"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "Sid-ID"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "Läggs till efter anslutningens bas-URL. Den kan aldrig nå en annan värd."
 label = "Sökväg"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "Var i enheten den ska skrivas. {{document.filename}} fylls i per dokument."
 label = "Destinationssökväg"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "Rapport lämnar dokumentet orört. Ersätt byter ut det mot det som kommer tillbaka."
 label = "Vad som ska göras med svaret"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "Signerarens e-post"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "Ämne"
 placeholder = "Processed: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio analyserar den här texten. Använd {{document.title}} eller klistra in texten du vill kontrollera."
 label = "Text att kontrollera"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "Till"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Nextcloud-användarnamn"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "Meddelar ett utrymme att policyn hanterade ett dokument."
 label = "Publicera ett meddelande på Google Chat"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "Arkiverar det bearbetade dokumentet på ett ärende."
 label = "Bifoga till ett Jira-ärende"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "Skickar det bearbetade dokumentet som en bilaga."
 label = "Skicka dokumentet via e-post (Mailgun)"
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "Skriver det bearbetade dokumentet till en mapp."
 label = "Ladda upp till Nextcloud"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "Din egen Presidio-server rapporterar de personuppgifter den hittar."
 label = "Identifiera personuppgifter"
 note = "Presidio läser text, inte filer. Ge den texten du vill kontrollera — själva dokumentet laddas inte upp."
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "Ersätt dokumentet med svaret"
 report = "Behåll dokumentet, registrera svaret"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "Skickar det bearbetade dokumentet som en bilaga."
 label = "Skicka dokumentet via e-post (SendGrid)"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "Meddelar en kanal att policyn hanterade ett dokument."
 label = "Publicera ett meddelande på Slack"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "Registrerar vad policyn gjorde där dina revisorer redan tittar."
 label = "Skicka en granskningshändelse till Splunk"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "Registrerar vad policyn gjorde till en HTTP-insamlare."
 label = "Skicka en granskningshändelse till Sumo Logic"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "Meddelar en kanal att policyn hanterade ett dokument."
 label = "Publicera ett meddelande på Teams"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "Skickar själva dokumentet till en URL som du väljer."
 label = "Posta dokumentet till en webhook"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "Skickar körningens detaljer till din automatisering."
 label = "Utlös ett Zap- eller Make-scenario"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "Aktiv"
 dataProcessed = "Data bearbetad"
 docsEnforced = "Dokument tillämpade"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "Aktiv"
 paused = "Pausad"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "Tillämpas vid uppladdning/export"
 label = "Aktiva policyer"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "Tillgängliga att konfigurera"
 label = "Kategorier"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "Över aktiva policyer"
 label = "Dokument tillämpade"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "Konfigurerade men körs inte"
 label = "Pausade"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "Gäller för"
 docs = "Dokument tillämpade"
 enforces = "Tvingar igenom"
 policy = "Policy"
 status = "Status"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "Tillbaka"
 cancel = "Avbryt"
 continue = "Fortsätt"
 enablePolicy = "Aktivera policy"
 saveChanges = "Spara ändringar"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "Identifierar dokumentets typ utifrån ditt teams etiketter och taggar det, så att det arkiveras och söks efter kategori."
 label = "Klassificera dokumentet"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "Komprimerar dokumentet till en mindre filstorlek."
 label = "Minska filstorlek"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "Slår samman formulärfält och kommentarer med sidan så att de inte kan redigeras."
 label = "Platta ut dokumentet"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "Kör OCR så att skannade sidor blir markerbar, sökbar text."
 label = "Gör text sökbar"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "Hittar och svartmarkerar känsliga uppgifter — som personnummer och kortnummer — så att de inte kan läsas."
 label = "Maskera känslig information"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "Tar bort dolt JavaScript så att inget kan köras automatiskt när dokumentet öppnas."
 label = "Ta bort aktivt innehåll"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "Bevisar att dokumentet fanns i exakt denna form vid en viss tidpunkt, med hjälp av en oberoende tidsstämpelutfärdare. Endast en hash skickas – dokumentet lämnar aldrig din server."
 label = "Lägg till en betrodd tidsstämpel"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "Stämplar en synlig markering (t.ex. ”Konfidentiellt”) över varje sida."
 label = "Lägg till en vattenstämpel"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "Varje uppladdat dokument klassificeras mot de inbyggda etiketterna och taggas med de typer som passar. Etikettuppsättningen delas i hela ditt team."
 labelsHeading = "Klassificeringsetiketter"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "Aktivera minst ett verktyg i arbetsflödet först."
 saveFailed = "Det gick inte att spara policyn. Försök igen."
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "Utdata och körning"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "Automatisk numrering"
 label = "Filnamnsregel"
 placeholder = "Text att lägga till (valfritt)"
 prefix = "Prefix"
 suffix = "Suffix"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "Utdata som"
 newFile = "Ny fil"
 newVersion = "Ny version"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "Export"
 helper = "När policyn körs: vid uppladdning eller före export."
 label = "Kör vid"
 upload = "Uppladdning"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "Inställningar"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "Källor"
 loading = "Läser in källor…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "Konfigurationssteg"
 settings = "Inställningar"
 workflow = "Åtgärder"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "Redigera policy för {{category}}"
 setUp = "Konfigurera policy för {{category}}"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "Välj vad denna policy gör med varje dokument den bearbetar."
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "Konfigurera"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "Antal avser de senaste 24 timmarna. Flödeshastigheten är illustrativ."
 liveBadge = "Live"
 stats = "{{connected}} anslutna · {{processed}} PDF-dokument bearbetade"
 title = "PDF-processor"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "Visningsläge"
 flow = "Flöde"
 sankey = "Sankey"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24 h"
 failed = "Misslyckades"
 heading = "Resultat"
 success = "Levererat"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}} aktiva"
 count = "{{n}} · 24 h"
 heading = "Policies"
 setUp = "Konfigurera"
 soon = "Snart"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "Policies · {{n}} aktiva"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "Anslut en källa och slå på en policy för att se dokument flöda genom processorn."
 title = "Inget flöde ännu"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "Anslut"
 editor = "Stirling PDF Editor"
 heading = "Källor"
 perDay = "{{n}} / 24 h"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "E-postintag"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "Få ditt team utvärderat, kontrakterat och ombordat. Varje dokument på ett ställe."
 title = "Inköp"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "Godkänn och prenumerera"
 confidential = "Konfidentiellt"
 confirm = "Jag har läst och godkänner Stirling Enterprise Agreement."
@@ -8440,7 +8443,7 @@ signatoryTitle = "Signerarens titel"
 signatoryTitlePlaceholder = "t.ex. chefsjurist"
 signError = "Kunde inte registrera din signatur. Försök igen."
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "Tillägg"
 addressLine1 = "Adressrad 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8520,7 +8523,7 @@ volumePlaceholder = "t.ex. 1 000 000"
 years_one = "{{count}} år"
 years_other = "{{count}} år"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "Enterprise-avtal"
 agreementSub = "MSA, Order Form och DPA i en signatur."
 download = "Ladda ner"
@@ -8540,10 +8543,10 @@ subtitle = "Dina avtalsdokument, tillgängliga när som helst."
 title = "Dokument"
 view = "Visa"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "Något gick fel"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "Steg {{current}} av {{total}}"
 ctaAgreement = "Granska och signera avtal"
 ctaExploring = "Konfigurera din testperiod"
@@ -8566,36 +8569,36 @@ sentencePayment = "inköpsorder och betalning"
 sentenceQuote = "granska och acceptera din offert"
 sentenceTrial = "konfigurera din testarbetsyta"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "{{count}} dag kvar"
 daysLeft_other = "{{count}} dagar kvar"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "En signatur täcker MSA, beställningsformulär, EULA och DPA."
 gatingAction = "Granska och signera ditt avtal"
 label = "Avtal"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "Provisionera din arbetsyta och kör go-live-spelboken."
 gatingAction = "Provisionerar din arbetsyta"
 label = "Implementering"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "Betala med kort, banköverföring eller mot en inköpsorder."
 gatingAction = "Bekräfta betalning"
 label = "Betalning"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "Granska prissättning för bunden volym och avtalsperiod."
 gatingAction = "Acceptera din offert"
 label = "Offert"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "Utvärdera Stirling mot dina dokument och arbetsflöden."
 gatingAction = "Bygg din offert"
 label = "Testperiod"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "Kopierad"
 copy = "Kopiera nyckel"
 downloadError = "Det gick inte att generera offline-licensfilen just nu — försök igen om en stund."
@@ -8606,21 +8609,21 @@ subtitle = "Aktivera en egenhostad instans med den här nyckeln, eller spara den
 title = "Din licensnyckel"
 trialFileHint = "Detta är din testlicensfil. När ditt avtal är på plats kan du komma tillbaka och ladda ner den igen — till skillnad från licensnyckeln online uppdateras .lic-filen inte av sig själv."
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "Länka konto"
 description = "Inköp körs på ditt länkade Stirling-konto: det är så vi provisionerar testperioden, prissätter din offert och startar fakturering. Länka ett konto för att börja."
 eyebrow = "Enterprise"
 title = "Länka ditt konto för att börja"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "Din prenumeration är aktiv och din licens är utfärdad. Ditt team är provisionerat och faktureringen har startat."
 eyebrow = "Live"
 title = "Du är live på Stirling Enterprise"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "Det gick inte att ladda ner offert-PDF:en just nu — försök igen om en stund."
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "Din offert är accepterad och din licens är redan aktiv — ditt team kan börja direkt. Betala den första fakturan när du är redo; du kan betala eller ladda ner den här, ingen e-post behövs."
 downloadAgreement = "Ladda ner signerat avtal"
 downloadInvoice = "Ladda ner faktura"
@@ -8628,7 +8631,7 @@ eyebrow = "Betalning"
 title = "Prenumeration skapad"
 viewInvoice = "Visa och betala faktura"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "Acceptera offert"
 annual = "Årsavgift (år 1)"
 downloadCta = "Ladda ner offert"
@@ -8637,14 +8640,14 @@ renewal = "Förnyas till {{amount}}/år efter perioden (+{{pct}} % KPI)"
 tcv = "{{years}}-årsperiod, betald i sin helhet i förskott: {{tcv}}"
 validUntil = "Giltig till {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "Det gick inte att läsa in schemaläggaren."
 fallbackLink = "Öppna schemaläggning i en ny flik"
 loading = "Läser in schemaläggaren..."
 subtitle = "Din lösningsingenjör går igenom utrullningen med ditt team. Välj en tid som passar dig."
 title = "Boka ett samtal"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "Air-gapped"
 airgapSub = "Isolerad, ingen utgående trafik"
 back = "Tillbaka"
@@ -8674,7 +8677,7 @@ viewEula = "Läs den"
 workEmail = "Arbets-e-post"
 workEmailPlaceholder = "du@företag.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "Förlängning lägger till 7 dagar och meddelar din lösningsingenjör."
 bodyMaxed = "Du har använt alla dina förlängningar — prata med din lösningsingenjör om du behöver mer tid."
 cancel = "Avbryt testperiod"
@@ -8683,42 +8686,42 @@ maxed = "Maximalt utnyttjad"
 subtitle = "Din kostnadsfria testperiod pågår till {{date}}. Inget kort krävs."
 title = "Enterprise-testperiod"
 
-[portal.search]
+[processor.search]
 ariaLabel = "Sök"
 placeholder = "Sök i Stirling — endpoints, pipelines, docs…"
 
-[portal.search.empty]
+[processor.search.empty]
 noActionsDescription = "Snabbåtgärder visas här när de är tillgängliga."
 noActionsTitle = "Inga snabbåtgärder"
 noMatches = "Inga träffar för \"{{query}}\""
 noMatchesDescription = "Prova ett annat sökord eller bläddra i katalogen."
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "Admin"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "Kontolänk"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "Länka Stirling-konto"
 primaryNav = "Primär navigering"
 switchApp = "Byt app"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "Stäng navigering"
 openNav = "Öppna navigering"
 search = "Sök"
 
-[portal.sources]
+[processor.sources]
 subtitle = "Återanvändbara indataanslutningar som matar dokument till Stirling. Konfigurera en anslutning en gång och referera sedan till den från valfritt antal policyer. Klicka på en rad för dess konfiguration och vilka policyer som använder den."
 title = "Källor"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "Anslut källa"
 
-[portal.sources.builder]
+[processor.sources.builder]
 back = "Tillbaka till källor"
 backToTypes = "Alla källtyper"
 cancel = "Avbryt"
@@ -8732,167 +8735,167 @@ editTitle = "Redigera källa"
 enabled = "Aktiverad"
 save = "Spara ändringar"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "Mappautomatiseringar kan bara använda mappar som en administratör har tillåtit. Lägg till den under inställningarna för mappåtkomst och försök sedan igen."
 openSettings = "Inställningar för mappåtkomst"
 title = "Den här mappen är inte tillåten"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "Ta bort \"{{name}}\"? Detta kan inte ångras. Policyer som refererar till den behöver uppdateras."
 cancel = "Avbryt"
 confirm = "Ta bort"
 title = "Ta bort källa?"
 
-[portal.sources.empty]
+[processor.sources.empty]
 description = "Anslut en mapp (och snart molnlagring) så att dina policyer har någonstans att hämta dokument från."
 title = "Inga källor anslutna än"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "Används"
 total = "Anslutningar"
 unused = "Oanvända"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "Den lagrade anslutningen med serveradressen och inloggningsuppgifterna. Återanvänds av varje källa som refererar till den."
 label = "Anslutning"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "Mapp på servern att kontrollera, relativt till inloggningshemmet eller delningens rot. Lämna tomt för roten."
 label = "Mapp"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "Förbruka tar bort varje fil från servern när varje policy har bearbetat den."
 label = "Läsläge"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "Förbruka: bearbeta varje fil en gång"
 snapshot = "Ögonblicksbild: läs om mappen vid varje körning"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 label = "Mappdjup"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "Inkludera undermappar"
 top = "Endast översta nivån"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "Aktiv"
 disabled = "Inaktiverad"
 unused = "Oanvänd"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "Dokument"
 source = "Källa"
 status = "Status"
 usedBy = "Policyer"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "Hämta dokument från Box-mappar som ditt team redan delar."
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "Hämta dokument från en delad Dropbox-mapp."
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "Dokument som ditt team har bearbetat i editorn, över policy- och AI-körningar."
 label = "Editor"
 noPolicies = "Inga policies har körts från editorn ännu."
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "Gör bilagor som skickas till en dedikerad postlåda till dokument."
 label = "E-postinkorg"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "Bevaka en katalog på servern för nya dokument."
 label = "Mapp"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "Absolut sökväg som Stirling bevakar för filer att bearbeta."
 label = "Katalogsökväg"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "Innehållskontroll läser varje ändrad fil, så namnbyten och touches som inte ändrar innehåll bearbetas inte om."
 label = "Ändringsdetektering"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "Storlek, datum och innehållskontroll"
 stat = "Storlek och ändringsdatum"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 label = "Läsläge"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "Förbruka: bearbeta varje fil en gång"
 snapshot = "Snapshot: läs om mappen vid varje körning"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 label = "Mappdjup"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "Inkludera undermappar"
 top = "Endast toppnivå"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "Kontrollera regelbundet en FTP- eller FTPS-servermapp för nya dokument."
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "Hämta dokument från delade Google Drive-mappar."
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "Bevaka en SMB-nätverksresurs för nya dokument."
 label = "Nätverksenhet"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "Bevaka OneDrive-mappar för nya dokument."
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "Hämta dokument från en Amazon S3- eller S3-kompatibel bucket."
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "Den lagrade anslutningen som innehåller bucket och inloggningsuppgifter. Återanvänds av varje källa och pipeline-utdata som refererar till den."
 label = "Anslutning"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "Förbruka tar bort varje objekt från bucket när varje policy har bearbetat det."
 label = "Läsläge"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "Förbruka: bearbeta varje objekt en gång"
 snapshot = "Ögonblicksbild: läs om bucket vid varje körning"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "Endast objekt vars nycklar börjar med detta prefix bearbetas."
 label = "Nyckelprefix"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "Kontrollera regelbundet en SFTP-drop-mapp för nya dokument."
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "Hämta dokument från SharePoint-dokumentbibliotek."
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "Källa"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "En leverans-URL och signeringshemlighet genereras när du skapar denna webhook. Avsändare POST:ar dokument till den URL:en och de refererande policies körs vid ankomst."
 description = "Ta emot dokument via signerad HTTP POST från valfritt externt system."
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "Leverans-URL"
 secretNote = "Signeringshemligheten visas en gång, när webhooken skapas. Skapa om källan för att rulla den."
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "Kopiera"
 done = "Klart"
 secret = "Signeringshemlighet"
@@ -8902,78 +8905,75 @@ title = "Webhook skapad"
 url = "Leverans-URL"
 usage = "POST:a varje dokument som rå request body till leverans-URL:en med en binär content type (application/pdf eller application/octet-stream). Refererande policies körs automatiskt vid ankomst."
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "Namn"
 namePlaceholder = "t.ex. skadeanmälningar"
 type = "Typ"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "Stäng"
 
-[portal.usage]
+[processor.usage]
 managePayment = "Hantera betalning"
 subtitle = "Förbrukning, fakturor och planhantering för varje PDF som Stirling har fakturerat, i en konsol."
 title = "Användning och fakturering"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "Det gick inte att läsa in plånbok"
 openStripePortal = "Det gick inte att öppna Stripe-portalen"
 walletUnavailable = "Plånbok inte tillgänglig: {{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "Logga in igen"
 body = "Din Stirling-kontosession har löpt ut. Logga in igen för att visa fakturering — din instans förblir länkad."
 title = "Sessionen har löpt ut"
 
-[portal.users]
+[processor.users]
 title = "Användare"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "Admin (organisationsägare)"
 summary = "Full styrning över arbetsytan, inställningar och medlemmar."
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "Hantera användare, team och roller"
 1 = "Hantera alla integrationer inkl. S3-anslutningar"
 2 = "Bevilja eller återkalla portalåtkomst"
 3 = "Allt som teamägaren kan göra"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "Gäst"
 summary = "Begränsad eller endast webbaserad åtkomst; kan inte ha personliga konfigurationer."
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "Endast webb-/demoanvändning"
 1 = "Inga API-nycklar eller integrationer"
 2 = "Ingen portalåtkomst"
 3 = "Skrivskyddad där det delas"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "Medlem"
 summary = "Vanlig användare — arbetar med delade resurser och egna konfigurationer."
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "Använd editorn och delade integrationer"
 1 = "Skapa personliga API- och MCP-konfigurationer"
 2 = "Se teamkonfigurationer som delas med dem"
 3 = "Ingen S3- eller arbetsytehantering"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "Teamägare"
 summary = "Äger ett team — hanterar dess medlemmars resurser och delade konfigurationer."
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "Skapa och hantera teamets S3-anslutningar"
 1 = "Hantera teamägda integrationskonfigurationer"
 2 = "Portalåtkomst via standardpolicyn"
 3 = "Allt som medlemmen kan göra"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Obegränsat"
-
-[printFile]
-title = "Skriv ut fil"
 
 [provider.googledrive]
 name = "Google Drive"

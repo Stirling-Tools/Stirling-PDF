@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Linking orchestrator (self-hosted side of combined-billing "Mode A").
  *
- * <p>{@link #link} is the same-origin action the portal triggers: it relays the admin's Supabase
+ * <p>{@link #link} is the same-origin action the processor triggers: it relays the admin's Supabase
  * JWT to the SaaS register endpoint, then persists the returned device credential secure-at-rest.
  * The credential — not the JWT — authenticates all later unattended entitlement calls.
  */
@@ -35,7 +35,7 @@ public class AccountLinkService {
         this.entitlementCache = entitlementCache;
     }
 
-    /** Status of this instance's link, for the portal's "Account link" card. */
+    /** Status of this instance's link, for the processor's "Account link" card. */
     public record LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {}
 
     /**
@@ -55,7 +55,7 @@ public class AccountLinkService {
     /**
      * Unlinks this instance — best-effort tells SaaS to revoke first (so the row gets {@code
      * revoked_at} set), then clears locally regardless. If SaaS is unreachable the local clear
-     * still proceeds (admin's intent must win); the orphan row can be revoked from the portal.
+     * still proceeds (admin's intent must win); the orphan row can be revoked from the processor.
      */
     public void unlink() {
         credentialStore
@@ -67,7 +67,7 @@ public class AccountLinkService {
                                 log.warn(
                                         "Account-link: SaaS self-revoke failed for device {};"
                                                 + " clearing locally anyway (admin can revoke"
-                                                + " from the portal).",
+                                                + " from the processor).",
                                         c.getDeviceId());
                             }
                         });

@@ -37,7 +37,7 @@ import stirling.software.saas.util.AuthenticationUtils;
  *
  * <p>Defensive: no team, no {@code stripe_customer_id} (free / pre-checkout), or the card simply
  * not in the mirror all degrade to {@code 200 present=false} rather than an error. Card edits never
- * happen here; the portal deep-links to Stripe's hosted customer portal for that.
+ * happen here; the processor deep-links to Stripe's hosted customer portal for that.
  */
 @Slf4j
 @Hidden

@@ -57,7 +57,7 @@ export function TextSelectionMenu({
     selection?.copyToClipboard();
   }, [selection]);
 
-  const portalContent =
+  const processorContent =
     position &&
     createPortal(
       <div
@@ -92,7 +92,7 @@ export function TextSelectionMenu({
   return (
     <>
       <div ref={setRef} style={menuWrapperProps?.style} />
-      {portalContent}
+      {processorContent}
     </>
   );
 }

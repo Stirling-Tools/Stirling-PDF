@@ -1,0 +1,31 @@
+import { useTranslation } from "react-i18next";
+import { Card } from "@app/ui";
+import type { AgentSkill } from "@processor/api/docs";
+import { DocsSection } from "@processor/components/docs/DocsSection";
+
+export function SkillsSection({ skills }: { skills: AgentSkill[] }) {
+  const { t } = useTranslation();
+  return (
+    <DocsSection
+      id="skill-catalog"
+      eyebrow={t("processor.docs.skills.eyebrow")}
+      title={t("processor.docs.skills.title")}
+      lead={t("processor.docs.skills.lead")}
+    >
+      <div className="processor-docs__skill-grid">
+        {skills.map((s) => (
+          <Card key={s.name} padding="default" interactive>
+            <div className="processor-docs__skill-head">
+              <span className="processor-docs__skill-glyph" aria-hidden>
+                ✷
+              </span>
+              <h3 className="processor-docs__skill-name">{s.name}</h3>
+            </div>
+            <p className="processor-docs__skill-blurb">{s.blurb}</p>
+            <code className="processor-docs__skill-ops">{s.ops}</code>
+          </Card>
+        ))}
+      </div>
+    </DocsSection>
+  );
+}

@@ -25,7 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.proprietary.model.api.apikey.CreateApiKeyRequest;
 import stirling.software.proprietary.model.api.apikey.CreatedApiKeyDto;
-import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
+import stirling.software.proprietary.model.api.apikey.ProcessorApiKeysResponse;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
 import stirling.software.proprietary.security.model.User;
@@ -111,7 +111,7 @@ class ApiKeyManagementServiceTest {
         when(apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(1L))
                 .thenReturn(List.of(personalKey(10, 1L)));
 
-        PortalApiKeysResponse res = service.listVisibleKeys();
+        ProcessorApiKeysResponse res = service.listVisibleKeys();
 
         assertThat(res.keys()).singleElement().satisfies(k -> assertThat(k.id()).isEqualTo("10"));
         // Isolation: the query is keyed by the caller's id, never a broad scan.

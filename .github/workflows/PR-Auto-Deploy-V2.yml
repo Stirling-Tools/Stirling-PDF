@@ -109,9 +109,9 @@ jobs:
       issues: write
       pull-requests: write
     env:
-      # Single source of truth for whether this preview embeds the admin portal:
+      # Single source of truth for whether this preview embeds the admin processor:
       # drives the image build-arg and the deployment comment.
-      BUILD_PORTAL: "true"
+      BUILD_PROCESSOR: "true"
 
     steps:
       - name: Harden Runner
@@ -240,7 +240,7 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
           build-args: |
             VERSION_TAG=v2-alpha
-            BUILD_PORTAL=${{ env.BUILD_PORTAL }}
+            BUILD_PROCESSOR=${{ env.BUILD_PROCESSOR }}
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -403,11 +403,11 @@ jobs:
 
             const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${v2Port}`;
 
-            // Only mention the portal when this image actually embeds it.
+            // Only mention the processor when this image actually embeds it.
             // Use the direct IP URL - the SSL hostname isn't supported yet.
-            const withPortal = "${{ env.BUILD_PORTAL }}" === "true";
-            const portalNote = withPortal
-              ? `🧩 **Admin portal** included - try it at [${deploymentUrl}/portal](${deploymentUrl}/portal).\n\n`
+            const withProcessor = "${{ env.BUILD_PROCESSOR }}" === "true";
+            const processorNote = withProcessor
+              ? `🧩 **Admin processor** included - try it at [${deploymentUrl}/processor](${deploymentUrl}/processor).\n\n`
               : ``;
 
             // Storybook preview: only present when this PR changed stories/config.
@@ -434,7 +434,7 @@ jobs:
 
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
-                              portalNote +
+                              processorNote +
                               storybookNote +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** for approved V2 contributors.`;

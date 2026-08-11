@@ -78,8 +78,8 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
-  dev:portal:
-    desc: "Start backend + editor; the portal is an admin route at /portal"
+  dev:processor:
+    desc: "Start backend + editor; the processor is an admin route at /processor"
     vars:
       PORTS:
         sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'

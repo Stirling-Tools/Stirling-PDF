@@ -1,0 +1,497 @@
+.processor-policies {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+/* Header */
+.processor-policies__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.processor-policies__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 650;
+  color: var(--c-text);
+}
+
+.processor-policies__sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+  max-width: 46rem;
+}
+
+/* Category grid */
+.processor-policies__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+/* Category row — locked (coming soon) */
+.processor-policies__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  min-height: 2.25rem;
+}
+
+.processor-policies__row-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+}
+
+/* "Set up" underline link inside the active-row button's rightSection */
+.processor-policies__setup-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Category card — horizontal table row */
+.processor-policies__card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.processor-policies__card--locked {
+  opacity: 0.7;
+}
+
+.processor-policies__card-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.processor-policies__card-enforces {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.processor-policies__card-meta {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-shrink: 0;
+}
+
+.processor-policies__card-statpair {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.0625rem;
+}
+
+.processor-policies__card-statval {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  line-height: 1.2;
+}
+
+.processor-policies__card-statlbl {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  line-height: 1.2;
+}
+
+.processor-policies__cat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  font-size: 1.125rem;
+  color: var(--c-text-muted);
+}
+
+.processor-policies__card-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.processor-policies__card-blurb {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  line-height: 1.4;
+}
+
+.processor-policies__card-summary {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+
+.processor-policies__card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.processor-policies__card-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.processor-policies__card-cta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-primary);
+}
+
+.processor-policies__chevron-right {
+  transform: rotate(-90deg);
+  display: block;
+}
+
+/* Configured-card stat footer */
+.processor-policies__card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+@media (max-width: 30rem) {
+  .processor-policies__card-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Wizard + detail shared chrome */
+.processor-policies__wizard-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processor-policies__wizard-foot,
+.processor-policies__detail-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.processor-policies__wizard-banner {
+  margin-top: 0.75rem;
+}
+
+.processor-policies__wizard-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1rem;
+}
+
+.processor-policies__wizard-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+}
+
+.processor-policies__wizard-heading {
+  margin: 0.75rem 0 0;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-subtle);
+  font-weight: 600;
+}
+
+.processor-policies__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.processor-policies__toggle-row {
+  padding: 0.25rem 0;
+}
+
+.processor-policies__field-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* Workflow step — policy capability settings list.
+ * Rows read as the policy's own settings (label + plain description + toggle),
+ * not a chain of distinct tools. Config reveals inline beneath an enabled row. */
+.processor-policies__capabilities {
+  display: flex;
+  flex-direction: column;
+}
+
+.processor-policies__capability {
+  padding: 0.75rem 0.875rem;
+}
+
+.processor-policies__capability + .processor-policies__capability {
+  border-top: 1px solid var(--c-border);
+}
+
+/* An enabled row with config gets a faint tint so the revealed settings read as
+ * belonging to it. */
+.processor-policies__capability[data-on]
+  .processor-policies__capability-config {
+  border-top: 1px dashed var(--c-border);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* Sources picker */
+/* Selectable source tiles: a vertical stack of full-width shared Buttons
+   (icon · name · check). Layout is the Button's own leftSection/label/
+   rightSection — only the selected border/tint is added here. */
+.processor-policies__sources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.processor-policies__source--on {
+  border-color: var(--c-primary);
+}
+
+.processor-policies__source-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processor-policies__link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-primary);
+  cursor: pointer;
+}
+
+/* Output filename row */
+.processor-policies__name-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.processor-policies__name-row .sui-input {
+  flex: 1;
+}
+
+/* Detail panel */
+.processor-policies__detail-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.processor-policies__detail-sep {
+  color: var(--c-text-subtle);
+  font-size: 0.75rem;
+}
+
+.processor-policies__detail-meta {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.processor-policies__enforce-arrow {
+  color: var(--c-text-subtle);
+  font-size: 0.75rem;
+}
+
+.processor-policies__detail-inline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  margin-bottom: 0.5rem;
+}
+
+.processor-policies__detail-inline-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  width: 4.5rem;
+}
+
+.processor-policies__detail-inline-value {
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+  line-height: 1.5;
+}
+
+/* Activity feed */
+.processor-policies__activity-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+}
+
+.processor-policies__activity-row + .processor-policies__activity-row {
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.processor-policies__activity-icon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0.125rem;
+}
+
+.processor-policies__activity-icon--success {
+  color: var(--color-green);
+}
+.processor-policies__activity-icon--warning {
+  color: var(--color-amber);
+}
+.processor-policies__activity-icon--info {
+  color: var(--c-primary);
+}
+
+@keyframes processor-policies-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.processor-policies__activity-spin {
+  animation: processor-policies-spin 1s linear infinite;
+}
+
+.processor-policies__activity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.processor-policies__activity-doc {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.processor-policies__activity-action {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.processor-policies__activity-time {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+}
+
+.processor-policies__activity-retry {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
+/* Error expand/collapse for long activity messages */
+.processor-policies__activity-error {
+  display: block;
+}
+
+.processor-policies__activity-error-text--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.processor-policies__activity-error-toggle {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.6875rem;
+}
+
+/* Detail stats footer */
+.processor-policies__detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 1rem;
+}
+
+.processor-policies__detail-stats .sui-stat {
+  padding: 0.875rem 1rem;
+}
+
+.processor-policies__detail-stats .sui-stat + .sui-stat {
+  border-left: 1px solid var(--c-border-subtle);
+}
+
+/* ── Catalogue table (replaces the stacked category cards) ──────────────── */
+.processor-policies__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.processor-policies__cell-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+  min-width: 0;
+}
+
+.processor-policies__rulechips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+}
+
+.processor-policies__muted {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.processor-policies__docs {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+/* The .pcat-badge icon styles live with the PolicyCategoryIcon component
+   (PolicyCategoryIcon.css) so the Home policy summary picks them up too. */

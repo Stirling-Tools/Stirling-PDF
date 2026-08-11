@@ -61,11 +61,11 @@ public class RequestUriUtils {
             return true;
         }
 
-        // Admin portal SPA shell (mounted at /processor — must match the frontend
-        // PORTAL_BASENAME). Served publicly like the editor root so a direct nav /
+        // Admin processor SPA shell (mounted at /processor — must match the frontend
+        // PROCESSOR_BASENAME). Served publicly like the editor root so a direct nav /
         // refresh to /processor loads the app (the JWT lives in localStorage, not a
         // cookie, so the server can't authenticate the navigation itself). The
-        // portal gates access via its own auth gate + RequirePortalAccess, and its
+        // processor gates access via its own auth gate + RequireProcessorAccess, and its
         // data APIs stay protected, so serving the shell pre-auth is safe.
         if (normalizedUri.equals("/processor") || normalizedUri.startsWith("/processor/")) {
             return true;

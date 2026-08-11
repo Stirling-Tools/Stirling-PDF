@@ -29,13 +29,15 @@ function httpError(status: number) {
 // Configure the two backend endpoints. teamMy === "404" simulates self-hosted.
 function backend(opts: {
   role: string;
-  portalAccess: boolean;
+  processorAccess: boolean;
   teamMy: unknown[] | "404";
 }) {
   h.get.mockImplementation((url: string) => {
     if (url === "/api/v1/auth/me") {
       return Promise.resolve({
-        data: { user: { role: opts.role, portalAccess: opts.portalAccess } },
+        data: {
+          user: { role: opts.role, processorAccess: opts.processorAccess },
+        },
       });
     }
     if (url === "/api/v1/team/my") {
@@ -65,7 +67,7 @@ const SIGNED_IN = { session: { user: { id: "u1" } }, isAnonymous: false };
 
 beforeEach(() => {
   window.sessionStorage.clear();
-  vi.stubEnv("VITE_INCLUDE_PORTAL", "true");
+  vi.stubEnv("VITE_INCLUDE_PROCESSOR", "true");
   vi.stubEnv("VITE_LOGIN_LANDING_MODE", "dynamic");
   h.auth = { ...SIGNED_IN };
   h.prefs = { loginLandingView: "processor" };
@@ -75,8 +77,8 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("LoginLandingRedirect", () => {
-  it("self-hosted admin (no /team/my, portalAccess) → processor", async () => {
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+  it("self-hosted admin (no /team/my, processorAccess) → processor", async () => {
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     markLoginLandingPending();
     renderAt("/");
     await waitFor(() =>
@@ -85,8 +87,8 @@ describe("LoginLandingRedirect", () => {
     expect(hasLoginLandingPending()).toBe(false);
   });
 
-  it("self-hosted member (no /team/my, no portalAccess) → editor", async () => {
-    backend({ role: "USER", portalAccess: false, teamMy: "404" });
+  it("self-hosted member (no /team/my, no processorAccess) → editor", async () => {
+    backend({ role: "USER", processorAccess: false, teamMy: "404" });
     markLoginLandingPending();
     renderAt("/");
     await waitFor(() => expect(hasLoginLandingPending()).toBe(false));
@@ -96,7 +98,7 @@ describe("LoginLandingRedirect", () => {
   it("saas real team lead → processor", async () => {
     backend({
       role: "USER",
-      portalAccess: true,
+      processorAccess: true,
       teamMy: [{ isLeader: true, isPersonal: false }],
     });
     markLoginLandingPending();
@@ -109,7 +111,7 @@ describe("LoginLandingRedirect", () => {
   it("saas member → editor", async () => {
     backend({
       role: "USER",
-      portalAccess: true,
+      processorAccess: true,
       teamMy: [
         { isLeader: true, isPersonal: true },
         { isLeader: false, isPersonal: false },
@@ -122,7 +124,7 @@ describe("LoginLandingRedirect", () => {
   });
 
   it("still redirects under StrictMode double-invoke", async () => {
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     markLoginLandingPending();
     renderAt("/", true);
     await waitFor(() =>
@@ -131,7 +133,7 @@ describe("LoginLandingRedirect", () => {
   });
 
   it("does not fetch when a user opted into the editor", async () => {
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     h.prefs = { loginLandingView: "editor" };
     markLoginLandingPending();
     renderAt("/");
@@ -143,7 +145,7 @@ describe("LoginLandingRedirect", () => {
 
   it("does nothing in editor mode (soft release)", async () => {
     vi.stubEnv("VITE_LOGIN_LANDING_MODE", "editor");
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     markLoginLandingPending();
     renderAt("/");
     await Promise.resolve();
@@ -152,7 +154,7 @@ describe("LoginLandingRedirect", () => {
   });
 
   it("does nothing without the fresh-login flag", async () => {
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     renderAt("/");
     await Promise.resolve();
     expect(h.get).not.toHaveBeenCalled();
@@ -160,7 +162,7 @@ describe("LoginLandingRedirect", () => {
   });
 
   it("waits on auth routes and keeps the flag", async () => {
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     markLoginLandingPending();
     renderAt("/login");
     await Promise.resolve();
@@ -170,7 +172,7 @@ describe("LoginLandingRedirect", () => {
 
   it("ignores anonymous sessions", async () => {
     h.auth = { session: { user: { id: "anon" } }, isAnonymous: true };
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     markLoginLandingPending();
     renderAt("/");
     await Promise.resolve();

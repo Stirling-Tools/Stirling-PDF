@@ -8,8 +8,8 @@
         "./src/proprietary/*",
         "./src/core/*"
       ],
-      "@portal/*": ["./src/portal-saas/*", "./src/portal/*"],
-      "@portal-proprietary/*": ["./src/portal/*"],
+      "@processor/*": ["./src/processor-saas/*", "./src/processor/*"],
+      "@processor-proprietary/*": ["./src/processor/*"],
       "@cloud/*": ["./src/cloud/*"],
       "@proprietary/*": ["./src/proprietary/*"],
       "@core/*": ["./src/core/*"]

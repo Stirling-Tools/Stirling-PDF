@@ -141,7 +141,7 @@ export default function UpgradeModal({
     onClose();
   };
 
-  // Portal to document.body so the overlay escapes the config modal's portal /
+  // Processor to document.body so the overlay escapes the config modal's processor /
   // stacking context. Without this the fixed-position backdrop layers inside
   // the Mantine modal (z-index 1300) instead of over the whole page, producing
   // the modal-in-modal look.

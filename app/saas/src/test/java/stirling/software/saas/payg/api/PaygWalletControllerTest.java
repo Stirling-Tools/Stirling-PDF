@@ -464,7 +464,7 @@ class PaygWalletControllerTest {
         ResponseEntity<Void> resp = controller.refreshWallet(jwtAuth(user.getSupabaseId()));
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-        // Portal pokes this after checkout so the next /wallet read reflects the subscription
+        // Processor pokes this after checkout so the next /wallet read reflects the subscription
         // immediately rather than after the cache TTL.
         verify(entitlementService).invalidate(70L);
     }

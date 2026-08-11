@@ -1,0 +1,194 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render as baseRender, screen, waitFor } from "@testing-library/react";
+import { ProcessorTestProviders } from "@processor/test/TestQueryProvider";
+import type { FileRunEvent } from "@processor/api/fileRunEvents";
+
+/**
+ * Tests for the list: the states it survives (loading, empty, no registry, refused),
+ * plus replacing a row in place after acting and re-reading when the server refuses.
+ */
+
+const fetchFileRunEvents = vi.fn();
+const applyFileRunEventAction = vi.fn();
+
+vi.mock("@processor/api/fileRunEvents", () => ({
+  fetchFileRunEvents: (...args: unknown[]) => fetchFileRunEvents(...args),
+  applyFileRunEventAction: (...args: unknown[]) =>
+    applyFileRunEventAction(...args),
+}));
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    // Faithful to i18next: a known key resolves, an unknown key falls back to
+    // defaultValue. That is what exercises the server-key-then-generic chain.
+    t: (key: string, options?: { defaultValue?: string } | string) => {
+      const known: Record<string, string> = {
+        "processor.failures.kind.inputPasswordProtected.title":
+          "Password-protected document",
+        "processor.failures.action.acknowledge": "Acknowledge",
+        "processor.failures.empty.title": "No failures recorded",
+        "processor.failures.occurrences": "occurrences",
+        "processor.failures.runReference": "Run r1",
+        "processor.failures.stage.input": "Input",
+      };
+      if (known[key]) return known[key];
+      if (typeof options === "string") return options;
+      if (options?.defaultValue) return options.defaultValue;
+      return key;
+    },
+  }),
+}));
+
+// The list reads through the shared query hooks, and @app/ui needs Mantine.
+const render = (ui: Parameters<typeof baseRender>[0]) =>
+  baseRender(ui, { wrapper: ProcessorTestProviders });
+
+const { FileRunEventList } =
+  await import("@processor/components/failures/FileRunEventList");
+
+function event(overrides: Partial<FileRunEvent> = {}): FileRunEvent {
+  return {
+    id: "fre-1",
+    kindId: "INPUT_PASSWORD_PROTECTED",
+    stage: "INPUT",
+    severity: "ERROR",
+    scope: "FILE",
+    origin: "POLICY",
+    remedy: "NEEDS_USER_INPUT",
+    titleKey: "processor.failures.kind.inputPasswordProtected.title",
+    descriptionKey:
+      "processor.failures.kind.inputPasswordProtected.description",
+    defaultTitle: "Password-protected document",
+    detail: "The PDF Document is passworded",
+    policyId: "p1",
+    runId: "r1",
+    fileId: "f-1",
+    actor: "dana@example.com",
+    occurrences: 1,
+    status: "NEW",
+    statusActor: null,
+    actions: [
+      {
+        id: "ACKNOWLEDGE",
+        labelKey: "processor.failures.action.acknowledge",
+        enabled: true,
+        disabledReasonKey: null,
+      },
+    ],
+    createdAt: 0,
+    lastSeenAt: 0,
+    ...overrides,
+  };
+}
+
+describe("FileRunEventList", () => {
+  beforeEach(() => {
+    fetchFileRunEvents.mockReset();
+    applyFileRunEventAction.mockReset();
+    // The dev-panel test stubs import.meta.env.DEV, which would otherwise persist
+    // into every test after it.
+    vi.unstubAllEnvs();
+  });
+
+  it("renders a row's title, run reference and raw detail, but no document name", async () => {
+    fetchFileRunEvents.mockResolvedValue([event()]);
+
+    render(<FileRunEventList />);
+
+    expect(await screen.findByText("Password-protected document")).toBeTruthy();
+    // A run reference, not a document name: the record holds no file identity.
+    expect(screen.getByText("Run r1")).toBeTruthy();
+    // The raw message is shown, not swallowed: for an unclassified failure it is
+    // the only diagnostic available.
+    expect(screen.getByText("The PDF Document is passworded")).toBeTruthy();
+  });
+
+  it("shows the occurrence count only once a failure has repeated", async () => {
+    fetchFileRunEvents.mockResolvedValue([event({ occurrences: 1 })]);
+    const { unmount } = render(<FileRunEventList />);
+    await screen.findByText("Run r1");
+    expect(screen.queryByText(/occurrences/)).toBeNull();
+    unmount();
+
+    fetchFileRunEvents.mockResolvedValue([event({ occurrences: 14 })]);
+    render(<FileRunEventList />);
+    expect(await screen.findByText(/occurrences/)).toBeTruthy();
+  });
+
+  it("shows an empty state when there is nothing to triage", async () => {
+    fetchFileRunEvents.mockResolvedValue([]);
+
+    render(<FileRunEventList />);
+
+    expect(await screen.findByText("No failures recorded")).toBeTruthy();
+  });
+
+  it("renders nothing when the server has no failure registry", async () => {
+    // A core-only build has no such route, which is not worth showing a reviewer as
+    // an error, so the section stays silent.
+    fetchFileRunEvents.mockRejectedValue(new Error("404"));
+
+    const { container } = render(<FileRunEventList />);
+
+    await waitFor(() => {
+      expect(container.querySelector(".processor-failures__list")).toBeNull();
+    });
+    expect(screen.queryByText("No failures recorded")).toBeNull();
+  });
+
+  it("renders no heading at all for a caller the server refuses", async () => {
+    // Reviewing is leader-only, so a member's read returns 403. With no dev panel to
+    // frame, the whole section goes rather than leaving a bare heading.
+    vi.stubEnv("DEV", false);
+    fetchFileRunEvents.mockRejectedValue(new Error("403"));
+
+    const { container } = render(<FileRunEventList />);
+
+    await waitFor(() => {
+      expect(container.querySelector(".processor-failures")).toBeNull();
+    });
+    // No section, and specifically no heading: Mantine puts its <style> tags in
+    // the container, so "renders nothing" is asserted on our own output.
+    expect(screen.queryByRole("heading")).toBeNull();
+    expect(container.querySelector(".processor-failures__debug")).toBeNull();
+  });
+
+  it("replaces the acted-on row in place using the server's response", async () => {
+    fetchFileRunEvents.mockResolvedValue([event()]);
+    applyFileRunEventAction.mockResolvedValue(
+      event({ status: "ACKNOWLEDGED", statusActor: "me@example.com" }),
+    );
+
+    render(<FileRunEventList />);
+    const button = await screen.findByRole("button", {
+      name: "Acknowledge",
+    });
+    button.click();
+
+    await waitFor(() => {
+      expect(applyFileRunEventAction).toHaveBeenCalledWith(
+        "fre-1",
+        "ACKNOWLEDGE",
+      );
+    });
+    // Updated from the response rather than by refetching, so the list does not
+    // reload and jump under the reviewer.
+    expect(fetchFileRunEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it("re-reads from the server when an action is refused", async () => {
+    // A 409 means someone else closed it first; the server's view wins.
+    fetchFileRunEvents.mockResolvedValue([event()]);
+    applyFileRunEventAction.mockRejectedValue(new Error("409"));
+
+    render(<FileRunEventList />);
+    const button = await screen.findByRole("button", {
+      name: "Acknowledge",
+    });
+    button.click();
+
+    await waitFor(() => {
+      expect(fetchFileRunEvents).toHaveBeenCalledTimes(2);
+    });
+  });
+});

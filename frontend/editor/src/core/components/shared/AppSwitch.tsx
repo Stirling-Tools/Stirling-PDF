@@ -25,9 +25,9 @@ export function AppSwitchMenuItems({
   const apps: Array<{ id: AppSwitchTarget; label: string }> = [
     {
       id: "processor",
-      label: t("portal.shell.sidebar.appProcessor", "Processor"),
+      label: t("processor.shell.sidebar.appProcessor", "Processor"),
     },
-    { id: "editor", label: t("portal.shell.sidebar.appEditor", "Editor") },
+    { id: "editor", label: t("processor.shell.sidebar.appEditor", "Editor") },
   ];
   return (
     <>

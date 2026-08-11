@@ -292,7 +292,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
 
   // EmbedPDF scale factor (annotation rects are in PDF points at scale 1)
   const scale = documentState?.scale ?? 1;
-  // The portal position is measured from DOM, so this key realigns it when the page transform changes.
+  // The processor position is measured from DOM, so this key realigns it when the page transform changes.
   const toolbarPositionKey = [
     scale,
     documentState?.document?.pages?.[pageIndex]?.rotation ?? 0,
@@ -481,7 +481,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
 
   if (linkAnnotations.length === 0) return null;
 
-  const toolbarPortal =
+  const toolbarProcessor =
     hoveredAnnotationLink &&
     toolbarPlacement?.linkId === hoveredAnnotationLink.id &&
     typeof document !== "undefined"
@@ -549,7 +549,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           );
         })}
       </div>
-      {toolbarPortal}
+      {toolbarProcessor}
     </>
   );
 };

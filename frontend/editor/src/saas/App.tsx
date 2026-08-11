@@ -83,7 +83,7 @@ export default function App() {
           }
         />
 
-        {/* Admin-only route-set (the portal): its own top-level shell, mounted
+        {/* Admin-only route-set (the processor): its own top-level shell, mounted
             before the catch-all. */}
         {getAdminRouteExtensions()}
 

@@ -8,7 +8,7 @@ import {
   formatMinor,
 } from "@app/billing/format";
 
-/** Copy the control renders. The editor passes i18n strings; the portal uses the defaults. */
+/** Copy the control renders. The editor passes i18n strings; the processor uses the defaults. */
 export interface SpendCapControlLabels {
   custom: string;
   amountAria: string;
@@ -51,7 +51,7 @@ export interface SpendCapControlProps {
 
 /**
  * Monthly spend-cap control shared by the editor cloud surface and the admin
- * portal: preset chips, a custom-entry pill, a no-cap chip, an optional Save
+ * processor: preset chips, a custom-entry pill, a no-cap chip, an optional Save
  * button, and a live cap→PDF estimate. Fully controlled (capUsd + onChange).
  * Styling comes from each app's own {@code scc-*} CSS; copy is injected via
  * {@link labels} so this carries no i18n dependency.
