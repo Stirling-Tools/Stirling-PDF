@@ -43,19 +43,61 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class PairingController {
 
+    /** Path of the approval page, appended to whichever base URL we resolve. */
+    static final String LINK_PATH = "/link";
+
     private final PairingService service;
     private final LeaderTeamResolver leaderTeamResolver;
-    private final String verificationUri;
+    private final String configuredBaseUrl;
 
     public PairingController(
             PairingService service,
             LeaderTeamResolver leaderTeamResolver,
-            @Value(
-                            "${stirling.billing.account-link.pairing.verification-uri:https://stirling.com/link}")
-                    String verificationUri) {
+            @Value("${stirling.billing.account-link.pairing.base-url:}") String configuredBaseUrl) {
         this.service = service;
         this.leaderTeamResolver = leaderTeamResolver;
-        this.verificationUri = verificationUri;
+        this.configuredBaseUrl = configuredBaseUrl;
+    }
+
+    /**
+     * Where the admin goes to approve: our own base URL plus {@value #LINK_PATH}.
+     *
+     * <p>Left unset, this is derived from the request that reached us, which is right by
+     * construction because the approval page is served by this same app. Hard-coding a default host
+     * would silently point staging and self-hosted-cloud deployments at production, and any guess
+     * also has to get the context path right. An operator can still pin it with {@code
+     * stirling.billing.account-link.pairing.base-url} when the API and the web app are not on the
+     * same origin.
+     *
+     * <p>The derived form trusts the forwarded host, which is client-controlled. That is fine here:
+     * the value is only ever echoed back to the caller that supplied it, so a spoofed host misleads
+     * nobody but the spoofer.
+     */
+    private String verificationUri(HttpServletRequest request) {
+        if (configuredBaseUrl != null && !configuredBaseUrl.isBlank()) {
+            return configuredBaseUrl.strip().replaceAll("/+$", "") + LINK_PATH;
+        }
+        String forwardedHost = firstHeaderValue(request, "X-Forwarded-Host");
+        String host = forwardedHost != null ? forwardedHost : request.getHeader("Host");
+        String scheme =
+                firstNonBlank(firstHeaderValue(request, "X-Forwarded-Proto"), request.getScheme());
+        if (host == null || host.isBlank()) {
+            host = request.getServerName();
+        }
+        String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
+        return scheme + "://" + host + contextPath + LINK_PATH;
+    }
+
+    private static String firstHeaderValue(HttpServletRequest request, String name) {
+        String value = request.getHeader(name);
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.split(",")[0].trim();
+    }
+
+    private static String firstNonBlank(String a, String b) {
+        return a != null && !a.isBlank() ? a : b;
     }
 
     /** Instance-supplied hints shown on the approval screen. Both optional and both untrusted. */
@@ -115,7 +157,7 @@ public class PairingController {
                         new StartResponse(
                                 PairingService.forDisplay(result.userCode()),
                                 result.deviceCode(),
-                                verificationUri,
+                                verificationUri(http),
                                 expiresIn,
                                 result.intervalSeconds()));
     }

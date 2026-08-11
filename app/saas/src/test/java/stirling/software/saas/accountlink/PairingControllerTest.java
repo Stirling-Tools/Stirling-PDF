@@ -45,8 +45,6 @@ import stirling.software.saas.util.AuthenticationUtils;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PairingControllerTest {
 
-    private static final String VERIFY_URI = "https://stirling.example/link";
-
     @Mock private PairingService service;
     @Mock private TeamMembershipRepository memberRepo;
     @Mock private UserRepository userRepository;
@@ -62,7 +60,7 @@ class PairingControllerTest {
         caller = mockUser(42L);
         controller =
                 new PairingController(
-                        service, new LeaderTeamResolver(memberRepo, userRepository), VERIFY_URI);
+                        service, new LeaderTeamResolver(memberRepo, userRepository), "");
         auth =
                 new AnonymousAuthenticationToken(
                         "k", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_USER")));
@@ -90,7 +88,7 @@ class PairingControllerTest {
         // Grouped for reading aloud, which is the only thing this value is for.
         assertThat(body.userCode()).isEqualTo("WXYZ-4821");
         assertThat(body.deviceCode()).isEqualTo("device-code");
-        assertThat(body.verificationUri()).isEqualTo(VERIFY_URI);
+        assertThat(body.verificationUri()).isEqualTo("https://saas.example.test/link");
         assertThat(body.expiresInSeconds()).isPositive();
     }
 
@@ -165,6 +163,44 @@ class PairingControllerTest {
                 .thenReturn(PairingService.PollResult.of(PairingService.PollOutcome.UNKNOWN));
 
         assertThat(controller.poll(null).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void start_derivesTheApprovalUrlFromTheRequestIncludingAnyContextPath() {
+        when(service.start(any(), any(), any()))
+                .thenReturn(
+                        new PairingService.StartResult(
+                                "AAAA2222", "d", LocalDateTime.now().plusMinutes(10), 5));
+        HttpServletRequest req = request("10.0.0.1", null);
+        // Behind a TLS-terminating proxy the scheme and host arrive as forwarded headers, and the
+        // app may be mounted under a subpath. Guessing a host would point staging at production.
+        when(req.getHeader("X-Forwarded-Proto")).thenReturn("https");
+        when(req.getHeader("X-Forwarded-Host")).thenReturn("app.stirling.test, internal");
+        when(req.getContextPath()).thenReturn("/app");
+
+        assertThat(controller.start(null, req).getBody())
+                .isNotNull()
+                .extracting(PairingController.StartResponse::verificationUri)
+                .isEqualTo("https://app.stirling.test/app/link");
+    }
+
+    @Test
+    void start_prefersAConfiguredBaseUrlOverTheRequest() {
+        PairingController pinned =
+                new PairingController(
+                        service,
+                        new LeaderTeamResolver(memberRepo, userRepository),
+                        "https://pinned.example/base/");
+        when(service.start(any(), any(), any()))
+                .thenReturn(
+                        new PairingService.StartResult(
+                                "AAAA2222", "d", LocalDateTime.now().plusMinutes(10), 5));
+
+        assertThat(pinned.start(null, request("10.0.0.1", null)).getBody())
+                .isNotNull()
+                .extracting(PairingController.StartResponse::verificationUri)
+                // Trailing slash trimmed, so an operator cannot produce a double slash.
+                .isEqualTo("https://pinned.example/base/link");
     }
 
     // ---------------------------------------------------------------------------------------
@@ -331,10 +367,13 @@ class PairingControllerTest {
         return membership;
     }
 
-    private static HttpServletRequest request(String remoteAddr, String forwarded) {
+    private static HttpServletRequest request(String remoteAddr, String forwardedFor) {
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getRemoteAddr()).thenReturn(remoteAddr);
-        when(req.getHeader("X-Forwarded-For")).thenReturn(forwarded);
+        when(req.getHeader("X-Forwarded-For")).thenReturn(forwardedFor);
+        when(req.getHeader("Host")).thenReturn("saas.example.test");
+        when(req.getScheme()).thenReturn("https");
+        when(req.getContextPath()).thenReturn("");
         return req;
     }
 }
