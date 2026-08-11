@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
-import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // eslint-disable-line no-restricted-imports -- asset lives outside @app alias root
+import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
 
 interface Dependency {
   moduleName?: string;

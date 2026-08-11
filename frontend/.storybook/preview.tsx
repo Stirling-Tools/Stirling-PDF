@@ -29,7 +29,16 @@ import { rtlLanguages, supportedLanguages } from "@core/i18n/languages";
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
 import "@core/theme/index.css";
+// The editor's semantic token layer (--bg-surface, --onboarding-title, …).
+// The app reaches it through its style entry; without it here, components
+// styled on those variables render unthemed (e.g. transparent modal surfaces)
+// and axe measures contrast against colours the app never shows.
+import "@core/styles/theme.css";
 import "@core/tokens/base.css";
+// Portal element reset + typography. Scoped to .portal-scope in the app so it
+// can't leak into the editor; the decorator below adds that class around
+// portal stories only, mirroring how PortalApp mounts.
+import "@portal/theme/base.css";
 
 // Storybook-only: bundle every shipped locale's TOML at build time via a ?raw
 // glob, so the toolbar language switcher can flip between all languages with no
@@ -201,6 +210,13 @@ const withProviders: Decorator = (Story, context) => {
   // anything that isn't "dark" as light — matching the addon's own
   // `selected || defaultTheme` fallback where defaultTheme is light.
   const colorScheme = context.globals.theme === "dark" ? "dark" : "light";
+  // PortalApp mounts its views inside a .portal-scope wrapper, which is what
+  // the portal's base.css keys its reset/typography on. Give portal stories
+  // the same wrapper (and only them — the scoping exists precisely so portal
+  // styles never apply to editor components).
+  const isPortalStory = (context.parameters.fileName ?? "").includes(
+    "/portal/",
+  );
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
@@ -214,7 +230,13 @@ const withProviders: Decorator = (Story, context) => {
                 <TierKey tier={tier}>
                   <UIProvider>
                     <Suspense fallback={null}>
-                      <Story />
+                      {isPortalStory ? (
+                        <div className="portal-scope">
+                          <Story />
+                        </div>
+                      ) : (
+                        <Story />
+                      )}
                     </Suspense>
                   </UIProvider>
                 </TierKey>
@@ -229,6 +251,12 @@ const withProviders: Decorator = (Story, context) => {
 
 const preview: Preview = {
   loaders: [mswLoader],
+  // The scan runs once per theme (SCAN_THEME=light|dark, forwarded by
+  // .storybook/vitest.config.ts); pinning the global here themes every story in
+  // the run. Unset — the Storybook UI — falls back to the toolbar default.
+  initialGlobals: {
+    theme: import.meta.env.VITE_SCAN_THEME === "dark" ? "dark" : "light",
+  },
   parameters: {
     layout: "padded",
     controls: {

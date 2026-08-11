@@ -2,22 +2,49 @@ version: '3'
 
 tasks:
   install:
-    desc: "Install engine dependencies"
+    desc: "Install engine runtime and development dependencies"
     run: once
     cmds:
       - uv python install 3.13.8
-      - uv sync
+      - uv sync --locked --group engine --group engine-dev
     sources:
       - uv.lock
       - pyproject.toml
     status:
       - test -d .venv
 
+  lock:
+    desc: "Update the engine lockfile from project metadata"
+    cmds:
+      - uv lock
+
+  lock:upgrade:
+    desc: "Upgrade allowed engine dependencies and update the lockfile"
+    cmds:
+      - uv lock --upgrade
+
+  lock:check:
+    desc: "Check whether the engine lockfile is current"
+    cmds:
+      - uv lock --check
+
+  update:
+    desc: "Upgrade engine dependencies and synchronize the environment"
+    cmds:
+      - task: lock:upgrade
+      - uv sync --locked --group engine --group engine-dev
+
+  update:all:
+    desc: "Upgrade all Python dependency groups and synchronize the environment"
+    cmds:
+      - task: lock:upgrade
+      - uv sync --locked --all-groups
+
   prepare:
     desc: "Set up engine .env from template"
     deps: [install]
     cmds:
-      - uv run scripts/setup_env.py
+      - uv run --locked --group engine --group engine-dev scripts/setup_env.py
     sources:
       - scripts/setup_env.py
     generates:
@@ -33,7 +60,7 @@ tasks:
     env:
       PYTHONUNBUFFERED: "1"
     cmds:
-      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}} --workers "${STIRLING_ENGINE_WORKERS:-4}"
+      - uv run --locked --group engine uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}} --workers "${STIRLING_ENGINE_WORKERS:-4}"
 
   dev:
     desc: "Start engine dev server with hot reload"
@@ -45,43 +72,43 @@ tasks:
     env:
       PYTHONUNBUFFERED: "1"
     cmds:
-      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}} --reload
+      - uv run --locked --group engine --group engine-dev uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}} --reload
 
   lint:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - uv run ruff check .
+      - uv run --locked --group engine --group engine-dev ruff check .
 
   lint:fix:
     desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
-      - uv run ruff check . --fix
+      - uv run --locked --group engine --group engine-dev ruff check . --fix
 
   format:
     desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
-      - uv run ruff format .
+      - uv run --locked --group engine --group engine-dev ruff format .
 
   format:check:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - uv run ruff format . --diff
+      - uv run --locked --group engine --group engine-dev ruff format . --diff
 
   typecheck:
     desc: "Run type checking"
     deps: [install]
     cmds:
-      - uv run pyright . --warnings
+      - uv run --locked --group engine --group engine-dev pyright . --warnings
 
   test:
     desc: "Run tests"
     deps: [prepare]
     cmds:
-      - uv run pytest tests
+      - uv run --locked --group engine --group engine-dev pytest tests
 
   test:coverage:
     desc: "Run tests with coverage reporting"
@@ -116,7 +143,7 @@ tasks:
     desc: "Generate tool_models.py from Java OpenAPI spec (SwaggerDoc.json)"
     deps: [install, ":backend:swagger"]
     cmds:
-      - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py --io-output src/stirling/models/tool_io.py
+      - uv run --locked --group engine --group engine-dev python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py --io-output src/stirling/models/tool_io.py
     sources:
       - ../SwaggerDoc.json
       - scripts/generate_tool_models.py
@@ -128,7 +155,7 @@ tasks:
     desc: "Fail if the committed tool models are out of date"
     deps: [install, ":backend:swagger"]
     cmds:
-      - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py --io-output src/stirling/models/tool_io.py --check
+      - uv run --locked --group engine --group engine-dev python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py --io-output src/stirling/models/tool_io.py --check
 
   clean:
     desc: "Clean build artifacts"
