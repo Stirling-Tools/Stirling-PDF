@@ -319,7 +319,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("returns the run view when present")
         void found() {
-            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep());
+            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep(), null);
             mockOwnedRun("run-3");
             when(runRegistry.get("run-3")).thenReturn(run);
 
