@@ -38,6 +38,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -85,6 +86,9 @@ public class ProcessingFolderController {
      * its place in the ledger and is picked up by later sweeps rather than dropped.
      */
     static final int DISK_SWEEP_LIMIT = 100;
+
+    /** The trigger that watches a directory for arrivals. */
+    static final String WATCH_TRIGGER = "folder-watch";
 
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
@@ -219,7 +223,12 @@ public class ProcessingFolderController {
                         "Processing folder: " + name,
                         policyAccessGuard.ownerForNewPolicy(),
                         request.enabled() == null || request.enabled(),
-                        null,
+                        // A disk directory is watched, so the folder reacts to arrivals on its own.
+                        // A null trigger would make it manual-only: the create-time backlog sweep
+                        // would run and nothing would ever process again. Storage-backed folders
+                        // stay manual until the storage arrival trigger exists — folder-watch only
+                        // supports directory sources.
+                        onDisk ? new TriggerConfig(WATCH_TRIGGER, Map.of()) : null,
                         List.of(source.id()),
                         request.steps() == null ? List.of() : request.steps(),
                         outputSpecFor(request, folder),
