@@ -941,7 +941,7 @@ public class GeneralUtils {
             }
 
             // If no MAC address found, use hostname as fallback
-            if (sb.length() == 0) {
+            if (sb.isEmpty()) {
                 String hostname = InetAddress.getLocalHost().getHostName();
                 sb.append(hostname != null ? hostname : "unknown-host");
                 log.warn("No MAC address found, using hostname for fingerprint generation");
