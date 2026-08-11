@@ -24,7 +24,10 @@ ADMIN_PASS = "stirling"
 def _sh(args, stdin=None, timeout=60):
     """Run a command, return (returncode, stdout, stderr)."""
     r = subprocess.run(
-        args, input=stdin, capture_output=True, timeout=timeout,
+        args,
+        input=stdin,
+        capture_output=True,
+        timeout=timeout,
         text=(stdin is None or isinstance(stdin, str)),
     )
     out = r.stdout if isinstance(r.stdout, str) else r.stdout.decode("utf-8", "replace")
@@ -34,9 +37,7 @@ def _sh(args, stdin=None, timeout=60):
 
 def _psql(query):
     """Run a query against the shared Postgres, return the raw tab/newline output (trimmed)."""
-    rc, out, err = _sh(
-        ["docker", "exec", PG, "psql", "-U", "stirling", "-d", "stirling", "-tAc", query]
-    )
+    rc, out, err = _sh(["docker", "exec", PG, "psql", "-U", "stirling", "-d", "stirling", "-tAc", query])
     assert rc == 0, f"psql failed: {err.strip() or out.strip()}"
     return out.strip()
 
@@ -47,10 +48,7 @@ def _psql_int(query):
 
 
 def _network():
-    rc, out, _ = _sh(
-        ["docker", "inspect", "-f",
-         "{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}", NODES[0]]
-    )
+    rc, out, _ = _sh(["docker", "inspect", "-f", "{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}", NODES[0]])
     return out.strip() or "compose_stirling-multinode"
 
 
@@ -89,18 +87,25 @@ def _names_on_node(node, path, token):
         data = json.loads(body)
     except ValueError:
         return set()
-    items = data if isinstance(data, list) else data.get(path.rsplit("/", 1)[-1], []) \
-        or data.get("sources", []) or data.get("policies", [])
+    items = (
+        data
+        if isinstance(data, list)
+        else data.get(path.rsplit("/", 1)[-1], []) or data.get("sources", []) or data.get("policies", [])
+    )
     return {i.get("name") for i in items if isinstance(i, dict)}
 
 
 def _policy_body(name, source_ids=None, enabled=True):
-    return json.dumps({
-        "name": name, "enabled": enabled, "trigger": None,
-        "sourceIds": source_ids or [],
-        "steps": [{"operation": "/api/v1/misc/compress-pdf", "parameters": {}}],
-        "output": {"type": "inline", "options": {}},
-    })
+    return json.dumps(
+        {
+            "name": name,
+            "enabled": enabled,
+            "trigger": None,
+            "sourceIds": source_ids or [],
+            "steps": [{"operation": "/api/v1/misc/compress-pdf", "parameters": {}}],
+            "output": {"type": "inline", "options": {}},
+        }
+    )
 
 
 def _any_connection_id(context):
@@ -108,8 +113,7 @@ def _any_connection_id(context):
     cid = getattr(context, "_seed_conn_id", None)
     if cid:
         return cid
-    r = requests.get(f"{LB_URL}/api/v1/integrations",
-                     headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
+    r = requests.get(f"{LB_URL}/api/v1/integrations", headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
     assert r.status_code == 200, f"list integrations failed: HTTP {r.status_code}"
     s3 = next((c for c in r.json() if c.get("integrationType") == "S3"), None)
     assert s3, "no S3 connection available (did the seed run?)"
@@ -119,33 +123,45 @@ def _any_connection_id(context):
 
 def _s3_source_body(name, connection_id):
     # Folder sources are config-gated; S3 sources against the seeded connection always work.
-    return json.dumps({
-        "name": name, "type": "s3",
-        "options": {"connectionId": connection_id, "prefix": "regr/", "mode": "snapshot"},
-        "enabled": True,
-    })
+    return json.dumps(
+        {
+            "name": name,
+            "type": "s3",
+            "options": {"connectionId": connection_id, "prefix": "regr/", "mode": "snapshot"},
+            "enabled": True,
+        }
+    )
 
 
 def _source_id_by_name(context, name):
-    r = requests.get(f"{LB_URL}/api/v1/sources",
-                     headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
+    r = requests.get(f"{LB_URL}/api/v1/sources", headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
     assert r.status_code == 200, f"list sources failed: HTTP {r.status_code}"
     return next((s["id"] for s in r.json().get("sources", []) if s.get("name") == name), None)
 
 
 def _s3_connection_body(name):
-    return json.dumps({
-        "integrationType": "S3", "name": name, "scope": "SERVER", "enabled": True,
-        "locked": False, "defaultAccess": "ORG_ALL",
-        "config": {"bucket": BUCKET, "region": "us-east-1", "endpoint": "http://minio:9000",
-                   "accessKeyId": "minioadmin", "secretAccessKey": "minioadmin",
-                   "pathStyleAccess": True},
-    })
+    return json.dumps(
+        {
+            "integrationType": "S3",
+            "name": name,
+            "scope": "SERVER",
+            "enabled": True,
+            "locked": False,
+            "defaultAccess": "ORG_ALL",
+            "config": {
+                "bucket": BUCKET,
+                "region": "us-east-1",
+                "endpoint": "http://minio:9000",
+                "accessKeyId": "minioadmin",
+                "secretAccessKey": "minioadmin",
+                "pathStyleAccess": True,
+            },
+        }
+    )
 
 
 def _lb_login(context):
-    r = requests.post(f"{LB_URL}/api/v1/auth/login",
-                      json={"username": ADMIN_USER, "password": ADMIN_PASS}, timeout=15)
+    r = requests.post(f"{LB_URL}/api/v1/auth/login", json={"username": ADMIN_USER, "password": ADMIN_PASS}, timeout=15)
     assert r.status_code == 200, f"admin login via LB failed: HTTP {r.status_code}"
     context.jwt_token = r.json()["session"]["access_token"]
 
@@ -154,6 +170,7 @@ def _pdf_bytes(marker):
     """A minimal valid single-page PDF carrying a unique marker (so outputs are identifiable)."""
     try:
         from reportlab.pdfgen import canvas
+
         buf = io.BytesIO()
         c = canvas.Canvas(buf)
         c.drawString(100, 750, f"multinode-regression {marker}")
@@ -162,10 +179,12 @@ def _pdf_bytes(marker):
         return buf.getvalue()
     except Exception:
         # Fallback: a hand-rolled minimal PDF if reportlab is unavailable.
-        return (b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
-                b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
-                b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\n"
-                b"trailer<</Root 1 0 R>>\n%%EOF")
+        return (
+            b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+            b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+            b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\n"
+            b"trailer<</Root 1 0 R>>\n%%EOF"
+        )
 
 
 def _mc(context, script, stdin=None):
@@ -173,14 +192,12 @@ def _mc(context, script, stdin=None):
     net = getattr(context, "_net", None) or _network()
     context._net = net
     full = f"mc alias set local http://minio:9000 minioadmin minioadmin >/dev/null 2>&1 && {script}"
-    args = ["docker", "run", "-i", "--rm", "--network", net, "--entrypoint", "/bin/sh",
-            "minio/mc", "-c", full]
+    args = ["docker", "run", "-i", "--rm", "--network", net, "--entrypoint", "/bin/sh", "minio/mc", "-c", full]
     return _sh(args, stdin=stdin, timeout=90)
 
 
 def _policy_id_by_name(context, name):
-    r = requests.get(f"{LB_URL}/api/v1/policies",
-                     headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
+    r = requests.get(f"{LB_URL}/api/v1/policies", headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
     assert r.status_code == 200, f"list policies failed: HTTP {r.status_code}"
     data = r.json()
     items = data if isinstance(data, list) else data.get("policies", [])
@@ -227,8 +244,8 @@ def step_lb_requests(context, endpoint, count):
 def step_distinct_nodes(context, n):
     distinct = set(context._served_by)
     assert len(distinct) >= n, (
-        f"expected >= {n} distinct upstreams, saw {sorted(distinct)} "
-        f"(is the X-Served-By header configured on the LB?)")
+        f"expected >= {n} distinct upstreams, saw {sorted(distinct)} (is the X-Served-By header configured on the LB?)"
+    )
 
 
 @then("every load-balanced response should be {code:d}")
@@ -248,8 +265,9 @@ def step_token_every_node(context):
 
 @then("the signing keys should be stored in the shared database")
 def step_keys_in_db(context):
-    assert _psql_int("select count(*) from jwt_signing_keys") >= 1, \
+    assert _psql_int("select count(*) from jwt_signing_keys") >= 1, (
         "no rows in jwt_signing_keys - keys are not persisted in the shared DB"
+    )
 
 
 @then("every stored private key should be encrypted at rest")
@@ -263,9 +281,9 @@ def step_keys_encrypted(context):
 @when('I create a team named "{name}" through the load balancer')
 def step_create_team(context, name):
     context._team_name = name
-    r = requests.post(f"{LB_URL}/api/v1/team/create",
-                      headers={"Authorization": f"Bearer {_token(context)}"},
-                      data={"name": name}, timeout=15)
+    r = requests.post(
+        f"{LB_URL}/api/v1/team/create", headers={"Authorization": f"Bearer {_token(context)}"}, data={"name": name}, timeout=15
+    )
     assert r.status_code in (200, 201, 409), f"create team failed: HTTP {r.status_code}"
 
 
@@ -335,9 +353,7 @@ def step_files_processed(context, seconds):
         if remaining == 0:
             break
         time.sleep(3)
-    assert remaining == 0, (
-        f"{remaining} of {len(context._dropped)} dropped files were still unprocessed after "
-        f"{seconds}s")
+    assert remaining == 0, f"{remaining} of {len(context._dropped)} dropped files were still unprocessed after {seconds}s"
     for node in NODES:
         rc, out, _ = _sh(["docker", "inspect", "-f", "{{.State.Status}}", node])
         assert out.strip() == "running", f"{node} crashed during concurrent processing"
@@ -348,15 +364,19 @@ def step_ledger_claim_atomic(context):
     # Exactly-once relies on the (identity_hash, policy_id) primary key: two nodes claiming the same file both insert it, but only one wins; this proves the constraint rejects the second claim.
     ihash = "regr-" + uuid.uuid4().hex
     pol = "regr-policy-" + uuid.uuid4().hex[:8]
-    insert = (f"insert into policy_processed_files (identity_hash, policy_id, status, attempts) "
-              f"values ('{ihash}', '{pol}', 'PROCESSING', 1)")
+    insert = (
+        f"insert into policy_processed_files (identity_hash, policy_id, status, attempts) "
+        f"values ('{ihash}', '{pol}', 'PROCESSING', 1)"
+    )
     _psql(insert)  # first claim wins
-    rc, out, err = _sh(["docker", "exec", PG, "psql", "-U", "stirling", "-d", "stirling",
-                        "-tAc", insert])  # second claim must be rejected
+    rc, out, err = _sh(
+        ["docker", "exec", PG, "psql", "-U", "stirling", "-d", "stirling", "-tAc", insert]
+    )  # second claim must be rejected
     _psql(f"delete from policy_processed_files where identity_hash = '{ihash}'")
     assert rc != 0 and "duplicate key" in (out + err).lower(), (
         "a second claim for the same file and policy was NOT rejected - the ledger's exactly-once "
-        "guarantee is not enforced by the primary key")
+        "guarantee is not enforced by the primary key"
+    )
 
 
 # --------------------------------------------------------------------------- policy run coordination (gap)
@@ -368,8 +388,7 @@ def step_run_policy_on_node(context, name, idx):
     assert pid, f"policy '{name}' not found"
     # Drop an input so the trigger actually produces a run (the source is otherwise empty).
     marker = uuid.uuid4().hex[:12]
-    _mc(context, f"mc pipe local/{BUCKET}/{SOURCE_PREFIX}runvis-{marker}.pdf",
-        stdin=_pdf_bytes(marker))
+    _mc(context, f"mc pipe local/{BUCKET}/{SOURCE_PREFIX}runvis-{marker}.pdf", stdin=_pdf_bytes(marker))
     status, _ = _curl_on_node(node, "POST", f"/api/v1/policies/{pid}/trigger", token=_token(context))
     assert status in (200, 202), f"triggering the policy on {node} failed: HTTP {status}"
     # Grab the runId that node recorded for the run it just executed.
@@ -393,7 +412,8 @@ def step_run_visible_every(context):
         assert context._run_id in run_ids, (
             f"run {context._run_id} (executed on {context._run_node}) is not visible from {node} - "
             f"PolicyRunRegistry is a per-node in-JVM map, so run status and cancellation do not "
-            f"cross nodes")
+            f"cross nodes"
+        )
 
 
 # --------------------------------------------------------------------------- rate limiting
@@ -401,9 +421,21 @@ def step_run_visible_every(context):
 def step_ratelimit_shared(context):
     # In cluster mode the ValkeyRateLimitStore holds counters in Valkey; probe that a key exists.
     net = context._net or _network()
-    rc, out, err = _sh(["docker", "run", "--rm", "--network", net, "--entrypoint", "/bin/sh",
-                        "valkey/valkey:8-alpine", "-c",
-                        "valkey-cli -h valkey keys '*'"], timeout=30)
+    rc, out, err = _sh(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            net,
+            "--entrypoint",
+            "/bin/sh",
+            "valkey/valkey:8-alpine",
+            "-c",
+            "valkey-cli -h valkey keys '*'",
+        ],
+        timeout=30,
+    )
     assert rc == 0, f"valkey probe failed: {err.strip()}"
     assert out.strip(), "no keys in Valkey - rate-limit/backplane state is not shared"
 
@@ -458,8 +490,9 @@ def _auth(context):
 # --- policies ---
 @when('I create a policy named "{name}" on node "{idx}"')
 def step_create_policy_on_node(context, name, idx):
-    status, body = _curl_on_node(_node(idx), "POST", "/api/v1/policies", token=_token(context),
-                                 data=_policy_body(name), content_type="application/json")
+    status, body = _curl_on_node(
+        _node(idx), "POST", "/api/v1/policies", token=_token(context), data=_policy_body(name), content_type="application/json"
+    )
     assert status in (200, 201), f"create policy on {_node(idx)} failed: HTTP {status}: {body[:200]}"
 
 
@@ -467,9 +500,12 @@ def step_create_policy_on_node(context, name, idx):
 def step_create_policy_ref(context, name, src):
     sid = _source_id_by_name(context, src)
     assert sid, f"source '{src}' not found"
-    r = requests.post(f"{LB_URL}/api/v1/policies",
-                      headers={**_auth(context), "Content-Type": "application/json"},
-                      data=_policy_body(name, [sid]), timeout=15)
+    r = requests.post(
+        f"{LB_URL}/api/v1/policies",
+        headers={**_auth(context), "Content-Type": "application/json"},
+        data=_policy_body(name, [sid]),
+        timeout=15,
+    )
     assert r.status_code in (200, 201), f"create referencing policy failed: HTTP {r.status_code}"
 
 
@@ -479,9 +515,9 @@ def step_rename_policy(context, old, new):
     assert pid, f"policy '{old}' not found"
     pol = requests.get(f"{LB_URL}/api/v1/policies/{pid}", headers=_auth(context), timeout=15).json()
     pol["name"] = new
-    r = requests.post(f"{LB_URL}/api/v1/policies",
-                      headers={**_auth(context), "Content-Type": "application/json"},
-                      json=pol, timeout=15)
+    r = requests.post(
+        f"{LB_URL}/api/v1/policies", headers={**_auth(context), "Content-Type": "application/json"}, json=pol, timeout=15
+    )
     assert r.status_code in (200, 201), f"rename policy failed: HTTP {r.status_code}"
 
 
@@ -524,8 +560,14 @@ def step_triggers_identical(context):
 @when('I create an S3 source named "{name}" on node "{idx}"')
 def step_create_source_on_node(context, name, idx):
     conn = _any_connection_id(context)
-    status, body = _curl_on_node(_node(idx), "POST", "/api/v1/sources", token=_token(context),
-                                 data=_s3_source_body(name, conn), content_type="application/json")
+    status, body = _curl_on_node(
+        _node(idx),
+        "POST",
+        "/api/v1/sources",
+        token=_token(context),
+        data=_s3_source_body(name, conn),
+        content_type="application/json",
+    )
     assert status in (200, 201), f"create source on {_node(idx)} failed: HTTP {status}: {body[:200]}"
 
 
@@ -556,16 +598,18 @@ def step_source_delete_guarded(context, name, idx):
     sid = _source_id_by_name(context, name)
     assert sid, f"source '{name}' not found"
     status, body = _curl_on_node(_node(idx), "DELETE", f"/api/v1/sources/{sid}", token=_token(context))
-    assert status == 409, (
-        f"expected 409 (source referenced by a policy created on another node), got HTTP {status}")
+    assert status == 409, f"expected 409 (source referenced by a policy created on another node), got HTTP {status}"
 
 
 # --- connections (integration configs) ---
 @when('I create an S3 connection named "{name}" via the load balancer')
 def step_create_conn(context, name):
-    r = requests.post(f"{LB_URL}/api/v1/integrations",
-                      headers={**_auth(context), "Content-Type": "application/json"},
-                      data=_s3_connection_body(name), timeout=15)
+    r = requests.post(
+        f"{LB_URL}/api/v1/integrations",
+        headers={**_auth(context), "Content-Type": "application/json"},
+        data=_s3_connection_body(name),
+        timeout=15,
+    )
     assert r.status_code in (200, 201), f"create connection failed: HTTP {r.status_code}: {r.text[:200]}"
     context._conn_id = r.json()["id"]
 
@@ -580,10 +624,9 @@ def step_conn_resolves(context, name):
         assert secret in (None, "", "********"), f"{node} leaked the connection secret on read"
 
 
-@when('I delete the connection via the load balancer')
+@when("I delete the connection via the load balancer")
 def step_delete_conn(context):
-    r = requests.delete(f"{LB_URL}/api/v1/integrations/{context._conn_id}",
-                        headers=_auth(context), timeout=15)
+    r = requests.delete(f"{LB_URL}/api/v1/integrations/{context._conn_id}", headers=_auth(context), timeout=15)
     assert r.status_code in (200, 204), f"delete connection failed: HTTP {r.status_code}"
 
 

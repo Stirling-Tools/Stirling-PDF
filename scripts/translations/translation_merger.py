@@ -39,7 +39,7 @@ class TranslationMerger:
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Error: Invalid file {file_path}: {e}")
             sys.exit(1)
 
@@ -64,7 +64,7 @@ class TranslationMerger:
 
             # Convert to sets for faster lookup
             return {lang: set(data.get("ignore", [])) for lang, data in ignore_data.items()}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
 
@@ -264,7 +264,7 @@ class TranslationMerger:
 
                 self._set_nested_value(target_data, key, translation)
                 applied_count += 1
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 errors.append(f"Error setting {key}: {e}")
 
         if applied_count > 0:
@@ -467,9 +467,7 @@ def main():
 
         # Extract translations from template format or simple dict
         if "translations" in translations_data:
-            translations = {
-                k: v["translated"] for k, v in translations_data["translations"].items() if v.get("translated")
-            }
+            translations = {k: v["translated"] for k, v in translations_data["translations"].items() if v.get("translated")}
         else:
             translations = translations_data
 

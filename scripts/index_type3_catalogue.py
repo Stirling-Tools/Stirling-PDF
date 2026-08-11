@@ -55,7 +55,7 @@ def main():
     for pdf in sorted(samples_dir.glob("*.pdf")):
         try:
             output = run(["pdffonts", str(pdf)])
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"Skipping {pdf.name}: {exc}")
             continue
         for font_name, encoding in parse_pdffonts(output):

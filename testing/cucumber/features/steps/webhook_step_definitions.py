@@ -2,7 +2,7 @@ import hashlib
 import hmac
 
 import requests
-from behave import given, when, then
+from behave import given, then, when
 
 BASE_URL = "http://localhost:8080"
 API_HEADERS = {"X-API-KEY": "123456789"}

@@ -79,7 +79,7 @@ def get_language_completion(locales_dir: Path, language: str) -> float | None:
 
         return (translated / total * 100) if total > 0 else 0.0
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: Could not calculate completion for {language}: {e}")
         return None
 
@@ -144,7 +144,7 @@ def translate_language(
     except subprocess.TimeoutExpired:
         safe_print(f"[{language}] ✗ Timeout exceeded")
         return (language, False, "Timeout exceeded")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         safe_print(f"[{language}] ✗ Error: {str(e)}")
         return (language, False, str(e))
 

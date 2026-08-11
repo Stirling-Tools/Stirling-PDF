@@ -205,7 +205,7 @@ def compare_files(
     Returns:
         list[tuple[str, int]]: A sorted list of tuples containing language codes and progress percentages
             (descending order by percentage). Duplicates are removed.
-    """
+    """  # noqa: E501
     reference_entries = load_translation_entries(default_file_path)
     ref_keys = set(reference_entries.keys())
     num_lines = len(ref_keys)
@@ -235,10 +235,7 @@ def compare_files(
             sort_ignore_translation[language] = tomlkit.table()
 
         # Ensure default ignore list if empty
-        if (
-            "ignore" not in sort_ignore_translation[language]
-            or len(sort_ignore_translation[language].get("ignore", [])) < 1
-        ):
+        if "ignore" not in sort_ignore_translation[language] or len(sort_ignore_translation[language].get("ignore", [])) < 1:
             sort_ignore_translation[language]["ignore"] = tomlkit.array(["language.direction"])
 
         # Clean up ignore list to only include keys present in reference
@@ -307,9 +304,7 @@ def main() -> None:
         --show-percentage: Print only the translation percentage for --lang and exit.
         --show-missing-keys: Show the list of missing keys when checking a single language file.
     """
-    parser = argparse.ArgumentParser(
-        description="Compare frontend i18n TOML files and optionally update README badges."
-    )
+    parser = argparse.ArgumentParser(description="Compare frontend i18n TOML files and optionally update README badges.")
     parser.add_argument(
         "--lang",
         "-l",

@@ -576,10 +576,7 @@ def sync_en_us(dry_run: bool) -> int:
         lines.append(f"[{name}]")
         lines.extend(f'{k} = "{v}"' for k, v in kvs)
 
-    print(
-        f"en-US: +{len(added)} key(s) from en-GB, "
-        f"{len(us_only)} en-US-only key(s) preserved (British->American applied)."
-    )
+    print(f"en-US: +{len(added)} key(s) from en-GB, {len(us_only)} en-US-only key(s) preserved (British->American applied).")
     for k in added:
         print(f"  [en-US] + {k}")
     if not dry_run:

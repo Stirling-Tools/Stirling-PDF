@@ -68,9 +68,9 @@ updater-signatures = [
 ]
 # Pinned repository-wide pre-commit tooling.
 pre-commit = [
-    "codespell==2.4.2",
-    "ruff==0.16.1",
-    "tomli-w==1.2.0",
+    "codespell>=2.4.2",
+    "ruff>=0.16.1",
+    "tomli-w>=1.2.0",
 ]
 
 [build-system]
@@ -85,7 +85,7 @@ exclude = ["tests"]
 default-groups = ["engine", "engine-dev"]
 
 [tool.ruff]
-line-length = 120
+line-length = 127
 target-version = "py313"
 
 [tool.ruff.lint]
@@ -104,6 +104,9 @@ select = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["stirling", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"testing/**/*.py" = ["N803", "BLE001", "E501"]
 
 [tool.pyright]
 pythonVersion = "3.13"

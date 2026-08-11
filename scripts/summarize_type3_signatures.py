@@ -56,9 +56,7 @@ def write_markdown(inventory: dict[str, list[dict]], output: Path, input_dir: Pa
     lines: list[str] = []
     lines.append("# Type3 Signature Inventory")
     lines.append("")
-    lines.append(
-        f"_Generated from `{input_dir}`. Run `scripts/summarize_type3_signatures.py` after capturing new samples._"
-    )
+    lines.append(f"_Generated from `{input_dir}`. Run `scripts/summarize_type3_signatures.py` after capturing new samples._")
     lines.append("")
 
     for alias in sorted(inventory.keys()):

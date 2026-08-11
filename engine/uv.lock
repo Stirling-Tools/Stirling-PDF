@@ -750,9 +750,9 @@ engine-dev = [
     { name = "ruff", specifier = ">=0.16.1" },
 ]
 pre-commit = [
-    { name = "codespell", specifier = "==2.4.2" },
-    { name = "ruff", specifier = "==0.16.1" },
-    { name = "tomli-w", specifier = "==1.2.0" },
+    { name = "codespell", specifier = ">=2.4.2" },
+    { name = "ruff", specifier = ">=0.16.1" },
+    { name = "tomli-w", specifier = ">=1.2.0" },
 ]
 tools = [
     { name = "deep-translator", specifier = ">=1.11.4" },

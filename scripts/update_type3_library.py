@@ -100,14 +100,12 @@ def normalize_source_path(pdf_path: str | None) -> str | None:
     try:
         source = Path(pdf_path)
         rel = source.relative_to(REPO_ROOT)
-    except Exception:
+    except Exception:  # noqa: BLE001
         rel = Path(pdf_path)
     return str(rel).replace("\\", "/")
 
 
-def update_library(
-    signatures_dir: Path, index_path: Path, apply_changes: bool
-) -> tuple[int, int, list[tuple[str, Path]]]:
+def update_library(signatures_dir: Path, index_path: Path, apply_changes: bool) -> tuple[int, int, list[tuple[str, Path]]]:
     entries = load_json(index_path)
     alias_index, signature_index = make_alias_index(entries)
 

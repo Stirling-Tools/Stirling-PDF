@@ -75,7 +75,7 @@ def parse_unicode_mapping(mapping_path):
         print(f"Parsed ToUnicode CMap: {len(gid_to_unicode)} mappings", file=sys.stderr)
         return gid_to_unicode
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: Failed to parse Unicode mapping: {e}", file=sys.stderr)
         return {}
 
@@ -186,10 +186,10 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                             min_lsb = min(min_lsb, lsb)
                             min_rsb = min(min_rsb, rsb)
                             max_extent = max(max_extent, extent)
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         pass  # Some glyphs may not have outlines
 
-                except Exception:
+                except Exception:  # noqa: BLE001
                     pass  # Use defaults
 
             widths[glyph_name] = width
@@ -308,14 +308,14 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                     unicode_val = int(glyph_name[3:], 16)
                     if unicode_val not in unicode_to_glyph:
                         unicode_to_glyph[unicode_val] = glyph_name
-                except Exception:
+                except Exception:  # noqa: BLE001
                     pass
             elif glyph_name.startswith("u") and len(glyph_name) >= 5:
                 try:
                     unicode_val = int(glyph_name[1:], 16)
                     if unicode_val not in unicode_to_glyph:
                         unicode_to_glyph[unicode_val] = glyph_name
-                except Exception:
+                except Exception:  # noqa: BLE001
                     pass
 
         # === Create cmap table ===
@@ -476,7 +476,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
 
         return True
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"ERROR: Conversion failed: {str(e)}", file=sys.stderr)
         import traceback
 

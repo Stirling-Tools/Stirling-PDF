@@ -150,7 +150,7 @@ def download_pdf(
         output_dir.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(content)
         return url, dest, None
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except  # noqa: BLE001
         return url, None, str(exc)
 
 
@@ -167,9 +167,7 @@ def main() -> None:
     failures: list[tuple[str, str]] = []
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
-        future_to_url = {
-            executor.submit(download_pdf, url, output_dir, args.timeout, args.overwrite): url for url in urls
-        }
+        future_to_url = {executor.submit(download_pdf, url, output_dir, args.timeout, args.overwrite): url for url in urls}
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
             result_url, path, error = future.result()

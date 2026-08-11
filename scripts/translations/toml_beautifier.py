@@ -28,7 +28,7 @@ class TOMLBeautifier:
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Error: Invalid TOML in {file_path}: {e}")
             sys.exit(1)
 

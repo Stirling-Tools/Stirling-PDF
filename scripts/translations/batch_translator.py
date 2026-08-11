@@ -98,7 +98,7 @@ CRITICAL RULES - MUST FOLLOW EXACTLY:
    - Do not remove any part of the original meaning
    - Keep the same level of detail
 
-Return ONLY the translated JSON. No markdown, no explanations, just the JSON object."""
+Return ONLY the translated JSON. No markdown, no explanations, just the JSON object."""  # noqa: E501
 
     def _record_usage(self, response) -> None:
         """Accumulate token usage/cost and print a per-batch line."""
@@ -366,7 +366,7 @@ Examples:
             if i < len(input_files):
                 time.sleep(args.delay)
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"✗ Failed: {e}")
             failed += 1
             continue

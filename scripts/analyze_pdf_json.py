@@ -227,7 +227,7 @@ def main() -> None:
     print(f"Total image elements: {page_stats.total_image_elements:,}")
     print(
         f"Page structural bytes (text arrays + images + streams + annotations): "
-        f"{human_bytes(page_stats.text_struct_bytes + page_stats.image_struct_bytes + page_stats.content_stream_bytes + page_stats.annotations_bytes)}"
+        f"{human_bytes(page_stats.text_struct_bytes + page_stats.image_struct_bytes + page_stats.content_stream_bytes + page_stats.annotations_bytes)}"  # noqa: E501
     )
 
     font_stats = summary.fonts

@@ -57,9 +57,11 @@ def create_clean_invoice():
     pdf.cell(0, 8, "Grand Total: $8,195.00", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Breakdown: $6,000.00 + $1,000.00 + $450.00 = $7,450.00",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     pdf.output("testing/ledger/clean_invoice.pdf")
@@ -87,9 +89,11 @@ def create_tally_error():
 
     pdf.ln(5)
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Total Q1 spend: $68,000 + $66,000 + $71,200 = $205,200",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     pdf.output("testing/ledger/tally_error.pdf")
@@ -156,12 +160,9 @@ def create_consistency_error():
     _body(pdf)
 
     _table_row(pdf, ["Metric", "Q1", "Q2", "Q3", "Q4", "FY2025"], bold=True)
-    _table_row(pdf, ["Revenue", "$5,100,000", "$5,800,000", "$6,200,000",
-                      "$7,200,000", "$24,300,000"])
-    _table_row(pdf, ["Expenses", "$4,300,000", "$4,400,000", "$4,600,000",
-                      "$4,900,000", "$18,200,000"])
-    _table_row(pdf, ["Profit", "$800,000", "$1,400,000", "$1,600,000",
-                      "$2,300,000", "$6,100,000"])
+    _table_row(pdf, ["Revenue", "$5,100,000", "$5,800,000", "$6,200,000", "$7,200,000", "$24,300,000"])
+    _table_row(pdf, ["Expenses", "$4,300,000", "$4,400,000", "$4,600,000", "$4,900,000", "$18,200,000"])
+    _table_row(pdf, ["Profit", "$800,000", "$1,400,000", "$1,600,000", "$2,300,000", "$6,100,000"])
 
     pdf.ln(5)
     # BUG: Page 1 says Total Revenue = $24,500,000
@@ -169,9 +170,11 @@ def create_consistency_error():
     #      Page 1 says Net Profit = $6,300,000
     #      Page 2 table says Profit FY2025 = $6,100,000
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Full-year revenue of $24,300,000 exceeded targets by 8%.",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     pdf.output("testing/ledger/consistency_error.pdf")
@@ -199,15 +202,19 @@ def create_mixed_errors():
     pdf.ln(5)
     # BUG: 51000 + 42000 + 29250 + 61500 = 183,750, NOT 182,750
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Total revenue: $51,000 + $42,000 + $29,250 + $61,500 = $182,750",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
     pdf.ln(3)
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Commission rate: 10% across all regions.",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     pdf.output("testing/ledger/mixed_errors.pdf")
@@ -235,37 +242,47 @@ def create_statement_errors():
 
     # Correct claim: profit grew from 2.5M to 3.1M = 24% growth
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Profit grew 24% year-over-year, from $2,500,000 to $3,100,000.",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     # BUG: Revenue grew from 10M to 11.2M = 12% growth, NOT 15%
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Revenue increased 15% compared to the prior year.",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     # BUG: Expenses went UP from 7.5M to 8.1M, NOT decreased
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Operating expenses decreased year-over-year.",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     # BUG: Headcount grew from 142 to 187 = 31.7%, NOT 25%
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "The team expanded by 25%, growing from 142 to 187 employees.",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     # Correct claim: profit margin = 3.1M / 11.2M = 27.68%
     pdf.cell(
-        0, 8,
+        0,
+        8,
         "Net profit margin reached approximately 28%.",
-        new_x="LMARGIN", new_y="NEXT",
+        new_x="LMARGIN",
+        new_y="NEXT",
     )
 
     pdf.output("testing/ledger/statement_errors.pdf")
@@ -274,6 +291,7 @@ def create_statement_errors():
 
 if __name__ == "__main__":
     import os
+
     os.makedirs("testing/ledger", exist_ok=True)
     print("Generating test PDFs:")
     create_clean_invoice()
