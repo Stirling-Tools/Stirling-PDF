@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -51,11 +51,11 @@ export default function AdminLegalSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<LegalSettingsData>({
     sectionName: "legal",
+    enabled: loginEnabled,
     // The flat legal URL fields save through the section endpoint as before; the nested
     // loginAgreement object is flattened to dotted keys sent via the global settings endpoint
     // (updateSettingsTransactional), which merges into the existing node. Saving a partial
@@ -74,12 +74,6 @@ export default function AdminLegalSection() {
       return { sectionData: flat, deltaSettings };
     },
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled]);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,

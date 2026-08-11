@@ -1,5 +1,7 @@
 /** Editor query keys: ["editor", <resource>, ...params]. */
 export const qk = {
+  adminSection: (sectionName: string) =>
+    ["editor", "adminSection", sectionName] as const,
   appConfig: () => ["editor", "appConfig"] as const,
   endpointsAvailability: () => ["editor", "endpointsAvailability"] as const,
   endpointEnabled: (endpoint: string) =>

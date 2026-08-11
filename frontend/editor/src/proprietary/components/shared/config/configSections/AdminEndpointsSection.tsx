@@ -45,11 +45,11 @@ export default function AdminEndpointsSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<EndpointsSettingsData>({
     sectionName: "endpoints",
+    enabled: loginEnabled,
   });
 
   const {
@@ -66,10 +66,9 @@ export default function AdminEndpointsSection() {
 
   useEffect(() => {
     if (loginEnabled) {
-      fetchSettings();
       fetchUiSettings();
     }
-  }, [loginEnabled, fetchSettings, fetchUiSettings]);
+  }, [loginEnabled, fetchUiSettings]);
 
   const {
     isDirty: isEndpointsDirty,

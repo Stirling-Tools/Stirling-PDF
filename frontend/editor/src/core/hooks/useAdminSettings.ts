@@ -1,5 +1,11 @@
-import { useState, useCallback } from "react";
-import apiClient from "@app/services/apiClient";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchAdminSection,
+  putAdminSection,
+  putAdminSettings,
+} from "@app/api/adminSettings";
+import { qk } from "@app/query/keys";
 import {
   mergePendingSettings,
   isFieldPending,
@@ -8,6 +14,8 @@ import {
 
 interface UseAdminSettingsOptions<T> {
   sectionName: string;
+  /** Skips the fetch entirely — sections pass their login/permission gate here. */
+  enabled?: boolean;
   /**
    * Optional transformer to combine data from multiple endpoints.
    * If not provided, uses the section response directly.
@@ -36,187 +44,121 @@ interface UseAdminSettingsReturn<T> {
 }
 
 /**
- * Hook for managing admin settings with automatic pending changes support.
- * Includes delta detection to only send changed fields.
+ * Admin settings for one config section: the server value, an editable draft on
+ * top of it, and a save that sends only what changed.
+ *
+ * Sections sharing a sectionName share the fetch — four separate AI tabs all
+ * read `aiEngine`.
  *
  * @example
  * const { settings, setSettings, saveSettings, isFieldPending } = useAdminSettings({
- *   sectionName: 'legal'
+ *   sectionName: 'legal',
+ *   enabled: loginEnabled,
  * });
  */
 export function useAdminSettings<T = any>(
   options: UseAdminSettingsOptions<T>,
 ): UseAdminSettingsReturn<T> {
-  const { sectionName, fetchTransformer, saveTransformer } = options;
+  const {
+    sectionName,
+    enabled = true,
+    fetchTransformer,
+    saveTransformer,
+  } = options;
 
-  const [settings, setSettings] = useState<T>({} as T);
-  const [rawSettings, setRawSettings] = useState<any>(null);
-  const [originalSettings, setOriginalSettings] = useState<T>({} as T); // Track original active values
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
+  const queryKey = qk.adminSection(sectionName);
 
-  const fetchSettings = useCallback(async () => {
-    try {
-      setLoading(true);
+  // Transformers are inline closures, so they change identity every render;
+  // the query must not treat that as a new fetcher.
+  const fetchTransformerRef = useRef(fetchTransformer);
+  fetchTransformerRef.current = fetchTransformer;
+  const saveTransformerRef = useRef(saveTransformer);
+  saveTransformerRef.current = saveTransformer;
 
-      let rawData: any;
+  const {
+    data: rawSettings,
+    isPending,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey,
+    queryFn: () =>
+      fetchTransformerRef.current
+        ? fetchTransformerRef.current()
+        : fetchAdminSection<T>(sectionName),
+    enabled,
+    staleTime: 0,
+  });
 
-      if (fetchTransformer) {
-        // Use custom fetch logic for complex sections
-        rawData = await fetchTransformer();
-      } else {
-        // Simple single-endpoint fetch
-        const response = await apiClient.get(
-          `/api/v1/admin/settings/section/${sectionName}`,
-        );
-        rawData = response.data || {};
-      }
+  // What the user saw, pending changes folded in — also the delta baseline.
+  const baseline = useMemo(
+    () => (rawSettings ? (mergePendingSettings(rawSettings) as T) : ({} as T)),
+    [rawSettings],
+  );
 
-      console.log(
-        `[useAdminSettings:${sectionName}] Raw response:`,
-        JSON.stringify(rawData, null, 2),
-      );
+  // Every fetch reseeds the draft, including the refetch after a save — the
+  // response carries the _pending block the form renders from.
+  const [draft, setDraft] = useState<T>(baseline);
+  useEffect(() => {
+    if (rawSettings !== undefined) setDraft(baseline);
+  }, [rawSettings, baseline]);
 
-      // Store raw settings (includes _pending if present)
-      setRawSettings(rawData);
+  const save = useMutation({
+    mutationFn: async () => {
+      const delta = computeDelta(baseline, draft);
+      if (Object.keys(delta).length === 0) return;
 
-      // Merge pending changes into settings for display
-      const mergedSettings = mergePendingSettings(rawData);
-      console.log(
-        `[useAdminSettings:${sectionName}] Merged settings:`,
-        JSON.stringify(mergedSettings, null, 2),
-      );
-
-      // Store merged settings as original for delta comparison
-      // This ensures we compare against what the user SAW (with pending), not raw active values
-      setOriginalSettings(mergedSettings as T);
-      console.log(
-        `[useAdminSettings:${sectionName}] Original settings (for comparison):`,
-        JSON.stringify(mergedSettings, null, 2),
-      );
-
-      setSettings(mergedSettings as T);
-    } catch (error) {
-      console.error(
-        `[useAdminSettings:${sectionName}] Failed to fetch:`,
-        error,
-      );
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [sectionName]);
-
-  const saveSettings = async () => {
-    try {
-      setSaving(true);
-
-      // Compute delta: only include fields that changed from original
-      const delta = computeDelta(originalSettings, settings);
-      console.log(
-        `[useAdminSettings:${sectionName}] Delta (changed fields):`,
-        JSON.stringify(delta, null, 2),
-      );
-
-      if (Object.keys(delta).length === 0) {
-        console.log(
-          `[useAdminSettings:${sectionName}] No changes detected, skipping save`,
-        );
+      const transform = saveTransformerRef.current;
+      if (!transform) {
+        await putAdminSection(sectionName, delta);
         return;
       }
 
-      if (saveTransformer) {
-        // Use custom save logic for complex sections
-        const { sectionData, deltaSettings } = saveTransformer(settings);
+      const { sectionData, deltaSettings } = transform(draft);
+      const { sectionData: originalSectionData, deltaSettings: originalDelta } =
+        transform(baseline);
 
-        // Get original sectionData using same transformer for fair comparison
-        const { sectionData: originalSectionData } =
-          saveTransformer(originalSettings);
-
-        // Save section data (with delta applied) - compare transformed vs transformed
-        const sectionDelta = computeDelta(originalSectionData, sectionData);
-        if (Object.keys(sectionDelta).length > 0) {
-          await apiClient.put(
-            `/api/v1/admin/settings/section/${sectionName}`,
-            sectionDelta,
-          );
-        }
-
-        // Save delta settings if provided (filter to only changed values)
-        if (deltaSettings && Object.keys(deltaSettings).length > 0) {
-          // Build deltaSettings from original using same transformer to get correct structure
-          const { deltaSettings: originalDeltaSettings } =
-            saveTransformer(originalSettings);
-
-          console.log(
-            `[useAdminSettings:${sectionName}] Comparing deltaSettings:`,
-            {
-              original: originalDeltaSettings,
-              current: deltaSettings,
-            },
-          );
-
-          // Compare current vs original deltaSettings (both have same backend paths)
-          const changedDeltaSettings: Record<string, any> = {};
-          for (const [key, value] of Object.entries(deltaSettings)) {
-            const originalValue = originalDeltaSettings?.[key];
-
-            // Only include if value actually changed
-            if (JSON.stringify(value) !== JSON.stringify(originalValue)) {
-              changedDeltaSettings[key] = value;
-              console.log(
-                `[useAdminSettings:${sectionName}] Delta field changed: ${key}`,
-                {
-                  original: originalValue,
-                  new: value,
-                },
-              );
-            }
-          }
-
-          if (Object.keys(changedDeltaSettings).length > 0) {
-            console.log(
-              `[useAdminSettings:${sectionName}] Sending delta settings:`,
-              changedDeltaSettings,
-            );
-            await apiClient.put("/api/v1/admin/settings", {
-              settings: changedDeltaSettings,
-            });
-          } else {
-            console.log(
-              `[useAdminSettings:${sectionName}] No delta settings changed, skipping`,
-            );
-          }
-        }
-      } else {
-        // Simple single-endpoint save with delta
-        await apiClient.put(
-          `/api/v1/admin/settings/section/${sectionName}`,
-          delta,
-        );
+      const sectionDelta = computeDelta(originalSectionData, sectionData);
+      if (Object.keys(sectionDelta).length > 0) {
+        await putAdminSection(sectionName, sectionDelta);
       }
 
-      // Refetch to get updated _pending block
-      await fetchSettings();
-    } catch (error) {
-      console.error(`[useAdminSettings:${sectionName}] Failed to save:`, error);
-      throw error;
-    } finally {
-      setSaving(false);
-    }
-  };
+      if (deltaSettings && Object.keys(deltaSettings).length > 0) {
+        const changed: Record<string, any> = {};
+        for (const [key, value] of Object.entries(deltaSettings)) {
+          if (JSON.stringify(value) !== JSON.stringify(originalDelta?.[key])) {
+            changed[key] = value;
+          }
+        }
+        if (Object.keys(changed).length > 0) await putAdminSettings(changed);
+      }
+    },
+    // Refetch rather than trust the local draft: the response carries a fresh
+    // _pending block the UI badges off.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  const fetchSettings = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  const saveSettings = useCallback(async () => {
+    await save.mutateAsync();
+  }, [save]);
 
   return {
-    settings,
-    rawSettings,
-    loading,
-    saving,
-    setSettings,
+    settings: draft,
+    rawSettings: rawSettings ?? null,
+    // Also true while disabled, matching the old hook: nothing has loaded yet.
+    loading: isPending || isFetching,
+    saving: save.isPending,
+    setSettings: setDraft,
     fetchSettings,
     saveSettings,
     isFieldPending: (fieldPath: string) =>
-      isFieldPending(rawSettings, fieldPath),
-    hasPendingChanges: () => hasPendingChanges(rawSettings),
+      isFieldPending(rawSettings as any, fieldPath),
+    hasPendingChanges: () => hasPendingChanges(rawSettings as any),
   };
 }
 
@@ -230,24 +172,19 @@ function computeDelta(original: any, current: any): any {
   for (const key in current) {
     if (!Object.prototype.hasOwnProperty.call(current, key)) continue;
 
-    const originalValue = original[key];
+    const originalValue = original?.[key];
     const currentValue = current[key];
 
-    // Handle nested objects
     if (isPlainObject(currentValue) && isPlainObject(originalValue)) {
       const nestedDelta = computeDelta(originalValue, currentValue);
       if (Object.keys(nestedDelta).length > 0) {
         delta[key] = nestedDelta;
       }
-    }
-    // Handle arrays
-    else if (Array.isArray(currentValue) && Array.isArray(originalValue)) {
+    } else if (Array.isArray(currentValue) && Array.isArray(originalValue)) {
       if (JSON.stringify(currentValue) !== JSON.stringify(originalValue)) {
         delta[key] = currentValue;
       }
-    }
-    // Handle primitives
-    else if (currentValue !== originalValue) {
+    } else if (currentValue !== originalValue) {
       delta[key] = currentValue;
     }
   }
