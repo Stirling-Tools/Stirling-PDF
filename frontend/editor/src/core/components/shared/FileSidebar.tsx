@@ -431,12 +431,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
     }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
 
-    // File filtering now lives in the global super search (top bar); the
-    // sidebar simply lists every stored file.
-    const filteredFileStubs = allFileStubs;
-
     // SaaS groups by classification label; core returns null → one flat, recency-sorted list.
-    const fileGroups = useFileSidebarGroups(filteredFileStubs);
+    const fileGroups = useFileSidebarGroups(allFileStubs);
     // Workbench membership as a Set for O(1) per-row lookups (see renderFileRow).
     const workbenchIds = useMemo(
       () => new Set(state.files.ids.map((id) => id as string)),
@@ -446,12 +442,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // must key by their unique leaf id rather than the shared lineage (see renderFileRow).
     const lineageCounts = useMemo(() => {
       const counts = new Map<string, number>();
-      for (const s of filteredFileStubs) {
+      for (const s of allFileStubs) {
         const k = (s.originalFileId ?? s.id) as string;
         counts.set(k, (counts.get(k) ?? 0) + 1);
       }
       return counts;
-    }, [filteredFileStubs]);
+    }, [allFileStubs]);
     // Per-group expand/collapse, falling back to each group's default until toggled.
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
@@ -1053,7 +1049,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <span className="file-sidebar-section-label">
                       {t("fileSidebar.library", "PDF Library")}
                     </span>
-                    <FileSidebarGroupControls stubs={filteredFileStubs} />
+                    <FileSidebarGroupControls stubs={allFileStubs} />
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-external"
@@ -1087,7 +1083,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <div className="file-sidebar-loading">
                       <Loader size="sm" color="var(--c-text-subtle)" />
                     </div>
-                  ) : filteredFileStubs.length > 0 ? (
+                  ) : allFileStubs.length > 0 ? (
                     <div className="file-sidebar-file-list">
                       {fileGroups ? (
                         <>
@@ -1165,13 +1161,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                               "fileSidebar.viewAll",
                               "View all {{count}} files",
                               {
-                                count: filteredFileStubs.length,
+                                count: allFileStubs.length,
                               },
                             )}
                           </Button>
                         </>
                       ) : (
-                        filteredFileStubs.map(renderFileRow)
+                        allFileStubs.map(renderFileRow)
                       )}
                     </div>
                   ) : (
