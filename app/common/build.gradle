@@ -14,7 +14,7 @@ dependencies {
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
     api "org.apache.commons:commons-lang3:${commonsLang3}"
-    api 'com.drewnoakes:metadata-extractor:2.20.0' // Image metadata extractor
+    api 'com.drewnoakes:metadata-extractor:2.21.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
@@ -25,9 +25,9 @@ dependencies {
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:8.12.6'
+    api 'org.simplejavamail:simple-java-mail:9.2.0'
     // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)
-    api('org.simplejavamail:outlook-module:8.12.6') {
+    api('org.simplejavamail:outlook-module:9.2.0') {
         exclude group: 'org.apache.commons', module: 'commons-math3'
     }
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
