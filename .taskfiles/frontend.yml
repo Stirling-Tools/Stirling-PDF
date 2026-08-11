@@ -459,7 +459,7 @@ tasks:
     deps: [prepare]
     vars:
       COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
-      TEST_TIMEOUT: '{{.TEST_TIMEOUT | default ""}}'
+      TEST_TIMEOUT: '{{.TEST_TIMEOUT | default "5000"}}'
     cmds:
       - >
         npx vitest run --root editor
