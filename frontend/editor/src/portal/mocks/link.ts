@@ -22,6 +22,7 @@ import type {
   LinkStatus,
   LinkedInstanceRow,
   LocalUsage,
+  PairingView,
 } from "@portal/api/link";
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -73,6 +74,8 @@ let store: LinkedInstanceRow[] = seedInstances();
 let nextId = 1004;
 let localStatus: LinkStatus = { linked: false, name: null };
 let localUsage: LocalUsage = seedLocalUsage();
+let pairing: PairingView | null = null;
+let pollsUntilApproved = 0;
 
 /** Resets the mock store + local link status to seed state (Storybook / tests). */
 export function resetLinkStore(): void {
@@ -80,6 +83,54 @@ export function resetLinkStore(): void {
   nextId = 1004;
   localStatus = { linked: false, name: null };
   localUsage = seedLocalUsage();
+  pairing = null;
+  pollsUntilApproved = 0;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Pairing (device grant) — start hands back a code, polling settles it     */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+const IDLE_PAIRING: PairingView = {
+  phase: "idle",
+  userCode: null,
+  verificationUri: null,
+  expiresAt: null,
+  intervalSeconds: 0,
+};
+
+/** Starts a pairing. Approves itself after a couple of polls so the mock settles
+ *  on its own, the way a real admin approving on another device would. */
+export function startPairingMock(): PairingView {
+  pollsUntilApproved = 2;
+  pairing = {
+    phase: "waiting",
+    userCode: "WXYZ-4821",
+    verificationUri: "https://stirling.com/link",
+    expiresAt: new Date(Date.now() + 600_000).toISOString(),
+    intervalSeconds: 5,
+  };
+  return { ...pairing };
+}
+
+/** Advances the mock pairing. Mirrors the real endpoint: linked once approved. */
+export function pairingStatusMock(): PairingView {
+  if (localStatus.linked) {
+    return { ...IDLE_PAIRING, phase: "linked" };
+  }
+  if (!pairing) return { ...IDLE_PAIRING };
+  if (pollsUntilApproved > 0) {
+    pollsUntilApproved -= 1;
+    return { ...pairing };
+  }
+  linkLocal("pdf-prod-01");
+  pairing = null;
+  return { ...IDLE_PAIRING, phase: "linked" };
+}
+
+export function cancelPairingMock(): void {
+  pairing = null;
+  pollsUntilApproved = 0;
 }
 
 /** Current instance-local unsynced usage (GET /api/v1/account-link/usage). */

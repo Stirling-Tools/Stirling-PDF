@@ -37,16 +37,19 @@
   user-select: all;
 }
 
+/* --c-text-muted, not --c-text-subtle: subtle is 3.59:1 on the dark surface and
+   fails AA. Both of these carry information the admin needs while they wait, so
+   neither can be decorative-faint. */
 .portal-pairing__wait {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--c-text-subtle);
+  color: var(--c-text-muted);
 }
 
 .portal-pairing__hint {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--c-text-subtle);
+  color: var(--c-text-muted);
 }
 
 .portal-pairing__actions {

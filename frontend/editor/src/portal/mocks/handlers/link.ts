@@ -1,11 +1,14 @@
 import { http, HttpResponse, delay } from "msw";
 import type { LinkInstanceRequest } from "@portal/api/link";
 import {
+  cancelPairingMock,
   getLocalStatus,
   getLocalUsage,
   linkLocal,
   listInstances,
+  pairingStatusMock,
   revokeInstance,
+  startPairingMock,
   unlinkLocal,
 } from "@portal/mocks/link";
 
@@ -47,6 +50,26 @@ export const linkHandlers = [
     await delay(120);
     // Clear local link state, then 204 (no body) to match the real backend.
     unlinkLocal();
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // Device-grant pairing. start hands back the code the admin reads out; status
+  // advances it and settles on linked after a couple of polls, standing in for
+  // someone approving on another device. The device code never crosses the wire
+  // to the browser, matching the real contract.
+  http.post("/api/v1/account-link/pair/start", async () => {
+    await delay(120);
+    return HttpResponse.json(startPairingMock());
+  }),
+
+  http.get("/api/v1/account-link/pair/status", async () => {
+    await delay(120);
+    return HttpResponse.json(pairingStatusMock());
+  }),
+
+  http.post("/api/v1/account-link/pair/cancel", async () => {
+    await delay(120);
+    cancelPairingMock();
     return new HttpResponse(null, { status: 204 });
   }),
 

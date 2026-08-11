@@ -14,10 +14,17 @@ const meta: Meta<typeof LinkAccountModal> = {
 export default meta;
 type Story = StoryObj<typeof LinkAccountModal>;
 
-/** Default "link" mode — sign in to register this instance against a Stirling account. */
+/**
+ * Default "link" mode: the server shows a pairing code and waits for a team owner
+ * to approve it. Driven by the MSW pair handlers, which settle on linked after a
+ * couple of polls, so this story moves on its own.
+ */
 export const Default: Story = {};
 
-/** "reauth" mode — an already-linked instance's session expired and needs a fresh sign-in. */
+/**
+ * "reauth" mode: the instance is already linked and only the browser's SaaS
+ * session lapsed, so this one keeps the in-app sign-in rather than pairing again.
+ */
 export const Reauth: Story = {
   args: { mode: "reauth" },
 };
