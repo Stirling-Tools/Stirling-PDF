@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { openSettings } from "@app/tests/helpers/ui-helpers";
 import type { Page } from "@playwright/test";
 
 /**
@@ -120,6 +121,29 @@ test.describe("Super search — bar basics", () => {
 
     await showLess.click();
     await expect(tools.getByRole("option")).toHaveCount(collapsedCount);
+  });
+
+  test("Ctrl+K inside the settings modal closes it and focuses the bar", async ({
+    page,
+  }) => {
+    const input = page.locator(INPUT);
+    await expect(input).toBeVisible();
+    await openSettings(page);
+
+    // The modal traps focus, so the bar's own shortcut is inert; the modal
+    // cedes: it closes itself and hands focus to the bar.
+    await page.keyboard.press("Control+KeyK");
+    await expect(page.locator(".modal-container")).not.toBeVisible();
+    await expect(input).toBeFocused();
+    await expect(input).toHaveAttribute("aria-expanded", "true");
+
+    // Full loop: a settings result deep-links straight back into the modal.
+    await input.fill("general");
+    await page
+      .getByRole("option", { name: /General/ })
+      .first()
+      .click();
+    await expect(page.locator(".modal-container")).toBeVisible();
   });
 });
 

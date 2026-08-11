@@ -277,7 +277,9 @@ export default function SuperSearch({
       const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
       if (!combo || e.code !== "KeyK") return;
       // Leave the shortcut alone while a modal owns the screen — focusing an
-      // input underneath the overlay would strand keyboard focus.
+      // input underneath the overlay would strand keyboard focus. Modals that
+      // want to cede to the search (the settings modal does) close themselves
+      // and dispatch "superSearch:focus" instead.
       const target = e.target as HTMLElement | null;
       if (target?.closest('[role="dialog"]')) return;
       e.preventDefault();
@@ -285,8 +287,26 @@ export default function SuperSearch({
       inputRef.current?.focus();
       inputRef.current?.select();
     };
+    // Focus handover from a closing dialog. Only the on-screen instance
+    // responds (offsetParent is null while display:none / unmounted hosts),
+    // and focus waits two frames so the dialog's own return-focus runs first.
+    const onFocusRequest = () => {
+      const input = inputRef.current;
+      if (!input || input.offsetParent === null) return;
+      setOpen(true);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          input.focus();
+          input.select();
+        }),
+      );
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("superSearch:focus", onFocusRequest);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("superSearch:focus", onFocusRequest);
+    };
   }, []);
 
   // Keep the highlighted row visible when keyboard navigation moves it past

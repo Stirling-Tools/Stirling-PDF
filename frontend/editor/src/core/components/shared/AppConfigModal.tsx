@@ -215,9 +215,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const runningEE = config?.runningEE ?? false;
   const loginEnabled = config?.enableLogin ?? false;
 
+  /** Resolves false when a dirty-state confirm kept the modal open. */
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
-    if (!canProceed) return;
+    if (!canProceed) return false;
 
     // Only unwind history if settings was opened via the URL; opened via state
     // there's no /settings entry to pop and navigate(-1) would jump to /files.
@@ -230,6 +231,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       }
     }
     onClose();
+    return true;
   }, [
     confirmIfDirty,
     location.key,
@@ -243,6 +245,24 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const handleCloseSync = useCallback(() => {
     void handleClose();
   }, [handleClose]);
+
+  // Cmd/Ctrl+K: hand over to the global super search. The bar's own shortcut
+  // is inert while a dialog traps focus, so the modal closes itself (through
+  // the same dirty-check as any other close) and asks the bar to take focus.
+  // Settings results deep-link straight back into this modal.
+  useEffect(() => {
+    if (!opened) return;
+    const onKey = (e: KeyboardEvent) => {
+      const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
+      if (!combo || e.code !== "KeyK") return;
+      e.preventDefault();
+      void handleClose().then((closed) => {
+        if (closed) window.dispatchEvent(new Event("superSearch:focus"));
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [opened, handleClose]);
 
   // Left navigation structure and icons
   const registrySections = useConfigNavSections(
