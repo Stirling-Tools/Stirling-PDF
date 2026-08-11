@@ -896,10 +896,16 @@ jobs:
 
       # Gate publish on valid updater sigs. Runs after the review upload (so
       # artifacts survive for debugging) and before action-gh-release.
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
       - name: Verify updater signatures
         run: |
-          python3 -m pip install --quiet 'cryptography==44.0.0'
-          python3 .github/scripts/verify-updater-signatures.py \
+          uv run --project engine --locked --only-group updater-signatures python .github/scripts/verify-updater-signatures.py \
             ./artifacts/tauri frontend/editor/src-tauri/tauri.conf.json
 
       # workflow_dispatch path requires platform=='all' so a single-platform

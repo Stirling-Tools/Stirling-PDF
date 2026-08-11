@@ -9,23 +9,22 @@ Usage:
     --fix: Automatically remove extra placeholders (use with caution)
 """
 
+import argparse
 import json
 import re
 import sys
-from pathlib import Path
-from typing import Dict, List, Set
-import argparse
 import tomllib  # Python 3.11+ (stdlib)
+from pathlib import Path
 
 
-def find_placeholders(text: str) -> Set[str]:
+def find_placeholders(text: str) -> set[str]:
     """Find all placeholders in text like {n}, {{var}}, {0}, etc."""
     if not isinstance(text, str):
         return set()
     return set(re.findall(r"\{\{?[^}]+\}\}?", text))
 
 
-def flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> Dict[str, str]:
+def flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> dict[str, str]:
     """Flatten nested dict to dot-notation keys."""
     items = []
     for k, v in d.items():
@@ -37,9 +36,7 @@ def flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> Dict[str, str
     return dict(items)
 
 
-def validate_language(
-    en_us_flat: Dict[str, str], lang_flat: Dict[str, str], lang_code: str
-) -> List[Dict]:
+def validate_language(en_us_flat: dict[str, str], lang_flat: dict[str, str], lang_code: str) -> list[dict]:
     """Validate placeholders for a language against en-US."""
     issues = []
 
@@ -67,7 +64,7 @@ def validate_language(
     return issues
 
 
-def print_issues(issues: List[Dict], verbose: bool = False):
+def print_issues(issues: list[dict], verbose: bool = False):
     """Print validation issues in a readable format."""
     if not issues:
         print("✅ No placeholder validation issues found!")
@@ -93,9 +90,7 @@ def print_issues(issues: List[Dict], verbose: bool = False):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Validate translation placeholder consistency"
-    )
+    parser = argparse.ArgumentParser(description="Validate translation placeholder consistency")
     parser.add_argument(
         "--language",
         help="Specific language code to validate (e.g., es-ES)",
