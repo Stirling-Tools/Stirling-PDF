@@ -96,7 +96,7 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
               // The rendered page is a white sheet in either scheme, so its
               // copy takes a fixed dark ink rather than inheriting the theme's,
               // which would be near-white here.
-              color: "var(--p-ink)",
+              color: "var(--c-text-on-light)",
               borderRadius: 6,
             }}
           >

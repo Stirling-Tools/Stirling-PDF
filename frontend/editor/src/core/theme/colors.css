@@ -45,6 +45,11 @@ html[data-app-theme="light"] {
   --c-warning-solid: var(--p-amber-700);
   --c-neutral-solid: var(--p-gray-600);
   --c-accent-solid: var(--p-blue-600);
+  /* Ink for surfaces that are white in both schemes — a rendered page, a
+     signature sheet. Scheme-independent for the same reason the fills above
+     are: the ground does not change, so the ink must not either. */
+  --c-text-on-light: var(--p-ink);
+  --c-accent-on-light: var(--p-blue-700);
   /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
   --c-highlight: var(--p-flash-yellow);
   /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */
