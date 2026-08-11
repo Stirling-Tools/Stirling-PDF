@@ -107,16 +107,26 @@ export function Policies() {
   );
 
   // Open a category passed as ?category=<id> (deep link from the super
-  // search), then strip the param so back/reload doesn't re-open it.
+  // search), then strip the param so back/reload doesn't re-open it. Waits for
+  // the AI-engine flag too: openEntry refuses AI-gated categories until the
+  // flag is confirmed, and stripping the param before that decision would
+  // drop the deep link silently.
   useEffect(() => {
     const categoryId = searchParams.get("category");
-    if (categoryId === null || loading) return;
+    if (categoryId === null || loading || aiEngineLoading) return;
     const entry = displayCatalogue.find((e) => e.category.id === categoryId);
     if (entry) openEntry(entry);
     const next = new URLSearchParams(searchParams);
     next.delete("category");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams, loading, displayCatalogue, openEntry]);
+  }, [
+    searchParams,
+    setSearchParams,
+    loading,
+    aiEngineLoading,
+    displayCatalogue,
+    openEntry,
+  ]);
 
   async function handleSubmit(
     entry: CatalogueEntry,

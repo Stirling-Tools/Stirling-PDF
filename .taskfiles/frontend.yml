@@ -78,8 +78,6 @@ tasks:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
       OPEN: '{{.OPEN | default ""}}'
-      DEV_LABEL:
-        sh: 'root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; root="${root%/}"; printf "%s\n" "${root##*/}"'
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
       # Dev-only browser-tab label so concurrent worktrees are distinguishable.

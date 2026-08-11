@@ -14,6 +14,16 @@ import { accountLinkSettings } from "@portal/components/settings/accountLinkSett
 import { useUI } from "@portal/contexts/UIContext";
 
 /**
+ * Settings sections the portal cannot host. Shared with the portal's search
+ * provider so these never surface as search results either.
+ *
+ * TODO: opening Keyboard Shortcuts in the portal white-screens the app (the
+ * section expects editor-only context). Hidden here as a stopgap; fix the
+ * section properly and drop this.
+ */
+export const PORTAL_HIDDEN_SECTION_KEYS: NavKey[] = ["hotkeys"];
+
+/**
  * Mounts the editor's settings modal (the app-wide settings surface) inside the
  * portal. The portal deliberately lives outside the editor's AppProviders, so
  * this host supplies the contexts the settings tree needs: user preferences,
@@ -82,10 +92,7 @@ export function PortalSettingsHost() {
               initialSection={initialSection}
               initialFocus={settingsInitialFocus}
               extraSections={extraSections}
-              // TODO: opening Keyboard Shortcuts in the portal white-screens
-              // the app (the section expects editor-only context). Hidden here
-              // as a stopgap; fix the section properly and drop this.
-              hiddenSectionKeys={["hotkeys"]}
+              hiddenSectionKeys={PORTAL_HIDDEN_SECTION_KEYS}
             />
           </ThemeProvider>
         </PreferencesProvider>

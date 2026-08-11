@@ -15,12 +15,6 @@
   );
 }
 
-.super-search--with-inline-filters {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .super-search-input-row {
   position: relative;
 }
@@ -90,23 +84,6 @@
 
 .super-search-filters .sui-chip {
   user-select: none;
-}
-
-.super-search--with-inline-filters .super-search-filters {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding: 0;
-  margin: 0;
-  border-bottom: 0;
-  scrollbar-width: thin;
-}
-
-.super-search--with-inline-filters .super-search-filters::-webkit-scrollbar {
-  height: 6px;
-}
-
-.super-search--with-inline-filters .super-search-filters .sui-chip {
-  flex-shrink: 0;
 }
 
 .super-search-section + .super-search-section {

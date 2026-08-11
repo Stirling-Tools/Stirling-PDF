@@ -14,7 +14,11 @@ import {
 } from "@portal/api/policies";
 import { fetchPipelines, type PipelineView } from "@portal/api/pipelines";
 import { fetchSources, type SourceView } from "@portal/api/sources";
-import { fetchUsers, type Member } from "@portal/api/users";
+import type { Member } from "@portal/api/users";
+// Flavor-resolved users backend: self-hosted reads the proprietary admin
+// endpoints, SaaS the invitation-based team endpoints (the admin ones 403
+// there for the always-ROLE_USER sessions).
+import { usersBackend } from "@app/portal/usersBackend";
 import {
   DocsIcon,
   PipelinesIcon,
@@ -153,7 +157,7 @@ export async function fetchPortalEntityScope(
 ): Promise<PortalEntityItems> {
   switch (scopeId) {
     case "portal-users":
-      return (await fetchUsers(tier)).members;
+      return (await usersBackend.fetchUsers(tier)).members;
     case "portal-policies": {
       const [list, runs] = await Promise.all([
         fetchPoliciesList(),

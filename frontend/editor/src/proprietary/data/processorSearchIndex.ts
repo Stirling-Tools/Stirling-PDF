@@ -80,13 +80,6 @@ const VIEWS: ProcessorSearchEntry[] = [
     keywords: ["billing", "invoices", "plan", "wallet", "payg", "bundles"],
   },
   {
-    id: "procurement",
-    labelKey: "portal.nav.procurement",
-    labelFallback: "Procurement",
-    path: `${PORTAL_BASENAME}/procurement`,
-    keywords: ["enterprise", "trial", "pricing", "contract"],
-  },
-  {
     id: "docs",
     labelKey: "portal.nav.docs",
     labelFallback: "Documentation",

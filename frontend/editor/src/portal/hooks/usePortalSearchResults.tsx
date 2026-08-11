@@ -3,12 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { withBasePath } from "@app/constants/app";
-import {
-  getToolUrlPath,
-  isComingSoonTool,
-  type ToolRegistry,
-} from "@app/data/toolsTaxonomy";
+import { getToolUrlPath } from "@app/data/toolsTaxonomy";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { PORTAL_HIDDEN_SECTION_KEYS } from "@portal/components/PortalSettingsHost";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
   assembleSuperSearchGroups,
@@ -198,17 +195,6 @@ export function usePortalSearchResults(
     ],
   );
 
-  // Match what the editor bar can actually open: drop coming-soon placeholders
-  // (no component, no link) — cross-app navigation to one lands on a tool that
-  // can't render.
-  const searchableTools = useMemo(() => {
-    const out: Partial<ToolRegistry> = {};
-    for (const [id, tool] of Object.entries(allTools)) {
-      if (tool && !isComingSoonTool(id, tool)) out[id as ToolId] = tool;
-    }
-    return out;
-  }, [allTools]);
-
   const openTool = useCallback(
     (id: ToolId) => {
       // Link tools have no in-editor UI — navigating to a tool URL for one
@@ -254,7 +240,14 @@ export function usePortalSearchResults(
     const settingsGroups = assembleSuperSearchGroups(
       {
         settings: scopeEnabled("settings")
-          ? rankSettingsResults(trimmed, t, gates, openSettingsSection)
+          ? rankSettingsResults(
+              trimmed,
+              t,
+              gates,
+              openSettingsSection,
+              undefined,
+              PORTAL_HIDDEN_SECTION_KEYS,
+            )
           : [],
       },
       t,
@@ -270,7 +263,7 @@ export function usePortalSearchResults(
     const editorGroups = assembleSuperSearchGroups(
       {
         tools: scopeEnabled("tools")
-          ? rankToolResults(searchableTools, trimmed, openTool)
+          ? rankToolResults(allTools, trimmed, openTool)
           : [],
       },
       t,
@@ -297,7 +290,7 @@ export function usePortalSearchResults(
     openSettingsSection,
     openTool,
     scopeEnabled,
-    searchableTools,
+    allTools,
     t,
     trimmed,
   ]);

@@ -23,8 +23,9 @@ const NO_SCOPES: readonly PortalEntityScopeId[] = [];
  * entity-search module is imported on demand (first search keystroke) — a
  * static value import here would pull the portal into the main bundle, the
  * same constraint the static page index (processorSearchIndex) lives under.
- * Fetch discipline (TTL, in-flight dedupe, generation guard) comes from the
- * same useScopedFetchCache the portal bar uses.
+ * Fetch discipline (TTL, in-flight dedupe, generation guard) comes from
+ * useScopedFetchCache; the scope list is dynamic and the fetcher lives in the
+ * lazily loaded module, which useQuery's static-key shape handles awkwardly.
  *
  * `tier` shapes only presentational fields on the users payload, never the
  * lists (see fetchPortalEntityScope), so the editor passes "free" rather than

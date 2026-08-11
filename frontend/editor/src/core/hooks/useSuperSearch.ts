@@ -29,7 +29,7 @@ import {
 } from "@app/utils/fuzzySearch";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolId } from "@app/types/toolId";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import { isComingSoonTool, type ToolRegistry } from "@app/data/toolsTaxonomy";
 import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
 import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
 import {
@@ -266,10 +266,11 @@ export function rankToolResults(
   limit = GROUP_RESULT_CEILING,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
-  const entries = Object.entries(registry) as [
-    ToolId,
-    ToolRegistry[ToolId] | undefined,
-  ][];
+  // Coming-soon placeholders are listed in the catalogue but can't open —
+  // selecting one would land on the "tool not found" panel.
+  const entries = (
+    Object.entries(registry) as [ToolId, ToolRegistry[ToolId] | undefined][]
+  ).filter(([id, tool]) => tool && !isComingSoonTool(id, tool));
   return rankByFuzzy(entries, trimmed, [
     ([id]) => idToWords(id),
     ([, v]) => v?.name ?? "",
@@ -294,6 +295,9 @@ export function rankSettingsResults(
   gates: SuperSearchGates | null,
   openSettings: (section: string, anchor?: string) => void,
   limit = GROUP_RESULT_CEILING,
+  /** Sections the host's settings modal refuses to show (e.g. the portal's
+   * hiddenSectionKeys) — offering them would deep-link into a blank modal. */
+  excludeSections?: readonly string[],
 ): SuperSearchResult[] {
   if (!trimmed) return [];
 
@@ -301,6 +305,7 @@ export function rankSettingsResults(
   // (core / proprietary / saas / desktop), so this only ever sees sections
   // the current build's settings modal can actually show.
   const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
+    if (excludeSections?.includes(s.key)) return false;
     // Null gates (config still loading): hide every gated section.
     // requiresLogin keys off the deployment's login *mode*, mirroring the nav
     // builder: with login on the editor is login-walled (an unauthenticated
@@ -425,7 +430,9 @@ export function rankProcessorResults(
       key: `processor:${item.id}`,
       group: "processor",
       title: t(item.labelKey, item.labelFallback),
-      iconName: "grid-view-rounded",
+      // Must exist in the bundled Material Symbols set (LocalIcon falls back
+      // to a network fetch for unknown names — blank when self-hosted offline).
+      iconName: "grid-view",
       score,
       onSelect: () => selectEntry(item),
     }));
@@ -479,8 +486,15 @@ export function useSuperSearch(
   } = useToolWorkflow();
   const { actions: navActions } = useNavigationActions();
   const { actions: fileActions } = useFileActions();
-  // ViewerContext is only present once the viewer subtree mounts; treat as optional.
+  // ViewerContext is only present once the viewer subtree mounts; treat as
+  // optional. Read through a ref: the provider value is rebuilt every viewer
+  // render, and a direct dependency would re-rank every result lane on each
+  // page turn — openFile only needs the value at click time.
   const viewer = useContext(ViewerContext);
+  const viewerRef = useRef(viewer);
+  useEffect(() => {
+    viewerRef.current = viewer;
+  }, [viewer]);
 
   const trimmed = query.trim();
   const { stubs, loadingFiles } = useMyFilesStubs(active);
@@ -505,13 +519,13 @@ export function useSuperSearch(
         // metadata are preserved (addFiles would persist a duplicate record).
         await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
         navActions.setWorkbench("viewer");
-        viewer?.setActiveFileId?.(stub.id);
+        viewerRef.current?.setActiveFileId?.(stub.id);
         leaveFileManager();
       } catch (err) {
         console.error("[SuperSearch] Failed to open file:", stub.name, err);
       }
     },
-    [fileActions, navActions, viewer, leaveFileManager],
+    [fileActions, navActions, leaveFileManager],
   );
 
   const openTool = useCallback(

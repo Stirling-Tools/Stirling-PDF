@@ -60,8 +60,6 @@ interface SuperSearchProps {
   inputId?: string;
   /** Optional scope chips + `scope:` prefixes for host-specific filters. */
   scopes?: readonly SuperSearchScope[];
-  /** Where to render scope chips when a host enables them. */
-  scopeChipsPlacement?: "dropdown" | "inline";
   /** Dropdown width floor — the results panel needs more room than the
    * compact input. Defaults shared by every bar; override per host if a
    * layout can't fit it. */
@@ -85,7 +83,6 @@ export default function SuperSearch({
   useResults = useSuperSearch,
   inputId = "super-search-input",
   scopes = [],
-  scopeChipsPlacement = "dropdown",
   dropdownMinWidth = 760,
   dropdownClassName,
 }: SuperSearchProps = {}) {
@@ -275,8 +272,9 @@ export default function SuperSearch({
   // works on non-Latin keyboard layouts, where e.key isn't "k".
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      const combo =
-        (isMacLike() ? e.metaKey : e.ctrlKey) && !e.altKey && !e.shiftKey;
+      // Accept both modifiers everywhere: Macs have a Control key too, and
+      // muscle memory from other platforms expects Ctrl+K to keep working.
+      const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
       if (!combo || e.code !== "KeyK") return;
       // Leave the shortcut alone while a modal owns the screen — focusing an
       // input underneath the overlay would strand keyboard focus.
@@ -342,6 +340,10 @@ export default function SuperSearch({
       selectResult(visibleFlatResults[highlight]);
     } else if (e.key === "Escape") {
       e.preventDefault();
+      // Consume the event: hosts with their own window-level Escape handling
+      // (e.g. the Files page closing itself) must not also act on this press —
+      // especially since the blur below makes their focus guards pass.
+      e.stopPropagation();
       if (hasQuery) {
         setQuery("");
       } else {
@@ -455,7 +457,7 @@ export default function SuperSearch({
         // Keep focus on the input when clicking inside the dropdown.
         onMouseDown={(e) => e.preventDefault()}
       >
-        {scopeChipsPlacement === "dropdown" && scopeFilters}
+        {scopeFilters}
 
         {!hasQuery && scopes.length === 0 && (
           <div className="super-search-empty">
@@ -597,15 +599,7 @@ export default function SuperSearch({
     ) : null;
 
   return (
-    <div
-      className={`super-search${
-        scopeChipsPlacement === "inline" && scopes.length > 0
-          ? " super-search--with-inline-filters"
-          : ""
-      }`}
-      ref={containerRef}
-      onKeyDown={handleKeyDown}
-    >
+    <div className="super-search" ref={containerRef} onKeyDown={handleKeyDown}>
       <div className="super-search-input-row">
         <TextInput
           id={inputId}
@@ -636,7 +630,6 @@ export default function SuperSearch({
           </kbd>
         )}
       </div>
-      {scopeChipsPlacement === "inline" && scopeFilters}
       {dropdown && createPortal(dropdown, document.body)}
     </div>
   );
