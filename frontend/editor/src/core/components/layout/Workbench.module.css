@@ -12,7 +12,10 @@
 .workbenchBarReopenTab {
   position: absolute;
   top: 100%;
-  right: 12px;
+  /* Right-align with the retract handle inside the bar: the bar's right
+     margin (--nav-gutter) + 1px border + 8px bar padding + the handle's own
+     6px inset. */
+  right: calc(var(--nav-gutter) + 15px);
   display: flex;
   align-items: center;
   justify-content: center;
