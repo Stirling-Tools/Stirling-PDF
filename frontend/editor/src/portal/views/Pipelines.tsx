@@ -9,7 +9,6 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { PipelinesIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
-import { LinkGate } from "@portal/components/account-link/LinkGate";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Pipelines.css";
 
@@ -33,8 +32,10 @@ export function Pipelines() {
   const openCreate = guard(() =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`),
   );
-  const connectSource = () =>
-    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`);
+  // Guarded in its own right so the ask happens here rather than after a pointless hop to Sources.
+  const connectSource = guard(() =>
+    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`),
+  );
   // A row opens that pipeline's own page (view / edit / run / delete live there).
   const openPipeline = guard((pipeline: PipelineView) =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/${pipeline.id}`),
@@ -70,28 +71,26 @@ export function Pipelines() {
       )}
 
       {showEmpty && (
-        <LinkGate feature={t("portal.pipelines.title")} bare>
-          <EmptyState
-            icon={<PipelinesIcon size={28} />}
-            title={t("portal.pipelines.empty.title")}
-            description={t("portal.pipelines.empty.description")}
-            actions={
-              <>
-                <Button
-                  onClick={openCreate}
-                  leftSection={
-                    <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
-                  }
-                >
-                  {t("portal.pipelines.empty.action")}
-                </Button>
-                <Button variant="secondary" onClick={connectSource}>
-                  {t("portal.pipelines.empty.connectSource")}
-                </Button>
-              </>
-            }
-          />
-        </LinkGate>
+        <EmptyState
+          icon={<PipelinesIcon size={28} />}
+          title={t("portal.pipelines.empty.title")}
+          description={t("portal.pipelines.empty.description")}
+          actions={
+            <>
+              <Button
+                onClick={openCreate}
+                leftSection={
+                  <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.pipelines.empty.action")}
+              </Button>
+              <Button variant="secondary" onClick={connectSource}>
+                {t("portal.pipelines.empty.connectSource")}
+              </Button>
+            </>
+          }
+        />
       )}
 
       {!isLoading && pipelines.length > 0 && (

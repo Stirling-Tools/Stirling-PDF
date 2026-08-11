@@ -6332,18 +6332,11 @@ step = "Step {{current}} of {{total}}"
 [portal.accountLink.connect.benefits]
 creditsDetail = "500 free on a new account"
 creditsLabel = "Credits"
-lede = "Connecting unlocks the platform features around the editor. Manual PDF editing stays free, connected or not."
-pipelinesDetail = "Chain tools and run them unattended"
-pipelinesLabel = "Pipelines"
-policiesDetail = "Rules that run on every file"
-policiesLabel = "Policies"
-processorDetail = "Watch folders and act on files"
+processorDetail = "Pipelines, policies, sources and audit"
 processorLabel = "Processor"
 teamsDetail = "Free for 5 users and under"
 teamsLabel = "Teams"
 title = "Connect this server to a Stirling account"
-usageDetail = "Pay only for what you run"
-usageLabel = "Usage"
 
 [portal.accountLink.connect.done]
 addPolicy = "Add a policy"
@@ -6360,12 +6353,6 @@ failed = "Couldn't connect this server"
 lede = "Your credits and team live in your Stirling account. This server connects once, then runs on its own."
 reauthLede = "Your session expired. Sign back in to your Stirling account. This server stays connected."
 title = "Sign in to Stirling"
-
-[portal.accountLink.gate]
-action = "Connect account"
-description = "Connect your Stirling account to use this. Manual PDF tools keep working either way."
-title = "This needs a connected account"
-titleFeature = "{{feature}} need a connected account"
 
 [portal.accountLink.instances]
 active = "Active"
@@ -6543,11 +6530,6 @@ showMostRecent_other = "Show {{count}} most recent"
 title = "Invoice history"
 viewAriaLabel = "View invoice {{number}} in Stripe"
 viewLink = "View ↗"
-
-[portal.billing.linkPrompt]
-cta = "Connect account"
-description = "Manual PDF editing is always free, connected or not. Connecting adds teams, the processor, pipelines and policies, and a new Stirling account starts with 500 free credits for automation, AI and the API."
-title = "Connect your Stirling account"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Billed monthly"

@@ -24,7 +24,7 @@ import { LinkAccountModal } from "@portal/components/account-link/LinkAccountMod
 
 type Props = Parameters<typeof LinkAccountModal>[0];
 
-const BENEFITS = /Connecting unlocks the platform features/;
+const BENEFITS = /Pipelines, policies, sources and audit/;
 const SIGN_IN = /This server connects once/;
 const REAUTH = /Your session expired/;
 const DONE = /now runs against your Stirling account/;

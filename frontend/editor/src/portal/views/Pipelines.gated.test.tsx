@@ -4,11 +4,15 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PortalViewProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * The gate as a user meets it. Pipelines stands in for the five gated views: they all take the
- * same hook, so what is worth pinning here is the behaviour rather than the wiring.
+ * How the gate behaves for someone who has not connected an account.
  *
- * The decision this encodes is that gating covers creating and editing but never viewing, so an
- * upgrade cannot take away a pipeline that already runs.
+ * The page must look exactly as it always does. The ask is a dialog raised when they try to do
+ * something, not a lock screen in place of the feature: an admin who has pipelines still needs to
+ * see them, and one who has none should still see the empty state that explains what they are.
+ *
+ * The route guard is the important half. Guarding click handlers is whack-a-mole, and the builder
+ * is reachable from its own list, the Documents review queue, the Connect flow's next steps, and a
+ * typed URL. These pin the route, so a new link added later cannot walk around it.
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 
@@ -38,6 +42,7 @@ vi.mock("@portal/api/pipelines", () => ({
 }));
 
 import { Pipelines } from "@portal/views/Pipelines";
+import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
 
 const PIPELINE = {
   id: "plc-1",
@@ -51,19 +56,19 @@ const PIPELINE = {
   owner: "security@acme.com",
 };
 
-function renderView() {
+function renderAt(initial: string) {
   return render(
     <PortalViewProviders>
-      <MemoryRouter initialEntries={["/processor/pipelines"]}>
+      <MemoryRouter initialEntries={[initial]}>
         <Routes>
           <Route path="/processor/pipelines" element={<Pipelines />} />
           <Route
             path="/processor/pipelines/new"
-            element={<div>builder new</div>}
-          />
-          <Route
-            path="/processor/pipelines/:id"
-            element={<div>pipeline page</div>}
+            element={
+              <ConnectGuardedRoute fallback="/processor/pipelines">
+                <div>builder</div>
+              </ConnectGuardedRoute>
+            }
           />
         </Routes>
       </MemoryRouter>
@@ -71,41 +76,50 @@ function renderView() {
   );
 }
 
-describe("Pipelines view when the account is not connected", () => {
+describe("Pipelines when the account is not connected", () => {
   beforeEach(() => {
     connect.mockReset();
     fetchPipelines.mockReset();
   });
 
-  it("replaces the empty state with the connect gate", async () => {
+  it("leaves the empty state exactly as it is", async () => {
     fetchPipelines.mockResolvedValue({ kpis: [], pipelines: [] });
-    renderView();
+    renderAt("/processor/pipelines");
     expect(
-      await screen.findByText("portal.accountLink.gate.titleFeature"),
+      await screen.findByText("portal.pipelines.empty.title"),
     ).toBeInTheDocument();
-    expect(screen.queryByText("portal.pipelines.empty.title")).toBeNull();
-  });
-
-  it("asks to connect instead of opening the builder", async () => {
-    fetchPipelines.mockResolvedValue({ kpis: [], pipelines: [] });
-    renderView();
-    await screen.findByText("portal.accountLink.gate.titleFeature");
-    fireEvent.click(screen.getByText("portal.pipelines.actions.newPipeline"));
-    expect(connect).toHaveBeenCalled();
-    expect(screen.queryByText("builder new")).toBeNull();
   });
 
   it("still lists pipelines that already exist", async () => {
     fetchPipelines.mockResolvedValue({ kpis: [], pipelines: [PIPELINE] });
-    renderView();
+    renderAt("/processor/pipelines");
     expect(await screen.findByText("Redact claims")).toBeInTheDocument();
+  });
+
+  it("asks to connect instead of opening the builder", async () => {
+    fetchPipelines.mockResolvedValue({ kpis: [], pipelines: [] });
+    renderAt("/processor/pipelines");
+    await screen.findByText("portal.pipelines.empty.title");
+    fireEvent.click(screen.getByText("portal.pipelines.actions.newPipeline"));
+    expect(connect).toHaveBeenCalled();
+    expect(screen.queryByText("builder")).toBeNull();
   });
 
   it("asks to connect instead of opening an existing pipeline", async () => {
     fetchPipelines.mockResolvedValue({ kpis: [], pipelines: [PIPELINE] });
-    renderView();
+    renderAt("/processor/pipelines");
     fireEvent.click(await screen.findByText("Redact claims"));
     expect(connect).toHaveBeenCalled();
-    expect(screen.queryByText("pipeline page")).toBeNull();
+  });
+
+  it("turns away a direct arrival at the builder, however it was reached", async () => {
+    fetchPipelines.mockResolvedValue({ kpis: [], pipelines: [] });
+    renderAt("/processor/pipelines/new");
+    // Bounced to the list, which is the page it would have come from.
+    expect(
+      await screen.findByText("portal.pipelines.empty.title"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("builder")).toBeNull();
+    expect(connect).toHaveBeenCalled();
   });
 });
