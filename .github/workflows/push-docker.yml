@@ -19,7 +19,6 @@ on:
         type: boolean
         default: false
   push:
-    environment: docker-publish
     branches:
       - master
       - main
@@ -42,6 +41,7 @@ permissions:
 
 jobs:
   push:
+    environment: docker-publish
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-24.04-8core
     permissions:

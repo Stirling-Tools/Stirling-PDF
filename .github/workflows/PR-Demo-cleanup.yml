@@ -13,13 +13,13 @@ env:
 
 jobs:
   cleanup:
-    # also needs GH_APP_PRIVATE_KEY from repo scope
     environment: pr-preview
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:
+      contents: read # actions/checkout
       pull-requests: write
-      issues: write
+      issues: write # list/remove labels, list/delete comments
 
     steps:
       - name: Harden Runner
@@ -30,20 +30,11 @@ jobs:
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Remove 'pr-deployed' label if present
         id: remove-label-comment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const prNumber = ${{ github.event.pull_request.number }};
             const owner = context.repo.owner;

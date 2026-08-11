@@ -35,10 +35,10 @@ permissions:
 
 jobs:
   check-comment:
-    environment: bot-identity
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      contents: read # actions/checkout
+      issues: write # add reaction to the triggering issue comment
     if: |
       vars.CI_PROFILE != 'lite' && (
         github.event_name == 'workflow_dispatch' ||
@@ -76,15 +76,6 @@ jobs:
 
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Get PR data
         id: get-pr
@@ -156,7 +147,7 @@ jobs:
         id: add-eyes-reaction
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding eyes reaction to comment ID: ${context.payload.comment.id}`);
             try {
@@ -175,14 +166,14 @@ jobs:
             }
 
   deploy-pr:
-    # also needs GH_APP_PRIVATE_KEY (bot-identity), still resolved from repo scope
     environment: pr-preview
     needs: check-comment
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      contents: read # actions/checkout, incl. the PR merge ref
+      issues: write # reactions, 'pr-deployed' label, deployment URL comment
       pull-requests: write
-      packages: write
+      packages: write # push PR image to ghcr.io
 
     steps:
       - name: Harden Runner
@@ -193,20 +184,12 @@ jobs:
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: refs/pull/${{ needs.check-comment.outputs.pr_number }}/merge
-          token: ${{ steps.setup-bot.outputs.token }}
+          # untrusted tree gets built below - never leave credentials in .git/config
+          persist-credentials: false
 
       - name: Set up JDK 25
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
@@ -408,7 +391,7 @@ jobs:
         if: success() && github.event_name == 'issue_comment'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding rocket reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
             try {
@@ -443,7 +426,7 @@ jobs:
         if: failure() && github.event_name == 'issue_comment'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding -1 reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
             try {
@@ -463,7 +446,7 @@ jobs:
         if: success()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const { GITHUB_REPOSITORY } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
@@ -493,9 +476,11 @@ jobs:
         continue-on-error: true
 
   handle-label-commands:
-    environment: bot-identity
     if: ${{ github.event.issue.pull_request != null }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # actions/checkout, reads repo_devs.json and labels.yml
+      issues: write # add/remove labels, delete the command comment
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -505,17 +490,10 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Apply label commands
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const fs = require('fs');
             const path = require('path');
