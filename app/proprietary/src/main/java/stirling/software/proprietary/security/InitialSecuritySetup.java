@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -44,40 +45,63 @@ public class InitialSecuritySetup {
     private final TeamMembershipService teamMembershipService;
 
     /**
-     * SaaS manages identity in Supabase and billing via PAYG, so the self-host bootstrap steps that
-     * scan/rewrite the whole user table (default-team backfill, seat-license grandfathering) don't
-     * apply - and against a large SaaS user table they stall startup with full-table loads +
-     * per-row saveAll. Per-user team assignment happens in SupabaseAuthenticationFilter instead.
+     * SaaS skips the self-host bootstrap: full-table backfills stall startup at SaaS scale, and
+     * team assignment happens per-user in SupabaseAuthenticationFilter instead.
      */
     private boolean isSaas() {
         return Arrays.asList(environment.getActiveProfiles()).contains("saas");
     }
 
+    // Peers racing a cold shared DB collide on a different row each pass, and each collision means
+    // a peer committed that row - so a bounded loop converges; one retry is not enough.
+    private static final int BOOTSTRAP_RACE_ATTEMPTS = 6;
+
     @PostConstruct
     public void init() {
         try {
-
-            if (!userService.hasUsers()) {
-                if (databaseService.hasBackup()) {
-                    databaseService.importDatabase();
-                } else {
-                    initializeAdminUser();
+            for (int attempt = 1; ; attempt++) {
+                try {
+                    runBootstrap();
+                    return;
+                } catch (DataIntegrityViolationException e) {
+                    if (attempt >= BOOTSTRAP_RACE_ATTEMPTS) {
+                        throw e;
+                    }
+                    log.info(
+                            "Security bootstrap lost a race to a peer node (attempt {}/{});"
+                                    + " re-running against its committed rows.",
+                            attempt,
+                            BOOTSTRAP_RACE_ATTEMPTS);
                 }
             }
-
-            configureJWTSettings();
-            initializeInternalApiUser();
-            if (isSaas()) {
-                log.info(
-                        "SaaS profile active - skipping self-host user-table bootstrap"
-                                + " (default-team backfill, seat-license grandfathering).");
-            } else {
-                assignUsersToDefaultTeamIfMissing();
-                initializeUserLicenseSettings();
-            }
-        } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
+        } catch (IllegalArgumentException
+                | SQLException
+                | UnsupportedProviderException
+                | DataIntegrityViolationException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
+        }
+    }
+
+    private void runBootstrap()
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        if (!userService.hasUsers()) {
+            if (databaseService.hasBackup()) {
+                databaseService.importDatabase();
+            } else {
+                initializeAdminUser();
+            }
+        }
+
+        configureJWTSettings();
+        initializeInternalApiUser();
+        if (isSaas()) {
+            log.info(
+                    "SaaS profile active - skipping self-host user-table bootstrap"
+                            + " (default-team backfill, seat-license grandfathering).");
+        } else {
+            assignUsersToDefaultTeamIfMissing();
+            initializeUserLicenseSettings();
         }
     }
 
