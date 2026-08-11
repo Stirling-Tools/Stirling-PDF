@@ -2122,9 +2122,9 @@ failed = "An error occurred while detecting form fields."
 [autoFormDetection.progress]
 analyzing = "Analyzing page {{page}} of {{pageCount}}..."
 applying = "Building fillable fields..."
-downloadNote = "One-time setup - future runs start instantly."
 downloading = "Fetching AI model..."
 downloadingSized = "Fetching AI model ({{loaded}} of {{total}})..."
+downloadNote = "One-time setup - future runs start instantly."
 loadingModel = "Getting the model ready..."
 rendering = "Preparing page {{page}} of {{pageCount}}..."
 starting = "Preparing detection..."
@@ -2147,7 +2147,7 @@ title = "Settings"
 
 [autoFormDetection.summary]
 checkboxes = "Checkboxes"
-noneBody = 'The document may not contain form-like areas. Undo, switch sensitivity to "Thorough", and run again to look harder.'
+noneBody = "The document may not contain form-like areas. Undo, switch sensitivity to \"Thorough\", and run again to look harder."
 noneTitle = "No form fields found"
 pages_one = "Across {{count}} page."
 pages_other = "Across {{count}} pages."
