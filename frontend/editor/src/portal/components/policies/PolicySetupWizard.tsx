@@ -23,6 +23,7 @@ import {
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import { errorMessage } from "@portal/api/http";
 import {
   policyEndpoint,
   policyStepFromWire,
@@ -31,10 +32,10 @@ import {
   type PolicyToolId,
   type PolicyToolStep,
 } from "@app/policies/operations";
+import { isPolicyStepConfigured } from "@app/policies/stepValidity";
 import { resolveRunOn } from "@app/policies/runOn";
 import { useSources } from "@portal/queries/sources";
 import { fetchIntegrations } from "@portal/api/integrations";
-import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
@@ -343,6 +344,25 @@ function PolicySetupWizardBody({
     [visibleTools],
   );
 
+  // Mirrors the backend's save-time step validation: while any enabled
+  // capability is missing required config, save stays disabled.
+  const misconfiguredTool = useMemo(
+    () => enabledTools.find((tl) => !isPolicyStepConfigured(tl)) ?? null,
+    [enabledTools],
+  );
+  const hasMisconfiguredTool = misconfiguredTool !== null;
+  // Hover/focus hint on the gated buttons naming what still needs config —
+  // a bare disabled button explains nothing.
+  const gateHint = misconfiguredTool
+    ? t("portal.policies.wizard.finishConfiguring", {
+        defaultValue: 'Finish configuring "{{capability}}"',
+        capability: t(
+          CAPABILITY_META[misconfiguredTool.toolId].labelKey,
+          CAPABILITY_META[misconfiguredTool.toolId].labelEn,
+        ),
+      })
+    : undefined;
+
   function setToolEnabled(toolId: PolicyToolId, enabled: boolean) {
     setTools((prev) =>
       prev.map((tl) => (tl.toolId === toolId ? { ...tl, enabled } : tl)),
@@ -426,13 +446,15 @@ function PolicySetupWizardBody({
             {t("portal.policies.wizard.actions.cancel")}
           </Button>
           {step === "workflow" ? (
-            <Button
-              size="sm"
-              style={{ marginLeft: "auto" }}
-              onClick={() => setStep("settings")}
-            >
-              {t("portal.policies.wizard.actions.continue")}
-            </Button>
+            <span title={gateHint} style={{ marginLeft: "auto" }}>
+              <Button
+                size="sm"
+                onClick={() => setStep("settings")}
+                disabled={hasMisconfiguredTool}
+              >
+                {t("portal.policies.wizard.actions.continue")}
+              </Button>
+            </span>
           ) : (
             <>
               <Button
@@ -443,11 +465,18 @@ function PolicySetupWizardBody({
               >
                 {t("portal.policies.wizard.actions.back")}
               </Button>
-              <Button size="sm" onClick={submit} loading={submitting}>
-                {isEdit
-                  ? t("portal.policies.wizard.actions.saveChanges")
-                  : t("portal.policies.wizard.actions.enablePolicy")}
-              </Button>
+              <span title={gateHint}>
+                <Button
+                  size="sm"
+                  onClick={submit}
+                  loading={submitting}
+                  disabled={hasMisconfiguredTool}
+                >
+                  {isEdit
+                    ? t("portal.policies.wizard.actions.saveChanges")
+                    : t("portal.policies.wizard.actions.enablePolicy")}
+                </Button>
+              </span>
             </>
           )}
         </div>
@@ -457,7 +486,12 @@ function PolicySetupWizardBody({
         variant="underline"
         ariaLabel={t("portal.policies.wizard.tabs.ariaLabel")}
         activeKey={step}
-        onChange={(k) => setStep(k as Step)}
+        // The tab is gated like the Continue button: leaving the workflow step
+        // with a half-configured capability would only defer the block to save.
+        onChange={(k) => {
+          if (k === "settings" && hasMisconfiguredTool) return;
+          setStep(k as Step);
+        }}
         items={[
           { key: "workflow", label: t("portal.policies.wizard.tabs.workflow") },
           { key: "settings", label: t("portal.policies.wizard.tabs.settings") },

@@ -253,7 +253,17 @@ function deserializeStep<Id extends PolicyToolId>(
   const op = POLICY_OPERATIONS[toolId] as unknown as PolicyOperation<
     PolicyParams<Id>
   >;
-  // Wire params are untyped JSON; this is the one point they enter the typed model.
-  const params = op.fromApi(parameters);
+  // Wire params are untyped JSON; this is the one point they enter the typed
+  // model. Fields the wire step omits fall back to the tool's defaults — the
+  // same shape policyStep() gives a fresh step — so a sparsely stored step
+  // renders configured values instead of empty fields.
+  const restored = op.fromApi(parameters) as Record<string, unknown>;
+  const params = { ...(op.defaultParameters as object) } as Record<
+    string,
+    unknown
+  >;
+  for (const [key, value] of Object.entries(restored)) {
+    if (value !== undefined) params[key] = value;
+  }
   return { toolId, params } as unknown as PolicyToolStepOf<Id>;
 }

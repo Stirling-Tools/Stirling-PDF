@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.seed;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,10 +18,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.service.ToolChainValidator;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamCreatedEvent;
+import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.steps.RedactStepValidator;
+import stirling.software.proprietary.policy.engine.steps.WatermarkStepValidator;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
@@ -45,6 +52,24 @@ class DefaultClassificationPolicySeederTest {
                 List.of(),
                 new OutputSpec("inline", Map.of("categoryId", "classification")),
                 teamId);
+    }
+
+    @Test
+    void theSeededDefaultPassesSaveTimeValidation() {
+        // The seeder writes straight to the store, skipping the controller's validation gate —
+        // acceptable only while what it seeds would have passed that gate. This pins it.
+        PolicyOutputSink inlineSink = mock(PolicyOutputSink.class);
+        when(inlineSink.supports(any())).thenReturn(true);
+        PolicyValidator validator =
+                new PolicyValidator(
+                        List.of(),
+                        List.of(),
+                        List.of(inlineSink),
+                        List.of(new WatermarkStepValidator(), new RedactStepValidator()),
+                        new InProcessSourceStore(),
+                        new ToolChainValidator(path -> java.util.Optional.empty()));
+
+        validator.validate(DefaultClassificationPolicySeeder.defaultPolicy(7L));
     }
 
     @Test

@@ -23,6 +23,8 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.proprietary.policy.engine.steps.RedactStepValidator;
+import stirling.software.proprietary.policy.engine.steps.WatermarkStepValidator;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -55,7 +57,10 @@ class PolicyValidatorTest {
                         List.of(trigger),
                         List.of(inputSource),
                         List.of(outputSink),
-                        List.of(stepValidator),
+                        List.of(
+                                stepValidator,
+                                new WatermarkStepValidator(),
+                                new RedactStepValidator()),
                         sourceStore,
                         new ToolChainValidator(path -> java.util.Optional.empty()));
     }
@@ -129,6 +134,64 @@ class PolicyValidatorTest {
                         IllegalArgumentException.class,
                         () -> validator.validate(policy("mystery")));
         assertTrue(ex.getMessage().contains("unknown trigger type"));
+    }
+
+    @Test
+    void rejectsATextWatermarkStepWithNoText() {
+        when(inputSource.supports(any())).thenReturn(true);
+        // No outputSink stub: steps are validated before the output, so the sink is never reached.
+        Policy policy =
+                withConfiguredSteps(
+                        new PipelineStep(
+                                "/api/v1/security/add-watermark",
+                                Map.of("watermarkType", "text", "watermarkText", "  "),
+                                Map.of()));
+
+        assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+    }
+
+    @Test
+    void rejectsAnAutomaticRedactStepWithNoPatterns() {
+        when(inputSource.supports(any())).thenReturn(true);
+        // No outputSink stub: steps are validated before the output, so the sink is never reached.
+        Policy policy =
+                withConfiguredSteps(
+                        new PipelineStep(
+                                "/api/v1/security/auto-redact",
+                                Map.of("useRegex", true, "listOfText", "  "),
+                                Map.of()));
+
+        assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+    }
+
+    @Test
+    void acceptsConfiguredSecuritySteps() {
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        Policy policy =
+                withConfiguredSteps(
+                        new PipelineStep(
+                                "/api/v1/security/add-watermark",
+                                Map.of("watermarkType", "text", "watermarkText", "Confidential"),
+                                Map.of()),
+                        new PipelineStep(
+                                "/api/v1/security/auto-redact",
+                                Map.of("useRegex", true, "listOfText", "\\d{3}-\\d{2}-\\d{4}"),
+                                Map.of()));
+
+        validator.validate(policy);
+    }
+
+    /** A manual-input policy carrying the given configured steps. */
+    private Policy withConfiguredSteps(PipelineStep... steps) {
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                List.of(PipelineInput.manual(folderSourceId())),
+                List.of(steps),
+                OutputSpec.inline());
     }
 
     @Test
