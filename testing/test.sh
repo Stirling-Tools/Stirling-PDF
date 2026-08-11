@@ -936,7 +936,7 @@ main() {
         export TEST_REPORT_DIR="$REPORT_DIR"
 
         gha_group "Test: Behave regression tests"
-        if python -m behave \
+        if uv run --project ../../engine --locked --group cucumber python -m behave \
             -f behave_html_formatter:HTMLFormatter -o "$CUCUMBER_REPORT" \
             -f pretty \
             --junit --junit-directory "$CUCUMBER_JUNIT_DIR"; then
