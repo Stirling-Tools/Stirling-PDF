@@ -457,8 +457,20 @@ tasks:
   test:editor:
     desc: "Run editor tests"
     deps: [prepare]
+    vars:
+      COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
+      TEST_TIMEOUT: '{{.TEST_TIMEOUT | default ""}}'
     cmds:
-      - npx vitest run --root editor
+      - >
+        npx vitest run --root editor
+        {{if eq .COVERAGE "true"}}--coverage
+        --coverage.provider=v8
+        --coverage.reporter=text-summary
+        --coverage.reporter=json-summary
+        --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage
+        {{if .TEST_TIMEOUT}}--testTimeout={{.TEST_TIMEOUT}}
+        --hookTimeout={{.TEST_TIMEOUT}}{{end}}{{end}}
 
   test:watch:
     desc: "Run tests in watch mode"
@@ -468,30 +480,15 @@ tasks:
 
   test:coverage:
     desc: "Run tests with coverage (one-shot; CI-friendly)."
-    deps: [prepare]
     vars:
       TEST_TIMEOUT: '{{.TEST_TIMEOUT | default "5000"}}'
     env:
       TEST_TIMEOUT: '{{.TEST_TIMEOUT}}'
     cmds:
-      # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
-      # mode). Explicit reporter list because v8 + json-summary is what the
-      # coverage-summary.py helper consumes; html/text are kept for humans.
-      #
-      # reportsDirectory is pinned to ./coverage relative to vitest's root
-      # (--root editor), so output lands at frontend/editor/coverage/. The
-      # CI upload step reads from that path. An earlier attempt with
-      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
-      # pinning future-proofs against vitest changing the default.
-      - >
-        npx vitest run --root editor --coverage
-        --coverage.provider=v8
-        --coverage.reporter=text-summary
-        --coverage.reporter=json-summary
-        --coverage.reporter=html
-        --coverage.reportsDirectory=./coverage
-        --testTimeout={{.TEST_TIMEOUT}}
-        --hookTimeout={{.TEST_TIMEOUT}}
+      - task: test:editor
+        vars:
+          COVERAGE: "true"
+          TEST_TIMEOUT: '{{.TEST_TIMEOUT}}'
 
   # ============================================================
   # Code Generation
