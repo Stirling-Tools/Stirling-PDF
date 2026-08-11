@@ -643,7 +643,9 @@ const CODE_EXEMPT_PATH = [
   /\/onboarding\//,
   /addStamp|addWatermark|\/tooltips\//,
   /UpgradeBanner|AdminPlanSection/,
-  /\.test\.[jt]sx?$|\.stories\.[jt]sx?$|\/types\//,
+  // Stories are checked like app code; colour-as-data lines opt out with
+  // `theme-allow-color`.
+  /\.test\.[jt]sx?$|\/types\//,
 ];
 const CODE_HEX =
   /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;

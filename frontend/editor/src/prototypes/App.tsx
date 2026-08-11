@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Routes, Route, useParams } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
@@ -8,7 +8,6 @@ import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import Landing from "@app/routes/Landing";
 import { RootGate } from "@app/routes/RootGate";
 import Login from "@app/routes/Login";
-import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import InviteAccept from "@app/routes/InviteAccept";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
@@ -64,7 +63,12 @@ export default function App() {
                 <AppLayout>
                   <Routes>
                     <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
+                    {/* Self-hosted has no signup - accounts are created by an
+                        admin. Old links land on login instead. */}
+                    <Route
+                      path="/signup"
+                      element={<Navigate to="/login" replace />}
+                    />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/invite/:token" element={<InviteAccept />} />
                     <Route path="/share/:token" element={<ShareLinkPage />} />
