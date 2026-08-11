@@ -1,6 +1,5 @@
 package stirling.software.proprietary.cluster.valkey;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -11,9 +10,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -21,16 +21,21 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.cluster.ClusterNode;
 import stirling.software.common.cluster.InstanceRegistry;
 
-/**
- * Valkey-backed {@link InstanceRegistry}. Each node is stored as a hash with a TTL equal to the
- * configured heartbeat TTL; the heartbeat re-arms the TTL.
- */
+/** Every operation is single-key, so it is correct on standalone, sentinel and cluster alike. */
 @Component
 @RequiredArgsConstructor
 @ConditionalOnValkeyBackplane
 public class ValkeyInstanceRegistry implements InstanceRegistry {
 
     private static final String PREFIX = "stirling:nodes:";
+
+    // Single-key HSET+PEXPIRE. Atomic server-side, so a crash can never leave the node hash
+    // without a TTL, which would mask a dead node as alive forever.
+    private static final RedisScript<Long> HSET_WITH_TTL =
+            new DefaultRedisScript<>(
+                    "redis.call('HSET', KEYS[1], unpack(ARGV, 2));"
+                            + " redis.call('PEXPIRE', KEYS[1], ARGV[1]); return 1",
+                    Long.class);
 
     private final StringRedisTemplate template;
 
@@ -44,25 +49,13 @@ public class ValkeyInstanceRegistry implements InstanceRegistry {
         fields.put("role", node.role());
         fields.put("lastHeartbeat", node.lastHeartbeat().toString());
 
-        // MULTI/EXEC so the hash fields and the TTL commit together. Without this, a crash
-        // between HSET and EXPIRE leaves the hash with no TTL: it never expires, masks the
-        // dead node as alive, and only a subsequent successful register() would re-arm it.
-        template.execute(
-                (RedisCallback<Object>)
-                        connection -> {
-                            connection.multi();
-                            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-                            Map<byte[], byte[]> hashBytes = new LinkedHashMap<>();
-                            for (Map.Entry<String, String> f : fields.entrySet()) {
-                                hashBytes.put(
-                                        f.getKey().getBytes(StandardCharsets.UTF_8),
-                                        f.getValue().getBytes(StandardCharsets.UTF_8));
-                            }
-                            connection.hashCommands().hMSet(keyBytes, hashBytes);
-                            connection.keyCommands().pExpire(keyBytes, ttlMs);
-                            connection.exec();
-                            return null;
-                        });
+        List<String> args = new ArrayList<>(1 + fields.size() * 2);
+        args.add(Long.toString(ttlMs));
+        for (Map.Entry<String, String> f : fields.entrySet()) {
+            args.add(f.getKey());
+            args.add(f.getValue());
+        }
+        template.execute(HSET_WITH_TTL, List.of(key), args.toArray());
     }
 
     @Override

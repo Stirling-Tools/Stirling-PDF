@@ -453,7 +453,7 @@ mcp:
     requireExistingAccount: true # Reject tokens whose subject has no enabled Stirling account (recommended)
   engineCapabilityRefreshMinutes: 5 # How often to refresh the AI capabilities manifest from the engine
 
-# Cluster configuration. NOT YET ENABLED - scaffolding for later work. Leave at defaults.
+# Cluster configuration. Multi-node deployments only - leave 'enabled: false' for a single instance.
 cluster:
   enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.
   backplane: inprocess # Backplane implementation: 'inprocess' (single JVM only) or 'valkey' (multi-node via Valkey/Redis)
@@ -461,9 +461,33 @@ cluster:
   s3:
     keyPrefix: transient/ # Bucket key prefix used by the cluster artifact store when artifactStore=s3. Trailing slash recommended. Lets a single bucket host both persistent uploads (storage.s3.*) and transient job artifacts under separate prefixes.
   valkey:
-    url: "" # Valkey/Redis URL, e.g. 'redis://valkey:6379' or 'rediss://...' for TLS. Required when enabled=true and backplane=valkey.
+    mode: "" # Topology: 'standalone' (single server, uses url), 'sentinel' (HA primary/replica watched by sentinels), or 'cluster' (sharded). Blank (default) infers: sentinel.master set = sentinel, nodes set = cluster, otherwise standalone.
+    # SECURITY - in sentinel/cluster mode the url below is ignored ENTIRELY, including its 'rediss://'
+    # scheme and any embedded credentials. A 'rediss://' url with tls.enabled=false refuses to boot.
+    url: "" # Valkey/Redis URL, e.g. 'redis://valkey:6379' or 'rediss://...' for TLS. Required when enabled=true and mode=standalone. Read ONLY in standalone mode.
+    username: "" # Data-node ACL username. Overrides any user in 'url'. Blank = default user.
+    password: "" # Data-node password. Overrides any password in 'url'. Never logged.
+    nodes: [] # Valkey Cluster seed nodes, e.g. ['valkey-1:6379','valkey-2:6379','valkey-3:6379']. Required when mode=cluster.
+    maxRedirects: 3 # Cluster mode only: max MOVED/ASK redirects followed before a command fails.
+    topologyRefreshMs: 30000 # Cluster mode only: periodic topology refresh backstop (ms). Adaptive refresh on MOVED/ASK/reconnect is always enabled.
+    clientName: "" # CLIENT SETNAME applied to every connection so Valkey monitoring can attribute load per node. Blank (default) = 'stirling-<cluster.node.id>' - stable for the life of the process; set cluster.node.id to get a name that survives restarts (a blank node id is a fresh UUID every boot). Set to 'off' to send no CLIENT SETNAME at all, for locked-down ACL users denied the CLIENT command.
+    commandTimeoutMs: 2000 # Per-command timeout (ms). Bounds every backplane call so a slow Valkey cannot stall request threads.
+    sentinel:
+      master: "" # Monitored primary name, i.e. the name in 'sentinel monitor <name> ...'. Required when mode=sentinel.
+      nodes: [] # Sentinel endpoints, e.g. ['sentinel-1:26379','sentinel-2:26379','sentinel-3:26379']. Required when mode=sentinel.
+      username: "" # Username used when connecting to the SENTINELS (separate from the data-node username).
+      password: "" # Password used when connecting to the SENTINELS. Separate from 'password' - setting only that one does NOT authenticate to sentinels.
     tls:
+      enabled: false # The ONLY way to get TLS in sentinel/cluster mode - the url and its 'rediss://' scheme are ignored there. Ignored in standalone mode (the URL scheme decides).
       skipCertVerification: false # set to 'true' to skip TLS certificate verification on Valkey connections (dev/test only)
+    pool:
+      enabled: true # Pool dedicated connections. Turning this off makes every transactional/blocking call open and tear down a TCP connection.
+      maxActive: 16 # Max pooled connections. Must be >= 2 - one is permanently held by the shared native connection.
+      maxIdle: 16 # Max idle pooled connections. Keep equal to maxActive so idle connections are not churned.
+      minIdle: 0 # Connections kept warm. 0 (default): backplane traffic runs on the shared native connection, so warm pooled sockets would sit idle on every node. Raise it only to pre-pay the connect cost for bursty job traffic.
+      maxWaitMillis: 2000 # Max wait for a pooled connection (ms). Must be > 0 - a non-positive value blocks forever.
+      timeBetweenEvictionRunsMillis: 30000 # Idle-evictor interval (ms). minIdle is only honoured while the evictor runs.
+      testOnBorrow: true # Validate a pooled connection on borrow. Local isOpen() check only, no round trip: it catches explicitly closed connections, NOT one that a failover dropped (Lettuce still reports those open while it auto-reconnects).
   node:
     id: "" # Optional explicit node id. Blank = auto-generated UUID at startup.
     role: both # 'web' (serves HTTP), 'worker' (runs jobs), or 'both' (default)

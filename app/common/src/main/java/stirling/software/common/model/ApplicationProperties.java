@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -537,11 +538,7 @@ public class ApplicationProperties {
         }
     }
 
-    /**
-     * Cluster backplane configuration. All keys live under the top-level {@code cluster.*} prefix
-     * (e.g. env var {@code CLUSTER_ENABLED}). The master switch is {@link #enabled} and defaults to
-     * off; when off the in-process backplane is wired and no other cluster keys are required.
-     */
+    /** Cluster backplane config, bound under the top-level {@code cluster.*} prefix. */
     @Data
     public static class Cluster {
 
@@ -552,13 +549,8 @@ public class ApplicationProperties {
         private String backplane = "inprocess";
 
         /**
-         * Transient cluster job-artifact store selector. Valid values: {@code local} | {@code s3}.
-         *
-         * <p>This is distinct from {@code storage.provider}, which selects the backend for
-         * persistent user-uploaded files. The two switches exist because the user-facing storage
-         * feature is optional ({@code storage.enabled=false} is common) but every multi-node
-         * cluster still needs a shared artifact store to serve cross-node downloads. Both
-         * implementations share credentials from {@code storage.s3.*} when set to {@code s3}.
+         * {@code local} | {@code s3}. Distinct from {@code storage.provider} (persistent uploads);
+         * shares the {@code storage.s3.*} credentials when set to {@code s3}.
          */
         private String artifactStore = "local";
 
@@ -566,6 +558,7 @@ public class ApplicationProperties {
         private Node node = new Node();
 
         private transient String cachedNodeId;
+        private transient String cachedNodeName;
 
         public NodeRole resolvedRole() {
             if (node == null || node.getRole() == null) {
@@ -589,6 +582,37 @@ public class ApplicationProperties {
             return cachedNodeId;
         }
 
+        /**
+         * Stable per-node label for CLIENT SETNAME: {@code cluster.node.id}, else hostname, else
+         * {@link #resolvedNodeId()}. The first two survive a restart; the UUID fallback does not.
+         */
+        public synchronized String resolvedNodeName() {
+            if (node != null && node.getId() != null && !node.getId().isBlank()) {
+                return node.getId();
+            }
+            if (cachedNodeName == null) {
+                cachedNodeName = localHostname();
+            }
+            return cachedNodeName != null ? cachedNodeName : resolvedNodeId();
+        }
+
+        // Hostname resolution depends on DNS and can throw; a missing name must never fail startup.
+        private static String localHostname() {
+            String env = java.lang.System.getenv("HOSTNAME");
+            if (env == null || env.isBlank()) {
+                env = java.lang.System.getenv("COMPUTERNAME");
+            }
+            if (env != null && !env.isBlank()) {
+                return env.trim();
+            }
+            try {
+                String host = InetAddress.getLocalHost().getHostName();
+                return host != null && !host.isBlank() ? host.trim() : null;
+            } catch (Exception ex) {
+                return null;
+            }
+        }
+
         public enum NodeRole {
             WEB,
             WORKER,
@@ -598,20 +622,164 @@ public class ApplicationProperties {
         @Data
         public static class Valkey {
             /**
-             * {@code redis://host:6379} or {@code rediss://...} for TLS. Required when cluster mode
-             * is on and backplane is valkey.
+             * {@code redis://} or {@code rediss://} URL; read ONLY in standalone mode. Excluded
+             * from toString because it can carry userinfo credentials.
              */
-            private String url = "";
+            @ToString.Exclude private String url = "";
 
+            /**
+             * {@code standalone} | {@code sentinel} | {@code cluster}; blank auto-resolves (see
+             * {@link #resolvedMode()}). {@code url} is read only in standalone mode.
+             */
+            private String mode = "";
+
+            /** Data-node username; overrides any userinfo in {@link #url}. */
+            private String username = "";
+
+            /** Data-node password; overrides any userinfo in {@link #url}. */
+            @ToString.Exclude private String password = "";
+
+            /** Valkey Cluster seed nodes as {@code host:port}. Read only when mode is cluster. */
+            private List<String> nodes = new ArrayList<>();
+
+            /** Max MOVED/ASK redirects the cluster client follows before failing a command. */
+            private int maxRedirects = 3;
+
+            /**
+             * Periodic cluster topology refresh interval in milliseconds. Adaptive refresh on
+             * MOVED/ASK/reconnect is always on; this is the backstop when no redirect is seen.
+             */
+            private long topologyRefreshMs = 30000;
+
+            /**
+             * CLIENT SETNAME applied to every connection so Valkey monitoring can attribute load to
+             * a node. Blank (default) = {@code stirling-} + {@code Cluster.resolvedNodeName()}.
+             */
+            private String clientName = "";
+
+            /**
+             * Per-command timeout in milliseconds. Bounds every backplane call so a slow or
+             * partitioned Valkey cannot stall request threads.
+             */
+            private long commandTimeoutMs = 2000;
+
+            private Sentinel sentinel = new Sentinel();
             private Tls tls = new Tls();
+            private Pool pool = new Pool();
+
+            /**
+             * Explicit {@link #mode} wins; blank infers SENTINEL from sentinel.master, CLUSTER from
+             * nodes, else STANDALONE, and throws when both are set (ambiguous).
+             */
+            public ValkeyMode resolvedMode() {
+                if (mode != null && !mode.isBlank()) {
+                    try {
+                        return ValkeyMode.valueOf(mode.trim().toUpperCase(Locale.ROOT));
+                    } catch (IllegalArgumentException ex) {
+                        throw new IllegalStateException(
+                                "cluster.valkey.mode has unknown value '"
+                                        + mode
+                                        + "'. Valid values: standalone | sentinel | cluster.",
+                                ex);
+                    }
+                }
+                boolean sentinelConfigured =
+                        sentinel != null
+                                && sentinel.getMaster() != null
+                                && !sentinel.getMaster().isBlank();
+                boolean clusterConfigured = nodes != null && !nodes.isEmpty();
+                if (sentinelConfigured && clusterConfigured) {
+                    throw new IllegalStateException(
+                            "cluster.valkey.mode is not set but both"
+                                    + " cluster.valkey.sentinel.master and cluster.valkey.nodes are"
+                                    + " configured. Set cluster.valkey.mode explicitly to"
+                                    + " 'sentinel' or 'cluster'.");
+                }
+                if (sentinelConfigured) {
+                    return ValkeyMode.SENTINEL;
+                }
+                if (clusterConfigured) {
+                    return ValkeyMode.CLUSTER;
+                }
+                return ValkeyMode.STANDALONE;
+            }
+
+            public enum ValkeyMode {
+                STANDALONE,
+                SENTINEL,
+                CLUSTER
+            }
+
+            @Data
+            public static class Sentinel {
+                /** Monitored primary name, i.e. the name in {@code sentinel monitor <name> ...}. */
+                private String master = "";
+
+                /** Sentinel endpoints as {@code host:port}; sentinel's default port is 26379. */
+                private List<String> nodes = new ArrayList<>();
+
+                /** Username for the SENTINEL connections. Separate from the data-node username. */
+                private String username = "";
+
+                /**
+                 * Password for the SENTINEL connections. Separate from the data-node password -
+                 * setting only {@code cluster.valkey.password} does NOT authenticate to sentinels.
+                 */
+                @ToString.Exclude private String password = "";
+            }
 
             @Data
             public static class Tls {
+                /**
+                 * Force TLS in sentinel/cluster mode, where there is no {@code rediss://} URL to
+                 * carry the scheme. Ignored in standalone mode, which takes TLS from the URL.
+                 */
+                private boolean enabled = false;
+
                 /**
                  * When {@code true}, skip Valkey/Redis TLS certificate verification (dev/test
                  * only). Leave {@code false} in production.
                  */
                 private boolean skipCertVerification = false;
+            }
+
+            @Data
+            public static class Pool {
+                /**
+                 * Connection pooling for dedicated connections. On by default: without a pool every
+                 * blocking/transactional call opens and tears down a TCP connection.
+                 */
+                private boolean enabled = true;
+
+                /**
+                 * Max pooled connections. One is permanently held by the shared native connection,
+                 * so this must be at least 2.
+                 */
+                private int maxActive = 16;
+
+                /** Max idle connections kept in the pool. Keep equal to maxActive. */
+                private int maxIdle = 16;
+
+                /**
+                 * Connections kept warm. Default 0: backplane traffic runs on the shared native
+                 * connection, so warm pooled sockets would idle unused on every node.
+                 */
+                private int minIdle = 0;
+
+                /**
+                 * Max wait for a pooled connection. Never set 0/negative: commons-pool2 treats that
+                 * as block-forever, which would defeat commandTimeoutMs.
+                 */
+                private long maxWaitMillis = 2000;
+
+                /** Idle-evictor interval. minIdle is only honoured while the evictor runs. */
+                private long timeBetweenEvictionRunsMillis = 30000;
+
+                /**
+                 * Validate on borrow. Cheap (no round trip - Lettuce checks isOpen) but it only
+                 * rejects explicitly closed connections; a disconnected, reconnecting one is open.
+                 */
+                private boolean testOnBorrow = true;
             }
         }
 

@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ScanOptions;
@@ -26,8 +25,7 @@ public class ValkeyKeyValueCache implements KeyValueCache {
 
     @Override
     public void put(String namespace, String key, String value, Duration ttl) {
-        template.opsForValue()
-                .set(buildKey(namespace, key), value, ttl.toMillis(), TimeUnit.MILLISECONDS);
+        template.opsForValue().set(buildKey(namespace, key), value, ttl);
     }
 
     @Override
@@ -50,8 +48,10 @@ public class ValkeyKeyValueCache implements KeyValueCache {
                 keys.add(cursor.next());
             }
         }
-        if (!keys.isEmpty()) {
-            template.delete(keys);
+        // Bulk unlink in 500-key batches - ceil(n/500) round trips, not n: Lettuce partitions
+        // del/unlink by slot and fans out per node, so multi-key is legitimate here on Cluster.
+        for (int i = 0; i < keys.size(); i += 500) {
+            template.unlink(keys.subList(i, Math.min(i + 500, keys.size())));
         }
     }
 

@@ -1,6 +1,5 @@
 package stirling.software.proprietary.cluster.valkey;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -12,9 +11,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,11 +28,8 @@ import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
 
 /**
- * Valkey-backed {@link JobStore}. Each job is one hash; a reverse index maps fileId to jobId.
- *
- * <p><b>put() atomicity:</b> the hash fields, the per-job TTL, and the reverse-index entries are
- * issued inside a single pipelined Redis transaction (MULTI/EXEC). A partial failure cannot leave
- * the hash without a TTL or with half the file→job index entries written.
+ * put() is NOT atomic across keys: hash+TTL is one Lua script, each index row a SET PX, so a torn
+ * put() leaves stale index rows. Lua, not MULTI/WATCH: the cluster client rejects both.
  */
 @Component
 @RequiredArgsConstructor
@@ -47,12 +44,37 @@ public class ValkeyJobStore implements JobStore {
     private static final TypeReference<List<String>> LIST_STRING = new TypeReference<>() {};
     private static final TypeReference<Map<String, String>> MAP_STRING = new TypeReference<>() {};
 
+    // Atomic HSET+PEXPIRE: the hash must never exist without a TTL.
+    private static final RedisScript<Long> HSET_WITH_TTL =
+            new DefaultRedisScript<>(
+                    "redis.call('HSET', KEYS[1], unpack(ARGV, 2));"
+                            + " redis.call('PEXPIRE', KEYS[1], ARGV[1]); return 1",
+                    Long.class);
+
+    // Value-guarded delete: never removes an index row a newer job already owns.
+    private static final RedisScript<Long> DEL_INDEX_IF_OWNER =
+            new DefaultRedisScript<>(
+                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1])"
+                            + " else return 0 end",
+                    Long.class);
+
     private final StringRedisTemplate template;
 
     @Override
     public void put(JobStoreEntry entry, Duration ttl) {
         String key = JOB_PREFIX + entry.jobId();
         long ttlMs = ttl.toMillis();
+        // SET..PX rejects a non-positive TTL, so an already-expired entry deletes instead.
+        // Reachable via stirling.jobResultExpiryMinutes=0.
+        if (ttlMs <= 0) {
+            if (entry.fileIds() != null) {
+                for (String fileId : entry.fileIds()) {
+                    template.delete(FILE_INDEX_PREFIX + fileId);
+                }
+            }
+            template.delete(key);
+            return;
+        }
         Map<String, String> fields = new LinkedHashMap<>();
         fields.put("jobId", entry.jobId());
         fields.put("state", entry.state().name());
@@ -71,37 +93,20 @@ public class ValkeyJobStore implements JobStore {
                 "resultMeta",
                 writeJson(entry.resultMeta() == null ? Map.of() : entry.resultMeta()));
 
-        // Build pipelined MULTI/EXEC so the hash, its TTL, and every reverse-index entry
-        // commit atomically.
-        template.execute(
-                (RedisCallback<Object>)
-                        connection -> {
-                            connection.multi();
-                            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-                            Map<byte[], byte[]> hashBytes = new LinkedHashMap<>();
-                            for (Map.Entry<String, String> f : fields.entrySet()) {
-                                hashBytes.put(
-                                        f.getKey().getBytes(StandardCharsets.UTF_8),
-                                        f.getValue().getBytes(StandardCharsets.UTF_8));
-                            }
-                            connection.hashCommands().hMSet(keyBytes, hashBytes);
-                            connection.keyCommands().pExpire(keyBytes, ttlMs);
-                            if (entry.fileIds() != null) {
-                                for (String fileId : entry.fileIds()) {
-                                    byte[] idxKey =
-                                            (FILE_INDEX_PREFIX + fileId)
-                                                    .getBytes(StandardCharsets.UTF_8);
-                                    connection
-                                            .stringCommands()
-                                            .set(
-                                                    idxKey,
-                                                    entry.jobId().getBytes(StandardCharsets.UTF_8));
-                                    connection.keyCommands().pExpire(idxKey, ttlMs);
-                                }
-                            }
-                            connection.exec();
-                            return null;
-                        });
+        // Index entries first: the surviving crash window then leaves "index points at a job not
+        // yet visible", which every caller already handles (findJobIdByFileId returns Optional).
+        if (entry.fileIds() != null) {
+            for (String fileId : entry.fileIds()) {
+                template.opsForValue().set(FILE_INDEX_PREFIX + fileId, entry.jobId(), ttl);
+            }
+        }
+        List<String> args = new ArrayList<>(1 + fields.size() * 2);
+        args.add(Long.toString(ttlMs));
+        for (Map.Entry<String, String> f : fields.entrySet()) {
+            args.add(f.getKey());
+            args.add(f.getValue());
+        }
+        template.execute(HSET_WITH_TTL, List.of(key), args.toArray());
     }
 
     @Override
@@ -109,70 +114,21 @@ public class ValkeyJobStore implements JobStore {
         return readEntry(JOB_PREFIX + jobId);
     }
 
+    /**
+     * Not atomic: a concurrent put() for the same jobId can resurrect the hash after the DEL and
+     * leave its fileIds unindexed. Tolerated - dead path on Valkey (shouldRunLocalCleanup=false).
+     */
     @Override
     public void delete(String jobId) {
-        // WATCH/MULTI/EXEC: read fileIds INSIDE the watched scope so a concurrent put() that
-        // adds new fileIds between our read and EXEC aborts the transaction. Without this guard,
-        // an interleaved put() that grows fileIds would leave orphaned reverse-index entries
-        // pointing at the deleted jobId until their TTL expires. One retry handles the common
-        // case; further contention falls through to lazy TTL cleanup (acceptable - this is an
-        // eviction path, not a correctness primitive).
         String jobKey = JOB_PREFIX + jobId;
-        byte[] jobKeyBytes = jobKey.getBytes(StandardCharsets.UTF_8);
-        for (int attempt = 0; attempt < 2; attempt++) {
-            Boolean committed =
-                    template.execute(
-                            (RedisCallback<Boolean>)
-                                    connection -> {
-                                        connection.watch(jobKeyBytes);
-                                        // Read the single fileIds field with hGet rather than
-                                        // hGetAll + map.get: hGetAll returns a Map<byte[],byte[]>
-                                        // whose keys compare by identity, so a fresh
-                                        // "fileIds".getBytes() lookup never matches and the reverse
-                                        // index would be left orphaned. hGet resolves the field
-                                        // server-side.
-                                        byte[] fileIdsBytes =
-                                                connection
-                                                        .hashCommands()
-                                                        .hGet(
-                                                                jobKeyBytes,
-                                                                "fileIds"
-                                                                        .getBytes(
-                                                                                StandardCharsets
-                                                                                        .UTF_8));
-                                        List<byte[]> keysToDelete = new ArrayList<>();
-                                        keysToDelete.add(jobKeyBytes);
-                                        if (fileIdsBytes != null) {
-                                            List<String> fileIds =
-                                                    readJsonList(
-                                                            new String(
-                                                                    fileIdsBytes,
-                                                                    StandardCharsets.UTF_8),
-                                                            jobKey);
-                                            for (String fileId : fileIds) {
-                                                keysToDelete.add(
-                                                        (FILE_INDEX_PREFIX + fileId)
-                                                                .getBytes(StandardCharsets.UTF_8));
-                                            }
-                                        }
-                                        connection.multi();
-                                        for (byte[] key : keysToDelete) {
-                                            connection.keyCommands().del(key);
-                                        }
-                                        List<Object> results = connection.exec();
-                                        // exec() returns null when WATCH detected a concurrent
-                                        // write; spring-data-redis surfaces this as either null
-                                        // or empty depending on the driver path.
-                                        return results != null && !results.isEmpty();
-                                    });
-            if (Boolean.TRUE.equals(committed)) {
-                return;
-            }
+        String fileIdsJson = (String) template.opsForHash().get(jobKey, "fileIds");
+        template.delete(jobKey);
+        if (fileIdsJson == null) {
+            return;
         }
-        log.warn(
-                "JobStore.delete({}) lost two WATCH races to concurrent put(); reverse-index"
-                        + " entries may linger until TTL expiry",
-                jobId);
+        for (String fileId : readJsonList(fileIdsJson, jobKey)) {
+            template.execute(DEL_INDEX_IF_OWNER, List.of(FILE_INDEX_PREFIX + fileId), jobId);
+        }
     }
 
     @Override
@@ -188,7 +144,8 @@ public class ValkeyJobStore implements JobStore {
 
     @Override
     public Collection<JobStoreEntry> all() {
-        // SCAN, not KEYS - KEYS blocks the Valkey server for the duration of the walk.
+        // SCAN, not KEYS - KEYS blocks the Valkey server for the duration of the walk. On Cluster
+        // Lettuce walks every master, so this is a best-effort snapshot, not a point-in-time one.
         ScanOptions options = ScanOptions.scanOptions().match(JOB_PREFIX + "*").count(256).build();
         List<JobStoreEntry> result = new ArrayList<>();
         try (Cursor<String> cursor = template.scan(options)) {
