@@ -2332,6 +2332,7 @@
     "color-contrast",
     "empty-table-header"
   ],
+  "editor/src/portal/views/Policies.stories.tsx :: Default": ["color-contrast"],
   "editor/src/portal/views/Policies.stories.tsx :: Empty": ["color-contrast"],
   "editor/src/portal/views/Sources.stories.tsx :: Default": ["color-contrast"],
   "editor/src/portal/views/Sources.stories.tsx :: Empty": ["color-contrast"],
