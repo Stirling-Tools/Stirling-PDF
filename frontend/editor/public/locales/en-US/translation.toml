@@ -6367,12 +6367,6 @@ description = "Connect your Stirling account to use this. Manual PDF tools keep 
 title = "This needs a connected account"
 titleFeature = "{{feature}} need a connected account"
 
-[portal.accountLink.rail]
-cta = "Connect"
-later = "Later"
-sub = "Unlocks teams, the processor, pipelines and policies. Manual PDF editing stays free."
-title = "Connect your Stirling account"
-
 [portal.accountLink.instances]
 active = "Active"
 revoke = "Revoke"
@@ -6420,6 +6414,12 @@ sub = "Link this self-hosted org to its Stirling account so unattended processin
 forbidden = "Only the team owner can view the org's linked instances."
 generic = "Couldn't load the team's linked instances. Try again in a moment."
 title = "Couldn't load linked instances"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Later"
+sub = "Unlocks teams, the processor, pipelines and policies. Manual PDF editing stays free."
+title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "Editor plan"
