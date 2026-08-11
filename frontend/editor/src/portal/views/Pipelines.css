@@ -98,13 +98,6 @@
   font-weight: 600;
 }
 
-.portal-pipelines__composer-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  width: 100%;
-}
-
 .portal-pipelines__source-list {
   display: flex;
   flex-direction: column;
@@ -115,14 +108,4 @@
   background: var(--color-bg-subtle);
   border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
-}
-
-.portal-pipelines__schedule {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.portal-pipelines__schedule-count {
-  width: 5rem;
 }
