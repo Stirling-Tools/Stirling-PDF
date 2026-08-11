@@ -65,7 +65,9 @@
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--c-text-subtle);
+  /* Muted rather than subtle: at 12px this is body-size text, so it owes WCAG AA. Subtle resolves
+     to #71717a, which is only 3.59:1 on the dark surface; muted clears it in both themes. */
+  color: var(--c-text-muted);
   white-space: nowrap;
 }
 
