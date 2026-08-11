@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@app/auth/UseSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -485,6 +485,17 @@ export function useSuperSearch(
   const trimmed = query.trim();
   const { stubs, loadingFiles } = useMyFilesStubs(active);
   const { scopeEnabled } = useSearchScopeFilter(options);
+  const { pathname } = useLocation();
+
+  // Workbench-bound selections must leave the file manager through the router.
+  // Tool/file selection pins its URL via raw history.pushState, which the
+  // router never observes — so on /files the route keeps re-asserting the
+  // "myFiles" workbench and the selection appears to do nothing.
+  const leaveFileManager = useCallback(() => {
+    if (pathname.startsWith("/files")) {
+      navigate("/");
+    }
+  }, [pathname, navigate]);
 
   // --- Actions -----------------------------------------------------------
   const openFile = useCallback(
@@ -495,11 +506,12 @@ export function useSuperSearch(
         await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
         navActions.setWorkbench("viewer");
         viewer?.setActiveFileId?.(stub.id);
+        leaveFileManager();
       } catch (err) {
         console.error("[SuperSearch] Failed to open file:", stub.name, err);
       }
     },
-    [fileActions, navActions, viewer],
+    [fileActions, navActions, viewer, leaveFileManager],
   );
 
   const openTool = useCallback(
@@ -523,8 +535,15 @@ export function useSuperSearch(
       } else {
         handleToolSelectForced(id);
       }
+      leaveFileManager();
     },
-    [handleToolSelect, handleToolSelectForced, toolAvailability, toolRegistry],
+    [
+      handleToolSelect,
+      handleToolSelectForced,
+      toolAvailability,
+      toolRegistry,
+      leaveFileManager,
+    ],
   );
 
   const openSettings = useCallback(
