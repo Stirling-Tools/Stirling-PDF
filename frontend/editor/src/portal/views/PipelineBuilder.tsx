@@ -67,7 +67,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
-import { PipelineHeader } from "@portal/components/pipelines/PipelineHeader";
+import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreateHeader";
+import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
+import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
 import { PipelineInspector } from "@portal/components/pipelines/PipelineInspector";
 import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
 import {
@@ -258,9 +260,17 @@ export function PipelineBuilder() {
   const [inputAsked, setInputAsked] = useState(false);
   const [outputAsked, setOutputAsked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Which create action is in flight, so only the button that was clicked (Create / Create paused)
+  // shows its spinner. Null in edit and while idle.
+  const [pendingCreateEnabled, setPendingCreateEnabled] = useState<
+    boolean | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [running, setRunning] = useState(false);
+  // Pausing/activating an existing pipeline acts immediately (a separate save), not on the next
+  // "Save changes"; this tracks that in-flight toggle.
+  const [togglingEnabled, setTogglingEnabled] = useState(false);
   const [clearingHistory, setClearingHistory] = useState(false);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
@@ -587,10 +597,11 @@ export function PipelineBuilder() {
   }
 
   // Track unsaved edits: snapshot the form and compare against the state captured just after
-  // seeding, so leaving the builder can prompt to save or discard.
+  // seeding, so leaving the builder can prompt to save or discard. `enabled` is deliberately left
+  // out: in edit it is toggled and persisted at once (never an unsaved edit), and in create it is
+  // chosen at submit - so it can never be the thing that makes the form dirty.
   const snapshot = JSON.stringify({
     name: name.trim(),
-    enabled,
     input,
     steps: steps.map((step) => serializeToolStep(step, allTools)),
     uploads: steps.map(stepRequiresUpload),
@@ -629,14 +640,14 @@ export function PipelineBuilder() {
     else navigate(destination);
   }
 
-  async function save(destination: string) {
+  async function save(destination: string, enabledOverride?: boolean) {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
     const policy: Policy = {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
-      enabled,
+      enabled: enabledOverride ?? enabled,
       // The wire shape stays a list; canSave guarantees the one input has a source.
       inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
       steps: steps.map((step) => serializeToolStep(step, allTools)),
@@ -652,6 +663,37 @@ export function PipelineBuilder() {
     } catch (e) {
       setError(errorMessage(e));
       setSubmitting(false);
+      setPendingCreateEnabled(null);
+    }
+  }
+
+  // Create live or paused. The buttons disable until the pipeline is valid, so this only fires on a
+  // saveable pipeline; the flag records which button spins and whether it starts live or paused.
+  function submitCreate(enabledValue: boolean) {
+    setPendingCreateEnabled(enabledValue);
+    void save(listPath, enabledValue);
+  }
+
+  /**
+   * Pause or activate the saved pipeline now, without leaving the builder. It re-saves the
+   * persisted policy with the flag flipped - deliberately NOT the working form - so a pending chain
+   * edit is not silently committed by a pause. The dirty tracker ignores `enabled`, so this never
+   * looks like an unsaved change.
+   */
+  async function handleTogglePause() {
+    if (togglingEnabled || !policyState.data) return;
+    const next = !enabled;
+    setTogglingEnabled(true);
+    setError(null);
+    try {
+      await savePipeline({ ...policyState.data, enabled: next });
+      if (!mounted.current) return;
+      setEnabled(next);
+      await invalidatePipelines();
+    } catch (e) {
+      if (mounted.current) setError(errorMessage(e));
+    } finally {
+      if (mounted.current) setTogglingEnabled(false);
     }
   }
 
@@ -1056,29 +1098,37 @@ export function PipelineBuilder() {
 
   return (
     <div className="portal-builder">
-      <PipelineHeader
-        name={name}
-        onNameChange={setName}
-        enabled={enabled}
-        onEnabledChange={setEnabled}
-        isEdit={isEdit}
-        stepCount={steps.length}
-        canSave={canSave}
-        saving={submitting}
-        onSave={() => save(listPath)}
-        onCancel={() => attemptLeave(listPath)}
-        onBack={() => attemptLeave(listPath)}
-        onTest={handleTest}
-        testing={testing}
-        onRun={handleRun}
-        running={running}
-        onClearHistory={handleClearHistory}
-        clearingHistory={clearingHistory}
-        onDelete={() => setPendingDelete(true)}
-        onViewDefinition={() => setDefinitionOpen(true)}
-        runResult={testSummary}
-        onDownloadOutput={downloadOutput}
-      />
+      {isEdit ? (
+        <PipelineEditHeader
+          name={name}
+          onNameChange={setName}
+          enabled={enabled}
+          onTogglePause={handleTogglePause}
+          togglingEnabled={togglingEnabled}
+          onBack={() => attemptLeave(listPath)}
+          canSave={canSave}
+          saving={submitting}
+          onSave={() => save(listPath)}
+          onRun={handleRun}
+          running={running}
+          onClearHistory={handleClearHistory}
+          clearingHistory={clearingHistory}
+          onDelete={() => setPendingDelete(true)}
+          onViewDefinition={() => setDefinitionOpen(true)}
+        />
+      ) : (
+        <PipelineCreateHeader
+          name={name}
+          onNameChange={setName}
+          canSave={canSave}
+          saving={submitting}
+          pendingCreateEnabled={pendingCreateEnabled}
+          onCreate={() => submitCreate(true)}
+          onCreatePaused={() => submitCreate(false)}
+          onCancel={() => attemptLeave(listPath)}
+          onViewDefinition={() => setDefinitionOpen(true)}
+        />
+      )}
 
       {error && <Banner tone="danger" description={error} />}
       {runResult && (
@@ -1110,44 +1160,53 @@ export function PipelineBuilder() {
       )}
 
       <div className="portal-builder__grid">
-        <PipelineGraph
-          // An end is on the chain once it has been asked for or already holds a value, so a
-          // loaded pipeline needs no seeding: its source and destination place themselves.
-          input={
-            inputAsked || inputValid
-              ? {
-                  label:
-                    chosenSource?.name ??
-                    t("portal.pipelines.builder.chooseSource"),
-                  detail: chosenSource ? triggerSummary() : undefined,
-                  warning: inputValid
-                    ? undefined
-                    : t("portal.pipelines.builder.needsSource"),
-                }
-              : null
-          }
-          output={
-            outputAsked || outputValid
-              ? {
-                  label:
-                    chosenDestination?.name ??
-                    t("portal.pipelines.builder.chooseDestination"),
-                  warning: outputValid
-                    ? undefined
-                    : t("portal.pipelines.builder.needsDestination"),
-                }
-              : null
-          }
-          steps={graphSteps}
-          selected={selected}
-          onSelect={setSelected}
-          onAddEnd={addEnd}
-          onRemoveEnd={removeEnd}
-          onInsertStep={setPickerAt}
-          onRemoveSteps={removeSteps}
-          onReorderSteps={reorderSteps}
-          onOpenStepError={(index) => setSelected({ steps: [index] })}
-        />
+        <div className="portal-builder__canvas">
+          <PipelineGraphToolbar
+            stepCount={steps.length}
+            onTest={handleTest}
+            testing={testing}
+            runResult={testSummary}
+            onDownloadOutput={downloadOutput}
+          />
+          <PipelineGraph
+            // An end is on the chain once it has been asked for or already holds a value, so a
+            // loaded pipeline needs no seeding: its source and destination place themselves.
+            input={
+              inputAsked || inputValid
+                ? {
+                    label:
+                      chosenSource?.name ??
+                      t("portal.pipelines.builder.chooseSource"),
+                    detail: chosenSource ? triggerSummary() : undefined,
+                    warning: inputValid
+                      ? undefined
+                      : t("portal.pipelines.builder.needsSource"),
+                  }
+                : null
+            }
+            output={
+              outputAsked || outputValid
+                ? {
+                    label:
+                      chosenDestination?.name ??
+                      t("portal.pipelines.builder.chooseDestination"),
+                    warning: outputValid
+                      ? undefined
+                      : t("portal.pipelines.builder.needsDestination"),
+                  }
+                : null
+            }
+            steps={graphSteps}
+            selected={selected}
+            onSelect={setSelected}
+            onAddEnd={addEnd}
+            onRemoveEnd={removeEnd}
+            onInsertStep={setPickerAt}
+            onRemoveSteps={removeSteps}
+            onReorderSteps={reorderSteps}
+            onOpenStepError={(index) => setSelected({ steps: [index] })}
+          />
+        </div>
 
         <PipelineInspector
           title={

@@ -225,3 +225,29 @@
   gap: 0.5rem;
   width: 100%;
 }
+
+/* The graph column: the test control sits directly above the graph card, in the same column and at
+   the same width, so it reads as the graph's toolbar rather than floating free above the whole page.
+   Caps at the row height (like the bare graph did) and lets the graph scroll inside while the
+   toolbar stays put. */
+.portal-builder__canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.portal-builder__canvas > .portal-graph {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* The flex cap governs height here, so drop the standalone one it uses outside this layout. */
+  max-height: none;
+}
+
+/* Stacked (short viewport): the page scrolls, so the column must not cap or nest its own scroll. */
+@media (max-width: 60rem) {
+  .portal-builder__canvas {
+    max-height: none;
+  }
+}

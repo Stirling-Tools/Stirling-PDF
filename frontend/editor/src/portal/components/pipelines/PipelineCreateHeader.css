@@ -1,0 +1,39 @@
+/**
+ * Create mode's toolbar: name on the left, commit actions on the right - the same shape as the edit
+ * header, so the two modes feel like one page.
+ */
+
+.portal-pipeline-create-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Sized to a name, not the width of the page: a title-length field reads as a title, where the old
+   full-bleed input read as a search bar. It gives a little on narrow viewports but never grows to
+   fill the row - the actions on the right anchor the far end instead. */
+.portal-pipeline-create-header__name {
+  flex: 0 1 22rem;
+  min-width: 12rem;
+}
+
+.portal-pipeline-create-header__name input {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Pinned to the right, mirroring the edit header. Buttons hold their width and the row wraps rather
+   than clipping. */
+.portal-pipeline-create-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  flex: none;
+}
+
+.portal-pipeline-create-header__actions .sui-btn {
+  flex: none;
+  white-space: nowrap;
+}
