@@ -50,12 +50,18 @@ dependencies {
     if (jpdfiumPlatformsProp == 'auto') {
         def osName = System.getProperty('os.name').toLowerCase()
         def osArch = System.getProperty('os.arch').toLowerCase()
+        def isArm64 = osArch.contains('aarch64') || osArch.contains('arm64')
         if (osName.contains('linux')) {
-            jpdfiumPlatforms = osArch.contains('aarch64') ? ['linux-arm64'] : ['linux-x64']
+            jpdfiumPlatforms = isArm64 ? ['linux-arm64'] : ['linux-x64']
         } else if (osName.contains('mac')) {
-            jpdfiumPlatforms = osArch.contains('aarch64') ? ['darwin-arm64'] : ['darwin-x64']
+            jpdfiumPlatforms = isArm64 ? ['darwin-arm64'] : ['darwin-x64']
         } else if (osName.contains('win')) {
-            jpdfiumPlatforms = ['windows-x64']
+            if (isArm64) {
+                logger.lifecycle("JPDFium natives are not available for windows-arm64; set -PjpdfiumPlatforms=none to skip bundling natives.")
+                jpdfiumPlatforms = []
+            } else {
+                jpdfiumPlatforms = ['windows-x64']
+            }
         } else {
             // Fallback: bundle all platforms when host can't be determined
             jpdfiumPlatforms = jpdfiumAllPlatforms
