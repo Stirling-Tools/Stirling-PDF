@@ -15,6 +15,7 @@ import Onboarding from "@app/components/onboarding/Onboarding";
 import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import { LoginLandingRedirect } from "@app/components/LoginLandingRedirect";
@@ -55,6 +56,16 @@ export default function App() {
           element={
             <PublicRouteProviders>
               <MobileScannerPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        {/* Mobile signature drawing - reached from the Sign tool QR code */}
+        <Route
+          path="/mobile-sign"
+          element={
+            <PublicRouteProviders>
+              <MobileSignPage />
             </PublicRouteProviders>
           }
         />

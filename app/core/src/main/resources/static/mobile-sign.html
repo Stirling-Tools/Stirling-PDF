@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#c02223">
+    <meta name="robots" content="noindex">
+    <title>Stirling PDF - Draw Signature</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="shortcut icon" href="favicon.ico">
+
+    <style>
+        :root {
+            --brand: #c02223;
+            --brand-dark: #882425;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #111827;
+            --text-dim: #6b7280;
+            --border: #e5e7eb;
+            --tile: #f9fafb;
+            --tile-hover: #f1f3f5;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.12);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f1115;
+                --card: #1a1d23;
+                --text: #f3f4f6;
+                --text-dim: #9ca3af;
+                --border: #2c303a;
+                --tile: #22262e;
+                --tile-hover: #2a2f38;
+                --shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: env(safe-area-inset-top) 1rem 1.5rem;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 34rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.5rem 0 0.25rem;
+            justify-content: center;
+        }
+
+        header .logo {
+            width: 2.75rem;
+            height: 2.75rem;
+            flex: none;
+        }
+
+        header .titles {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
+        }
+
+        header .wordmark {
+            height: 1.5rem;
+            width: auto;
+            display: block;
+            color: var(--text);
+        }
+
+        header .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .card {
+            background-color: var(--card);
+            border-radius: 1.25rem;
+            box-shadow: var(--shadow);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+            padding: 0.7rem 0.85rem;
+            border-radius: 0.75rem;
+            background: var(--tile);
+            color: var(--text-dim);
+        }
+
+        .status .dot {
+            width: 0.6rem;
+            height: 0.6rem;
+            border-radius: 50%;
+            background: var(--text-dim);
+            flex: none;
+        }
+
+        .status.ok { color: var(--success); }
+        .status.ok .dot { background: var(--success); }
+        .status.err { color: var(--danger); }
+        .status.err .dot { background: var(--danger); }
+
+        /* The pad stays white in both themes: signatures land on paper-white
+           pages, so drawing on white previews the real result. */
+        .pad {
+            position: relative;
+            width: 100%;
+            height: min(45vh, 20rem);
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 0.9rem;
+            overflow: hidden;
+        }
+
+        .pad canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        .pad .guide {
+            position: absolute;
+            left: 8%;
+            right: 8%;
+            bottom: 22%;
+            border-bottom: 1px dashed #d1d5db;
+            pointer-events: none;
+        }
+
+        /* Landscape phones: shorter chrome, give the pad more of the height. */
+        @media (orientation: landscape) and (max-height: 32rem) {
+            header { padding-top: 0.5rem; }
+            .pad { height: min(58vh, 16rem); }
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .swatches { display: flex; gap: 0.5rem; }
+
+        .swatch {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+        }
+
+        .swatch.active { border-color: var(--brand); }
+
+        .sizes { display: flex; gap: 0.25rem; }
+
+        .size-btn {
+            border: 1px solid var(--border);
+            background: var(--tile);
+            color: var(--text);
+            border-radius: 0.5rem;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .size-btn.active {
+            border-color: var(--brand);
+            color: var(--brand);
+            font-weight: 600;
+        }
+
+        .tools { display: flex; gap: 0.5rem; }
+
+        .tool-btn {
+            border: 1px solid var(--border);
+            background: var(--tile);
+            color: var(--text);
+            border-radius: 0.5rem;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .tool-btn:disabled { opacity: 0.45; cursor: default; }
+
+        .btn {
+            appearance: none;
+            border: none;
+            border-radius: 0.9rem;
+            background: var(--brand);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.9rem 1rem;
+            cursor: pointer;
+        }
+
+        .btn:active { background: var(--brand-dark); }
+        .btn:disabled { opacity: 0.5; cursor: default; }
+
+        .progress {
+            height: 0.4rem;
+            border-radius: 0.25rem;
+            background: var(--tile);
+            overflow: hidden;
+        }
+
+        .progress span {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: var(--brand);
+            transition: width 0.15s ease;
+        }
+
+        .hint {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .done {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.75rem 0;
+            text-align: center;
+        }
+
+        .done .check {
+            width: 3.25rem;
+            height: 3.25rem;
+            border-radius: 50%;
+            background: var(--success);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .done .check svg { width: 1.75rem; height: 1.75rem; }
+
+        .hidden { display: none !important; }
+
+        footer {
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            padding-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <svg class="logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <linearGradient id="lg" x1="223" x2="241" y1="372" y2="114" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="#dcf1f3"/><stop offset="1" stop-color="#c2c2c9"/>
+                </linearGradient>
+                <path fill="#c02223" d="M347 14 99 69c-25 6-43 28-43 54v315c0 22 17 41 39 44l130 16 115-114 116-119-2-180c0-22-20-38-42-34l-29 7 0-14C383 25 366 10 347 14Z"/>
+                <path fill="#882425" d="M383 57v286l73-78-2-186c0-19-18-33-36-29Z"/>
+                <path fill="url(#lg)" d="M283 215s-22-29-39-37c-10-5-26-7-38-1-18 9-20 34-3 44 4 2 9 5 16 6 37 8 97 26 90 96 0 0-4 66-74 73-12 1-25 0-36-2-16-4-46-11-60-20l-3-75h7s14 33 53 50c7 3 15 4 23 3 10-1 21-7 26-23 0 0 8-23-33-36-33-10-63-21-76-55-6-16-7-34-3-52 5-22 21-54 64-68 0 0 57-16 97 6l-2 90Z"/>
+            </svg>
+            <div class="titles">
+                <div class="wordmark" style="font-size:1.25rem;font-weight:700;">Stirling PDF</div>
+                <div class="subtitle">Draw Signature</div>
+            </div>
+        </header>
+
+        <div class="card" id="signer">
+            <div class="status" id="status"><span class="dot"></span><span id="statusText">Connecting&hellip;</span></div>
+
+            <div class="pad">
+                <div class="guide"></div>
+                <canvas id="pad" aria-label="Signature drawing area"></canvas>
+            </div>
+
+            <div class="toolbar">
+                <div class="swatches">
+                    <button class="swatch active" type="button" data-color="#101010" style="background:#101010" aria-label="Black ink"></button>
+                    <button class="swatch" type="button" data-color="#1d4ed8" style="background:#1d4ed8" aria-label="Blue ink"></button>
+                </div>
+                <div class="sizes">
+                    <button class="size-btn" type="button" data-size="2">S</button>
+                    <button class="size-btn active" type="button" data-size="3.5">M</button>
+                    <button class="size-btn" type="button" data-size="6">L</button>
+                </div>
+                <div class="tools">
+                    <button class="tool-btn" id="undoBtn" type="button" disabled>Undo</button>
+                    <button class="tool-btn" id="clearBtn" type="button" disabled>Clear</button>
+                </div>
+            </div>
+
+            <button class="btn" id="sendBtn" type="button" disabled>Send to computer</button>
+
+            <div class="progress hidden" id="progressWrap"><span id="progressBar"></span></div>
+
+            <p class="hint">Draw your signature above, then send it. It appears in the Sign tool on your computer automatically.</p>
+        </div>
+
+        <div class="card hidden" id="successCard">
+            <div class="done">
+                <div class="check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>
+                </div>
+                <h2>Sent!</h2>
+                <p>Your signature is now on your computer.</p>
+                <button class="tool-btn" id="againBtn" type="button">Draw another</button>
+            </div>
+        </div>
+
+        <footer>Stirling PDF &middot; signatures transfer directly to your desktop</footer>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            var API_BASE = new URL(".", window.location.href).href;
+
+            var params = new URLSearchParams(window.location.search);
+            var sessionId = (params.get("session") || "").trim();
+            var SESSION_RE = /^[A-Za-z0-9-]{8,128}$/;
+
+            var els = {
+                status: document.getElementById("status"),
+                statusText: document.getElementById("statusText"),
+                pad: document.getElementById("pad"),
+                undoBtn: document.getElementById("undoBtn"),
+                clearBtn: document.getElementById("clearBtn"),
+                sendBtn: document.getElementById("sendBtn"),
+                progressWrap: document.getElementById("progressWrap"),
+                progressBar: document.getElementById("progressBar"),
+                signer: document.getElementById("signer"),
+                successCard: document.getElementById("successCard"),
+                againBtn: document.getElementById("againBtn")
+            };
+
+            var sessionReady = false;
+            var penColor = "#101010";
+            var penSize = 3.5;
+            var strokes = [];
+            var activeStroke = null;
+
+            function setStatus(text, kind) {
+                els.statusText.textContent = text;
+                els.status.className = "status" + (kind ? " " + kind : "");
+            }
+
+            function refreshButtons() {
+                var hasInk = strokes.length > 0;
+                els.undoBtn.disabled = !hasInk;
+                els.clearBtn.disabled = !hasInk;
+                els.sendBtn.disabled = !sessionReady || !hasInk;
+            }
+
+            // ---- drawing ------------------------------------------------------
+            // Strokes are stored in CSS-pixel space; the backing store is scaled
+            // by devicePixelRatio so ink lands exactly under the finger.
+
+            var ctx = els.pad.getContext("2d");
+
+            function resizeCanvas() {
+                var rect = els.pad.getBoundingClientRect();
+                var dpr = window.devicePixelRatio || 1;
+                els.pad.width = Math.max(1, Math.round(rect.width * dpr));
+                els.pad.height = Math.max(1, Math.round(rect.height * dpr));
+                redraw();
+            }
+
+            function drawStroke(target, stroke) {
+                var pts = stroke.points;
+                if (pts.length === 0) return;
+                target.strokeStyle = stroke.color;
+                target.fillStyle = stroke.color;
+                target.lineWidth = stroke.size;
+                target.lineCap = "round";
+                target.lineJoin = "round";
+                if (pts.length === 1) {
+                    target.beginPath();
+                    target.arc(pts[0].x, pts[0].y, stroke.size / 2, 0, Math.PI * 2);
+                    target.fill();
+                    return;
+                }
+                // Quadratic midpoint smoothing turns pointer samples into a pen-like line
+                target.beginPath();
+                target.moveTo(pts[0].x, pts[0].y);
+                for (var i = 1; i < pts.length - 1; i++) {
+                    var midX = (pts[i].x + pts[i + 1].x) / 2;
+                    var midY = (pts[i].y + pts[i + 1].y) / 2;
+                    target.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
+                }
+                var last = pts[pts.length - 1];
+                target.lineTo(last.x, last.y);
+                target.stroke();
+            }
+
+            function redraw() {
+                var dpr = window.devicePixelRatio || 1;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.clearRect(0, 0, els.pad.width / dpr, els.pad.height / dpr);
+                for (var i = 0; i < strokes.length; i++) drawStroke(ctx, strokes[i]);
+                if (activeStroke) drawStroke(ctx, activeStroke);
+            }
+
+            function pointFrom(e) {
+                var rect = els.pad.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+
+            els.pad.addEventListener("pointerdown", function (e) {
+                if (activeStroke) return; // one stroke at a time
+                els.pad.setPointerCapture(e.pointerId);
+                activeStroke = { color: penColor, size: penSize, points: [pointFrom(e)] };
+                redraw();
+            });
+
+            els.pad.addEventListener("pointermove", function (e) {
+                if (!activeStroke) return;
+                var events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+                var rect = els.pad.getBoundingClientRect();
+                for (var i = 0; i < events.length; i++) {
+                    activeStroke.points.push({
+                        x: events[i].clientX - rect.left,
+                        y: events[i].clientY - rect.top
+                    });
+                }
+                redraw();
+            });
+
+            function endStroke() {
+                if (!activeStroke) return;
+                strokes.push(activeStroke);
+                activeStroke = null;
+                redraw();
+                refreshButtons();
+            }
+
+            els.pad.addEventListener("pointerup", endStroke);
+            els.pad.addEventListener("pointercancel", endStroke);
+
+            els.undoBtn.onclick = function () {
+                strokes.pop();
+                redraw();
+                refreshButtons();
+            };
+
+            els.clearBtn.onclick = function () {
+                strokes = [];
+                activeStroke = null;
+                redraw();
+                refreshButtons();
+            };
+
+            document.querySelectorAll(".swatch").forEach(function (btn) {
+                btn.onclick = function () {
+                    penColor = btn.getAttribute("data-color");
+                    document.querySelectorAll(".swatch").forEach(function (b) { b.classList.remove("active"); });
+                    btn.classList.add("active");
+                };
+            });
+
+            document.querySelectorAll(".size-btn").forEach(function (btn) {
+                btn.onclick = function () {
+                    penSize = parseFloat(btn.getAttribute("data-size"));
+                    document.querySelectorAll(".size-btn").forEach(function (b) { b.classList.remove("active"); });
+                    btn.classList.add("active");
+                };
+            });
+
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            // ---- export + upload ---------------------------------------------
+
+            function exportBlob(callback) {
+                if (strokes.length === 0) { callback(null); return; }
+
+                // Crop to the inked region (plus padding) so the signature
+                // stamps tightly on the desktop side.
+                var rect = els.pad.getBoundingClientRect();
+                var PAD = 12;
+                var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                strokes.forEach(function (stroke) {
+                    var reach = stroke.size / 2 + PAD;
+                    stroke.points.forEach(function (p) {
+                        if (p.x - reach < minX) minX = p.x - reach;
+                        if (p.y - reach < minY) minY = p.y - reach;
+                        if (p.x + reach > maxX) maxX = p.x + reach;
+                        if (p.y + reach > maxY) maxY = p.y + reach;
+                    });
+                });
+                minX = Math.max(0, minX);
+                minY = Math.max(0, minY);
+                maxX = Math.min(rect.width, maxX);
+                maxY = Math.min(rect.height, maxY);
+
+                var dpr = window.devicePixelRatio || 1;
+                var out = document.createElement("canvas");
+                out.width = Math.max(1, Math.round((maxX - minX) * dpr));
+                out.height = Math.max(1, Math.round((maxY - minY) * dpr));
+                var outCtx = out.getContext("2d");
+                outCtx.setTransform(dpr, 0, 0, dpr, -minX * dpr, -minY * dpr);
+                for (var i = 0; i < strokes.length; i++) drawStroke(outCtx, strokes[i]);
+                out.toBlob(callback, "image/png");
+            }
+
+            els.sendBtn.onclick = function () {
+                if (!sessionReady || strokes.length === 0) return;
+                exportBlob(function (blob) {
+                    if (!blob) return;
+
+                    var form = new FormData();
+                    form.append("files", blob, "signature-draw-" + Date.now() + ".png");
+
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("POST", API_BASE + "api/v1/mobile-scanner/upload/" + encodeURIComponent(sessionId));
+
+                    els.sendBtn.disabled = true;
+                    els.progressWrap.classList.remove("hidden");
+                    els.progressBar.style.width = "0%";
+
+                    xhr.upload.onprogress = function (e) {
+                        if (e.lengthComputable) {
+                            els.progressBar.style.width = Math.round((e.loaded / e.total) * 100) + "%";
+                        }
+                    };
+
+                    xhr.onload = function () {
+                        els.progressWrap.classList.add("hidden");
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            els.signer.classList.add("hidden");
+                            els.successCard.classList.remove("hidden");
+                        } else {
+                            var msg = "Sending failed. Please try again.";
+                            if (xhr.status === 403) msg = "Mobile signatures are not enabled on this server.";
+                            else if (xhr.status === 400) msg = "Session expired. Re-scan the QR code.";
+                            setStatus(msg, "err");
+                            refreshButtons();
+                        }
+                    };
+
+                    xhr.onerror = function () {
+                        els.progressWrap.classList.add("hidden");
+                        setStatus("Network error. Stay on the same Wi-Fi and try again.", "err");
+                        refreshButtons();
+                    };
+
+                    xhr.send(form);
+                });
+            };
+
+            els.againBtn.onclick = function () {
+                strokes = [];
+                activeStroke = null;
+                els.successCard.classList.add("hidden");
+                els.signer.classList.remove("hidden");
+                resizeCanvas();
+                refreshButtons();
+            };
+
+            // ---- session ------------------------------------------------------
+
+            function init() {
+                if (!sessionId || !SESSION_RE.test(sessionId)) {
+                    setStatus("Invalid link. Re-scan the QR code on your computer.", "err");
+                    return;
+                }
+                setStatus("Connecting…");
+                fetch(API_BASE + "api/v1/mobile-scanner/validate-session/" + encodeURIComponent(sessionId))
+                    .then(function (res) {
+                        if (res.ok) {
+                            return res.json().then(function (data) {
+                                if (data && data.valid) {
+                                    setStatus("Connected to your computer", "ok");
+                                    sessionReady = true;
+                                    refreshButtons();
+                                } else {
+                                    setStatus("Session expired. Re-scan the QR code.", "err");
+                                }
+                            });
+                        }
+                        if (res.status === 403) {
+                            setStatus("Mobile signatures are not enabled on this server.", "err");
+                        } else {
+                            setStatus("Session not found. Re-scan the QR code.", "err");
+                        }
+                    })
+                    .catch(function () {
+                        setStatus("Can't reach your computer. Stay on the same Wi-Fi.", "err");
+                    });
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>

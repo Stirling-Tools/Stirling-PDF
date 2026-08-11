@@ -4993,6 +4993,34 @@ uploadSuccess = "Upload Successful!"
 uploadSuccessMessage = "Your images have been transferred."
 validating = "Validating session..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Scan to upload photos. Images auto-convert to PDF."
 descriptionNoConvert = "Scan to upload photos from your mobile device."
@@ -10254,6 +10282,7 @@ backgroundRemovalFailedTitle = "Background removal failed"
 hint = "Upload a PNG or JPG image of your signature"
 label = "Upload signature image"
 placeholder = "Select image file"
+previewAlt = "Current image signature"
 processing = "Processing image..."
 removeBackground = "Remove white background (make transparent)"
 
@@ -10266,6 +10295,17 @@ resumeHint = "Resume placement to click and add your signature."
 saved = "Select a saved signature above, then click anywhere on the PDF to place it."
 text = "After entering your name above, click anywhere on the PDF to place your signature."
 title = "How to add signature"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Move Signature"
