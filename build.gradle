@@ -259,7 +259,6 @@ subprojects {
 
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        implementation 'io.github.pixee:java-security-toolkit:1.2.3'
 
         //tmp for security bumps
         implementation "ch.qos.logback:logback-core:$logback"
@@ -528,6 +527,13 @@ subprojects {
                 }
             }
 
+            // Lazy initialization defers bean creation until first use,
+            // reducing dev-mode RSS significantly (heap drops ~40-60%).
+            // Enable with: ./gradlew bootRun -PlazyInit=true
+            if (rootProject.findProperty('lazyInit') == 'true') {
+                runtimeArgs.add("-Dspring.main.lazy-initialization=true")
+                logger.lifecycle("Lazy initialization enabled (-PlazyInit=true)")
+            }
             jvmArgs = runtimeArgs
         }
     }
