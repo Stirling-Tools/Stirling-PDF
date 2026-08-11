@@ -93,8 +93,9 @@ export interface DataTableProps<T> {
   variant?: DataTableVariant;
   /** Accessible caption for the table. */
   caption?: string;
-  /** Labels for a group's "show all / show less" toggle (pass translated). */
-  collapseLabels?: { showAll: (remaining: number) => string; showLess: string };
+  /** Labels for a group's "show all / show less" toggle (pass translated).
+   *  `showAll` receives the group's total row count. */
+  collapseLabels?: { showAll: (total: number) => string; showLess: string };
 }
 
 function ChevronGlyph() {
@@ -151,7 +152,7 @@ export function DataTable<T extends RowData>({
   variant = "default",
   caption,
   collapseLabels = {
-    showAll: (n) => `Show ${n} more`,
+    showAll: (n) => `Show all ${n}`,
     showLess: "Show less",
   },
 }: DataTableProps<T>) {
@@ -303,7 +304,7 @@ export function DataTable<T extends RowData>({
             >
               {open
                 ? collapseLabels.showLess
-                : collapseLabels.showAll(g.rows.length - limit)}
+                : collapseLabels.showAll(g.rows.length)}
             </button>
           </td>
         </tr>

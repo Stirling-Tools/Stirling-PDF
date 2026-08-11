@@ -216,9 +216,20 @@
   gap: 0.1875rem;
   min-width: 0;
 }
+.sui-dtc__entity-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
 .sui-dtc__entity-name {
   font-weight: 600;
   color: var(--c-text);
+}
+.sui-dtc__entity-suffix {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--c-text-subtle);
 }
 .sui-dtc__note {
   font-size: 0.75rem;
@@ -230,6 +241,9 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.25rem;
+}
+.sui-dtc__menu-item--danger {
+  color: var(--c-danger);
 }
 
 /* Grouped tables: section header row + per-group "show all" toggle. */

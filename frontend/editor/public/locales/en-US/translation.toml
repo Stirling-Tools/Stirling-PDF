@@ -10955,6 +10955,12 @@ approver = "Approves policy"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
 cancelInviteTitle = "Cancel invitation"
@@ -10974,10 +10980,8 @@ title = "No members yet"
 addToTeam = "Add to team"
 guestCount = "{{count}} guest"
 guests = "Guests"
-guestsDesc = "External collaborators, scoped to what you shared. Editor only."
 ledBy = "led by {{owner}}"
 org = "Organization"
-orgDesc = "Owners with org-wide authority and policy approval"
 owners = "{{count}} owner"
 team = "{{name}} team"
 teamMeta = "{{count}} people"

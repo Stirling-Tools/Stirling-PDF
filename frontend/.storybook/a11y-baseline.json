@@ -2224,13 +2224,16 @@
     "color-contrast"
   ],
   "editor/src/portal/components/users/PendingInvitations.stories.tsx :: Default": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/PendingInvitations.stories.tsx :: Empty": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/PendingInvitations.stories.tsx :: Expires Today": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/RenameTeamModal.stories.tsx :: Default": [
     "color-contrast"
@@ -2244,28 +2247,36 @@
     "label"
   ],
   "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Default": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Large Team": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Member States": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Org Only": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Saas Team Leader": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Single Team": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/UsersDirectory.stories.tsx :: Team Wide Processor": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/components/users/UsersDirectory.stories.tsx :: With Guests": [
-    "color-contrast"
+    "color-contrast",
+    "empty-table-header"
   ],
   "editor/src/portal/data/Endpoints.stories.tsx :: By Vertical": [
     "color-contrast"

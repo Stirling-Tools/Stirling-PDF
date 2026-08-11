@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { Chip, type ChipAccent } from "@app/ui/Chip";
 import { Button } from "@app/ui/Button";
+import { Dropdown } from "@app/ui/Dropdown";
 import { ProgressBar } from "@app/ui/ProgressBar";
 import { Select, type SelectOption } from "@app/ui/Select";
 
@@ -49,42 +50,88 @@ function KebabGlyph() {
   );
 }
 
-/** A row/group action. Rendered as a locked button. */
+/** An item in a kebab action menu. */
+export interface CellMenuItem {
+  label: string;
+  tone?: "default" | "danger";
+  disabled?: boolean;
+  onClick: () => void;
+  /** Draw a divider above this item. */
+  dividerBefore?: boolean;
+}
+
+/** A row/group action. A locked button, or a kebab menu when `menu` is set. */
 export interface CellAction {
   label: string;
   glyph?: CellGlyph;
   /** Icon-only (uses `label` as the accessible name). */
   iconOnly?: boolean;
   tone?: "default" | "danger";
-  onClick: () => void;
+  onClick?: () => void;
   loading?: boolean;
   disabled?: boolean;
+  /** When set, the button opens this menu instead of firing `onClick`. */
+  menu?: CellMenuItem[];
 }
 
-/** Renders a row of locked action buttons. Shared by the `actions` cell kind
- *  and grouped-table headers. */
+/** Renders a row of locked action buttons / kebab menus. Shared by the
+ *  `actions` cell kind and grouped-table headers. */
 export function renderCellActions(actions: CellAction[]): ReactNode {
   return (
     <div className="sui-dtc__actions">
-      {actions.map((a) => (
-        <Button
-          key={a.label}
-          variant={a.iconOnly ? "quiet" : "tertiary"}
-          accent={a.tone === "danger" ? "danger" : undefined}
-          size="sm"
-          shape={a.iconOnly ? "circle" : undefined}
-          leftSection={a.glyph ? <KebabGlyph /> : undefined}
-          loading={a.loading}
-          disabled={a.disabled}
-          aria-label={a.iconOnly ? a.label : undefined}
-          onClick={(e) => {
-            e.stopPropagation();
-            a.onClick();
-          }}
-        >
-          {a.iconOnly ? undefined : a.label}
-        </Button>
-      ))}
+      {actions.map((a) =>
+        a.menu ? (
+          <Dropdown.Root key={a.label}>
+            <Dropdown.Trigger>
+              <Button
+                variant={a.iconOnly ? "quiet" : "tertiary"}
+                size="sm"
+                shape={a.iconOnly ? "circle" : undefined}
+                leftSection={a.glyph ? <KebabGlyph /> : undefined}
+                aria-label={a.iconOnly ? a.label : undefined}
+              >
+                {a.iconOnly ? undefined : a.label}
+              </Button>
+            </Dropdown.Trigger>
+            <Dropdown.Menu width={210}>
+              {a.menu.map((m) => (
+                <Fragment key={m.label}>
+                  {m.dividerBefore && <Dropdown.Divider />}
+                  <Dropdown.Item
+                    onSelect={m.onClick}
+                    disabled={m.disabled}
+                    className={
+                      m.tone === "danger"
+                        ? "sui-dtc__menu-item--danger"
+                        : undefined
+                    }
+                  >
+                    {m.label}
+                  </Dropdown.Item>
+                </Fragment>
+              ))}
+            </Dropdown.Menu>
+          </Dropdown.Root>
+        ) : (
+          <Button
+            key={a.label}
+            variant={a.iconOnly ? "quiet" : "tertiary"}
+            accent={a.tone === "danger" ? "danger" : undefined}
+            size="sm"
+            shape={a.iconOnly ? "circle" : undefined}
+            leftSection={a.glyph ? <KebabGlyph /> : undefined}
+            loading={a.loading}
+            disabled={a.disabled}
+            aria-label={a.iconOnly ? a.label : undefined}
+            onClick={(e) => {
+              e.stopPropagation();
+              a.onClick?.();
+            }}
+          >
+            {a.iconOnly ? undefined : a.label}
+          </Button>
+        ),
+      )}
     </div>
   );
 }
@@ -246,11 +293,53 @@ function labels<T>(
   });
 }
 
+/**
+ * An interactive capability chip: click to grant, remove to revoke, dashed to
+ * offer adding. A functional cell (it toggles state), distinct from static
+ * `labels`.
+ */
+export interface CellCap {
+  label: string;
+  accent?: ChipAccent;
+  onClick?: () => void;
+  onRemove?: () => void;
+  dashed?: boolean;
+}
+
+function caps<T>(
+  o: Common & { get: (row: T) => CellCap[] },
+): DataTableColumn<T> {
+  return base<T>(o, {
+    align: "left",
+    nowrap: false,
+    fit: false,
+    renderCell: (r) => (
+      <div className="sui-dtc__labels">
+        {o.get(r).map((c) => (
+          <Chip
+            key={c.label}
+            accent={c.accent ?? "neutral"}
+            size="sm"
+            showDot={false}
+            dashed={c.dashed}
+            onClick={c.onClick}
+            onRemove={c.onRemove}
+          >
+            {c.label}
+          </Chip>
+        ))}
+      </div>
+    ),
+  });
+}
+
 function entity<T>(
   o: Common & {
     /** Semantic leading icon (component owns its size + colour container). */
     icon?: (row: T) => ReactNode;
     primary: (row: T) => string;
+    /** Muted inline suffix after the name, its own node (e.g. "(you)"). */
+    suffix?: (row: T) => string | null | undefined;
     /** Secondary muted line under the name. */
     note?: (row: T) => string | null | undefined;
     sortBy?: (row: T) => SortValue;
@@ -263,6 +352,7 @@ function entity<T>(
     sortValue: o.sortBy ?? ((r) => o.primary(r)),
     renderCell: (r) => {
       const icon = o.icon?.(r);
+      const suffix = o.suffix?.(r);
       const note = o.note?.(r);
       return (
         <div className="sui-dtc__entity">
@@ -272,7 +362,12 @@ function entity<T>(
             </span>
           )}
           <div className="sui-dtc__entity-body">
-            <span className="sui-dtc__entity-name">{o.primary(r)}</span>
+            <span className="sui-dtc__entity-head">
+              <span className="sui-dtc__entity-name">{o.primary(r)}</span>
+              {suffix && (
+                <span className="sui-dtc__entity-suffix">{suffix}</span>
+              )}
+            </span>
             {note && <span className="sui-dtc__note">{note}</span>}
           </div>
         </div>
@@ -360,6 +455,7 @@ function select<T>(o: {
     defaultValue?: string;
     options: SelectOption[];
     ariaLabel?: string;
+    disabled?: boolean;
   };
   /** Omit for an uncontrolled select (local UI state only). */
   onChange?: (row: T, value: string | null) => void;
@@ -382,6 +478,7 @@ function select<T>(o: {
             defaultValue={s.defaultValue}
             onChange={change ? (v) => change(r, v) : undefined}
             aria-label={s.ariaLabel}
+            disabled={s.disabled}
             inputSize="sm"
           />
         </div>
@@ -401,6 +498,7 @@ export const column = {
   number,
   badge,
   labels,
+  caps,
   entity,
   actions,
   progress,
